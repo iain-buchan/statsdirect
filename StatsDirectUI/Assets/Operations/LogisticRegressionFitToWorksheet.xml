@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>LogisticRegressionFitToWorksheet</name>
+	<friendly-name lang="en-GB">Fits and residuals to worksheet</friendly-name>
+  <prerequisite-operation>LogisticRegression</prerequisite-operation>
+  <steps>
+		<builtin function-name="rptLogisticRegressionFit" />
+    <settings>
+      <parameters>
+        <options>
+          <prompt>Save fits and residuals to a worksheet</prompt>
+          <options>
+            <option selected="true" name="trials">Trials</option>
+            <option selected="true" name="events">Events</option>
+            <option selected="true" name="eventProbability">Event probability</option>
+            <option selected="true" name="devianceResidual">Deviance residual</option>
+            <option selected="true" name="pearsonResidual">Pearson residual</option>
+            <option selected="true" name="leverage">Leverage</option>
+            <option selected="true" name="stdPearsonResidual">Std Pearson residual</option>
+            <option selected="true" name="deltaBeta">Delta beta</option>
+            <option selected="true" name="stdDeltaBeta">Std delta beta</option>
+            <option selected="true" name="deltaDeviance">Delta deviance</option>
+            <option selected="true" name="deltaChiSquare">Delta chi-square</option>
+          </options>
+        </options>
+      </parameters>
+    </settings>
+		<builtin function-name="gridLogisticRegressionFit" />
+		<output-frame frame-name="results" />
+	</steps>
+</operation>

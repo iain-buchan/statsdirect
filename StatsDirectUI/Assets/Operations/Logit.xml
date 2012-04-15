@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>Logit</name>
+  <friendly-name lang="en-GB">Probit analysis on a logit scale</friendly-name>
+  <help chm-id="1283" />
+  <steps>
+    <settings>
+      <parameters>
+        <frame>
+          <name>dose</name>
+          <prompt>Select data for DOSE levels</prompt>
+          <same-length>false</same-length>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>subjects</name>
+          <prompt>Select data for SUBJECTS at each dose level</prompt>
+          <same-length-as>dose</same-length-as>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>responders</name>
+          <prompt>Select data for RESPONDERS at each dose level</prompt>
+          <same-length-as>dose</same-length-as>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <multiple-options>
+          <prompt>Select probit options</prompt>
+          <options>
+            <option name="calc-log10-doses" selected="true">Calc log10 of doses</option>
+          </options>
+          <selects>
+            <combo name="conf" prompt="Confidence (%)" default-value="95">
+              <option value="90">90</option>
+              <option value="91">91</option>
+              <option value="92">92</option>
+              <option value="93">93</option>
+              <option value="94">94</option>
+              <option value="95">95</option>
+              <option value="96">96</option>
+              <option value="97">97</option>
+              <option value="98">98</option>
+              <option value="99">99</option>
+            </combo>
+          </selects>
+        </multiple-options>
+      </parameters>
+    </settings>
+		<builtin function-name="rptLogit" />
+		<report filename="probit.rtf" />
+	</steps>
+  <suggested-operations>
+    <suggested-operation>ProbitPlot</suggested-operation>
+    <suggested-operation>ProbitInterpolateX</suggested-operation>
+    <suggested-operation>ProbitInterpolateY</suggested-operation>
+    <suggested-operation>ProbitMore</suggested-operation>
+  </suggested-operations>
+</operation>

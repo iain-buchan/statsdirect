@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>OldChiSquareGoodnessOfFit</name>
+	<friendly-name>Chi-square Goodness of Fit</friendly-name>
+  <help chm-id="1051" />
+  <steps>
+    <settings>
+      <parameters>
+        <option>
+          <name>individualOrGrouped</name>
+          <prompt>What do your selected rows represent?</prompt>
+          <default-value>I</default-value>
+          <options>
+            <option value="I">Individual observations</option>
+            <option value="G">Grouped frequencies</option>
+          </options>
+        </option>
+      </parameters>
+    </settings>
+    <test>
+      <condition>="I".Equals(Parameters["individualOrGrouped"].AsString)</condition>
+      <iftrue>
+        <!-- Individual -->
+        <settings>
+          <parameters>
+            <frame>
+              <name>data</name>
+              <prompt>Select individual data</prompt>
+              <same-length>false</same-length>
+              <mode>CategoryReplaceMissing</mode>
+              <min-columns>1</min-columns>
+              <max-columns>1</max-columns>
+              <clear-selection-first>true</clear-selection-first>
+            </frame>
+          </parameters>
+        </settings>
+      </iftrue>
+      <iffalse>
+        <!-- Grouped -->
+        <settings>
+          <parameters>
+            <frame>
+              <name>data</name>
+              <prompt>Select grouped data values</prompt>
+              <same-length>false</same-length>
+              <mode>NumericReplaceMissing</mode>
+              <min-columns>1</min-columns>
+              <max-columns>1</max-columns>
+              <clear-selection-first>true</clear-selection-first>
+            </frame>
+            <frame>
+              <name>names</name>
+              <prompt>Select group names [Default for default names]</prompt>
+              <cancel-skips-parameter>Default</cancel-skips-parameter>
+              <same-length>true</same-length>
+              <same-length-as>data</same-length-as>
+              <mode>Text</mode>
+              <min-columns>1</min-columns>
+              <max-columns>1</max-columns>
+              <clear-selection-first>true</clear-selection-first>
+            </frame>
+          </parameters>
+        </settings>
+      </iffalse>
+    </test>
+    <builtin function-name="rptChiGood" />
+  	<report filename="chigood.rtf"/>
+	</steps>
+</operation>

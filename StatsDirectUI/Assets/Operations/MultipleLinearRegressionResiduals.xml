@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>MultipleLinearRegressionResiduals</name>
+	<friendly-name lang="en-GB">Influential data</friendly-name>
+  <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
+  <steps>
+    <settings>
+			<parameters>
+				<options>
+					<name>options</name>
+					<prompt>Save values to worksheet</prompt>
+          <must-request>true</must-request>
+          <options>
+						<option name="saveFittedY">Fitted Y, SD of fitted Y and residual</option>
+						<option name="saveStudentised">Studentised residual, leverage and Cook's distance</option>
+						<option name="saveJackknife">Jackknife residual and DFIT</option>
+					</options>
+				</options>
+			</parameters>
+		</settings>
+		<builtin function-name="rptMultipleLinearRegressionResiduals" />
+		<test>
+			<condition>=Parameters.ContainsKey("yfit") || Parameters.ContainsKey("studentised") || Parameters.ContainsKey("jackknife") </condition>
+			<iftrue>
+				<select-output-for-frame />
+				<test>
+					<condition>=Parameters.ContainsKey("yfit")</condition>
+					<iftrue>
+						<output-frame frame-name="yfit" keep-selection="true" />
+					</iftrue>
+				</test>
+				<test>
+					<condition>=Parameters.ContainsKey("studentised")</condition>
+					<iftrue>
+						<output-frame frame-name="studentised" keep-selection="true" />
+					</iftrue>
+				</test>
+				<test>
+					<condition>=Parameters.ContainsKey("jackknife")</condition>
+					<iftrue>
+						<output-frame frame-name="jackknife" keep-selection="true" />
+					</iftrue>
+				</test>
+			</iftrue>
+		</test>
+		<report filename="residm.rtf" />
+	</steps>
+</operation>

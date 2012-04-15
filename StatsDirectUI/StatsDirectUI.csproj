@@ -1,0 +1,1649 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C73E1B83-A745-4592-92A0-40C5658D6D7C}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>StatsDirect</RootNamespace>
+    <AssemblyName>StatsDirect</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <StartupObject>StatsDirect.UI.Program</StartupObject>
+    <ApplicationIcon>UI\sd3.ico</ApplicationIcon>
+    <SignAssembly>false</SignAssembly>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <PublishUrl>http://localhost/StatsDirect/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
+    <OutputPath>bin\ReleaseWithSigning\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Antlr3.Runtime">
+      <HintPath>..\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Data.v11.2, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.Printing.v11.2.Core, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.RichEdit.v11.2.Core, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.Utils.v11.2, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraBars.v11.2, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraEditors.v11.2, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraPrinting.v11.2, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraRichEdit.v11.2, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraRichEdit.v11.2.Extensions, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraRichEdit.v11.2.Printing, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraTreeList.v11.2, Version=11.2.10.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="SpreadsheetGear, Version=6.0.3.158, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\SpreadsheetGear.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Builtins\Agreement.cs" />
+    <Compile Include="Builtins\Analysis.cs" />
+    <Compile Include="Builtins\Anova.cs" />
+    <Compile Include="Builtins\Calcit.cs" />
+    <Compile Include="Builtins\ChartExplorer.cs" />
+    <Compile Include="Builtins\Chi.cs" />
+    <Compile Include="Builtins\Coxreg.cs" />
+    <Compile Include="Builtins\Describe.cs" />
+    <Compile Include="Builtins\Distribution.cs" />
+    <Compile Include="Builtins\Exact.cs" />
+    <Compile Include="Builtins\ExactBB.cs" />
+    <Compile Include="Builtins\Formula.cs" />
+    <Compile Include="Builtins\ImportExport.cs" />
+    <Compile Include="Builtins\Matrix.cs" />
+    <Compile Include="Builtins\Meta.cs" />
+    <Compile Include="Builtins\Nonparametric.cs" />
+    <Compile Include="Builtins\Options.cs" />
+    <Compile Include="Builtins\Parametric.cs" />
+    <Compile Include="Builtins\Power.cs" />
+    <Compile Include="Builtins\Random.cs" />
+    <Compile Include="Builtins\Rates.cs" />
+    <Compile Include="Builtins\Registry.cs" />
+    <Compile Include="Builtins\Regress.cs" />
+    <Compile Include="Builtins\Regress1.cs" />
+    <Compile Include="Builtins\RegressRpt.cs" />
+    <Compile Include="Builtins\Sheet.cs" />
+    <Compile Include="Builtins\Survival.cs" />
+    <Compile Include="Builtins\Tables.cs" />
+    <Compile Include="Calculator\Calculator.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Calculator.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Calculator\frmStatsDirectCalculator.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Calculator\frmStatsDirectCalculator.Designer.cs">
+      <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Charting\AgreementOptions.cs" />
+    <Compile Include="Charting\Axis.cs" />
+    <Compile Include="Charting\AxisMode.cs" />
+    <Compile Include="Charting\AxisScaler.cs" />
+    <Compile Include="Charting\BarOptions.cs" />
+    <Compile Include="Charting\BoxWhiskerOptions.cs" />
+    <Compile Include="Charting\ChartDefinition.cs" />
+    <Compile Include="Charting\ChartOptions.cs" />
+    <Compile Include="Charting\ChartRenderer.cs" />
+    <Compile Include="Charting\ComparisonValue.cs" />
+    <Compile Include="Charting\ControlOptions.cs" />
+    <Compile Include="Charting\DoubleSeries.cs" />
+    <Compile Include="Charting\ErrorBarOptions.cs" />
+    <Compile Include="Charting\FillStyle.cs" />
+    <Compile Include="Charting\ForestOptions.cs" />
+    <Compile Include="Charting\GenericOptions.cs" />
+    <Compile Include="Charting\GiniOptions.cs" />
+    <Compile Include="Charting\HistogramOptions.cs" />
+    <Compile Include="Charting\LadderOptions.cs" />
+    <Compile Include="Charting\LinearRegressionOptions.cs" />
+    <Compile Include="Charting\MarkerShape.cs" />
+    <Compile Include="Charting\MarkerType.cs" />
+    <Compile Include="Charting\NormalOptions.cs" />
+    <Compile Include="Charting\PyramidOptions.cs" />
+    <Compile Include="Charting\ROCCutoff.cs" />
+    <Compile Include="Charting\ROCOptions.cs" />
+    <Compile Include="Charting\ROCSeriesRecord.cs" />
+    <Compile Include="Charting\ScatterXYOptions.cs" />
+    <Compile Include="Charting\SDGlobalStub.cs" />
+    <Compile Include="Charting\Series.cs" />
+    <Compile Include="Charting\SeriesOptionsDescriptor.cs" />
+    <Compile Include="Charting\SpreadOptions.cs" />
+    <Compile Include="Charting\StringSeries.cs" />
+    <Compile Include="Charting\SurvivalOptions.cs" />
+    <Compile Include="Charting\Transformation.cs" />
+    <Compile Include="Configuration\SDConfiguration.cs" />
+    <Compile Include="Data\ClassifierVariable.cs" />
+    <Compile Include="Data\ColumnData.cs" />
+    <Compile Include="Data\DataFrame.cs" />
+    <Compile Include="Data\DataFrame2D.cs" />
+    <Compile Include="Data\DateVariable.cs" />
+    <Compile Include="Data\DoubleVariable.cs" />
+    <Compile Include="Data\Group.cs" />
+    <Compile Include="Data\IOrigin.cs" />
+    <Compile Include="Data\IRefillSource.cs" />
+    <Compile Include="Data\IStripForRedo.cs" />
+    <Compile Include="Data\StringVariable.cs" />
+    <Compile Include="Data\Variable.cs" />
+    <Compile Include="Data\VariableType.cs" />
+    <Compile Include="Data\WorksheetOrigin.cs" />
+    <Compile Include="Expressions\Argument.cs" />
+    <Compile Include="Expressions\Converter.cs" />
+    <Compile Include="Expressions\Arguments.cs" />
+    <Compile Include="Expressions\FunctionDefinition.cs" />
+    <Compile Include="Expressions\FunctionRegistry.cs" />
+    <Compile Include="Expressions\SDMath.cs" />
+    <Compile Include="Expressions\StatsDirectExpressionLexer.cs" />
+    <Compile Include="Expressions\StatsDirectExpressionParser.cs" />
+    <Compile Include="Expressions\StatsDirectExpressionParserPartial.cs" />
+    <Compile Include="Numerics\BetaRNG.cs" />
+    <Compile Include="Numerics\BinomialRNG.cs" />
+    <Compile Include="Numerics\Dunett.cs" />
+    <Compile Include="Numerics\Expnos.cs" />
+    <Compile Include="Numerics\ExponentialRNG.cs" />
+    <Compile Include="Numerics\GammaRNG.cs" />
+    <Compile Include="Numerics\MathDbl.cs" />
+    <Compile Include="Numerics\Mersenne.cs" />
+    <Compile Include="Numerics\NonParametric.cs" />
+    <Compile Include="Numerics\NormalRNG.cs" />
+    <Compile Include="Numerics\Numerics.cs" />
+    <Compile Include="Numerics\PoissonRNG.cs" />
+    <Compile Include="Numerics\Rank.cs" />
+    <Compile Include="Numerics\Summary.cs" />
+    <Compile Include="Numerics\UniformXRNG.cs" />
+    <Compile Include="Settings1.Designer.cs" />
+    <Compile Include="Settings11.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings1.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Templates\BooleanParameter.cs" />
+    <Compile Include="Templates\BuiltinRegistry.cs" />
+    <Compile Include="Templates\BuiltinStep.cs" />
+    <Compile Include="Templates\ChartStep.cs" />
+    <Compile Include="Templates\ConfidenceIntervalParameter.cs" />
+    <Compile Include="Templates\DateParameter.cs" />
+    <Compile Include="Templates\Double2By2ByKParameter.cs" />
+    <Compile Include="Templates\Double2By2Parameter.cs" />
+    <Compile Include="Templates\DoubleParameter.cs" />
+    <Compile Include="Templates\EditGridParameter.cs" />
+    <Compile Include="Templates\Expression.cs" />
+    <Compile Include="Templates\FilledParameter.cs" />
+    <Compile Include="Templates\Grid2DParameter.cs" />
+    <Compile Include="Templates\GridParameter.cs" />
+    <Compile Include="Templates\GroupedCovarianceParameter.cs" />
+    <Compile Include="Templates\HelpContext.cs" />
+    <Compile Include="Templates\IChartHost.cs" />
+    <Compile Include="Templates\IFillable.cs" />
+    <Compile Include="Templates\IMightRequireInput.cs" />
+    <Compile Include="Templates\IntegerParameter.cs" />
+    <Compile Include="Templates\InvalidDataException.cs" />
+    <Compile Include="Templates\IScriptEngine.cs" />
+    <Compile Include="Templates\ITemplateHost.cs" />
+    <Compile Include="Templates\ITemplateProcessor.cs" />
+    <Compile Include="Templates\IterationStep.cs" />
+    <Compile Include="Templates\MultipleOptionsParameter.cs" />
+    <Compile Include="Templates\Operation.cs" />
+    <Compile Include="Templates\OptionDescriptor.cs" />
+    <Compile Include="Templates\OptionParameter.cs" />
+    <Compile Include="Templates\OptionsParameter.cs" />
+    <Compile Include="Templates\OutputFrameStep.cs" />
+    <Compile Include="Templates\Parameter.cs" />
+    <Compile Include="Templates\ParameterBag.cs" />
+    <Compile Include="Templates\ParametersStep.cs" />
+    <Compile Include="Templates\PickFromListParameter.cs" />
+    <Compile Include="Templates\PickVariablesParameter.cs" />
+    <Compile Include="Templates\RangeParameter.cs" />
+    <Compile Include="Templates\ReportStep.cs" />
+    <Compile Include="Templates\ScriptStep.cs" />
+    <Compile Include="Templates\SDPreferences.cs" />
+    <Compile Include="Templates\SelectOutputForFrameStep.cs" />
+    <Compile Include="Templates\Settings.Designer.cs" />
+    <Compile Include="Templates\SpecialParameter.cs" />
+    <Compile Include="Templates\Step.cs" />
+    <Compile Include="Templates\StepResult.cs" />
+    <Compile Include="Templates\StringParameter.cs" />
+    <Compile Include="Templates\SuggestedOperation.cs" />
+    <Compile Include="Templates\TemplateFactory.cs" />
+    <Compile Include="Templates\TestStep.cs" />
+    <Compile Include="TextProcessing\ActiveRtfLexer.cs" />
+    <Compile Include="TextProcessing\ActiveRtfParser.cs" />
+    <Compile Include="TextProcessing\ActiveRtfParserPartial.cs" />
+    <Compile Include="UI\ctlPDF.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlPDF.Designer.cs">
+      <DependentUpon>ctlPDF.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ExcelAddInManager.cs" />
+    <Compile Include="UI\ClipboardMetafileHelper.cs" />
+    <Compile Include="UI\ctlDummyOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlDummyOptions.Designer.cs">
+      <DependentUpon>ctlDummyOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmScale.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmScale.Designer.cs">
+      <DependentUpon>frmScale.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmUpdateCheck.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmUpdateCheck.Designer.cs">
+      <DependentUpon>frmUpdateCheck.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\PortableSettingsProvider.cs" />
+    <Compile Include="UI\ComboBoxEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\ComboBoxEx.Designer.cs">
+      <DependentUpon>ComboBoxEx.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmReportRichEditDummy.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmReportRichEditDummy.designer.cs">
+      <DependentUpon>frmReportRichEditDummy.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlTextToNumbers.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlTextToNumbers.Designer.cs">
+      <DependentUpon>ctlTextToNumbers.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlBarOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlBarOptions.Designer.cs">
+      <DependentUpon>ctlBarOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmTextPreview.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmTextPreview.Designer.cs">
+      <DependentUpon>frmTextPreview.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmErrorMessage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmErrorMessage.Designer.cs">
+      <DependentUpon>frmErrorMessage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlROCCutoff.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlROCCutoff.Designer.cs">
+      <DependentUpon>ctlROCCutoff.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlAxisOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlAxisOptions.Designer.cs">
+      <DependentUpon>ctlAxisOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlFont.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlFont.Designer.cs">
+      <DependentUpon>ctlFont.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlOneAxisOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlOneAxisOptions.Designer.cs">
+      <DependentUpon>ctlOneAxisOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmImagePreview.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmImagePreview.Designer.cs">
+      <DependentUpon>frmImagePreview.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmReportRichEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmReportRichEdit.designer.cs">
+      <DependentUpon>frmReportRichEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlFillStyle.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlFillStyle.Designer.cs">
+      <DependentUpon>ctlFillStyle.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlOneSeriesOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlOneSeriesOptions.Designer.cs">
+      <DependentUpon>ctlOneSeriesOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlMarkerShape.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlMarkerShape.Designer.cs">
+      <DependentUpon>ctlMarkerShape.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlDashStyle.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlDashStyle.Designer.cs">
+      <DependentUpon>ctlDashStyle.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlLineThickness.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlLineThickness.Designer.cs">
+      <DependentUpon>ctlLineThickness.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlSeriesOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlSeriesOptions.Designer.cs">
+      <DependentUpon>ctlSeriesOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlPickAWindow.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlPickAWindow.Designer.cs">
+      <DependentUpon>ctlPickAWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlEffectOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlEffectOptions.Designer.cs">
+      <DependentUpon>ctlEffectOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlOptions.Designer.cs">
+      <DependentUpon>ctlOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlCoxRegressionOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlCoxRegressionOptions.Designer.cs">
+      <DependentUpon>ctlCoxRegressionOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlChiGFOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlChiGFOptions.Designer.cs">
+      <DependentUpon>ctlChiGFOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlChartOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlChartOptions.Designer.cs">
+      <DependentUpon>ctlChartOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlHistogramOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlHistogramOptions.Designer.cs">
+      <DependentUpon>ctlHistogramOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlBoxWhiskerOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlBoxWhiskerOptions.Designer.cs">
+      <DependentUpon>ctlBoxWhiskerOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlSort.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlSort.Designer.cs">
+      <DependentUpon>ctlSort.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmExportGraphic.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmExportGraphic.Designer.cs">
+      <DependentUpon>frmExportGraphic.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmLicense.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmLicense.Designer.cs">
+      <DependentUpon>frmLicense.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmAbout.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmAbout.Designer.cs">
+      <DependentUpon>frmAbout.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmSetupTools.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmSetupTools.Designer.cs">
+      <DependentUpon>frmSetupTools.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmDeleteSpecial.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmDeleteSpecial.Designer.cs">
+      <DependentUpon>frmDeleteSpecial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmInsertCells.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmInsertCells.Designer.cs">
+      <DependentUpon>frmInsertCells.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmExtraction.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmExtraction.Designer.cs">
+      <DependentUpon>frmExtraction.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmGraphicsOptions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmGraphicsOptions.Designer.cs">
+      <DependentUpon>frmGraphicsOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmLoading.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmLoading.Designer.cs">
+      <DependentUpon>frmLoading.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmOpening.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmOpening.Designer.cs">
+      <DependentUpon>frmOpening.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmPasteSpecial.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmPasteSpecial.Designer.cs">
+      <DependentUpon>frmPasteSpecial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmCategorise.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmCategorise.Designer.cs">
+      <DependentUpon>frmCategorise.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmDummyOptions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmDummyOptions.Designer.cs">
+      <DependentUpon>frmDummyOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmEffectOptions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmEffectOptions.Designer.cs">
+      <DependentUpon>frmEffectOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmCoxRegressionOptions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmCoxRegressionOptions.Designer.cs">
+      <DependentUpon>frmCoxRegressionOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmInputBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmInputBox.Designer.cs">
+      <DependentUpon>frmInputBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmROCCutoff.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmROCCutoff.Designer.cs">
+      <DependentUpon>frmROCCutoff.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmScores.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmScores.Designer.cs">
+      <DependentUpon>frmScores.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmScriptReplace.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmScriptReplace.Designer.cs">
+      <DependentUpon>frmScriptReplace.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmScriptFind.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmScriptFind.Designer.cs">
+      <DependentUpon>frmScriptFind.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmSummaryStatistics.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmSummaryStatistics.Designer.cs">
+      <DependentUpon>frmSummaryStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\IFillParameterBag.cs" />
+    <Compile Include="UI\IFindable.cs" />
+    <Compile Include="UI\IOkable.cs" />
+    <Compile Include="UI\IScriptWindow.cs" />
+    <Compile Include="UI\frmScript.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmScript.designer.cs">
+      <DependentUpon>frmScript.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmPickAWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmPickAWindow.Designer.cs">
+      <DependentUpon>frmPickAWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\IForm.cs" />
+    <Compile Include="UI\IGrid.cs" />
+    <Compile Include="UI\Area.cs" />
+    <Compile Include="UI\IReport.cs" />
+    <Compile Include="UI\IToolStripHost.cs" />
+    <Compile Include="UI\License.cs" />
+    <Compile Include="UI\Pane.cs" />
+    <Compile Include="PJLControls\ColourPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PJLControls\ColourPanelForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PJLControls\ColourPanelWithCapture.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PJLControls\ColourPicker.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PJLControls\CustomColorPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PJLControls\CustomColorPicker.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PJLControls\PopupCustomColorPicker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PJLControls\PopupCustomColorPicker.Designer.cs">
+      <DependentUpon>PopupCustomColorPicker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PJLControls\Utils.cs" />
+    <Compile Include="Rserve.NET\MutableR.cs" />
+    <Compile Include="Rserve.NET\REngine.cs" />
+    <Compile Include="Rserve.NET\REngineE.cs" />
+    <Compile Include="Rserve.NET\REXP.cs" />
+    <Compile Include="Rserve.NET\REXPDoub.cs" />
+    <Compile Include="Rserve.NET\REXPEnvi.cs" />
+    <Compile Include="Rserve.NET\REXPExpr.cs" />
+    <Compile Include="Rserve.NET\REXPFact.cs" />
+    <Compile Include="Rserve.NET\REXPGene.cs" />
+    <Compile Include="Rserve.NET\REXPInte.cs" />
+    <Compile Include="Rserve.NET\REXPLang.cs" />
+    <Compile Include="Rserve.NET\REXPList.cs" />
+    <Compile Include="Rserve.NET\REXPLogi.cs" />
+    <Compile Include="Rserve.NET\REXPMism.cs" />
+    <Compile Include="Rserve.NET\REXPNull.cs" />
+    <Compile Include="Rserve.NET\REXPRaw.cs" />
+    <Compile Include="Rserve.NET\REXPRefe.cs" />
+    <Compile Include="Rserve.NET\REXPS4.cs" />
+    <Compile Include="Rserve.NET\REXPStri.cs" />
+    <Compile Include="Rserve.NET\REXPSymb.cs" />
+    <Compile Include="Rserve.NET\REXPUnkn.cs" />
+    <Compile Include="Rserve.NET\REXPVect.cs" />
+    <Compile Include="Rserve.NET\RFactor.cs" />
+    <Compile Include="Rserve.NET\RList.cs" />
+    <Compile Include="Rserve.NET\Rserve\protocol\jcrypt.cs" />
+    <Compile Include="Rserve.NET\Rserve\protocol\REXPFact.cs" />
+    <Compile Include="Rserve.NET\Rserve\protocol\RPacket.cs" />
+    <Compile Include="Rserve.NET\Rserve\protocol\RTalk.cs" />
+    <Compile Include="Rserve.NET\Rserve\RConnect.cs" />
+    <Compile Include="Rserve.NET\Rserve\RFileInp.cs" />
+    <Compile Include="Rserve.NET\Rserve\RFileOut.cs" />
+    <Compile Include="Rserve.NET\Rserve\RserveEx.cs" />
+    <Compile Include="Rserve.NET\Rserve\RSession.cs" />
+    <Compile Include="Rserve.NET\Rserve\test\jt.cs" />
+    <Compile Include="Rserve.NET\Rserve\test\PlotDemo.cs" />
+    <Compile Include="Rserve.NET\Rserve\test\StartRse.cs" />
+    <Compile Include="Rserve.NET\Rserve\test\test.cs" />
+    <Compile Include="Rserve.NET\SupportClass.cs" />
+    <Compile Include="UI\SDGroupBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\SDListItem.cs" />
+    <Compile Include="UI\SDMenuItem.cs" />
+    <Compile Include="UI\Range.cs" />
+    <Compile Include="UI\SDApplication.cs" />
+    <Compile Include="UI\SDSpreadsheetGear.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\SelectablePictureBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Settings.cs" />
+    <Compile Include="UI\StatsDirectForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\StatsDirectToolStripRenderer.cs" />
+    <Compile Include="TemplateProcessing\ScriptEngine.cs" />
+    <Compile Include="TemplateProcessing\TemplateProcessor.cs" />
+    <Compile Include="UI\TextRuler.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\VerticalLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\WindowInformation.cs" />
+    <Compile Include="UI\frmSpreadsheetGear.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmSpreadsheetGear.Designer.cs">
+      <DependentUpon>frmSpreadsheetGear.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\frmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmMain.Designer.cs">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\coxp.cs" />
+    <Compile Include="Utilities\DataAcquisitionMode.cs" />
+    <Compile Include="Utilities\Formatting.cs" />
+    <Compile Include="Utilities\Parsing.cs" />
+    <Compile Include="Utilities\SDRegistry.cs" />
+    <Compile Include="Utilities\Set.cs" />
+    <Compile Include="Utilities\TemplateOperationCancelledException.cs" />
+    <Compile Include="Utilities\Utilities.cs" />
+    <Compile Include="Utilities\ValidationException.cs" />
+    <EmbeddedResource Include="Calculator\frmStatsDirectCalculator.resx">
+      <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlDummyOptions.resx">
+      <DependentUpon>ctlDummyOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlPDF.resx">
+      <DependentUpon>ctlPDF.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmReportRichEditDummy.resx">
+      <DependentUpon>frmReportRichEditDummy.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlTextToNumbers.resx">
+      <DependentUpon>ctlTextToNumbers.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlBarOptions.resx">
+      <DependentUpon>ctlBarOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmScale.resx">
+      <DependentUpon>frmScale.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmTextPreview.resx">
+      <DependentUpon>frmTextPreview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmErrorMessage.resx">
+      <DependentUpon>frmErrorMessage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlROCCutoff.resx">
+      <DependentUpon>ctlROCCutoff.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlAxisOptions.resx">
+      <DependentUpon>ctlAxisOptions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlFont.resx">
+      <DependentUpon>ctlFont.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlOneAxisOptions.resx">
+      <DependentUpon>ctlOneAxisOptions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmImagePreview.resx">
+      <DependentUpon>frmImagePreview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmReportRichEdit.resx">
+      <DependentUpon>frmReportRichEdit.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlFillStyle.resx">
+      <DependentUpon>ctlFillStyle.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlOneSeriesOptions.resx">
+      <DependentUpon>ctlOneSeriesOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlMarkerShape.resx">
+      <DependentUpon>ctlMarkerShape.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlDashStyle.resx">
+      <DependentUpon>ctlDashStyle.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlLineThickness.resx">
+      <DependentUpon>ctlLineThickness.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlSeriesOptions.resx">
+      <DependentUpon>ctlSeriesOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlPickAWindow.resx">
+      <DependentUpon>ctlPickAWindow.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlEffectOptions.resx">
+      <DependentUpon>ctlEffectOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlOptions.resx">
+      <DependentUpon>ctlOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlCoxRegressionOptions.resx">
+      <DependentUpon>ctlCoxRegressionOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlChiGFOptions.resx">
+      <DependentUpon>ctlChiGFOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlChartOptions.resx">
+      <DependentUpon>ctlChartOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlHistogramOptions.resx">
+      <DependentUpon>ctlHistogramOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlBoxWhiskerOptions.resx">
+      <DependentUpon>ctlBoxWhiskerOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlSort.resx">
+      <DependentUpon>ctlSort.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmExportGraphic.resx">
+      <DependentUpon>frmExportGraphic.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmLicense.resx">
+      <DependentUpon>frmLicense.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmAbout.resx">
+      <DependentUpon>frmAbout.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmSetupTools.resx">
+      <DependentUpon>frmSetupTools.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmDeleteSpecial.resx">
+      <DependentUpon>frmDeleteSpecial.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmInsertCells.resx">
+      <DependentUpon>frmInsertCells.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmExtraction.resx">
+      <DependentUpon>frmExtraction.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmGraphicsOptions.resx">
+      <DependentUpon>frmGraphicsOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmLoading.resx">
+      <DependentUpon>frmLoading.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmOpening.resx">
+      <DependentUpon>frmOpening.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmPasteSpecial.resx">
+      <DependentUpon>frmPasteSpecial.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmCategorise.resx">
+      <DependentUpon>frmCategorise.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmDummyOptions.resx">
+      <DependentUpon>frmDummyOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmEffectOptions.resx">
+      <DependentUpon>frmEffectOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmCoxRegressionOptions.resx">
+      <DependentUpon>frmCoxRegressionOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmInputBox.resx">
+      <DependentUpon>frmInputBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmROCCutoff.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmROCCutoff.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmScores.resx">
+      <DependentUpon>frmScores.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmScriptReplace.resx">
+      <DependentUpon>frmScriptReplace.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmScriptFind.resx">
+      <DependentUpon>frmScriptFind.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmScript.resx">
+      <DependentUpon>frmScript.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmPickAWindow.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmPickAWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmSpreadsheetGear.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmSpreadsheetGear.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmMain.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmSummaryStatistics.resx">
+      <DependentUpon>frmSummaryStatistics.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PJLControls\ColourPanel.resx">
+      <DependentUpon>ColourPanel.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PJLControls\ColourPanelForm.resx">
+      <DependentUpon>ColourPanelForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PJLControls\ColourPanelWithCapture.resx">
+      <DependentUpon>ColourPanelWithCapture.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PJLControls\ColourPicker.resx">
+      <DependentUpon>ColourPicker.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PJLControls\CustomColorPanel.resx">
+      <DependentUpon>CustomColorPanel.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PJLControls\CustomColorPicker.resx">
+      <DependentUpon>CustomColorPicker.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PJLControls\PopupCustomColorPicker.resx">
+      <DependentUpon>PopupCustomColorPicker.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\licenses.licx" />
+    <EmbeddedResource Include="UI\frmUpdateCheck.resx">
+      <DependentUpon>frmUpdateCheck.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="UI\Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="App.config" />
+    <None Include="Assets\Excel\StatsDirectExcelLink.xla" />
+    <None Include="Assets\Excel\StatsDirectExcelLink.xls" />
+    <None Include="Assets\Operations\Operation.xsd" />
+    <None Include="Calculator\Calculator.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Calculator.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Charting\app.config" />
+    <None Include="Expressions\StatsDirectExpression.g" />
+    <None Include="Expressions\StatsDirectExpression.tokens" />
+    <Antlr3 Include="TextProcessing\ActiveRtf.g">
+      <Generator>MSBuild:Compile</Generator>
+    </Antlr3>
+    <None Include="UI\Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Rserve.NET\LICENSE" />
+    <None Include="Rserve.NET\Makefile" />
+    <None Include="Rserve.NET\Rserve\Makefile" />
+    <None Include="Rserve.NET\Rserve\test\Makefile" />
+    <None Include="Assets\STATSDIRECT.chm" />
+    <None Include="Assets\Template\abridged.rtf" />
+    <None Include="Assets\Template\agree.rtf" />
+    <None Include="Assets\Template\asciigr.rtf" />
+    <None Include="Assets\Template\BACKINT.rtf" />
+    <None Include="Assets\Template\bartlett.rtf" />
+    <None Include="Assets\Template\blank.rtf" />
+    <None Include="Assets\Template\BONFERR.rtf" />
+    <None Include="Assets\Template\chartonly.rtf" />
+    <None Include="Assets\Template\charts.rtf" />
+    <None Include="Assets\Template\chi2x2.rtf" />
+    <None Include="Assets\Template\chi2xc.rtf" />
+    <None Include="Assets\Template\chigood.rtf" />
+    <None Include="Assets\Template\chirxc.rtf" />
+    <None Include="Assets\Template\cimeany.rtf" />
+    <None Include="Assets\Template\clogit.rtf" />
+    <None Include="Assets\Template\chartonly-ascii.rtf" />
+    <None Include="Assets\Template\cochranq.rtf" />
+    <None Include="Assets\Template\chiTwoByKSimulatedExactP.rtf" />
+    <None Include="Assets\Template\universal_r_compare.rtf" />
+    <None Include="Assets\Template\metaCorrelation.rtf" />
+    <None Include="Assets\Template\universalAgreement.rtf" />
+    <None Include="Assets\Template\kappaSimulatedExactP.rtf" />
+    <None Include="Assets\Template\simulatedExactP.rtf" />
+    <None Include="Assets\Template\xtabouter.rtf" />
+    <None Include="Assets\Template\covarmx.rtf" />
+    <None Include="Assets\Template\coxreg.rtf" />
+    <None Include="Assets\Template\cox_det.rtf" />
+    <None Include="Assets\Template\cox_dev.rtf" />
+    <None Include="Assets\Template\cox_r.rtf" />
+    <None Include="Assets\Template\cox_s.rtf" />
+    <None Include="Assets\Template\cronbach.rtf" />
+    <None Include="Assets\Template\cuzick.rtf" />
+    <None Include="Assets\Template\describe.rtf" />
+    <None Include="Assets\Template\diagnost.rtf" />
+    <None Include="Assets\Template\diversity.rtf" />
+    <None Include="Assets\Template\dstdr.rtf" />
+    <None Include="Assets\Template\dunnett.rtf" />
+    <None Include="Assets\Template\effect.rtf" />
+    <None Include="Assets\Template\effectwm.rtf" />
+    <None Include="Assets\Template\FALSER.rtf" />
+    <None Include="Assets\Template\fisher.rtf" />
+    <None Include="Assets\Template\fisherx.rtf" />
+    <None Include="Assets\Template\freq.rtf" />
+    <None Include="Assets\Template\friedman.rtf" />
+    <None Include="Assets\Template\frmulti.rtf" />
+    <None Include="Assets\Template\gencmh.rtf" />
+    <None Include="Assets\Template\genmeta.rtf" />
+    <None Include="Assets\Template\gini.rtf" />
+    <None Include="Assets\Template\glranova.rtf" />
+    <None Include="Assets\Template\grpcov.rtf" />
+    <None Include="Assets\Template\grprep.rtf" />
+    <None Include="Assets\Template\incid.rtf" />
+    <None Include="Assets\Template\interlin.rtf" />
+    <None Include="Assets\Template\INTERP.rtf" />
+    <None Include="Assets\Template\interpmr.rtf" />
+    <None Include="Assets\Template\INTPROBX.rtf" />
+    <None Include="Assets\Template\INTPROBY.rtf" />
+    <None Include="Assets\Template\irdmeta.rtf" />
+    <None Include="Assets\Template\irdmeta~2.rtf" />
+    <None Include="Assets\Template\irrmeta.rtf" />
+    <None Include="Assets\Template\kappa.rtf" />
+    <None Include="Assets\Template\kappa2.rtf" />
+    <None Include="Assets\Template\kappam.rtf" />
+    <None Include="Assets\Template\kap_meir.rtf" />
+    <None Include="Assets\Template\KENDALL.rtf" />
+    <None Include="Assets\Template\kruskal.rtf" />
+    <None Include="Assets\Template\kwmulti.rtf" />
+    <None Include="Assets\Template\latin.rtf" />
+    <None Include="Assets\Template\lifetab.rtf" />
+    <None Include="Assets\Template\likely.rtf" />
+    <None Include="Assets\Template\LINISED.rtf" />
+    <None Include="Assets\Template\logrank.rtf" />
+    <None Include="Assets\Template\LOGREG.rtf" />
+    <None Include="Assets\Template\lpredict.rtf" />
+    <None Include="Assets\Template\lr_bootstrap.rtf" />
+    <None Include="Assets\Template\lr_class.rtf" />
+    <None Include="Assets\Template\lr_det.rtf" />
+    <None Include="Assets\Template\lr_fit.rtf" />
+    <None Include="Assets\Template\lr_odds.rtf" />
+    <None Include="Assets\Template\MANNWHIT.rtf" />
+    <None Include="Assets\Template\mantel.rtf" />
+    <None Include="Assets\Template\mcnamar.rtf" />
+    <None Include="Assets\Template\multi.rtf" />
+    <None Include="Assets\Template\M_PAIRED.rtf" />
+    <None Include="Assets\Template\M_SINGLE.rtf" />
+    <None Include="Assets\Template\M_UNPAIR.rtf" />
+    <None Include="Assets\Template\nestmean.rtf" />
+    <None Include="Assets\Template\nkeuls.rtf" />
+    <None Include="Assets\Template\nplinreg.rtf" />
+    <None Include="Assets\Template\odds.rtf" />
+    <None Include="Assets\Template\oneway.rtf" />
+    <None Include="Assets\Template\orci.rtf" />
+    <None Include="Assets\Template\pardet.rtf" />
+    <None Include="Assets\Template\peto.rtf" />
+    <None Include="Assets\Template\pinterp.rtf" />
+    <None Include="Assets\Template\poisreg.rtf" />
+    <None Include="Assets\Template\poisson.rtf" />
+    <None Include="Assets\Template\poly.rtf" />
+    <None Include="Assets\Template\POLY_AUC.rtf" />
+    <None Include="Assets\Template\prate.rtf" />
+    <None Include="Assets\Template\prcoeff.rtf" />
+    <None Include="Assets\Template\prefer.rtf" />
+    <None Include="Assets\Template\PRINC.rtf" />
+    <None Include="Assets\Template\prmatrix.rtf" />
+    <None Include="Assets\Template\probcal.rtf" />
+    <None Include="Assets\Template\probit.rtf" />
+    <None Include="Assets\Template\probmore.rtf" />
+    <None Include="Assets\Template\propmeta.rtf" />
+    <None Include="Assets\Template\prscores.rtf" />
+    <None Include="Assets\Template\pr_det.rtf" />
+    <None Include="Assets\Template\pr_fit.rtf" />
+    <None Include="Assets\Template\pr_irr.rtf" />
+    <None Include="Assets\Template\p_pair.rtf" />
+    <None Include="Assets\Template\p_sng.rtf" />
+    <None Include="Assets\Template\p_unpair.rtf" />
+    <None Include="Assets\Template\quantile.rtf" />
+    <None Include="Assets\Template\rdmeta.rtf" />
+    <None Include="Assets\Template\refrange.rtf" />
+    <None Include="Assets\Template\relrisk.rtf" />
+    <None Include="Assets\Template\residm.rtf" />
+    <None Include="Assets\Template\residuals.rtf" />
+    <None Include="Assets\Template\retro_r.rtf" />
+    <None Include="Assets\Template\roc.rtf" />
+    <None Include="Assets\Template\rrmeta.rtf" />
+    <None Include="Assets\Template\r_block.rtf" />
+    <None Include="Assets\Template\R_PAIR.rtf" />
+    <None Include="Assets\Template\R_UNPAIR.rtf" />
+    <None Include="Assets\Template\R_XY.rtf" />
+    <None Include="Assets\Template\scheffe.rtf" />
+    <None Include="Assets\Template\normality.rtf" />
+    <None Include="Assets\Template\sign.rtf" />
+    <None Include="Assets\Template\SIMANAL.rtf" />
+    <None Include="Assets\Template\simple.rtf" />
+    <None Include="Assets\Template\smirnov.rtf" />
+    <None Include="Assets\Template\spearman.rtf" />
+    <None Include="Assets\Template\sqrank.rtf" />
+    <None Include="Assets\Template\sqrank2.rtf" />
+    <None Include="Assets\Template\stdmort.rtf" />
+    <None Include="Assets\Template\stdrr.rtf" />
+    <None Include="Assets\Template\subset.rtf" />
+    <None Include="Assets\Template\sum.rtf" />
+    <None Include="Assets\Template\s_corr.rtf" />
+    <None Include="Assets\Template\S_INCASE.rtf" />
+    <None Include="Assets\Template\S_IND.rtf" />
+    <None Include="Assets\Template\S_MACASE.rtf" />
+    <None Include="Assets\Template\S_MAPROP.rtf" />
+    <None Include="Assets\Template\S_SURVEY.rtf" />
+    <None Include="Assets\Template\s_survival.rtf" />
+    <None Include="Assets\Template\S_T.rtf" />
+    <None Include="Assets\Template\treat.rtf" />
+    <None Include="Assets\Template\tukey.rtf" />
+    <None Include="Assets\Template\twomulti.rtf" />
+    <None Include="Assets\Template\TWONEST.rtf" />
+    <None Include="Assets\Template\twoway.rtf" />
+    <None Include="Assets\Template\VARIANCE.rtf" />
+    <None Include="Assets\Template\wei.rtf" />
+    <None Include="Assets\Template\WILCO.rtf" />
+    <None Include="Assets\Template\woolf.rtf" />
+    <None Include="Assets\Template\xover.rtf" />
+    <None Include="Assets\Template\xtab.rtf" />
+    <None Include="Assets\Template\xtabz.rtf" />
+    <None Include="Assets\Template\xxi.rtf" />
+    <None Include="Assets\Template\z_norm1.rtf" />
+    <None Include="Assets\Template\z_norm2.rtf" />
+    <Compile Include="UI\Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <None Include="Settings1.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings11.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Templates\app.config" />
+    <None Include="Templates\Settings.settings" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\menu-sd2.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Assets\menu.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Assets\Operations\SortByExpression.xml" />
+    <Content Include="Graphics\binoc.ico" />
+    <Content Include="Graphics\bold.ico" />
+    <Content Include="Graphics\bulleted_list.png" />
+    <Content Include="Graphics\Calculator.ico" />
+    <Content Include="Graphics\centre.ico" />
+    <None Include="Graphics\RPT3.gif" />
+    <None Include="Graphics\Marker9.gif" />
+    <Content Include="Graphics\decrease_indent.png" />
+    <Content Include="Graphics\Draft.png" />
+    <Content Include="Graphics\increase_indent.png" />
+    <Content Include="Graphics\IndentedList.png" />
+    <Content Include="Graphics\numbered_list.png" />
+    <Content Include="Graphics\PrintLayout.png" />
+    <Content Include="Graphics\sd3-script-16.ico" />
+    <Content Include="Graphics\sd3-report-16.ico" />
+    <Content Include="Graphics\sd3-grid-16.ico" />
+    <Content Include="Graphics\Fill0.gif" />
+    <Content Include="Graphics\Fill1.gif" />
+    <Content Include="Graphics\Fill2.gif" />
+    <Content Include="Graphics\Fill3.gif" />
+    <Content Include="Graphics\Fill4.gif" />
+    <Content Include="Graphics\RPT4-16.ICO" />
+    <Content Include="Graphics\copy.ico" />
+    <Content Include="Graphics\cut.ico" />
+    <Content Include="Graphics\delete.ico" />
+    <Content Include="Graphics\find_dc2.ico" />
+    <Content Include="Graphics\find_doc.ico" />
+    <Content Include="Graphics\font.ico" />
+    <Content Include="Graphics\font_big.ico" />
+    <Content Include="Graphics\font_sml.ico" />
+    <Content Include="Graphics\font_wid.ico" />
+    <Content Include="Graphics\help.ico" />
+    <Content Include="Graphics\help_ptr.ico" />
+    <Content Include="Graphics\italic.ico" />
+    <Content Include="Graphics\justify.ico" />
+    <Content Include="Graphics\left.ico" />
+    <Content Include="Graphics\lst2icon.ico" />
+    <Content Include="Graphics\mail.ico" />
+    <Content Include="Graphics\mail2.ico" />
+    <None Include="Assets\Data\test.xls" />
+    <None Include="Graphics\Marker1.gif" />
+    <None Include="Graphics\Marker2.gif" />
+    <None Include="Graphics\Marker3.gif" />
+    <None Include="Graphics\Marker4.gif" />
+    <None Include="Graphics\Marker5.gif" />
+    <None Include="Graphics\Marker6.gif" />
+    <None Include="Graphics\Marker7.gif" />
+    <None Include="Graphics\Marker8.gif" />
+    <Content Include="Graphics\new.ico" />
+    <Content Include="Graphics\open.ico" />
+    <Content Include="Graphics\paste.ico" />
+    <Content Include="Graphics\print.ico" />
+    <Content Include="Graphics\print2.ico" />
+    <Content Include="Graphics\redo.ico" />
+    <Content Include="Graphics\refresh.ico" />
+    <Content Include="Graphics\Rich Text Format.ico" />
+    <Content Include="Graphics\right.ico" />
+    <None Include="Graphics\RPT3.bmp" />
+    <Content Include="Graphics\RPT4.ICO" />
+    <Content Include="Graphics\save.ico" />
+    <Content Include="Graphics\script.ico" />
+    <None Include="Graphics\sd3-report-32.png" />
+    <None Include="Graphics\sd3-grid-32.png" />
+    <Content Include="Graphics\sd3-grid.ico" />
+    <Content Include="Graphics\sd3-report.ico" />
+    <Content Include="Graphics\sd3-script.ico" />
+    <Content Include="Graphics\sd3.ico" />
+    <Content Include="Graphics\SD7.ICO" />
+    <None Include="Graphics\Style1.gif" />
+    <None Include="Graphics\Style2.gif" />
+    <None Include="Graphics\Style3.gif" />
+    <None Include="Graphics\Style4.gif" />
+    <None Include="Graphics\Style5.gif" />
+    <None Include="Graphics\sdbutton1.bmp" />
+    <None Include="Graphics\sdbutton2.bmp" />
+    <Content Include="Graphics\subscript.png" />
+    <Content Include="Graphics\superscript.png" />
+    <Content Include="Graphics\toupper.ico" />
+    <None Include="Graphics\trolley.png" />
+    <Content Include="Graphics\underlne.ico" />
+    <Content Include="Graphics\undo.ico" />
+    <None Include="Graphics\Width4.gif" />
+    <None Include="Graphics\Width1.gif" />
+    <None Include="Graphics\Width2.gif" />
+    <None Include="Graphics\Width3.gif" />
+    <None Include="Graphics\WORKBK3.png" />
+    <None Include="Graphics\WORKBK3.gif" />
+    <Content Include="Graphics\WORKBK3.bmp" />
+    <Content Include="Graphics\WORKBOOK.ICO" />
+    <Content Include="Assets\Operations\AbridgedLifetable.xml" />
+    <Content Include="Assets\Operations\Agreement.xml" />
+    <Content Include="Assets\Operations\Bonferroni.xml" />
+    <Content Include="Assets\Operations\BoxWhiskerPlot.xml" />
+    <Content Include="Assets\Operations\ChiSquareGoodnessOfFit.xml" />
+    <Content Include="Assets\Operations\CiMeanY.xml" />
+    <Content Include="Assets\Operations\CochranePlot.xml" />
+    <Content Include="Assets\Operations\ConditionalLogisticRegression.xml" />
+    <Content Include="Assets\Operations\ControlPlot.xml" />
+    <Content Include="Assets\Operations\ChiWoolfScreen.xml" />
+    <Content Include="Assets\Operations\ChiWoolfWorksheet.xml" />
+    <Content Include="Assets\Operations\Chi2byNWithoutTrend.xml" />
+    <Content Include="Assets\Operations\Chi2byNLinearTrend.xml" />
+    <Content Include="Assets\Operations\Chi2byNWithTrend.xml" />
+    <Content Include="Assets\Operations\ClearMissing.xml" />
+    <Content Include="Assets\Operations\ApplyFunction.xml" />
+    <Content Include="Assets\Operations\Combine.xml" />
+    <Content Include="Assets\Operations\BoxWhiskerPlotText.xml" />
+    <Content Include="Assets\Operations\AnalysisOptions.xml" />
+    <Content Include="Assets\Operations\BarPlot.xml" />
+    <Content Include="Assets\Operations\CochranQ.xml" />
+    <Content Include="Assets\Operations\ChiGFSimulateExactP.xml" />
+    <Content Include="Assets\Operations\Chi2ByNWithTrendSimulateExactP.xml" />
+    <Content Include="Assets\Operations\UniversalAgreementSimulateExactP.xml" />
+    <Content Include="Assets\Operations\TransformZECDF.xml" />
+    <Content Include="Assets\Operations\TransformZSD.xml" />
+    <Content Include="Assets\Operations\MetaCorrelation.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Assets\Operations\UniversalAgreement.xml" />
+    <Content Include="Assets\Operations\KappaSimulateExactP.xml" />
+    <Content Include="Assets\Operations\KruskalSimulateExactP.xml" />
+    <Content Include="Assets\Operations\OldChiSquareGoodnessOfFit.xml" />
+    <Content Include="Assets\Operations\FriedmanSimulateExactP.xml" />
+    <Content Include="Assets\Operations\CoxBaselineToWorksheet.xml" />
+    <Content Include="Assets\Operations\LogisticRegressionFitToWorksheet.xml" />
+    <Content Include="Assets\Operations\PoissonRegressionFitToWorksheet.xml" />
+    <Content Include="Assets\Operations\PolynomialRegressionChangeDegree.xml" />
+    <Content Include="Assets\Operations\GroupedTwoWay.xml" />
+    <Content Include="Assets\Operations\GroupedOneWay.xml" />
+    <Content Include="Assets\Operations\StackedBar100PercentPlot.xml" />
+    <Content Include="Assets\Operations\StackedBarPlot.xml" />
+    <Content Include="Assets\Operations\ErrorPlot.xml" />
+    <Content Include="Assets\Operations\LinePlot.xml" />
+    <Content Include="Assets\Operations\ExploreContinuousDistributions.xml" />
+    <Content Include="Assets\Operations\SortInPlace.xml" />
+    <Content Include="Assets\Operations\ExportWorksheet.xml" />
+    <Content Include="Assets\Operations\ImportWorksheet.xml" />
+    <Content Include="Assets\Operations\GraphicsOptions.xml" />
+    <Content Include="Assets\Operations\MetaPlotOptions.xml" />
+    <Content Include="Assets\Operations\MetaCalculationOptions.xml" />
+    <Content Include="Assets\Operations\ExactFisher.xml" />
+    <Content Include="Assets\Operations\ScatterPlotText.xml" />
+    <Content Include="Assets\Operations\HistogramPlotText.xml" />
+    <Content Include="Assets\Operations\DistributionNonCentralT.xml" />
+    <Content Include="Assets\Operations\DistributionSpearman.xml" />
+    <Content Include="Assets\Operations\DistributionKendall.xml" />
+    <Content Include="Assets\Operations\DistributionChiSquare.xml" />
+    <Content Include="Assets\Operations\DistributionPoisson.xml" />
+    <Content Include="Assets\Operations\DistributionBinomial.xml" />
+    <Content Include="Assets\Operations\DistributionF.xml" />
+    <Content Include="Assets\Operations\DistributionT.xml" />
+    <Content Include="Assets\Operations\DistributionQ.xml" />
+    <Content Include="Assets\Operations\DistributionNormal.xml" />
+    <Content Include="Assets\Operations\FillSeries.xml" />
+    <Content Include="Assets\Operations\Detabulate.xml" />
+    <Content Include="Assets\Operations\Tabulate.xml" />
+    <Content Include="Assets\Operations\GroupExtract.xml" />
+    <Content Include="Assets\Operations\TextCode.xml" />
+    <Content Include="Assets\Operations\GroupCategorise.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Assets\Operations\TransformLogit.xml" />
+    <Content Include="Assets\Operations\TransformProbit.xml" />
+    <Content Include="Assets\Operations\TransformAngular.xml" />
+    <Content Include="Assets\Operations\TransformCumulate.xml" />
+    <Content Include="Assets\Operations\TransformLog10.xml" />
+    <Content Include="Assets\Operations\TransformLog.xml" />
+    <Content Include="Assets\Operations\Sort.xml" />
+    <Content Include="Assets\Operations\Rotate.xml" />
+    <Content Include="Assets\Operations\Rank.xml" />
+    <Content Include="Assets\Operations\RndWeibull.xml" />
+    <Content Include="Assets\Operations\RndBeta.xml" />
+    <Content Include="Assets\Operations\RndCauchy.xml" />
+    <Content Include="Assets\Operations\RndF.xml" />
+    <Content Include="Assets\Operations\RndT.xml" />
+    <Content Include="Assets\Operations\RndLogit.xml" />
+    <Content Include="Assets\Operations\RndLogNormal.xml" />
+    <Content Include="Assets\Operations\RndGeometric.xml" />
+    <Content Include="Assets\Operations\RndNegativeBinomial.xml" />
+    <Content Include="Assets\Operations\RndBinomial.xml" />
+    <Content Include="Assets\Operations\RndPoisson.xml" />
+    <Content Include="Assets\Operations\RndGamma.xml" />
+    <Content Include="Assets\Operations\RndExponential.xml" />
+    <Content Include="Assets\Operations\RndChiSquare.xml" />
+    <Content Include="Assets\Operations\RndNormal.xml" />
+    <Content Include="Assets\Operations\RndUniformAB.xml" />
+    <Content Include="Assets\Operations\RndUniform01.xml" />
+    <Content Include="Assets\Operations\PairMeans.xml" />
+    <Content Include="Assets\Operations\PairSlopes.xml" />
+    <Content Include="Assets\Operations\PairDifferences.xml" />
+    <Content Include="Assets\Operations\Normal.xml" />
+    <Content Include="Assets\Operations\GroupSplit.xml" />
+    <Content Include="Assets\Operations\Dates.xml" />
+    <Content Include="Assets\Operations\Standardize.xml" />
+    <Content Include="Assets\Operations\LadderPowers.xml" />
+    <Content Include="Assets\Operations\DummyVariables.xml" />
+    <Content Include="Assets\Operations\SizeCorrelation.xml" />
+    <Content Include="Assets\Operations\SizeSurvival.xml" />
+    <Content Include="Assets\Operations\SizePopSurvey.xml" />
+    <Content Include="Assets\Operations\SizeMatchProp.xml" />
+    <Content Include="Assets\Operations\SizeMatchCase.xml" />
+    <Content Include="Assets\Operations\SizeIndProp.xml" />
+    <Content Include="Assets\Operations\SizeIndCase.xml" />
+    <Content Include="Assets\Operations\SizeUnPaired.xml" />
+    <Content Include="Assets\Operations\SizePaired.xml" />
+    <Content Include="Assets\Operations\RandomUnPaired.xml" />
+    <Content Include="Assets\Operations\RandomBlock.xml" />
+    <Content Include="Assets\Operations\RandomPairs.xml" />
+    <Content Include="Assets\Operations\RandomXY.xml" />
+    <Content Include="Assets\Operations\RateSmrScreen.xml" />
+    <Content Include="Assets\Operations\RateDirectScreen.xml" />
+    <Content Include="Assets\Operations\RateCompareTwo.xml" />
+    <Content Include="Assets\Operations\KappaScreen.xml" />
+    <Content Include="Assets\Operations\PropUnPaired.xml" />
+    <Content Include="Assets\Operations\PropPairs.xml" />
+    <Content Include="Assets\Operations\PropSingle.xml" />
+    <Content Include="Assets\Operations\MiscLikely.xml" />
+    <Content Include="Assets\Operations\MiscNumberNeededToTreat.xml" />
+    <Content Include="Assets\Operations\MiscDiagnostic.xml" />
+    <Content Include="Assets\Operations\MiscRetroRisk.xml" />
+    <Content Include="Assets\Operations\MiscRelRisk.xml" />
+    <Content Include="Assets\Operations\MantelHaenszelScreen.xml" />
+    <Content Include="Assets\Operations\MiscFalseResult.xml" />
+    <Content Include="Assets\Operations\ExactMcNamarChi.xml" />
+    <Content Include="Assets\Operations\ExactChiRbyCScreen.xml" />
+    <Content Include="Assets\Operations\ExactChiRbyC.xml" />
+    <Content Include="Assets\Operations\RatePoissonCI.xml" />
+    <Content Include="Assets\Operations\ExactORCML.xml" />
+    <Content Include="Assets\Operations\ExactMcNamar.xml" />
+    <Content Include="Assets\Operations\ExactFisherRbyC.xml" />
+    <Content Include="Assets\Operations\ExactFisherX.xml" />
+    <Content Include="Assets\Operations\Chi2by2.xml" />
+    <Content Include="Assets\Operations\Stdrr.xml" />
+    <Content Include="Assets\Operations\RateDirect.xml" />
+    <Content Include="Assets\Operations\RateSmr.xml" />
+    <Content Include="Assets\Operations\ExactSign.xml" />
+    <Content Include="Assets\Operations\Crosstabs.xml" />
+    <Content Include="Assets\Operations\UniversalRCompare.xml" />
+    <Content Include="Assets\Operations\WeightedUnivariateSummary.xml" />
+    <Content Include="Assets\Operations\UnivariateSummary.xml" />
+    <Content Include="Assets\Operations\QuickSummary.xml" />
+    <Content Include="Assets\Operations\Frequency.xml" />
+    <Content Include="Assets\Operations\Preferences.xml" />
+    <Content Include="Assets\Operations\TUnpairedSummary.xml" />
+    <Content Include="Assets\Operations\TSingleSummary.xml" />
+    <Content Include="Assets\Operations\TPaired.xml" />
+    <Content Include="Assets\Operations\TSingle.xml" />
+    <Content Include="Assets\Operations\TUnpaired.xml" />
+    <Content Include="Assets\Operations\Normality.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Assets\Operations\TransformECDF.xml" />
+    <Content Include="Assets\Operations\ZSingle.xml" />
+    <Content Include="Assets\Operations\ZUnpaired.xml" />
+    <Content Include="Assets\Operations\CoxBaselineToReport.xml" />
+    <Content Include="Assets\Operations\CoxHazardPlots.xml" />
+    <Content Include="Assets\Operations\CoxHazardRatios.xml" />
+    <Content Include="Assets\Operations\CoxModelAnalysis.xml" />
+    <Content Include="Assets\Operations\CoxRegression.xml" />
+    <Content Include="Assets\Operations\CoxResiduals.xml" />
+    <Content Include="Assets\Operations\Cronbach.xml" />
+    <Content Include="Assets\Operations\Crossover.xml" />
+    <Content Include="Assets\Operations\Cuzick.xml" />
+    <Content Include="Assets\Operations\Diversity.xml" />
+    <Content Include="Assets\Operations\Dunnett.xml" />
+    <Content Include="Assets\Operations\Effect.xml" />
+    <Content Include="Assets\Operations\EqualityOfVariance.xml" />
+    <Content Include="Assets\Operations\FollowUpLifeTable.xml" />
+    <Content Include="Assets\Operations\Friedman.xml" />
+    <Content Include="Assets\Operations\FriedmanMulti.xml" />
+    <Content Include="Assets\Operations\Gini.xml" />
+    <Content Include="Assets\Operations\GroupedCovariance.xml" />
+    <Content Include="Assets\Operations\GroupedLinearity.xml" />
+    <Content Include="Assets\Operations\HistogramPlot.xml" />
+    <Content Include="Assets\Operations\InterpolateXY.xml" />
+    <Content Include="Assets\Operations\InterpolateYX.xml" />
+    <Content Include="Assets\Operations\KaplanMeier.xml" />
+    <Content Include="Assets\Operations\Kappa.xml" />
+    <Content Include="Assets\Operations\Kendall.xml" />
+    <Content Include="Assets\Operations\Kruskal.xml" />
+    <Content Include="Assets\Operations\KruskalWallisMulti.xml" />
+    <Content Include="Assets\Operations\LadderPlot.xml" />
+    <Content Include="Assets\Operations\LatinSquare.xml" />
+    <Content Include="Assets\Operations\LinearizedEstimateInterpolation.xml" />
+    <Content Include="Assets\Operations\LinearizedEstimatePlot.xml" />
+    <Content Include="Assets\Operations\LinearizedEstimates.xml" />
+    <Content Include="Assets\Operations\LinearizedEstimatesWithModel.xml" />
+    <Content Include="Assets\Operations\LogisticRegression.xml" />
+    <Content Include="Assets\Operations\LogisticRegressionBootstrap.xml" />
+    <Content Include="Assets\Operations\LogisticRegressionClassification.xml" />
+    <Content Include="Assets\Operations\LogisticRegressionDiagnostics.xml" />
+    <Content Include="Assets\Operations\LogisticRegressionFitToReport.xml" />
+    <Content Include="Assets\Operations\LogisticRegressionModel.xml" />
+    <Content Include="Assets\Operations\LogisticRegressionOdds.xml" />
+    <Content Include="Assets\Operations\LogisticRegressionPrediction.xml" />
+    <Content Include="Assets\Operations\Logit.xml" />
+    <Content Include="Assets\Operations\LogRank.xml" />
+    <Content Include="Assets\Operations\MannWhitney.xml" />
+    <Content Include="Assets\Operations\Mantel.xml" />
+    <Content Include="Assets\Operations\MetaIncidenceRateDifference.xml" />
+    <Content Include="Assets\Operations\MetaIncidenceRateRatio.xml" />
+    <Content Include="Assets\Operations\MetaSummary.xml" />
+    <Content Include="Assets\Operations\MultipleLinearRegression.xml" />
+    <Content Include="Assets\Operations\MultipleLinearRegressionAnova.xml" />
+    <Content Include="Assets\Operations\MultipleLinearRegressionBestSubset.xml" />
+    <Content Include="Assets\Operations\MultipleLinearRegressionPrediction.xml" />
+    <Content Include="Assets\Operations\MultipleLinearRegressionParameterDetail.xml" />
+    <Content Include="Assets\Operations\MultipleLinearRegressionResiduals.xml" />
+    <Content Include="Assets\Operations\NewmanKeuls.xml" />
+    <Content Include="Assets\Operations\NonparametricLinearRegression.xml" />
+    <Content Include="Assets\Operations\NormalPlot.xml" />
+    <Content Include="Assets\Operations\OneWay.xml" />
+    <Content Include="Assets\Operations\PCRCoefficients.xml" />
+    <Content Include="Assets\Operations\PCRCorrelation.xml" />
+    <Content Include="Assets\Operations\PCRCovariance.xml" />
+    <Content Include="Assets\Operations\PCRMatrix.xml" />
+    <Content Include="Assets\Operations\PCRScores.xml" />
+    <Content Include="Assets\Operations\PetoMeta.xml" />
+    <Content Include="Assets\Operations\PlotMultipleLinearRegressionResiduals.xml" />
+    <Content Include="Assets\Operations\PlotPredictionInterval.xml" />
+    <Content Include="Assets\Operations\PlotResidualsSimple.xml" />
+    <Content Include="Assets\Operations\PlotSeCi.xml" />
+    <Content Include="Assets\Operations\PlotSimpleLinearRegression.xml" />
+    <Content Include="Assets\Operations\PoissonConfidenceInterval.xml" />
+    <Content Include="Assets\Operations\PoissonRegression.xml" />
+    <Content Include="Assets\Operations\PoissonRegressionFitToReport.xml" />
+    <Content Include="Assets\Operations\PoissonRegressionIRR.xml" />
+    <Content Include="Assets\Operations\PoissonRegressionModel.xml" />
+    <Content Include="Assets\Operations\PoissonRegressionResiduals.xml" />
+    <Content Include="Assets\Operations\PolynomialAreaUnderCurve.xml" />
+    <Content Include="Assets\Operations\PolynomialRegression.xml" />
+    <Content Include="Assets\Operations\PolynomialRegressionBackInterpolation.xml" />
+    <Content Include="Assets\Operations\PolynomialRegressionConfidence.xml" />
+    <Content Include="Assets\Operations\PolynomialRegressionInterpolation.xml" />
+    <Content Include="Assets\Operations\PolynomialRegressionPlot.xml" />
+    <Content Include="Assets\Operations\Probit.xml" />
+    <Content Include="Assets\Operations\ProbitInterpolateX.xml" />
+    <Content Include="Assets\Operations\ProbitInterpolateY.xml" />
+    <Content Include="Assets\Operations\ProbitMore.xml" />
+    <Content Include="Assets\Operations\ProbitPlot.xml" />
+    <Content Include="Assets\Operations\ProportionMeta.xml" />
+    <Content Include="Assets\Operations\PyramidPlot.xml" />
+    <Content Include="Assets\Operations\Quantile.xml" />
+    <Content Include="Assets\Operations\Ranv.xml" />
+    <Content Include="Assets\Operations\ReferenceRange.xml" />
+    <Content Include="Assets\Operations\RelativeRiskMeta.xml" />
+    <Content Include="Assets\Operations\ReplicateTwoWay.xml" />
+    <Content Include="Assets\Operations\RiskDifference.xml" />
+    <Content Include="Assets\Operations\ROCPlot.xml" />
+    <Content Include="Assets\Operations\ScatterPlot.xml" />
+    <Content Include="Assets\Operations\Scheffe.xml" />
+    <Content Include="Assets\Operations\SimpleLinearRegression.xml" />
+    <Content Include="Assets\Operations\SimpleLinearRegressionCI.xml" />
+    <Content Include="Assets\Operations\Smirnov.xml" />
+    <Content Include="Assets\Operations\Spearman.xml" />
+    <Content Include="Assets\Operations\SpreadPlot.xml" />
+    <Content Include="Assets\Operations\SquaredRanks.xml" />
+    <Content Include="Assets\Operations\SurvivalPlot.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Assets\Operations\Tukey.xml" />
+    <Content Include="Assets\Operations\TwoWay.xml" />
+    <Content Include="Assets\Operations\TwoWayNested.xml" />
+    <Content Include="Assets\Operations\TwoWayNestedMeans.xml" />
+    <Content Include="Assets\Operations\VarianceRatio.xml" />
+    <Content Include="Assets\Operations\WeiLachin.xml" />
+    <Content Include="Assets\Operations\Wilcoxon.xml" />
+    <Content Include="Assets\Operations\Xxi.xml" />
+    <None Include="Properties\app.manifest" />
+    <None Include="Resources\sdbutton1.bmp" />
+    <None Include="Resources\Open.gif" />
+    <None Include="Resources\print.ico" />
+    <None Include="Resources\save.ico" />
+    <None Include="Resources\cut.ico" />
+    <None Include="Resources\paste.ico" />
+    <None Include="Resources\undo.ico" />
+    <None Include="Resources\copy.ico" />
+    <None Include="Resources\sdabout1.jpg" />
+    <None Include="Resources\RULERS.ICO" />
+    <None Include="Resources\ruler.ico" />
+    <None Include="Resources\l_indent_pos_lower.png" />
+    <None Include="Resources\l_indet_pos_upper.png" />
+    <None Include="Resources\r_indent_pos.png" />
+    <None Include="Resources\tab_pos.png" />
+    <None Include="Assets\Template\groupedtwoway.rtf" />
+    <None Include="Assets\Template\groupedoneway.rtf" />
+    <Content Include="UI\sd3.ico" />
+    <Content Include="UI\SD7.ICO" />
+    <Content Include="Assets\UserOperations\com.statsdirect.RTest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"
+xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
+</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>$(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)Expressions -make $(ProjectDir)Expressions\StatsDirectExpression.g
+$(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir)TextProcessing\ActiveRtf.g
+</PreBuildEvent>
+  </PropertyGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

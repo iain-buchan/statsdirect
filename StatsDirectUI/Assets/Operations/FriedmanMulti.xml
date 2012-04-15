@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>FriedmanMulti</name>
+	<friendly-name lang="en-GB">Friedman multiple comparisons</friendly-name>
+  <help chm-id="1223" />
+  <prerequisite-operation>Friedman</prerequisite-operation>
+  <steps>
+    <settings>
+      <parameters>
+        <confidence-interval>
+          <name>confidence</name>
+        </confidence-interval>
+        <frame>
+          <name>data</name>
+          <prompt>Select DATA</prompt>
+          <same-length>true</same-length>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>2</min-columns>
+          <max-columns>200</max-columns>
+          <ask-for-group-id>true</ask-for-group-id>
+        </frame>
+      </parameters>
+    </settings>
+		<builtin function-name="rptFrMultiple" />
+		<report filename="frmulti.rtf" />
+	</steps>
+</operation>

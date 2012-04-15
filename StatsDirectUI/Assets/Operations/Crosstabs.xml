@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>Crosstabs</name>
+	<friendly-name lang="en-GB">Cross-tabulate variables and analyse the tables</friendly-name>
+  <help chm-id="1042" />
+  <steps>
+    <settings>
+      <parameters>
+        <frame>
+          <name>c1</name>
+          <prompt>Select data for FIRST CLASSIFIER (ROWS)</prompt>
+          <mode>CategoryReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>c2</name>
+          <prompt>Select data for SECOND CLASSIFIER(S) (COLUMNS)</prompt>
+          <mode>CategoryReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>100</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+          <same-length-as>c1</same-length-as>
+        </frame>
+      </parameters>
+    </settings>
+    <test>
+      <condition>=Parameters["c2"].AsDataFrame.VariableCount == 1</condition>
+      <iftrue>
+        <settings>
+          <parameters>
+            <frame>
+              <name>c3</name>
+              <prompt>Select data for THIRD CLASSIFIER (STRATA) [skip if none]</prompt>
+              <cancel-skips-parameter>Skip</cancel-skips-parameter>
+              <mode>CategoryReplaceMissing</mode>
+              <min-columns>1</min-columns>
+              <max-columns>1</max-columns>
+              <clear-selection-first>true</clear-selection-first>
+              <same-length-as>c1</same-length-as>
+            </frame>
+          </parameters>
+        </settings>
+      </iftrue>
+    </test>
+    <settings>
+      <parameters>
+        <confidence-interval>
+          <name>cco</name>
+        </confidence-interval>
+      </parameters>
+    </settings>
+		<builtin function-name="rptCrosstabs" />
+		<report filename="xtabouter.rtf" />
+	</steps>
+</operation>

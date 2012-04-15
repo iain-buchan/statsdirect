@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>KaplanMeier</name>
+  <friendly-name lang="en-GB">Kaplan-Meier product limit estimates of survival</friendly-name>
+  <help chm-id="1323" />
+  <steps>
+    <settings>
+      <parameters>
+        <frame>
+          <name>times</name>
+          <prompt>Select data for TIMES</prompt>
+          <same-length>false</same-length>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>deaths</name>
+          <prompt>Select data for DEATHS/EVENTS or CENSORED{0}</prompt>
+          <same-length-as>times</same-length-as>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>groups</name>
+          <prompt>Select data for GROUP IDENTIFIER (skip if not grouped)</prompt>
+          <cancel-skips-parameter>Skip</cancel-skips-parameter>
+          <same-length-as>times</same-length-as>
+          <mode>CategoryReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
+      </parameters>
+    </settings>
+		<builtin function-name="rptKaplanMeier" />
+		<test>
+			<condition>=Parameters.ContainsKey("results")</condition>
+			<iftrue>
+				<output-frame frame-name="results" />
+			</iftrue>
+		</test>
+		<report filename="kap_meir.rtf" />
+    <settings>
+      <parameters>
+        <multiple-options>
+          <prompt>Select survival plot options</prompt>
+          <options>
+            <option name="use-tics" selected="true">Show censorship tics</option>
+            <option name="use-markers" selected="false">Show event markers</option>
+          </options>
+        </multiple-options>
+      </parameters>
+    </settings>
+		<builtin function-name="rptKaplanMeierPlots" />
+		<report filename="charts.rtf" />
+	</steps>
+</operation>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>CoxHazardPlots</name>
+	<friendly-name lang="en-GB">Survival and hazard plots</friendly-name>
+  <prerequisite-operation>CoxRegression</prerequisite-operation>
+  <steps>
+    <settings>
+      <parameters>
+        <multiple-options>
+          <prompt>Cox baseline options</prompt>
+          <options>
+            <option name="use-tics" selected="true">Use tics for censored times</option>
+            <option name="use-markers" selected="true">Use markers for all observed times</option>
+          </options>
+        </multiple-options>
+        <pick-from-list>
+          <name>group</name>
+          <prompt>Split by</prompt>
+          <source>subgroups</source>
+        </pick-from-list>
+      </parameters>
+    </settings>
+		<builtin function-name="rptCoxHazardPlots" />
+		<report filename="charts.rtf" />
+	</steps>
+</operation>

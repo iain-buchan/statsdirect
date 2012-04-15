@@ -1,0 +1,2057 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ON EACH BUILD, INCREMENT THE VERSION NUMBER IN STATSDIRECTUI - and remember this system ignores the fourth number! -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <Product
+    Id="*"
+    Name="StatsDirect"
+    Language="1033"
+    Version="!(bind.FileVersion.statsdirectexe)"
+    Manufacturer="StatsDirect Limited"
+    UpgradeCode="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
+    
+    <!-- Packaging: a single .msi with compressed files in .cab format, embedded in the .msi -->
+    <Package
+      InstallerVersion="200"
+      Compressed="yes"
+      Description="StatsDirect v3.0 beta"
+      Manufacturer="StatsDirect Limited"/>
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+    
+    <!-- Upgrading: we're willing to upgrade pretty much any version up to this one. -->
+    <!-- For now, that's 3.x only - we're not blowing away 2.x installs.  That will change. -->
+    <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
+    <Property Id="NEWERVERSIONINSTALLED" Secure="yes" />
+    <!-- SD3, upgrade code CA3C.... -->
+    <Upgrade Id="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
+      <UpgradeVersion OnlyDetect="no" Minimum="3.0.0.0" Maximum="!(bind.FileVersion.statsdirectexe)" Property="PREVIOUSVERSIONSINSTALLED" IncludeMinimum="yes" IncludeMaximum="no" />
+      <UpgradeVersion OnlyDetect="yes" Minimum="!(bind.FileVersion.statsdirectexe)" Maximum="99.99.9999.9999" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" IncludeMaximum="yes" />
+    </Upgrade>
+    <InstallExecuteSequence>
+      <RemoveExistingProducts Before="InstallInitialize"></RemoveExistingProducts>
+    </InstallExecuteSequence>
+
+    <!-- User interface and license -->
+    <!-- Licence file location -->
+    <WixVariable Id="WixUILicenseRtf" Value="Licence.rtf"/>
+    <!-- Tell the UI what property holds the install directory -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
+    <!-- Download location for the .Net framework, plus the custom action to invoke it -->
+    <Property Id="WixShellExecTarget" Value="http://www.microsoft.com/downloads/details.aspx?FamilyId=333325FD-AE52-4E35-B531-508D977D32A6" />
+    <CustomAction Id="LaunchFrameworkDownload" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+    <!-- Reference the property from netfx that tells us whether framework 3.5 is installed or not -->
+    <PropertyRef Id="NETFRAMEWORK35"/>
+    <!-- Custom bitmaps -->
+    <WixVariable Id="WixUIBannerBmp" Value="bannrbmp-sd.bmp"/>
+    <WixVariable Id="WixUIDialogBmp" Value="dlgbmp-sd.bmp"/>
+    <!-- Custom exit dialog text -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="StatsDirect will run faster if you leave five minutes for the optimisation process to finish." />
+    <!-- Now specify the UI - a little more complex than normal, as we've spliced in our own dialog for .Net framework detection -->
+    <UI>
+      <!-- Dialog to prompt the user for .Net installation -->
+      <Dialog Id="DotNetFxDlg" Title="[ProductName] Setup" Width="370" Height="270" NoMinimize="yes">
+        <Control Id="Description" Type="Text" X="50" Y="90" Width="270" Height="80" Transparent="yes" NoPrefix="yes" Text="StatsDirect 3 requires Microsoft's .Net Framework 3.5 or later, and it is not yet installed on this computer. Please install the .Net Framework from Microsoft's site. If you click the button below, setup will launch your Web browser to download the latest version of the .Net Framework." />
+        <Control Id="LaunchFrameworkDownloadButton" Type="PushButton" Text="Download .Net Framework 3.5 from www.microsoft.com" Width="250" Height="20" X="60" Y="170">
+          <Publish Event="DoAction" Value="LaunchFrameworkDownload">1</Publish>
+        </Control>
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back" />
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}Install .Net Framework 3.5</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+      </Dialog>
+
+      <!-- Modified dialog sequencing -->
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="DotNetFxDlg">NOT NETFRAMEWORK35</Publish>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">NETFRAMEWORK35</Publish>
+
+      <Publish Dialog="DotNetFxDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
+      <Publish Dialog="DotNetFxDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="DotNetFxDlg">NOT NETFRAMEWORK35</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">NETFRAMEWORK35</Publish>
+
+      <!-- From WixUI_InstallDir.wxs in the source -->
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="WixUI_Mode" Value="InstallDir" />
+
+      <DialogRef Id="BrowseDlg" />
+      <DialogRef Id="DiskCostDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+
+      <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
+      <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">LicenseAccepted = "1"</Publish>
+
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2">1</Publish>
+
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1">NOT Installed</Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed</Publish>
+
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+
+      <!-- Add/Remove Programs values.  Note ARPNOMODIFY disables the "modify" button as there's no optional part of the installation -->
+      <Property Id="ARPNOMODIFY" Value="1" />
+      <!-- <Property Id='ARPCOMMENTS'>any comments</Property> -->
+      <Property Id='ARPCONTACT'>support@statsdirect.com</Property>
+      <Property Id='ARPHELPLINK'>http://www.statsdirect.com/Support.aspx</Property>
+      <Property Id='ARPURLINFOABOUT'>http://www.statsdirect.com/Specifications.aspx</Property>
+      <Property Id='ARPURLUPDATEINFO'>http://www.statsdirect.com/Update.aspx</Property>
+      <!-- <Property Id='ARPHELPTELEPHONE'>Phone number for technical support - we don't offer one.</Property> -->
+      <!-- <Property Id='ARPREADME'>path</Property> -->
+
+      <ProgressText Action="RollbackCleanup">Removing backup files and starting StatsDirect optimisation</ProgressText>
+    </UI>
+    <!-- Link in the common dialog - usually we'd use a UIRef to WixUI_InstallDir, but we're using Common and referencing the bits we need due to the extra UI referencing above. -->
+    <UIRef Id="WixUI_Common" />
+    <!-- HACK: Newer 3.5s don't always define this. -->
+    <!-- <WixVariable Id="WixUICostingPopupOptOut" Value="1" Overridable="yes" /> -->
+
+    <!-- Icon in add/remove programs -->
+    <Icon Id="statsdirect.ico" SourceFile="..\StatsDirectUI\UI\Graphics\sd3.ico"/>
+    <Icon Id="calculator.ico" SourceFile="..\StatsDirectUI\UI\Graphics\calculator.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
+
+    <!-- Installation conditions: At least Windows XP, no service pack required, no upper limit on OS version-->
+    <!-- Verify not an Unknown OS -->
+    <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows XP, 2003, Vista, 2008 and 7.">
+      <![CDATA[Installed OR (VersionNT >= 501)]]>
+    </Condition>
+    <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
+    <Condition Message="A later version of [ProductName] is already installed. Setup will now exit.">
+      NOT NEWERVERSIONDETECTED OR Installed
+    </Condition>
+
+    <!-- Start menu shortcuts -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="4A69823D-392D-49aa-81DF-B660EA920F25">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="StatsDirect"
+                  Description="StatsDirect Statistical Package"
+                  Icon="statsdirect.ico"
+                  Target="[INSTALLLOCATION]StatsDirect.exe"
+                  WorkingDirectory="INSTALLLOCATION"
+                  />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirect" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+      <Component Id="CalculatorShortcut" Guid="827ED6FB-DBEC-42e7-A3B1-22BF3FAAB104">
+        <Shortcut Id="CalculatorStartMenuShortcut"
+                  Name="StatsDirect Calculator"
+                  Description="StatsDirect Calculator Utility"
+                  Icon="calculator.ico"
+                  Target="[INSTALLLOCATION]StatsDirect.exe"
+                  Arguments="-calculator"
+                  WorkingDirectory="INSTALLLOCATION"/>
+        <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirectCalculator" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Initial registry area so that SD3 can write its licence key -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="RegistryEntries" Guid="D2C93068-C954-4b1d-8516-355434B623D7">
+        <RegistryKey Root="HKCU"
+		     Key="Software\VB and VBA Program Settings"
+		     Action="create">
+          <Permission GenericAll="yes" User="[LogonUser]"/>
+          <RegistryValue Type="string" Value="Default Value"/>
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Start menu shortcut location -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="StatsDirect 3 Beta"/>
+      </Directory>
+      
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLLOCATION" Name="StatsDirect3" FileSource="$(var.StatsDirectUI.TargetDir)">
+          <Component Id="ProductComponent" Guid="CE038078-F78B-42b0-A547-8509996AA427">
+            <File Id="statsdirectexe" KeyPath="yes" Name="StatsDirect.exe" Checksum="yes">
+              <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="all" Priority="1" AppBaseDirectory="INSTALLLOCATION"/>
+              <Shortcut Id="StatsDirectExeDesktopShortcut"
+                        Directory="DesktopFolder"
+                        Name="StatsDirect"
+                        Description="StatsDirect Statistical Package"
+                        Icon="statsdirect.ico"
+                        WorkingDirectory="INSTALLLOCATION"
+                        Advertise="yes"/>
+            </File>
+          </Component>
+          
+          <!-- DevExpress rich text editor -->
+          <Component Id="DevExpress.Data.v11.2.dll" Guid="B7FCAF74-DED3-4f48-832A-5A6E805A9327">
+            <File Id="DevExpress.Data.v11.2.dll" KeyPath="yes" Name="DevExpress.Data.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.Printing.v11.2.Core.dll" Guid="*">
+            <File Id="DevExpress.Printing.v11.2.Core.dll" KeyPath="yes" Name="DevExpress.Printing.v11.2.Core.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.RichEdit.v11.2.Core.dll" Guid="D552AD66-42F6-41b3-B571-FAD68316252C">
+            <File Id="DevExpress.RichEdit.v11.2.Core.dll" KeyPath="yes" Name="DevExpress.RichEdit.v11.2.Core.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.Utils.v11.2.dll" Guid="53388A36-FA1E-4d39-9666-039D823B018E">
+            <File Id="DevExpress.Utils.v11.2.dll" KeyPath="yes" Name="DevExpress.Utils.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraBars.v11.2.dll" Guid="70D6715A-12B0-455f-AD0B-8D6668998158">
+            <File Id="DevExpress.XtraBars.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraBars.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraEditors.v11.2.dll" Guid="E29EC4C6-AF32-4528-90EE-26E4F155A10D">
+            <File Id="DevExpress.XtraEditors.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraEditors.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraPrinting.v11.2.dll" Guid="909422E4-2CED-41f7-9751-CFFA2492BAC3">
+            <File Id="DevExpress.XtraPrinting.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraPrinting.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraRichEdit.v11.2.dll" Guid="2103A789-004D-490d-96BE-397EBB110485">
+            <File Id="DevExpress.XtraRichEdit.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraRichEdit.v11.2.Extensions.dll" Guid="8A5EE4E2-7F48-4514-9FC3-01D0D8A88EB5">
+            <File Id="DevExpress.XtraRichEdit.v11.2.Extensions.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v11.2.Extensions.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraRichEdit.v11.2.Printing.dll" Guid="99B6B312-8BD3-41ba-9AA7-93A233D66A8B">
+            <File Id="DevExpress.XtraRichEdit.v11.2.Printing.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v11.2.Printing.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraTreeList.v11.2.dll" Guid="92AAA0A5-E4B8-4d66-9005-EFD821878251">
+            <File Id="DevExpress.XtraTreeList.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraTreeList.v11.2.dll" Checksum="yes" />
+          </Component>
+
+          <!-- SD3 -->
+          <Component Id="menu.xml" Guid="F62D48FD-865B-49bc-9EA1-3892E80D8F3D">
+            <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
+          </Component>
+          <Component Id="SpreadsheetGear.dll" Guid="BC8F8EF3-AE68-43c3-9568-746D5353F902">
+            <File Id="SpreadsheetGear.dll" KeyPath="yes" Name="SpreadsheetGear.dll" Checksum="yes" />
+          </Component>
+          <Component Id="Antlr3.Runtime.dll" Guid="5959E801-C4AF-4647-A89D-3FC92B46D0DD">
+            <File Id="Antlr3.Runtime.dll" KeyPath="yes" Name="Antlr3.Runtime.dll" Checksum="yes" />
+          </Component>
+          <Component Id="STATSDIRECT.chm" Guid="EAF352F1-416D-4978-90DE-9829CA550A9D">
+            <File Id="STATSDIRECT.chm" KeyPath="yes" Name="STATSDIRECT.chm" Checksum="yes" />
+          </Component>
+          <Component Id="StatsDirect.exe.config" Guid="C7A3E2B0-BCD1-4ee1-B603-5B2D8F0EB07F">
+            <File Id="StatsDirect.exe.config" KeyPath="yes" Name="StatsDirect.exe.config" Checksum="yes" />
+          </Component>
+
+          <!-- Sample data files -->
+          <Directory Id="data" Name="data">
+            <Component Id="test.xls" Guid="*">
+              <File Id="test.xls" KeyPath="yes" Name="test.xls" Checksum="yes" />
+            </Component>
+          </Directory>
+
+          <!-- Operations -->
+          <Directory Id="Operations" Name="Operations">
+            <Component Id="AbridgedLifetable.xml" Guid="*">
+              <File Id="AbridgedLifetable.xml" Name="AbridgedLifetable.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Agreement.xml" Guid="*">
+              <File Id="Agreement.xml" Name="Agreement.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="AnalysisOptions.xml" Guid="*">
+              <File Id="AnalysisOptions.xml" Name="AnalysisOptions.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ApplyFunction.xml" Guid="*">
+              <File Id="ApplyFunction.xml" Name="ApplyFunction.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="BarPlot.xml" Guid="*">
+              <File Id="BarPlot.xml" Name="BarPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Bonferroni.xml" Guid="*">
+              <File Id="Bonferroni.xml" Name="Bonferroni.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="BoxWhiskerPlot.xml" Guid="*">
+              <File Id="BoxWhiskerPlot.xml" Name="BoxWhiskerPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="BoxWhiskerPlotText.xml" Guid="*">
+              <File Id="BoxWhiskerPlotText.xml" Name="BoxWhiskerPlotText.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Chi2by2.xml" Guid="*">
+              <File Id="Chi2by2.xml" Name="Chi2by2.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Chi2byNLinearTrend.xml" Guid="*">
+              <File Id="Chi2byNLinearTrend.xml" Name="Chi2byNLinearTrend.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Chi2byNWithoutTrend.xml" Guid="*">
+              <File Id="Chi2byNWithoutTrend.xml" Name="Chi2byNWithoutTrend.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Chi2byNWithTrend.xml" Guid="*">
+              <File Id="Chi2byNWithTrend.xml" Name="Chi2byNWithTrend.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Chi2byNWithTrendSimulateExactP.xml" Guid="*">
+              <File Id="Chi2byNWithTrendSimulateExactP.xml" Name="Chi2byNWithTrendSimulateExactP.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ChiSquareGoodnessOfFit.xml" Guid="*">
+              <File Id="ChiSquareGoodnessOfFit.xml" Name="ChiSquareGoodnessOfFit.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ChiWoolfScreen.xml" Guid="*">
+              <File Id="ChiWoolfScreen.xml" Name="ChiWoolfScreen.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ChiWoolfWorksheet.xml" Guid="*">
+              <File Id="ChiWoolfWorksheet.xml" Name="ChiWoolfWorksheet.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CiMeanY.xml" Guid="*">
+              <File Id="CiMeanY.xml" Name="CiMeanY.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ClearMissing.xml" Guid="*">
+              <File Id="ClearMissing.xml" Name="ClearMissing.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CochranePlot.xml" Guid="*">
+              <File Id="CochranePlot.xml" Name="CochranePlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CochranQ.xml" Guid="*">
+              <File Id="CochranQ.xml" Name="CochranQ.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Combine.xml" Guid="*">
+              <File Id="Combine.xml" Name="Combine.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ConditionalLogisticRegression.xml" Guid="*">
+              <File Id="ConditionalLogisticRegression.xml" Name="ConditionalLogisticRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ControlPlot.xml" Guid="*">
+              <File Id="ControlPlot.xml" Name="ControlPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CoxBaselineToReport.xml" Guid="*">
+              <File Id="CoxBaselineToReport.xml" Name="CoxBaselineToReport.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CoxBaselineToWorksheet.xml" Guid="*">
+              <File Id="CoxBaselineToWorksheet.xml" Name="CoxBaselineToWorksheet.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CoxHazardPlots.xml" Guid="*">
+              <File Id="CoxHazardPlots.xml" Name="CoxHazardPlots.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CoxHazardRatios.xml" Guid="*">
+              <File Id="CoxHazardRatios.xml" Name="CoxHazardRatios.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CoxModelAnalysis.xml" Guid="*">
+              <File Id="CoxModelAnalysis.xml" Name="CoxModelAnalysis.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CoxRegression.xml" Guid="*">
+              <File Id="CoxRegression.xml" Name="CoxRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="CoxResiduals.xml" Guid="*">
+              <File Id="CoxResiduals.xml" Name="CoxResiduals.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Cronbach.xml" Guid="*">
+              <File Id="Cronbach.xml" Name="Cronbach.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Crossover.xml" Guid="*">
+              <File Id="Crossover.xml" Name="Crossover.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Crosstabs.xml" Guid="*">
+              <File Id="Crosstabs.xml" Name="Crosstabs.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Cuzick.xml" Guid="*">
+              <File Id="Cuzick.xml" Name="Cuzick.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Dates.xml" Guid="*">
+              <File Id="Dates.xml" Name="Dates.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Detabulate.xml" Guid="*">
+              <File Id="Detabulate.xml" Name="Detabulate.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionBinomial.xml" Guid="*">
+              <File Id="DistributionBinomial.xml" Name="DistributionBinomial.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionChiSquare.xml" Guid="*">
+              <File Id="DistributionChiSquare.xml" Name="DistributionChiSquare.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionF.xml" Guid="*">
+              <File Id="DistributionF.xml" Name="DistributionF.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionKendall.xml" Guid="*">
+              <File Id="DistributionKendall.xml" Name="DistributionKendall.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionNonCentralT.xml" Guid="*">
+              <File Id="DistributionNonCentralT.xml" Name="DistributionNonCentralT.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionNormal.xml" Guid="*">
+              <File Id="DistributionNormal.xml" Name="DistributionNormal.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionPoisson.xml" Guid="*">
+              <File Id="DistributionPoisson.xml" Name="DistributionPoisson.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionQ.xml" Guid="*">
+              <File Id="DistributionQ.xml" Name="DistributionQ.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionSpearman.xml" Guid="*">
+              <File Id="DistributionSpearman.xml" Name="DistributionSpearman.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DistributionT.xml" Guid="*">
+              <File Id="DistributionT.xml" Name="DistributionT.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Diversity.xml" Guid="*">
+              <File Id="Diversity.xml" Name="Diversity.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="DummyVariables.xml" Guid="*">
+              <File Id="DummyVariables.xml" Name="DummyVariables.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Dunnett.xml" Guid="*">
+              <File Id="Dunnett.xml" Name="Dunnett.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Effect.xml" Guid="*">
+              <File Id="Effect.xml" Name="Effect.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="EqualityOfVariance.xml" Guid="*">
+              <File Id="EqualityOfVariance.xml" Name="EqualityOfVariance.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ErrorPlot.xml" Guid="*">
+              <File Id="ErrorPlot.xml" Name="ErrorPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactChiRbyC.xml" Guid="*">
+              <File Id="ExactChiRbyC.xml" Name="ExactChiRbyC.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactChiRbyCScreen.xml" Guid="*">
+              <File Id="ExactChiRbyCScreen.xml" Name="ExactChiRbyCScreen.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactFisher.xml" Guid="*">
+              <File Id="ExactFisher.xml" Name="ExactFisher.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactFisherRbyC.xml" Guid="*">
+              <File Id="ExactFisherRbyC.xml" Name="ExactFisherRbyC.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactFisherX.xml" Guid="*">
+              <File Id="ExactFisherX.xml" Name="ExactFisherX.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactMcNamar.xml" Guid="*">
+              <File Id="ExactMcNamar.xml" Name="ExactMcNamar.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactMcNamarChi.xml" Guid="*">
+              <File Id="ExactMcNamarChi.xml" Name="ExactMcNamarChi.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactORCML.xml" Guid="*">
+              <File Id="ExactORCML.xml" Name="ExactORCML.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExactSign.xml" Guid="*">
+              <File Id="ExactSign.xml" Name="ExactSign.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExploreContinuousDistributions.xml" Guid="*">
+              <File Id="ExploreContinuousDistributions.xml" Name="ExploreContinuousDistributions.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ExportWorksheet.xml" Guid="*">
+              <File Id="ExportWorksheet.xml" Name="ExportWorksheet.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="FillSeries.xml" Guid="*">
+              <File Id="FillSeries.xml" Name="FillSeries.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="FollowUpLifeTable.xml" Guid="*">
+              <File Id="FollowUpLifeTable.xml" Name="FollowUpLifeTable.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Frequency.xml" Guid="*">
+              <File Id="Frequency.xml" Name="Frequency.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Friedman.xml" Guid="*">
+              <File Id="Friedman.xml" Name="Friedman.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="FriedmanSimulateExactP.xml" Guid="*">
+              <File Id="FriedmanSimulateExactP.xml" Name="FriedmanSimulateExactP.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="FriedmanMulti.xml" Guid="*">
+              <File Id="FriedmanMulti.xml" Name="FriedmanMulti.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Gini.xml" Guid="*">
+              <File Id="Gini.xml" Name="Gini.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GraphicsOptions.xml" Guid="*">
+              <File Id="GraphicsOptions.xml" Name="GraphicsOptions.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GroupCategorise.xml" Guid="*">
+              <File Id="GroupCategorise.xml" Name="GroupCategorise.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GroupedCovariance.xml" Guid="*">
+              <File Id="GroupedCovariance.xml" Name="GroupedCovariance.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GroupedLinearity.xml" Guid="*">
+              <File Id="GroupedLinearity.xml" Name="GroupedLinearity.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GroupedOneWay.xml" Guid="*">
+              <File Id="GroupedOneWay.xml" Name="GroupedOneWay.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GroupedTwoWay.xml" Guid="*">
+              <File Id="GroupedTwoWay.xml" Name="GroupedTwoWay.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GroupExtract.xml" Guid="*">
+              <File Id="GroupExtract.xml" Name="GroupExtract.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GroupSplit.xml" Guid="*">
+              <File Id="GroupSplit.xml" Name="GroupSplit.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="HistogramPlot.xml" Guid="*">
+              <File Id="HistogramPlot.xml" Name="HistogramPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="HistogramPlotText.xml" Guid="*">
+              <File Id="HistogramPlotText.xml" Name="HistogramPlotText.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ImportWorksheet.xml" Guid="*">
+              <File Id="ImportWorksheet.xml" Name="ImportWorksheet.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="InterpolateXY.xml" Guid="*">
+              <File Id="InterpolateXY.xml" Name="InterpolateXY.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="InterpolateYX.xml" Guid="*">
+              <File Id="InterpolateYX.xml" Name="InterpolateYX.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="KaplanMeier.xml" Guid="*">
+              <File Id="KaplanMeier.xml" Name="KaplanMeier.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Kappa.xml" Guid="*">
+              <File Id="Kappa.xml" Name="Kappa.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="KappaScreen.xml" Guid="*">
+              <File Id="KappaScreen.xml" Name="KappaScreen.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="KappaSimulateExactP.xml" Guid="*">
+              <File Id="KappaSimulateExactP.xml" Name="KappaSimulateExactP.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Kendall.xml" Guid="*">
+              <File Id="Kendall.xml" Name="Kendall.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Kruskal.xml" Guid="*">
+              <File Id="Kruskal.xml" Name="Kruskal.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="KruskalWallisMulti.xml" Guid="*">
+              <File Id="KruskalWallisMulti.xml" Name="KruskalWallisMulti.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LadderPlot.xml" Guid="*">
+              <File Id="LadderPlot.xml" Name="LadderPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LadderPowers.xml" Guid="*">
+              <File Id="LadderPowers.xml" Name="LadderPowers.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LatinSquare.xml" Guid="*">
+              <File Id="LatinSquare.xml" Name="LatinSquare.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LinearizedEstimateInterpolation.xml" Guid="*">
+              <File Id="LinearizedEstimateInterpolation.xml" Name="LinearizedEstimateInterpolation.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LinearizedEstimatePlot.xml" Guid="*">
+              <File Id="LinearizedEstimatePlot.xml" Name="LinearizedEstimatePlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LinearizedEstimates.xml" Guid="*">
+              <File Id="LinearizedEstimates.xml" Name="LinearizedEstimates.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LinearizedEstimatesWithModel.xml" Guid="*">
+              <File Id="LinearizedEstimatesWithModel.xml" Name="LinearizedEstimatesWithModel.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LinePlot.xml" Guid="*">
+              <File Id="LinePlot.xml" Name="LinePlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegression.xml" Guid="*">
+              <File Id="LogisticRegression.xml" Name="LogisticRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegressionBootstrap.xml" Guid="*">
+              <File Id="LogisticRegressionBootstrap.xml" Name="LogisticRegressionBootstrap.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegressionClassification.xml" Guid="*">
+              <File Id="LogisticRegressionClassification.xml" Name="LogisticRegressionClassification.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegressionDiagnostics.xml" Guid="*">
+              <File Id="LogisticRegressionDiagnostics.xml" Name="LogisticRegressionDiagnostics.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegressionFitToReport.xml" Guid="*">
+              <File Id="LogisticRegressionFitToReport.xml" Name="LogisticRegressionFitToReport.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegressionFitToWorksheet.xml" Guid="*">
+              <File Id="LogisticRegressionFitToWorksheet.xml" Name="LogisticRegressionFitToWorksheet.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegressionModel.xml" Guid="*">
+              <File Id="LogisticRegressionModel.xml" Name="LogisticRegressionModel.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegressionOdds.xml" Guid="*">
+              <File Id="LogisticRegressionOdds.xml" Name="LogisticRegressionOdds.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogisticRegressionPrediction.xml" Guid="*">
+              <File Id="LogisticRegressionPrediction.xml" Name="LogisticRegressionPrediction.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Logit.xml" Guid="*">
+              <File Id="Logit.xml" Name="Logit.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="LogRank.xml" Guid="*">
+              <File Id="LogRank.xml" Name="LogRank.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MannWhitney.xml" Guid="*">
+              <File Id="MannWhitney.xml" Name="MannWhitney.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Mantel.xml" Guid="*">
+              <File Id="Mantel.xml" Name="Mantel.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MantelHaenszelScreen.xml" Guid="*">
+              <File Id="MantelHaenszelScreen.xml" Name="MantelHaenszelScreen.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MetaCalculationOptions.xml" Guid="*">
+              <File Id="MetaCalculationOptions.xml" Name="MetaCalculationOptions.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MetaCorrelation.xml" Guid="*">
+              <File Id="MetaCorrelation.xml" Name="MetaCorrelation.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MetaIncidenceRateDifference.xml" Guid="*">
+              <File Id="MetaIncidenceRateDifference.xml" Name="MetaIncidenceRateDifference.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MetaIncidenceRateRatio.xml" Guid="*">
+              <File Id="MetaIncidenceRateRatio.xml" Name="MetaIncidenceRateRatio.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MetaPlotOptions.xml" Guid="*">
+              <File Id="MetaPlotOptions.xml" Name="MetaPlotOptions.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MetaSummary.xml" Guid="*">
+              <File Id="MetaSummary.xml" Name="MetaSummary.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MiscDiagnostic.xml" Guid="*">
+              <File Id="MiscDiagnostic.xml" Name="MiscDiagnostic.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MiscFalseResult.xml" Guid="*">
+              <File Id="MiscFalseResult.xml" Name="MiscFalseResult.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MiscLikely.xml" Guid="*">
+              <File Id="MiscLikely.xml" Name="MiscLikely.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MiscNumberNeededToTreat.xml" Guid="*">
+              <File Id="MiscNumberNeededToTreat.xml" Name="MiscNumberNeededToTreat.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MiscRelRisk.xml" Guid="*">
+              <File Id="MiscRelRisk.xml" Name="MiscRelRisk.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MiscRetroRisk.xml" Guid="*">
+              <File Id="MiscRetroRisk.xml" Name="MiscRetroRisk.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MultipleLinearRegression.xml" Guid="*">
+              <File Id="MultipleLinearRegression.xml" Name="MultipleLinearRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MultipleLinearRegressionAnova.xml" Guid="*">
+              <File Id="MultipleLinearRegressionAnova.xml" Name="MultipleLinearRegressionAnova.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MultipleLinearRegressionBestSubset.xml" Guid="*">
+              <File Id="MultipleLinearRegressionBestSubset.xml" Name="MultipleLinearRegressionBestSubset.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MultipleLinearRegressionParameterDetail.xml" Guid="*">
+              <File Id="MultipleLinearRegressionParameterDetail.xml" Name="MultipleLinearRegressionParameterDetail.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MultipleLinearRegressionPrediction.xml" Guid="*">
+              <File Id="MultipleLinearRegressionPrediction.xml" Name="MultipleLinearRegressionPrediction.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="MultipleLinearRegressionResiduals.xml" Guid="*">
+              <File Id="MultipleLinearRegressionResiduals.xml" Name="MultipleLinearRegressionResiduals.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="NewmanKeuls.xml" Guid="*">
+              <File Id="NewmanKeuls.xml" Name="NewmanKeuls.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="NonparametricLinearRegression.xml" Guid="*">
+              <File Id="NonparametricLinearRegression.xml" Name="NonparametricLinearRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Normal.xml" Guid="*">
+              <File Id="Normal.xml" Name="Normal.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="NormalPlot.xml" Guid="*">
+              <File Id="NormalPlot.xml" Name="NormalPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="OneWay.xml" Guid="*">
+              <File Id="OneWay.xml" Name="OneWay.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Operation.xsd" Guid="*">
+              <File Id="Operation.xsd" Name="Operation.xsd" KeyPath="yes" />
+            </Component>
+            <Component Id="PairDifferences.xml" Guid="*">
+              <File Id="PairDifferences.xml" Name="PairDifferences.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PairMeans.xml" Guid="*">
+              <File Id="PairMeans.xml" Name="PairMeans.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PairSlopes.xml" Guid="*">
+              <File Id="PairSlopes.xml" Name="PairSlopes.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PCRCoefficients.xml" Guid="*">
+              <File Id="PCRCoefficients.xml" Name="PCRCoefficients.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PCRCorrelation.xml" Guid="*">
+              <File Id="PCRCorrelation.xml" Name="PCRCorrelation.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PCRCovariance.xml" Guid="*">
+              <File Id="PCRCovariance.xml" Name="PCRCovariance.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PCRMatrix.xml" Guid="*">
+              <File Id="PCRMatrix.xml" Name="PCRMatrix.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PCRScores.xml" Guid="*">
+              <File Id="PCRScores.xml" Name="PCRScores.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PetoMeta.xml" Guid="*">
+              <File Id="PetoMeta.xml" Name="PetoMeta.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PlotMultipleLinearRegressionResiduals.xml" Guid="*">
+              <File Id="PlotMultipleLinearRegressionResiduals.xml" Name="PlotMultipleLinearRegressionResiduals.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PlotPredictionInterval.xml" Guid="*">
+              <File Id="PlotPredictionInterval.xml" Name="PlotPredictionInterval.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PlotResidualsSimple.xml" Guid="*">
+              <File Id="PlotResidualsSimple.xml" Name="PlotResidualsSimple.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PlotSeCi.xml" Guid="*">
+              <File Id="PlotSeCi.xml" Name="PlotSeCi.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PlotSimpleLinearRegression.xml" Guid="*">
+              <File Id="PlotSimpleLinearRegression.xml" Name="PlotSimpleLinearRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PoissonConfidenceInterval.xml" Guid="*">
+              <File Id="PoissonConfidenceInterval.xml" Name="PoissonConfidenceInterval.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PoissonRegression.xml" Guid="*">
+              <File Id="PoissonRegression.xml" Name="PoissonRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PoissonRegressionFitToReport.xml" Guid="*">
+              <File Id="PoissonRegressionFitToReport.xml" Name="PoissonRegressionFitToReport.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PoissonRegressionFitToWorksheet.xml" Guid="*">
+              <File Id="PoissonRegressionFitToWorksheet.xml" Name="PoissonRegressionFitToWorksheet.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PoissonRegressionIRR.xml" Guid="*">
+              <File Id="PoissonRegressionIRR.xml" Name="PoissonRegressionIRR.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PoissonRegressionModel.xml" Guid="*">
+              <File Id="PoissonRegressionModel.xml" Name="PoissonRegressionModel.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PoissonRegressionResiduals.xml" Guid="*">
+              <File Id="PoissonRegressionResiduals.xml" Name="PoissonRegressionResiduals.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PolynomialAreaUnderCurve.xml" Guid="*">
+              <File Id="PolynomialAreaUnderCurve.xml" Name="PolynomialAreaUnderCurve.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PolynomialRegression.xml" Guid="*">
+              <File Id="PolynomialRegression.xml" Name="PolynomialRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PolynomialRegressionBackInterpolation.xml" Guid="*">
+              <File Id="PolynomialRegressionBackInterpolation.xml" Name="PolynomialRegressionBackInterpolation.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PolynomialRegressionConfidence.xml" Guid="*">
+              <File Id="PolynomialRegressionConfidence.xml" Name="PolynomialRegressionConfidence.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PolynomialRegressionInterpolation.xml" Guid="*">
+              <File Id="PolynomialRegressionInterpolation.xml" Name="PolynomialRegressionInterpolation.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PolynomialRegressionPlot.xml" Guid="*">
+              <File Id="PolynomialRegressionPlot.xml" Name="PolynomialRegressionPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Preferences.xml" Guid="*">
+              <File Id="Preferences.xml" Name="Preferences.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Probit.xml" Guid="*">
+              <File Id="Probit.xml" Name="Probit.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ProbitInterpolateX.xml" Guid="*">
+              <File Id="ProbitInterpolateX.xml" Name="ProbitInterpolateX.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ProbitInterpolateY.xml" Guid="*">
+              <File Id="ProbitInterpolateY.xml" Name="ProbitInterpolateY.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ProbitMore.xml" Guid="*">
+              <File Id="ProbitMore.xml" Name="ProbitMore.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ProbitPlot.xml" Guid="*">
+              <File Id="ProbitPlot.xml" Name="ProbitPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ProportionMeta.xml" Guid="*">
+              <File Id="ProportionMeta.xml" Name="ProportionMeta.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PropPairs.xml" Guid="*">
+              <File Id="PropPairs.xml" Name="PropPairs.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PropSingle.xml" Guid="*">
+              <File Id="PropSingle.xml" Name="PropSingle.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PropUnPaired.xml" Guid="*">
+              <File Id="PropUnPaired.xml" Name="PropUnPaired.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PyramidPlot.xml" Guid="*">
+              <File Id="PyramidPlot.xml" Name="PyramidPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Quantile.xml" Guid="*">
+              <File Id="Quantile.xml" Name="Quantile.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="QuickSummary.xml" Guid="*">
+              <File Id="QuickSummary.xml" Name="QuickSummary.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RandomBlock.xml" Guid="*">
+              <File Id="RandomBlock.xml" Name="RandomBlock.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RandomPairs.xml" Guid="*">
+              <File Id="RandomPairs.xml" Name="RandomPairs.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RandomUnPaired.xml" Guid="*">
+              <File Id="RandomUnPaired.xml" Name="RandomUnPaired.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RandomXY.xml" Guid="*">
+              <File Id="RandomXY.xml" Name="RandomXY.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Rank.xml" Guid="*">
+              <File Id="Rank.xml" Name="Rank.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Ranv.xml" Guid="*">
+              <File Id="Ranv.xml" Name="Ranv.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RateCompareTwo.xml" Guid="*">
+              <File Id="RateCompareTwo.xml" Name="RateCompareTwo.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RateDirect.xml" Guid="*">
+              <File Id="RateDirect.xml" Name="RateDirect.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RateDirectScreen.xml" Guid="*">
+              <File Id="RateDirectScreen.xml" Name="RateDirectScreen.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RatePoissonCI.xml" Guid="*">
+              <File Id="RatePoissonCI.xml" Name="RatePoissonCI.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RateSmr.xml" Guid="*">
+              <File Id="RateSmr.xml" Name="RateSmr.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RateSmrScreen.xml" Guid="*">
+              <File Id="RateSmrScreen.xml" Name="RateSmrScreen.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ReferenceRange.xml" Guid="*">
+              <File Id="ReferenceRange.xml" Name="ReferenceRange.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RelativeRiskMeta.xml" Guid="*">
+              <File Id="RelativeRiskMeta.xml" Name="RelativeRiskMeta.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ReplicateTwoWay.xml" Guid="*">
+              <File Id="ReplicateTwoWay.xml" Name="ReplicateTwoWay.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RiskDifference.xml" Guid="*">
+              <File Id="RiskDifference.xml" Name="RiskDifference.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndBeta.xml" Guid="*">
+              <File Id="RndBeta.xml" Name="RndBeta.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndBinomial.xml" Guid="*">
+              <File Id="RndBinomial.xml" Name="RndBinomial.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndCauchy.xml" Guid="*">
+              <File Id="RndCauchy.xml" Name="RndCauchy.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndChiSquare.xml" Guid="*">
+              <File Id="RndChiSquare.xml" Name="RndChiSquare.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndExponential.xml" Guid="*">
+              <File Id="RndExponential.xml" Name="RndExponential.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndF.xml" Guid="*">
+              <File Id="RndF.xml" Name="RndF.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndGamma.xml" Guid="*">
+              <File Id="RndGamma.xml" Name="RndGamma.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndGeometric.xml" Guid="*">
+              <File Id="RndGeometric.xml" Name="RndGeometric.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndLogit.xml" Guid="*">
+              <File Id="RndLogit.xml" Name="RndLogit.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndLogNormal.xml" Guid="*">
+              <File Id="RndLogNormal.xml" Name="RndLogNormal.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndNegativeBinomial.xml" Guid="*">
+              <File Id="RndNegativeBinomial.xml" Name="RndNegativeBinomial.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndNormal.xml" Guid="*">
+              <File Id="RndNormal.xml" Name="RndNormal.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndPoisson.xml" Guid="*">
+              <File Id="RndPoisson.xml" Name="RndPoisson.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndT.xml" Guid="*">
+              <File Id="RndT.xml" Name="RndT.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndUniform01.xml" Guid="*">
+              <File Id="RndUniform01.xml" Name="RndUniform01.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndUniformAB.xml" Guid="*">
+              <File Id="RndUniformAB.xml" Name="RndUniformAB.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="RndWeibull.xml" Guid="*">
+              <File Id="RndWeibull.xml" Name="RndWeibull.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ROCPlot.xml" Guid="*">
+              <File Id="ROCPlot.xml" Name="ROCPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Rotate.xml" Guid="*">
+              <File Id="Rotate.xml" Name="Rotate.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ScatterPlot.xml" Guid="*">
+              <File Id="ScatterPlot.xml" Name="ScatterPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ScatterPlotText.xml" Guid="*">
+              <File Id="ScatterPlotText.xml" Name="ScatterPlotText.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Scheffe.xml" Guid="*">
+              <File Id="Scheffe.xml" Name="Scheffe.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="normality.xml" Guid="*">
+              <File Id="normality.xml" Name="normality.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SimpleLinearRegression.xml" Guid="*">
+              <File Id="SimpleLinearRegression.xml" Name="SimpleLinearRegression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SimpleLinearRegressionCI.xml" Guid="*">
+              <File Id="SimpleLinearRegressionCI.xml" Name="SimpleLinearRegressionCI.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizeCorrelation.xml" Guid="*">
+              <File Id="SizeCorrelation.xml" Name="SizeCorrelation.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizeIndCase.xml" Guid="*">
+              <File Id="SizeIndCase.xml" Name="SizeIndCase.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizeIndProp.xml" Guid="*">
+              <File Id="SizeIndProp.xml" Name="SizeIndProp.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizeMatchCase.xml" Guid="*">
+              <File Id="SizeMatchCase.xml" Name="SizeMatchCase.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizeMatchProp.xml" Guid="*">
+              <File Id="SizeMatchProp.xml" Name="SizeMatchProp.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizePaired.xml" Guid="*">
+              <File Id="SizePaired.xml" Name="SizePaired.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizePopSurvey.xml" Guid="*">
+              <File Id="SizePopSurvey.xml" Name="SizePopSurvey.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizeSurvival.xml" Guid="*">
+              <File Id="SizeSurvival.xml" Name="SizeSurvival.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SizeUnPaired.xml" Guid="*">
+              <File Id="SizeUnPaired.xml" Name="SizeUnPaired.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Smirnov.xml" Guid="*">
+              <File Id="Smirnov.xml" Name="Smirnov.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Sort.xml" Guid="*">
+              <File Id="Sort.xml" Name="Sort.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SortByExpression.xml" Guid="*">
+              <File Id="SortByExpression.xml" Name="SortByExpression.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SortInPlace.xml" Guid="*">
+              <File Id="SortInPlace.xml" Name="SortInPlace.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Spearman.xml" Guid="*">
+              <File Id="Spearman.xml" Name="Spearman.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SpreadPlot.xml" Guid="*">
+              <File Id="SpreadPlot.xml" Name="SpreadPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SquaredRanks.xml" Guid="*">
+              <File Id="SquaredRanks.xml" Name="SquaredRanks.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="StackedBar100PercentPlot.xml" Guid="*">
+              <File Id="StackedBar100PercentPlot.xml" Name="StackedBar100PercentPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="StackedBarPlot.xml" Guid="*">
+              <File Id="StackedBarPlot.xml" Name="StackedBarPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Standardize.xml" Guid="*">
+              <File Id="Standardize.xml" Name="Standardize.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Stdrr.xml" Guid="*">
+              <File Id="Stdrr.xml" Name="Stdrr.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SurvivalPlot.xml" Guid="*">
+              <File Id="SurvivalPlot.xml" Name="SurvivalPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Tabulate.xml" Guid="*">
+              <File Id="Tabulate.xml" Name="Tabulate.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TextCode.xml" Guid="*">
+              <File Id="TextCode.xml" Name="TextCode.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TPaired.xml" Guid="*">
+              <File Id="TPaired.xml" Name="TPaired.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformAngular.xml" Guid="*">
+              <File Id="TransformAngular.xml" Name="TransformAngular.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformCumulate.xml" Guid="*">
+              <File Id="TransformCumulate.xml" Name="TransformCumulate.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformECDF.xml" Guid="*">
+              <File Id="TransformECDF.xml" Name="TransformECDF.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformLog.xml" Guid="*">
+              <File Id="TransformLog.xml" Name="TransformLog.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformLog10.xml" Guid="*">
+              <File Id="TransformLog10.xml" Name="TransformLog10.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformLogit.xml" Guid="*">
+              <File Id="TransformLogit.xml" Name="TransformLogit.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformProbit.xml" Guid="*">
+              <File Id="TransformProbit.xml" Name="TransformProbit.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformZECDF.xml" Guid="*">
+              <File Id="TransformZECDF.xml" Name="TransformZECDF.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TransformZSD.xml" Guid="*">
+              <File Id="TransformZSD.xml" Name="TransformZSD.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TSingle.xml" Guid="*">
+              <File Id="TSingle.xml" Name="TSingle.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TSingleSummary.xml" Guid="*">
+              <File Id="TSingleSummary.xml" Name="TSingleSummary.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Tukey.xml" Guid="*">
+              <File Id="Tukey.xml" Name="Tukey.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TUnpaired.xml" Guid="*">
+              <File Id="TUnpaired.xml" Name="TUnpaired.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TUnpairedSummary.xml" Guid="*">
+              <File Id="TUnpairedSummary.xml" Name="TUnpairedSummary.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TwoWay.xml" Guid="*">
+              <File Id="TwoWay.xml" Name="TwoWay.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TwoWayNested.xml" Guid="*">
+              <File Id="TwoWayNested.xml" Name="TwoWayNested.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="TwoWayNestedMeans.xml" Guid="*">
+              <File Id="TwoWayNestedMeans.xml" Name="TwoWayNestedMeans.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="UnivariateSummary.xml" Guid="*">
+              <File Id="UnivariateSummary.xml" Name="UnivariateSummary.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="UniversalAgreement.xml" Guid="*">
+              <File Id="UniversalAgreement.xml" Name="UniversalAgreement.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="UniversalAgreementSimulateExactP.xml" Guid="*">
+              <File Id="UniversalAgreementSimulateExactP.xml" Name="UniversalAgreementSimulateExactP.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="UniversalRCompare.xml" Guid="*">
+              <File Id="UniversalRCompare.xml" Name="UniversalRCompare.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="VarianceRatio.xml" Guid="*">
+              <File Id="VarianceRatio.xml" Name="VarianceRatio.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="WeightedUnivariateSummary.xml" Guid="*">
+              <File Id="WeightedUnivariateSummary.xml" Name="WeightedUnivariateSummary.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="WeiLachin.xml" Guid="*">
+              <File Id="WeiLachin.xml" Name="WeiLachin.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Wilcoxon.xml" Guid="*">
+              <File Id="Wilcoxon.xml" Name="Wilcoxon.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Xxi.xml" Guid="*">
+              <File Id="Xxi.xml" Name="Xxi.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ZSingle.xml" Guid="*">
+              <File Id="ZSingle.xml" Name="ZSingle.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ZUnpaired.xml" Guid="*">
+              <File Id="ZUnpaired.xml" Name="ZUnpaired.xml" KeyPath="yes" />
+            </Component>
+          </Directory>
+
+          <!-- Output templates -->
+          <Directory Id="Template" Name="Template">
+            <Component Id="abridged.rtf" Guid="*">
+              <File Id="abridged.rtf" Name="abridged.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="agree.rtf" Guid="*">
+              <File Id="agree.rtf" Name="agree.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="asciigr.rtf" Guid="*">
+              <File Id="asciigr.rtf" Name="asciigr.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="BACKINT.rtf" Guid="*">
+              <File Id="BACKINT.rtf" Name="BACKINT.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="bartlett.rtf" Guid="*">
+              <File Id="bartlett.rtf" Name="bartlett.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="blank.rtf" Guid="*">
+              <File Id="blank.rtf" Name="blank.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="BONFERR.rtf" Guid="*">
+              <File Id="BONFERR.rtf" Name="BONFERR.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="chartonly_ascii.rtf" Guid="*">
+              <File Id="chartonly_ascii.rtf" Name="chartonly-ascii.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="chartonly.rtf" Guid="*">
+              <File Id="chartonly.rtf" Name="chartonly.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="charts.rtf" Guid="*">
+              <File Id="charts.rtf" Name="charts.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="chi2x2.rtf" Guid="*">
+              <File Id="chi2x2.rtf" Name="chi2x2.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="chi2xc.rtf" Guid="*">
+              <File Id="chi2xc.rtf" Name="chi2xc.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="chigood.rtf" Guid="*">
+              <File Id="chigood.rtf" Name="chigood.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="chirxc.rtf" Guid="*">
+              <File Id="chirxc.rtf" Name="chirxc.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="chiTwoByKSimulatedExactP.rtf" Guid="*">
+              <File Id="chiTwoByKSimulatedExactP.rtf" Name="chiTwoByKSimulatedExactP.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="cimeany.rtf" Guid="*">
+              <File Id="cimeany.rtf" Name="cimeany.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="clogit.rtf" Guid="*">
+              <File Id="clogit.rtf" Name="clogit.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="cochranq.rtf" Guid="*">
+              <File Id="cochranq.rtf" Name="cochranq.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="covarmx.rtf" Guid="*">
+              <File Id="covarmx.rtf" Name="covarmx.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="coxreg.rtf" Guid="*">
+              <File Id="coxreg.rtf" Name="coxreg.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="cox_det.rtf" Guid="*">
+              <File Id="cox_det.rtf" Name="cox_det.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="cox_dev.rtf" Guid="*">
+              <File Id="cox_dev.rtf" Name="cox_dev.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="cox_r.rtf" Guid="*">
+              <File Id="cox_r.rtf" Name="cox_r.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="cox_s.rtf" Guid="*">
+              <File Id="cox_s.rtf" Name="cox_s.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="cronbach.rtf" Guid="*">
+              <File Id="cronbach.rtf" Name="cronbach.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="cuzick.rtf" Guid="*">
+              <File Id="cuzick.rtf" Name="cuzick.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="describe.rtf" Guid="*">
+              <File Id="describe.rtf" Name="describe.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="DIAGNOST.rtf" Guid="*">
+              <File Id="DIAGNOST.rtf" Name="DIAGNOST.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="diversity.rtf" Guid="*">
+              <File Id="diversity.rtf" Name="diversity.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="dstdr.rtf" Guid="*">
+              <File Id="dstdr.rtf" Name="dstdr.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="dunnett.rtf" Guid="*">
+              <File Id="dunnett.rtf" Name="dunnett.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="effect.rtf" Guid="*">
+              <File Id="effect.rtf" Name="effect.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="effectwm.rtf" Guid="*">
+              <File Id="effectwm.rtf" Name="effectwm.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="FALSER.rtf" Guid="*">
+              <File Id="FALSER.rtf" Name="FALSER.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="fisher.rtf" Guid="*">
+              <File Id="fisher.rtf" Name="fisher.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="fisherx.rtf" Guid="*">
+              <File Id="fisherx.rtf" Name="fisherx.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="freq.rtf" Guid="*">
+              <File Id="freq.rtf" Name="freq.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="friedman.rtf" Guid="*">
+              <File Id="friedman.rtf" Name="friedman.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="frmulti.rtf" Guid="*">
+              <File Id="frmulti.rtf" Name="frmulti.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="gencmh.rtf" Guid="*">
+              <File Id="gencmh.rtf" Name="gencmh.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="genmeta.rtf" Guid="*">
+              <File Id="genmeta.rtf" Name="genmeta.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="gini.rtf" Guid="*">
+              <File Id="gini.rtf" Name="gini.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="glranova.rtf" Guid="*">
+              <File Id="glranova.rtf" Name="glranova.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="groupedoneway.rtf" Guid="*">
+              <File Id="groupedoneway.rtf" Name="groupedoneway.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="groupedtwoway.rtf" Guid="*">
+              <File Id="groupedtwoway.rtf" Name="groupedtwoway.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="grpcov.rtf" Guid="*">
+              <File Id="grpcov.rtf" Name="grpcov.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="grprep.rtf" Guid="*">
+              <File Id="grprep.rtf" Name="grprep.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="incid.rtf" Guid="*">
+              <File Id="incid.rtf" Name="incid.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="interlin.rtf" Guid="*">
+              <File Id="interlin.rtf" Name="interlin.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="INTERP.rtf" Guid="*">
+              <File Id="INTERP.rtf" Name="INTERP.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="interpmr.rtf" Guid="*">
+              <File Id="interpmr.rtf" Name="interpmr.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="INTPROBX.rtf" Guid="*">
+              <File Id="INTPROBX.rtf" Name="INTPROBX.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="INTPROBY.rtf" Guid="*">
+              <File Id="INTPROBY.rtf" Name="INTPROBY.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="irdmeta.rtf" Guid="*">
+              <File Id="irdmeta.rtf" Name="irdmeta.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="irrmeta.rtf" Guid="*">
+              <File Id="irrmeta.rtf" Name="irrmeta.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="kappa.rtf" Guid="*">
+              <File Id="kappa.rtf" Name="kappa.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="kappa2.rtf" Guid="*">
+              <File Id="kappa2.rtf" Name="kappa2.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="kappam.rtf" Guid="*">
+              <File Id="kappam.rtf" Name="kappam.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="kappaSimulatedExactP.rtf" Guid="*">
+              <File Id="kappaSimulatedExactP.rtf" Name="kappaSimulatedExactP.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="kap_meir.rtf" Guid="*">
+              <File Id="kap_meir.rtf" Name="kap_meir.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="KENDALL.rtf" Guid="*">
+              <File Id="KENDALL.rtf" Name="KENDALL.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="kruskal.rtf" Guid="*">
+              <File Id="kruskal.rtf" Name="kruskal.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="kwmulti.rtf" Guid="*">
+              <File Id="kwmulti.rtf" Name="kwmulti.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="latin.rtf" Guid="*">
+              <File Id="latin.rtf" Name="latin.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="lifetab.rtf" Guid="*">
+              <File Id="lifetab.rtf" Name="lifetab.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="likely.rtf" Guid="*">
+              <File Id="likely.rtf" Name="likely.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="LINISED.rtf" Guid="*">
+              <File Id="LINISED.rtf" Name="LINISED.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="logrank.rtf" Guid="*">
+              <File Id="logrank.rtf" Name="logrank.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="LOGREG.rtf" Guid="*">
+              <File Id="LOGREG.rtf" Name="LOGREG.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="lpredict.rtf" Guid="*">
+              <File Id="lpredict.rtf" Name="lpredict.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="lr_bootstrap.rtf" Guid="*">
+              <File Id="lr_bootstrap.rtf" Name="lr_bootstrap.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="lr_class.rtf" Guid="*">
+              <File Id="lr_class.rtf" Name="lr_class.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="lr_det.rtf" Guid="*">
+              <File Id="lr_det.rtf" Name="lr_det.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="lr_fit.rtf" Guid="*">
+              <File Id="lr_fit.rtf" Name="lr_fit.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="lr_odds.rtf" Guid="*">
+              <File Id="lr_odds.rtf" Name="lr_odds.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="MANNWHIT.rtf" Guid="*">
+              <File Id="MANNWHIT.rtf" Name="MANNWHIT.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="mantel.rtf" Guid="*">
+              <File Id="mantel.rtf" Name="mantel.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="mcnamar.rtf" Guid="*">
+              <File Id="mcnamar.rtf" Name="mcnamar.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="metaCorrelation.rtf" Guid="*">
+              <File Id="metaCorrelation.rtf" Name="metaCorrelation.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="multi.rtf" Guid="*">
+              <File Id="multi.rtf" Name="multi.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="M_PAIRED.rtf" Guid="*">
+              <File Id="M_PAIRED.rtf" Name="M_PAIRED.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="M_SINGLE.rtf" Guid="*">
+              <File Id="M_SINGLE.rtf" Name="M_SINGLE.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="M_UNPAIR.rtf" Guid="*">
+              <File Id="M_UNPAIR.rtf" Name="M_UNPAIR.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="nestmean.rtf" Guid="*">
+              <File Id="nestmean.rtf" Name="nestmean.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="nkeuls.rtf" Guid="*">
+              <File Id="nkeuls.rtf" Name="nkeuls.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="nplinreg.rtf" Guid="*">
+              <File Id="nplinreg.rtf" Name="nplinreg.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="odds.rtf" Guid="*">
+              <File Id="odds.rtf" Name="odds.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="ONEWAY.rtf" Guid="*">
+              <File Id="ONEWAY.rtf" Name="ONEWAY.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="orci.rtf" Guid="*">
+              <File Id="orci.rtf" Name="orci.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="pardet.rtf" Guid="*">
+              <File Id="pardet.rtf" Name="pardet.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="peto.rtf" Guid="*">
+              <File Id="peto.rtf" Name="peto.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="pinterp.rtf" Guid="*">
+              <File Id="pinterp.rtf" Name="pinterp.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="poisreg.rtf" Guid="*">
+              <File Id="poisreg.rtf" Name="poisreg.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="poisson.rtf" Guid="*">
+              <File Id="poisson.rtf" Name="poisson.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="poly.rtf" Guid="*">
+              <File Id="poly.rtf" Name="poly.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="POLY_AUC.rtf" Guid="*">
+              <File Id="POLY_AUC.rtf" Name="POLY_AUC.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="prate.rtf" Guid="*">
+              <File Id="prate.rtf" Name="prate.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="prcoeff.rtf" Guid="*">
+              <File Id="prcoeff.rtf" Name="prcoeff.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="prefer.rtf" Guid="*">
+              <File Id="prefer.rtf" Name="prefer.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="PRINC.rtf" Guid="*">
+              <File Id="PRINC.rtf" Name="PRINC.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="prmatrix.rtf" Guid="*">
+              <File Id="prmatrix.rtf" Name="prmatrix.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="probcal.rtf" Guid="*">
+              <File Id="probcal.rtf" Name="probcal.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="probit.rtf" Guid="*">
+              <File Id="probit.rtf" Name="probit.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="probmore.rtf" Guid="*">
+              <File Id="probmore.rtf" Name="probmore.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="propmeta.rtf" Guid="*">
+              <File Id="propmeta.rtf" Name="propmeta.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="prscores.rtf" Guid="*">
+              <File Id="prscores.rtf" Name="prscores.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="pr_det.rtf" Guid="*">
+              <File Id="pr_det.rtf" Name="pr_det.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="pr_fit.rtf" Guid="*">
+              <File Id="pr_fit.rtf" Name="pr_fit.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="pr_irr.rtf" Guid="*">
+              <File Id="pr_irr.rtf" Name="pr_irr.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="p_pair.rtf" Guid="*">
+              <File Id="p_pair.rtf" Name="p_pair.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="p_sng.rtf" Guid="*">
+              <File Id="p_sng.rtf" Name="p_sng.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="p_unpair.rtf" Guid="*">
+              <File Id="p_unpair.rtf" Name="p_unpair.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="quantile.rtf" Guid="*">
+              <File Id="quantile.rtf" Name="quantile.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="rdmeta.rtf" Guid="*">
+              <File Id="rdmeta.rtf" Name="rdmeta.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="refrange.rtf" Guid="*">
+              <File Id="refrange.rtf" Name="refrange.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="relrisk.rtf" Guid="*">
+              <File Id="relrisk.rtf" Name="relrisk.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="residm.rtf" Guid="*">
+              <File Id="residm.rtf" Name="residm.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="residuals.rtf" Guid="*">
+              <File Id="residuals.rtf" Name="residuals.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="retro_r.rtf" Guid="*">
+              <File Id="retro_r.rtf" Name="retro_r.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="roc.rtf" Guid="*">
+              <File Id="roc.rtf" Name="roc.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="rrmeta.rtf" Guid="*">
+              <File Id="rrmeta.rtf" Name="rrmeta.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="r_block.rtf" Guid="*">
+              <File Id="r_block.rtf" Name="r_block.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="R_PAIR.rtf" Guid="*">
+              <File Id="R_PAIR.rtf" Name="R_PAIR.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="R_UNPAIR.rtf" Guid="*">
+              <File Id="R_UNPAIR.rtf" Name="R_UNPAIR.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="R_XY.rtf" Guid="*">
+              <File Id="R_XY.rtf" Name="R_XY.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="scheffe.rtf" Guid="*">
+              <File Id="scheffe.rtf" Name="scheffe.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="normality.rtf" Guid="*">
+              <File Id="normality.rtf" Name="normality.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="sign.rtf" Guid="*">
+              <File Id="sign.rtf" Name="sign.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="simulatedExactP.rtf" Guid="*">
+              <File Id="simulatedExactP.rtf" Name="simulatedExactP.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="SIMANAL.rtf" Guid="*">
+              <File Id="SIMANAL.rtf" Name="SIMANAL.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="simple.rtf" Guid="*">
+              <File Id="simple.rtf" Name="simple.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="smirnov.rtf" Guid="*">
+              <File Id="smirnov.rtf" Name="smirnov.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="spearman.rtf" Guid="*">
+              <File Id="spearman.rtf" Name="spearman.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="sqrank.rtf" Guid="*">
+              <File Id="sqrank.rtf" Name="sqrank.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="sqrank2.rtf" Guid="*">
+              <File Id="sqrank2.rtf" Name="sqrank2.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="stdmort.rtf" Guid="*">
+              <File Id="stdmort.rtf" Name="stdmort.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="stdrr.rtf" Guid="*">
+              <File Id="stdrr.rtf" Name="stdrr.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="subset.rtf" Guid="*">
+              <File Id="subset.rtf" Name="subset.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="sum.rtf" Guid="*">
+              <File Id="sum.rtf" Name="sum.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="s_corr.rtf" Guid="*">
+              <File Id="s_corr.rtf" Name="s_corr.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="S_INCASE.rtf" Guid="*">
+              <File Id="S_INCASE.rtf" Name="S_INCASE.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="S_IND.rtf" Guid="*">
+              <File Id="S_IND.rtf" Name="S_IND.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="S_MACASE.rtf" Guid="*">
+              <File Id="S_MACASE.rtf" Name="S_MACASE.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="S_MAPROP.rtf" Guid="*">
+              <File Id="S_MAPROP.rtf" Name="S_MAPROP.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="S_SURVEY.rtf" Guid="*">
+              <File Id="S_SURVEY.rtf" Name="S_SURVEY.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="s_survival.rtf" Guid="*">
+              <File Id="s_survival.rtf" Name="s_survival.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="S_T.rtf" Guid="*">
+              <File Id="S_T.rtf" Name="S_T.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="treat.rtf" Guid="*">
+              <File Id="treat.rtf" Name="treat.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="tukey.rtf" Guid="*">
+              <File Id="tukey.rtf" Name="tukey.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="twomulti.rtf" Guid="*">
+              <File Id="twomulti.rtf" Name="twomulti.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="TWONEST.rtf" Guid="*">
+              <File Id="TWONEST.rtf" Name="TWONEST.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="twoway.rtf" Guid="*">
+              <File Id="twoway.rtf" Name="twoway.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="universalAgreement.rtf" Guid="*">
+              <File Id="universalAgreement.rtf" Name="universalAgreement.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="universal_r_compare.rtf" Guid="*">
+              <File Id="universal_r_compare.rtf" Name="universal_r_compare.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="VARIANCE.rtf" Guid="*">
+              <File Id="VARIANCE.rtf" Name="VARIANCE.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="wei.rtf" Guid="*">
+              <File Id="wei.rtf" Name="wei.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="WILCO.rtf" Guid="*">
+              <File Id="WILCO.rtf" Name="WILCO.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="woolf.rtf" Guid="*">
+              <File Id="woolf.rtf" Name="woolf.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="xover.rtf" Guid="*">
+              <File Id="xover.rtf" Name="xover.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="xtab.rtf" Guid="*">
+              <File Id="xtab.rtf" Name="xtab.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="xtabouter.rtf" Guid="*">
+              <File Id="xtabouter.rtf" Name="xtabouter.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="xtabz.rtf" Guid="*">
+              <File Id="xtabz.rtf" Name="xtabz.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="xxi.rtf" Guid="*">
+              <File Id="xxi.rtf" Name="xxi.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="z_norm1.rtf" Guid="*">
+              <File Id="z_norm1.rtf" Name="z_norm1.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="z_norm2.rtf" Guid="*">
+              <File Id="z_norm2.rtf" Name="z_norm2.rtf" KeyPath="yes" />
+            </Component>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id="ProductFeature" Title="SDInstaller" Level="1">
+      <!-- Shortcuts -->
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="CalculatorShortcut" />
+      
+      <!-- Registry -->
+      <ComponentRef Id="RegistryEntries"/>
+
+      <!-- Main files -->
+      <ComponentRef Id="ProductComponent" />
+
+      <ComponentRef Id="DevExpress.Data.v11.2.dll" />
+      <ComponentRef Id="DevExpress.Printing.v11.2.Core.dll" />
+      <ComponentRef Id="DevExpress.RichEdit.v11.2.Core.dll" />
+      <ComponentRef Id="DevExpress.Utils.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraBars.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraEditors.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraPrinting.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraRichEdit.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraRichEdit.v11.2.Extensions.dll" />
+      <ComponentRef Id="DevExpress.XtraRichEdit.v11.2.Printing.dll" />
+      <ComponentRef Id="DevExpress.XtraTreeList.v11.2.dll" />
+
+      <ComponentRef Id="menu.xml" />
+      <ComponentRef Id="SpreadsheetGear.dll" />
+      <ComponentRef Id="Antlr3.Runtime.dll" />
+      <ComponentRef Id="STATSDIRECT.chm" />
+      <ComponentRef Id="StatsDirect.exe.config" />
+
+      <!-- Sample files -->
+      <ComponentRef Id="test.xls" />
+
+      <!-- Operations -->
+      <ComponentRef Id="AbridgedLifetable.xml" />
+      <ComponentRef Id="Agreement.xml" />
+      <ComponentRef Id="AnalysisOptions.xml" />
+      <ComponentRef Id="ApplyFunction.xml" />
+      <ComponentRef Id="BarPlot.xml" />
+      <ComponentRef Id="Bonferroni.xml" />
+      <ComponentRef Id="BoxWhiskerPlot.xml" />
+      <ComponentRef Id="BoxWhiskerPlotText.xml" />
+      <ComponentRef Id="Chi2by2.xml" />
+      <ComponentRef Id="Chi2byNLinearTrend.xml" />
+      <ComponentRef Id="Chi2byNWithoutTrend.xml" />
+      <ComponentRef Id="Chi2byNWithTrend.xml" />
+      <ComponentRef Id="Chi2byNWithTrendSimulateExactP.xml" />
+      <ComponentRef Id="ChiSquareGoodnessOfFit.xml" />
+      <ComponentRef Id="ChiWoolfScreen.xml" />
+      <ComponentRef Id="ChiWoolfWorksheet.xml" />
+      <ComponentRef Id="CiMeanY.xml" />
+      <ComponentRef Id="ClearMissing.xml" />
+      <ComponentRef Id="CochranePlot.xml" />
+      <ComponentRef Id="CochranQ.xml" />
+      <ComponentRef Id="Combine.xml" />
+      <ComponentRef Id="ConditionalLogisticRegression.xml" />
+      <ComponentRef Id="ControlPlot.xml" />
+      <ComponentRef Id="CoxBaselineToReport.xml" />
+      <ComponentRef Id="CoxBaselineToWorksheet.xml" />
+      <ComponentRef Id="CoxHazardPlots.xml" />
+      <ComponentRef Id="CoxHazardRatios.xml" />
+      <ComponentRef Id="CoxModelAnalysis.xml" />
+      <ComponentRef Id="CoxRegression.xml" />
+      <ComponentRef Id="CoxResiduals.xml" />
+      <ComponentRef Id="Cronbach.xml" />
+      <ComponentRef Id="Crossover.xml" />
+      <ComponentRef Id="Crosstabs.xml" />
+      <ComponentRef Id="Cuzick.xml" />
+      <ComponentRef Id="Dates.xml" />
+      <ComponentRef Id="Detabulate.xml" />
+      <ComponentRef Id="DistributionBinomial.xml" />
+      <ComponentRef Id="DistributionChiSquare.xml" />
+      <ComponentRef Id="DistributionF.xml" />
+      <ComponentRef Id="DistributionKendall.xml" />
+      <ComponentRef Id="DistributionNonCentralT.xml" />
+      <ComponentRef Id="DistributionNormal.xml" />
+      <ComponentRef Id="DistributionPoisson.xml" />
+      <ComponentRef Id="DistributionQ.xml" />
+      <ComponentRef Id="DistributionSpearman.xml" />
+      <ComponentRef Id="DistributionT.xml" />
+      <ComponentRef Id="Diversity.xml" />
+      <ComponentRef Id="DummyVariables.xml" />
+      <ComponentRef Id="Dunnett.xml" />
+      <ComponentRef Id="Effect.xml" />
+      <ComponentRef Id="EqualityOfVariance.xml" />
+      <ComponentRef Id="ErrorPlot.xml" />
+      <ComponentRef Id="ExactChiRbyC.xml" />
+      <ComponentRef Id="ExactChiRbyCScreen.xml" />
+      <ComponentRef Id="ExactFisher.xml" />
+      <ComponentRef Id="ExactFisherRbyC.xml" />
+      <ComponentRef Id="ExactFisherX.xml" />
+      <ComponentRef Id="ExactMcNamar.xml" />
+      <ComponentRef Id="ExactMcNamarChi.xml" />
+      <ComponentRef Id="ExactORCML.xml" />
+      <ComponentRef Id="ExactSign.xml" />
+      <ComponentRef Id="ExploreContinuousDistributions.xml" />
+      <ComponentRef Id="ExportWorksheet.xml" />
+      <ComponentRef Id="FillSeries.xml" />
+      <ComponentRef Id="FollowUpLifeTable.xml" />
+      <ComponentRef Id="Frequency.xml" />
+      <ComponentRef Id="Friedman.xml" />
+      <ComponentRef Id="FriedmanSimulateExactP.xml" />
+      <ComponentRef Id="FriedmanMulti.xml" />
+      <ComponentRef Id="Gini.xml" />
+      <ComponentRef Id="GraphicsOptions.xml" />
+      <ComponentRef Id="GroupCategorise.xml" />
+      <ComponentRef Id="GroupedCovariance.xml" />
+      <ComponentRef Id="GroupedLinearity.xml" />
+      <ComponentRef Id="GroupedOneWay.xml" />
+      <ComponentRef Id="GroupedTwoWay.xml" />
+      <ComponentRef Id="GroupExtract.xml" />
+      <ComponentRef Id="GroupSplit.xml" />
+      <ComponentRef Id="HistogramPlot.xml" />
+      <ComponentRef Id="HistogramPlotText.xml" />
+      <ComponentRef Id="ImportWorksheet.xml" />
+      <ComponentRef Id="InterpolateXY.xml" />
+      <ComponentRef Id="InterpolateYX.xml" />
+      <ComponentRef Id="KaplanMeier.xml" />
+      <ComponentRef Id="Kappa.xml" />
+      <ComponentRef Id="KappaScreen.xml" />
+      <ComponentRef Id="KappaSimulateExactP.xml" />
+      <ComponentRef Id="Kendall.xml" />
+      <ComponentRef Id="Kruskal.xml" />
+      <ComponentRef Id="KruskalWallisMulti.xml" />
+      <ComponentRef Id="LadderPlot.xml" />
+      <ComponentRef Id="LadderPowers.xml" />
+      <ComponentRef Id="LatinSquare.xml" />
+      <ComponentRef Id="LinearizedEstimateInterpolation.xml" />
+      <ComponentRef Id="LinearizedEstimatePlot.xml" />
+      <ComponentRef Id="LinearizedEstimates.xml" />
+      <ComponentRef Id="LinearizedEstimatesWithModel.xml" />
+      <ComponentRef Id="LinePlot.xml" />
+      <ComponentRef Id="LogisticRegression.xml" />
+      <ComponentRef Id="LogisticRegressionBootstrap.xml" />
+      <ComponentRef Id="LogisticRegressionClassification.xml" />
+      <ComponentRef Id="LogisticRegressionDiagnostics.xml" />
+      <ComponentRef Id="LogisticRegressionFitToReport.xml" />
+      <ComponentRef Id="LogisticRegressionFitToWorksheet.xml" />
+      <ComponentRef Id="LogisticRegressionModel.xml" />
+      <ComponentRef Id="LogisticRegressionOdds.xml" />
+      <ComponentRef Id="LogisticRegressionPrediction.xml" />
+      <ComponentRef Id="Logit.xml" />
+      <ComponentRef Id="LogRank.xml" />
+      <ComponentRef Id="MannWhitney.xml" />
+      <ComponentRef Id="Mantel.xml" />
+      <ComponentRef Id="MantelHaenszelScreen.xml" />
+      <ComponentRef Id="MetaCalculationOptions.xml" />
+      <ComponentRef Id="MetaCorrelation.xml" />
+      <ComponentRef Id="MetaIncidenceRateDifference.xml" />
+      <ComponentRef Id="MetaIncidenceRateRatio.xml" />
+      <ComponentRef Id="MetaPlotOptions.xml" />
+      <ComponentRef Id="MetaSummary.xml" />
+      <ComponentRef Id="MiscDiagnostic.xml" />
+      <ComponentRef Id="MiscFalseResult.xml" />
+      <ComponentRef Id="MiscLikely.xml" />
+      <ComponentRef Id="MiscNumberNeededToTreat.xml" />
+      <ComponentRef Id="MiscRelRisk.xml" />
+      <ComponentRef Id="MiscRetroRisk.xml" />
+      <ComponentRef Id="MultipleLinearRegression.xml" />
+      <ComponentRef Id="MultipleLinearRegressionAnova.xml" />
+      <ComponentRef Id="MultipleLinearRegressionBestSubset.xml" />
+      <ComponentRef Id="MultipleLinearRegressionParameterDetail.xml" />
+      <ComponentRef Id="MultipleLinearRegressionPrediction.xml" />
+      <ComponentRef Id="MultipleLinearRegressionResiduals.xml" />
+      <ComponentRef Id="NewmanKeuls.xml" />
+      <ComponentRef Id="NonparametricLinearRegression.xml" />
+      <ComponentRef Id="Normal.xml" />
+      <ComponentRef Id="NormalPlot.xml" />
+      <ComponentRef Id="OneWay.xml" />
+      <ComponentRef Id="Operation.xsd" />
+      <ComponentRef Id="PairDifferences.xml" />
+      <ComponentRef Id="PairMeans.xml" />
+      <ComponentRef Id="PairSlopes.xml" />
+      <ComponentRef Id="PCRCoefficients.xml" />
+      <ComponentRef Id="PCRCorrelation.xml" />
+      <ComponentRef Id="PCRCovariance.xml" />
+      <ComponentRef Id="PCRMatrix.xml" />
+      <ComponentRef Id="PCRScores.xml" />
+      <ComponentRef Id="PetoMeta.xml" />
+      <ComponentRef Id="PlotMultipleLinearRegressionResiduals.xml" />
+      <ComponentRef Id="PlotPredictionInterval.xml" />
+      <ComponentRef Id="PlotResidualsSimple.xml" />
+      <ComponentRef Id="PlotSeCi.xml" />
+      <ComponentRef Id="PlotSimpleLinearRegression.xml" />
+      <ComponentRef Id="PoissonConfidenceInterval.xml" />
+      <ComponentRef Id="PoissonRegression.xml" />
+      <ComponentRef Id="PoissonRegressionFitToReport.xml" />
+      <ComponentRef Id="PoissonRegressionFitToWorksheet.xml" />
+      <ComponentRef Id="PoissonRegressionIRR.xml" />
+      <ComponentRef Id="PoissonRegressionModel.xml" />
+      <ComponentRef Id="PoissonRegressionResiduals.xml" />
+      <ComponentRef Id="PolynomialAreaUnderCurve.xml" />
+      <ComponentRef Id="PolynomialRegression.xml" />
+      <ComponentRef Id="PolynomialRegressionBackInterpolation.xml" />
+      <ComponentRef Id="PolynomialRegressionConfidence.xml" />
+      <ComponentRef Id="PolynomialRegressionInterpolation.xml" />
+      <ComponentRef Id="PolynomialRegressionPlot.xml" />
+      <ComponentRef Id="Preferences.xml" />
+      <ComponentRef Id="Probit.xml" />
+      <ComponentRef Id="ProbitInterpolateX.xml" />
+      <ComponentRef Id="ProbitInterpolateY.xml" />
+      <ComponentRef Id="ProbitMore.xml" />
+      <ComponentRef Id="ProbitPlot.xml" />
+      <ComponentRef Id="ProportionMeta.xml" />
+      <ComponentRef Id="PropPairs.xml" />
+      <ComponentRef Id="PropSingle.xml" />
+      <ComponentRef Id="PropUnPaired.xml" />
+      <ComponentRef Id="PyramidPlot.xml" />
+      <ComponentRef Id="Quantile.xml" />
+      <ComponentRef Id="QuickSummary.xml" />
+      <ComponentRef Id="RandomBlock.xml" />
+      <ComponentRef Id="RandomPairs.xml" />
+      <ComponentRef Id="RandomUnPaired.xml" />
+      <ComponentRef Id="RandomXY.xml" />
+      <ComponentRef Id="Rank.xml" />
+      <ComponentRef Id="Ranv.xml" />
+      <ComponentRef Id="RateCompareTwo.xml" />
+      <ComponentRef Id="RateDirect.xml" />
+      <ComponentRef Id="RateDirectScreen.xml" />
+      <ComponentRef Id="RatePoissonCI.xml" />
+      <ComponentRef Id="RateSmr.xml" />
+      <ComponentRef Id="RateSmrScreen.xml" />
+      <ComponentRef Id="ReferenceRange.xml" />
+      <ComponentRef Id="RelativeRiskMeta.xml" />
+      <ComponentRef Id="ReplicateTwoWay.xml" />
+      <ComponentRef Id="RiskDifference.xml" />
+      <ComponentRef Id="RndBeta.xml" />
+      <ComponentRef Id="RndBinomial.xml" />
+      <ComponentRef Id="RndCauchy.xml" />
+      <ComponentRef Id="RndChiSquare.xml" />
+      <ComponentRef Id="RndExponential.xml" />
+      <ComponentRef Id="RndF.xml" />
+      <ComponentRef Id="RndGamma.xml" />
+      <ComponentRef Id="RndGeometric.xml" />
+      <ComponentRef Id="RndLogit.xml" />
+      <ComponentRef Id="RndLogNormal.xml" />
+      <ComponentRef Id="RndNegativeBinomial.xml" />
+      <ComponentRef Id="RndNormal.xml" />
+      <ComponentRef Id="RndPoisson.xml" />
+      <ComponentRef Id="RndT.xml" />
+      <ComponentRef Id="RndUniform01.xml" />
+      <ComponentRef Id="RndUniformAB.xml" />
+      <ComponentRef Id="RndWeibull.xml" />
+      <ComponentRef Id="ROCPlot.xml" />
+      <ComponentRef Id="Rotate.xml" />
+      <ComponentRef Id="ScatterPlot.xml" />
+      <ComponentRef Id="ScatterPlotText.xml" />
+      <ComponentRef Id="Scheffe.xml" />
+      <ComponentRef Id="normality.xml" />
+      <ComponentRef Id="SimpleLinearRegression.xml" />
+      <ComponentRef Id="SimpleLinearRegressionCI.xml" />
+      <ComponentRef Id="SizeCorrelation.xml" />
+      <ComponentRef Id="SizeIndCase.xml" />
+      <ComponentRef Id="SizeIndProp.xml" />
+      <ComponentRef Id="SizeMatchCase.xml" />
+      <ComponentRef Id="SizeMatchProp.xml" />
+      <ComponentRef Id="SizePaired.xml" />
+      <ComponentRef Id="SizePopSurvey.xml" />
+      <ComponentRef Id="SizeSurvival.xml" />
+      <ComponentRef Id="SizeUnPaired.xml" />
+      <ComponentRef Id="Smirnov.xml" />
+      <ComponentRef Id="Sort.xml" />
+      <ComponentRef Id="SortByExpression.xml" />
+      <ComponentRef Id="SortInPlace.xml" />
+      <ComponentRef Id="Spearman.xml" />
+      <ComponentRef Id="SpreadPlot.xml" />
+      <ComponentRef Id="SquaredRanks.xml" />
+      <ComponentRef Id="StackedBar100PercentPlot.xml" />
+      <ComponentRef Id="StackedBarPlot.xml" />
+      <ComponentRef Id="Standardize.xml" />
+      <ComponentRef Id="Stdrr.xml" />
+      <ComponentRef Id="SurvivalPlot.xml" />
+      <ComponentRef Id="Tabulate.xml" />
+      <ComponentRef Id="TextCode.xml" />
+      <ComponentRef Id="TPaired.xml" />
+      <ComponentRef Id="TransformAngular.xml" />
+      <ComponentRef Id="TransformCumulate.xml" />
+      <ComponentRef Id="TransformECDF.xml" />
+      <ComponentRef Id="TransformLog.xml" />
+      <ComponentRef Id="TransformLog10.xml" />
+      <ComponentRef Id="TransformLogit.xml" />
+      <ComponentRef Id="TransformProbit.xml" />
+      <ComponentRef Id="TransformZECDF.xml" />
+      <ComponentRef Id="TransformZSD.xml" />
+      <ComponentRef Id="TSingle.xml" />
+      <ComponentRef Id="TSingleSummary.xml" />
+      <ComponentRef Id="Tukey.xml" />
+      <ComponentRef Id="TUnpaired.xml" />
+      <ComponentRef Id="TUnpairedSummary.xml" />
+      <ComponentRef Id="TwoWay.xml" />
+      <ComponentRef Id="TwoWayNested.xml" />
+      <ComponentRef Id="TwoWayNestedMeans.xml" />
+      <ComponentRef Id="UnivariateSummary.xml" />
+      <ComponentRef Id="UniversalAgreement.xml" />
+      <ComponentRef Id="UniversalAgreementSimulateExactP.xml" />
+      <ComponentRef Id="UniversalRCompare.xml" />
+      <ComponentRef Id="VarianceRatio.xml" />
+      <ComponentRef Id="WeightedUnivariateSummary.xml" />
+      <ComponentRef Id="WeiLachin.xml" />
+      <ComponentRef Id="Wilcoxon.xml" />
+      <ComponentRef Id="Xxi.xml" />
+      <ComponentRef Id="ZSingle.xml" />
+      <ComponentRef Id="ZUnpaired.xml" />
+
+      <!-- Output templates -->
+      <ComponentRef Id="abridged.rtf" />
+      <ComponentRef Id="agree.rtf" />
+      <ComponentRef Id="asciigr.rtf" />
+      <ComponentRef Id="BACKINT.rtf" />
+      <ComponentRef Id="bartlett.rtf" />
+      <ComponentRef Id="blank.rtf" />
+      <ComponentRef Id="BONFERR.rtf" />
+      <ComponentRef Id="chartonly_ascii.rtf" />
+      <ComponentRef Id="chartonly.rtf" />
+      <ComponentRef Id="charts.rtf" />
+      <ComponentRef Id="chi2x2.rtf" />
+      <ComponentRef Id="chi2xc.rtf" />
+      <ComponentRef Id="chigood.rtf" />
+      <ComponentRef Id="chirxc.rtf" />
+      <ComponentRef Id="chiTwoByKSimulatedExactP.rtf" />
+      <ComponentRef Id="cimeany.rtf" />
+      <ComponentRef Id="clogit.rtf" />
+      <ComponentRef Id="cochranq.rtf" />
+      <ComponentRef Id="covarmx.rtf" />
+      <ComponentRef Id="coxreg.rtf" />
+      <ComponentRef Id="cox_det.rtf" />
+      <ComponentRef Id="cox_dev.rtf" />
+      <ComponentRef Id="cox_r.rtf" />
+      <ComponentRef Id="cox_s.rtf" />
+      <ComponentRef Id="cronbach.rtf" />
+      <ComponentRef Id="cuzick.rtf" />
+      <ComponentRef Id="describe.rtf" />
+      <ComponentRef Id="DIAGNOST.rtf" />
+      <ComponentRef Id="diversity.rtf" />
+      <ComponentRef Id="dstdr.rtf" />
+      <ComponentRef Id="dunnett.rtf" />
+      <ComponentRef Id="effect.rtf" />
+      <ComponentRef Id="effectwm.rtf" />
+      <ComponentRef Id="FALSER.rtf" />
+      <ComponentRef Id="fisher.rtf" />
+      <ComponentRef Id="fisherx.rtf" />
+      <ComponentRef Id="freq.rtf" />
+      <ComponentRef Id="friedman.rtf" />
+      <ComponentRef Id="frmulti.rtf" />
+      <ComponentRef Id="gencmh.rtf" />
+      <ComponentRef Id="genmeta.rtf" />
+      <ComponentRef Id="gini.rtf" />
+      <ComponentRef Id="glranova.rtf" />
+      <ComponentRef Id="groupedoneway.rtf" />
+      <ComponentRef Id="groupedtwoway.rtf" />
+      <ComponentRef Id="grpcov.rtf" />
+      <ComponentRef Id="grprep.rtf" />
+      <ComponentRef Id="incid.rtf" />
+      <ComponentRef Id="interlin.rtf" />
+      <ComponentRef Id="INTERP.rtf" />
+      <ComponentRef Id="interpmr.rtf" />
+      <ComponentRef Id="INTPROBX.rtf" />
+      <ComponentRef Id="INTPROBY.rtf" />
+      <ComponentRef Id="irdmeta.rtf" />
+      <ComponentRef Id="irrmeta.rtf" />
+      <ComponentRef Id="kappa.rtf" />
+      <ComponentRef Id="kappa2.rtf" />
+      <ComponentRef Id="kappam.rtf" />
+      <ComponentRef Id="kappaSimulatedExactP.rtf" />
+      <ComponentRef Id="kap_meir.rtf" />
+      <ComponentRef Id="KENDALL.rtf" />
+      <ComponentRef Id="kruskal.rtf" />
+      <ComponentRef Id="kwmulti.rtf" />
+      <ComponentRef Id="latin.rtf" />
+      <ComponentRef Id="lifetab.rtf" />
+      <ComponentRef Id="likely.rtf" />
+      <ComponentRef Id="LINISED.rtf" />
+      <ComponentRef Id="logrank.rtf" />
+      <ComponentRef Id="LOGREG.rtf" />
+      <ComponentRef Id="lpredict.rtf" />
+      <ComponentRef Id="lr_bootstrap.rtf" />
+      <ComponentRef Id="lr_class.rtf" />
+      <ComponentRef Id="lr_det.rtf" />
+      <ComponentRef Id="lr_fit.rtf" />
+      <ComponentRef Id="lr_odds.rtf" />
+      <ComponentRef Id="MANNWHIT.rtf" />
+      <ComponentRef Id="mantel.rtf" />
+      <ComponentRef Id="mcnamar.rtf" />
+      <ComponentRef Id="metaCorrelation.rtf" />
+      <ComponentRef Id="multi.rtf" />
+      <ComponentRef Id="M_PAIRED.rtf" />
+      <ComponentRef Id="M_SINGLE.rtf" />
+      <ComponentRef Id="M_UNPAIR.rtf" />
+      <ComponentRef Id="nestmean.rtf" />
+      <ComponentRef Id="nkeuls.rtf" />
+      <ComponentRef Id="nplinreg.rtf" />
+      <ComponentRef Id="odds.rtf" />
+      <ComponentRef Id="ONEWAY.rtf" />
+      <ComponentRef Id="orci.rtf" />
+      <ComponentRef Id="pardet.rtf" />
+      <ComponentRef Id="peto.rtf" />
+      <ComponentRef Id="pinterp.rtf" />
+      <ComponentRef Id="poisreg.rtf" />
+      <ComponentRef Id="poisson.rtf" />
+      <ComponentRef Id="poly.rtf" />
+      <ComponentRef Id="POLY_AUC.rtf" />
+      <ComponentRef Id="prate.rtf" />
+      <ComponentRef Id="prcoeff.rtf" />
+      <ComponentRef Id="prefer.rtf" />
+      <ComponentRef Id="PRINC.rtf" />
+      <ComponentRef Id="prmatrix.rtf" />
+      <ComponentRef Id="probcal.rtf" />
+      <ComponentRef Id="probit.rtf" />
+      <ComponentRef Id="probmore.rtf" />
+      <ComponentRef Id="propmeta.rtf" />
+      <ComponentRef Id="prscores.rtf" />
+      <ComponentRef Id="pr_det.rtf" />
+      <ComponentRef Id="pr_fit.rtf" />
+      <ComponentRef Id="pr_irr.rtf" />
+      <ComponentRef Id="p_pair.rtf" />
+      <ComponentRef Id="p_sng.rtf" />
+      <ComponentRef Id="p_unpair.rtf" />
+      <ComponentRef Id="quantile.rtf" />
+      <ComponentRef Id="rdmeta.rtf" />
+      <ComponentRef Id="refrange.rtf" />
+      <ComponentRef Id="relrisk.rtf" />
+      <ComponentRef Id="residm.rtf" />
+      <ComponentRef Id="residuals.rtf" />
+      <ComponentRef Id="retro_r.rtf" />
+      <ComponentRef Id="roc.rtf" />
+      <ComponentRef Id="rrmeta.rtf" />
+      <ComponentRef Id="r_block.rtf" />
+      <ComponentRef Id="R_PAIR.rtf" />
+      <ComponentRef Id="R_UNPAIR.rtf" />
+      <ComponentRef Id="R_XY.rtf" />
+      <ComponentRef Id="scheffe.rtf" />
+      <ComponentRef Id="normality.rtf" />
+      <ComponentRef Id="sign.rtf" />
+      <ComponentRef Id="SIMANAL.rtf" />
+      <ComponentRef Id="simple.rtf" />
+      <ComponentRef Id="simulatedExactP.rtf" />
+      <ComponentRef Id="smirnov.rtf" />
+      <ComponentRef Id="spearman.rtf" />
+      <ComponentRef Id="sqrank.rtf" />
+      <ComponentRef Id="sqrank2.rtf" />
+      <ComponentRef Id="stdmort.rtf" />
+      <ComponentRef Id="stdrr.rtf" />
+      <ComponentRef Id="subset.rtf" />
+      <ComponentRef Id="sum.rtf" />
+      <ComponentRef Id="s_corr.rtf" />
+      <ComponentRef Id="S_INCASE.rtf" />
+      <ComponentRef Id="S_IND.rtf" />
+      <ComponentRef Id="S_MACASE.rtf" />
+      <ComponentRef Id="S_MAPROP.rtf" />
+      <ComponentRef Id="S_SURVEY.rtf" />
+      <ComponentRef Id="s_survival.rtf" />
+      <ComponentRef Id="S_T.rtf" />
+      <ComponentRef Id="treat.rtf" />
+      <ComponentRef Id="tukey.rtf" />
+      <ComponentRef Id="twomulti.rtf" />
+      <ComponentRef Id="TWONEST.rtf" />
+      <ComponentRef Id="twoway.rtf" />
+      <ComponentRef Id="universalAgreement.rtf" />
+      <ComponentRef Id="universal_r_compare.rtf" />
+      <ComponentRef Id="VARIANCE.rtf" />
+      <ComponentRef Id="wei.rtf" />
+      <ComponentRef Id="WILCO.rtf" />
+      <ComponentRef Id="woolf.rtf" />
+      <ComponentRef Id="xover.rtf" />
+      <ComponentRef Id="xtab.rtf" />
+      <ComponentRef Id="xtabouter.rtf" />
+      <ComponentRef Id="xtabz.rtf" />
+      <ComponentRef Id="xxi.rtf" />
+      <ComponentRef Id="z_norm1.rtf" />
+      <ComponentRef Id="z_norm2.rtf" />
+    </Feature>
+  </Product>
+</Wix>

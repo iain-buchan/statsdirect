@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>Friedman</name>
+	<friendly-name lang="en-GB">Friedman and Cochran (nonparametric two-way ANOVA) tests</friendly-name>
+  <help chm-id="1223" />
+  <steps>
+    <settings>
+      <parameters>
+        <frame>
+          <name>data</name>
+          <prompt>Select DATA</prompt>
+          <same-length>true</same-length>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>2</min-columns>
+          <max-columns>200</max-columns>
+          <ask-for-group-id>true</ask-for-group-id>
+        </frame>
+      </parameters>
+    </settings>
+		<builtin function-name="rptFriedman" />
+    <test>
+      <condition>="Friedman".Equals(Parameters["testName"].AsString)</condition>
+      <iftrue>
+        <report filename="friedman.rtf" />
+      </iftrue>
+      <iffalse>
+        <report filename="cochranq.rtf" />
+      </iffalse>
+    </test>
+  </steps>
+  <suggested-operations>
+    <suggested-operation>FriedmanMulti</suggested-operation>
+    <suggested-operation>SquaredRanks</suggested-operation>
+    <suggested-operation>FriedmanSimulateExactP</suggested-operation>
+  </suggested-operations>
+</operation>

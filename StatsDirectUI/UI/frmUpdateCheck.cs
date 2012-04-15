@@ -1,0 +1,119 @@
+﻿using System;
+using System.Diagnostics;
+using System.Net;
+using System.Windows.Forms;
+
+namespace StatsDirect.UI
+{
+    public partial class frmUpdateCheck : Form
+    {
+        private WebClient client;
+        public frmUpdateCheck()
+        {
+            InitializeComponent();
+        }
+
+        private void cmdClose_Click(object sender, EventArgs e)
+        {
+            if (null != client)
+                client.CancelAsync();
+            Close();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (null != client)
+                client.CancelAsync();
+            Close();
+            SDApplication.SoleInstance.CloseAndUpdate();
+        }
+
+        private void frmUpdateCheck_Shown(object sender, EventArgs e)
+        {
+            StartCheck();
+        }
+
+        private void StartCheck()
+        {
+            Application.UseWaitCursor = true;
+            client = new WebClient();
+            client.DownloadStringCompleted += client_DownloadStringCompleted;
+            client.DownloadStringAsync(new Uri("http://www.statsdirect.com/update.aspx"));
+            Application.DoEvents(); // HACK: Horrible bodge because buttons aren't drawn otherwise
+        }
+
+        private void client_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        {
+            Application.UseWaitCursor = false;
+            const string prefix = "Current version ";
+            if (e.Cancelled)
+                return;
+            if (null != e.Error)
+                lblStatus.Text = "Could not check for updates. Please check your Internet connection.";
+            // Success - look for the version
+            string downloadedPage = e.Result;
+            int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.Ordinal);
+            if (latestVersionPos < 0)
+            {
+                lblStatus.Text = "Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx";
+                return;
+            }
+            string latestVersion = downloadedPage.Substring(latestVersionPos + prefix.Length);
+            int versionEndPos = latestVersion.IndexOf(' ');
+            if (versionEndPos < 0)
+            {
+                lblStatus.Text = "Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx";
+                return;
+            }
+            latestVersion = latestVersion.Substring(0, versionEndPos - 1);
+            string currentVersion = Application.ProductVersion;
+            int lastDotPos = currentVersion.LastIndexOf('.');
+            if (lastDotPos > 0)
+                currentVersion = currentVersion.Substring(0, lastDotPos);
+            // Check versions
+            bool isNewer = false;
+            string[] splitCurrentVersion = currentVersion.Split('.');
+            string[] splitLatestVersion = latestVersion.Split('.');
+            for (int i = 0; i < Math.Min(splitCurrentVersion.Length, splitLatestVersion.Length); i++ )
+            {
+                int currentValue;
+                int latestValue;
+                if (!(int.TryParse(splitCurrentVersion[i], out currentValue) && int.TryParse(splitLatestVersion[i], out latestValue)))
+                {
+                    lblStatus.Text = "Cannot tell which version is newer. Please check manually at www.statsdirect.com/update.aspx";
+                    return;
+                }
+                if (latestValue > currentValue)
+                {
+                    isNewer = true;
+                    break;
+                }
+                if (latestValue < currentValue)
+                {
+                    // We're newer
+                    break;
+                }
+                // Check the next part - the numbers are neck-and-neck to here.  If there are no more values, we're equal to the latest version, so we'll exit the loop with isNewer = false.
+            }
+            // isNewer = true; // useful for testing without updating the web site!
+            if (isNewer)
+            {
+                lblStatus.Text = "You are presently running version " + currentVersion + ". Version " + latestVersion +
+                                    " is available. Would you like to close StatsDirect and install the new version?";
+                cmdClose.Text = "Cancel";
+                button1.Visible = true;
+                lblWhatsNew.Visible = true;
+            }
+            else
+            {
+                lblStatus.Text = "You are presently running version " + currentVersion +
+                                    ". You have the latest version of StatsDirect.";
+            }
+        }
+
+        private void lblWhatsNew_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://www.statsdirect.com/Revisions.aspx");
+        }
+    }
+}

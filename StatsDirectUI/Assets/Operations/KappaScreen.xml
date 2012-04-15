@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>KappaScreen</name>
+  <friendly-name lang="en-GB">Measures of inter-rater agreement over categorization</friendly-name>
+  <help chm-id="1003" />
+  <steps>
+    <settings>
+      <parameters>
+        <special>
+          <name>responsesCrosstab</name>
+          <type>raters-2d</type>
+          <must-request>true</must-request>
+        </special>
+        <confidence-interval>
+          <name>ci</name>
+          <must-request>true</must-request>
+        </confidence-interval>
+        <option>
+          <name>method</name>
+          <prompt>Select method for weighted kappa</prompt>
+          <default-value>1</default-value>
+          <options>
+            <option value="1">linear: 1-abs(i-j)/(1-k)</option>
+            <option value="2">quadratic: 1-[(i-j)/(1-k)]&#178;</option>
+          </options>
+        </option>
+      </parameters>
+    </settings>
+  	<builtin function-name="rptKappaScreen" />
+		<report filename="kappa.rtf" />
+	</steps>
+  <suggested-operations>
+    <suggested-operation>KappaSimulateExactP</suggested-operation>
+  </suggested-operations>
+</operation>

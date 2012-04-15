@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>MultipleLinearRegressionBestSubset</name>
+	<friendly-name lang="en-GB">Best sub-set</friendly-name>
+  <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
+  <steps>
+    <settings>
+			<parameters>
+				<pick-from-list>
+					<name>selectedPredictors</name>
+					<allow-multiple>true</allow-multiple>
+					<prompt>Select predictors that must be kept</prompt>
+					<source>predictorTitles</source>
+					<must-request>true</must-request>
+				</pick-from-list>
+				<option>
+					<name>selector</name>
+					<prompt>Selection method</prompt>
+          <default-value>minimumMallows</default-value>
+					<must-request>true</must-request>
+					<options>
+						<option value="minimumMallows">Minimum Mallows' CP</option>
+						<option value="maximumF">Maximum overall F</option>
+					</options>
+				</option>
+			</parameters>
+		</settings>
+		<builtin function-name="rptMultipleLinearRegressionBestSubset" />
+		<report filename="subset.rtf" />
+		<test>
+			<condition>=Parameters.ContainsKey("subsetApplied") &amp;&amp; Parameters["subsetApplied"].AsBoolean</condition>
+			<iftrue>
+				<report filename="multi.rtf" />
+			</iftrue>
+		</test>
+	</steps>
+</operation>

@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="StatsDirect.Templates.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="TemplateDirectory" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Template</Value>
+    </Setting>
+    <Setting Name="OperationsDirectory" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Operations</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

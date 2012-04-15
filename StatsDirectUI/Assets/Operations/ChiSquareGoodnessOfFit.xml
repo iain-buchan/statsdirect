@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>ChiSquareGoodnessOfFit</name>
+	<friendly-name>Chi-square goodness of fit test</friendly-name>
+  <help chm-id="1051" />
+  <steps>
+    <!-- Grouped -->
+    <settings>
+      <parameters>
+        <frame>
+          <name>observed</name>
+          <prompt>Select observed counts</prompt>
+          <title>Observed counts</title>
+          <same-length>false</same-length>
+          <mode>NumericSkipMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>expected</name>
+          <prompt>Select cell probabilities or expected counts</prompt>
+          <title>Probabilities or expected counts</title>
+          <same-length>false</same-length>
+          <same-length-as>observed</same-length-as>
+          <mode>NumericSkipMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>names</name>
+          <prompt>Select category names [skip for default names]</prompt>
+          <cancel-skips-parameter>Skip</cancel-skips-parameter>
+          <same-length>true</same-length>
+          <same-length-as>observed</same-length-as>
+          <mode>Text</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+      </parameters>
+    </settings>
+    <builtin function-name="rptChiSquareGoodnessOfFit" />
+  	<report filename="chigood.rtf"/>
+	</steps>
+  <suggested-operations>
+    <suggested-operation>ChiGFSimulateExactP</suggested-operation>
+  </suggested-operations>
+</operation>

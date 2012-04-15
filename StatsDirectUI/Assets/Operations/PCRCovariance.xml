@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>PCRCovariance</name>
+  <friendly-name lang="en-GB">Principal components analysis: covariance</friendly-name>
+  <help chm-id="1280" />
+  <steps>
+    <settings>
+      <parameters>
+        <!-- CI added for cronbach-->
+        <confidence-interval>
+          <name>ci</name>
+        </confidence-interval>
+        <frame>
+          <name>data</name>
+          <prompt>Select DATA</prompt>
+          <ask-for-group-id>false</ask-for-group-id>
+          <same-length>true</same-length>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>2</min-columns>
+          <max-columns>200</max-columns>
+        </frame>
+      </parameters>
+    </settings>
+		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />
+		<report filename="princ.rtf" />
+    <!-- Defect ID #217: Do Cronbach immediately after PCR and disable other follow-on functions -->
+    <builtin function-name="rptCronbach" />
+    <report filename="cronbach.rtf" />
+  </steps>
+  <!--
+  <suggested-operations>
+	<suggested-operation>PCRCoefficients</suggested-operation>
+	<suggested-operation>PCRScores</suggested-operation>
+	<suggested-operation>PCRMatrix</suggested-operation>
+	<suggested-operation>Cronbach</suggested-operation>
+  </suggested-operations>
+  -->
+</operation>

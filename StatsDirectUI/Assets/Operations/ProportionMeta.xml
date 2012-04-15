@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>ProportionMeta</name>
+  <friendly-name lang="en-GB">Meta-analysis of proportions</friendly-name>
+  <help chm-id="1169" />
+  <steps>
+    <settings>
+      <parameters>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
+        <frame>
+          <name>sn</name>
+          <prompt>Select TOTAL number of subjects (n) studied</prompt>
+          <validator>Positive</validator>
+          <mode>NumericSkipMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>sr</name>
+          <prompt>Select number of subjects (r) with OUTCOME</prompt>
+          <same-length-as>sn</same-length-as>
+          <mode>NumericSkipMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>strata</name>
+          <prompt>Select stratum LABELS [Default for default]</prompt>
+          <cancel-skips-parameter>Default</cancel-skips-parameter>
+          <same-length-as>sn</same-length-as>
+          <mode>Text</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <option>
+          <name>fudge</name>
+          <prompt>Weights = n +</prompt>
+          <default-value>1</default-value>
+          <format-type>Dropdown</format-type>
+          <prompt-precedes-parameter>true</prompt-precedes-parameter>
+          <options>
+            <option value="0.5">0.5</option>
+            <option value="1">1.0</option>
+          </options>
+        </option>
+      </parameters>
+    </settings>
+		<builtin function-name="rptProportionMeta" />
+		<report filename="propmeta.rtf" />
+		<report filename="charts.rtf" />
+	</steps>
+</operation>

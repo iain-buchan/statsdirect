@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>Chi2byNWithoutTrend</name>
+  <friendly-name lang="en-GB">Chi-square 2-by-k independence test</friendly-name>
+  <help chm-id="1049" />
+  <steps>
+    <settings>
+      <parameters>
+        <special>
+          <name>data</name>
+          <must-request>true</must-request>
+          <type>chi-2-column</type>
+        </special>
+      </parameters>
+    </settings>
+  	<builtin function-name="rptChi2byNWithoutTrend" />
+	  <report filename="chi2xc.rtf" />
+	</steps>
+</operation>

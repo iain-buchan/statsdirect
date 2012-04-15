@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>PropSingle</name>
+  <friendly-name lang="en-GB">Analysis of single proportions</friendly-name>
+  <help chm-id="1251" />
+  <steps>
+    <settings>
+      <parameters>
+        <double>
+          <name>n</name>
+          <prompt>Total number of observations</prompt>
+          <minimum-value>0</minimum-value>
+          <must-request>true</must-request>
+        </double>
+        <double>
+          <name>r</name>
+          <prompt>Number responding</prompt>
+          <minimum-value>0</minimum-value>
+          <must-request>true</must-request>
+        </double>
+        <double>
+          <name>qpi</name>
+          <prompt>Probability of success on each trial</prompt>
+          <minimum-value>0</minimum-value>
+          <must-request>true</must-request>
+          <default-value>0.5</default-value>
+        </double>
+        <confidence-interval>
+          <name>cco</name>
+          <must-request>true</must-request>
+        </confidence-interval>
+      </parameters>
+    </settings>
+  	<builtin function-name="rptPropSingle" />
+	  <report filename="p_sng.rtf" />
+	</steps>
+  <suggested-operations>
+    <suggested-operation>PropSingle</suggested-operation>
+  </suggested-operations>
+</operation>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>TwoWayNested</name>
+	<friendly-name lang="en-GB">Two way hierarchical (nested) analysis of variance</friendly-name>
+  <help chm-id="1010" />
+  <steps>
+    <settings>
+      <parameters>
+        <frame2d>
+          <name>data2d</name>
+          <prompt></prompt>
+          <sub-prompt>Select SUB-GROUP IDENTIFIER</sub-prompt>
+          <same-length>true</same-length>
+          <mode>Mode1</mode>
+          <min-columns>2</min-columns>
+          <max-columns>10</max-columns>
+        </frame2d>
+      </parameters>
+    </settings>
+		<builtin function-name="rptTwoNest" />
+		<report filename="twonest.rtf" />
+	</steps>
+  <suggested-operations>
+    <suggested-operation>TwoWayNestedMeans</suggested-operation>
+  </suggested-operations>
+</operation>

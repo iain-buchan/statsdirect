@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>EqualityOfVariance</name>
+	<friendly-name lang="en-GB">Equality of Variance (Levene, Bartlett)</friendly-name>
+  <prerequisite-operation>OneWay</prerequisite-operation>
+  <steps>
+    <settings>
+      <parameters>
+        <frame>
+          <name>data</name>
+          <prompt>Select DATA</prompt>
+          <same-length>false</same-length>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>2</min-columns>
+          <max-columns>200</max-columns>
+          <ask-for-group-id>true</ask-for-group-id>
+        </frame>
+      </parameters>
+    </settings>
+		<builtin function-name="rptEqualityOfVariance" />
+		<report filename="bartlett.rtf" />
+	</steps>
+</operation>

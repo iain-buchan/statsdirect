@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>MetaPlotOptions</name>
+  <friendly-name lang="en-GB">Meta-analysis plot options</friendly-name>
+  <help chm-id="1166" />
+  <steps>
+    <settings>
+      <parameters>
+        <option>
+          <name>meta-plot-method</name>
+          <prompt>Vertical Axis in Meta-Analysis Bias Plot</prompt>
+          <default-value>=Host.Preferences.MetaPlotMethod.ToString()</default-value>
+          <options>
+            <option value="1">standard error</option>
+            <option value="2">precision</option>
+            <option value="3">1/sample size</option>
+            <option value="4">sample size</option>
+            <option value="5">1/log(sample size)</option>
+            <option value="6">log(sample size)</option>
+            <option value="7">1/MH weight</option>
+          </options>
+        </option>
+        <boolean>
+          <name>meta-plot-ci</name>
+          <prompt>Include CI if relevant</prompt>
+          <default-value>=Host.Preferences.MetaPlotCI</default-value>
+        </boolean>
+      </parameters>
+    </settings>
+    <script language="CSharp">
+  <![CDATA[
+SDPreferences preferences = Host.Preferences;
+preferences.MetaPlotCI = Parameters["meta-plot-ci"].AsBoolean;
+preferences.MetaPlotMethod = Parsing.Cint_Txt(Parameters["meta-plot-method"].AsString);
+return new ParameterBag();
+    ]]></script>
+	</steps>
+</operation>

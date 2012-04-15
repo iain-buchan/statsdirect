@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>LogisticRegressionBootstrap</name>
+	<friendly-name lang="en-GB">Bootstrap</friendly-name>
+  <prerequisite-operation>LogisticRegression</prerequisite-operation>
+  <steps>
+    <settings>
+      <parameters>
+        <integer>
+          <name>boots</name>
+          <prompt>How many bootstrap iterations?</prompt>
+          <default-value>1000</default-value>
+          <minimum-value>1</minimum-value>
+        </integer>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
+      </parameters>
+    </settings>
+		<builtin function-name="rptLogisticRegressionBootstrap" />
+		<report filename="lr_bootstrap.rtf" />
+	</steps>
+</operation>

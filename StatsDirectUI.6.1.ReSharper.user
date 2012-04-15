@@ -1,0 +1,505 @@
+<Configuration>
+  <RecentFiles>
+    <RecentFiles>
+      <File id="E078706D-AAFB-4C68-A06A-165B039FB3A4/d:Properties/f:AssemblyInfo.cs" caret="531" fromTop="11" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:UI/f:SDMenuItem.cs" caret="0" fromTop="0" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:UI/f:frmReportRichEdit.cs" caret="0" fromTop="0" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:UI/f:ctlPickAWindow.cs" caret="0" fromTop="0" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:UI/f:SDApplication.cs" caret="0" fromTop="0" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:UI/f:frmMain.cs" caret="0" fromTop="0" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:Expressions/f:SDMath.cs" caret="0" fromTop="0" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:Expressions/f:StatsDirectExpressionParser.cs" caret="1092" fromTop="20" />
+      <File id="D9AC87D9-842B-4C52-9F58-8036C0940DAF/f:Product.wxs" caret="102224" fromTop="8" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:Expressions/f:StatsDirectExpressionLexer.cs" caret="0" fromTop="0" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:Properties/f:AssemblyInfo.cs" caret="1584" fromTop="25" />
+    </RecentFiles>
+    <RecentEdits>
+      <File id="D9AC87D9-842B-4C52-9F58-8036C0940DAF/f:Product.wxs" caret="91048" fromTop="22" />
+      <File id="D9AC87D9-842B-4C52-9F58-8036C0940DAF/f:Product.wxs" caret="90911" fromTop="14" />
+      <File id="E078706D-AAFB-4C68-A06A-165B039FB3A4/d:Properties/f:AssemblyInfo.cs" caret="531" fromTop="11" />
+      <File id="D9AC87D9-842B-4C52-9F58-8036C0940DAF/f:Product.wxs" caret="59332" fromTop="21" />
+      <File id="D9AC87D9-842B-4C52-9F58-8036C0940DAF/f:Product.wxs" caret="102777" fromTop="21" />
+      <File id="C73E1B83-A745-4592-92A0-40C5658D6D7C/d:Properties/f:AssemblyInfo.cs" caret="2262" fromTop="35" />
+    </RecentEdits>
+  </RecentFiles>
+  <CompletionStatisticsManager>
+    <ItemStatistics item="CSharpCodeCompletionContext">
+      <Item value="int" priority="576" />
+      <Item value="Math`0" priority="127" />
+      <Item value="lastdatti" priority="31" />
+      <Item value="lastgpti" priority="31" />
+      <Item value="null" priority="1120" />
+      <Item value="primaryScreen" priority="31" />
+      <Item value="next" priority="31" />
+      <Item value="gearForm" priority="31" />
+      <Item value="ActiveMdiChild" priority="31" />
+      <Item value="StringBuffer" priority="28" />
+      <Item value="sb" priority="95" />
+      <Item value="bool" priority="479" />
+      <Item value="true" priority="255" />
+      <Item value="for" priority="63" />
+      <Item value="char" priority="95" />
+      <Item value="label" priority="31" />
+      <Item value="nextShouldBeUpper" priority="95" />
+      <Item value="Text" priority="122" />
+      <Item value="StringBuilder`0" priority="26" />
+      <Item value="c" priority="95" />
+      <Item value="if" priority="863" />
+      <Item value="else" priority="95" />
+      <Item value="break" priority="159" />
+      <Item value="currentLine" priority="63" />
+      <Item value="try" priority="63" />
+      <Item value="finally" priority="31" />
+      <Item value="return" priority="735" />
+      <Item value="false" priority="159" />
+      <Item value="FormatException`0" priority="31" />
+      <Item value="val" priority="159" />
+      <Item value="is" priority="95" />
+      <Item value="DateTime`0" priority="63" />
+      <Item value="Int32`0" priority="63" />
+      <Item value="string" priority="479" />
+      <Item value="double" priority="477" />
+      <Item value="ierr" priority="31" />
+      <Item value="Constant`0" priority="31" />
+      <Item value="txtTL" priority="63" />
+      <Item value="cbo" priority="31" />
+      <Item value="txt" priority="31" />
+      <Item value="Control`0" priority="95" />
+      <Item value="invalidControlOrNull" priority="95" />
+      <Item value="optionPanel" priority="31" />
+      <Item value="rows" priority="31" />
+      <Item value="throw" priority="223" />
+      <Item value="new" priority="579" />
+      <Item value="InvalidDataException" priority="57" />
+      <Item value="public" priority="381" />
+      <Item value="class" priority="61" />
+      <Item value="XmlAttribute" priority="31" />
+      <Item value="menuItem" priority="63" />
+      <Item value="sdMenuItem" priority="95" />
+      <Item value="res" priority="31" />
+      <Item value="OK" priority="16" />
+      <Item value="richEditControl1" priority="31" />
+      <Item value="DocumentPosition`0" priority="31" />
+      <Item value="oldTitle" priority="63" />
+      <Item value="operation" priority="63" />
+      <Item value="workbookView" priority="127" />
+      <Item value="WorkbookView`0" priority="128" />
+      <Item value="NotImplementedException" priority="88" />
+      <Item value="private" priority="319" />
+      <Item value="foreach" priority="63" />
+      <Item value="in" priority="63" />
+      <Item value="tlp" priority="31" />
+      <Item value="FindGridOrNull`0" priority="31" />
+      <Item value="grid" priority="127" />
+      <Item value="has3Columns" priority="63" />
+      <Item value="ssgContainer" priority="31" />
+      <Item value="Color`0" priority="97" />
+      <Item value="BackColor" priority="60" />
+      <Item value="Padding" priority="210" />
+      <Item value="Margin" priority="98" />
+      <Item value="Size" priority="32" />
+      <Item value="isLikelihood" priority="31" />
+      <Item value="ShowRangeExplorer`0" priority="31" />
+      <Item value="SDApplication`0" priority="223" />
+      <Item value="Close`0" priority="63" />
+      <Item value="void" priority="95" />
+      <Item value="client" priority="31" />
+      <Item value="e" priority="63" />
+      <Item value="lblStatus" priority="127" />
+      <Item value="downloadedPage" priority="63" />
+      <Item value="versionPos" priority="63" />
+      <Item value="HttpListenerPrefixCollection`0" priority="31" />
+      <Item value="const" priority="95" />
+      <Item value="version" priority="159" />
+      <Item value="versionEndPos" priority="63" />
+      <Item value="cmdClose" priority="31" />
+      <Item value="button1" priority="26" />
+      <Item value="Form`0" priority="31" />
+      <Item value="frmUpdateCheck" priority="29" />
+      <Item value="f" priority="63" />
+      <Item value="mainWindow" priority="159" />
+      <Item value="closingForUpgrade" priority="31" />
+      <Item value="DomainUpDown`0" priority="31" />
+      <Item value="appPath" priority="31" />
+      <Item value="currentVersion" priority="191" />
+      <Item value="lastDotPos" priority="63" />
+      <Item value="i" priority="127" />
+      <Item value="splitCurrentVersion" priority="63" />
+      <Item value="Length" priority="107" />
+      <Item value="splitVersion" priority="63" />
+      <Item value="out" priority="543" />
+      <Item value="currentValue" priority="63" />
+      <Item value="value" priority="63" />
+      <Item value="isNewer" priority="63" />
+      <Item value="ProcessCmdKey`0" priority="31" />
+      <Item value="ShouldCloseOperationOnCancel`0" priority="31" />
+      <Item value="definition" priority="31" />
+      <Item value="sp" priority="159" />
+      <Item value="transTemp72" priority="31" />
+      <Item value="transTemp73" priority="31" />
+      <Item value="transTemp66" priority="31" />
+      <Item value="transTemp67" priority="31" />
+      <Item value="transTemp64" priority="31" />
+      <Item value="transTemp65" priority="31" />
+      <Item value="using" priority="154" />
+      <Item value="StatsDirect" priority="92" />
+      <Item value="Data" priority="26" />
+      <Item value="t" priority="31" />
+      <Item value="C" priority="63" />
+      <Item value="r" priority="63" />
+      <Item value="catch" priority="63" />
+      <Item value="System" priority="62" />
+      <Item value="ComponentModel" priority="26" />
+      <Item value="Win32Exception`0" priority="27" />
+      <Item value="MenuItem`0" priority="31" />
+      <Item value="ex" priority="95" />
+      <Item value="IOException`0" priority="31" />
+      <Item value="Exception`0" priority="31" />
+      <Item value="fillableParameter" priority="31" />
+      <Item value="control" priority="31" />
+      <Item value="chartOptionsParameter" priority="31" />
+      <Item value="idif" priority="31" />
+      <Item value="this" priority="63" />
+      <Item value="selectedTest" priority="31" />
+      <Item value="SetVisibility`0" priority="31" />
+      <Item value="host" priority="31" />
+      <Item value="DistributionOf`0" priority="31" />
+      <Item value="distributionOptions" priority="64" />
+      <Item value="DistributionOptions" priority="28" />
+      <Item value="IFillable`0" priority="31" />
+      <Item value="index" priority="31" />
+      <Item value="barOptions" priority="63" />
+      <Item value="xs0" priority="31" />
+      <Item value="longestTitle" priority="95" />
+      <Item value="bOptions" priority="31" />
+      <Item value="LabelDirection" priority="32" />
+      <Item value="LabelDirection`0" priority="64" />
+      <Item value="Across" priority="16" />
+      <Item value="preferredLabelDirection" priority="31" />
+      <Item value="Up" priority="16" />
+      <Item value="maxLabelChars" priority="31" />
+      <Item value="rdoExcelOff" priority="31" />
+      <Item value="rdoExcelOn" priority="63" />
+      <Item value="DefaultData`0" priority="31" />
+      <Item value="StringCollection`0" priority="95" />
+      <Item value="ParseXmlToStringCollection`0" priority="63" />
+      <Item value="xPaths" priority="31" />
+      <Item value="XmlDocument" priority="28" />
+      <Item value="doc" priority="63" />
+      <Item value="rawXml" priority="31" />
+      <Item value="XmlNodeList`0" priority="31" />
+      <Item value="XmlNode`0" priority="31" />
+      <Item value="element" priority="31" />
+      <Item value="StringCollection" priority="28" />
+      <Item value="s" priority="63" />
+      <Item value="Settings1`0" priority="31" />
+      <Item value="s1" priority="31" />
+      <Item value="object" priority="249" />
+      <Item value="XmlIgnore" priority="31" />
+      <Item value="ExtraData" priority="32" />
+      <Item value="Step`0" priority="223" />
+      <Item value="stepFound" priority="223" />
+      <Item value="outputForFrameStep" priority="95" />
+      <Item value="frameStep" priority="96" />
+      <Item value="foundStep" priority="64" />
+      <Item value="parameter" priority="31" />
+      <Item value="preferBefore" priority="31" />
+      <Item value="RelativePosition`0" priority="63" />
+      <Item value="UI" priority="53" />
+      <Item value="commandLine" priority="127" />
+      <Item value="firstSpace" priority="95" />
+      <Item value="args" priority="63" />
+      <Item value="static" priority="127" />
+      <Item value="Runtime" priority="22" />
+      <Item value="parser" priority="95" />
+      <Item value="Hidden" priority="26" />
+      <Item value="Expressions" priority="31" />
+      <Item value="Converter`0" priority="26" />
+      <Item value="equation" priority="31" />
+      <Item value="cSharpExpression" priority="31" />
+      <Item value="assemblyPath" priority="31" />
+      <Item value="cSharpFunction" priority="31" />
+      <Item value="Debug`0" priority="31" />
+      <Item value="Numerics" priority="26" />
+      <Item value="term" priority="63" />
+      <Item value="Exception" priority="29" />
+      <Item value="arg" priority="31" />
+      <Item value="Calcit`0" priority="31" />
+      <Item value="MethodInfo`0" priority="31" />
+      <Item value="methodInfo" priority="32" />
+      <Item value="retval" priority="63" />
+      <Item value="typeName" priority="31" />
+      <Item value="methodName" priority="63" />
+      <Item value="PDF`0" priority="63" />
+      <Item value="q" priority="95" />
+      <Item value="Pnorm`0" priority="31" />
+      <Item value="mean" priority="63" />
+      <Item value="sd" priority="63" />
+      <Item value="lowerTail" priority="63" />
+      <Item value="p" priority="63" />
+      <Item value="DevExpress" priority="25" />
+      <Item value="SelectAllCommand" priority="26" />
+      <Item value="assembly" priority="56" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.Math">
+      <Item value="Floor`0" priority="26" />
+      <Item value="Min`0" priority="26" />
+      <Item value="Log`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.String">
+      <Item value="IsNullOrEmpty`0" priority="107" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Threading.Thread">
+      <Item value="CurrentCulture" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Globalization.CultureInfo">
+      <Item value="TextInfo" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Globalization.TextInfo">
+      <Item value="ToTitleCase`0" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.Char">
+      <Item value="IsLetter`0" priority="26" />
+      <Item value="ToUpper`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Text.StringBuilder">
+      <Item value="Add`0" priority="26" />
+      <Item value="Append`0" priority="45" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.String">
+      <Item value="Contains`0" priority="27" />
+      <Item value="Replace`0" priority="26" />
+      <Item value="IndexOf`0" priority="107" />
+      <Item value="Substring`0" priority="134" />
+      <Item value="Split`0" priority="53" />
+      <Item value="Length" priority="53" />
+      <Item value="Equals`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@StatsDirect.Numerics.Constant">
+      <Item value="MISSING" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Windows.Forms.TextBox">
+      <Item value="SelectAll`0" priority="26" />
+      <Item value="Focus`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Windows.Forms.TableLayoutPanel">
+      <Item value="Controls" priority="53" />
+      <Item value="BackColor" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.UI.SDMenuItem">
+      <Item value="Help" priority="80" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.UI.SDMenuItemHelp">
+      <Item value="ChmId" priority="53" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Windows.Forms.ToolStripMenuItem">
+      <Item value="Tag" priority="26" />
+      <Item value="Text" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.Int32">
+      <Item value="Parse`0" priority="26" />
+      <Item value="TryParse`0" priority="53" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Int32">
+      <Item value="ToString`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:DevExpress.XtraRichEdit.RichEditControl">
+      <Item value="Document" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:DevExpress.XtraRichEdit.API.Native.Document">
+      <Item value="InsertText`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.DateTime">
+      <Item value="Now" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.DateTime">
+      <Item value="ToString`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Templates.Operation">
+      <Item value="FriendlyNames" priority="107" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Collections.Generic.IList`1">
+      <Item value="Count" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.UI.SDWorkbookView">
+      <Item value="ActiveWorkbookSet" priority="26" />
+      <Item value="GetLock`0" priority="26" />
+      <Item value="ReleaseLock`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:SpreadsheetGear.IWorkbookSet">
+      <Item value="DefaultFontName" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:SpreadsheetGear.Windows.Forms.WorkbookView">
+      <Item value="ActiveWorksheet" priority="80" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:SpreadsheetGear.IWorksheet">
+      <Item value="Cells" priority="81" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:SpreadsheetGear.IRange">
+      <Item value="ColumnCount" priority="26" />
+      <Item value="EntireColumn" priority="53" />
+      <Item value="Hidden" priority="26" />
+      <Item value="ColumnWidth" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.Drawing.Color">
+      <Item value="Red" priority="26" />
+      <Item value="Green" priority="55" />
+      <Item value="PaleGreen" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@SpreadsheetGear.Windows.Forms.RangeExplorerCategoryFlags">
+      <Item value="All" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@StatsDirect.UI.SDApplication">
+      <Item value="SoleInstance" priority="161" />
+      <Item value="HasInstance" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Net.WebClient">
+      <Item value="CancelAsync`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Net.DownloadStringCompletedEventArgs">
+      <Item value="Cancelled" priority="26" />
+      <Item value="Equals`0" priority="26" />
+      <Item value="Result" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Windows.Forms.Label">
+      <Item value="Text" priority="107" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Windows.Forms.Button">
+      <Item value="Text" priority="26" />
+      <Item value="Visible" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Windows.Forms.Form">
+      <Item value="ShowDialog`0" priority="26" />
+      <Item value="Dispose`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.UI.frmMain">
+      <Item value="Close`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.UI.SDApplication">
+      <Item value="ClosingForUpgrade" priority="26" />
+      <Item value="FriendlyError`0" priority="80" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.Diagnostics.Process">
+      <Item value="Start`0" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Charting.ChartDefinition">
+      <Item value="YSeries" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Collections.Generic.List`1">
+      <Item value="Count" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Templates.ScaleParameters">
+      <Item value="X" priority="81" />
+      <Item value="Y" priority="53" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Templates.AxisScaleParameters">
+      <Item value="Min" priority="80" />
+      <Item value="Max" priority="80" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.UI.frmReportRichEdit">
+      <Item value="SelectAllToolStripMenuItem" priority="22" />
+      <Item value="insertToolStripMenuItem" priority="22" />
+      <Item value="insertDateAndTimeToolStripMenuItem" priority="22" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Builtins.ctlPDF">
+      <Item value="selectedTest" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Templates.ITemplateHost">
+      <Item value="Amend`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Builtins.DistributionOptions">
+      <Item value="SelectedTest" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Charting.BarOptions">
+      <Item value="SeriesTitles" priority="53" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Windows.Forms.DataGridView">
+      <Item value="Rows" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Windows.Forms.DataGridViewRowCollection">
+      <Item value="Clear`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Configuration.SettingsProperty">
+      <Item value="DefaultValue" priority="53" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Xml.XmlDocument">
+      <Item value="Load`0" priority="26" />
+      <Item value="GetElementsByTagName`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Xml.XmlNode">
+      <Item value="InnerText" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Collections.Specialized.StringCollection">
+      <Item value="Add`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Double">
+      <Item value="ToString`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Templates.OutputFrameStep">
+      <Item value="PreferInPlaceInsertion" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.UI.ctlPickAWindow">
+      <Item value="writePosition" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Templates.SpecialParameter">
+      <Item value="ExtraData" priority="22" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@StatsDirect.UI.RelativePosition">
+      <Item value="BeforeSelection" priority="26" />
+      <Item value="AfterSelection" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Calculator.Calculator">
+      <Item value="CalculatorTop" priority="22" />
+      <Item value="CalculatorLeft" priority="27" />
+      <Item value="CalculatorWidth" priority="27" />
+      <Item value="CalculatorHeight" priority="27" />
+      <Item value="CalculatorMaximized" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Calculator.frmStatsDirectCalculator">
+      <Item value="Dispose`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Expressions.StatsDirectExpressionParser+start_return">
+      <Item value="builtExpression" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.Windows.Forms.MessageBox">
+      <Item value="Show`0" priority="27" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@StatsDirect.Expressions.Converter">
+      <Item value="Convert`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.Diagnostics.Debug">
+      <Item value="Assert`0" priority="54" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@System.Convert">
+      <Item value="ToDouble`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Builtins.Calcit">
+      <Item value="Evaluate`0" priority="83" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:StatsDirect.Expressions.StatsDirectExpressionParser">
+      <Item value="Failed" priority="26" />
+      <Item value="GetErrorMessage`0" priority="26" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@StatsDirect.Numerics.PDF">
+      <Item value="tfromp`0" priority="26" />
+      <Item value="alnorm`0" priority="27" />
+    </ItemStatistics>
+  </CompletionStatisticsManager>
+  <NAntValidationSettings>
+    <NAntPath value="" />
+  </NAntValidationSettings>
+  <UnitTestRunner>
+    <Providers />
+  </UnitTestRunner>
+  <UnitTestRunnerNUnit>
+    <NUnitInstallDir IsNull="False" />
+    <UseAddins>Never</UseAddins>
+  </UnitTestRunnerNUnit>
+  <SettingsComponent>
+    <string />
+    <integer />
+    <boolean>
+      <setting name="SolutionAnalysisEnabled">False</setting>
+    </boolean>
+  </SettingsComponent>
+</Configuration>

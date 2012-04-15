@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>PoissonRegression</name>
+  <friendly-name lang="en-GB">Poisson regression</friendly-name>
+  <help chm-id="1281" />
+  <steps>
+    <settings>
+      <parameters>
+        <option>
+          <name>grouping</name>
+          <prompt>Response data</prompt>
+          <columns>1</columns>
+          <default-value>individual</default-value>
+          <lifetime>SessionForThisOperation</lifetime>
+          <options>
+            <option value="grouped">Grouped (i.e. r out of n responded with covariates in row i)</option>
+            <option value="individual">Individual (i.e. 0 [not responded]  or 1 [responded] for individual i in row i)</option>
+          </options>
+        </option>
+        <string>
+          <name>accuracy</name>
+          <prompt>Precision of estimates:</prompt>
+          <prompt-precedes-parameter>true</prompt-precedes-parameter>
+          <maximum-length>12</maximum-length>
+          <default-value>="0.0000001"</default-value>
+          <lifetime>SessionForThisOperation</lifetime>
+        </string>
+        <boolean>
+          <name>intercept</name>
+          <prompt>Calculate intercepts</prompt>
+          <default-value>true</default-value>
+          <lifetime>SessionForThisOperation</lifetime>
+        </boolean>
+        <boolean>
+          <name>weights</name>
+          <prompt>Use weights for responses</prompt>
+          <default-value>false</default-value>
+          <lifetime>SessionForThisOperation</lifetime>
+        </boolean>
+<!--
+        <multiple-options>
+          <format-hint>poissonRegressionOptions</format-hint>
+          <prompt>Poisson regression options</prompt>
+          <options>
+            <option name="has-exposure" value="false">Counts of events only</option>
+            <option name="has-exposure" value="true">Counts of events and exposure (person-time)</option>
+            <option name="intercept" selected="true">Calculate intercept</option>
+            <option name="weights" selected="false">Use weights for responses</option>
+          </options>
+          <strings>
+            <string name="accuracy" default="0.0000001">Precision of estimates</string>
+          </strings>
+        </multiple-options>
+        -->
+        <frame>
+          <name>response</name>
+          <prompt>Select data for RESPONSE/number of EVENTS</prompt>
+          <same-length>false</same-length>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+      </parameters>
+    </settings>
+		<test>
+			<condition>="true".Equals(Parameters["has-exposure"].AsString)</condition>
+			<iftrue>
+				<!-- grouped -->
+        <settings>
+          <parameters>
+            <frame>
+              <name>exposure</name>
+              <prompt>Select data for EXPOSURE (person-time)</prompt>
+              <same-length>true</same-length>
+              <same-length-as>response</same-length-as>
+              <mode>NumericReplaceMissing</mode>
+              <min-columns>1</min-columns>
+              <max-columns>1</max-columns>
+              <clear-selection-first>true</clear-selection-first>
+            </frame>
+          </parameters>
+        </settings>
+			</iftrue>
+		</test>
+		<test>
+			<condition>=Parameters["weights"].AsBoolean</condition>
+			<iftrue>
+        <settings>
+          <parameters>
+            <frame>
+              <name>weight</name>
+              <prompt>Select data for PRIOR WEIGHTS</prompt>
+              <same-length>true</same-length>
+              <same-length-as>response</same-length-as>
+              <mode>NumericReplaceMissing</mode>
+              <min-columns>1</min-columns>
+              <max-columns>1</max-columns>
+              <clear-selection-first>true</clear-selection-first>
+            </frame>
+          </parameters>
+        </settings>
+			</iftrue>
+		</test>
+    <settings>
+      <parameters>
+        <frame>
+          <name>predictors</name>
+          <prompt>Select data for PREDICTORS</prompt>
+          <validator>CheckForNonDummiedCategories</validator>
+          <same-length>true</same-length>
+          <same-length-as>response</same-length-as>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>200</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+      </parameters>
+    </settings>
+		<builtin function-name="rptPoissonRegression" />
+		<report filename="poisreg.rtf" />
+	</steps>
+  <suggested-operations>
+    <suggested-operation>PoissonRegressionFitToReport</suggested-operation>
+    <suggested-operation>PoissonRegressionFitToWorksheet</suggested-operation>
+    <suggested-operation>PoissonRegressionModel</suggested-operation>
+    <suggested-operation>PoissonRegressionIRR</suggested-operation>
+    <suggested-operation>PoissonRegressionResiduals</suggested-operation>
+  </suggested-operations>
+</operation>
