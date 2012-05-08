@@ -40,9 +40,9 @@
         <option>
           <name>fudge</name>
           <prompt>Weights = n +</prompt>
+          <prompt-precedes-parameter>true</prompt-precedes-parameter>
           <default-value>1</default-value>
           <format-type>Dropdown</format-type>
-          <prompt-precedes-parameter>true</prompt-precedes-parameter>
           <options>
             <option value="0.5">0.5</option>
             <option value="1">1.0</option>

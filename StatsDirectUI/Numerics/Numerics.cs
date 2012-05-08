@@ -1,38 +1,38 @@
 namespace StatsDirect.Numerics
 {
-	using System;
-	public class Constant
-	{
-		//IEEE 754 floating point constants as per float.h in other C
-		//compatability with old netlib.org machine constant routine
-		// DMACH1 = DBL_MIN;
-		// DMACH2 = DBL_MAX;
-		// DMACH3 = DBL_LRS/2;
-		// DMACH4 = Math.Pow (2.0,1.0-DBL_MANT_DIG);
-		// DMACH5 = Math.Log10 (2.0);
-		public const int DBL_MANT_DIG =                           53; //digits in the mantissa
-		public const int DBL_DIG =                                15; //significant digits
-		public const double DBL_MIN_EXP =                      -1021; //minimum exponent to the base e
-		public const double DBL_MIN_10_EXP=                     -307; //minimum exponent to the base 10
-		public const double DBL_MAX_EXP =                       1024; //maximum exponent to the base e
-		public const double DBL_MAX_10_EXP=                      308; //maximum exponent to the base 10
-		public const double DBL_MAX =        1.7976931348623157E+308; //largest magnitude [LMREAL]
-		public const double DBL_MIN =        2.2250738585072014E-308; //smallest positive magnitude [SPREAL]
-		public const double DBL_LRS =    2.22044604925031308085E-016; //largest relative spacing [EPSILON]
-		public const double DBL_SRS =    1.11022302462515654042E-016; //smallest relative spacing [EPSNEG]
-		public const double MAXEXP =           709.78271289338399672; //log(DBL_MAX)
-		
-		public const double PI =       3.1415926535897932384626433832795028841971693993751d;
-        public const double SQRTPI =   1.7724538509055160272981674833411451827975494561224d;
-		public const double SQ2PIL =   0.918938533204672741780329736405617639861397473637;  //log(sqrt(pi*2))
-		public const double SQPI2L =   0.225791352644727432363097614947441071785897339277;  //log(sqrt(pi/2))
+    using System;
+    public class Constant
+    {
+        //IEEE 754 floating point constants as per float.h in other C
+        //compatability with old netlib.org machine constant routine
+        // DMACH1 = DBL_MIN;
+        // DMACH2 = DBL_MAX;
+        // DMACH3 = DBL_LRS/2;
+        // DMACH4 = Math.Pow (2.0,1.0-DBL_MANT_DIG);
+        // DMACH5 = Math.Log10 (2.0);
+        public const int DBL_MANT_DIG = 53; //digits in the mantissa
+        public const int DBL_DIG = 15; //significant digits
+        public const double DBL_MIN_EXP = -1021; //minimum exponent to the base e
+        public const double DBL_MIN_10_EXP = -307; //minimum exponent to the base 10
+        public const double DBL_MAX_EXP = 1024; //maximum exponent to the base e
+        public const double DBL_MAX_10_EXP = 308; //maximum exponent to the base 10
+        public const double DBL_MAX = 1.7976931348623157E+308; //largest magnitude [LMREAL]
+        public const double DBL_MIN = 2.2250738585072014E-308; //smallest positive magnitude [SPREAL]
+        public const double DBL_LRS = 2.22044604925031308085E-016; //largest relative spacing [EPSILON]
+        public const double DBL_SRS = 1.11022302462515654042E-016; //smallest relative spacing [EPSNEG]
+        public const double MAXEXP = 709.78271289338399672; //log(DBL_MAX)
+
+        public const double PI = 3.1415926535897932384626433832795028841971693993751d;
+        public const double SQRTPI = 1.7724538509055160272981674833411451827975494561224d;
+        public const double SQ2PIL = 0.918938533204672741780329736405617639861397473637;  //log(sqrt(pi*2))
+        public const double SQPI2L = 0.225791352644727432363097614947441071785897339277;  //log(sqrt(pi/2))
 
         public const double MISSING = double.MinValue; //missing data value was 1E+300 in SD2
-        
-        public const double EPSNEG =  DBL_SRS; //largest relative spacing of doubles = B**(-MACHEP)
-        public const double SPREAL =  DBL_MIN; //smallest positive double = B**(EMIN-1)
-        public const double LMREAL =  DBL_MAX; //largest double = B**EMAX*(1 - B**(-D))
-		public const double EPSILON = DBL_LRS; //smallest relative spacing of doubles = B**(-D)
+
+        public const double EPSNEG = DBL_SRS; //largest relative spacing of doubles = B**(-MACHEP)
+        public const double SPREAL = DBL_MIN; //smallest positive double = B**(EMIN-1)
+        public const double LMREAL = DBL_MAX; //largest double = B**EMAX*(1 - B**(-D))
+        public const double EPSILON = DBL_LRS; //smallest relative spacing of doubles = B**(-D)
 
         // For conversion purposes:
         // dpmach(1) = Constant.MISSING
@@ -43,52 +43,52 @@ namespace StatsDirect.Numerics
         // dpmach(6) = 3.141592653589793238462643383279502884197169399375
         // dpmach(7) = 2147483647.0
         // dpmach(8) = 2.718281828459045235360287
-	}
+    }
 
-	/// <summary>
-	/// Core numerical functions for .Net statistical algorithms, Iain Buchan, July 2003.
-	/// </summary>
-	public class Base
-	{
-		/// <summary>
-		/// Default seed for random number generators.
-		/// </summary>
-		public static int DefaultSeed()
-		{
-			return Environment.TickCount; 
-		}
+    /// <summary>
+    /// Core numerical functions for .Net statistical algorithms, Iain Buchan, July 2003.
+    /// </summary>
+    public class Base
+    {
+        /// <summary>
+        /// Default seed for random number generators.
+        /// </summary>
+        public static int DefaultSeed()
+        {
+            return Environment.TickCount;
+        }
 
-		/// <summary>
-		/// Sign transfer b to a (FORTRAN compatability).
-		/// </summary>
-		public static double dsign(double a, double b)
-		{
-		    if (b<0.0) 
-				return -Math.Abs(a);
-		    return Math.Abs(a);
-		}
+        /// <summary>
+        /// Sign transfer b to a (FORTRAN compatability).
+        /// </summary>
+        public static double dsign(double a, double b)
+        {
+            if (b < 0.0)
+                return -Math.Abs(a);
+            return Math.Abs(a);
+        }
 
-	    /// <summary>
-		/// Integer rounding function (FORTRAN compatability)
-		/// </summary>
-		public static double dnint(double a)
-	    {
-	        if (a>0.0)
-				return (int)(a + 0.5);
-	        return (int)(a - 0.5);
-	    }
+        /// <summary>
+        /// Integer rounding function (FORTRAN compatability)
+        /// </summary>
+        public static double dnint(double a)
+        {
+            if (a > 0.0)
+                return (int)(a + 0.5);
+            return (int)(a - 0.5);
+        }
 
-	    /// <summary>
-		/// safe Exponent.
-		/// </summary>
-		public static double SafeExp(double x)
-	    {
-	        if (Math.Log(x)>Constant.MAXEXP) 
-				return double.MaxValue;
-	        return Math.Exp(x);
-	    }
+        /// <summary>
+        /// safe Exponent.
+        /// </summary>
+        public static double SafeExp(double x)
+        {
+            if (Math.Log(x) > Constant.MAXEXP)
+                return double.MaxValue;
+            return Math.Exp(x);
+        }
 
-	    /// <summary>
+        /// <summary>
         /// Safe square root (was Safe_Sqr in SD2).
         /// </summary>
         public static double SafeSqrt(double x)
@@ -98,69 +98,69 @@ namespace StatsDirect.Numerics
             return Constant.MISSING;
         }
 
-		/// <summary>
-		/// Number of terms for 64 bit orthogonal series; error within eta.
-		/// </summary>
-		/// <remarks>
+        /// <summary>
+        /// Number of terms for 64 bit orthogonal series; error within eta.
+        /// </summary>
+        /// <remarks>
         /// Ref: R. Broucke, Algorithm 446, CACM., 16, 254 (1973).
         /// </remarks>
-		public static int chebyinit(double[] cs, int n, double eta)
-		{
-		    if (n < 1)
-				return 0;
+        public static int chebyinit(double[] cs, int n, double eta)
+        {
+            if (n < 1)
+                return 0;
 
-			double err = 0.0;
-			int i = 0;
-			for (int j=1; j<=n; j++) 
-			{
-				i = n - j;
-				err += Math.Abs(cs[i]);
-				if (err > eta) 
-					return i;
-			}
-			return i;
-		}
+            double err = 0.0;
+            int i = 0;
+            for (int j = 1; j <= n; j++)
+            {
+                i = n - j;
+                err += Math.Abs(cs[i]);
+                if (err > eta)
+                    return i;
+            }
+            return i;
+        }
 
-		/// <summary>
-		/// Evaluate the n term Chebyshev series in a[].
-		/// </summary>
-		/// <remarks>
+        /// <summary>
+        /// Evaluate the n term Chebyshev series in a[].
+        /// </summary>
+        /// <remarks>
         /// Ref: R. Broucke, Algorithm 446, CACM., 16, 254 (1973).
         /// </remarks>
-		public static double cheby(double x, double[] a, int n)
-		{
-			if (n < 1 || n > 1000) return double.NaN;
-			if (x < -1.1 || x > 1.1) return double.NaN;
-			double twox = x * 2;
-		    double b2 = 0;
+        public static double cheby(double x, double[] a, int n)
+        {
+            if (n < 1 || n > 1000) return double.NaN;
+            if (x < -1.1 || x > 1.1) return double.NaN;
+            double twox = x * 2;
+            double b2 = 0;
             double b1 = 0;
-			double b0 = 0;
-			for (int i = 1; i <= n; i++)
-			{
-				b2 = b1;
-				b1 = b0;
-				b0 = twox * b1 - b2 + a[n - i];
-			}
-			return (b0 - b2) * 0.5;
-		}
+            double b0 = 0;
+            for (int i = 1; i <= n; i++)
+            {
+                b2 = b1;
+                b1 = b0;
+                b0 = twox * b1 - b2 + a[n - i];
+            }
+            return (b0 - b2) * 0.5;
+        }
 
-		/// <summary>
-		/// Relative error logarithm log(1 + x).
-		/// </summary>
-		/// <remarks>
+        /// <summary>
+        /// Relative error logarithm log(1 + x).
+        /// </summary>
+        /// <remarks>
         /// Ref: netlib.org DLNREL algorithm by W. Fullerton of Los Alamos Scientific Laboratory.
         /// </remarks>
-		public static double log1p(double x)
-		{
-			/* series for log1p on the interval -.375 to .375
-				 *		          with weighted error   6.35e-32
-				 *		           log weighted error  31.20
-				 *		 significant figures required  30.93
-				 *			  decimal places required  32.01
-				 */
+        public static double log1p(double x)
+        {
+            /* series for log1p on the interval -.375 to .375
+                 *		          with weighted error   6.35e-32
+                 *		           log weighted error  31.20
+                 *		 significant figures required  30.93
+                 *			  decimal places required  32.01
+                 */
 
-			// Chebychev series for log relative error log1p
-			double[] alnrcs = {
+            // Chebychev series for log relative error log1p
+            double[] alnrcs = {
 								  +.10378693562743769800686267719098e+1,
 								  -.13364301504908918098766041553133e+0,
 								  +.19408249135520563357926199374750e-1,
@@ -204,227 +204,227 @@ namespace StatsDirect.Numerics
 								  +.17578597841760239233269760000000e-29,
 								  -.33410026677731010351377066666666e-30,
 								  +.63533936180236187354180266666666e-31};
-			
-			double xmin = -1.0 + Math.Sqrt (1.0/Constant.DBL_LRS);
-			
-			const int nlnrel =22;
-			// for IEEE 64 bit
 
-			if (x == 0.0) return 0.0;
-			if (x == -1.0) return double.NegativeInfinity;
-			if (x  < -1.0) return double.NaN;
+            double xmin = -1.0 + Math.Sqrt(1.0 / Constant.DBL_LRS);
 
-			if (Math.Abs(x) <= .375) 
-			{
-				if(Math.Abs(x) < .5 * Constant.DBL_LRS) return x;
-				if( (0.0 < x && x < 1e-8) || (-1e-9 < x && x < 0.0)) return x * (1.0 - .5 * x);
-				return x * (1.0 - x * cheby(x / .375, alnrcs, nlnrel));
-			}
-			if (x < xmin) 
-			{
-				// low precision; x too close to -1
-			}
-			return Math.Log(1.0 + x);
-		}
+            const int nlnrel = 22;
+            // for IEEE 64 bit
 
-		/// <summary>
-		/// Compute the Exponential minus 1 (note: due in C99 math library)
-		/// </summary>
-		public static double expm1(double x)
-		{
-			double y, a = Math.Abs(x);
+            if (x == 0.0) return 0.0;
+            if (x == -1.0) return double.NegativeInfinity;
+            if (x < -1.0) return double.NaN;
 
-			if (a < Constant.DBL_LRS) return x;
-			if (a > 0.697) return Math.Exp(x) - 1.0;
+            if (Math.Abs(x) <= .375)
+            {
+                if (Math.Abs(x) < .5 * Constant.DBL_LRS) return x;
+                if ((0.0 < x && x < 1e-8) || (-1e-9 < x && x < 0.0)) return x * (1.0 - .5 * x);
+                return x * (1.0 - x * cheby(x / .375, alnrcs, nlnrel));
+            }
+            if (x < xmin)
+            {
+                // low precision; x too close to -1
+            }
+            return Math.Log(1.0 + x);
+        }
 
-			if (a > 1e-8)
-			{
-				y = Math.Exp(x) - 1.0;
-			}
-			else 
-			{
-				y = (x / 2.0 + 1.0) * x;
-			}
-			y -= (1.0 + y) * (log1p (y) - x);
-			return y;
-		}
-	
-	} //end of Base class
+        /// <summary>
+        /// Compute the Exponential minus 1 (note: due in C99 math library)
+        /// </summary>
+        public static double expm1(double x)
+        {
+            double y, a = Math.Abs(x);
 
-	/// <summary>
-	/// Basic probability distribution functions
-	/// </summary>
-	public class PDF
-	{
-		/// <summary>
-		/// normal deviate Z for a given lower tail area of P; Z is accurate to about 1 part in 10**16.
-		/// </summary>
-		/// <remarks>
+            if (a < Constant.DBL_LRS) return x;
+            if (a > 0.697) return Math.Exp(x) - 1.0;
+
+            if (a > 1e-8)
+            {
+                y = Math.Exp(x) - 1.0;
+            }
+            else
+            {
+                y = (x / 2.0 + 1.0) * x;
+            }
+            y -= (1.0 + y) * (log1p(y) - x);
+            return y;
+        }
+
+    } //end of Base class
+
+    /// <summary>
+    /// Basic probability distribution functions
+    /// </summary>
+    public class PDF
+    {
+        /// <summary>
+        /// normal deviate Z for a given lower tail area of P; Z is accurate to about 1 part in 10**16.
+        /// </summary>
+        /// <remarks>
         /// Wichura MJ. Algorithm AS 241: The Percentage Points of the Normal Distribution.
         /// Applied Statistics 1988, 37, 477-484.
         /// </remarks>
-		public static double gauinv(double p, out int ifault)
-		{
-			const double
-					  zero = 0.0,
-					  one = 1.0,
-					  half = 0.50,
-					  split1 = 0.4250,
-					  split2 = 5.0,
-					  const1 = 0.1806250,
-					  const2 = 1.6,
-					  a0 = 3.3871328727963666080,
-					  a1 = 1.3314166789178437745e+2,
-					  a2 = 1.9715909503065514427e+3,
-					  a3 = 1.3731693765509461125e+4,
-					  a4 = 4.5921953931549871457e+4,
-					  a5 = 6.7265770927008700853e+4,
-					  a6 = 3.3430575583588128105e+4,
-					  a7 = 2.5090809287301226727e+3,
-					  b1 = 4.2313330701600911252e+1,
-					  b2 = 6.8718700749205790830e+2,
-					  b3 = 5.3941960214247511077e+3,
-					  b4 = 2.1213794301586595867e+4,
-					  b5 = 3.9307895800092710610e+4,
-					  b6 = 2.8729085735721942674e+4,
-					  b7 = 5.2264952788528545610e+3,
-					  c0 = 1.42343711074968357734,
-					  c1 = 4.63033784615654529590,
-					  c2 = 5.76949722146069140550,
-					  c3 = 3.64784832476320460504,
-					  c4 = 1.27045825245236838258,
-					  c5 = 2.41780725177450611770e-1,
-					  c6 = 2.27238449892691845833e-2,
-					  c7 = 7.74545014278341407640e-4,
-					  d1 = 2.05319162663775882187,
-					  d2 = 1.67638483018380384940,
-					  d3 = 6.89767334985100004550e-1,
-					  d4 = 1.48103976427480074590e-1,
-					  d5 = 1.51986665636164571966e-2,
-					  d6 = 5.47593808499534494600e-4,
-					  d7 = 1.05075007164441684324e-9,
-					  e0 = 6.65790464350110377720,
-					  e1 = 5.46378491116411436990,
-					  e2 = 1.78482653991729133580,
-					  e3 = 2.96560571828504891230e-1,
-					  e4 = 2.65321895265761230930e-2,
-					  e5 = 1.24266094738807843860e-3,
-					  e6 = 2.71155556874348757815e-5,
-					  e7 = 2.01033439929228813265e-7,
-					  f1 = 5.99832206555887937690e-1,
-					  f2 = 1.36929880922735805310e-1,
-					  f3 = 1.48753612908506148525e-2,
-					  f4 = 7.86869131145613259100e-4,
-					  f5 = 1.84631831751005468180e-5,
-					  f6 = 1.42151175831644588870e-7,
-					  f7 = 2.04426310338993978564e-15;
-			double r, val;
+        public static double gauinv(double p, out int ifault)
+        {
+            const double
+                      zero = 0.0,
+                      one = 1.0,
+                      half = 0.50,
+                      split1 = 0.4250,
+                      split2 = 5.0,
+                      const1 = 0.1806250,
+                      const2 = 1.6,
+                      a0 = 3.3871328727963666080,
+                      a1 = 1.3314166789178437745e+2,
+                      a2 = 1.9715909503065514427e+3,
+                      a3 = 1.3731693765509461125e+4,
+                      a4 = 4.5921953931549871457e+4,
+                      a5 = 6.7265770927008700853e+4,
+                      a6 = 3.3430575583588128105e+4,
+                      a7 = 2.5090809287301226727e+3,
+                      b1 = 4.2313330701600911252e+1,
+                      b2 = 6.8718700749205790830e+2,
+                      b3 = 5.3941960214247511077e+3,
+                      b4 = 2.1213794301586595867e+4,
+                      b5 = 3.9307895800092710610e+4,
+                      b6 = 2.8729085735721942674e+4,
+                      b7 = 5.2264952788528545610e+3,
+                      c0 = 1.42343711074968357734,
+                      c1 = 4.63033784615654529590,
+                      c2 = 5.76949722146069140550,
+                      c3 = 3.64784832476320460504,
+                      c4 = 1.27045825245236838258,
+                      c5 = 2.41780725177450611770e-1,
+                      c6 = 2.27238449892691845833e-2,
+                      c7 = 7.74545014278341407640e-4,
+                      d1 = 2.05319162663775882187,
+                      d2 = 1.67638483018380384940,
+                      d3 = 6.89767334985100004550e-1,
+                      d4 = 1.48103976427480074590e-1,
+                      d5 = 1.51986665636164571966e-2,
+                      d6 = 5.47593808499534494600e-4,
+                      d7 = 1.05075007164441684324e-9,
+                      e0 = 6.65790464350110377720,
+                      e1 = 5.46378491116411436990,
+                      e2 = 1.78482653991729133580,
+                      e3 = 2.96560571828504891230e-1,
+                      e4 = 2.65321895265761230930e-2,
+                      e5 = 1.24266094738807843860e-3,
+                      e6 = 2.71155556874348757815e-5,
+                      e7 = 2.01033439929228813265e-7,
+                      f1 = 5.99832206555887937690e-1,
+                      f2 = 1.36929880922735805310e-1,
+                      f3 = 1.48753612908506148525e-2,
+                      f4 = 7.86869131145613259100e-4,
+                      f5 = 1.84631831751005468180e-5,
+                      f6 = 1.42151175831644588870e-7,
+                      f7 = 2.04426310338993978564e-15;
+            double r, val;
 
-			ifault = 0;
-			double q = p - half;
-			if (Math.Abs(q) <= split1)
-			{
-				r = const1 - q * q;
-				val = q * (((((((a7 * r + a6) * r + a5) * r + a4) * r + a3)
-					* r + a2) * r + a1) * r + a0) /
-					(((((((b7 * r + b6) * r + b5) * r + b4) * r + b3)
-					* r + b2) * r + b1) * r + one);
-				return val;
-			}
-		    if (q < zero)
-		        r = p;
-		    else
-		        r = one - p;
-	  
-		    if (r <= zero)
-		    {
-		        ifault = 1;
-		        val = zero;
-		        return val;
-		    }
-		    r = Math.Sqrt(-Math.Log(r));
-		    if (r <= split2)
-		    {
-		        r = r - const2;
-		        val = (((((((c7 * r + c6) * r + c5) * r + c4) * r + c3)
-		                 * r + c2) * r + c1) * r + c0) /
-		              (((((((d7 * r + d6) * r + d5) * r + d4) * r + d3)
-		                 * r + d2) * r + d1) * r + one);
-		    }
-		    else
-		    {
-		        r = r - split2;
-		        val = (((((((e7 * r + e6) * r + e5) * r + e4) * r + e3)
-		                 * r + e2) * r + e1) * r + e0) /
-		              (((((((f7 * r + f6) * r + f5) * r + f4) * r + f3)
-		                 * r + f2) * r + f1) * r + one);
-		    }
-		    if (q < zero) val = - val;
-		    return val;
-		}
-		/// <summary>
-		/// log of the absolute value of the gamma function
-		/// </summary>
-		/// <remarks>
+            ifault = 0;
+            double q = p - half;
+            if (Math.Abs(q) <= split1)
+            {
+                r = const1 - q * q;
+                val = q * (((((((a7 * r + a6) * r + a5) * r + a4) * r + a3)
+                    * r + a2) * r + a1) * r + a0) /
+                    (((((((b7 * r + b6) * r + b5) * r + b4) * r + b3)
+                    * r + b2) * r + b1) * r + one);
+                return val;
+            }
+            if (q < zero)
+                r = p;
+            else
+                r = one - p;
+
+            if (r <= zero)
+            {
+                ifault = 1;
+                val = zero;
+                return val;
+            }
+            r = Math.Sqrt(-Math.Log(r));
+            if (r <= split2)
+            {
+                r = r - const2;
+                val = (((((((c7 * r + c6) * r + c5) * r + c4) * r + c3)
+                         * r + c2) * r + c1) * r + c0) /
+                      (((((((d7 * r + d6) * r + d5) * r + d4) * r + d3)
+                         * r + d2) * r + d1) * r + one);
+            }
+            else
+            {
+                r = r - split2;
+                val = (((((((e7 * r + e6) * r + e5) * r + e4) * r + e3)
+                         * r + e2) * r + e1) * r + e0) /
+                      (((((((f7 * r + f6) * r + f5) * r + f4) * r + f3)
+                         * r + f2) * r + f1) * r + one);
+            }
+            if (q < zero) val = -val;
+            return val;
+        }
+        /// <summary>
+        /// log of the absolute value of the gamma function
+        /// </summary>
+        /// <remarks>
         /// december 2003 iain buchan C# translation and adaptation
         /// august 1980 edition. w. fullerton, c3, los alamos scientific lab.
         /// </remarks>
-		public static double alogam (double x)
-		{
-		    //xmax=0.0;
-			//dxrel=0.0;
-			double ret = double.NaN;
-			double xmax = Constant.DBL_MAX/Math.Log(Constant.DBL_MAX);
-			//dxrel = Math.Sqrt(Defs.DBL_LRS)
-			double y = Math.Abs(x);
-			if (y <= 10.0)
-			{
-			    double dabsgx = Math.Abs(dgamma(x));
-			    ret = Math.Log(dabsgx);
-			}
-			else if (y > xmax)
-			{
-				//      overflow
-			}
-			else if (x > 0.0)
-			{
-				ret = Constant.SQ2PIL + (x-0.5)*Math.Log(x) - x + d9lgmc(y);
-			}
-			else
-			{
-			    double sinpiy = Math.Abs(Math.Sin(Constant.PI*y));
-			    if (sinpiy == 0.0)
-				{
-					//        -ve argument
-				}
-				else
-				{
-					ret = Constant.SQPI2L+(x-0.5)*Math.Log(y)-x-Math.Log(sinpiy)-d9lgmc(y);
-					//        if (Math.Abs((x-dint(x-0.5))*alogam/x) < dxrel) then
-					//        low precision
-					//     end if
-				}
-			}
-		    return ret;
-		}
+        public static double alogam(double x)
+        {
+            //xmax=0.0;
+            //dxrel=0.0;
+            double ret = double.NaN;
+            double xmax = Constant.DBL_MAX / Math.Log(Constant.DBL_MAX);
+            //dxrel = Math.Sqrt(Defs.DBL_LRS)
+            double y = Math.Abs(x);
+            if (y <= 10.0)
+            {
+                double dabsgx = Math.Abs(dgamma(x));
+                ret = Math.Log(dabsgx);
+            }
+            else if (y > xmax)
+            {
+                //      overflow
+            }
+            else if (x > 0.0)
+            {
+                ret = Constant.SQ2PIL + (x - 0.5) * Math.Log(x) - x + d9lgmc(y);
+            }
+            else
+            {
+                double sinpiy = Math.Abs(Math.Sin(Constant.PI * y));
+                if (sinpiy == 0.0)
+                {
+                    //        -ve argument
+                }
+                else
+                {
+                    ret = Constant.SQPI2L + (x - 0.5) * Math.Log(y) - x - Math.Log(sinpiy) - d9lgmc(y);
+                    //        if (Math.Abs((x-dint(x-0.5))*alogam/x) < dxrel) then
+                    //        low precision
+                    //     end if
+                }
+            }
+            return ret;
+        }
 
-		/// <summary>
-		/// compute the log gamma correction factor for x .ge. 10. so that
-		/// dlog (dgamma(x)) = dlog(dsqrt(2*pi)) + (x-.5)*dlog(x) - x + d9lgmc(x)
-		/// </summary>
-		/// <remarks>
+        /// <summary>
+        /// compute the log gamma correction factor for x .ge. 10. so that
+        /// dlog (dgamma(x)) = dlog(dsqrt(2*pi)) + (x-.5)*dlog(x) - x + d9lgmc(x)
+        /// </summary>
+        /// <remarks>
         /// december 2003 iain buchan C# translation and adaptation
         /// august 1977 edition. w. fullerton, c3, los alamos scientific lab
         /// </remarks>
-		private static double d9lgmc (double x)
-		{
-			// series for algm on the interval  0. to  1.00000e-02
-			//                      with weighted error   1.28e-31
-			//                           log weighted error  30.89
-			//                 significant figures required  29.81
-			//                      decimal places required  31.48
-			//
-			double[] algmcs = {
+        private static double d9lgmc(double x)
+        {
+            // series for algm on the interval  0. to  1.00000e-02
+            //                      with weighted error   1.28e-31
+            //                           log weighted error  30.89
+            //                 significant figures required  29.81
+            //                      decimal places required  31.48
+            //
+            double[] algmcs = {
 								  +0.166638948045186324720572965082e+0,
 								  -0.1384948176067563840732986059135e-4,
 								  +0.9810825646924729426157171547487e-8,
@@ -440,50 +440,50 @@ namespace StatsDirect.Numerics
 								  +0.1025680058010470912000000000000e-27,
 								  -0.3401102254316748799999999999999e-29,
 								  +0.1276642195630062933333333333333e-30};
-			// IEEE 64-bit Chebyshev orthogonal series = 5
-			// for other systems call nalgm=Base.chebyinit(algmcs,15,Defs.DBL_SRS)
-			const int nalgm=5;
-			double
-				xbig=1.0/Math.Sqrt(Constant.DBL_SRS),
-				xmax=Math.Exp(Math.Min(Math.Log(Constant.DBL_MAX/12.0),-Math.Log(12.0*Constant.DBL_SRS)));
-			double ret = double.NaN;
-			if (x < 10.0)
-			{
-				//     x must be > 10
-			}
-			else if (x < xmax)
-			{
-				if (x >= xbig)
-				{
-					ret = 1.0/(12.0*x);
-				}
-				else
-				{
-					ret = Base.cheby(2.0*Math.Pow((10.0/x),2.0)-1.0,algmcs,nalgm)/x;
-				}
-			}
-			else
-			{
-				//  underflow
-				ret = 0.0;
-			}
-			return ret;
-		}
-		
-		///<summary>
-		// june 2003 iain buchan f90 translation and adaptation
-		// jan 1984 edition.  w. fullerton, c3, los alamos scientific lab.
-		// jan 1994 wpp@ips.id.ethz.ch, ehg@research.att.com   declare xsml
-		// complete gamma function
-		///</summary>
-		public static double dgamma (double x)
-		{
-			// series for gam on the interval 0. to  1.00000e+00
-			//                    with weighted error   5.79e-32
-			//                         log weighted error  31.24
-			//               significant figures required  30.00
-			//                    decimal places required  32.05
-			double[] gamcs = {	 0.8571195590989331421920062399942e-2,
+            // IEEE 64-bit Chebyshev orthogonal series = 5
+            // for other systems call nalgm=Base.chebyinit(algmcs,15,Defs.DBL_SRS)
+            const int nalgm = 5;
+            double
+                xbig = 1.0 / Math.Sqrt(Constant.DBL_SRS),
+                xmax = Math.Exp(Math.Min(Math.Log(Constant.DBL_MAX / 12.0), -Math.Log(12.0 * Constant.DBL_SRS)));
+            double ret = double.NaN;
+            if (x < 10.0)
+            {
+                //     x must be > 10
+            }
+            else if (x < xmax)
+            {
+                if (x >= xbig)
+                {
+                    ret = 1.0 / (12.0 * x);
+                }
+                else
+                {
+                    ret = Base.cheby(2.0 * Math.Pow((10.0 / x), 2.0) - 1.0, algmcs, nalgm) / x;
+                }
+            }
+            else
+            {
+                //  underflow
+                ret = 0.0;
+            }
+            return ret;
+        }
+
+        ///<summary>
+        // june 2003 iain buchan f90 translation and adaptation
+        // jan 1984 edition.  w. fullerton, c3, los alamos scientific lab.
+        // jan 1994 wpp@ips.id.ethz.ch, ehg@research.att.com   declare xsml
+        // complete gamma function
+        ///</summary>
+        public static double dgamma(double x)
+        {
+            // series for gam on the interval 0. to  1.00000e+00
+            //                    with weighted error   5.79e-32
+            //                         log weighted error  31.24
+            //               significant figures required  30.00
+            //                    decimal places required  32.05
+            double[] gamcs = {	 0.8571195590989331421920062399942e-2,
 								 0.4415381324841006757191315771652e-2,
 								 0.5685043681599363378632664588789e-1,
 								 -0.4219835396418560501012500186624e-2,
@@ -526,619 +526,624 @@ namespace StatsDirect.Numerics
 								 0.3376448816585338090334890666666e-30,
 								 -0.5793070335782135784625493333333e-31};
 
-			// IEEE 64-bit Chebyshev orthogonal series = 22
-			// for other systems call ngamcs = Base.chebyinit(gamcs,42,0.1*Defs.DBL_SRS)
-			const int ngamcs=22;
-			// IEEE 64-bit values for xmin and xmax are fixed here
-			// for other systems call d9gaml(ref xmin, ref xmax)
-			const double
-					  xmax=171.61447887182297,
-					  xmin=-170.56749727266123;
- 			double 
-				ret,
-				// dxrel = Math.Sqrt(Constant.DBL_LRS),
-				xsml = Math.Exp(Math.Max(Math.Log(Constant.DBL_MIN),-Math.Log(Constant.DBL_MAX))+0.01);
+            // IEEE 64-bit Chebyshev orthogonal series = 22
+            // for other systems call ngamcs = Base.chebyinit(gamcs,42,0.1*Defs.DBL_SRS)
+            const int ngamcs = 22;
+            // IEEE 64-bit values for xmin and xmax are fixed here
+            // for other systems call d9gaml(ref xmin, ref xmax)
+            const double
+                      xmax = 171.61447887182297,
+                      xmin = -170.56749727266123;
+            double
+                ret,
+                // dxrel = Math.Sqrt(Constant.DBL_LRS),
+                xsml = Math.Exp(Math.Max(Math.Log(Constant.DBL_MIN), -Math.Log(Constant.DBL_MAX)) + 0.01);
 
-		    double y = Math.Abs(x);
-			if (y  <=  10.0)
-			{
-				// compute gamma(x) for -xbnd  <=  x  <=  xbnd.  reduce interval and find gamma(1+y) for 0.0  <=  y  <  1.0 first of all.
-				int n = (int)x;
-				if (x  <  0.0) n = n - 1;
-				double xn = n;
-				y = x - xn;
-				n = n - 1;
-				ret = 0.9375 + Base.cheby(2.0*y-1.0,gamcs,ngamcs);
-				if (n == 0) return ret;
-			    double xi;
-			    int i;
-			    if (n <= 0)
-				{
-					n = -n;
-					if (x == 0.0)return double.NaN;
-					// compute gamma(x) for x  <  1.0
-					if (y  <  xsml) return double.NaN;
-					xn = n - 2;
-					if (x < 0.0 & x+xn == 0.0) return double.NaN;
-					//  if (x < -0.5 .and. Math.Abs((x-dint(x-0.5))/x) < dxrel) then low precision
-					xi = 0.0;
-					for (i=1; i<=n; i++)
-					{
-						ret = ret/(x+xi);
-						xi = xi + 1.0;
-					}
-					return ret;
-				}
-				// gamma(x) for x  >=  2.0 and x  <=  10.0
-				xi = 1.0;
-				for (i=1; i<=n; i++)
-				{
-					ret = (y+xi)*ret;
-					xi = xi + 1.0;
-				}
-				return ret;
-			}
-			if (x > xmax) return double.NaN;
-			ret = 0.0;
-			if (x < xmin) return ret;
-			ret = Math.Exp((y-0.5)*Math.Log(y)-y+Constant.SQ2PIL+d9lgmc(y));
-			if (x > 0.0) return ret;
-			// if (Math.Abs((x-dint(x-0.5))/x)  <  dxrel) then low precision
-			double sinpiy = Math.Sin(Constant.PI*y);
-			if (sinpiy  ==  0.0) return double.NaN;
-			ret = -Constant.PI/(y*sinpiy*ret);
-			return ret;
-		}
+            double y = Math.Abs(x);
+            if (y <= 10.0)
+            {
+                // compute gamma(x) for -xbnd  <=  x  <=  xbnd.  reduce interval and find gamma(1+y) for 0.0  <=  y  <  1.0 first of all.
+                int n = (int)x;
+                if (x < 0.0) n = n - 1;
+                double xn = n;
+                y = x - xn;
+                n = n - 1;
+                ret = 0.9375 + Base.cheby(2.0 * y - 1.0, gamcs, ngamcs);
+                if (n == 0) return ret;
+                double xi;
+                int i;
+                if (n <= 0)
+                {
+                    n = -n;
+                    if (x == 0.0) return double.NaN;
+                    // compute gamma(x) for x  <  1.0
+                    if (y < xsml) return double.NaN;
+                    xn = n - 2;
+                    if (x < 0.0 & x + xn == 0.0) return double.NaN;
+                    //  if (x < -0.5 .and. Math.Abs((x-dint(x-0.5))/x) < dxrel) then low precision
+                    xi = 0.0;
+                    for (i = 1; i <= n; i++)
+                    {
+                        ret = ret / (x + xi);
+                        xi = xi + 1.0;
+                    }
+                    return ret;
+                }
+                // gamma(x) for x  >=  2.0 and x  <=  10.0
+                xi = 1.0;
+                for (i = 1; i <= n; i++)
+                {
+                    ret = (y + xi) * ret;
+                    xi = xi + 1.0;
+                }
+                return ret;
+            }
+            if (x > xmax) return double.NaN;
+            ret = 0.0;
+            if (x < xmin) return ret;
+            ret = Math.Exp((y - 0.5) * Math.Log(y) - y + Constant.SQ2PIL + d9lgmc(y));
+            if (x > 0.0) return ret;
+            // if (Math.Abs((x-dint(x-0.5))/x)  <  dxrel) then low precision
+            double sinpiy = Math.Sin(Constant.PI * y);
+            if (sinpiy == 0.0) return double.NaN;
+            ret = -Constant.PI / (y * sinpiy * ret);
+            return ret;
+        }
 
-		/*///<summary>
-		/// june 2003 iain buchan f90 translation and adaptation
-		/// june 1977 edition.   w. fullerton, c3, los alamos scientific lab.
-		///
-		/// calculate the minimum and maximum legal bounds for x in gamma(x).
-		/// xmin and xmax are not the only bounds, but they are the only non-
-		/// trivial ones to calculate.
-		///
-		///             output arguments --
-		/// xmin   dble prec minimum legal value of x in gamma(x).  any smaller
-		///        value of x might result in underflow.
-		/// xmax   dble prec maximum legal value of x in gamma(x).  any larger
-		///        value of x might cause overflow.
-		///</summary>
-		private static void d9gaml (ref double xmin, ref double xmax)
-		{
-			int i;
-			double xold, xln;
-			double alnsml = Math.Log(Defs.DBL_MIN);
-			double alnbig = Math.Log(Defs.DBL_MAX);
-			xmin = double.NaN;
-			xmax = double.NaN;
-			xmin = -alnsml;
-			for (i=1; i<=10; i++)
-			{
-				xold = xmin;
-				xln = Math.Log(xmin);
-				xmin = xmin - xmin*((xmin+0.5)*xln-xmin-.2258+alnsml)/(xmin*xln+0.5);
-				if (Math.Abs(xmin-xold) < 0.005) break;
-			}
-			if (i >= 10)
-			{
-				xmin = double.NaN;
-				return;
-			}
-			xmin = -xmin + 0.01;
-			xmax = alnbig;
-			for (i=1; i<=11; i++)
-			{
-				xold = xmax;
-				xln = Math.Log(xmax);
-				xmax = xmax - xmax*((xmax-0.5)*xln-xmax+.9189-alnbig)/(xmax*xln-0.5);
-				if (Math.Abs(xmax-xold) < 0.005) break;
-			}
-			if (i >= 10)
-			{
-				xmax = double.NaN;
-				return;
-			}
-			xmax = xmax - 0.01;
-			xmin = Math.Max(xmin,-xmax+1.0);
-			return;
-		}*/
-	
-		/// <summary>
-		/// algorithm as 63  appl.statist. (1973), vol.22, no.3
-		/// modified as per remark asr 19  (1977), vol.26, no. 1
-		/// computes incomplete beta function ratio for arguments
-		/// x between zero and one, p and q positive.
-		/// log of complete beta function, beta, assumed to be known.
-		/// calculation of beta added
-		/// </summary>
-		public static double betain(double x, double p, double q, out int ifault)
-		{
-			bool index;
-			double xx, pp,qq;
+        /*///<summary>
+        /// june 2003 iain buchan f90 translation and adaptation
+        /// june 1977 edition.   w. fullerton, c3, los alamos scientific lab.
+        ///
+        /// calculate the minimum and maximum legal bounds for x in gamma(x).
+        /// xmin and xmax are not the only bounds, but they are the only non-
+        /// trivial ones to calculate.
+        ///
+        ///             output arguments --
+        /// xmin   dble prec minimum legal value of x in gamma(x).  any smaller
+        ///        value of x might result in underflow.
+        /// xmax   dble prec maximum legal value of x in gamma(x).  any larger
+        ///        value of x might cause overflow.
+        ///</summary>
+        private static void d9gaml (ref double xmin, ref double xmax)
+        {
+            int i;
+            double xold, xln;
+            double alnsml = Math.Log(Defs.DBL_MIN);
+            double alnbig = Math.Log(Defs.DBL_MAX);
+            xmin = double.NaN;
+            xmax = double.NaN;
+            xmin = -alnsml;
+            for (i=1; i<=10; i++)
+            {
+                xold = xmin;
+                xln = Math.Log(xmin);
+                xmin = xmin - xmin*((xmin+0.5)*xln-xmin-.2258+alnsml)/(xmin*xln+0.5);
+                if (Math.Abs(xmin-xold) < 0.005) break;
+            }
+            if (i >= 10)
+            {
+                xmin = double.NaN;
+                return;
+            }
+            xmin = -xmin + 0.01;
+            xmax = alnbig;
+            for (i=1; i<=11; i++)
+            {
+                xold = xmax;
+                xln = Math.Log(xmax);
+                xmax = xmax - xmax*((xmax-0.5)*xln-xmax+.9189-alnbig)/(xmax*xln-0.5);
+                if (Math.Abs(xmax-xold) < 0.005) break;
+            }
+            if (i >= 10)
+            {
+                xmax = double.NaN;
+                return;
+            }
+            xmax = xmax - 0.01;
+            xmin = Math.Max(xmin,-xmax+1.0);
+            return;
+        }*/
 
-			//        define accuracy and initialize
+        /// <summary>
+        /// computes incomplete beta function ratio for arguments
+        /// x between zero and one, p and q positive.
+        /// log of complete beta function, beta, assumed to be known.
+        /// calculation of beta added
+        /// </summary>
+        /// <remarks>
+        /// algorithm as 63  appl.statist. (1973), vol.22, no.3
+        /// modified as per remark asr 19  (1977), vol.26, no. 1
+        /// </remarks>
+        public static double betain(double x, double p, double q, out int ifault)
+        {
+            bool index;
+            double xx, pp, qq;
 
-			const double acu =0.1e-15;
-			double ret = x;
+            //        define accuracy and initialize
 
-			//        test for admisibility of agruments
+            const double acu = 0.1e-15;
+            double ret = x;
 
-			ifault = 1;
-			if (p<=0.0|q<=0.0) return ret;
-			ifault = 2;
-			if (x<0.0|x>1.0) return ret;
-			ifault = 0;
-			if (x==0.0|x==1.0) return ret;
+            //        test for admissibility of arguments
 
-			//     change tail if necessary and determine s
+            ifault = 1;
+            if (double.IsNaN(p) || double.IsNaN(q) || p <= 0.0 || q <= 0.0)
+                return ret;
+            ifault = 2;
+            if (double.IsNaN(x) || x < 0.0 || x > 1.0)
+                return ret;
+            ifault = 0;
+            if (x == 0.0 || x == 1.0)
+                return ret;
 
-			double psq = p + q;
-			double cx = 1.0 - x;
-			if (p < psq * x)
-			{
-				xx = cx;
-				cx = x;
-				pp = q;
-				qq = p;
-				index = true;
-			}
-			else
-			{
-				xx = x;
-				pp = p;
-				qq = q;
-				index = false;
-			}
-			double term = 1.0;
-			double ai = 1.0;
-			ret = 1.0;
-			double zs = Base.dnint(qq + cx * psq);
-			//
-			//        use soper's reduction formulae
-			//
-			double rx = xx / cx;
-			double temp = qq - ai;
-			if (zs == 0.0) rx = xx;
-			for(;;)
-			{
-				term = term * temp * rx / (pp + ai);
-				ret = ret + term;
-				temp = Math.Abs(term);
-				if (temp <= acu & temp <= acu * ret) break;
-				ai = ai + 1.0;
-				zs = zs - 1.0;
-				if (zs >= 0.0)
-				{
-					temp = qq - ai;
-					if (zs == 0.0) rx = xx;
-				}
-				else
-				{
-					temp = psq;
-					psq = psq + 1.0;
-				}
-			}
+            //     change tail if necessary and determine s
 
-			//        calculate result
+            double psq = p + q;
+            double cx = 1.0 - x;
+            if (p < psq * x)
+            {
+                xx = cx;
+                cx = x;
+                pp = q;
+                qq = p;
+                index = true;
+            }
+            else
+            {
+                xx = x;
+                pp = p;
+                qq = q;
+                index = false;
+            }
+            double term = 1.0;
+            double ai = 1.0;
+            ret = 1.0;
+            double zs = Base.dnint(qq + cx * psq);
+            //
+            //        use soper's reduction formulae
+            //
+            double rx = xx / cx;
+            double temp = qq - ai;
+            if (zs == 0.0) rx = xx;
+            for (; ; )
+            {
+                term = term * temp * rx / (pp + ai);
+                ret = ret + term;
+                temp = Math.Abs(term);
+                if (temp <= acu & temp <= acu * ret) break;
+                ai = ai + 1.0;
+                zs = zs - 1.0;
+                if (zs >= 0.0)
+                {
+                    temp = qq - ai;
+                    if (zs == 0.0) rx = xx;
+                }
+                else
+                {
+                    temp = psq;
+                    psq = psq + 1.0;
+                }
+            }
 
-			double beta = alogam(p) + alogam(q) - alogam(p+q);
-			ret = ret * Math.Exp(pp * Math.Log(xx) + (qq - 1.0) * Math.Log(cx) - beta) / pp;
-			if (index) ret = 1.0 - ret;
-			return ret;
-		}
+            //        calculate result
 
-		/// <summary>	
-		///     Root finding by secant and modified Illinois method
-		///     AS 109 and AS 64 not stable  
-		/// </summary>
-		public static double xinbta (double pin, double qin, double p, out int ifault)
-		{
-		    double x2, f2;
-		    double ret = double.NaN;
-			if (pin <= 0.0)
-			{
-				ifault = 1;
-				return ret;
-			}
-			if (qin <= 0.0)
-			{
-				ifault = 2;
-				return ret;
-			}
-			if (p<=0.0 | p>1.0)
-			{
-				ifault = 3;
-				return ret;
-			}
-			double x1 = p;
-			double f1 = betain(x1,pin,qin,out ifault) - p;
-			if (f1 == 0.0)
-			{
-				x2 = x1;
-				ret = (x1+x2)*0.5;
-				return ret;
-			}
-			x2 = p + 0.05;
-			double xd = 0.05;
-			if (x2 <= 0.0)
-			{
-				f2 = -p;
-			}
-			else if (x2 >= 1.0)
-			{
-				f2 = 1.0 - p;
-			}
-			else
-			{
-				f2 = betain(x2,pin,qin,out ifault) - p;
-			}
-			double slope = Math.Max(0.01,(f2-f1)/xd);
-			double delta = -f1/slope;
-			int iter = 0;
-			for (;;)
-			{
-				delta = 2.0*delta;
-				iter = iter + 1;
-				if (iter > 100)
-				{
-					x2 = 1.0;
-					break;
-				}
-				x2 = x1 + delta;
-				if (x2 <= 0.0)
-				{
-					f2 = -p;
-				}
-				else if (x2 >= 1.0)
-				{
-					f2 = 1.0 - p;
-				}
-				else
-				{
-					f2 = betain(x2,pin,qin,out ifault) - p;
-				}
-				if (f1*f2 >= 0.0)
-				{
-					x1 = x2;
-				}
-				else
-				{
-					break;
-				}
-			}
-			bool ibisec = false;
-			ifault = 4;
-			for (iter=1; iter<=100; iter++)
-			{
-				double xm = (x1+x2)*0.5;
-				double fd = f2 - f1;
-				xd = x2 - x1;
-				if (xm != 0.0)
-				{
-					if (Math.Abs(xd) < Math.Abs(xm*Constant.DBL_LRS))
-					{
-						ifault=0;
-						break;
-					}
-				}
-				else
-				{
-					if (Math.Abs(xd) < Constant.DBL_LRS)
-					{
-						ifault=0;
-						break;
-					}
-				}
-			    double x3;
-			    if (ibisec)
-				{
-					x3 = xm;
-				}
-				else
-				{
-					x3 = x2 - f2*xd/fd;
-				}
-				ibisec = false;
-			    double f3;
-			    if (x3 <= 0.0)
-				{
-					f3 = -p;
-				}
-				else if (x3 >= 1.0)
-				{
-					f3 = 1.0 - p;
-				}
-				else
-				{
-					f3 = betain(x3,pin,qin,out ifault) - p;
-				}
-				if (f3*f2 <= 0.0)
-				{
-					x1 = x2;
-					f1 = f2;
-					x2 = x3;
-					f2 = f3;
-				}
-				else
-				{
-					x2 = x3;
-					f2 = f3;
-					f1 = f1*0.5;
-					if (Math.Abs(f2) > Math.Abs(f1))
-					{
-						f1 = 2.0*f1;
-						ibisec = true;
-					}
-				}
-			}
-			ret = (x1+x2)*0.5;
-			return ret;
-		}
+            double beta = alogam(p) + alogam(q) - alogam(p + q);
+            ret = ret * Math.Exp(pp * Math.Log(xx) + (qq - 1.0) * Math.Log(cx) - beta) / pp;
+            if (index) ret = 1.0 - ret;
+            return ret;
+        }
 
-		/// <summary>
-		/// F (variance ratio) quantile from a tail area
-		/// </summary>
-		public static double ffromp(double dfd,double dfn, double p)
-		{
-			int ifault;
-		    double a = dfd/2.0;
-			double b = dfn/2.0;
-			double ret = xinbta(a,b,p,out ifault);
-			if(ifault!=0)
-				ret=double.NaN;
-			else
-				ret=(1.0/ret-1.0)*dfd/dfn;
-			return ret;
-		}
+        /// <summary>	
+        ///     Root finding by secant and modified Illinois method
+        ///     AS 109 and AS 64 not stable  
+        /// </summary>
+        public static double xinbta(double pin, double qin, double p, out int ifault)
+        {
+            double x2, f2;
+            double ret = double.NaN;
+            if (pin <= 0.0)
+            {
+                ifault = 1;
+                return ret;
+            }
+            if (qin <= 0.0)
+            {
+                ifault = 2;
+                return ret;
+            }
+            if (p <= 0.0 || p > 1.0)
+            {
+                ifault = 3;
+                return ret;
+            }
+            double x1 = p;
+            double f1 = betain(x1, pin, qin, out ifault) - p;
+            if (f1 == 0.0)
+            {
+                x2 = x1;
+                ret = (x1 + x2) * 0.5;
+                return ret;
+            }
+            x2 = p + 0.05;
+            double xd = 0.05;
+            if (x2 <= 0.0)
+            {
+                f2 = -p;
+            }
+            else if (x2 >= 1.0)
+            {
+                f2 = 1.0 - p;
+            }
+            else
+            {
+                f2 = betain(x2, pin, qin, out ifault) - p;
+            }
+            double slope = Math.Max(0.01, (f2 - f1) / xd);
+            double delta = -f1 / slope;
+            int iter = 0;
+            for (; ; )
+            {
+                delta = 2.0 * delta;
+                iter = iter + 1;
+                if (iter > 100)
+                {
+                    x2 = 1.0;
+                    break;
+                }
+                x2 = x1 + delta;
+                if (x2 <= 0.0)
+                {
+                    f2 = -p;
+                }
+                else if (x2 >= 1.0)
+                {
+                    f2 = 1.0 - p;
+                }
+                else
+                {
+                    f2 = betain(x2, pin, qin, out ifault) - p;
+                }
+                if (f1 * f2 >= 0.0)
+                {
+                    x1 = x2;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            bool ibisec = false;
+            ifault = 4;
+            for (iter = 1; iter <= 100; iter++)
+            {
+                double xm = (x1 + x2) * 0.5;
+                double fd = f2 - f1;
+                xd = x2 - x1;
+                if (xm != 0.0)
+                {
+                    if (Math.Abs(xd) < Math.Abs(xm * Constant.DBL_LRS))
+                    {
+                        ifault = 0;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (Math.Abs(xd) < Constant.DBL_LRS)
+                    {
+                        ifault = 0;
+                        break;
+                    }
+                }
+                double x3;
+                if (ibisec)
+                {
+                    x3 = xm;
+                }
+                else
+                {
+                    x3 = x2 - f2 * xd / fd;
+                }
+                ibisec = false;
+                double f3;
+                if (x3 <= 0.0)
+                {
+                    f3 = -p;
+                }
+                else if (x3 >= 1.0)
+                {
+                    f3 = 1.0 - p;
+                }
+                else
+                {
+                    f3 = betain(x3, pin, qin, out ifault) - p;
+                }
+                if (f3 * f2 <= 0.0)
+                {
+                    x1 = x2;
+                    f1 = f2;
+                    x2 = x3;
+                    f2 = f3;
+                }
+                else
+                {
+                    x2 = x3;
+                    f2 = f3;
+                    f1 = f1 * 0.5;
+                    if (Math.Abs(f2) > Math.Abs(f1))
+                    {
+                        f1 = 2.0 * f1;
+                        ibisec = true;
+                    }
+                }
+            }
+            ret = (x1 + x2) * 0.5;
+            return ret;
+        }
 
-		/// <summary>
-		/// Lower tail area for F (variance ratio)
-		/// </summary>
-		public static double fvalp(double f,double dfn, double dfd)
-		{
-			int fault;
-		    double ret = betain(dfd / (dfd + dfn * f), dfd / 2.0, dfn / 2.0, out fault);
-			if(fault!=0) ret=double.NaN;
-			return ret;
-		}
+        /// <summary>
+        /// F (variance ratio) quantile from a tail area
+        /// </summary>
+        public static double ffromp(double dfd, double dfn, double p)
+        {
+            int ifault;
+            double a = dfd / 2.0;
+            double b = dfn / 2.0;
+            double ret = xinbta(a, b, p, out ifault);
+            if (ifault != 0)
+                ret = double.NaN;
+            else
+                ret = (1.0 / ret - 1.0) * dfd / dfn;
+            return ret;
+        }
 
-		/// <summary>
-		/// Student t quantile from a lower tail area
-		/// </summary>
-		public static double tfromp(double p,double df)
-		{
-			int ifault;
-			double ret;
-			if (p<1.0-p)
-				ret=finvt(2.0*p,df,out ifault);
-			else
-				ret=-finvt(2.0*(1.0-p),df,out ifault);
-			if(ifault!=0) ret=double.NaN;
-			return ret;
-		}
+        /// <summary>
+        /// Lower tail area for F (variance ratio)
+        /// </summary>
+        public static double fvalp(double f, double dfn, double dfd)
+        {
+            int fault;
+            double ret = betain(dfd / (dfd + dfn * f), dfd / 2.0, dfn / 2.0, out fault);
+            if (fault != 0) ret = double.NaN;
+            return ret;
+        }
 
-		/// <summary>
-		/// Student t quantile from a two tail area
-		/// </summary>
-		public static double tfromp2(double p, double df)
-		{
-			int ifault;
-		    double ret = finvt(p,df,out ifault);
-			if(ifault!=0) ret=double.NaN;
-			return ret;
-		}
+        /// <summary>
+        /// Student t quantile from a lower tail area
+        /// </summary>
+        public static double tfromp(double p, double df)
+        {
+            int ifault;
+            double ret;
+            if (p < 1.0 - p)
+                ret = finvt(2.0 * p, df, out ifault);
+            else
+                ret = -finvt(2.0 * (1.0 - p), df, out ifault);
+            if (ifault != 0) ret = double.NaN;
+            return ret;
+        }
 
-		/// <summary>
-		/// Two tail area for Student t
-		/// </summary>
-		public static double tvalp(double t, double df)
-		{
-		    double ret = fvalp(t * t, 1.0, df);
-		    if (double.IsNaN(ret))
-			{
-				return ret;
-			}
-		    ret=ret*0.5;
-		    if (t<0.0) ret=1.0-ret;
-		    return ret;
-		}
+        /// <summary>
+        /// Student t quantile from a two tail area
+        /// </summary>
+        public static double tfromp2(double p, double df)
+        {
+            int ifault;
+            double ret = finvt(p, df, out ifault);
+            if (ifault != 0) ret = double.NaN;
+            return ret;
+        }
 
-	    /// <summary>
-	    ///     finvt gives the two-tailed t percentage point
-	    /// </summary>
-	    /// <param name="t2">two-tailed area</param>
-	    ///<param name="df">degrees of freedom</param>
-	    ///<param name="ifault">zero if no fault, non-zero if fault</param>
+        /// <summary>
+        /// Two tail area for Student t
+        /// </summary>
+        public static double tvalp(double t, double df)
+        {
+            double ret = fvalp(t * t, 1.0, df);
+            if (double.IsNaN(ret))
+            {
+                return ret;
+            }
+            ret = ret * 0.5;
+            if (t < 0.0) ret = 1.0 - ret;
+            return ret;
+        }
+
+        /// <summary>
+        ///     finvt gives the two-tailed t percentage point
+        /// </summary>
+        /// <param name="t2">two-tailed area</param>
+        ///<param name="df">degrees of freedom</param>
+        ///<param name="ifault">zero if no fault, non-zero if fault</param>
         /// <returns>number such that the probability that the absolute value of a t random variable with df degrees of freedom will be greater than finvt is equal to t2</returns>
-	    ///<remarks>
-	    ///     reference: hill (1970 cacm 13, 619-620)
-	    ///
-	    ///     creation date: winter 1984 - modified IEB Sep 99
-	    ///
-	    ///     remark: max abs difference with mdsti less than
-	    ///             .6e-02 observed at 20 d.f. and p=.0004
-	    /// </remarks>
-	    private static double finvt(double t2,double df, out int ifault)
-		{
-			const double pib2=0.5*Constant.PI;
-			// double sr2=Math.Sqrt(2.0);
-			double ret;
-			ifault=0;
-			double p = t2;
-			if(df==2.0)
-			{
-				ret=Math.Sqrt(2.0/(p*(2.0-p))-2.0);
-			}
-			else if(df==1.0)
-			{
-				p=p*pib2;
-				ret=Math.Cos(p)/Math.Sin(p);
-			}
-			else if(df<60.0)
-			{
-				ret=xinbta(df/2.0,0.5,p,out ifault);
-				ret = ifault!=0 ? double.NaN : Math.Sqrt(Math.Abs(df*(1.0/ret-1.0)));
-			}
-			else
-			{
-				double dn = df;
-				double a = 1.0/(dn-0.5);
-				double b = 48.0/(a*a);
-				double c = ((20700.0*a/b-98.0)*a-16.0)*a+96.36;
-				double d = ((94.5/(b+c)-3.0)/b+1.0)*Math.Sqrt(a*pib2)*dn;
-				double x = d*p;
-				double y = Math.Pow(x,(2.0/dn));
-				double pp = p*0.5;
-				x=gauinv(pp, out ifault);
-				if(y<=0.5+a)
-					y=((1.0/(((dn+6.0)/(dn*y)-0.089*d-0.822)*(dn+2.0)*3.0)+0.5/(dn+4.0))*y-1.0)*(dn+1.0)/(dn+2.0)+1.0/y;
-				else
-				{
-					y=x*x;
-					if(df<5.0) c=c+0.3*(dn-4.5)*(x+0.6);
-					c=(((0.05*d*x-5.0)*x-7.0)*x-2.0)*x+b+c;
-					y=(((((0.4*y+6.3)*y+36.0)*y+94.5)/c-y-3.0)/b+1.0)*x;
-					y=a*y*y;
-					if(y>0.002)
-						y=Math.Exp(y)-1.0;
-					else
-						y=0.5*y*y+y;
-				}
-				ret=Math.Sqrt(dn*y);
-			}
-			return ret;
-		}
+        ///<remarks>
+        ///     reference: hill (1970 cacm 13, 619-620)
+        ///
+        ///     creation date: winter 1984 - modified IEB Sep 99
+        ///
+        ///     remark: max abs difference with mdsti less than
+        ///             .6e-02 observed at 20 d.f. and p=.0004
+        /// </remarks>
+        private static double finvt(double t2, double df, out int ifault)
+        {
+            const double pib2 = 0.5 * Constant.PI;
+            // double sr2=Math.Sqrt(2.0);
+            double ret;
+            ifault = 0;
+            double p = t2;
+            if (df == 2.0)
+            {
+                ret = Math.Sqrt(2.0 / (p * (2.0 - p)) - 2.0);
+            }
+            else if (df == 1.0)
+            {
+                p = p * pib2;
+                ret = Math.Cos(p) / Math.Sin(p);
+            }
+            else if (df < 60.0)
+            {
+                ret = xinbta(df / 2.0, 0.5, p, out ifault);
+                ret = ifault != 0 ? double.NaN : Math.Sqrt(Math.Abs(df * (1.0 / ret - 1.0)));
+            }
+            else
+            {
+                double dn = df;
+                double a = 1.0 / (dn - 0.5);
+                double b = 48.0 / (a * a);
+                double c = ((20700.0 * a / b - 98.0) * a - 16.0) * a + 96.36;
+                double d = ((94.5 / (b + c) - 3.0) / b + 1.0) * Math.Sqrt(a * pib2) * dn;
+                double x = d * p;
+                double y = Math.Pow(x, (2.0 / dn));
+                double pp = p * 0.5;
+                x = gauinv(pp, out ifault);
+                if (y <= 0.5 + a)
+                    y = ((1.0 / (((dn + 6.0) / (dn * y) - 0.089 * d - 0.822) * (dn + 2.0) * 3.0) + 0.5 / (dn + 4.0)) * y - 1.0) * (dn + 1.0) / (dn + 2.0) + 1.0 / y;
+                else
+                {
+                    y = x * x;
+                    if (df < 5.0) c = c + 0.3 * (dn - 4.5) * (x + 0.6);
+                    c = (((0.05 * d * x - 5.0) * x - 7.0) * x - 2.0) * x + b + c;
+                    y = (((((0.4 * y + 6.3) * y + 36.0) * y + 94.5) / c - y - 3.0) / b + 1.0) * x;
+                    y = a * y * y;
+                    if (y > 0.002)
+                        y = Math.Exp(y) - 1.0;
+                    else
+                        y = 0.5 * y * y + y;
+                }
+                ret = Math.Sqrt(dn * y);
+            }
+            return ret;
+        }
 
-		/// <summary>
-		/// tail area of the chi-square distribution
-		/// </summary>
-		public static double chivalp(double x, double df)
-		{
-			int ifault;
-			double ret = 1.0 - gammad(x / 2.0, df / 2.0, out ifault);
-			if (ifault!=0) ret =double.NaN;
-			return ret;
-		}
+        /// <summary>
+        /// tail area of the chi-square distribution
+        /// </summary>
+        public static double chivalp(double x, double df)
+        {
+            int ifault;
+            double ret = 1.0 - gammad(x / 2.0, df / 2.0, out ifault);
+            if (ifault != 0) ret = double.NaN;
+            return ret;
+        }
 
-		/// <summary>
-		/// tail area of the gamma distribution
-		/// </summary>
-		public static double gammad(double x, double p, out int ifault)
-		{
-			const double tol = Constant.DBL_SRS, zero = 0.0, one = 1.0, two = 2.0, three = 3.0, nine = 9.0, plimit = 1000.0, xbig = 1.0e12;
-			double
-				elimit = Math.Log(Constant.DBL_MIN),
-				oflo = Math.Sqrt(Constant.DBL_MAX);
-			double pn1, arg, c, a;
-			double ret = zero;
-			if (p <= zero || x < zero || double.IsNaN(x) || double.IsNaN(p))
-			{
-				ifault = 1;
-				return ret;
-			}
-			ifault = 0;
-			if (x == zero)
-			{
-				ret = zero;
-				return ret;
-			}
-			if (x > plimit)
-			{
-				pn1 = three * Math.Sqrt(p) * (Math.Pow((x / p), (one / three)) + one /(nine * p) - one);
-				ret = alnorm(pn1);
-				return ret;
-			}
-			if (x > xbig)
-			{
-				ret = one;
-				return ret;
-			}
-			if (x <= one | x < p)
-			{
-				arg = p * Math.Log(x) - x - alogam(p + one);
-				c = one;
-				ret = one;
-				a = p;
-				for (;;)
-				{
-					a = a + one;
-					c = c * x / a;
-					ret = ret + c;
-					if (c <= tol) break;
-				}
-				arg = arg + Math.Log(ret);
-				ret = zero;
-				if (arg >= elimit) ret = Math.Exp(arg);
-			}
-			else
-			{
-				arg = p * Math.Log(x) - x - alogam(p);
-				a = one - p;
-				double b = a + x + one;
-				c = zero;
-				pn1 = one;
-				double pn2 = x;
-				double pn3 = x + one;
-				double pn4 = x * b;
-				ret = pn3 / pn4;
-				for (;;)
-				{
-					a = a + one;
-					b = b + two;
-					c = c + one;
-					double an = a * c;
-					double pn5 = b * pn3 - an * pn1;
-					double pn6 = b * pn4 - an * pn2;
-					if (Math.Abs(pn6) > zero)
-					{
-						double rn = pn5 / pn6;
-						if (Math.Abs(ret - rn) <= Math.Min(tol, tol * rn)) break;
-						ret = rn;
-					}
-					pn1 = pn3;
-					pn2 = pn4;
-					pn3 = pn5;
-					pn4 = pn6;
-					if (Math.Abs(pn5) >= oflo)
-					{
-						pn1 = pn1 / oflo;
-						pn2 = pn2 / oflo;
-						pn3 = pn3 / oflo;
-						pn4 = pn4 / oflo;
-					}
-				}
-				arg = arg + Math.Log(ret);
-				ret = one;
-				if (arg >= elimit) ret = one - Math.Exp(arg);
-			}
-			return ret;
-		}
+        /// <summary>
+        /// tail area of the gamma distribution
+        /// </summary>
+        public static double gammad(double x, double p, out int ifault)
+        {
+            const double tol = Constant.DBL_SRS, zero = 0.0, one = 1.0, two = 2.0, three = 3.0, nine = 9.0, plimit = 1000.0, xbig = 1.0e12;
+            double
+                elimit = Math.Log(Constant.DBL_MIN),
+                oflo = Math.Sqrt(Constant.DBL_MAX);
+            double pn1, arg, c, a;
+            double ret = zero;
+            if (p <= zero || x < zero || double.IsNaN(x) || double.IsNaN(p))
+            {
+                ifault = 1;
+                return ret;
+            }
+            ifault = 0;
+            if (x == zero)
+            {
+                ret = zero;
+                return ret;
+            }
+            if (x > plimit)
+            {
+                pn1 = three * Math.Sqrt(p) * (Math.Pow((x / p), (one / three)) + one / (nine * p) - one);
+                ret = alnorm(pn1);
+                return ret;
+            }
+            if (x > xbig)
+            {
+                ret = one;
+                return ret;
+            }
+            if (x <= one | x < p)
+            {
+                arg = p * Math.Log(x) - x - alogam(p + one);
+                c = one;
+                ret = one;
+                a = p;
+                for (; ; )
+                {
+                    a = a + one;
+                    c = c * x / a;
+                    ret = ret + c;
+                    if (c <= tol) break;
+                }
+                arg = arg + Math.Log(ret);
+                ret = zero;
+                if (arg >= elimit) ret = Math.Exp(arg);
+            }
+            else
+            {
+                arg = p * Math.Log(x) - x - alogam(p);
+                a = one - p;
+                double b = a + x + one;
+                c = zero;
+                pn1 = one;
+                double pn2 = x;
+                double pn3 = x + one;
+                double pn4 = x * b;
+                ret = pn3 / pn4;
+                for (; ; )
+                {
+                    a = a + one;
+                    b = b + two;
+                    c = c + one;
+                    double an = a * c;
+                    double pn5 = b * pn3 - an * pn1;
+                    double pn6 = b * pn4 - an * pn2;
+                    if (Math.Abs(pn6) > zero)
+                    {
+                        double rn = pn5 / pn6;
+                        if (Math.Abs(ret - rn) <= Math.Min(tol, tol * rn)) break;
+                        ret = rn;
+                    }
+                    pn1 = pn3;
+                    pn2 = pn4;
+                    pn3 = pn5;
+                    pn4 = pn6;
+                    if (Math.Abs(pn5) >= oflo)
+                    {
+                        pn1 = pn1 / oflo;
+                        pn2 = pn2 / oflo;
+                        pn3 = pn3 / oflo;
+                        pn4 = pn4 / oflo;
+                    }
+                }
+                arg = arg + Math.Log(ret);
+                ret = one;
+                if (arg >= elimit) ret = one - Math.Exp(arg);
+            }
+            return ret;
+        }
 
-		/// <summary>
-		/// Normal integral via the compliment of the error function
-		/// </summary>
-		public static double alnorm(double z)
-		{
-		    if (double.IsNaN(z))
-				return double.NaN;
-		    return 0.5*derfc(-z*Math.Sqrt(0.5));
-		}
+        /// <summary>
+        /// Normal integral via the compliment of the error function
+        /// </summary>
+        public static double alnorm(double z)
+        {
+            if (double.IsNaN(z))
+                return double.NaN;
+            return 0.5 * derfc(-z * Math.Sqrt(0.5));
+        }
 
-	    /// <summary>
-		///  Calculates the double precision error function for double precision argument.
-		///  Series for ERF on the interval  0. to  1.00000E+00
-		///                      with weighted error   1.28E-32
-		///                       log weighted error  31.89
-		///             significant figures required  31.05
-		///                  decimal places required  32.55
-		/// </summary>
-		/// <remarks>
+        /// <summary>
+        ///  Calculates the double precision error function for double precision argument.
+        ///  Series for ERF on the interval  0. to  1.00000E+00
+        ///                      with weighted error   1.28E-32
+        ///                       log weighted error  31.89
+        ///             significant figures required  31.05
+        ///                  decimal places required  32.55
+        /// </summary>
+        /// <remarks>
         ///  Adaptation and translation of Netlib Saltec routine by Fullerton, W.
         /// </remarks>
-		public static double derf(double x)
-		{
-			double [] erfcs = {
+        public static double derf(double x)
+        {
+            double[] erfcs = {
 								  - 0.49046121234691808039984544033376e-1,
 								  - 0.14226120510371364237824741899631,
 								  + 0.10035582187599795575754676712933e-1,
@@ -1160,54 +1165,54 @@ namespace StatsDirect.Numerics
 								  + 0.86550114699637626197333333333333e-28,
 								  - 0.10788925177498064213333333333333e-29,
 								  + 0.12811883993017002666666666666666e-31};
-			// For IEEE 64-bit Chebyshev interpolation terms = 11
-			// for other systems call nterf = Base.chebyinit(erfcs,21,0.1*Defs.DBL_SRS)
-			const int nterf=11;
-			double 
-				xbig = Math.Sqrt(-Math.Log(Constant.SQRTPI*Constant.DBL_SRS)),
-				sqeps = Math.Sqrt(2.0*Constant.DBL_SRS);
-			double ret;
-			double y = Math.Abs(x);
-			if ( y<=1.0 )
-			{
-				// ERF(X) = 1.0 - ERFC(X)  FOR  -1.0 <= X <= 1.0
-				if ( y<=sqeps )
-					ret = 2.0*x*x/Constant.SQRTPI;
-				else
-					ret = x*(1.0+Base.cheby(2.0*x*x-1.0,erfcs,nterf));
-			}
-			else
-			{
-				// ERF(X) = 1.0 - ERFC(X) FOR Math.Abs(X) > 1.0
-				ret = y<=xbig ? Base.dsign(1.0-derfc(y),x) : Base.dsign(1.0,x);
-			}
-			return ret;
-		}
+            // For IEEE 64-bit Chebyshev interpolation terms = 11
+            // for other systems call nterf = Base.chebyinit(erfcs,21,0.1*Defs.DBL_SRS)
+            const int nterf = 11;
+            double
+                xbig = Math.Sqrt(-Math.Log(Constant.SQRTPI * Constant.DBL_SRS)),
+                sqeps = Math.Sqrt(2.0 * Constant.DBL_SRS);
+            double ret;
+            double y = Math.Abs(x);
+            if (y <= 1.0)
+            {
+                // ERF(X) = 1.0 - ERFC(X)  FOR  -1.0 <= X <= 1.0
+                if (y <= sqeps)
+                    ret = 2.0 * x * x / Constant.SQRTPI;
+                else
+                    ret = x * (1.0 + Base.cheby(2.0 * x * x - 1.0, erfcs, nterf));
+            }
+            else
+            {
+                // ERF(X) = 1.0 - ERFC(X) FOR Math.Abs(X) > 1.0
+                ret = y <= xbig ? Base.dsign(1.0 - derfc(y), x) : Base.dsign(1.0, x);
+            }
+            return ret;
+        }
 
-		/// <summary>
-		///     calculates the double precision complementary error function for double precision argument.
-		///     series for erf        on the interval  0.          to  1.00000e+00
-		///                                        with weighted error   1.28e-32
-		///                                         log weighted error  31.89
-		///                               significant figures required  31.05
-		///                                    decimal places required  32.55
-		///     series for erc2       on the interval  2.50000e-01 to  1.00000e+00
-		///                                        with weighted error   2.67e-32
-		///                                         log weighted error  31.57
-		///                               significant figures required  30.31
-		///                                    decimal places required  32.42
-		///     series for erfc       on the interval  0.          to  2.50000e-01
-		///                                        with weighted error   1.53e-31
-		///                                         log weighted error  30.82
-		///                               significant figures required  29.47
-		///                                    decimal places required  31.70
-		/// </summary>
-		/// <remarks>
+        /// <summary>
+        ///     calculates the double precision complementary error function for double precision argument.
+        ///     series for erf        on the interval  0.          to  1.00000e+00
+        ///                                        with weighted error   1.28e-32
+        ///                                         log weighted error  31.89
+        ///                               significant figures required  31.05
+        ///                                    decimal places required  32.55
+        ///     series for erc2       on the interval  2.50000e-01 to  1.00000e+00
+        ///                                        with weighted error   2.67e-32
+        ///                                         log weighted error  31.57
+        ///                               significant figures required  30.31
+        ///                                    decimal places required  32.42
+        ///     series for erfc       on the interval  0.          to  2.50000e-01
+        ///                                        with weighted error   1.53e-31
+        ///                                         log weighted error  30.82
+        ///                               significant figures required  29.47
+        ///                                    decimal places required  31.70
+        /// </summary>
+        /// <remarks>
         ///     adaptation and translation of netlib saltec routine by w fullerton.
         /// </remarks>
-		public static double derfc(double x)
-		{
-			double[] erfcs = {
+        public static double derfc(double x)
+        {
+            double[] erfcs = {
 								 - 0.49046121234691808039984544033376e-1,
 								 - 0.14226120510371364237824741899631,
 								 + 0.10035582187599795575754676712933e-1,
@@ -1229,7 +1234,7 @@ namespace StatsDirect.Numerics
 								 + 0.86550114699637626197333333333333e-28,
 								 - 0.10788925177498064213333333333333e-29,
 								 + 0.12811883993017002666666666666666e-31};
-			double[] erc2cs = {
+            double[] erc2cs = {
 								  - 0.6960134660230950112739150826197e-1,
 								  - 0.4110133936262089348982212084666e-1,
 								  + 0.3914495866689626881561143705244e-2,
@@ -1279,7 +1284,7 @@ namespace StatsDirect.Numerics
 								  + 0.3691326793107069042251093333333e-30,
 								  - 0.9909389590624365420653226666666e-31,
 								  + 0.2666491705195388413323946666666e-31};
-			double[] erfccs = {
+            double[] erfccs = {
 								  + 0.715179310202924774503697709496e-1,
 								  - 0.265324343376067157558893386681e-1,
 								  + 0.171115397792085588332699194606e-2,
@@ -1339,633 +1344,633 @@ namespace StatsDirect.Numerics
 								  + 0.109905283010276157359726683750e-29,
 								  - 0.486771374164496572732518677435e-30,
 								  + 0.152587726411035756763200828211e-30};
-			// const double eta = 0.1*Defs.DBL_SRS;
-			// For IEEE 64-bit Chebyshev interpolation terms = 11 for nterf, 24 for nterfc and 23 for nterc2
-			// for other systems call
-			//  nterf = Base.chebyinit(erfcs,21,eta)
-			//  nterfc = Base.chebyinit(erfccs,59,eta)
-			//  nterc2 = Base.chebyinit(erc2cs,49,eta)
-			const int nterf=11, nterfc=24, nterc2=23;
-			double
-				xsml = -Math.Sqrt(-Math.Log(Constant.SQRTPI*Constant.DBL_SRS)),
-				txmax = Math.Sqrt(-Math.Log(Constant.SQRTPI*Constant.DBL_MIN)),
-				xmax = txmax - 0.5*Math.Log(txmax)/txmax - 0.01,
-				sqeps = Math.Sqrt(2.0*Constant.DBL_SRS);
-		    // erfc(x) = 1.0 - erf(x)  for  x < xsml
-			if (x<=xsml) return 2.0;
-			if (x<=xmax)
-			{
-				double y = Math.Abs(x);
-				if (y<=1.0)
-				{
-				    // erfc(x) = 1.0 - erf(x)  for Math.Abs(x) <= 1.0
-					if ( y<sqeps )
-						return 1.0 - 2.0*x/Constant.SQRTPI;
-				    return 1.0 - x*(1.0+Base.cheby(2.0*x*x-1.0,erfcs,nterf));
-				}
-			    // erfc(x) = 1.0 - erf(x)  for  1.0 < Math.Abs(x) <= xmax
-				y = y*y;
-				double ret;
-				if (y<=4.0)
-					ret = Math.Exp(-y)/Math.Abs(x)*(0.5+Base.cheby((8.0/y-5.0)/3.0,erc2cs,nterc2));
-				else
-					ret = Math.Exp(-y)/Math.Abs(x)*(0.5+Base.cheby(8.0/y-1.0,erfccs,nterfc));
-				if (x<0.0) ret = 2.0 - ret;
-				return ret;
-			}
-			//     x so big erfc underflows
-			return 0.0;
-		}
+            // const double eta = 0.1*Defs.DBL_SRS;
+            // For IEEE 64-bit Chebyshev interpolation terms = 11 for nterf, 24 for nterfc and 23 for nterc2
+            // for other systems call
+            //  nterf = Base.chebyinit(erfcs,21,eta)
+            //  nterfc = Base.chebyinit(erfccs,59,eta)
+            //  nterc2 = Base.chebyinit(erc2cs,49,eta)
+            const int nterf = 11, nterfc = 24, nterc2 = 23;
+            double
+                xsml = -Math.Sqrt(-Math.Log(Constant.SQRTPI * Constant.DBL_SRS)),
+                txmax = Math.Sqrt(-Math.Log(Constant.SQRTPI * Constant.DBL_MIN)),
+                xmax = txmax - 0.5 * Math.Log(txmax) / txmax - 0.01,
+                sqeps = Math.Sqrt(2.0 * Constant.DBL_SRS);
+            // erfc(x) = 1.0 - erf(x)  for  x < xsml
+            if (x <= xsml) return 2.0;
+            if (x <= xmax)
+            {
+                double y = Math.Abs(x);
+                if (y <= 1.0)
+                {
+                    // erfc(x) = 1.0 - erf(x)  for Math.Abs(x) <= 1.0
+                    if (y < sqeps)
+                        return 1.0 - 2.0 * x / Constant.SQRTPI;
+                    return 1.0 - x * (1.0 + Base.cheby(2.0 * x * x - 1.0, erfcs, nterf));
+                }
+                // erfc(x) = 1.0 - erf(x)  for  1.0 < Math.Abs(x) <= xmax
+                y = y * y;
+                double ret;
+                if (y <= 4.0)
+                    ret = Math.Exp(-y) / Math.Abs(x) * (0.5 + Base.cheby((8.0 / y - 5.0) / 3.0, erc2cs, nterc2));
+                else
+                    ret = Math.Exp(-y) / Math.Abs(x) * (0.5 + Base.cheby(8.0 / y - 1.0, erfccs, nterfc));
+                if (x < 0.0) ret = 2.0 - ret;
+                return ret;
+            }
+            //     x so big erfc underflows
+            return 0.0;
+        }
 
-		/// <summary>
-		///
-		///     function  ppchi2
-		///       evaluates the percentae points of the chi-squared
-		///       probability distribution function.
-		///       g should equal ln(gamma(v/2.0)).
-		///
-		///     input variables:
-		///       p = left tail probability  (between 0.0000002 and 0.999998 for AS91)
-		///       v = degrees of freedom (a positive real number)
-		///     output variables:
-		///       ppchi2 = chi-square percentage point
-		///       ifault = 1 if p is out of range
-		///                2 if v is not positive
-		///                3 if function gammad returns a fault
-		///                0 otherwise
-		///     auxiliary functions rquired:
-		///       gauinv(p,if1) = normal percentage point
-		///       alogam(x) = ln(gamma(x))
-		/// </summary>
-		/// <remarks>
+        /// <summary>
+        ///
+        ///     function  ppchi2
+        ///       evaluates the percentae points of the chi-squared
+        ///       probability distribution function.
+        ///       g should equal ln(gamma(v/2.0)).
+        ///
+        ///     input variables:
+        ///       p = left tail probability  (between 0.0000002 and 0.999998 for AS91)
+        ///       v = degrees of freedom (a positive real number)
+        ///     output variables:
+        ///       ppchi2 = chi-square percentage point
+        ///       ifault = 1 if p is out of range
+        ///                2 if v is not positive
+        ///                3 if function gammad returns a fault
+        ///                0 otherwise
+        ///     auxiliary functions rquired:
+        ///       gauinv(p,if1) = normal percentage point
+        ///       alogam(x) = ln(gamma(x))
+        /// </summary>
+        /// <remarks>
         ///     best, d.j. and roberts, d.e. (1975).
         ///       the percentage points of the chi-square distribution
         ///       algorithm as 91 appl. statist. vol. 24 no. 3, pp. 385-388.
         ///
         ///     available via the statlib archive, at http://lib.stat.cmu.edu/apstat/
         /// </remarks>
-		public static double ppchi2(double prob, double v, out int ifault)
-		{
-			const double e=0.5e-12, aa=0.6931471805;
-			double ch,q,p1,p2,t,a;
-			//  after defining accuracy and ln(2), test arguments and initialize
-			double p = prob;
-			double ret = -1.0;
-			ifault=1;
-			if(p<0.000002|p>0.999998)
-			{
-				ret=ppchir(prob,v,out ifault);
-				return ret;
-			}
-			if(v<=0.0) return ret;
-			ifault=0;
-			double xx = 0.5*v;
-			double c = xx-1.0;
-			double g = alogam(xx);
-			if(ifault!=0) return ret;
-			//  start approximation for small chi-squared
-			if (v<-1.24*Math.Log(p))
-			{
-				ch=Math.Pow((p*xx*Math.Exp(g+xx*aa)),(1.0/xx));
-				if ((ch-e)<0.0) return ch;
-			}   
-			else
-			{
-				//  start approximation for v less than or equal to 0.32
-				if (v<=0.32)
-				{
-					ch=0.4;
-					a=Math.Log(1.0-p);
-					for (;;)
-					{
-						q=ch;
-						p1=1.0+ch*(4.67+ch);
-						p2=ch*(6.73+ch*(6.66+ch));
-						t=-0.5+(4.67+2.0*ch)/p1-(6.73+ch*(13.32+3.0*ch))/p2;
-						ch=ch-(1.0-Math.Exp(a+g+0.5*ch+c*aa)*p2/p1)/t;
-						if((Math.Abs(q/ch-1.0)-0.01)<=0.0) break;
-					}
-				}
-				else
-				{
-					//  call to gauinv(p) - note that p has been tested above
-					double x = gauinv(p, out ifault);
-					if(ifault!=0) return ret;
-					//  start approximation using wilson and hilferty estimate
-					p1=0.222222/v;
-					ch=v*Math.Pow((x*Math.Sqrt(p1)+1.0-p1),3);
-					//  start approximation for p tending to 1
-					if (ch>2.2*v+6.0) ch=-2.0*(Math.Log(1.0-p)-c*Math.Log(0.5*ch)+g);
-				}
-			}
-			//  call to incomplete gamma function and claculation of seven term taylor series
-			for (;;)
-			{
-				q=ch;
-				p1=0.5*ch;
-				p2=p-gammad(p1,xx,out ifault);
-				if(ifault!=0) return ret;
-				t=p2*Math.Exp(xx*aa+g+p1-c*Math.Log(ch));
-				double b = t/ch;
-				a=0.5*t-b*c;
-				double s1 = (210.0+a*(140.0+a*(105.0+a*(84.0+a*(70.0+60.0*a)))))/420.0;
-				double s2 = (420.0+a*(735.0+a*(966.0+a*(1141.0+1278.0*a))))/2520.0;
-				double s3 = (210.0+a*(462.0+a*(707.0+932.0*a)))/2520.0;
-				double s4 = (252.0+a*(672.0+1182.0*a)+c*(294.0+a*(889.0+1740.0*a)))/5040.0;
-				double s5 = (84.0+264.0*a+c*(175.0+606.0*a))/2520.0;
-				double s6 = (120.0+c*(346.0+127.0*c))/5040.0;
-				ch=ch+t*(1.0+0.5*t*s1-b*c*(s1-b*(s2-b*(s3-b*(s4-b*(s5-b*s6))))));
-				if (Math.Abs(q/ch-1.0)<=e) break;
-			}
-			ret=ch;
-			return ret;
-		}
+        public static double ppchi2(double prob, double v, out int ifault)
+        {
+            const double e = 0.5e-12, aa = 0.6931471805;
+            double ch, q, p1, p2, t, a;
+            //  after defining accuracy and ln(2), test arguments and initialize
+            double p = prob;
+            double ret = -1.0;
+            ifault = 1;
+            if (p < 0.000002 | p > 0.999998)
+            {
+                ret = ppchir(prob, v, out ifault);
+                return ret;
+            }
+            if (v <= 0.0) return ret;
+            ifault = 0;
+            double xx = 0.5 * v;
+            double c = xx - 1.0;
+            double g = alogam(xx);
+            if (ifault != 0) return ret;
+            //  start approximation for small chi-squared
+            if (v < -1.24 * Math.Log(p))
+            {
+                ch = Math.Pow((p * xx * Math.Exp(g + xx * aa)), (1.0 / xx));
+                if ((ch - e) < 0.0) return ch;
+            }
+            else
+            {
+                //  start approximation for v less than or equal to 0.32
+                if (v <= 0.32)
+                {
+                    ch = 0.4;
+                    a = Math.Log(1.0 - p);
+                    for (; ; )
+                    {
+                        q = ch;
+                        p1 = 1.0 + ch * (4.67 + ch);
+                        p2 = ch * (6.73 + ch * (6.66 + ch));
+                        t = -0.5 + (4.67 + 2.0 * ch) / p1 - (6.73 + ch * (13.32 + 3.0 * ch)) / p2;
+                        ch = ch - (1.0 - Math.Exp(a + g + 0.5 * ch + c * aa) * p2 / p1) / t;
+                        if ((Math.Abs(q / ch - 1.0) - 0.01) <= 0.0) break;
+                    }
+                }
+                else
+                {
+                    //  call to gauinv(p) - note that p has been tested above
+                    double x = gauinv(p, out ifault);
+                    if (ifault != 0) return ret;
+                    //  start approximation using wilson and hilferty estimate
+                    p1 = 0.222222 / v;
+                    ch = v * Math.Pow((x * Math.Sqrt(p1) + 1.0 - p1), 3);
+                    //  start approximation for p tending to 1
+                    if (ch > 2.2 * v + 6.0) ch = -2.0 * (Math.Log(1.0 - p) - c * Math.Log(0.5 * ch) + g);
+                }
+            }
+            //  call to incomplete gamma function and claculation of seven term taylor series
+            for (; ; )
+            {
+                q = ch;
+                p1 = 0.5 * ch;
+                p2 = p - gammad(p1, xx, out ifault);
+                if (ifault != 0) return ret;
+                t = p2 * Math.Exp(xx * aa + g + p1 - c * Math.Log(ch));
+                double b = t / ch;
+                a = 0.5 * t - b * c;
+                double s1 = (210.0 + a * (140.0 + a * (105.0 + a * (84.0 + a * (70.0 + 60.0 * a))))) / 420.0;
+                double s2 = (420.0 + a * (735.0 + a * (966.0 + a * (1141.0 + 1278.0 * a)))) / 2520.0;
+                double s3 = (210.0 + a * (462.0 + a * (707.0 + 932.0 * a))) / 2520.0;
+                double s4 = (252.0 + a * (672.0 + 1182.0 * a) + c * (294.0 + a * (889.0 + 1740.0 * a))) / 5040.0;
+                double s5 = (84.0 + 264.0 * a + c * (175.0 + 606.0 * a)) / 2520.0;
+                double s6 = (120.0 + c * (346.0 + 127.0 * c)) / 5040.0;
+                ch = ch + t * (1.0 + 0.5 * t * s1 - b * c * (s1 - b * (s2 - b * (s3 - b * (s4 - b * (s5 - b * s6))))));
+                if (Math.Abs(q / ch - 1.0) <= e) break;
+            }
+            ret = ch;
+            return ret;
+        }
 
-		private static double ppchir (double p,double df,out int ifault)
-		{
-			const double eps = 10.0*Constant.DBL_LRS;
-		    double x2, xd;
-		    double ret = double.NaN;
-			ifault=0;
-			if (p<=0.0 | p>=1.0) return ret;
-			if (df < 0.5) return ret;
-			double xint = gauinv(p,out ifault);
-			if (ifault!=0) return ret;
-			double x0 = 2.0/(9.0*df);
-			double x1 = df*Math.Pow((1.0-x0+xint*Math.Sqrt(x0)),3.0);
-			if (x1 < 0.0) x1 = 0.0;
-			double f1 = chivalp(x1,df) - p;
-			if (f1 == 0.0)
-			{
-				x2 = x1;
-				ret = (x1+x2)/2.0;
-				return ret;
-			}
-			if (Math.Abs(xint) >= 1.0)
-			{
-				x2 = xint*1.05;
-				xd = x2 - x1;
-			}
-			else
-			{
-				x2 = xint + 0.05;
-				xd = 0.05;
-			}
-			if (x2 < 0.0) x2 = 0.0;
-			double f2 = chivalp(x2,df) - p;
-			double slope = Math.Max(0.01,(f2-f1)/xd);
-			double delta = -f1/slope;
-			int iter = 0;
-			for (;;)
-			{
-				delta = 2.0*delta;
-				iter = iter + 1;
-				if (iter > 100) return double.NaN;
-				x2 = x1 + delta;
-				if (x2 < 0.0) x2 = 0.0;
-				f2 = chivalp(x2,df) - p;
-				if (f1*f2 >= 0.0)
-					x1 = x2;
-				else
-					break;
-			}
-			//  regula falsi estimate
-			bool ibisec = false;
-			for (iter=1; iter<=100; iter++)
-			{
-				double xm = (x1+x2)/2.0;
-				double fd = f2 - f1;
-				xd = x2 - x1;
-				if (Math.Abs(xm) != 0.0)
-				{
-					if (Math.Abs(xd) < xm*eps) break;
-				}
-				else
-				{
-					if (Math.Abs(xd) < eps) break;
-				}
-			    double x3 = ibisec ? xm : x2 - f2*xd/fd;
-			    ibisec = false;
-				if (x3 < 0.0) x3 = 0.0;
-				double f3 = chivalp(x3,df) - p;
-				if (f3*f2 <= 0.0)
-				{
-					//                root was trapped, use regula falsi
-					x1 = x2;
-					f1 = f2;
-					x2 = x3;
-					f2 = f3;
-				}
-				else
-				{
-					//                root was not trapped, use illinois
-					x2 = x3;
-					f2 = f3;
-					f1 = f1/2.0;
-					if (Math.Abs(f2) > Math.Abs(f1))
-					{
-						//            use bisection
-						f1 = 2.0*f1;
-						ibisec = true;
-					}
-				}
-			}
-			ret = (x1+x2)/2.0;
-			return ret;
-		}
+        private static double ppchir(double p, double df, out int ifault)
+        {
+            const double eps = 10.0 * Constant.DBL_LRS;
+            double x2, xd;
+            double ret = double.NaN;
+            ifault = 0;
+            if (p <= 0.0 | p >= 1.0) return ret;
+            if (df < 0.5) return ret;
+            double xint = gauinv(p, out ifault);
+            if (ifault != 0) return ret;
+            double x0 = 2.0 / (9.0 * df);
+            double x1 = df * Math.Pow((1.0 - x0 + xint * Math.Sqrt(x0)), 3.0);
+            if (x1 < 0.0) x1 = 0.0;
+            double f1 = chivalp(x1, df) - p;
+            if (f1 == 0.0)
+            {
+                x2 = x1;
+                ret = (x1 + x2) / 2.0;
+                return ret;
+            }
+            if (Math.Abs(xint) >= 1.0)
+            {
+                x2 = xint * 1.05;
+                xd = x2 - x1;
+            }
+            else
+            {
+                x2 = xint + 0.05;
+                xd = 0.05;
+            }
+            if (x2 < 0.0) x2 = 0.0;
+            double f2 = chivalp(x2, df) - p;
+            double slope = Math.Max(0.01, (f2 - f1) / xd);
+            double delta = -f1 / slope;
+            int iter = 0;
+            for (; ; )
+            {
+                delta = 2.0 * delta;
+                iter = iter + 1;
+                if (iter > 100) return double.NaN;
+                x2 = x1 + delta;
+                if (x2 < 0.0) x2 = 0.0;
+                f2 = chivalp(x2, df) - p;
+                if (f1 * f2 >= 0.0)
+                    x1 = x2;
+                else
+                    break;
+            }
+            //  regula falsi estimate
+            bool ibisec = false;
+            for (iter = 1; iter <= 100; iter++)
+            {
+                double xm = (x1 + x2) / 2.0;
+                double fd = f2 - f1;
+                xd = x2 - x1;
+                if (Math.Abs(xm) != 0.0)
+                {
+                    if (Math.Abs(xd) < xm * eps) break;
+                }
+                else
+                {
+                    if (Math.Abs(xd) < eps) break;
+                }
+                double x3 = ibisec ? xm : x2 - f2 * xd / fd;
+                ibisec = false;
+                if (x3 < 0.0) x3 = 0.0;
+                double f3 = chivalp(x3, df) - p;
+                if (f3 * f2 <= 0.0)
+                {
+                    //                root was trapped, use regula falsi
+                    x1 = x2;
+                    f1 = f2;
+                    x2 = x3;
+                    f2 = f3;
+                }
+                else
+                {
+                    //                root was not trapped, use illinois
+                    x2 = x3;
+                    f2 = f3;
+                    f1 = f1 / 2.0;
+                    if (Math.Abs(f2) > Math.Abs(f1))
+                    {
+                        //            use bisection
+                        f1 = 2.0 * f1;
+                        ibisec = true;
+                    }
+                }
+            }
+            ret = (x1 + x2) / 2.0;
+            return ret;
+        }
 
-		public static void bino(int n, double p ,int k, ref double term, ref double plo, ref double phi, out int ifault)
-		{
-		    int i;
-			double sml=Math.Log(Constant.DBL_MIN);
-			//     cumulative and point binomial distribution
-			if (p<0.0 | p>1.0)
-			{
-				ifault=1;
-				return;
-			}
-		    if (n<k)
-		    {
-		        ifault=2;
-		        return;
-		    }
-		    ifault=0;
+        public static void bino(int n, double p, int k, ref double term, ref double plo, ref double phi, out int ifault)
+        {
+            int i;
+            double sml = Math.Log(Constant.DBL_MIN);
+            //     cumulative and point binomial distribution
+            if (p < 0.0 | p > 1.0)
+            {
+                ifault = 1;
+                return;
+            }
+            if (n < k)
+            {
+                ifault = 2;
+                return;
+            }
+            ifault = 0;
 
-		    double xn = n;
-			// double xk = k;
-			plo = 0.0;
-			double xn1 = xn + 1.0;
-			for (i=0;i<=k;i++)
-			{
-				double xi = i;
-				term = alogam(xn1) - alogam(xi+1.0) - alogam(xn1-xi) + xi * Math.Log(p) + (xn-xi) * Math.Log(1.0-p);
-				if (term>sml) plo = plo + Math.Exp(term);
-			}
-			if (term>sml) term = Math.Exp(term);
-			if (term<0.0) term = 0.0;
-			phi = 1.0 - plo + term;
-		}
+            double xn = n;
+            // double xk = k;
+            plo = 0.0;
+            double xn1 = xn + 1.0;
+            for (i = 0; i <= k; i++)
+            {
+                double xi = i;
+                term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                if (term > sml) plo = plo + Math.Exp(term);
+            }
+            if (term > sml) term = Math.Exp(term);
+            if (term < 0.0) term = 0.0;
+            phi = 1.0 - plo + term;
+        }
 
-		/// <summary>
-		///     cumulative binomial distribution for two sided inference
-		///
-		///	updated 1/2/02 - Alan Gibbs 2 * p1 not acceptable if p &lt;> 0.5
-		/// </summary>
-		public static void bino2(int n, double p, int k, out double p1, out double p2, out int ifault)
-		{
-			double xi, px;
-			int i;
-			double sml=Math.Log(Constant.DBL_MIN);
-			if (p<0.0 | p>1.0)
-			{
-				ifault=1;
+        /// <summary>
+        ///     cumulative binomial distribution for two sided inference
+        ///
+        ///	updated 1/2/02 - Alan Gibbs 2 * p1 not acceptable if p &lt;> 0.5
+        /// </summary>
+        public static void bino2(int n, double p, int k, out double p1, out double p2, out int ifault)
+        {
+            double xi, px;
+            int i;
+            double sml = Math.Log(Constant.DBL_MIN);
+            if (p < 0.0 | p > 1.0)
+            {
+                ifault = 1;
                 p1 = Constant.MISSING;
                 p2 = Constant.MISSING;
                 return;
-			}
-		    if (n<k)
-		    {
-		        ifault=2;
-		        p1 = Constant.MISSING;
-		        p2 = Constant.MISSING;
-		        return;
-		    }
-		    ifault=0;
-
-		    if (p==0.0)
-			{
-				p1=0.5;
-				p2=1.0;
-				return;
-			}
-			if (p==1.0)
-			{
-				if (k==n)
-				{
-					p1=0.5;
-					p2=1.0;
-				}
-				else
-				{
-					p1=0.0;
-					p2=0.0;
-				}
-				return;
-			}
-			double xn = n;
-			double xn1 = xn + 1.0;
-			// double xk = k;
-			double plo = 0.0;
-			// p1 = plo;
-			// p2 = plo;
-			double term = 0.0;
-			for (i = 0; i<=k; i++)
-			{
-				xi = i;
-				term = alogam(xn1) - alogam(xi+1.0) - alogam(xn1-xi) + xi * Math.Log(p) + (xn-xi) * Math.Log(1.0-p);
-				if (term>sml) plo = plo + Math.Exp(term);
-			}
-			if (term>sml) term = Math.Exp(term);
-			if (term<0.0) term = 0.0;
-			double phi = 1.0 - plo + term;
-			p1 = phi<plo ? phi : plo;
-			p2=p1;
-			double z = term+Constant.DBL_LRS;
-			double znp = n*p;
-			if (k>=znp)
-			{
-				for (i = 0; i<=k-1; i++)
-				{
-					xi = i;
-					term = alogam(xn1) - alogam(xi+1.0) - alogam(xn1-xi) + xi * Math.Log(p) + (xn-xi) * Math.Log(1.0-p);
-					if (term>sml)
-					{
-						px=Math.Exp(term);
-						if (px<z) p2=p2+px;
-					}
-				}
-			}
-			else
-			{
-				for (i = (int)znp;i<=n;i++)
-				{
-					xi = i;
-					term = alogam(xn1) - alogam(xi+1.0) - alogam(xn1-xi) + xi * Math.Log(p) + (xn-xi) * Math.Log(1.0-p);
-					if (term>sml)
-					{
-						px=Math.Exp(term);
-						if (px<z) p2=p2+px;
-					}
-				}
-			}
-		}
-
-
-		/// <summary>
-		///     cumulative binomial distribution for mid-point inference
-		/// </summary>
-		public static void binomid(int n,double p, int k,out double p1,out double p2,out int ifault)
-		{
-		    int i;
-			double sml=Math.Log(Constant.DBL_MIN);
-			if (p<0.0 | p>1.0)
-			{
-				ifault=1;
+            }
+            if (n < k)
+            {
+                ifault = 2;
                 p1 = Constant.MISSING;
                 p2 = Constant.MISSING;
                 return;
-			}
-		    if (n<k)
-		    {
-		        ifault=2;
-		        p1 = Constant.MISSING;
-		        p2 = Constant.MISSING;
-		        return;
-		    }
-		    ifault=0;
+            }
+            ifault = 0;
 
-		    if (p==0.0)
-			{ 
-				p1=0.5;
-				p2=1.0;
-				return;
-			}
-			if (p==1.0)
-			{
-				if (k==n)
-				{
-					p1=0.5;
-					p2=1.0;
-				}
-				else
-				{
-					p1=0.0;
-					p2=0.0;
-				}
-				return;
-			}
-			double xn = n;
-		    double plo = 0.0;
-			double term = 0.0;
-			double xn1 = xn + 1.0;
-			for (i = 0; i<=k;i++)
-			{
-				double xi = i;
-				term = alogam(xn1) - alogam(xi+1.0) - alogam(xn1-xi) + xi * Math.Log(p) + (xn-xi) * Math.Log(1.0-p);
-				if (term>sml) plo = plo + Math.Exp(term);
-			}
-			if (term>sml) term = Math.Exp(term);
-			if (term<0.0) term = 0.0;
-			double phi = 1.0 - plo + term;
-			p1 = phi<plo ? phi : plo;
-			p1 = p1 - term / 2.0;
-			p2 = 2.0 * p1;
-		}
+            if (p == 0.0)
+            {
+                p1 = 0.5;
+                p2 = 1.0;
+                return;
+            }
+            if (p == 1.0)
+            {
+                if (k == n)
+                {
+                    p1 = 0.5;
+                    p2 = 1.0;
+                }
+                else
+                {
+                    p1 = 0.0;
+                    p2 = 0.0;
+                }
+                return;
+            }
+            double xn = n;
+            double xn1 = xn + 1.0;
+            // double xk = k;
+            double plo = 0.0;
+            // p1 = plo;
+            // p2 = plo;
+            double term = 0.0;
+            for (i = 0; i <= k; i++)
+            {
+                xi = i;
+                term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                if (term > sml) plo = plo + Math.Exp(term);
+            }
+            if (term > sml) term = Math.Exp(term);
+            if (term < 0.0) term = 0.0;
+            double phi = 1.0 - plo + term;
+            p1 = phi < plo ? phi : plo;
+            p2 = p1;
+            double z = term + Constant.DBL_LRS;
+            double znp = n * p;
+            if (k >= znp)
+            {
+                for (i = 0; i <= k - 1; i++)
+                {
+                    xi = i;
+                    term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                    if (term > sml)
+                    {
+                        px = Math.Exp(term);
+                        if (px < z) p2 = p2 + px;
+                    }
+                }
+            }
+            else
+            {
+                for (i = (int)znp; i <= n; i++)
+                {
+                    xi = i;
+                    term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                    if (term > sml)
+                    {
+                        px = Math.Exp(term);
+                        if (px < z) p2 = p2 + px;
+                    }
+                }
+            }
+        }
 
-		/// <summary>
-		///     cumulative poisson distribution
-		/// </summary>
-		public static void poisson(double xlam,int k,out double phi,out double plo,out double term,out int ifault)
-		{
-			term=ppoiseq(k,xlam);
-			plo=ppoisle(k,xlam);
-			phi = 1.0 - plo + term;
-			ifault = (double.IsNaN(term)||double.IsNaN(plo)) ?1 : 0;
-		}
 
-		/// <summary>
-		///     inverse cumulative Poisson distribution by simple bisection
-		///     set idx = 3 if input p is plo else input p is assumed to be phi
-		///     this function returns the Poisson mean associated with p and k (nl)
-		/// </summary>
-		public static void poissoni(ref int idx, double p,out double xmid,out double trm,out double phi,out double plo,int nl,out int ifault)
-		{
-			const double acc=Constant.DBL_LRS;
-			double dx, fmid;
-			const int imax=1000;
-		    double xnl = nl;
-			const double x1 = acc;
-			double x2 = 0.0;
-			//     find upper limit for mean where phi is almost 1
-			int istep = 0;
-			for (;;)
-			{
-				x2=x2+xnl;
-				poisson (x2, nl,out phi,out plo,out trm,out ifault);
-				if (ifault!=0) break;
-				dx = idx==2 ? Math.Abs(1.0-phi) : Math.Abs(0.0-plo);
-				istep=istep + 1;
-				if (istep>imax)
-				{
-					ifault = 1;
-					break;
-				}
-				if (dx<=acc) break;
-			}
-			//     bisect to converge upon p
-			double bis = x1;
-			dx=x2-x1;
-			istep = 0;
-			if (idx==2)
-			{
-				for (;;)
-				{
-					dx=dx*0.5;
-					xmid = bis + dx;
-					poisson (xmid, nl,out phi,out plo,out trm,out ifault);
-					fmid = phi;
-					if (ifault!=0) break;
-					if (fmid-p<=0.0) bis=xmid;
-					if ((Math.Abs(dx)<=acc)|(Math.Abs(fmid-p)==0.0)) break;
-					istep = istep + 1;
-					if (istep>imax)
-					{
-						ifault = 3;
-						break;
-					}
-				}
-			} 
-			else
-			{
-				for (;;)
-				{
-					dx=dx*0.5;
-					xmid = bis + dx;
-					poisson (xmid, nl,out phi,out plo,out trm,out ifault);
-					fmid = plo;
-					if (ifault!=0) break;
-					if (fmid-p>0.0) bis=xmid;
-					if ((Math.Abs(dx)<=acc)|(Math.Abs(fmid-p)==0.0)) break;
-					istep = istep + 1;
-					if (istep>imax)
-					{
-						ifault = 3;
-						break;
-					}
-				}
-			}
-		}
+        /// <summary>
+        ///     cumulative binomial distribution for mid-point inference
+        /// </summary>
+        public static void binomid(int n, double p, int k, out double p1, out double p2, out int ifault)
+        {
+            int i;
+            double sml = Math.Log(Constant.DBL_MIN);
+            if (p < 0.0 | p > 1.0)
+            {
+                ifault = 1;
+                p1 = Constant.MISSING;
+                p2 = Constant.MISSING;
+                return;
+            }
+            if (n < k)
+            {
+                ifault = 2;
+                p1 = Constant.MISSING;
+                p2 = Constant.MISSING;
+                return;
+            }
+            ifault = 0;
 
-		/// <summary>
-		///       probability that a poisson random variable = k with mean theta
-		/// </summary>
-		private static double ppoiseq (int k, double theta)
-		{
-		    double smexe = Math.Log(Constant.DBL_MIN);
-			if (theta <= 0.0) return double.NaN;
-			if (k < 0) return 0.0;
-			double temp = theta + alogam(k+1);
-			double ex = -1.0*temp + k*Math.Log(theta);
-			if (ex >= smexe)
-				return Math.Exp(ex);
-		    return 0.0;
-		}
+            if (p == 0.0)
+            {
+                p1 = 0.5;
+                p2 = 1.0;
+                return;
+            }
+            if (p == 1.0)
+            {
+                if (k == n)
+                {
+                    p1 = 0.5;
+                    p2 = 1.0;
+                }
+                else
+                {
+                    p1 = 0.0;
+                    p2 = 0.0;
+                }
+                return;
+            }
+            double xn = n;
+            double plo = 0.0;
+            double term = 0.0;
+            double xn1 = xn + 1.0;
+            for (i = 0; i <= k; i++)
+            {
+                double xi = i;
+                term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                if (term > sml) plo = plo + Math.Exp(term);
+            }
+            if (term > sml) term = Math.Exp(term);
+            if (term < 0.0) term = 0.0;
+            double phi = 1.0 - plo + term;
+            p1 = phi < plo ? phi : plo;
+            p1 = p1 - term / 2.0;
+            p2 = 2.0 * p1;
+        }
 
-		/// <summary>
-		///       probability that a poisson random variable &lt;= k with mean theta
-		/// </summary>
-		private static double ppoisle (int k, double theta)
-		{
-		    double pe;
-		    const double
-					  eps = Constant.DBL_LRS,
-                      sml = 2.0*Constant.DBL_MIN;
-			double alnsml = Math.Log(sml);
-			if (theta <= 0.0) return double.NaN;
-			if (k < 0) return 0.0;
-			int k1 = k + 1;
-			//      lambda = 0, special
-			if (theta <= eps)
-				pe = 1.0;
-			else
-			{
-				//      prep forward calc
-				double x = theta;
-				double y = 1.0;
-				int jj = 1;
-				double p1 = -theta;
-				int icnt = (int)(p1/alnsml);
-				p1 = p1 - icnt*alnsml;
-				p1 = Math.Exp(p1);
-				//      prep backward calc
-				double x2 = k;
-				double y2 = theta;
-				double g = x2*Math.Log(y2);
-				double h = k1;
-				h = alogam(h);
-				double p2 = -y2 + g - h;
-				int kcnt = (int)(p2/alnsml);
-				p2 = p2 - kcnt*alnsml;
-				p2 = Math.Exp(p2);
-				g = 1.0;
-				h = 1.0;
-				if (icnt == 0) g = 1.0 - p1;
-				if (kcnt == 0) h = 1.0 - p2;
-				pe = 0.0;
-				//      work out which end to calculate from
-				for (;;)
-				{
-					int j = icnt - kcnt;
-				    double temp;
-				    if (j>0.0 | (j==0.0&p1<=p2))
-					{
-						//        forward
-						//        no need to scale, just store term
-						if (icnt == 0) pe = pe + p1;
-						if (jj != k1)
-						{
-							//         next term (recursion)
-							p1 = p1*x/y;
-							if (p1 >= h)
-							{
-								//          scale
-								temp = p1*sml;
-								if (temp != 0.0)
-								{
-									p1 = temp;
-									icnt = icnt - 1;
-								}
-							}
-							jj = jj + 1;
-							y = y + 1.0;
-						}
-						else
-						{
-							break;
-						}
-					}
-					else
-					{
-						//        backward
-						//        no need to scale, just store term
-						if (kcnt == 0) pe = pe + p2;
-						if (jj != k1)
-						{
-							//         next term (recursion)
-							p2 = p2*x2/y2;
-							if (p2 >= g)
-							{
-								//          scale
-								temp = p2*sml;
-								if (temp != 0.0)
-								{
-									p2 = temp;
-									kcnt = kcnt - 1;
-								}
-							}
-							k1 = k1 - 1;
-							x2 = x2 - 1.0;
-						}
-						else
-						{
-							break;
-						}
-					}
-				}
-			}
-			if (pe > 1.0) pe = 1.0;
-			return pe;
-		}
+        /// <summary>
+        ///     cumulative poisson distribution
+        /// </summary>
+        public static void poisson(double xlam, int k, out double phi, out double plo, out double term, out int ifault)
+        {
+            term = ppoiseq(k, xlam);
+            plo = ppoisle(k, xlam);
+            phi = 1.0 - plo + term;
+            ifault = (double.IsNaN(term) || double.IsNaN(plo)) ? 1 : 0;
+        }
+
+        /// <summary>
+        ///     inverse cumulative Poisson distribution by simple bisection
+        ///     set idx = 3 if input p is plo else input p is assumed to be phi
+        ///     this function returns the Poisson mean associated with p and k (nl)
+        /// </summary>
+        public static void poissoni(ref int idx, double p, out double xmid, out double trm, out double phi, out double plo, int nl, out int ifault)
+        {
+            const double acc = Constant.DBL_LRS;
+            double dx, fmid;
+            const int imax = 1000;
+            double xnl = nl;
+            const double x1 = acc;
+            double x2 = 0.0;
+            //     find upper limit for mean where phi is almost 1
+            int istep = 0;
+            for (; ; )
+            {
+                x2 = x2 + xnl;
+                poisson(x2, nl, out phi, out plo, out trm, out ifault);
+                if (ifault != 0) break;
+                dx = idx == 2 ? Math.Abs(1.0 - phi) : Math.Abs(0.0 - plo);
+                istep = istep + 1;
+                if (istep > imax)
+                {
+                    ifault = 1;
+                    break;
+                }
+                if (dx <= acc) break;
+            }
+            //     bisect to converge upon p
+            double bis = x1;
+            dx = x2 - x1;
+            istep = 0;
+            if (idx == 2)
+            {
+                for (; ; )
+                {
+                    dx = dx * 0.5;
+                    xmid = bis + dx;
+                    poisson(xmid, nl, out phi, out plo, out trm, out ifault);
+                    fmid = phi;
+                    if (ifault != 0) break;
+                    if (fmid - p <= 0.0) bis = xmid;
+                    if ((Math.Abs(dx) <= acc) | (Math.Abs(fmid - p) == 0.0)) break;
+                    istep = istep + 1;
+                    if (istep > imax)
+                    {
+                        ifault = 3;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                for (; ; )
+                {
+                    dx = dx * 0.5;
+                    xmid = bis + dx;
+                    poisson(xmid, nl, out phi, out plo, out trm, out ifault);
+                    fmid = plo;
+                    if (ifault != 0) break;
+                    if (fmid - p > 0.0) bis = xmid;
+                    if ((Math.Abs(dx) <= acc) | (Math.Abs(fmid - p) == 0.0)) break;
+                    istep = istep + 1;
+                    if (istep > imax)
+                    {
+                        ifault = 3;
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        ///       probability that a poisson random variable = k with mean theta
+        /// </summary>
+        private static double ppoiseq(int k, double theta)
+        {
+            double smexe = Math.Log(Constant.DBL_MIN);
+            if (theta <= 0.0) return double.NaN;
+            if (k < 0) return 0.0;
+            double temp = theta + alogam(k + 1);
+            double ex = -1.0 * temp + k * Math.Log(theta);
+            if (ex >= smexe)
+                return Math.Exp(ex);
+            return 0.0;
+        }
+
+        /// <summary>
+        ///       probability that a poisson random variable &lt;= k with mean theta
+        /// </summary>
+        private static double ppoisle(int k, double theta)
+        {
+            double pe;
+            const double
+                      eps = Constant.DBL_LRS,
+                      sml = 2.0 * Constant.DBL_MIN;
+            double alnsml = Math.Log(sml);
+            if (theta <= 0.0) return double.NaN;
+            if (k < 0) return 0.0;
+            int k1 = k + 1;
+            //      lambda = 0, special
+            if (theta <= eps)
+                pe = 1.0;
+            else
+            {
+                //      prep forward calc
+                double x = theta;
+                double y = 1.0;
+                int jj = 1;
+                double p1 = -theta;
+                int icnt = (int)(p1 / alnsml);
+                p1 = p1 - icnt * alnsml;
+                p1 = Math.Exp(p1);
+                //      prep backward calc
+                double x2 = k;
+                double y2 = theta;
+                double g = x2 * Math.Log(y2);
+                double h = k1;
+                h = alogam(h);
+                double p2 = -y2 + g - h;
+                int kcnt = (int)(p2 / alnsml);
+                p2 = p2 - kcnt * alnsml;
+                p2 = Math.Exp(p2);
+                g = 1.0;
+                h = 1.0;
+                if (icnt == 0) g = 1.0 - p1;
+                if (kcnt == 0) h = 1.0 - p2;
+                pe = 0.0;
+                //      work out which end to calculate from
+                for (; ; )
+                {
+                    int j = icnt - kcnt;
+                    double temp;
+                    if (j > 0.0 | (j == 0.0 & p1 <= p2))
+                    {
+                        //        forward
+                        //        no need to scale, just store term
+                        if (icnt == 0) pe = pe + p1;
+                        if (jj != k1)
+                        {
+                            //         next term (recursion)
+                            p1 = p1 * x / y;
+                            if (p1 >= h)
+                            {
+                                //          scale
+                                temp = p1 * sml;
+                                if (temp != 0.0)
+                                {
+                                    p1 = temp;
+                                    icnt = icnt - 1;
+                                }
+                            }
+                            jj = jj + 1;
+                            y = y + 1.0;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        //        backward
+                        //        no need to scale, just store term
+                        if (kcnt == 0) pe = pe + p2;
+                        if (jj != k1)
+                        {
+                            //         next term (recursion)
+                            p2 = p2 * x2 / y2;
+                            if (p2 >= g)
+                            {
+                                //          scale
+                                temp = p2 * sml;
+                                if (temp != 0.0)
+                                {
+                                    p2 = temp;
+                                    kcnt = kcnt - 1;
+                                }
+                            }
+                            k1 = k1 - 1;
+                            x2 = x2 - 1.0;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (pe > 1.0) pe = 1.0;
+            return pe;
+        }
 
         /// <summary>
         ///       expected normal order statistics

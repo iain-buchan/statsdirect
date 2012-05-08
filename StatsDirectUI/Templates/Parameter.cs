@@ -86,19 +86,10 @@ namespace StatsDirect.Templates
        XmlInclude(typeof(StringParameter))]
     public abstract class Parameter
     {
-        private string name;
         private Expression prompt;
-        private ValidationMode validationMode;
-        private string validationFailMessage;
-        private string requiresParameter;
         private Operation operation;
-        private bool mustRequest;
-        private string cancelSkipsParameter;
         private Expression acquireIfTrue;
         private Expression rubric;
-        private ParameterLifetime lifetime;
-        private bool promptPrecedesParameter;
-        private string title;
 
         public bool AcquireIfTrue(ITemplateProcessor processor, ParameterBag parameters)
         {
@@ -129,18 +120,10 @@ namespace StatsDirect.Templates
         }
 
         [XmlElement(ElementName = "lifetime")]
-        public ParameterLifetime Lifetime
-        {
-            get { return lifetime; }
-            set { lifetime = value; }
-        }
+        public ParameterLifetime Lifetime { get; set; }
 
         [XmlElement(ElementName="title")]
-        public string Title
-        {
-            get { return title; }
-            set { title = value; }
-        }
+        public string Title { get; set; }
 
         /// <summary>
         /// If true, this parameter must be requested from the user (if there is a user) even if it is already present as an input parameter.
@@ -148,11 +131,7 @@ namespace StatsDirect.Templates
         /// This is generally used in post-hoc processing to ensure that repeated operations are handled correctly.
         /// </summary>
         [XmlElement(ElementName = "must-request")]
-        public bool MustRequest
-        {
-            get { return mustRequest; }
-            set { mustRequest = value; }
-        }
+        public bool MustRequest { get; set; }
 
         [XmlIgnore]
         public bool HasPrompt
@@ -184,73 +163,55 @@ namespace StatsDirect.Templates
         public Expression AcquireIfTrueExpression
         {
             get { return acquireIfTrue; }
-            set
-            {
-                acquireIfTrue = value;
-            }
+            set { acquireIfTrue = value; }
         }
 
         /// <summary>
         /// The name of another parameter which must be present and non-blank in the parameters collection for this parameter to be requested.
         /// </summary>
         [XmlElement(ElementName = "requires-parameter")]
-        public string RequiresParameter
-        {
-            get { return requiresParameter; }
-            set { requiresParameter = value; }
-        }
+        public string RequiresParameter { get; set; }
 
         /// <summary>
         /// The name by which the parameter will be known within the parameters collection.
         /// </summary>
         [XmlElement(ElementName = "name")]
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
+        public string Name { get; set; }
 
         /// <summary>
         /// The mode in which the data should be loaded into the frame
         /// </summary>
         [XmlElement(ElementName = "validator")]
-        public ValidationMode ValidationMode
-        {
-            get { return validationMode; }
-            set { validationMode = value; }
-        }
+        public ValidationMode ValidationMode { get; set; }
 
         /// <summary>
         /// The error message that should be shown if there is a validator and it fails.
         /// If this is not set, the default error message should be used.
         /// </summary>
         [XmlElement(ElementName = "validation-fail-message")]
-        public string ValidationFailMessage
-        {
-            get { return validationFailMessage; }
-            set { validationFailMessage = value; }
-        }
+        public string ValidationFailMessage { get; set; }
 
         /// <summary>
         /// If non-null, UIs should fill a null value if the user cancels entry of the value (and should display the value of the parameter as a prompt on any interface they may present).
         /// If null, UIs should throw a user cancelled exception if the user cancels entry of the value.
         /// </summary>
         [XmlElement(ElementName = "cancel-skips-parameter")]
-        public string CancelSkipsParameter
-        {
-            get { return cancelSkipsParameter; }
-            set { cancelSkipsParameter = value; }
-        }
+        public string CancelSkipsParameter { get; set; }
 
         /// <summary>
         /// If true, UIs should render the prompt before the input for the parameter.
         /// If false (default), UIs should render the prompt after the parameter.
         /// </summary>
         [XmlElement(ElementName = "prompt-precedes-parameter")]
-        public bool PromptPrecedesParameter
+        public bool PromptPrecedesParameter { get; set; }
+
+        private HelpTip _help;
+
+        [XmlElement(ElementName = "help")]
+        public HelpTip Help
         {
-            get { return promptPrecedesParameter; }
-            set { promptPrecedesParameter = value; }
+            get { return _help; }
+            set { _help = value; }
         }
 
         public virtual bool RequiresGrid

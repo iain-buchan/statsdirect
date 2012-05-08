@@ -107,6 +107,7 @@
       <xs:element minOccurs="0" maxOccurs="1" name="validator" type="sdop:ValidationMode" />
       <xs:element minOccurs="0" maxOccurs="1" name="validation-fail-message" type="xs:string" />
       <xs:element minOccurs="0" maxOccurs="1" name="lifetime" type="sdop:Lifetime" />
+      <xs:element minOccurs="0" maxOccurs="1" name="help" type="sdop:HelpTip" />
     </xs:choice>
   </xs:complexType>
   <xs:complexType name="DoubleParameter">
@@ -150,6 +151,12 @@
       <xs:enumeration value="Positive" />
       <xs:enumeration value="ZeroToOneExclusive" />
       <xs:enumeration value="TwoBinsAndNoMissingData" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="OptionFormatType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Radio" />
+      <xs:enumeration value="Dropdown" />
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="Lifetime">
@@ -212,6 +219,7 @@
           <xs:element minOccurs="0" maxOccurs="1" name="format-hint" type="xs:string" />
           <xs:element minOccurs="1" maxOccurs="1" name="options" type="sdop:ArrayOfOptionOption" />
           <xs:element minOccurs="0" maxOccurs="1" name="default-value" type="xs:string" />
+          <xs:element minOccurs="0" maxOccurs="1" name="format-type" type="sdop:OptionFormatType" />
         </xs:choice>
       </xs:extension>
     </xs:complexContent>
@@ -434,5 +442,12 @@
   <xs:complexType name="Help">
     <xs:attribute name="chm-id" type="xs:integer" />
     <xs:attribute name="url" type="xs:anyURI" />
+  </xs:complexType>
+  <xs:complexType name="HelpTip">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="lang" type="xs:string" />
+      </xs:extension>
+    </xs:simpleContent>
   </xs:complexType>
 </xs:schema>

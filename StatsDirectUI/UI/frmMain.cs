@@ -190,7 +190,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private object ToTagObject(ToolStripItem item)
+        private static object ToTagObject(ToolStripItem item)
         {
             if (null == item)
                 return null;
@@ -267,7 +267,7 @@ namespace StatsDirect.UI
             return menuItem;
         }
 
-        private string ToTagString(Dictionary<string, string> tags)
+        private static string ToTagString(Dictionary<string, string> tags)
         {
             if (null == tags || tags.Count == 0)
                 return null;
@@ -899,18 +899,22 @@ namespace StatsDirect.UI
         /// <summary>
         /// Shows the Input Menubar and waits for the user to select a range of data
         /// </summary>
-        /// <param name="msg"></param>
-        /// <param name="wasPivoted"></param>
+        /// <param name="selectionMessage">The message to be shown to the user as what they're selecting</param>
+        /// <param name="cancelButtonLabel">If null, the cancel button shows its standard message.  If non-null, the cancel button shows this.</param>
+        /// <param name="wasPivoted">true if the user changed GIDV, false if not</param>
         /// <returns>true if the user clicked OK, false if the user clicked Cancel</returns>
-        public bool SelectCells(string msg, out bool wasPivoted)
+        public bool SelectCells(string selectionMessage, string cancelButtonLabel, out bool wasPivoted)
         {
             bool status;
             bool oldGidv = SDApplication.SoleInstance.Preferences.GIDV;
             bool wasWaiting = Application.UseWaitCursor;
             if (wasWaiting)
                 Application.UseWaitCursor = false;
-            lblSelectionMessage.Text = msg;
+            lblSelectionMessage.Text = selectionMessage;
             ShowPanel(PanelType.Selection, false);
+            string oldCancelText = cmdCancel.Text;
+            if (null != cancelButtonLabel)
+                cmdCancel.Text = cancelButtonLabel;
             selectingData = true;
             okSelected = false;
             // wait here until user presses OK or Cancel, or does something else suitable
@@ -937,7 +941,7 @@ namespace StatsDirect.UI
             }
             if (!wasPivoted)
                 ShowPanel(PanelType.Default, false);
-            // Re-enable all the forms
+            cmdCancel.Text = oldCancelText;
             // Wait for the screen to update
             if (wasWaiting)
                 Application.UseWaitCursor = true;
@@ -2201,10 +2205,20 @@ namespace StatsDirect.UI
                     cb.Checked = false;
             }
             cb.Text = booleanParameter.HasPrompt ? booleanParameter.Prompt(processor, context) : "";
+            MaybeAddHelpTip(cb, booleanParameter);
             tlp.Controls.Add(cb);
             tlp.SetColumnSpan(cb, 2);
 
             return null;
+        }
+
+        private void MaybeAddHelpTip(Control control, Parameter parameter)
+        {
+            if (null != parameter.Help)
+            {
+                ToolTip tt = new ToolTip();
+                tt.SetToolTip(control, parameter.Help.Text);
+            }
         }
 
         void EnterMovesDown(object sender, KeyPressEventArgs e)
@@ -2315,6 +2329,7 @@ namespace StatsDirect.UI
                 cbo = new ComboBox {Size = new Size(55, 18), FormattingEnabled = true};
                 cbo.KeyPress += EnterMovesDown;
                 tlp.Controls.Add(cbo);
+                MaybeAddHelpTip(cbo, confidenceIntervalParameter);
 
                 Label lbl = new Label
                                 {
@@ -2327,6 +2342,7 @@ namespace StatsDirect.UI
                                             : "Confidence (%)"
                                 };
                 tlp.Controls.Add(lbl);
+                MaybeAddHelpTip(lbl, confidenceIntervalParameter);
             }
 
             cbo.Tag = confidenceIntervalParameter;
@@ -2376,6 +2392,7 @@ namespace StatsDirect.UI
                 }
             }
             txt.KeyPress += EnterMovesDown;
+            MaybeAddHelpTip(txt, dateParameter);
             tlp.Controls.Add(txt);
 
             Label lbl = new Label
@@ -2386,6 +2403,7 @@ namespace StatsDirect.UI
                                 Text = dateParameter.HasPrompt ? dateParameter.Prompt(processor, context) : ""
                             };
             tlp.Controls.Add(lbl);
+            MaybeAddHelpTip(lbl, dateParameter);
             return null;
         }
 
@@ -2426,6 +2444,9 @@ namespace StatsDirect.UI
                 lbl.Text = doubleParameter.Prompt(processor, context) + suffix;
             else
                 lbl.Text = suffix;
+
+            MaybeAddHelpTip(lbl, doubleParameter);
+            MaybeAddHelpTip(txt, doubleParameter);
 
             if (doubleParameter.PromptPrecedesParameter)
             {
@@ -3025,6 +3046,9 @@ namespace StatsDirect.UI
                                         ? integerParameter.Prompt(processor, context) + suffix
                                         : suffix
                             };
+
+            MaybeAddHelpTip(lbl, integerParameter);
+            MaybeAddHelpTip(txt, integerParameter);
 
             if (integerParameter.PromptPrecedesParameter)
             {
@@ -3716,6 +3740,9 @@ namespace StatsDirect.UI
                                 AutoSize = true,
                                 Text = stringParameter.HasPrompt ? stringParameter.Prompt(processor, context) : ""
                             };
+
+            MaybeAddHelpTip(lbl, stringParameter);
+            MaybeAddHelpTip(txt, stringParameter);
 
             if (stringParameter.PromptPrecedesParameter)
             {

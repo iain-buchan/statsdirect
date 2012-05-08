@@ -250,32 +250,20 @@ namespace StatsDirect.Builtins
             
             string clearRowString = parameters[ "row-or-cell" ].AsString; 
             bool clearRow = totcols > 1 && "row".Equals( clearRowString ); 
-            double userNumber = parameters.ContainsKey( "missing-double" ) ? parameters[ "missing-double" ].AsDouble : Constant.MISSING; 
-            if ( parameters.ContainsKey( "missing-text" ) && parameters[ "missing-text" ].AsString.Trim().Length > 0 ) 
+            double userNumber = parameters.ContainsKey( "missing-double" ) ? parameters[ "missing-double" ].AsDouble : Constant.MISSING;
+            userText = parameters.ContainsKey("missing-text") && parameters["missing-text"].AsString.Trim().Length > 0
+                           ? parameters["missing-text"].AsString
+                           : "";
+            for ( int c=0; c <= totcols - 1; c++ ) 
             { 
-                userText = parameters[ "missing-text" ].AsString; 
-            } 
-            else 
-            { 
-                userText = ""; 
-            } 
-            for ( int C=0; C <= totcols - 1; C++ ) 
-            { 
-                StringVariable v = data.Variables[ C ].AsStringVariable; 
+                StringVariable v = data.Variables[ c ].AsStringVariable; 
                 int rx = 0; 
-                for ( r=0; r <= totrows - 1; r++ ) 
-                { 
-                    rx = rx + 1; 
-                    if ( IsMissing( v.Data[ r ], userNumber, userText ) ) 
-                    { 
-                        hold[ rx, C ] = ""; 
-                    } 
-                    else 
-                    { 
-                        hold[ rx, C ] = v.Data[ r ]; 
-                    } 
-                } 
-                hold[ 0, C ] = v.Title; 
+                for ( r=0; r <= totrows - 1; r++ )
+                {
+                    rx++;
+                    hold[rx, c] = ((v.Length <= r) || IsMissing(v.Data[r], userNumber, userText)) ? "" : v.Data[r];
+                }
+                hold[ 0, c ] = v.Title; 
             } 
             int maxctr = 0; 
             // int lc = totcols; 
@@ -303,7 +291,7 @@ namespace StatsDirect.Builtins
                     { 
                         if ( hold[ r, c ].Length > 0 )
                         { 
-                            ctrx = ctrx + 1; 
+                            ctrx++; 
                         } 
                     } 
                     if ( ctrx == totcols ) 

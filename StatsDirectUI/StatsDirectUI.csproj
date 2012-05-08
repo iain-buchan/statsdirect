@@ -267,6 +267,7 @@
     <Compile Include="Templates\GridParameter.cs" />
     <Compile Include="Templates\GroupedCovarianceParameter.cs" />
     <Compile Include="Templates\HelpContext.cs" />
+    <Compile Include="Templates\HelpTip.cs" />
     <Compile Include="Templates\IChartHost.cs" />
     <Compile Include="Templates\IFillable.cs" />
     <Compile Include="Templates\IMightRequireInput.cs" />
@@ -1643,7 +1644,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

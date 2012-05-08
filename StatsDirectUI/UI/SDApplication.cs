@@ -1163,7 +1163,7 @@ namespace StatsDirect.UI
             return host.FillCombinedParameters(processor, context);
         }
 
-        double IChartHost.GetConfidenceInterval(out bool Cancelled)
+        double IChartHost.GetConfidenceInterval(out bool cancelled)
         {
             const string KEY = "solo";
             ConfidenceIntervalParameter parameter = new ConfidenceIntervalParameter
@@ -1175,8 +1175,8 @@ namespace StatsDirect.UI
                                                             CancelSkipsParameter = "Skip"
                                                         };
             ParameterBag results = FillSingleParameter(parameter);
-            Cancelled = (null == results || !results.ContainsKey(KEY));
-            if (Cancelled)
+            cancelled = (null == results || !results.ContainsKey(KEY));
+            if (cancelled)
                 return 0.0;
             return results[KEY].AsDouble;
         }
