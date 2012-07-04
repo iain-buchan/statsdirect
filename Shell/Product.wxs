@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ON EACH BUILD, INCREMENT THE VERSION NUMBER IN STATSDIRECTUI - and remember this system ignores the fourth number! -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <Product
+    Id="*"
+    Name="StatsDirect Shell"
+    Language="1033"
+    Version="!(bind.FileVersion.statsdirectexe)"
+    Manufacturer="StatsDirect Limited"
+    UpgradeCode="880CB5E7-D99C-41CD-A50D-4A4A9D5A6211">
+
+    <!-- Packaging: a single .msi with compressed files in .cab format, embedded in the .msi -->
+    <Package
+      InstallerVersion="200"
+      Compressed="yes"
+      Description="StatsDirect Shell"
+      Manufacturer="StatsDirect Limited"/>
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+
+    <!-- Upgrading: we're willing to upgrade pretty much any version up to this one. -->
+    <!-- For now, that's 3.x only - we're not blowing away 2.x installs.  That will change. -->
+    <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
+    <Property Id="NEWERVERSIONINSTALLED" Secure="yes" />
+    <!-- SD3, upgrade code CA3C.... -->
+    <Upgrade Id="880CB5E7-D99C-41CD-A50D-4A4A9D5A6211">
+      <UpgradeVersion OnlyDetect="no" Minimum="3.0.0.0" Maximum="!(bind.FileVersion.statsdirectexe)" Property="PREVIOUSVERSIONSINSTALLED" IncludeMinimum="yes" IncludeMaximum="no" />
+      <UpgradeVersion OnlyDetect="yes" Minimum="!(bind.FileVersion.statsdirectexe)" Maximum="99.99.9999.9999" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" IncludeMaximum="yes" />
+    </Upgrade>
+    <InstallExecuteSequence>
+      <RemoveExistingProducts Before="InstallInitialize"></RemoveExistingProducts>
+    </InstallExecuteSequence>
+
+    <!-- User interface and license -->
+    <!-- Licence file location -->
+    <WixVariable Id="WixUILicenseRtf" Value="Licence.rtf"/>
+    <!-- Tell the UI what property holds the install directory -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
+    <!-- Download location for the .Net framework, plus the custom action to invoke it -->
+    <Property Id="WixShellExecTarget" Value="http://www.microsoft.com/downloads/details.aspx?FamilyId=333325FD-AE52-4E35-B531-508D977D32A6" />
+    <CustomAction Id="LaunchFrameworkDownload" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+    <!-- Reference the property from netfx that tells us whether framework 3.5 is installed or not -->
+    <PropertyRef Id="NETFRAMEWORK35"/>
+    <!-- Custom bitmaps -->
+    <WixVariable Id="WixUIBannerBmp" Value="bannrbmp-sd.bmp"/>
+    <WixVariable Id="WixUIDialogBmp" Value="dlgbmp-sd.bmp"/>
+    <!-- Custom exit dialog text -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="StatsDirect Shell will run faster if you leave five minutes for the optimisation process to finish." />
+    <!-- Now specify the UI - a little more complex than normal, as we've spliced in our own dialog for .Net framework detection -->
+    <UI>
+      <!-- Dialog to prompt the user for .Net installation -->
+      <Dialog Id="DotNetFxDlg" Title="[ProductName] Setup" Width="370" Height="270" NoMinimize="yes">
+        <Control Id="Description" Type="Text" X="50" Y="90" Width="270" Height="80" Transparent="yes" NoPrefix="yes" Text="StatsDirect 3 Shell requires Microsoft's .Net Framework 3.5 or later, and it is not yet installed on this computer. Please install the .Net Framework from Microsoft's site. If you click the button below, setup will launch your Web browser to download the latest version of the .Net Framework." />
+        <Control Id="LaunchFrameworkDownloadButton" Type="PushButton" Text="Download .Net Framework 3.5 from www.microsoft.com" Width="250" Height="20" X="60" Y="170">
+          <Publish Event="DoAction" Value="LaunchFrameworkDownload">1</Publish>
+        </Control>
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back" />
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}Install .Net Framework 3.5</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+      </Dialog>
+
+      <!-- Modified dialog sequencing -->
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="DotNetFxDlg">NOT NETFRAMEWORK35</Publish>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">NETFRAMEWORK35</Publish>
+
+      <Publish Dialog="DotNetFxDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
+      <Publish Dialog="DotNetFxDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="DotNetFxDlg">NOT NETFRAMEWORK35</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">NETFRAMEWORK35</Publish>
+
+      <!-- From WixUI_InstallDir.wxs in the source -->
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="WixUI_Mode" Value="InstallDir" />
+
+      <DialogRef Id="BrowseDlg" />
+      <DialogRef Id="DiskCostDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+
+      <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
+      <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">LicenseAccepted = "1"</Publish>
+
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2">1</Publish>
+
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1">NOT Installed</Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed</Publish>
+
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+
+      <!-- Add/Remove Programs values.  Note ARPNOMODIFY disables the "modify" button as there's no optional part of the installation -->
+      <Property Id="ARPNOMODIFY" Value="1" />
+      <!-- <Property Id='ARPCOMMENTS'>any comments</Property> -->
+      <Property Id='ARPCONTACT'>support@statsdirect.com</Property>
+      <Property Id='ARPHELPLINK'>http://www.statsdirect.com/Support.aspx</Property>
+      <Property Id='ARPURLINFOABOUT'>http://www.statsdirect.com/Specifications.aspx</Property>
+      <Property Id='ARPURLUPDATEINFO'>http://www.statsdirect.com/Update.aspx</Property>
+      <!-- <Property Id='ARPHELPTELEPHONE'>Phone number for technical support - we don't offer one.</Property> -->
+      <!-- <Property Id='ARPREADME'>path</Property> -->
+
+      <ProgressText Action="RollbackCleanup">Removing backup files and starting StatsDirect Shell optimisation</ProgressText>
+    </UI>
+    <!-- Link in the common dialog - usually we'd use a UIRef to WixUI_InstallDir, but we're using Common and referencing the bits we need due to the extra UI referencing above. -->
+    <UIRef Id="WixUI_Common" />
+    <!-- HACK: Newer 3.5s don't always define this. -->
+    <!-- <WixVariable Id="WixUICostingPopupOptOut" Value="1" Overridable="yes" /> -->
+
+    <!-- Icon in add/remove programs -->
+    <Icon Id="statsdirect.ico" SourceFile="..\StatsDirectUI\UI\Graphics\sd3.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
+
+    <!-- Installation conditions: At least Windows XP, no service pack required, no upper limit on OS version-->
+    <!-- Verify not an Unknown OS -->
+    <Condition Message="StatsDirect Shell is not supported on this version of Windows. It is supported on Windows XP, 2003, Vista, 2008 and 7.">
+      <![CDATA[Installed OR (VersionNT >= 501)]]>
+    </Condition>
+    <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
+    <Condition Message="A later version of [ProductName] is already installed. Setup will now exit.">
+      NOT NEWERVERSIONDETECTED OR Installed
+    </Condition>
+
+    <!-- Start menu shortcuts -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="9FE342EF-0BD6-4D33-AA2E-AB6C546A75ED">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="StatsDirect Shell"
+                  Description="StatsDirect user-defined script execution shell"
+                  Icon="statsdirect.ico"
+                  Target="[INSTALLLOCATION]StatsDirect.exe"
+                  WorkingDirectory="INSTALLLOCATION"
+                  />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirect" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Initial registry area so that SD3 can write its licence key -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="RegistryEntries" Guid="69F73941-DFA4-41B3-9186-72D7F691C86E">
+        <RegistryKey Root="HKCU"
+		     Key="Software\VB and VBA Program Settings"
+		     Action="create">
+          <Permission GenericAll="yes" User="[LogonUser]"/>
+          <RegistryValue Type="string" Value="Default Value"/>
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Start menu shortcut location -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="StatsDirect 3 Shell"/>
+      </Directory>
+
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLLOCATION" Name="StatsDirect3" FileSource="$(var.StatsDirectUI.TargetDir)">
+          <Component Id="ProductComponent" Guid="53727216-D299-498C-88A8-8EA8F6877971">
+            <File Id="statsdirectexe" KeyPath="yes" Name="StatsDirect.exe" Checksum="yes">
+              <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="all" Priority="1" AppBaseDirectory="INSTALLLOCATION"/>
+              <Shortcut Id="StatsDirectExeDesktopShortcut"
+                        Directory="DesktopFolder"
+                        Name="StatsDirect"
+                        Description="StatsDirect user-defined script execution shell"
+                        Icon="statsdirect.ico"
+                        WorkingDirectory="INSTALLLOCATION"
+                        Advertise="yes"/>
+            </File>
+          </Component>
+
+          <!-- DevExpress rich text editor -->
+          <Component Id="DevExpress.Data.v11.2.dll">
+            <File Id="DevExpress.Data.v11.2.dll" KeyPath="yes" Name="DevExpress.Data.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.Printing.v11.2.Core.dll">
+            <File Id="DevExpress.Printing.v11.2.Core.dll" KeyPath="yes" Name="DevExpress.Printing.v11.2.Core.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.RichEdit.v11.2.Core.dll">
+            <File Id="DevExpress.RichEdit.v11.2.Core.dll" KeyPath="yes" Name="DevExpress.RichEdit.v11.2.Core.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.Utils.v11.2.dll">
+            <File Id="DevExpress.Utils.v11.2.dll" KeyPath="yes" Name="DevExpress.Utils.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraBars.v11.2.dll">
+            <File Id="DevExpress.XtraBars.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraBars.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraEditors.v11.2.dll">
+            <File Id="DevExpress.XtraEditors.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraEditors.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraPrinting.v11.2.dll">
+            <File Id="DevExpress.XtraPrinting.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraPrinting.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraRichEdit.v11.2.dll">
+            <File Id="DevExpress.XtraRichEdit.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v11.2.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraRichEdit.v11.2.Extensions.dll">
+            <File Id="DevExpress.XtraRichEdit.v11.2.Extensions.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v11.2.Extensions.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraRichEdit.v11.2.Printing.dll">
+            <File Id="DevExpress.XtraRichEdit.v11.2.Printing.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v11.2.Printing.dll" Checksum="yes" />
+          </Component>
+          <Component Id="DevExpress.XtraTreeList.v11.2.dll">
+            <File Id="DevExpress.XtraTreeList.v11.2.dll" KeyPath="yes" Name="DevExpress.XtraTreeList.v11.2.dll" Checksum="yes" />
+          </Component>
+
+          <!-- SD3 -->
+          <Component Id="menu.xml">
+            <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
+          </Component>
+          <Component Id="SpreadsheetGear.dll">
+            <File Id="SpreadsheetGear.dll" KeyPath="yes" Name="SpreadsheetGear.dll" Checksum="yes" />
+          </Component>
+          <Component Id="Antlr3.Runtime.dll">
+            <File Id="Antlr3.Runtime.dll" KeyPath="yes" Name="Antlr3.Runtime.dll" Checksum="yes" />
+          </Component>
+          <Component Id="STATSDIRECT.chm">
+            <File Id="STATSDIRECT.chm" KeyPath="yes" Name="STATSDIRECT.chm" Checksum="yes" />
+          </Component>
+          <Component Id="StatsDirect.exe.config">
+            <File Id="StatsDirect.exe.config" KeyPath="yes" Name="StatsDirect.exe.config" Checksum="yes" />
+          </Component>
+
+          <!-- Sample data files -->
+          <Directory Id="data" Name="data">
+            <Component Id="test.xls">
+              <File Id="test.xls" KeyPath="yes" Name="test.xls" Checksum="yes" />
+            </Component>
+          </Directory>
+
+          <!-- Operations -->
+          <Directory Id="Operations" Name="Operations">
+            <Component Id="AnalysisOptions.xml">
+              <File Id="AnalysisOptions.xml" Name="AnalysisOptions.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="GraphicsOptions.xml">
+              <File Id="GraphicsOptions.xml" Name="GraphicsOptions.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="Preferences.xml">
+              <File Id="Preferences.xml" Name="Preferences.xml" KeyPath="yes" />
+            </Component>
+          </Directory>
+
+          <!-- Output templates -->
+          <Directory Id="Template" Name="Template">
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id="ProductFeature" Title="SDInstaller" Level="1">
+      <!-- Shortcuts -->
+      <ComponentRef Id="ApplicationShortcut" />
+
+      <!-- Registry -->
+      <ComponentRef Id="RegistryEntries"/>
+
+      <!-- Main files -->
+      <ComponentRef Id="ProductComponent" />
+
+      <ComponentRef Id="DevExpress.Data.v11.2.dll" />
+      <ComponentRef Id="DevExpress.Printing.v11.2.Core.dll" />
+      <ComponentRef Id="DevExpress.RichEdit.v11.2.Core.dll" />
+      <ComponentRef Id="DevExpress.Utils.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraBars.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraEditors.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraPrinting.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraRichEdit.v11.2.dll" />
+      <ComponentRef Id="DevExpress.XtraRichEdit.v11.2.Extensions.dll" />
+      <ComponentRef Id="DevExpress.XtraRichEdit.v11.2.Printing.dll" />
+      <ComponentRef Id="DevExpress.XtraTreeList.v11.2.dll" />
+
+      <ComponentRef Id="menu.xml" />
+      <ComponentRef Id="SpreadsheetGear.dll" />
+      <ComponentRef Id="Antlr3.Runtime.dll" />
+      <ComponentRef Id="STATSDIRECT.chm" />
+      <ComponentRef Id="StatsDirect.exe.config" />
+
+      <!-- Sample files -->
+      <ComponentRef Id="test.xls" />
+
+      <!-- Operations -->
+      <ComponentRef Id="AnalysisOptions.xml" />
+      <ComponentRef Id="GraphicsOptions.xml" />
+      <ComponentRef Id="Preferences.xml" />
+
+      <!-- Output templates -->
+    </Feature>
+  </Product>
+</Wix>
