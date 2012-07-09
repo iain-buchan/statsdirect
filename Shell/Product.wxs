@@ -4,7 +4,7 @@
      xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
   <Product
     Id="*"
-    Name="StatsDirect Shell"
+    Name="StatsDirect 3 Shell"
     Language="1033"
     Version="!(bind.FileVersion.statsdirectexe)"
     Manufacturer="StatsDirect Limited"
@@ -14,7 +14,7 @@
     <Package
       InstallerVersion="200"
       Compressed="yes"
-      Description="StatsDirect Shell"
+      Description="StatsDirect 3 Shell"
       Manufacturer="StatsDirect Limited"/>
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 
@@ -186,13 +186,13 @@
 
       <Directory Id="DesktopFolder" Name="Desktop" />
       <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLLOCATION" Name="StatsDirect3" FileSource="$(var.StatsDirectUI.TargetDir)">
+        <Directory Id="INSTALLLOCATION" Name="StatsDirect3Shell" FileSource="$(var.StatsDirectUI.TargetDir)">
           <Component Id="ProductComponent" Guid="53727216-D299-498C-88A8-8EA8F6877971">
             <File Id="statsdirectexe" KeyPath="yes" Name="StatsDirect.exe" Checksum="yes">
               <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="all" Priority="1" AppBaseDirectory="INSTALLLOCATION"/>
               <Shortcut Id="StatsDirectExeDesktopShortcut"
                         Directory="DesktopFolder"
-                        Name="StatsDirect"
+                        Name="StatsDirect Shell"
                         Description="StatsDirect user-defined script execution shell"
                         Icon="statsdirect.ico"
                         WorkingDirectory="INSTALLLOCATION"
@@ -237,7 +237,7 @@
 
           <!-- SD3 -->
           <Component Id="menu.xml">
-            <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
+            <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Source="..\StatsDirectUI\Assets\menu-shell.xml" Checksum="yes" />
           </Component>
           <Component Id="SpreadsheetGear.dll">
             <File Id="SpreadsheetGear.dll" KeyPath="yes" Name="SpreadsheetGear.dll" Checksum="yes" />

@@ -1209,10 +1209,13 @@
     <None Include="Templates\Settings.settings" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\menu.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\menu-sd2.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\menu.xml">
+    <Content Include="Assets\menu-shell.xml">
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Assets\Operations\SortByExpression.xml" />
@@ -1644,7 +1647,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>
