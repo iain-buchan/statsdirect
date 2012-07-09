@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// $ANTLR 3.4.1.9004 C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g 2012-05-08 08:59:36
+// $ANTLR 3.4.1.9004 C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g 2012-07-09 07:25:17
 
 // The variable 'variable' is assigned but its value is never used.
 #pragma warning disable 168, 219
@@ -89,7 +89,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	}
 
 	public override string[] TokenNames { get { return ActiveRtfParser.tokenNames; } }
-	public override string GrammarFileName { get { return "C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g"; } }
+	public override string GrammarFileName { get { return "C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g"; } }
 
 
 	[Conditional("ANTLR_TRACE")]
@@ -106,7 +106,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_start() {}
 	// $ANTLR start "start"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:6:8: public start returns [string code] : activeRtf EOF ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:6:8: public start returns [string code] : activeRtf EOF ;
 	[GrammarRule("start")]
 	public string start()
 	{
@@ -122,9 +122,9 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(6, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:7:2: ( activeRtf EOF )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:7:2: ( activeRtf EOF )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:7:4: activeRtf EOF
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:7:4: activeRtf EOF
 			{
 			DebugLocation(7, 4);
 			PushFollow(Follow._activeRtf_in_start32);
@@ -163,7 +163,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_activeRtf() {}
 	// $ANTLR start "activeRtf"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:10:1: activeRtf returns [string code] : first= piece (rest= piece )* ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:10:1: activeRtf returns [string code] : first= piece (rest= piece )* ;
 	[GrammarRule("activeRtf")]
 	private string activeRtf()
 	{
@@ -180,9 +180,9 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(10, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:11:2: (first= piece (rest= piece )* )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:11:2: (first= piece (rest= piece )* )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:11:4: first= piece (rest= piece )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:11:4: first= piece (rest= piece )*
 			{
 			DebugLocation(11, 9);
 			PushFollow(Follow._piece_in_activeRtf53);
@@ -192,7 +192,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			DebugLocation(11, 16);
 			 code = first; 
 			DebugLocation(12, 3);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:12:3: (rest= piece )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:12:3: (rest= piece )*
 			try { DebugEnterSubRule(1);
 			while (true)
 			{
@@ -211,7 +211,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:12:4: rest= piece
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:12:4: rest= piece
 					{
 					DebugLocation(12, 8);
 					PushFollow(Follow._piece_in_activeRtf62);
@@ -262,7 +262,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_piece() {}
 	// $ANTLR start "piece"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:15:1: piece returns [string code] : ( substitution | block | bumf );
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:15:1: piece returns [string code] : ( substitution | block | bumf );
 	[GrammarRule("piece")]
 	private string piece()
 	{
@@ -280,7 +280,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(15, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:16:2: ( substitution | block | bumf )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:16:2: ( substitution | block | bumf )
 			int alt2=3;
 			try { DebugEnterDecision(2, decisionCanBacktrack[2]);
 			switch (input.LA(1))
@@ -317,7 +317,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:16:4: substitution
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:16:4: substitution
 				{
 				DebugLocation(16, 4);
 				PushFollow(Follow._substitution_in_piece82);
@@ -331,7 +331,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 				break;
 			case 2:
 				DebugEnterAlt(2);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:17:4: block
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:17:4: block
 				{
 				DebugLocation(17, 4);
 				PushFollow(Follow._block_in_piece89);
@@ -345,7 +345,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 				break;
 			case 3:
 				DebugEnterAlt(3);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:18:4: bumf
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:18:4: bumf
 				{
 				DebugLocation(18, 4);
 				PushFollow(Follow._bumf_in_piece96);
@@ -384,7 +384,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_substitution() {}
 	// $ANTLR start "substitution"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:21:1: substitution returns [string code] : SLASHSTAR ( WS )? VARIABLENAME= IDENTIFIER ( ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER )? ( WS )? SLASH ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:21:1: substitution returns [string code] : SLASHSTAR ( WS )? VARIABLENAME= IDENTIFIER ( ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER )? ( WS )? SLASH ;
 	[GrammarRule("substitution")]
 	private string substitution()
 	{
@@ -401,14 +401,14 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(21, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:2: ( SLASHSTAR ( WS )? VARIABLENAME= IDENTIFIER ( ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER )? ( WS )? SLASH )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:2: ( SLASHSTAR ( WS )? VARIABLENAME= IDENTIFIER ( ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER )? ( WS )? SLASH )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:4: SLASHSTAR ( WS )? VARIABLENAME= IDENTIFIER ( ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER )? ( WS )? SLASH
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:4: SLASHSTAR ( WS )? VARIABLENAME= IDENTIFIER ( ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER )? ( WS )? SLASH
 			{
 			DebugLocation(22, 4);
 			Match(input,SLASHSTAR,Follow._SLASHSTAR_in_substitution113); 
 			DebugLocation(22, 14);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:14: ( WS )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:14: ( WS )?
 			int alt3=2;
 			try { DebugEnterSubRule(3);
 			try { DebugEnterDecision(3, decisionCanBacktrack[3]);
@@ -423,7 +423,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:14: WS
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:14: WS
 				{
 				DebugLocation(22, 14);
 				Match(input,WS,Follow._WS_in_substitution115); 
@@ -437,7 +437,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			DebugLocation(22, 30);
 			VARIABLENAME=(IToken)Match(input,IDENTIFIER,Follow._IDENTIFIER_in_substitution120); 
 			DebugLocation(22, 42);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:42: ( ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:42: ( ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER )?
 			int alt6=2;
 			try { DebugEnterSubRule(6);
 			try { DebugEnterDecision(6, decisionCanBacktrack[6]);
@@ -461,10 +461,10 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:44: ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:44: ( WS )? COLON ( WS )? VARIABLEFORMAT= IDENTIFIER
 				{
 				DebugLocation(22, 44);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:44: ( WS )?
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:44: ( WS )?
 				int alt4=2;
 				try { DebugEnterSubRule(4);
 				try { DebugEnterDecision(4, decisionCanBacktrack[4]);
@@ -479,7 +479,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:44: WS
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:44: WS
 					{
 					DebugLocation(22, 44);
 					Match(input,WS,Follow._WS_in_substitution124); 
@@ -493,7 +493,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 				DebugLocation(22, 48);
 				Match(input,COLON,Follow._COLON_in_substitution127); 
 				DebugLocation(22, 54);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:54: ( WS )?
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:54: ( WS )?
 				int alt5=2;
 				try { DebugEnterSubRule(5);
 				try { DebugEnterDecision(5, decisionCanBacktrack[5]);
@@ -508,7 +508,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:54: WS
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:54: WS
 					{
 					DebugLocation(22, 54);
 					Match(input,WS,Follow._WS_in_substitution129); 
@@ -529,7 +529,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			} finally { DebugExitSubRule(6); }
 
 			DebugLocation(22, 87);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:87: ( WS )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:87: ( WS )?
 			int alt7=2;
 			try { DebugEnterSubRule(7);
 			try { DebugEnterDecision(7, decisionCanBacktrack[7]);
@@ -544,7 +544,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:87: WS
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:22:87: WS
 				{
 				DebugLocation(22, 87);
 				Match(input,WS,Follow._WS_in_substitution139); 
@@ -587,7 +587,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_block() {}
 	// $ANTLR start "block"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:25:1: block returns [string code] : blockStart activeRtf blockFinish ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:25:1: block returns [string code] : blockStart activeRtf blockFinish ;
 	[GrammarRule("block")]
 	private string block()
 	{
@@ -604,9 +604,9 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(25, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:26:2: ( blockStart activeRtf blockFinish )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:26:2: ( blockStart activeRtf blockFinish )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:26:4: blockStart activeRtf blockFinish
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:26:4: blockStart activeRtf blockFinish
 			{
 			DebugLocation(26, 4);
 			PushFollow(Follow._blockStart_in_block159);
@@ -653,7 +653,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_bumf() {}
 	// $ANTLR start "bumf"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:29:1: bumf returns [string code] : bumfPieces ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:29:1: bumf returns [string code] : bumfPieces ;
 	[GrammarRule("bumf")]
 	private string bumf()
 	{
@@ -669,9 +669,9 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(29, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:30:2: ( bumfPieces )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:30:2: ( bumfPieces )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:30:4: bumfPieces
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:30:4: bumfPieces
 			{
 			DebugLocation(30, 4);
 			PushFollow(Follow._bumfPieces_in_bumf180);
@@ -708,7 +708,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_bumfPieces() {}
 	// $ANTLR start "bumfPieces"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:33:1: bumfPieces returns [string text] : first= bumfPiece (rest= bumfPiece )* ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:33:1: bumfPieces returns [string text] : first= bumfPiece (rest= bumfPiece )* ;
 	[GrammarRule("bumfPieces")]
 	private string bumfPieces()
 	{
@@ -725,9 +725,9 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(33, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:34:2: (first= bumfPiece (rest= bumfPiece )* )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:34:2: (first= bumfPiece (rest= bumfPiece )* )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:34:4: first= bumfPiece (rest= bumfPiece )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:34:4: first= bumfPiece (rest= bumfPiece )*
 			{
 			DebugLocation(34, 9);
 			PushFollow(Follow._bumfPiece_in_bumfPieces199);
@@ -737,7 +737,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			DebugLocation(34, 20);
 			 text = first; 
 			DebugLocation(35, 3);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:35:3: (rest= bumfPiece )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:35:3: (rest= bumfPiece )*
 			try { DebugEnterSubRule(8);
 			while (true)
 			{
@@ -756,7 +756,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:35:4: rest= bumfPiece
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:35:4: rest= bumfPiece
 					{
 					DebugLocation(35, 8);
 					PushFollow(Follow._bumfPiece_in_bumfPieces208);
@@ -807,7 +807,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_bumfPiece() {}
 	// $ANTLR start "bumfPiece"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:38:1: bumfPiece returns [string text] : ( BUMF | COLON | IDENTIFIER | SLASH | WS );
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:38:1: bumfPiece returns [string text] : ( BUMF | COLON | IDENTIFIER | SLASH | WS );
 	[GrammarRule("bumfPiece")]
 	private string bumfPiece()
 	{
@@ -821,9 +821,9 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(38, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:39:2: ( BUMF | COLON | IDENTIFIER | SLASH | WS )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:39:2: ( BUMF | COLON | IDENTIFIER | SLASH | WS )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
 			{
 			DebugLocation(39, 2);
 			if (input.LA(1)==BUMF||input.LA(1)==COLON||input.LA(1)==IDENTIFIER||input.LA(1)==SLASH||input.LA(1)==WS)
@@ -866,7 +866,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_blockStart() {}
 	// $ANTLR start "blockStart"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:46:1: blockStart returns [string name] : SLASHBS ( WS )? IDENTIFIER ( WS )? SLASH ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:46:1: blockStart returns [string name] : SLASHBS ( WS )? IDENTIFIER ( WS )? SLASH ;
 	[GrammarRule("blockStart")]
 	private string blockStart()
 	{
@@ -882,14 +882,14 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(46, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:2: ( SLASHBS ( WS )? IDENTIFIER ( WS )? SLASH )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:2: ( SLASHBS ( WS )? IDENTIFIER ( WS )? SLASH )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:4: SLASHBS ( WS )? IDENTIFIER ( WS )? SLASH
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:4: SLASHBS ( WS )? IDENTIFIER ( WS )? SLASH
 			{
 			DebugLocation(47, 4);
 			Match(input,SLASHBS,Follow._SLASHBS_in_blockStart263); 
 			DebugLocation(47, 12);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:12: ( WS )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:12: ( WS )?
 			int alt9=2;
 			try { DebugEnterSubRule(9);
 			try { DebugEnterDecision(9, decisionCanBacktrack[9]);
@@ -904,7 +904,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:12: WS
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:12: WS
 				{
 				DebugLocation(47, 12);
 				Match(input,WS,Follow._WS_in_blockStart265); 
@@ -918,7 +918,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			DebugLocation(47, 16);
 			IDENTIFIER8=(IToken)Match(input,IDENTIFIER,Follow._IDENTIFIER_in_blockStart268); 
 			DebugLocation(47, 27);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:27: ( WS )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:27: ( WS )?
 			int alt10=2;
 			try { DebugEnterSubRule(10);
 			try { DebugEnterDecision(10, decisionCanBacktrack[10]);
@@ -933,7 +933,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:27: WS
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:47:27: WS
 				{
 				DebugLocation(47, 27);
 				Match(input,WS,Follow._WS_in_blockStart270); 
@@ -976,7 +976,7 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_blockFinish() {}
 	// $ANTLR start "blockFinish"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:50:1: blockFinish : SLASHBF SLASH ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:50:1: blockFinish : SLASHBF SLASH ;
 	[GrammarRule("blockFinish")]
 	private void blockFinish()
 	{
@@ -987,9 +987,9 @@ public partial class ActiveRtfParser : Antlr.Runtime.Parser
 		DebugLocation(50, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:51:2: ( SLASHBF SLASH )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:51:2: ( SLASHBF SLASH )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:51:4: SLASHBF SLASH
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:51:4: SLASHBF SLASH
 			{
 			DebugLocation(51, 4);
 			Match(input,SLASHBF,Follow._SLASHBF_in_blockFinish286); 

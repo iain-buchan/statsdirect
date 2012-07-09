@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// $ANTLR 3.4.1.9004 C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g 2012-05-08 08:59:36
+// $ANTLR 3.4.1.9004 C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g 2012-07-09 07:25:18
 
 // The variable 'variable' is assigned but its value is never used.
 #pragma warning disable 168, 219
@@ -82,7 +82,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
 
 		OnCreated();
 	}
-	public override string GrammarFileName { get { return "C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g"; } }
+	public override string GrammarFileName { get { return "C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g"; } }
 
 	private static readonly bool[] decisionCanBacktrack = new bool[0];
 
@@ -109,9 +109,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		{
     		int _type = SLASHBF;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:59:9: ( '/' B F )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:59:9: ( '/' B F )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:59:11: '/' B F
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:59:11: '/' B F
     		{
     		DebugLocation(59, 11);
     		Match('/'); 
@@ -150,9 +150,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		{
     		int _type = SLASHBS;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:60:9: ( '/' B S )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:60:9: ( '/' B S )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:60:11: '/' B S
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:60:11: '/' B S
     		{
     		DebugLocation(60, 11);
     		Match('/'); 
@@ -191,9 +191,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		{
     		int _type = SLASHSTAR;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:61:11: ( '/' '*' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:61:11: ( '/' '*' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:61:13: '/' '*'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:61:13: '/' '*'
     		{
     		DebugLocation(61, 13);
     		Match('/'); 
@@ -230,9 +230,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		{
     		int _type = COLON;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:64:8: ( ':' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:64:8: ( ':' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:64:10: ':'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:64:10: ':'
     		{
     		DebugLocation(64, 10);
     		Match(':'); 
@@ -267,9 +267,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		{
     		int _type = IDENTIFIER;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:65:11: ( ( 'A' .. 'Z' | 'a' .. 'z' ) ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' )* )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:65:11: ( ( 'A' .. 'Z' | 'a' .. 'z' ) ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' )* )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:65:13: ( 'A' .. 'Z' | 'a' .. 'z' ) ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' )*
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:65:13: ( 'A' .. 'Z' | 'a' .. 'z' ) ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' )*
     		{
     		DebugLocation(65, 13);
     		if ((input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z'))
@@ -285,7 +285,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		}
 
     		DebugLocation(65, 32);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:65:32: ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' )*
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:65:32: ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' )*
     		try { DebugEnterSubRule(1);
     		while (true)
     		{
@@ -304,7 +304,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     			{
     			case 1:
     				DebugEnterAlt(1);
-    				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     				{
     				DebugLocation(65, 32);
     				input.Consume();
@@ -354,9 +354,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		{
     		int _type = SLASH;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:66:8: ( '/' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:66:8: ( '/' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:66:10: '/'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:66:10: '/'
     		{
     		DebugLocation(66, 10);
     		Match('/'); 
@@ -391,9 +391,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		{
     		int _type = WS;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:67:3: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:67:3: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(67, 3);
     		if ((input.LA(1)>='\t' && input.LA(1)<='\n')||input.LA(1)=='\r'||input.LA(1)==' ')
@@ -439,12 +439,12 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		{
     		int _type = BUMF;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:70:6: ( (~ ( '/' | ':' | ' ' | '\\t' | '\\r' | '\\n' | 'A' .. 'Z' | 'a' .. 'z' ) )+ )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:70:6: ( (~ ( '/' | ':' | ' ' | '\\t' | '\\r' | '\\n' | 'A' .. 'Z' | 'a' .. 'z' ) )+ )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:70:8: (~ ( '/' | ':' | ' ' | '\\t' | '\\r' | '\\n' | 'A' .. 'Z' | 'a' .. 'z' ) )+
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:70:8: (~ ( '/' | ':' | ' ' | '\\t' | '\\r' | '\\n' | 'A' .. 'Z' | 'a' .. 'z' ) )+
     		{
     		DebugLocation(70, 8);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:70:8: (~ ( '/' | ':' | ' ' | '\\t' | '\\r' | '\\n' | 'A' .. 'Z' | 'a' .. 'z' ) )+
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:70:8: (~ ( '/' | ':' | ' ' | '\\t' | '\\r' | '\\n' | 'A' .. 'Z' | 'a' .. 'z' ) )+
     		int cnt2=0;
     		try { DebugEnterSubRule(2);
     		while (true)
@@ -464,7 +464,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     			{
     			case 1:
     				DebugEnterAlt(1);
-    				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     				{
     				DebugLocation(70, 8);
     				input.Consume();
@@ -517,9 +517,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("A", 9);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:72:12: ( 'A' | 'a' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:72:12: ( 'A' | 'a' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(72, 12);
     		if (input.LA(1)=='A'||input.LA(1)=='a')
@@ -561,9 +561,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("B", 10);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:73:12: ( 'B' | 'b' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:73:12: ( 'B' | 'b' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(73, 12);
     		if (input.LA(1)=='B'||input.LA(1)=='b')
@@ -605,9 +605,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("C", 11);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:74:12: ( 'C' | 'c' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:74:12: ( 'C' | 'c' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(74, 12);
     		if (input.LA(1)=='C'||input.LA(1)=='c')
@@ -649,9 +649,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("D", 12);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:75:12: ( 'D' | 'd' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:75:12: ( 'D' | 'd' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(75, 12);
     		if (input.LA(1)=='D'||input.LA(1)=='d')
@@ -693,9 +693,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("E", 13);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:76:12: ( 'E' | 'e' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:76:12: ( 'E' | 'e' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(76, 12);
     		if (input.LA(1)=='E'||input.LA(1)=='e')
@@ -737,9 +737,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("F", 14);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:77:12: ( 'F' | 'f' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:77:12: ( 'F' | 'f' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(77, 12);
     		if (input.LA(1)=='F'||input.LA(1)=='f')
@@ -781,9 +781,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("G", 15);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:78:12: ( 'G' | 'g' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:78:12: ( 'G' | 'g' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(78, 12);
     		if (input.LA(1)=='G'||input.LA(1)=='g')
@@ -825,9 +825,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("H", 16);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:79:12: ( 'H' | 'h' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:79:12: ( 'H' | 'h' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(79, 12);
     		if (input.LA(1)=='H'||input.LA(1)=='h')
@@ -869,9 +869,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("I", 17);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:80:12: ( 'I' | 'i' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:80:12: ( 'I' | 'i' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(80, 12);
     		if (input.LA(1)=='I'||input.LA(1)=='i')
@@ -913,9 +913,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("J", 18);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:81:12: ( 'J' | 'j' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:81:12: ( 'J' | 'j' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(81, 12);
     		if (input.LA(1)=='J'||input.LA(1)=='j')
@@ -957,9 +957,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("K", 19);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:82:12: ( 'K' | 'k' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:82:12: ( 'K' | 'k' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(82, 12);
     		if (input.LA(1)=='K'||input.LA(1)=='k')
@@ -1001,9 +1001,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("L", 20);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:83:12: ( 'L' | 'l' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:83:12: ( 'L' | 'l' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(83, 12);
     		if (input.LA(1)=='L'||input.LA(1)=='l')
@@ -1045,9 +1045,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("M", 21);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:84:12: ( 'M' | 'm' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:84:12: ( 'M' | 'm' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(84, 12);
     		if (input.LA(1)=='M'||input.LA(1)=='m')
@@ -1089,9 +1089,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("N", 22);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:85:12: ( 'N' | 'n' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:85:12: ( 'N' | 'n' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(85, 12);
     		if (input.LA(1)=='N'||input.LA(1)=='n')
@@ -1133,9 +1133,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("O", 23);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:86:12: ( 'O' | 'o' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:86:12: ( 'O' | 'o' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(86, 12);
     		if (input.LA(1)=='O'||input.LA(1)=='o')
@@ -1177,9 +1177,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("P", 24);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:87:12: ( 'P' | 'p' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:87:12: ( 'P' | 'p' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(87, 12);
     		if (input.LA(1)=='P'||input.LA(1)=='p')
@@ -1221,9 +1221,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("Q", 25);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:88:12: ( 'Q' | 'q' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:88:12: ( 'Q' | 'q' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(88, 12);
     		if (input.LA(1)=='Q'||input.LA(1)=='q')
@@ -1265,9 +1265,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("R", 26);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:89:12: ( 'R' | 'r' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:89:12: ( 'R' | 'r' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(89, 12);
     		if (input.LA(1)=='R'||input.LA(1)=='r')
@@ -1309,9 +1309,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("S", 27);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:90:12: ( 'S' | 's' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:90:12: ( 'S' | 's' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(90, 12);
     		if (input.LA(1)=='S'||input.LA(1)=='s')
@@ -1353,9 +1353,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("T", 28);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:91:12: ( 'T' | 't' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:91:12: ( 'T' | 't' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(91, 12);
     		if (input.LA(1)=='T'||input.LA(1)=='t')
@@ -1397,9 +1397,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("U", 29);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:92:12: ( 'U' | 'u' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:92:12: ( 'U' | 'u' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(92, 12);
     		if (input.LA(1)=='U'||input.LA(1)=='u')
@@ -1441,9 +1441,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("V", 30);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:93:12: ( 'V' | 'v' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:93:12: ( 'V' | 'v' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(93, 12);
     		if (input.LA(1)=='V'||input.LA(1)=='v')
@@ -1485,9 +1485,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("W", 31);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:94:12: ( 'W' | 'w' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:94:12: ( 'W' | 'w' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(94, 12);
     		if (input.LA(1)=='W'||input.LA(1)=='w')
@@ -1529,9 +1529,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("X", 32);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:95:12: ( 'X' | 'x' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:95:12: ( 'X' | 'x' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(95, 12);
     		if (input.LA(1)=='X'||input.LA(1)=='x')
@@ -1573,9 +1573,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("Y", 33);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:96:12: ( 'Y' | 'y' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:96:12: ( 'Y' | 'y' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(96, 12);
     		if (input.LA(1)=='Y'||input.LA(1)=='y')
@@ -1617,9 +1617,9 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	TraceIn("Z", 34);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:97:12: ( 'Z' | 'z' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:97:12: ( 'Z' | 'z' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:
     		{
     		DebugLocation(97, 12);
     		if (input.LA(1)=='Z'||input.LA(1)=='z')
@@ -1649,7 +1649,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
 
     public override void mTokens()
     {
-    	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:8: ( SLASHBF | SLASHBS | SLASHSTAR | COLON | IDENTIFIER | SLASH | WS | BUMF )
+    	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:8: ( SLASHBF | SLASHBS | SLASHSTAR | COLON | IDENTIFIER | SLASH | WS | BUMF )
     	int alt3=8;
     	try { DebugEnterDecision(3, decisionCanBacktrack[3]);
     	int LA3_1 = input.LA(1);
@@ -1718,7 +1718,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     	{
     	case 1:
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:10: SLASHBF
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:10: SLASHBF
     		{
     		DebugLocation(1, 10);
     		mSLASHBF(); 
@@ -1727,7 +1727,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		break;
     	case 2:
     		DebugEnterAlt(2);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:18: SLASHBS
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:18: SLASHBS
     		{
     		DebugLocation(1, 18);
     		mSLASHBS(); 
@@ -1736,7 +1736,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		break;
     	case 3:
     		DebugEnterAlt(3);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:26: SLASHSTAR
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:26: SLASHSTAR
     		{
     		DebugLocation(1, 26);
     		mSLASHSTAR(); 
@@ -1745,7 +1745,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		break;
     	case 4:
     		DebugEnterAlt(4);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:36: COLON
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:36: COLON
     		{
     		DebugLocation(1, 36);
     		mCOLON(); 
@@ -1754,7 +1754,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		break;
     	case 5:
     		DebugEnterAlt(5);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:42: IDENTIFIER
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:42: IDENTIFIER
     		{
     		DebugLocation(1, 42);
     		mIDENTIFIER(); 
@@ -1763,7 +1763,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		break;
     	case 6:
     		DebugEnterAlt(6);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:53: SLASH
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:53: SLASH
     		{
     		DebugLocation(1, 53);
     		mSLASH(); 
@@ -1772,7 +1772,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		break;
     	case 7:
     		DebugEnterAlt(7);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:59: WS
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:59: WS
     		{
     		DebugLocation(1, 59);
     		mWS(); 
@@ -1781,7 +1781,7 @@ public partial class ActiveRtfLexer : Antlr.Runtime.Lexer
     		break;
     	case 8:
     		DebugEnterAlt(8);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:62: BUMF
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\TextProcessing\\ActiveRtf.g:1:62: BUMF
     		{
     		DebugLocation(1, 62);
     		mBUMF(); 

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// $ANTLR 3.4.1.9004 C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g 2012-05-08 08:59:35
+// $ANTLR 3.4.1.9004 C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g 2012-07-09 07:25:16
 
 // The variable 'variable' is assigned but its value is never used.
 #pragma warning disable 168, 219
@@ -107,7 +107,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
 
 		OnCreated();
 	}
-	public override string GrammarFileName { get { return "C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g"; } }
+	public override string GrammarFileName { get { return "C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g"; } }
 
 	private static readonly bool[] decisionCanBacktrack = new bool[0];
 
@@ -134,12 +134,12 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = INTEGER;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:111:9: ( ( '0' .. '9' )+ )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:111:9: ( ( '0' .. '9' )+ )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:111:11: ( '0' .. '9' )+
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:111:11: ( '0' .. '9' )+
     		{
     		DebugLocation(111, 11);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:111:11: ( '0' .. '9' )+
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:111:11: ( '0' .. '9' )+
     		int cnt1=0;
     		try { DebugEnterSubRule(1);
     		while (true)
@@ -159,7 +159,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			{
     			case 1:
     				DebugEnterAlt(1);
-    				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     				{
     				DebugLocation(111, 11);
     				input.Consume();
@@ -214,7 +214,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = FLOAT;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:5: ( ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )? | '.' ( '0' .. '9' )+ ( EXPONENT )? | ( '0' .. '9' )+ EXPONENT )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:5: ( ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )? | '.' ( '0' .. '9' )+ ( EXPONENT )? | ( '0' .. '9' )+ EXPONENT )
     		int alt8=3;
     		try { DebugEnterDecision(8, decisionCanBacktrack[8]);
     		try
@@ -231,10 +231,10 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		case 1:
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:9: ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )?
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:9: ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )?
     			{
     			DebugLocation(115, 9);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:9: ( '0' .. '9' )+
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:9: ( '0' .. '9' )+
     			int cnt2=0;
     			try { DebugEnterSubRule(2);
     			while (true)
@@ -254,7 +254,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     				{
     				case 1:
     					DebugEnterAlt(1);
-    					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     					{
     					DebugLocation(115, 9);
     					input.Consume();
@@ -281,7 +281,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			DebugLocation(115, 21);
     			Match('.'); 
     			DebugLocation(115, 25);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:25: ( '0' .. '9' )*
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:25: ( '0' .. '9' )*
     			try { DebugEnterSubRule(3);
     			while (true)
     			{
@@ -300,7 +300,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     				{
     				case 1:
     					DebugEnterAlt(1);
-    					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     					{
     					DebugLocation(115, 25);
     					input.Consume();
@@ -320,7 +320,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			} finally { DebugExitSubRule(3); }
 
     			DebugLocation(115, 37);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:37: ( EXPONENT )?
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:37: ( EXPONENT )?
     			int alt4=2;
     			try { DebugEnterSubRule(4);
     			try { DebugEnterDecision(4, decisionCanBacktrack[4]);
@@ -335,7 +335,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			{
     			case 1:
     				DebugEnterAlt(1);
-    				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:37: EXPONENT
+    				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:115:37: EXPONENT
     				{
     				DebugLocation(115, 37);
     				mEXPONENT(); 
@@ -351,12 +351,12 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			break;
     		case 2:
     			DebugEnterAlt(2);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:116:9: '.' ( '0' .. '9' )+ ( EXPONENT )?
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:116:9: '.' ( '0' .. '9' )+ ( EXPONENT )?
     			{
     			DebugLocation(116, 9);
     			Match('.'); 
     			DebugLocation(116, 13);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:116:13: ( '0' .. '9' )+
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:116:13: ( '0' .. '9' )+
     			int cnt5=0;
     			try { DebugEnterSubRule(5);
     			while (true)
@@ -376,7 +376,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     				{
     				case 1:
     					DebugEnterAlt(1);
-    					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     					{
     					DebugLocation(116, 13);
     					input.Consume();
@@ -401,7 +401,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			} finally { DebugExitSubRule(5); }
 
     			DebugLocation(116, 25);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:116:25: ( EXPONENT )?
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:116:25: ( EXPONENT )?
     			int alt6=2;
     			try { DebugEnterSubRule(6);
     			try { DebugEnterDecision(6, decisionCanBacktrack[6]);
@@ -416,7 +416,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			{
     			case 1:
     				DebugEnterAlt(1);
-    				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:116:25: EXPONENT
+    				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:116:25: EXPONENT
     				{
     				DebugLocation(116, 25);
     				mEXPONENT(); 
@@ -432,10 +432,10 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			break;
     		case 3:
     			DebugEnterAlt(3);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:117:9: ( '0' .. '9' )+ EXPONENT
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:117:9: ( '0' .. '9' )+ EXPONENT
     			{
     			DebugLocation(117, 9);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:117:9: ( '0' .. '9' )+
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:117:9: ( '0' .. '9' )+
     			int cnt7=0;
     			try { DebugEnterSubRule(7);
     			while (true)
@@ -455,7 +455,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     				{
     				case 1:
     					DebugEnterAlt(1);
-    					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     					{
     					DebugLocation(117, 9);
     					input.Consume();
@@ -514,9 +514,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = AND;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:121:5: ( A N D )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:121:5: ( A N D )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:121:7: A N D
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:121:7: A N D
     		{
     		DebugLocation(121, 7);
     		mA(); 
@@ -555,9 +555,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = EE;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:122:4: ( E E )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:122:4: ( E E )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:122:6: E E
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:122:6: E E
     		{
     		DebugLocation(122, 6);
     		mE(); 
@@ -594,9 +594,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = EQ;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:123:4: ( '=' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:123:4: ( '=' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:123:6: '='
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:123:6: '='
     		{
     		DebugLocation(123, 6);
     		Match('='); 
@@ -631,9 +631,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = FALSE;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:124:6: ( F A L S E )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:124:6: ( F A L S E )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:124:8: F A L S E
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:124:8: F A L S E
     		{
     		DebugLocation(124, 8);
     		mF(); 
@@ -676,7 +676,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = GE;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:4: ( ( '=' '>' ) | ( '>' '=' ) )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:4: ( ( '=' '>' ) | ( '>' '=' ) )
     		int alt9=2;
     		try { DebugEnterDecision(9, decisionCanBacktrack[9]);
     		int LA9_1 = input.LA(1);
@@ -700,12 +700,12 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		case 1:
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:6: ( '=' '>' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:6: ( '=' '>' )
     			{
     			DebugLocation(125, 6);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:6: ( '=' '>' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:6: ( '=' '>' )
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:7: '=' '>'
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:7: '=' '>'
     			{
     			DebugLocation(125, 7);
     			Match('='); 
@@ -719,12 +719,12 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			break;
     		case 2:
     			DebugEnterAlt(2);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:18: ( '>' '=' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:18: ( '>' '=' )
     			{
     			DebugLocation(125, 18);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:18: ( '>' '=' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:18: ( '>' '=' )
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:19: '>' '='
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:125:19: '>' '='
     			{
     			DebugLocation(125, 19);
     			Match('>'); 
@@ -766,9 +766,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = GETS;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:126:5: ( ':' '=' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:126:5: ( ':' '=' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:126:7: ':' '='
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:126:7: ':' '='
     		{
     		DebugLocation(126, 7);
     		Match(':'); 
@@ -805,9 +805,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = GT;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:127:4: ( '>' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:127:4: ( '>' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:127:6: '>'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:127:6: '>'
     		{
     		DebugLocation(127, 6);
     		Match('>'); 
@@ -842,7 +842,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = LE;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:4: ( ( '<' '=' ) | ( '=' '<' ) )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:4: ( ( '<' '=' ) | ( '=' '<' ) )
     		int alt10=2;
     		try { DebugEnterDecision(10, decisionCanBacktrack[10]);
     		int LA10_1 = input.LA(1);
@@ -866,12 +866,12 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		case 1:
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:6: ( '<' '=' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:6: ( '<' '=' )
     			{
     			DebugLocation(128, 6);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:6: ( '<' '=' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:6: ( '<' '=' )
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:7: '<' '='
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:7: '<' '='
     			{
     			DebugLocation(128, 7);
     			Match('<'); 
@@ -885,12 +885,12 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			break;
     		case 2:
     			DebugEnterAlt(2);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:18: ( '=' '<' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:18: ( '=' '<' )
     			{
     			DebugLocation(128, 18);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:18: ( '=' '<' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:18: ( '=' '<' )
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:19: '=' '<'
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:128:19: '=' '<'
     			{
     			DebugLocation(128, 19);
     			Match('='); 
@@ -932,9 +932,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = LR;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:129:4: ( L R )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:129:4: ( L R )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:129:6: L R
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:129:6: L R
     		{
     		DebugLocation(129, 6);
     		mL(); 
@@ -971,9 +971,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = LT;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:130:4: ( '<' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:130:4: ( '<' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:130:6: '<'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:130:6: '<'
     		{
     		DebugLocation(130, 6);
     		Match('<'); 
@@ -1008,9 +1008,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = MOD;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:131:5: ( M O D )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:131:5: ( M O D )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:131:7: M O D
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:131:7: M O D
     		{
     		DebugLocation(131, 7);
     		mM(); 
@@ -1049,7 +1049,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = NE;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:4: ( ( '<' '>' ) | ( '>' '<' ) )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:4: ( ( '<' '>' ) | ( '>' '<' ) )
     		int alt11=2;
     		try { DebugEnterDecision(11, decisionCanBacktrack[11]);
     		int LA11_1 = input.LA(1);
@@ -1073,12 +1073,12 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		case 1:
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:6: ( '<' '>' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:6: ( '<' '>' )
     			{
     			DebugLocation(132, 6);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:6: ( '<' '>' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:6: ( '<' '>' )
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:7: '<' '>'
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:7: '<' '>'
     			{
     			DebugLocation(132, 7);
     			Match('<'); 
@@ -1092,12 +1092,12 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			break;
     		case 2:
     			DebugEnterAlt(2);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:18: ( '>' '<' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:18: ( '>' '<' )
     			{
     			DebugLocation(132, 18);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:18: ( '>' '<' )
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:18: ( '>' '<' )
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:19: '>' '<'
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:132:19: '>' '<'
     			{
     			DebugLocation(132, 19);
     			Match('>'); 
@@ -1139,9 +1139,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = NOT;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:133:5: ( N O T )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:133:5: ( N O T )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:133:7: N O T
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:133:7: N O T
     		{
     		DebugLocation(133, 7);
     		mN(); 
@@ -1180,9 +1180,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = OR;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:134:4: ( O R )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:134:4: ( O R )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:134:6: O R
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:134:6: O R
     		{
     		DebugLocation(134, 6);
     		mO(); 
@@ -1219,9 +1219,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = PI;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:135:4: ( P I )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:135:4: ( P I )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:135:6: P I
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:135:6: P I
     		{
     		DebugLocation(135, 6);
     		mP(); 
@@ -1258,9 +1258,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = TRUE;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:136:5: ( T R U E )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:136:5: ( T R U E )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:136:7: T R U E
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:136:7: T R U E
     		{
     		DebugLocation(136, 7);
     		mT(); 
@@ -1301,9 +1301,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = IDENTIFIER;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:138:11: ( ( 'A' .. 'Z' | 'a' .. 'z' ) ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '.' | '!' )* )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:138:11: ( ( 'A' .. 'Z' | 'a' .. 'z' ) ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '.' | '!' )* )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:138:13: ( 'A' .. 'Z' | 'a' .. 'z' ) ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '.' | '!' )*
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:138:13: ( 'A' .. 'Z' | 'a' .. 'z' ) ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '.' | '!' )*
     		{
     		DebugLocation(138, 13);
     		if ((input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z'))
@@ -1319,7 +1319,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		}
 
     		DebugLocation(138, 32);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:138:32: ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '.' | '!' )*
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:138:32: ( 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '.' | '!' )*
     		try { DebugEnterSubRule(12);
     		while (true)
     		{
@@ -1338,7 +1338,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			{
     			case 1:
     				DebugEnterAlt(1);
-    				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     				{
     				DebugLocation(138, 32);
     				input.Consume();
@@ -1388,9 +1388,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = BACKSLASH;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:141:11: ( '\\\\' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:141:11: ( '\\\\' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:141:13: '\\\\'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:141:13: '\\\\'
     		{
     		DebugLocation(141, 13);
     		Match('\\'); 
@@ -1425,9 +1425,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = CARET;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:142:8: ( '^' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:142:8: ( '^' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:142:10: '^'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:142:10: '^'
     		{
     		DebugLocation(142, 10);
     		Match('^'); 
@@ -1462,9 +1462,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = COMMA;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:143:8: ( ',' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:143:8: ( ',' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:143:10: ','
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:143:10: ','
     		{
     		DebugLocation(143, 10);
     		Match(','); 
@@ -1499,9 +1499,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = EXCLAIM;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:144:10: ( '!' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:144:10: ( '!' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:144:12: '!'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:144:12: '!'
     		{
     		DebugLocation(144, 12);
     		Match('!'); 
@@ -1536,9 +1536,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = LPAREN;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:145:9: ( '(' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:145:9: ( '(' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:145:11: '('
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:145:11: '('
     		{
     		DebugLocation(145, 11);
     		Match('('); 
@@ -1573,9 +1573,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = MINUS;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:146:8: ( '-' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:146:8: ( '-' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:146:10: '-'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:146:10: '-'
     		{
     		DebugLocation(146, 10);
     		Match('-'); 
@@ -1610,9 +1610,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = PLUS;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:147:7: ( '+' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:147:7: ( '+' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:147:9: '+'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:147:9: '+'
     		{
     		DebugLocation(147, 9);
     		Match('+'); 
@@ -1647,9 +1647,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = RPAREN;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:148:9: ( ')' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:148:9: ( ')' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:148:11: ')'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:148:11: ')'
     		{
     		DebugLocation(148, 11);
     		Match(')'); 
@@ -1684,9 +1684,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = SLASH;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:149:8: ( '/' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:149:8: ( '/' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:149:10: '/'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:149:10: '/'
     		{
     		DebugLocation(149, 10);
     		Match('/'); 
@@ -1721,9 +1721,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = STARSTAR;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:150:10: ( '*' '*' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:150:10: ( '*' '*' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:150:12: '*' '*'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:150:12: '*' '*'
     		{
     		DebugLocation(150, 12);
     		Match('*'); 
@@ -1760,9 +1760,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = STAR;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:151:7: ( '*' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:151:7: ( '*' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:151:9: '*'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:151:9: '*'
     		{
     		DebugLocation(151, 9);
     		Match('*'); 
@@ -1795,9 +1795,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("A", 31);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:153:12: ( 'A' | 'a' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:153:12: ( 'A' | 'a' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(153, 12);
     		if (input.LA(1)=='A'||input.LA(1)=='a')
@@ -1839,9 +1839,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("B", 32);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:154:12: ( 'B' | 'b' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:154:12: ( 'B' | 'b' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(154, 12);
     		if (input.LA(1)=='B'||input.LA(1)=='b')
@@ -1883,9 +1883,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("C", 33);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:155:12: ( 'C' | 'c' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:155:12: ( 'C' | 'c' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(155, 12);
     		if (input.LA(1)=='C'||input.LA(1)=='c')
@@ -1927,9 +1927,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("D", 34);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:156:12: ( 'D' | 'd' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:156:12: ( 'D' | 'd' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(156, 12);
     		if (input.LA(1)=='D'||input.LA(1)=='d')
@@ -1971,9 +1971,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("E", 35);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:157:12: ( 'E' | 'e' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:157:12: ( 'E' | 'e' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(157, 12);
     		if (input.LA(1)=='E'||input.LA(1)=='e')
@@ -2015,9 +2015,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("F", 36);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:158:12: ( 'F' | 'f' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:158:12: ( 'F' | 'f' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(158, 12);
     		if (input.LA(1)=='F'||input.LA(1)=='f')
@@ -2059,9 +2059,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("G", 37);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:159:12: ( 'G' | 'g' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:159:12: ( 'G' | 'g' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(159, 12);
     		if (input.LA(1)=='G'||input.LA(1)=='g')
@@ -2103,9 +2103,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("H", 38);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:160:12: ( 'H' | 'h' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:160:12: ( 'H' | 'h' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(160, 12);
     		if (input.LA(1)=='H'||input.LA(1)=='h')
@@ -2147,9 +2147,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("I", 39);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:161:12: ( 'I' | 'i' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:161:12: ( 'I' | 'i' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(161, 12);
     		if (input.LA(1)=='I'||input.LA(1)=='i')
@@ -2191,9 +2191,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("J", 40);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:162:12: ( 'J' | 'j' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:162:12: ( 'J' | 'j' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(162, 12);
     		if (input.LA(1)=='J'||input.LA(1)=='j')
@@ -2235,9 +2235,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("K", 41);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:163:12: ( 'K' | 'k' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:163:12: ( 'K' | 'k' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(163, 12);
     		if (input.LA(1)=='K'||input.LA(1)=='k')
@@ -2279,9 +2279,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("L", 42);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:164:12: ( 'L' | 'l' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:164:12: ( 'L' | 'l' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(164, 12);
     		if (input.LA(1)=='L'||input.LA(1)=='l')
@@ -2323,9 +2323,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("M", 43);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:165:12: ( 'M' | 'm' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:165:12: ( 'M' | 'm' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(165, 12);
     		if (input.LA(1)=='M'||input.LA(1)=='m')
@@ -2367,9 +2367,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("N", 44);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:166:12: ( 'N' | 'n' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:166:12: ( 'N' | 'n' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(166, 12);
     		if (input.LA(1)=='N'||input.LA(1)=='n')
@@ -2411,9 +2411,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("O", 45);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:167:12: ( 'O' | 'o' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:167:12: ( 'O' | 'o' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(167, 12);
     		if (input.LA(1)=='O'||input.LA(1)=='o')
@@ -2455,9 +2455,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("P", 46);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:168:12: ( 'P' | 'p' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:168:12: ( 'P' | 'p' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(168, 12);
     		if (input.LA(1)=='P'||input.LA(1)=='p')
@@ -2499,9 +2499,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("Q", 47);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:169:12: ( 'Q' | 'q' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:169:12: ( 'Q' | 'q' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(169, 12);
     		if (input.LA(1)=='Q'||input.LA(1)=='q')
@@ -2543,9 +2543,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("R", 48);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:170:12: ( 'R' | 'r' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:170:12: ( 'R' | 'r' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(170, 12);
     		if (input.LA(1)=='R'||input.LA(1)=='r')
@@ -2587,9 +2587,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("S", 49);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:171:12: ( 'S' | 's' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:171:12: ( 'S' | 's' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(171, 12);
     		if (input.LA(1)=='S'||input.LA(1)=='s')
@@ -2631,9 +2631,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("T", 50);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:172:12: ( 'T' | 't' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:172:12: ( 'T' | 't' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(172, 12);
     		if (input.LA(1)=='T'||input.LA(1)=='t')
@@ -2675,9 +2675,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("U", 51);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:173:12: ( 'U' | 'u' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:173:12: ( 'U' | 'u' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(173, 12);
     		if (input.LA(1)=='U'||input.LA(1)=='u')
@@ -2719,9 +2719,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("V", 52);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:174:12: ( 'V' | 'v' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:174:12: ( 'V' | 'v' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(174, 12);
     		if (input.LA(1)=='V'||input.LA(1)=='v')
@@ -2763,9 +2763,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("W", 53);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:175:12: ( 'W' | 'w' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:175:12: ( 'W' | 'w' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(175, 12);
     		if (input.LA(1)=='W'||input.LA(1)=='w')
@@ -2807,9 +2807,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("X", 54);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:176:12: ( 'X' | 'x' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:176:12: ( 'X' | 'x' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(176, 12);
     		if (input.LA(1)=='X'||input.LA(1)=='x')
@@ -2851,9 +2851,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("Y", 55);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:177:12: ( 'Y' | 'y' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:177:12: ( 'Y' | 'y' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(177, 12);
     		if (input.LA(1)=='Y'||input.LA(1)=='y')
@@ -2895,9 +2895,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("Z", 56);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:178:12: ( 'Z' | 'z' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:178:12: ( 'Z' | 'z' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     		{
     		DebugLocation(178, 12);
     		if (input.LA(1)=='Z'||input.LA(1)=='z')
@@ -2941,9 +2941,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = WS;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:181:3: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:181:3: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:181:9: ( ' ' | '\\t' | '\\r' | '\\n' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:181:9: ( ' ' | '\\t' | '\\r' | '\\n' )
     		{
     		DebugLocation(181, 9);
     		if ((input.LA(1)>='\t' && input.LA(1)<='\n')||input.LA(1)=='\r'||input.LA(1)==' ')
@@ -2991,14 +2991,14 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		int _type = STRING;
     		int _channel = DefaultTokenChannel;
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:189:5: ( '\"' (~ ( '\\\\' | '\"' ) )* '\"' )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:189:5: ( '\"' (~ ( '\\\\' | '\"' ) )* '\"' )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:189:8: '\"' (~ ( '\\\\' | '\"' ) )* '\"'
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:189:8: '\"' (~ ( '\\\\' | '\"' ) )* '\"'
     		{
     		DebugLocation(189, 8);
     		Match('\"'); 
     		DebugLocation(189, 12);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:189:12: (~ ( '\\\\' | '\"' ) )*
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:189:12: (~ ( '\\\\' | '\"' ) )*
     		try { DebugEnterSubRule(13);
     		while (true)
     		{
@@ -3017,7 +3017,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			{
     			case 1:
     				DebugEnterAlt(1);
-    				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     				{
     				DebugLocation(189, 12);
     				input.Consume();
@@ -3067,9 +3067,9 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	TraceIn("EXPONENT", 59);
     		try
     		{
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:192:19: ( ( 'd' | 'D' | 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:192:19: ( ( 'd' | 'D' | 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:192:21: ( 'd' | 'D' | 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:192:21: ( 'd' | 'D' | 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
     		{
     		DebugLocation(192, 21);
     		if ((input.LA(1)>='D' && input.LA(1)<='E')||(input.LA(1)>='d' && input.LA(1)<='e'))
@@ -3085,7 +3085,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		}
 
     		DebugLocation(192, 39);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:192:39: ( '+' | '-' )?
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:192:39: ( '+' | '-' )?
     		int alt14=2;
     		try { DebugEnterSubRule(14);
     		try { DebugEnterDecision(14, decisionCanBacktrack[14]);
@@ -3100,7 +3100,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		{
     		case 1:
     			DebugEnterAlt(1);
-    			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     			{
     			DebugLocation(192, 39);
     			input.Consume();
@@ -3113,7 +3113,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		} finally { DebugExitSubRule(14); }
 
     		DebugLocation(192, 50);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:192:50: ( '0' .. '9' )+
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:192:50: ( '0' .. '9' )+
     		int cnt15=0;
     		try { DebugEnterSubRule(15);
     		while (true)
@@ -3133,7 +3133,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     			{
     			case 1:
     				DebugEnterAlt(1);
-    				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
+    				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:
     				{
     				DebugLocation(192, 50);
     				input.Consume();
@@ -3172,7 +3172,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
 
     public override void mTokens()
     {
-    	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:8: ( INTEGER | FLOAT | AND | EE | EQ | FALSE | GE | GETS | GT | LE | LR | LT | MOD | NE | NOT | OR | PI | TRUE | IDENTIFIER | BACKSLASH | CARET | COMMA | EXCLAIM | LPAREN | MINUS | PLUS | RPAREN | SLASH | STARSTAR | STAR | WS | STRING )
+    	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:8: ( INTEGER | FLOAT | AND | EE | EQ | FALSE | GE | GETS | GT | LE | LR | LT | MOD | NE | NOT | OR | PI | TRUE | IDENTIFIER | BACKSLASH | CARET | COMMA | EXCLAIM | LPAREN | MINUS | PLUS | RPAREN | SLASH | STARSTAR | STAR | WS | STRING )
     	int alt16=32;
     	try { DebugEnterDecision(16, decisionCanBacktrack[16]);
     	try
@@ -3189,7 +3189,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     	{
     	case 1:
     		DebugEnterAlt(1);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:10: INTEGER
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:10: INTEGER
     		{
     		DebugLocation(1, 10);
     		mINTEGER(); 
@@ -3198,7 +3198,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 2:
     		DebugEnterAlt(2);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:18: FLOAT
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:18: FLOAT
     		{
     		DebugLocation(1, 18);
     		mFLOAT(); 
@@ -3207,7 +3207,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 3:
     		DebugEnterAlt(3);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:24: AND
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:24: AND
     		{
     		DebugLocation(1, 24);
     		mAND(); 
@@ -3216,7 +3216,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 4:
     		DebugEnterAlt(4);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:28: EE
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:28: EE
     		{
     		DebugLocation(1, 28);
     		mEE(); 
@@ -3225,7 +3225,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 5:
     		DebugEnterAlt(5);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:31: EQ
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:31: EQ
     		{
     		DebugLocation(1, 31);
     		mEQ(); 
@@ -3234,7 +3234,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 6:
     		DebugEnterAlt(6);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:34: FALSE
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:34: FALSE
     		{
     		DebugLocation(1, 34);
     		mFALSE(); 
@@ -3243,7 +3243,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 7:
     		DebugEnterAlt(7);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:40: GE
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:40: GE
     		{
     		DebugLocation(1, 40);
     		mGE(); 
@@ -3252,7 +3252,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 8:
     		DebugEnterAlt(8);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:43: GETS
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:43: GETS
     		{
     		DebugLocation(1, 43);
     		mGETS(); 
@@ -3261,7 +3261,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 9:
     		DebugEnterAlt(9);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:48: GT
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:48: GT
     		{
     		DebugLocation(1, 48);
     		mGT(); 
@@ -3270,7 +3270,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 10:
     		DebugEnterAlt(10);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:51: LE
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:51: LE
     		{
     		DebugLocation(1, 51);
     		mLE(); 
@@ -3279,7 +3279,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 11:
     		DebugEnterAlt(11);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:54: LR
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:54: LR
     		{
     		DebugLocation(1, 54);
     		mLR(); 
@@ -3288,7 +3288,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 12:
     		DebugEnterAlt(12);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:57: LT
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:57: LT
     		{
     		DebugLocation(1, 57);
     		mLT(); 
@@ -3297,7 +3297,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 13:
     		DebugEnterAlt(13);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:60: MOD
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:60: MOD
     		{
     		DebugLocation(1, 60);
     		mMOD(); 
@@ -3306,7 +3306,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 14:
     		DebugEnterAlt(14);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:64: NE
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:64: NE
     		{
     		DebugLocation(1, 64);
     		mNE(); 
@@ -3315,7 +3315,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 15:
     		DebugEnterAlt(15);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:67: NOT
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:67: NOT
     		{
     		DebugLocation(1, 67);
     		mNOT(); 
@@ -3324,7 +3324,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 16:
     		DebugEnterAlt(16);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:71: OR
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:71: OR
     		{
     		DebugLocation(1, 71);
     		mOR(); 
@@ -3333,7 +3333,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 17:
     		DebugEnterAlt(17);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:74: PI
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:74: PI
     		{
     		DebugLocation(1, 74);
     		mPI(); 
@@ -3342,7 +3342,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 18:
     		DebugEnterAlt(18);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:77: TRUE
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:77: TRUE
     		{
     		DebugLocation(1, 77);
     		mTRUE(); 
@@ -3351,7 +3351,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 19:
     		DebugEnterAlt(19);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:82: IDENTIFIER
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:82: IDENTIFIER
     		{
     		DebugLocation(1, 82);
     		mIDENTIFIER(); 
@@ -3360,7 +3360,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 20:
     		DebugEnterAlt(20);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:93: BACKSLASH
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:93: BACKSLASH
     		{
     		DebugLocation(1, 93);
     		mBACKSLASH(); 
@@ -3369,7 +3369,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 21:
     		DebugEnterAlt(21);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:103: CARET
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:103: CARET
     		{
     		DebugLocation(1, 103);
     		mCARET(); 
@@ -3378,7 +3378,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 22:
     		DebugEnterAlt(22);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:109: COMMA
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:109: COMMA
     		{
     		DebugLocation(1, 109);
     		mCOMMA(); 
@@ -3387,7 +3387,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 23:
     		DebugEnterAlt(23);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:115: EXCLAIM
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:115: EXCLAIM
     		{
     		DebugLocation(1, 115);
     		mEXCLAIM(); 
@@ -3396,7 +3396,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 24:
     		DebugEnterAlt(24);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:123: LPAREN
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:123: LPAREN
     		{
     		DebugLocation(1, 123);
     		mLPAREN(); 
@@ -3405,7 +3405,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 25:
     		DebugEnterAlt(25);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:130: MINUS
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:130: MINUS
     		{
     		DebugLocation(1, 130);
     		mMINUS(); 
@@ -3414,7 +3414,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 26:
     		DebugEnterAlt(26);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:136: PLUS
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:136: PLUS
     		{
     		DebugLocation(1, 136);
     		mPLUS(); 
@@ -3423,7 +3423,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 27:
     		DebugEnterAlt(27);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:141: RPAREN
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:141: RPAREN
     		{
     		DebugLocation(1, 141);
     		mRPAREN(); 
@@ -3432,7 +3432,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 28:
     		DebugEnterAlt(28);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:148: SLASH
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:148: SLASH
     		{
     		DebugLocation(1, 148);
     		mSLASH(); 
@@ -3441,7 +3441,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 29:
     		DebugEnterAlt(29);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:154: STARSTAR
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:154: STARSTAR
     		{
     		DebugLocation(1, 154);
     		mSTARSTAR(); 
@@ -3450,7 +3450,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 30:
     		DebugEnterAlt(30);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:163: STAR
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:163: STAR
     		{
     		DebugLocation(1, 163);
     		mSTAR(); 
@@ -3459,7 +3459,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 31:
     		DebugEnterAlt(31);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:168: WS
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:168: WS
     		{
     		DebugLocation(1, 168);
     		mWS(); 
@@ -3468,7 +3468,7 @@ public partial class StatsDirectExpressionLexer : Antlr.Runtime.Lexer
     		break;
     	case 32:
     		DebugEnterAlt(32);
-    		// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:171: STRING
+    		// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:1:171: STRING
     		{
     		DebugLocation(1, 171);
     		mSTRING(); 

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// $ANTLR 3.4.1.9004 C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g 2012-05-08 08:59:34
+// $ANTLR 3.4.1.9004 C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g 2012-07-09 07:25:16
 
 // The variable 'variable' is assigned but its value is never used.
 #pragma warning disable 168, 219
@@ -115,7 +115,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	}
 
 	public override string[] TokenNames { get { return StatsDirectExpressionParser.tokenNames; } }
-	public override string GrammarFileName { get { return "C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g"; } }
+	public override string GrammarFileName { get { return "C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g"; } }
 
 
 	[Conditional("ANTLR_TRACE")]
@@ -132,7 +132,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_start() {}
 	// $ANTLR start "start"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:6:8: public start returns [string builtExpression] : ( EQ )? expr EOF ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:6:8: public start returns [string builtExpression] : ( EQ )? expr EOF ;
 	[GrammarRule("start")]
 	public string start()
 	{
@@ -148,12 +148,12 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(6, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:7:2: ( ( EQ )? expr EOF )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:7:2: ( ( EQ )? expr EOF )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:7:4: ( EQ )? expr EOF
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:7:4: ( EQ )? expr EOF
 			{
 			DebugLocation(7, 4);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:7:4: ( EQ )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:7:4: ( EQ )?
 			int alt1=2;
 			try { DebugEnterSubRule(1);
 			try { DebugEnterDecision(1, decisionCanBacktrack[1]);
@@ -168,7 +168,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:7:4: EQ
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:7:4: EQ
 				{
 				DebugLocation(7, 4);
 				Match(input,EQ,Follow._EQ_in_start32); 
@@ -216,7 +216,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_expr() {}
 	// $ANTLR start "expr"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:10:1: expr returns [string builtExpression] : lhs= andexpr (op= OR rhs= andexpr )* ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:10:1: expr returns [string builtExpression] : lhs= andexpr (op= OR rhs= andexpr )* ;
 	[GrammarRule("expr")]
 	private string expr()
 	{
@@ -234,9 +234,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(10, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:11:2: (lhs= andexpr (op= OR rhs= andexpr )* )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:11:2: (lhs= andexpr (op= OR rhs= andexpr )* )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:11:4: lhs= andexpr (op= OR rhs= andexpr )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:11:4: lhs= andexpr (op= OR rhs= andexpr )*
 			{
 			DebugLocation(11, 7);
 			PushFollow(Follow._andexpr_in_expr56);
@@ -246,7 +246,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			DebugLocation(11, 16);
 			 builtExpression = lhs; 
 			DebugLocation(12, 3);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:12:3: (op= OR rhs= andexpr )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:12:3: (op= OR rhs= andexpr )*
 			try { DebugEnterSubRule(2);
 			while (true)
 			{
@@ -265,7 +265,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:12:4: op= OR rhs= andexpr
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:12:4: op= OR rhs= andexpr
 					{
 					DebugLocation(12, 6);
 					op=(IToken)Match(input,OR,Follow._OR_in_expr65); 
@@ -318,7 +318,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_andexpr() {}
 	// $ANTLR start "andexpr"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:15:1: andexpr returns [string builtExpression] : lhs= notexpr (op= AND rhs= notexpr )* ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:15:1: andexpr returns [string builtExpression] : lhs= notexpr (op= AND rhs= notexpr )* ;
 	[GrammarRule("andexpr")]
 	private string andexpr()
 	{
@@ -336,9 +336,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(15, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:16:2: (lhs= notexpr (op= AND rhs= notexpr )* )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:16:2: (lhs= notexpr (op= AND rhs= notexpr )* )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:16:4: lhs= notexpr (op= AND rhs= notexpr )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:16:4: lhs= notexpr (op= AND rhs= notexpr )*
 			{
 			DebugLocation(16, 7);
 			PushFollow(Follow._notexpr_in_andexpr91);
@@ -348,7 +348,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			DebugLocation(16, 16);
 			 builtExpression = lhs; 
 			DebugLocation(17, 3);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:17:3: (op= AND rhs= notexpr )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:17:3: (op= AND rhs= notexpr )*
 			try { DebugEnterSubRule(3);
 			while (true)
 			{
@@ -367,7 +367,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:17:4: op= AND rhs= notexpr
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:17:4: op= AND rhs= notexpr
 					{
 					DebugLocation(17, 6);
 					op=(IToken)Match(input,AND,Follow._AND_in_andexpr100); 
@@ -420,7 +420,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_notexpr() {}
 	// $ANTLR start "notexpr"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:20:1: notexpr returns [string builtExpression] : ( ( NOT rhs= relexpr ) | relexpr );
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:20:1: notexpr returns [string builtExpression] : ( ( NOT rhs= relexpr ) | relexpr );
 	[GrammarRule("notexpr")]
 	private string notexpr()
 	{
@@ -437,7 +437,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(20, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:21:2: ( ( NOT rhs= relexpr ) | relexpr )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:21:2: ( ( NOT rhs= relexpr ) | relexpr )
 			int alt4=2;
 			try { DebugEnterDecision(4, decisionCanBacktrack[4]);
 			int LA4_1 = input.LA(1);
@@ -461,12 +461,12 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:21:4: ( NOT rhs= relexpr )
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:21:4: ( NOT rhs= relexpr )
 				{
 				DebugLocation(21, 4);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:21:4: ( NOT rhs= relexpr )
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:21:4: ( NOT rhs= relexpr )
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:21:6: NOT rhs= relexpr
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:21:6: NOT rhs= relexpr
 				{
 				DebugLocation(21, 6);
 				Match(input,NOT,Follow._NOT_in_notexpr126); 
@@ -485,7 +485,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 2:
 				DebugEnterAlt(2);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:22:4: relexpr
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:22:4: relexpr
 				{
 				DebugLocation(22, 4);
 				PushFollow(Follow._relexpr_in_notexpr139);
@@ -524,7 +524,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_relexpr() {}
 	// $ANTLR start "relexpr"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:25:1: relexpr returns [string builtExpression] : lhs= numexpr (op= relop rhs= numexpr )? ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:25:1: relexpr returns [string builtExpression] : lhs= numexpr (op= relop rhs= numexpr )? ;
 	[GrammarRule("relexpr")]
 	private string relexpr()
 	{
@@ -542,9 +542,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(25, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:26:2: (lhs= numexpr (op= relop rhs= numexpr )? )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:26:2: (lhs= numexpr (op= relop rhs= numexpr )? )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:26:4: lhs= numexpr (op= relop rhs= numexpr )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:26:4: lhs= numexpr (op= relop rhs= numexpr )?
 			{
 			DebugLocation(26, 7);
 			PushFollow(Follow._numexpr_in_relexpr158);
@@ -554,7 +554,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			DebugLocation(26, 16);
 			 builtExpression = lhs; 
 			DebugLocation(27, 3);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:27:3: (op= relop rhs= numexpr )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:27:3: (op= relop rhs= numexpr )?
 			int alt5=2;
 			try { DebugEnterSubRule(5);
 			try { DebugEnterDecision(5, decisionCanBacktrack[5]);
@@ -569,7 +569,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:27:4: op= relop rhs= numexpr
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:27:4: op= relop rhs= numexpr
 				{
 				DebugLocation(27, 6);
 				PushFollow(Follow._relop_in_relexpr167);
@@ -618,7 +618,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_numexpr() {}
 	// $ANTLR start "numexpr"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:30:1: numexpr returns [string builtExpression] : lhs= mulexpr (op= addop rhs= mulexpr )* ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:30:1: numexpr returns [string builtExpression] : lhs= mulexpr (op= addop rhs= mulexpr )* ;
 	[GrammarRule("numexpr")]
 	private string numexpr()
 	{
@@ -636,9 +636,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(30, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:31:2: (lhs= mulexpr (op= addop rhs= mulexpr )* )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:31:2: (lhs= mulexpr (op= addop rhs= mulexpr )* )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:31:4: lhs= mulexpr (op= addop rhs= mulexpr )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:31:4: lhs= mulexpr (op= addop rhs= mulexpr )*
 			{
 			DebugLocation(31, 7);
 			PushFollow(Follow._mulexpr_in_numexpr193);
@@ -648,7 +648,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			DebugLocation(31, 16);
 			 builtExpression = lhs; 
 			DebugLocation(32, 3);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:32:3: (op= addop rhs= mulexpr )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:32:3: (op= addop rhs= mulexpr )*
 			try { DebugEnterSubRule(6);
 			while (true)
 			{
@@ -667,7 +667,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:32:4: op= addop rhs= mulexpr
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:32:4: op= addop rhs= mulexpr
 					{
 					DebugLocation(32, 6);
 					PushFollow(Follow._addop_in_numexpr202);
@@ -723,7 +723,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_mulexpr() {}
 	// $ANTLR start "mulexpr"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:35:1: mulexpr returns [string builtExpression] : lhs= powexpr (op= mulop rhs= powexpr )* ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:35:1: mulexpr returns [string builtExpression] : lhs= powexpr (op= mulop rhs= powexpr )* ;
 	[GrammarRule("mulexpr")]
 	private string mulexpr()
 	{
@@ -741,9 +741,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(35, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:36:2: (lhs= powexpr (op= mulop rhs= powexpr )* )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:36:2: (lhs= powexpr (op= mulop rhs= powexpr )* )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:36:4: lhs= powexpr (op= mulop rhs= powexpr )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:36:4: lhs= powexpr (op= mulop rhs= powexpr )*
 			{
 			DebugLocation(36, 7);
 			PushFollow(Follow._powexpr_in_mulexpr229);
@@ -753,7 +753,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			DebugLocation(36, 16);
 			 builtExpression = lhs; 
 			DebugLocation(37, 3);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:37:3: (op= mulop rhs= powexpr )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:37:3: (op= mulop rhs= powexpr )*
 			try { DebugEnterSubRule(7);
 			while (true)
 			{
@@ -772,7 +772,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:37:4: op= mulop rhs= powexpr
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:37:4: op= mulop rhs= powexpr
 					{
 					DebugLocation(37, 6);
 					PushFollow(Follow._mulop_in_mulexpr238);
@@ -828,7 +828,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_powexpr() {}
 	// $ANTLR start "powexpr"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:40:1: powexpr returns [string builtExpression] : lhs= factorial ( ( CARET | STARSTAR ) rhs= factorial )* ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:40:1: powexpr returns [string builtExpression] : lhs= factorial ( ( CARET | STARSTAR ) rhs= factorial )* ;
 	[GrammarRule("powexpr")]
 	private string powexpr()
 	{
@@ -845,9 +845,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(40, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:41:2: (lhs= factorial ( ( CARET | STARSTAR ) rhs= factorial )* )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:41:2: (lhs= factorial ( ( CARET | STARSTAR ) rhs= factorial )* )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:41:4: lhs= factorial ( ( CARET | STARSTAR ) rhs= factorial )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:41:4: lhs= factorial ( ( CARET | STARSTAR ) rhs= factorial )*
 			{
 			DebugLocation(41, 7);
 			PushFollow(Follow._factorial_in_powexpr264);
@@ -857,7 +857,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			DebugLocation(41, 18);
 			 builtExpression = lhs; 
 			DebugLocation(42, 3);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:42:3: ( ( CARET | STARSTAR ) rhs= factorial )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:42:3: ( ( CARET | STARSTAR ) rhs= factorial )*
 			try { DebugEnterSubRule(8);
 			while (true)
 			{
@@ -876,7 +876,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:42:4: ( CARET | STARSTAR ) rhs= factorial
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:42:4: ( CARET | STARSTAR ) rhs= factorial
 					{
 					DebugLocation(42, 4);
 					if (input.LA(1)==CARET||input.LA(1)==STARSTAR)
@@ -940,7 +940,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_factorial() {}
 	// $ANTLR start "factorial"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:45:1: factorial returns [string builtExpression] : term ( EXCLAIM )? ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:45:1: factorial returns [string builtExpression] : term ( EXCLAIM )? ;
 	[GrammarRule("factorial")]
 	private string factorial()
 	{
@@ -956,9 +956,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(45, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:46:2: ( term ( EXCLAIM )? )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:46:2: ( term ( EXCLAIM )? )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:46:4: term ( EXCLAIM )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:46:4: term ( EXCLAIM )?
 			{
 			DebugLocation(46, 4);
 			PushFollow(Follow._term_in_factorial302);
@@ -968,7 +968,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			DebugLocation(46, 9);
 			 builtExpression = term3; 
 			DebugLocation(47, 2);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:47:2: ( EXCLAIM )?
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:47:2: ( EXCLAIM )?
 			int alt9=2;
 			try { DebugEnterSubRule(9);
 			try { DebugEnterDecision(9, decisionCanBacktrack[9]);
@@ -983,7 +983,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:47:3: EXCLAIM
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:47:3: EXCLAIM
 				{
 				DebugLocation(47, 3);
 				Match(input,EXCLAIM,Follow._EXCLAIM_in_factorial308); 
@@ -1024,7 +1024,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_term() {}
 	// $ANTLR start "term"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:50:1: term returns [string builtExpression] : ( INTEGER | MINUS INTEGER | FLOAT | MINUS FLOAT | LPAREN expr RPAREN | constant | function | IDENTIFIER );
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:50:1: term returns [string builtExpression] : ( INTEGER | MINUS INTEGER | FLOAT | MINUS FLOAT | LPAREN expr RPAREN | constant | function | IDENTIFIER );
 	[GrammarRule("term")]
 	private string term()
 	{
@@ -1047,7 +1047,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(50, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:51:2: ( INTEGER | MINUS INTEGER | FLOAT | MINUS FLOAT | LPAREN expr RPAREN | constant | function | IDENTIFIER )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:51:2: ( INTEGER | MINUS INTEGER | FLOAT | MINUS FLOAT | LPAREN expr RPAREN | constant | function | IDENTIFIER )
 			int alt10=8;
 			try { DebugEnterDecision(10, decisionCanBacktrack[10]);
 			switch (input.LA(1))
@@ -1129,7 +1129,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:51:4: INTEGER
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:51:4: INTEGER
 				{
 				DebugLocation(51, 4);
 				INTEGER4=(IToken)Match(input,INTEGER,Follow._INTEGER_in_term328); 
@@ -1140,7 +1140,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 2:
 				DebugEnterAlt(2);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:52:4: MINUS INTEGER
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:52:4: MINUS INTEGER
 				{
 				DebugLocation(52, 4);
 				Match(input,MINUS,Follow._MINUS_in_term335); 
@@ -1153,7 +1153,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 3:
 				DebugEnterAlt(3);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:53:4: FLOAT
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:53:4: FLOAT
 				{
 				DebugLocation(53, 4);
 				FLOAT6=(IToken)Match(input,FLOAT,Follow._FLOAT_in_term344); 
@@ -1164,7 +1164,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 4:
 				DebugEnterAlt(4);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:54:4: MINUS FLOAT
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:54:4: MINUS FLOAT
 				{
 				DebugLocation(54, 4);
 				Match(input,MINUS,Follow._MINUS_in_term351); 
@@ -1177,7 +1177,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 5:
 				DebugEnterAlt(5);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:55:4: LPAREN expr RPAREN
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:55:4: LPAREN expr RPAREN
 				{
 				DebugLocation(55, 4);
 				Match(input,LPAREN,Follow._LPAREN_in_term360); 
@@ -1195,7 +1195,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 6:
 				DebugEnterAlt(6);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:56:4: constant
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:56:4: constant
 				{
 				DebugLocation(56, 4);
 				PushFollow(Follow._constant_in_term371);
@@ -1209,7 +1209,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 7:
 				DebugEnterAlt(7);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:57:4: function
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:57:4: function
 				{
 				DebugLocation(57, 4);
 				PushFollow(Follow._function_in_term378);
@@ -1223,7 +1223,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 8:
 				DebugEnterAlt(8);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:58:4: IDENTIFIER
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:58:4: IDENTIFIER
 				{
 				DebugLocation(58, 4);
 				IDENTIFIER11=(IToken)Match(input,IDENTIFIER,Follow._IDENTIFIER_in_term385); 
@@ -1259,7 +1259,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_function() {}
 	// $ANTLR start "function"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:61:1: function returns [string builtExpression] : IDENTIFIER LPAREN argumentlist RPAREN ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:61:1: function returns [string builtExpression] : IDENTIFIER LPAREN argumentlist RPAREN ;
 	[GrammarRule("function")]
 	private string function()
 	{
@@ -1276,9 +1276,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(61, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:62:2: ( IDENTIFIER LPAREN argumentlist RPAREN )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:62:2: ( IDENTIFIER LPAREN argumentlist RPAREN )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:62:4: IDENTIFIER LPAREN argumentlist RPAREN
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:62:4: IDENTIFIER LPAREN argumentlist RPAREN
 			{
 			DebugLocation(62, 4);
 			IDENTIFIER12=(IToken)Match(input,IDENTIFIER,Follow._IDENTIFIER_in_function403); 
@@ -1321,7 +1321,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_argumentlist() {}
 	// $ANTLR start "argumentlist"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:65:1: argumentlist returns [Arguments arguments] : lhs= argument ( COMMA rhs= argument )* ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:65:1: argumentlist returns [Arguments arguments] : lhs= argument ( COMMA rhs= argument )* ;
 	[GrammarRule("argumentlist")]
 	private Arguments argumentlist()
 	{
@@ -1338,9 +1338,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(65, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:66:2: (lhs= argument ( COMMA rhs= argument )* )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:66:2: (lhs= argument ( COMMA rhs= argument )* )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:66:4: lhs= argument ( COMMA rhs= argument )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:66:4: lhs= argument ( COMMA rhs= argument )*
 			{
 			DebugLocation(66, 7);
 			PushFollow(Follow._argument_in_argumentlist429);
@@ -1350,7 +1350,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			DebugLocation(66, 17);
 			 arguments = new Arguments(); if (null != lhs) arguments.Add(lhs); 
 			DebugLocation(67, 2);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:67:2: ( COMMA rhs= argument )*
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:67:2: ( COMMA rhs= argument )*
 			try { DebugEnterSubRule(11);
 			while (true)
 			{
@@ -1369,7 +1369,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				{
 				case 1:
 					DebugEnterAlt(1);
-					// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:67:4: COMMA rhs= argument
+					// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:67:4: COMMA rhs= argument
 					{
 					DebugLocation(67, 4);
 					Match(input,COMMA,Follow._COMMA_in_argumentlist436); 
@@ -1422,7 +1422,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_argument() {}
 	// $ANTLR start "argument"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:70:1: argument returns [Argument argument] : ( expr | explicitParameterName GETS expr |);
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:70:1: argument returns [Argument argument] : ( expr | explicitParameterName GETS expr |);
 	[GrammarRule("argument")]
 	private Argument argument()
 	{
@@ -1440,7 +1440,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(70, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:71:2: ( expr | explicitParameterName GETS expr |)
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:71:2: ( expr | explicitParameterName GETS expr |)
 			int alt12=3;
 			try { DebugEnterDecision(12, decisionCanBacktrack[12]);
 			switch (input.LA(1))
@@ -1498,7 +1498,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:71:4: expr
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:71:4: expr
 				{
 				DebugLocation(71, 4);
 				PushFollow(Follow._expr_in_argument461);
@@ -1512,7 +1512,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 2:
 				DebugEnterAlt(2);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:72:4: explicitParameterName GETS expr
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:72:4: explicitParameterName GETS expr
 				{
 				DebugLocation(72, 4);
 				PushFollow(Follow._explicitParameterName_in_argument468);
@@ -1533,7 +1533,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 3:
 				DebugEnterAlt(3);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:73:4: 
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:73:4: 
 				{
 				DebugLocation(73, 4);
 				 argument = null; 
@@ -1567,7 +1567,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_constant() {}
 	// $ANTLR start "constant"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:76:1: constant returns [string builtExpression] : ( PI | EE | FALSE | LR | TRUE );
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:76:1: constant returns [string builtExpression] : ( PI | EE | FALSE | LR | TRUE );
 	[GrammarRule("constant")]
 	private string constant()
 	{
@@ -1581,7 +1581,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(76, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:77:2: ( PI | EE | FALSE | LR | TRUE )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:77:2: ( PI | EE | FALSE | LR | TRUE )
 			int alt13=5;
 			try { DebugEnterDecision(13, decisionCanBacktrack[13]);
 			switch (input.LA(1))
@@ -1624,7 +1624,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:77:4: PI
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:77:4: PI
 				{
 				DebugLocation(77, 4);
 				Match(input,PI,Follow._PI_in_constant495); 
@@ -1635,7 +1635,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 2:
 				DebugEnterAlt(2);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:78:4: EE
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:78:4: EE
 				{
 				DebugLocation(78, 4);
 				Match(input,EE,Follow._EE_in_constant502); 
@@ -1646,7 +1646,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 3:
 				DebugEnterAlt(3);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:79:4: FALSE
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:79:4: FALSE
 				{
 				DebugLocation(79, 4);
 				Match(input,FALSE,Follow._FALSE_in_constant509); 
@@ -1657,7 +1657,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 4:
 				DebugEnterAlt(4);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:80:4: LR
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:80:4: LR
 				{
 				DebugLocation(80, 4);
 				Match(input,LR,Follow._LR_in_constant516); 
@@ -1668,7 +1668,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 5:
 				DebugEnterAlt(5);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:81:4: TRUE
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:81:4: TRUE
 				{
 				DebugLocation(81, 4);
 				Match(input,TRUE,Follow._TRUE_in_constant523); 
@@ -1704,7 +1704,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_relop() {}
 	// $ANTLR start "relop"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:84:1: relop returns [string builtExpression] : ( NE | LE | LT | GE | GT | EQ );
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:84:1: relop returns [string builtExpression] : ( NE | LE | LT | GE | GT | EQ );
 	[GrammarRule("relop")]
 	private string relop()
 	{
@@ -1718,7 +1718,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(84, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:85:2: ( NE | LE | LT | GE | GT | EQ )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:85:2: ( NE | LE | LT | GE | GT | EQ )
 			int alt14=6;
 			try { DebugEnterDecision(14, decisionCanBacktrack[14]);
 			switch (input.LA(1))
@@ -1766,7 +1766,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:85:4: NE
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:85:4: NE
 				{
 				DebugLocation(85, 4);
 				Match(input,NE,Follow._NE_in_relop541); 
@@ -1777,7 +1777,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 2:
 				DebugEnterAlt(2);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:86:4: LE
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:86:4: LE
 				{
 				DebugLocation(86, 4);
 				Match(input,LE,Follow._LE_in_relop548); 
@@ -1788,7 +1788,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 3:
 				DebugEnterAlt(3);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:87:4: LT
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:87:4: LT
 				{
 				DebugLocation(87, 4);
 				Match(input,LT,Follow._LT_in_relop555); 
@@ -1799,7 +1799,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 4:
 				DebugEnterAlt(4);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:88:4: GE
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:88:4: GE
 				{
 				DebugLocation(88, 4);
 				Match(input,GE,Follow._GE_in_relop562); 
@@ -1810,7 +1810,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 5:
 				DebugEnterAlt(5);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:89:4: GT
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:89:4: GT
 				{
 				DebugLocation(89, 4);
 				Match(input,GT,Follow._GT_in_relop569); 
@@ -1821,7 +1821,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 6:
 				DebugEnterAlt(6);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:90:4: EQ
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:90:4: EQ
 				{
 				DebugLocation(90, 4);
 				Match(input,EQ,Follow._EQ_in_relop576); 
@@ -1857,7 +1857,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_addop() {}
 	// $ANTLR start "addop"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:93:1: addop returns [string builtExpression] : ( PLUS | MINUS );
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:93:1: addop returns [string builtExpression] : ( PLUS | MINUS );
 	[GrammarRule("addop")]
 	private string addop()
 	{
@@ -1871,7 +1871,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(93, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:94:2: ( PLUS | MINUS )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:94:2: ( PLUS | MINUS )
 			int alt15=2;
 			try { DebugEnterDecision(15, decisionCanBacktrack[15]);
 			int LA15_1 = input.LA(1);
@@ -1895,7 +1895,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:94:4: PLUS
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:94:4: PLUS
 				{
 				DebugLocation(94, 4);
 				Match(input,PLUS,Follow._PLUS_in_addop593); 
@@ -1906,7 +1906,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 2:
 				DebugEnterAlt(2);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:95:4: MINUS
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:95:4: MINUS
 				{
 				DebugLocation(95, 4);
 				Match(input,MINUS,Follow._MINUS_in_addop600); 
@@ -1942,7 +1942,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_mulop() {}
 	// $ANTLR start "mulop"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:98:1: mulop returns [string builtExpression] : ( STAR | SLASH | BACKSLASH | MOD );
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:98:1: mulop returns [string builtExpression] : ( STAR | SLASH | BACKSLASH | MOD );
 	[GrammarRule("mulop")]
 	private string mulop()
 	{
@@ -1956,7 +1956,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(98, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:99:2: ( STAR | SLASH | BACKSLASH | MOD )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:99:2: ( STAR | SLASH | BACKSLASH | MOD )
 			int alt16=4;
 			try { DebugEnterDecision(16, decisionCanBacktrack[16]);
 			switch (input.LA(1))
@@ -1994,7 +1994,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 			{
 			case 1:
 				DebugEnterAlt(1);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:99:4: STAR
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:99:4: STAR
 				{
 				DebugLocation(99, 4);
 				Match(input,STAR,Follow._STAR_in_mulop618); 
@@ -2005,7 +2005,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 2:
 				DebugEnterAlt(2);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:100:4: SLASH
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:100:4: SLASH
 				{
 				DebugLocation(100, 4);
 				Match(input,SLASH,Follow._SLASH_in_mulop625); 
@@ -2016,7 +2016,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 3:
 				DebugEnterAlt(3);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:101:4: BACKSLASH
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:101:4: BACKSLASH
 				{
 				DebugLocation(101, 4);
 				Match(input,BACKSLASH,Follow._BACKSLASH_in_mulop632); 
@@ -2027,7 +2027,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 				break;
 			case 4:
 				DebugEnterAlt(4);
-				// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:102:4: MOD
+				// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:102:4: MOD
 				{
 				DebugLocation(102, 4);
 				Match(input,MOD,Follow._MOD_in_mulop639); 
@@ -2063,7 +2063,7 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 	[Conditional("ANTLR_TRACE")]
 	protected virtual void LeaveRule_explicitParameterName() {}
 	// $ANTLR start "explicitParameterName"
-	// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:105:1: explicitParameterName : IDENTIFIER ;
+	// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:105:1: explicitParameterName : IDENTIFIER ;
 	[GrammarRule("explicitParameterName")]
 	private ParserRuleReturnScope<IToken> explicitParameterName()
 	{
@@ -2077,9 +2077,9 @@ public partial class StatsDirectExpressionParser : Antlr.Runtime.Parser
 		DebugLocation(105, 1);
 		try
 		{
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:106:2: ( IDENTIFIER )
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:106:2: ( IDENTIFIER )
 			DebugEnterAlt(1);
-			// C:\\Sandbox\\StatsDirect\\StatsDirect3\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:106:4: IDENTIFIER
+			// C:\\Sandbox\\StatsDirect\\shell\\StatsDirectUI\\Expressions\\StatsDirectExpression.g:106:4: IDENTIFIER
 			{
 			DebugLocation(106, 4);
 			Match(input,IDENTIFIER,Follow._IDENTIFIER_in_explicitParameterName652); 
