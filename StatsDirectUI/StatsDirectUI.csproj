@@ -42,7 +42,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;USE_R</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -51,14 +51,14 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;USE_R</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
     <OutputPath>bin\ReleaseWithSigning\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;USE_R</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -132,34 +132,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Builtins\Agreement.cs" />
-    <Compile Include="Builtins\Analysis.cs" />
-    <Compile Include="Builtins\Anova.cs" />
     <Compile Include="Builtins\Calcit.cs" />
-    <Compile Include="Builtins\ChartExplorer.cs" />
-    <Compile Include="Builtins\Chi.cs" />
-    <Compile Include="Builtins\Coxreg.cs" />
-    <Compile Include="Builtins\Describe.cs" />
-    <Compile Include="Builtins\Distribution.cs" />
-    <Compile Include="Builtins\Exact.cs" />
-    <Compile Include="Builtins\ExactBB.cs" />
-    <Compile Include="Builtins\Formula.cs" />
     <Compile Include="Builtins\ImportExport.cs" />
-    <Compile Include="Builtins\Matrix.cs" />
-    <Compile Include="Builtins\Meta.cs" />
-    <Compile Include="Builtins\Nonparametric.cs" />
     <Compile Include="Builtins\Options.cs" />
-    <Compile Include="Builtins\Parametric.cs" />
-    <Compile Include="Builtins\Power.cs" />
-    <Compile Include="Builtins\Random.cs" />
-    <Compile Include="Builtins\Rates.cs" />
     <Compile Include="Builtins\Registry.cs" />
-    <Compile Include="Builtins\Regress.cs" />
-    <Compile Include="Builtins\Regress1.cs" />
-    <Compile Include="Builtins\RegressRpt.cs" />
     <Compile Include="Builtins\Sheet.cs" />
-    <Compile Include="Builtins\Survival.cs" />
-    <Compile Include="Builtins\Tables.cs" />
     <Compile Include="Calculator\Calculator.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -304,12 +281,6 @@
     <Compile Include="TextProcessing\ActiveRtfLexer.cs" />
     <Compile Include="TextProcessing\ActiveRtfParser.cs" />
     <Compile Include="TextProcessing\ActiveRtfParserPartial.cs" />
-    <Compile Include="UI\ctlPDF.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\ctlPDF.Designer.cs">
-      <DependentUpon>ctlPDF.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\ExcelAddInManager.cs" />
     <Compile Include="UI\ClipboardMetafileHelper.cs" />
     <Compile Include="UI\ctlDummyOptions.cs">
@@ -463,12 +434,6 @@
     <Compile Include="UI\ctlCoxRegressionOptions.Designer.cs">
       <DependentUpon>ctlCoxRegressionOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlChiGFOptions.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\ctlChiGFOptions.Designer.cs">
-      <DependentUpon>ctlChiGFOptions.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\ctlChartOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -595,12 +560,6 @@
     <Compile Include="UI\frmROCCutoff.Designer.cs">
       <DependentUpon>frmROCCutoff.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmScores.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmScores.Designer.cs">
-      <DependentUpon>frmScores.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\frmScriptReplace.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -612,12 +571,6 @@
     </Compile>
     <Compile Include="UI\frmScriptFind.Designer.cs">
       <DependentUpon>frmScriptFind.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\frmSummaryStatistics.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmSummaryStatistics.Designer.cs">
-      <DependentUpon>frmSummaryStatistics.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\IFillParameterBag.cs" />
     <Compile Include="UI\IFindable.cs" />
@@ -762,9 +715,6 @@
       <DependentUpon>ctlDummyOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlPDF.resx">
-      <DependentUpon>ctlPDF.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\frmReportRichEditDummy.resx">
       <DependentUpon>frmReportRichEditDummy.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -845,10 +795,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlCoxRegressionOptions.resx">
       <DependentUpon>ctlCoxRegressionOptions.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlChiGFOptions.resx">
-      <DependentUpon>ctlChiGFOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlChartOptions.resx">
@@ -935,10 +881,6 @@
       <SubType>Designer</SubType>
       <DependentUpon>frmROCCutoff.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmScores.resx">
-      <DependentUpon>frmScores.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\frmScriptReplace.resx">
       <DependentUpon>frmScriptReplace.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -962,10 +904,6 @@
     <EmbeddedResource Include="UI\frmMain.resx">
       <SubType>Designer</SubType>
       <DependentUpon>frmMain.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmSummaryStatistics.resx">
-      <DependentUpon>frmSummaryStatistics.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="PJLControls\ColourPanel.resx">
       <DependentUpon>ColourPanel.cs</DependentUpon>
@@ -1647,7 +1585,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

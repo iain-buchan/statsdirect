@@ -57,7 +57,7 @@ namespace StatsDirect.UI
 
             // Preload and parse XML for operations
             IDictionary<string, Templates.Operation> scrap = Templates.TemplateFactory.Operations;
-            IList<Templates.Operation> userScrap = Templates.TemplateFactory.UserOperations;
+            IDictionary<string, Templates.Operation> userScrap = Templates.TemplateFactory.UserOperations;
 
             // Perform any UI hooks we need to...
             SetupUserInterface();

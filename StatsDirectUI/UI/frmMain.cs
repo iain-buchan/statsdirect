@@ -241,7 +241,7 @@ namespace StatsDirect.UI
             if (!string.IsNullOrEmpty(sdMenuItem.Tooltip))
                 menuItem.ToolTipText = sdMenuItem.Tooltip;
             Dictionary<string, string> tags = new Dictionary<string, string>();
-            if (null != sdMenuItem.Operation && TemplateFactory.Operations.ContainsKey(sdMenuItem.Operation))
+            if (null != sdMenuItem.Operation && (TemplateFactory.Operations.ContainsKey(sdMenuItem.Operation) || TemplateFactory.UserOperations.ContainsKey(sdMenuItem.Operation)))
             {
                 tags.Add("operation", sdMenuItem.Operation);
                 // menuItem.BackColor = Color.PaleGreen;
@@ -320,22 +320,19 @@ namespace StatsDirect.UI
         {
             List<SDMenuItem> items = new List<SDMenuItem>();
 
-            // Not in use for 3.0 release.  TODO: Enable
-            /**
-            foreach (Operation operation in TemplateFactory.UserOperations)
+            foreach (Operation operation in TemplateFactory.UserOperations.Values)
             {
-                SDMenuItem item = new SDMenuItem();
-                item.Operation = operation.Names[0];
-                if (operation.FriendlyNames.Count > 0)
-                    item.Label = operation.FriendlyNames[0];
-                else
-                    item.Label = operation.Names[0];
+                SDMenuItem item = new SDMenuItem
+                                      {
+                                          Operation = operation.Names[0],
+                                          Label =
+                                              operation.FriendlyNames.Count > 0
+                                                  ? operation.FriendlyNames[0]
+                                                  : operation.Names[0]
+                                      };
                 items.Add(item);
             }
-             */
-            if (0 == items.Count)
-                return null;
-            return new SDMenuItem {Label = "&User-defined", SubItems = items.ToArray()};
+            return 0 == items.Count ? null : new SDMenuItem {Label = "&User-defined", SubItems = items.ToArray()};
         }
 
         private void OperationMenuHandler(object sender, EventArgs e)
@@ -360,7 +357,8 @@ namespace StatsDirect.UI
                 return;
             Operation operation;
             if (!TemplateFactory.Operations.TryGetValue(operationName, out operation))
-                return;
+                if (!TemplateFactory.UserOperations.TryGetValue(operationName, out operation))
+                    return;
             DoOperationWithPossibleBatching(operation);
 #if !WATCH_EXCEPTIONS
             }
@@ -1941,7 +1939,7 @@ namespace StatsDirect.UI
                                 }
                                 else if (typeof(FillableParameter) == parameter.GetType())
                                 {
-                                    fp = PrepareCombinedParameter(host, (FillableParameter)parameter);
+                                    fp = PrepareCombinedParameter((FillableParameter)parameter);
                                 }
                                 else
                                     throw new ArgumentOutOfRangeException("processor", "Must be a ChartOptionsParameter or FillableParameter if it is a custom parameter");
@@ -2889,16 +2887,17 @@ namespace StatsDirect.UI
             return null;
         }
 
-        private FilledParameter PrepareCombinedParameter(ITemplateHost host, FillableParameter fillableParameter)
+        private FilledParameter PrepareCombinedParameter(FillableParameter fillableParameter)
         {
             IFillable fillable = fillableParameter.Fillable;
             TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
             Control ctl;
+            /*
             if ("ChiSquareGoodnessOfFit".Equals(fillable.FillerToUse))
                 ctl = new ctlChiGFOptions((Builtins.ChiSquareGoodnessOfFitOptions)fillable);
             else if ("Distribution".Equals(fillable.FillerToUse))
                 ctl = new ctlPDF((Builtins.DistributionOptions)fillable, host);
-            else if ("Dummy".Equals(fillable.FillerToUse))
+            else */ if ("Dummy".Equals(fillable.FillerToUse))
                 ctl = new ctlDummyOptions((Builtins.DummyOptions)fillable);
             else if ("SortInPlace".Equals(fillable.FillerToUse))
             {

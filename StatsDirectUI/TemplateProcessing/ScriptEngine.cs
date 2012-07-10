@@ -4,9 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using System.CodeDom.Compiler;
 using System.IO;
-#if USE_R
 using org.rosuda.REngine;
-#endif
 using StatsDirect.Data;
 using System.Reflection;
 

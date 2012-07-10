@@ -6,7 +6,7 @@ namespace StatsDirect.Templates
     public sealed class TemplateFactory
     {
         private static IDictionary<string, Operation> operations;
-        private static IList<Operation> userOperations;
+        private static IDictionary<string, Operation> userOperations;
 
         public static IDictionary<string, Operation> Operations
         {
@@ -18,7 +18,7 @@ namespace StatsDirect.Templates
             }
         }
 
-        public static IList<Operation> UserOperations
+        public static IDictionary<string, Operation> UserOperations
         {
             get
             {
@@ -52,7 +52,7 @@ namespace StatsDirect.Templates
                 }
             }
 
-            userOperations = new List<Operation>();
+            userOperations = new Dictionary<string, Operation>();
             string userOperationDir = Path.Combine(Configuration.SDConfiguration.InstallationDirectory, System.Configuration.ConfigurationManager.AppSettings["UserOperationDir"]);
             if (Directory.Exists(userOperationDir))
             {
@@ -67,7 +67,8 @@ namespace StatsDirect.Templates
                         Operation o = (Operation)s.Deserialize(fs);
                         fs.Close();
                         o.FixAfterLoading();
-                        userOperations.Add(o);
+                        foreach (string name in o.Names)
+                            userOperations.Add(name, o);
                     }
                 }
             }
