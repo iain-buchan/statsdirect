@@ -3,13 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsDirectUI", "StatsDirectUI\StatsDirectUI.csproj", "{C73E1B83-A745-4592-92A0-40C5658D6D7C}"
 EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SDInstaller", "SDInstaller\SDInstaller.wixproj", "{D9AC87D9-842B-4C52-9F58-8036C0940DAF}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BF6CBFF8-F40E-427B-8EBD-16662BD9413B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SDLicense", "SDLicense\SDLicense.csproj", "{E078706D-AAFB-4C68-A06A-165B039FB3A4}"
-EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Shell", "Shell\Shell.wixproj", "{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,61 +33,16 @@ Global
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.ReleaseWithSigning|Mixed Platforms.ActiveCfg = ReleaseWithSigning|Any CPU
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.ReleaseWithSigning|Mixed Platforms.Build.0 = ReleaseWithSigning|Any CPU
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.ReleaseWithSigning|x86.ActiveCfg = ReleaseWithSigning|Any CPU
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|x86.ActiveCfg = Debug|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|x86.Build.0 = Debug|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|Any CPU.ActiveCfg = Release|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|Any CPU.Build.0 = Release|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|Mixed Platforms.Build.0 = Release|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|x86.ActiveCfg = Release|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|x86.Build.0 = Release|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|Any CPU.ActiveCfg = ReleaseWithSigning|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|Any CPU.Build.0 = ReleaseWithSigning|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|Mixed Platforms.ActiveCfg = ReleaseWithSigning|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|Mixed Platforms.Build.0 = ReleaseWithSigning|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|x86.ActiveCfg = ReleaseWithSigning|x86
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|x86.Build.0 = ReleaseWithSigning|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|x86.ActiveCfg = Debug|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|x86.Build.0 = Debug|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|Any CPU.ActiveCfg = Release|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|Mixed Platforms.Build.0 = Release|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|x86.ActiveCfg = Release|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|x86.Build.0 = Release|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.ReleaseWithSigning|Any CPU.ActiveCfg = Release|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.ReleaseWithSigning|Mixed Platforms.ActiveCfg = ReleaseWithSigning|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.ReleaseWithSigning|Mixed Platforms.Build.0 = ReleaseWithSigning|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.ReleaseWithSigning|x86.ActiveCfg = Release|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.ReleaseWithSigning|x86.Build.0 = Release|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Debug|x86.ActiveCfg = Debug|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Debug|x86.Build.0 = Debug|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Release|Any CPU.ActiveCfg = Release|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Release|Mixed Platforms.Build.0 = Release|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Release|x86.ActiveCfg = Release|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.Release|x86.Build.0 = Release|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.ReleaseWithSigning|Any CPU.ActiveCfg = Release|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.ReleaseWithSigning|Mixed Platforms.ActiveCfg = ReleaseWithSigning|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.ReleaseWithSigning|Mixed Platforms.Build.0 = ReleaseWithSigning|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.ReleaseWithSigning|x86.ActiveCfg = Release|x86
-		{9DD9E6DD-F7B5-4FA1-A710-B2174D5EA9BE}.ReleaseWithSigning|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_BuildAction = Both
-		BuildVersion_ConfigurationName = ReleaseWithSigning
-		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
-		BuildVersion_UpdateAssemblyVersion = False
 		BuildVersion_UpdateFileVersion = False
+		BuildVersion_UpdateAssemblyVersion = False
+		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
+		BuildVersion_ConfigurationName = ReleaseWithSigning
+		BuildVersion_BuildAction = Both
+		BuildVersion_UseGlobalSettings = False
 	EndGlobalSection
 EndGlobal
