@@ -1969,7 +1969,7 @@ namespace StatsDirect.UI
         {
             get { return true; }
         }
-
+/*
         private bool gidxyr(ref double[,] x, ref double[, ,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref Builtins.MinMax minMax)
         {
             const string msg_ti = "StatsDirect Data Selection";
@@ -2142,7 +2142,8 @@ namespace StatsDirect.UI
             // If we get here, the user cancelled
             return false;
         }
-
+*/
+        /*
         public Builtins.GroupedCovarianceData FillGroupedCovarianceParameter()
         {
             double[,] xt = null;
@@ -2378,7 +2379,7 @@ namespace StatsDirect.UI
             // If we get here, the user cancelled the operation
             throw new TemplateOperationCancelledException();
         }
-
+        */
 
         private DataFrame2D gidx3(int min, int max, int neq, string labsg, DataAcquisitionMode2D mode, out bool wasPivoted)
         {

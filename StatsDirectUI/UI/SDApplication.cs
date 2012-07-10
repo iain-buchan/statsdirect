@@ -797,7 +797,7 @@ namespace StatsDirect.UI
                         return null == frame ? null : new ParameterBag(Parameter.Name, new FilledParameter(true, frame));
                     }
                 case ParameterType.GroupedCovariance:
-                    return FillParameter((GroupedCovarianceParameter)Parameter);
+                    return null;
                 case ParameterType.Integer:
                     return FillParameter(processor, (IntegerParameter)Parameter, context);
                 case ParameterType.MultipleOptions:
@@ -857,7 +857,7 @@ namespace StatsDirect.UI
         {
             // TODO: Move logic out of SetOperation() into here
         }
-
+        /*
         ParameterBag FillParameter(GroupedCovarianceParameter Parameter)
         {
             frmSpreadsheetGear gearWindow = (frmSpreadsheetGear)ActiveGrid.Window;
@@ -866,7 +866,7 @@ namespace StatsDirect.UI
                 return null;
             return new ParameterBag(Parameter.Name, new FilledParameter(true, data));
         }
-
+        */
         ParameterBag FillParameter(ITemplateProcessor processor, IntegerParameter Parameter, ParameterBag context)
         {
             // Prompt for the range
@@ -1265,8 +1265,10 @@ namespace StatsDirect.UI
         {
             if ("Categorise".Equals(fillable.FillerToUse))
                 return Amend((Builtins.CategoriseOptions)fillable);
+            /*
             if ("ChartExplorer".Equals(fillable.FillerToUse))
                 return Amend((Builtins.ChartExplorerOptions)fillable);
+             */
             if ("ChartOptions".Equals(fillable.FillerToUse))
                 return FillChartOptions((Charting.ChartDefinition)fillable, context);
             if ("ChiSquareGoodnessOfFit".Equals(fillable.FillerToUse))
@@ -1281,12 +1283,16 @@ namespace StatsDirect.UI
                 return Amend((Builtins.GraphicsOptions)fillable);
             if ("ROCCutoff".Equals(fillable.FillerToUse))
                 return Amend((Charting.ROCCutoff)fillable);
+            /*
             if ("Scores".Equals(fillable.FillerToUse))
                 return Amend((Builtins.ScoresOptions)fillable);
+             */
             if ("SortInPlace".Equals(fillable.FillerToUse))
                 return AmendUsingControl(fillable);
+            /*
             if ("SummaryStatistics".Equals(fillable.FillerToUse))
                 return Amend((Builtins.SummaryStatisticsOptions)fillable);
+             */
             throw new ArgumentOutOfRangeException("fillable", fillable, "fillable.FillerToUse: Unknown option");
         }
 
@@ -1313,17 +1319,17 @@ namespace StatsDirect.UI
             return !userCancelled;
         }
 
-        private bool Amend(Builtins.ChartExplorerOptions options)
-        {
-            throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0");
-            /*
-            frmChartExplorer f = new frmChartExplorer(options);
-            f.ShowDialog(mainWindow);
-            bool userCancelled = f.UserCancelled;
-            f.Dispose();
-            return !userCancelled;
-             */
-        }
+        /*
+    private bool Amend(Builtins.ChartExplorerOptions options)
+    {
+        throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0");
+        frmChartExplorer f = new frmChartExplorer(options);
+        f.ShowDialog(mainWindow);
+        bool userCancelled = f.UserCancelled;
+        f.Dispose();
+        return !userCancelled;
+    }
+         */
 
         private bool Amend(Builtins.ExtractionOptions options)
         {
@@ -1365,28 +1371,30 @@ namespace StatsDirect.UI
             return true;
         }
 
-        private bool Amend(Builtins.ScoresOptions scores)
-        {
-            frmScores options = new frmScores(scores);
-            using (new DefaultCursor())
-            {
-                options.ShowDialog(mainWindow);
-            }
-            bool userCancelled = options.UserCancelled;
-            options.Dispose();
-            return !userCancelled;
-        }
+        /*
+                private bool Amend(Builtins.ScoresOptions scores)
+                {
+                    frmScores options = new frmScores(scores);
+                    using (new DefaultCursor())
+                    {
+                        options.ShowDialog(mainWindow);
+                    }
+                    bool userCancelled = options.UserCancelled;
+                    options.Dispose();
+                    return !userCancelled;
+                }
 
-        private bool Amend(Builtins.SummaryStatisticsOptions summaryStatisticsOptions)
-        {
-            frmSummaryStatistics options = new frmSummaryStatistics(summaryStatisticsOptions);
-            using (new DefaultCursor())
-            {
-                options.ShowDialog(mainWindow);
-            }
-            options.Dispose();
-            return true;
-        }
+                private bool Amend(Builtins.SummaryStatisticsOptions summaryStatisticsOptions)
+                {
+                    frmSummaryStatistics options = new frmSummaryStatistics(summaryStatisticsOptions);
+                    using (new DefaultCursor())
+                    {
+                        options.ShowDialog(mainWindow);
+                    }
+                    options.Dispose();
+                    return true;
+                }
+         */
 
         public void NoteEndOfSelection(bool ok)
         {
