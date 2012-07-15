@@ -1,7 +1,7 @@
 #define RELEASE_EXCEPTIONS
 // #define WATCH_EXCEPTIONS
 
-// If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the system is free to use unmanaged code to get around annoyances.
+// If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
 // Current uses:
 // - Removes flicker when swapping between maximised MDI children using tabs
 #define ALLOW_OPTIONAL_UNMANAGED_CODE
@@ -3576,24 +3576,30 @@ namespace StatsDirect.UI
                                             Margin = new Padding(0,0,0,0)
                                         };
                 grid.GetLock();
-                if (context.ContainsKey(specialParameter.Name) && null != context[specialParameter.Name] && context[specialParameter.Name].IsInputParameter && context[specialParameter.Name].IsDataFrame)
+                try
                 {
-                    DataFrame sourceFrame = context[specialParameter.Name].AsDataFrame;
-                    if (sourceFrame.VariableCount >= 2 && sourceFrame.Variables[0].IsDoubleVariable && sourceFrame.Variables[1].IsDoubleVariable)
+                    if (context.ContainsKey(specialParameter.Name) && null != context[specialParameter.Name] && context[specialParameter.Name].IsInputParameter && context[specialParameter.Name].IsDataFrame)
                     {
-                        DumpIntoSsg ((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0].AsDoubleVariable);
-                        DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 1, sourceFrame.Variables[1].AsDoubleVariable);
-                        if (has3Columns && sourceFrame.VariableCount >= 3 && sourceFrame.Variables[0].IsDoubleVariable)
+                        DataFrame sourceFrame = context[specialParameter.Name].AsDataFrame;
+                        if (sourceFrame.VariableCount >= 2 && sourceFrame.Variables[0].IsDoubleVariable && sourceFrame.Variables[1].IsDoubleVariable)
                         {
-                            DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2].AsDoubleVariable);
+                            DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0].AsDoubleVariable);
+                            DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 1, sourceFrame.Variables[1].AsDoubleVariable);
+                            if (has3Columns && sourceFrame.VariableCount >= 3 && sourceFrame.Variables[0].IsDoubleVariable)
+                            {
+                                DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2].AsDoubleVariable);
+                            }
                         }
                     }
+                    // grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
+                    grid.ActiveWorksheet.Cells[0, has3Columns ? 3 : 2, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
+                    grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.ColumnWidth = 11; // characters
+                    grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
                 }
-                // grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
-                grid.ActiveWorksheet.Cells[0, has3Columns ? 3 : 2, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
-                grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.ColumnWidth = 11; // characters
-                grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
-                grid.ReleaseLock();
+                finally
+                {
+                    grid.ReleaseLock();
+                }
                 ssgContainer.Controls.Add(grid, 1, 1);
 
                 tlp.Controls.Add(ssgContainer);
@@ -3621,9 +3627,15 @@ namespace StatsDirect.UI
 
                 WorkbookView grid = new WorkbookView {Size = new Size(450, 400), ContextMenuStrip = contextMenuStrip};
                 grid.GetLock();
-                grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
-                grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
-                grid.ReleaseLock();
+                try
+                {
+                    grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
+                    grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
+                }
+                finally
+                {
+                    grid.ReleaseLock();
+                }
                 ssgContainer.Controls.Add(grid, 1, 1);
 
                 tlp.Controls.Add(ssgContainer);
@@ -4298,10 +4310,17 @@ namespace StatsDirect.UI
                                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                                 IWorksheet worksheet = grid.ActiveWorksheet;
                                 grid.GetLock();
-                                object value = worksheet.UsedRange.Value;
-                                if (!value.GetType().IsArray)
-                                    value = new[,] { { value } };
-                                grid.ReleaseLock();
+                                object value;
+                                try
+                                {
+                                    value = worksheet.UsedRange.Value;
+                                    if (!value.GetType().IsArray)
+                                        value = new[,] { { value } };
+                                }
+                                finally
+                                {
+                                    grid.ReleaseLock();
+                                }
                                 object[,] ary = (object[,])value;
 
                                 DataFrame frame = new DataFrame();
@@ -4324,10 +4343,17 @@ namespace StatsDirect.UI
                                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                                 IWorksheet worksheet = grid.ActiveWorksheet;
                                 grid.GetLock();
-                                object value = worksheet.UsedRange.Value;
-                                if (!value.GetType().IsArray)
-                                    value = new[,] { { value } };
-                                grid.ReleaseLock();
+                                object value;
+                                try
+                                {
+                                    value = worksheet.UsedRange.Value;
+                                    if (!value.GetType().IsArray)
+                                        value = new[,] { { value } };
+                                }
+                                finally
+                                {
+                                    grid.ReleaseLock();
+                                }
                                 object[,] ary = (object[,])value;
 
                                 DataFrame frame = new DataFrame();
@@ -4349,10 +4375,17 @@ namespace StatsDirect.UI
                                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                                 IWorksheet worksheet = grid.ActiveWorksheet;
                                 grid.GetLock();
-                                object value = worksheet.UsedRange.Value;
-                                if (!value.GetType().IsArray)
-                                    value = new[,] { { value } };
-                                grid.ReleaseLock();
+                                object value;
+                                try
+                                {
+                                    value = worksheet.UsedRange.Value;
+                                    if (!value.GetType().IsArray)
+                                        value = new[,] { { value } };
+                                }
+                                finally
+                                {
+                                    grid.ReleaseLock();
+                                }
                                 object[,] ary = (object[,]) value;
 
                                 DataFrame frame = new DataFrame();

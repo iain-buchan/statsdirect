@@ -67,18 +67,20 @@ namespace StatsDirect.UI
 
             IList<PaneAndPosition> panesAndPositions;
             string newName;
-            Pane defaultSelection;
+            Pane defaultSelection = null;
             switch (outputType)
             {
                 case OutputType.Frame:
                     panesAndPositions = SDApplication.SoleInstance.AvailableFramePanesAndPositions();
                     newName = "New workbook";
-                    defaultSelection = SDApplication.SoleInstance.ActiveGrid.Window.SelectedPane;
+                    if (null != SDApplication.SoleInstance.ActiveGrid)
+                        defaultSelection = SDApplication.SoleInstance.ActiveGrid.Window.SelectedPane;
                     break;
                 case OutputType.Report:
                     panesAndPositions = SDApplication.SoleInstance.AvailableReportPanesAndPositions();
                     newName = "New report";
-                    defaultSelection = SDApplication.SoleInstance.MostRecentlySelectedReport.Pane;
+                    if (null != SDApplication.SoleInstance.MostRecentlySelectedReport)
+                        defaultSelection = SDApplication.SoleInstance.MostRecentlySelectedReport.Pane;
                     rdoAfterSelection.Visible = false;
                     rdoBeforeSelection.Visible = false;
                     rdoFirstColumn.Visible = false;

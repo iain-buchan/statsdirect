@@ -27,9 +27,15 @@ namespace StatsDirect.UI
             InitializeComponent();
             SDApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
             workbookView.GetLock();
-            workbookView.ActiveWorkbookSet.DefaultFontName = "Calibri";
-            workbookView.ActiveWorkbookSet.DefaultFontSize = 11;
-            workbookView.ReleaseLock();
+            try
+            {
+                workbookView.ActiveWorkbookSet.DefaultFontName = "Calibri";
+                workbookView.ActiveWorkbookSet.DefaultFontSize = 11;
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         private void frmSpreadsheetGear_FormClosing(object sender, FormClosingEventArgs e)
@@ -72,10 +78,16 @@ namespace StatsDirect.UI
             }
             // Known path, overwrite
             workbookView.GetLock();
-            workbookView.ActiveWorkbook.Save();
-            workbookView.ReleaseLock();
-            dirty = false;
-            return true;
+            try
+            {
+                workbookView.ActiveWorkbook.Save();
+                dirty = false;
+                return true;
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         internal override void ClearBatchMode()
@@ -112,11 +124,17 @@ namespace StatsDirect.UI
             string extension = System.IO.Path.GetExtension(Path).ToLower();
             FileFormat format = ".xlsx".Equals(extension) ? FileFormat.OpenXMLWorkbook : FileFormat.Excel8;
             workbookView.GetLock();
-            workbookView.ActiveWorkbook.SaveAs(path, format);
-            workbookView.ReleaseLock();
-            dirty = false;
-            SDApplication.SoleInstance.NoteRecentFile(path);
-            return true;
+            try
+            {
+                workbookView.ActiveWorkbook.SaveAs(path, format);
+                dirty = false;
+                SDApplication.SoleInstance.NoteRecentFile(path);
+                return true;
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         public override bool OpenFile(string Filename)
@@ -124,8 +142,14 @@ namespace StatsDirect.UI
             if (null != workbookView.ActiveWorkbook)
             {
                 workbookView.GetLock();
-                workbookView.ActiveWorkbook.Close();
-                workbookView.ReleaseLock();
+                try
+                {
+                    workbookView.ActiveWorkbook.Close();
+                }
+                finally
+                {
+                    workbookView.ReleaseLock();
+                }
             }
             workbookView.GetLock();
             IWorkbook wb;
@@ -153,13 +177,19 @@ namespace StatsDirect.UI
         object[,] IGrid.GetValues(int top, int left, int bottom, int right)
         {
             workbookView.GetLock();
-            object val = workbookView.ActiveWorksheet.Cells[top, left, bottom, right].Value;
-            workbookView.ReleaseLock();
-            if (null != val && val.GetType().IsArray)
+            try
             {
-                return (object[,])val;
+                object val = workbookView.ActiveWorksheet.Cells[top, left, bottom, right].Value;
+                if (null != val && val.GetType().IsArray)
+                {
+                    return (object[,])val;
+                }
+                return new[,] { { val } };
             }
-            return new[,] { { val } };
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         string IGrid.ActiveWorksheetName
@@ -167,9 +197,15 @@ namespace StatsDirect.UI
             get
             {
                 workbookView.GetLock();
-                string name = workbookView.ActiveWorksheet.Name;
-                workbookView.ReleaseLock();
-                return name;
+                try
+                {
+                    string name = workbookView.ActiveWorksheet.Name;
+                    return name;
+                }
+                finally
+                {
+                    workbookView.ReleaseLock();
+                }
             }
         }
 
@@ -178,9 +214,14 @@ namespace StatsDirect.UI
             get
             {
                 workbookView.GetLock();
-                string p = workbookView.ActiveWorkbook.FullName;
-                workbookView.ReleaseLock();
-                return p;
+                try
+                {
+                    return workbookView.ActiveWorkbook.FullName;
+                }
+                finally
+                {
+                    workbookView.ReleaseLock();
+                }
             }
         }
 
@@ -189,8 +230,14 @@ namespace StatsDirect.UI
             int RowsMinusOne = values.GetUpperBound(0) - values.GetLowerBound(0);
             int ColsMinusOne = values.GetUpperBound(1) - values.GetLowerBound(1);
             workbookView.GetLock();
-            workbookView.ActiveWorksheet.Cells[top, left, top + RowsMinusOne, left + ColsMinusOne].Value = values;
-            workbookView.ReleaseLock();
+            try
+            {
+                workbookView.ActiveWorksheet.Cells[top, left, top + RowsMinusOne, left + ColsMinusOne].Value = values;
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
             dirty = true;
         }
 
@@ -198,14 +245,19 @@ namespace StatsDirect.UI
         {
             // Set the active worksheet
             workbookView.ActiveWorkbookSet.GetLock();
-            string sheetName = worksheetOrigin.WorksheetName;
-            IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
-            bool succeeded = (null != worksheet);
-            if (succeeded)
+            try
+            {
+                string sheetName = worksheetOrigin.WorksheetName;
+                IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
+                bool succeeded = (null != worksheet);
+                if (!succeeded)
+                    throw new Exception("Cannot refill variable as the worksheet \"" + worksheetOrigin.WorksheetName + "\" in workbook \"" + worksheetOrigin.WorkbookPath + "\" no longer exists.");
                 workbookView.ActiveSheet = worksheet;
-            workbookView.ActiveWorkbookSet.ReleaseLock();
-            if (!succeeded)
-                throw new Exception("Cannot refill variable as the worksheet \"" + worksheetOrigin.WorksheetName + "\" in workbook \"" + worksheetOrigin.WorkbookPath + "\" no longer exists.");
+            }
+            finally
+            {
+                workbookView.ActiveWorkbookSet.ReleaseLock();
+            }
 
             CellColumnSelection cellColumnSelection = new CellColumnSelection
                                                           {
@@ -441,15 +493,18 @@ namespace StatsDirect.UI
         {
             get
             {
+                bool isLocked = false;
                 try
                 {
                     workbookView.GetLock();
+                    isLocked = true;
                     IRange rawRange = workbookView.ActiveWorksheet.UsedRange;
                     return IRangeToArea(this, rawRange);
                 }
                 finally
                 {
-                    workbookView.ReleaseLock();
+                    if (isLocked)
+                        workbookView.ReleaseLock();
                 }
             }
         }
@@ -494,8 +549,14 @@ namespace StatsDirect.UI
         public void ClearSelection()
         {
             workbookView.GetLock();
-            workbookView.ActiveCell.Select();
-            workbookView.ReleaseLock();
+            try
+            {
+                workbookView.ActiveCell.Select();
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         #endregion
@@ -746,19 +807,20 @@ namespace StatsDirect.UI
                 {
                     SelNumWarn(minimumColumns, maximumColumns, sel.TotalColumns, msg_ti);
                 }
+                string fullSelectionMessage = selectionMessage;
                 if (minimumColumns == maximumColumns)
                 {
-                    selectionMessage += " (" + minimumColumns.ToString() + " column" + (minimumColumns > 1 ? "s" : "") + ")";
+                    fullSelectionMessage += " (" + minimumColumns.ToString() + " column" + (minimumColumns > 1 ? "s" : "") + ")";
                 }
                 else
                 {
-                    selectionMessage += " (Min " + minimumColumns.ToString() + ": Max " + maximumColumns.ToString() + ")";
+                    fullSelectionMessage += " (Min " + minimumColumns.ToString() + ": Max " + maximumColumns.ToString() + ")";
                 }
                 SDApplication.SoleInstance.MainWindow.CanSelectMultipleRows = maximumColumns > 1;
                 SDApplication.SoleInstance.MainWindow.CanSelectGroupMethod = askGid;
                 if (askGid)
                     SDApplication.SoleInstance.MainWindow.GroupsByIdentifier = SDApplication.SoleInstance.Preferences.GIDV;
-                if (!SDApplication.SoleInstance.MainWindow.SelectCells(selectionMessage, cancelButtonLabel, out wasPivoted))
+                if (!SDApplication.SoleInstance.MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out wasPivoted))
                 {
                     // The user either cancelled or pivoted
                     userCancelled = !wasPivoted;
@@ -1840,19 +1902,29 @@ namespace StatsDirect.UI
         double GetCellValue(int Row, int Column)
         {
             workbookView.GetLock();
-            object val = workbookView.ActiveWorksheet.Cells[Row, Column].Value;
-            workbookView.ReleaseLock();
-            return ToCellValue(val);
+            try
+            {
+                object val = workbookView.ActiveWorksheet.Cells[Row, Column].Value;
+                return ToCellValue(val);
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         string GetCellText(int Row, int Column)
         {
             workbookView.GetLock();
-            object val = workbookView.ActiveWorksheet.Cells[Row, Column].Value;
-            workbookView.ReleaseLock();
-            if (null == val)
-                return "";
-            return val.ToString();
+            try
+            {
+                object val = workbookView.ActiveWorksheet.Cells[Row, Column].Value;
+                return null == val ? "" : val.ToString();
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         /// <summary>
@@ -1864,14 +1936,22 @@ namespace StatsDirect.UI
         /// <returns></returns>
         object[,] GetCellObjects(int column, int firstRow, int lastRow)
         {
+            if (lastRow < firstRow)
+                return new object[0,0];
             workbookView.GetLock();
-            object val = workbookView.ActiveWorksheet.Cells[firstRow, column, lastRow, column].Value;
-            workbookView.ReleaseLock();
-            if (null != val && val.GetType().IsArray)
+            try
             {
-                return (object[,])val;
+                object val = workbookView.ActiveWorksheet.Cells[firstRow, column, lastRow, column].Value;
+                if (null != val && val.GetType().IsArray)
+                {
+                    return (object[,])val;
+                }
+                return new[,] { { val } };
             }
-            return new[,] { { val } };
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         /// <summary>
@@ -1885,13 +1965,19 @@ namespace StatsDirect.UI
         {
             string[] result = new string[LastRow - FirstRow + 1];
             workbookView.GetLock();
-            for (int row = FirstRow; row <= LastRow; row++)
+            try
             {
-                string formula = workbookView.ActiveWorksheet.Cells[row, Column].Formula;
-                result[row - FirstRow] = formula;
+                for (int row = FirstRow; row <= LastRow; row++)
+                {
+                    string formula = workbookView.ActiveWorksheet.Cells[row, Column].Formula;
+                    result[row - FirstRow] = formula;
+                }
+                return result;
             }
-            workbookView.ReleaseLock();
-            return result;
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         double[] GetCellValues(int column, int firstRow, int lastRow)
@@ -2182,45 +2268,44 @@ namespace StatsDirect.UI
                             }
                         }
                         ITemplateHost host = SDApplication.SoleInstance;
-                        ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter
-                                                                  {CanDefault = true, Name = "ci"};
+                        ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter {CanDefault = true, Name = "ci"};
                         ParameterBag filledCi = host.FillParameter(new TemplateProcessor(host), ciParam, new ParameterBag(), false);
                         GAMMA = filledCi["ci"].AsDouble;
                         yrep = maxreps > 1;
 
                         // If we get here, the operation acquired all its parameters successfully
                         Builtins.GroupedCovarianceData gcd = new Builtins.GroupedCovarianceData
-                                                                 {
-                                                                     a = a,
-                                                                     b = b,
-                                                                     bnam = bnam,
-                                                                     cx = cx,
-                                                                     GAMMA = GAMMA,
-                                                                     k = k,
-                                                                     maxr = maxr,
-                                                                     maxreps = maxreps,
-                                                                     minMax = minMax,
-                                                                     nxi = nxi,
-                                                                     ny = ny,
-                                                                     rssx = rssx,
-                                                                     xlab = xlab,
-                                                                     xmean = xmean,
-                                                                     xt = xt,
-                                                                     y = y,
-                                                                     ymean = ymean
-                                                                 };
+                        {
+                            a = a,
+                            b = b,
+                            bnam = bnam,
+                            cx = cx,
+                            GAMMA = GAMMA,
+                            k = k,
+                            maxr = maxr,
+                            maxreps = maxreps,
+                            minMax = minMax,
+                            nxi = nxi,
+                            ny = ny,
+                            rssx = rssx,
+                            xlab = xlab,
+                            xmean = xmean,
+                            xt = xt,
+                            y = y,
+                            ymean = ymean
+                        };
                         return gcd;
                     }
                 }
                 else
                 {
                     minMax = new Builtins.MinMax
-                                 {
-                                     MinX = Double.MaxValue,
-                                     MaxX = Double.MinValue,
-                                     MinY = Double.MaxValue,
-                                     MaxY = Double.MinValue
-                                 };
+                    {
+                        MinX = Double.MaxValue,
+                        MaxX = Double.MinValue,
+                        MinY = Double.MaxValue,
+                        MaxY = Double.MinValue
+                    };
                     bool cancelled;
                     DataFrame predictorsFrame = GetCellArray(DataAcquisitionMode.NumericSkipMissing, 2, 200, "Select data for PREDICTOR (x axis) SERIES", null, true, false, out cancelled, out wasPivoted);
                     if (cancelled)

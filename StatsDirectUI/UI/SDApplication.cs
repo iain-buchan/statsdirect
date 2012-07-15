@@ -419,7 +419,9 @@ namespace StatsDirect.UI
         internal IList<PaneAndPosition> AvailableFramePanesAndPositions()
         {
             // PaneAndBoolean mostRecent = MostRecentlySelectedGrid;
-            Pane mostRecentPane = ActiveGrid.Window.SelectedPane;
+            Pane mostRecentPane = null;
+            if (null != ActiveGrid)
+                mostRecentPane = ActiveGrid.Window.SelectedPane;
             IList<PaneAndPosition> availableWindows = new List<PaneAndPosition>();
             foreach (Pane pane in AvailableFramePanes())
             {

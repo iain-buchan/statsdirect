@@ -448,7 +448,7 @@ namespace StatsDirect.Builtins
             { 
                 x[ i ] = 1.0; 
             } 
-            indef[ 1 ] = nCol;
+            indef[ 1 ] = 3;
             igrp = new int[nobs + 1 /* for VB to C# conversion */ ];
             ccase = new double[nobs + 1 /* for VB to C# conversion */, 6 + 1 /* for VB to C# conversion */];
             coef = new double[ldcoef + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
