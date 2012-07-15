@@ -33,7 +33,7 @@
         <integer>
           <name>seed</name>
           <prompt>Seed for random number generator</prompt>
-          <default-value>=Base.defaultseed()</default-value>
+          <default-value>=Base.DefaultSeed()</default-value>
         </integer>
       </parameters>
     </settings>

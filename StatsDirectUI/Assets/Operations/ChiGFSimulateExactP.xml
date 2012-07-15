@@ -17,7 +17,7 @@
         <integer>
           <name>seed</name>
           <prompt>Seed</prompt>
-          <default-value>=Base.defaultseed()</default-value>
+          <default-value>=Base.DefaultSeed()</default-value>
           <force-default>true</force-default>
           <must-request>true</must-request>
         </integer>
