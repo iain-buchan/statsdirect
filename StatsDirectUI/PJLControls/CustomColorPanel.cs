@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace PJLControls
+namespace StatsDirect.PJLControls
 {
 	/// <summary>
 	/// <B>Not implemented.</B><br></br><br></br>
@@ -10,11 +10,6 @@ namespace PJLControls
 	/// </summary>
 	public class CustomColorPanel : UserControl
 	{
-		/// <summary> 
-		/// Required designer variable.
-		/// </summary>
-		private Container components;
-
 		private BorderStyle borderStyle = BorderStyle.FixedSingle;
 
 	    private readonly Bitmap imgColors = new Bitmap(256, 256);
@@ -46,8 +41,6 @@ namespace PJLControls
 			{
                 if (null != imgColors)
                     imgColors.Dispose();
-				if(components != null)
-					components.Dispose();
 			}
 			base.Dispose( disposing );
 		}
@@ -119,19 +112,20 @@ namespace PJLControls
 
 			if( Enabled )
 			{
-				Pen p = new Pen(Color.Gray);
+				using (Pen p = new Pen(Color.Gray))
+				{
 
-				const int offset = 5;
+				    const int offset = 5;
 
-				e.Graphics.DrawLine( p, x_val, 0, x_val, y_val-offset );
-				e.Graphics.DrawLine( p, x_val, y_val+offset, x_val, 255 );
+				    e.Graphics.DrawLine(p, x_val, 0, x_val, y_val - offset);
+				    e.Graphics.DrawLine(p, x_val, y_val + offset, x_val, 255);
 
-				e.Graphics.DrawLine( p, 0, y_val, x_val-offset, y_val );
-				e.Graphics.DrawLine( p, x_val+offset, y_val, 255, y_val );
+				    e.Graphics.DrawLine(p, 0, y_val, x_val - offset, y_val);
+				    e.Graphics.DrawLine(p, x_val + offset, y_val, 255, y_val);
 
-				e.Graphics.DrawRectangle( p, x_val-offset, y_val-offset, 2*offset, 2*offset );
+				    e.Graphics.DrawRectangle(p, x_val - offset, y_val - offset, 2 * offset, 2 * offset);
 
-				p.Dispose();
+				}
 			}
 
 			base.OnPaint(e);

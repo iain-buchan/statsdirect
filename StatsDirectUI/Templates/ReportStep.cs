@@ -243,10 +243,12 @@ namespace StatsDirect.Templates
             {
                 // Only allow read permission to the templates.  If the user tries something sneaky like a ".." in name, this should fail the read.
                 new FileIOPermission(FileIOPermissionAccess.Read, TEMPLATE_PATH).Assert();
-                TextReader tr = new StreamReader(path, Encoding.ASCII);
-                string rtf = tr.ReadToEnd();
-                tr.Close();
-                return rtf;
+                using (TextReader tr = new StreamReader(path, Encoding.ASCII))
+                {
+                    string rtf = tr.ReadToEnd();
+                    tr.Close();
+                    return rtf;
+                }
             }
             finally
             {

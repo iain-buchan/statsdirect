@@ -1,6 +1,6 @@
 using System;
 
-namespace PJLControls
+namespace StatsDirect.PJLControls
 {
 	/// <summary>
 	/// Utility class.

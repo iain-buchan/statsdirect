@@ -39,34 +39,35 @@ namespace StatsDirect.Builtins
             Debug.Assert(null != assemblyPath);
             compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.exe"));
             compilerParameters.GenerateInMemory = true;
-            CodeDomProvider codeProvider = new Microsoft.CSharp.CSharpCodeProvider();
-            CompilerResults compilerResults = codeProvider.CompileAssemblyFromSource(compilerParameters, cSharpFunction);
-            codeProvider.Dispose();
-            if (compilerResults.Errors.HasErrors)
+            using (CodeDomProvider codeProvider = new Microsoft.CSharp.CSharpCodeProvider())
             {
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("Errors in compilation:");
-                foreach (CompilerError error in compilerResults.Errors)
+                CompilerResults compilerResults = codeProvider.CompileAssemblyFromSource(compilerParameters, cSharpFunction);
+                if (compilerResults.Errors.HasErrors)
                 {
-                    sb.Append("line ");
-                    sb.Append(error.Line);
-                    sb.Append(": ");
-                    sb.Append(error.IsWarning ? "warning " : "error ");
-                    sb.Append(error.ErrorNumber);
-                    sb.Append(": ");
-                    sb.AppendLine(error.ErrorText);
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine("Errors in compilation:");
+                    foreach (CompilerError error in compilerResults.Errors)
+                    {
+                        sb.Append("line ");
+                        sb.Append(error.Line);
+                        sb.Append(": ");
+                        sb.Append(error.IsWarning ? "warning " : "error ");
+                        sb.Append(error.ErrorNumber);
+                        sb.Append(": ");
+                        sb.AppendLine(error.ErrorText);
+                    }
+                    compilerResults.TempFiles.Delete();
+                    throw new Exception("Couldn't translate your expression to valid C# code:" + Environment.NewLine + sb.ToString());
                 }
+                // No compile errors - save and prepare to run it!
+                Assembly assembly = compilerResults.CompiledAssembly;
+                instance = assembly.CreateInstance(typeName);
+                Debug.Assert(null != instance);
+                Type type = instance.GetType();
+                methodInfo = type.GetMethod(methodName);
                 compilerResults.TempFiles.Delete();
-                throw new Exception("Couldn't translate your expression to valid C# code:" + Environment.NewLine + sb.ToString());
+                // By now, compiledScript is non-null or an exception has been thrown
             }
-            // No compile errors - save and prepare to run it!
-            Assembly assembly = compilerResults.CompiledAssembly;
-            instance = assembly.CreateInstance(typeName);
-            Debug.Assert(null != instance);
-            Type type = instance.GetType();
-            methodInfo = type.GetMethod(methodName);
-            compilerResults.TempFiles.Delete();
-            // By now, compiledScript is non-null or an exception has been thrown
         }
 
         public double Evaluate(double[] values)

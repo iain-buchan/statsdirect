@@ -358,22 +358,20 @@ namespace StatsDirect.Builtins
                                        DataMinY = gcd.minMax.MinY,
                                        DataMaxY = gcd.minMax.MaxY
                                    };
-            System.IO.Stream metaStream = new System.IO.MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            ch.PlotXYR( xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam ); 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            outputParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            
+            using (System.IO.MemoryStream metaStream = new System.IO.MemoryStream())
+            {
+                ch.StartMetafile(metaStream);
+                ch.PlotXYR(xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam);
+                ch.EndMetafile();
+                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+            }
+
             return new StepResult( StepSuccess.Success, outputParameters ); 
         } 
         
         
         public static StepResult RptConditionalLogisticRegression( ITemplateHost host, ParameterBag parameters ) 
         {
-            double dev = 0;
-            double devx = 0;
-
             const string capti = "Conditional logistic regression"; 
             
             double GAMMA = parameters[ "gamma" ].AsDouble; 
@@ -481,13 +479,15 @@ namespace StatsDirect.Builtins
             }
             int iter;
             int ifault;
-            clogit( rows, 1, strata, z_dum, rows, isz_dum, 1, ic, isi, devx, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault );
+            double devx;
+            clogit(rows, 1, strata, z_dum, rows, isz_dum, 1, ic, isi, out devx, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault);
 
             for (int i=1; i <= cols; i++ ) 
             { 
                 isz[ i ] = i; 
-            } 
-            clogit( rows, cols, strata, z, rows, isz, cols, ic, isi, dev, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault ); 
+            }
+            double dev;
+            clogit(rows, cols, strata, z, rows, isz, cols, ic, isi, out dev, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault); 
             
             double lrx2 = Math.Abs( devx - dev ); 
             
@@ -618,7 +618,7 @@ namespace StatsDirect.Builtins
         ///  <param name="iter"></param>
         ///  <param name="ifault"></param>
         ///  <remarks></remarks>
-        private static void clogit( int n, int m, int ns, double[,] z, int ldz, int[] isz, int ip, int[] ic, int[] isi, double dev, double[] b, double[] se, double[] sc, double[] cov, int[] NCA, int[] nct, double tol, int maxit, out int iter, out int ifault )
+        private static void clogit( int n, int m, int ns, double[,] z, int ldz, int[] isz, int ip, int[] ic, int[] isi, out double dev, double[] b, double[] se, double[] sc, double[] cov, int[] NCA, int[] nct, double tol, int maxit, out int iter, out int ifault )
         {
             int k; // Used in many ways through this function; this should be optimised, but not trivial to do so
             // int nrec = 1; 
@@ -627,6 +627,7 @@ namespace StatsDirect.Builtins
             
             ifault = 1;
             iter = 0;
+            dev = Constant.MISSING;
 
             if (m < 1 | n < 2 | ns < 1 | ip < 1 | ldz < n)
             {
@@ -792,7 +793,7 @@ namespace StatsDirect.Builtins
                     wz[ i, j ] = wk[ i + ( j - 1 ) * ip ]; 
                 } 
             } 
-            clmain2( nobs, maxobs, ns, wz, NCA, nct, ip, dev, b, sc, cov, maxit, tol, out iter, ref ifault ); 
+            clmain2( nobs, maxobs, ns, wz, NCA, nct, ip, out dev, b, sc, cov, maxit, tol, out iter, ref ifault ); 
             
             // dev = -2.0 * dev; 
             k = 0; 
@@ -812,7 +813,7 @@ namespace StatsDirect.Builtins
         } 
         
         
-        private static void clmain2( int nobs, int maxobs, int ns, double[,] z, int[] NCA, int[] nct, int ip, double dlik, double[] b, double[] sc, double[] cov, int maxit, double tol, out int iter, ref int ifault ) 
+        private static void clmain2( int nobs, int maxobs, int ns, double[,] z, int[] NCA, int[] nct, int ip, out double dlik, double[] b, double[] sc, double[] cov, int maxit, double tol, out int iter, ref int ifault ) 
         { 
             
             //      based on applied statistics algorithm as 196 (logcch)

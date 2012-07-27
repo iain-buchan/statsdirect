@@ -53,10 +53,9 @@
     <Setting Name="ToolsNames" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;string&gt;Stats calculator&lt;/string&gt;
+  &lt;string&gt;Calculator&lt;/string&gt;
   &lt;string&gt;Notepad&lt;/string&gt;
   &lt;string&gt;Wordpad&lt;/string&gt;
-  &lt;string&gt;Windows Calculator&lt;/string&gt;
 &lt;/ArrayOfString&gt;</Value>
     </Setting>
     <Setting Name="ToolsPrograms" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Collections.Specialized.StringCollection" Scope="User">
@@ -65,14 +64,13 @@
   &lt;string&gt;%STATSDIRECT%\StatsDirect.exe -calculator&lt;/string&gt;
   &lt;string&gt;notepad.exe&lt;/string&gt;
   &lt;string&gt;wordpad.exe&lt;/string&gt;
-  &lt;string&gt;calc.exe&lt;/string&gt;
 &lt;/ArrayOfString&gt;</Value>
     </Setting>
     <Setting Name="DataDirectory" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Data</Value>
     </Setting>
     <Setting Name="DefaultRecentlyUsedFile" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">test.xls</Value>
+      <Value Profile="(Default)">test.xlsx</Value>
     </Setting>
     <Setting Name="ShouldKeepData" Provider="StatsDirect.UI.PortableSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

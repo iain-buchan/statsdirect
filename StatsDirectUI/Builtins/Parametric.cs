@@ -729,16 +729,17 @@ namespace StatsDirect.Builtins
             Array.Copy( x, 1, qx0, 0, qx0.Length ); 
             cd.XSeries.Add( new DoubleSeries( qx0, v0.Title ) );
 
-            ChartRenderer ch = new ChartRenderer( cd ); 
-            Stream metaStream = new MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            ch.Plot_Normal( host, qx0 ); 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            ParameterBag chartParameters = new ParameterBag(); 
-            chartList.Add( chartParameters ); 
-            chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            
+            ChartRenderer ch = new ChartRenderer( cd );
+            using (MemoryStream metaStream = new MemoryStream())
+            {
+                ch.StartMetafile(metaStream);
+                ch.Plot_Normal(host, qx0);
+                ch.EndMetafile();
+                ParameterBag chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+            }
+
             return new StepResult( StepSuccess.Success, outputParameters ); 
         }
 
@@ -1516,15 +1517,16 @@ namespace StatsDirect.Builtins
                     } 
                 }
 
-                ChartRenderer ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                Stream metaStream = new MemoryStream(); 
-                ch.StartMetafile( metaStream ); 
-                ch.PlotTies( host, x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean ); 
-                ch.EndMetafile(); 
-                metaStream.Position = 0; 
-                ParameterBag chartParameters = new ParameterBag(); 
-                chartList.Add( chartParameters ); 
-                chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
+                ChartRenderer ch = new ChartRenderer( ChartDefinition.Empty() );
+                using (MemoryStream metaStream = new MemoryStream())
+                {
+                    ch.StartMetafile(metaStream);
+                    ch.PlotTies(host, x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean);
+                    ch.EndMetafile();
+                    ParameterBag chartParameters = new ParameterBag();
+                    chartList.Add(chartParameters);
+                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
             } 
             else 
             { 

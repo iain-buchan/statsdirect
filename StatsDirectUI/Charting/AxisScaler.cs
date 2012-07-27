@@ -300,7 +300,7 @@ namespace StatsDirect.Charting
             
             //  can replace with smallest relative spacing constant EPSNEG
             const double xmp = SDGlobalStub.EPSNEG; 
-            if ( zmn == zmx ) 
+            if (Math.Abs(zmn - zmx ) < 1e-10)
             { 
                 zmn = zmn - 1.0; 
                 zmx = zmx + 1.0; 

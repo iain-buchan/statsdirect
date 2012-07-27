@@ -1,7 +1,9 @@
-﻿using System.Xml.Serialization;
+﻿using System;
+using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
 {
+    [Serializable]
     public class HelpContext
     {
         [XmlAttribute(AttributeName="chm-id")]

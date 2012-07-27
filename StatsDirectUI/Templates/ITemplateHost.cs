@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using StatsDirect.Data;
 using StatsDirect.UI;
 using StatsDirect.Utilities;
@@ -53,19 +54,27 @@ namespace StatsDirect.Templates
         /// Given an image that (typically) holds a metafile, render it to RTF suitable for displaying in a Rich Text Control.
         /// TODO: Refactor this interface so that some alternative is passed across here - this feels like it's at the wrong level.
         /// </summary>
-        /// <param name="Image"></param>
+        /// <param name="image"></param>
         /// <returns></returns>
-        string ImageToRtf(Image Image);
+        string ImageToRtf(Image image);
+
+        /// <summary>
+        /// Given a stream that (typically) holds a metafile, render it to RTF suitable for displaying in a Rich Text Control.
+        /// TODO: Refactor this interface so that some alternative is passed across here - this feels like it's at the wrong level.
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        string ImageStreamToRtf(MemoryStream stream);
 
         /// <summary>
         /// Cause the report to be output in some way, for example by asking the user where to render it, then rendering it.
         /// </summary>
-        /// <param name="Rtf"></param>
+        /// <param name="rtf"></param>
         /// <param name="operation"></param>
         /// <param name="redoInformation">Any text that should be stored to assist in redoing the operation with new data at a later date</param>
         /// <param name="preferredOutputLocation">If non-null, indicates a possible host-controlled place to put the output</param>
         /// <returns>The host-assigned identity of the report that was used, or null if the report was not output at all.</returns>
-        object OutputReport(string Rtf, Operation operation, string redoInformation, object preferredOutputLocation);
+        object OutputReport(string rtf, Operation operation, string redoInformation, object preferredOutputLocation);
 
         /// <summary>
         /// The user (or similar decision-maker) should be allowed to amend whatever is deemed appropriate of the options.
@@ -79,7 +88,7 @@ namespace StatsDirect.Templates
         /// Return a clean, initialised instance of a script engine capable of running code in the specified language.
         /// </summary>
         /// <returns></returns>
-        IScriptEngine GetScriptEngine(string Language);
+        IScriptEngine GetScriptEngine(string language);
 
         /// <summary>
         /// Show/log an error to the user.

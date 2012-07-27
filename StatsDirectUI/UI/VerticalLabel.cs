@@ -1,6 +1,7 @@
 ﻿// From http://www.codeproject.com/KB/miscctrl/Vertical_Label_Control.aspx
 using System.ComponentModel;
 using System.Drawing;
+using System.Security.Permissions;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -57,42 +58,36 @@ namespace StatsDirect.UI
         protected override void OnPaint(PaintEventArgs e)
         {
             Color controlBackColor = BackColor;
-            Pen labelBorderPen;
-            SolidBrush labelBackColorBrush;
+            using (Pen labelBorderPen = new Pen(_transparentBG ? Color.Empty : controlBackColor, 0))
+            {
+                using (SolidBrush labelBackColorBrush = new SolidBrush(_transparentBG ? Color.Empty : controlBackColor))
+                {
+                    using (SolidBrush labelForeColorBrush = new SolidBrush(base.ForeColor))
+                    {
+                        base.OnPaint(e);
+                        float vlblControlWidth = Size.Width;
+                        float vlblControlHeight = Size.Height;
+                        e.Graphics.DrawRectangle(labelBorderPen, 0, 0, vlblControlWidth, vlblControlHeight);
+                        e.Graphics.FillRectangle(labelBackColorBrush, 0, 0, vlblControlWidth, vlblControlHeight);
+                        e.Graphics.TextRenderingHint = _renderMode;
+                        e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
-            if (_transparentBG)
-            {
-                labelBorderPen = new Pen(Color.Empty, 0);
-                labelBackColorBrush = new SolidBrush(Color.Empty);
-            }
-            else
-            {
-                labelBorderPen = new Pen(controlBackColor, 0);
-                labelBackColorBrush = new SolidBrush(controlBackColor);
-            }
-
-            SolidBrush labelForeColorBrush = new SolidBrush(base.ForeColor);
-            base.OnPaint(e);
-            float vlblControlWidth = Size.Width;
-            float vlblControlHeight = Size.Height;
-            e.Graphics.DrawRectangle(labelBorderPen, 0, 0, vlblControlWidth, vlblControlHeight);
-            e.Graphics.FillRectangle(labelBackColorBrush, 0, 0, vlblControlWidth, vlblControlHeight);
-            e.Graphics.TextRenderingHint = _renderMode;
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-
-            if (TextDrawMode == VerticalLabelDrawMode.BottomUp)
-            {
-                const float vlblTransformX = 0;
-                float vlblTransformY = vlblControlHeight;
-                e.Graphics.TranslateTransform(vlblTransformX, vlblTransformY);
-                e.Graphics.RotateTransform(270);
-                e.Graphics.DrawString(labelText, Font, labelForeColorBrush, 0, 0);
-            }
-            else
-            {
-                e.Graphics.TranslateTransform(vlblControlWidth, 0);
-                e.Graphics.RotateTransform(90);
-                e.Graphics.DrawString(labelText, Font, labelForeColorBrush, 0, 0, StringFormat.GenericTypographic);
+                        if (TextDrawMode == VerticalLabelDrawMode.BottomUp)
+                        {
+                            const float vlblTransformX = 0;
+                            float vlblTransformY = vlblControlHeight;
+                            e.Graphics.TranslateTransform(vlblTransformX, vlblTransformY);
+                            e.Graphics.RotateTransform(270);
+                            e.Graphics.DrawString(labelText, Font, labelForeColorBrush, 0, 0);
+                        }
+                        else
+                        {
+                            e.Graphics.TranslateTransform(vlblControlWidth, 0);
+                            e.Graphics.RotateTransform(90);
+                            e.Graphics.DrawString(labelText, Font, labelForeColorBrush, 0, 0, StringFormat.GenericTypographic);
+                        }
+                    }
+                }
             }
         }
         /// <summary>
@@ -100,6 +95,7 @@ namespace StatsDirect.UI
         /// </summary>
         protected override CreateParams CreateParams//v1.10 
         {
+            [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
             get
             {
                 CreateParams cp = base.CreateParams;

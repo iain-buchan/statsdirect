@@ -1,116 +1,118 @@
-using StatsDirect.Charting; 
-using StatsDirect.Data; 
-using StatsDirect.Numerics; 
-using StatsDirect.Templates; 
-using StatsDirect.Utilities; 
+using System.IO;
+using StatsDirect.Charting;
+using StatsDirect.Data;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 namespace StatsDirect.Builtins
 {
-    public class Regress  
-    { 
-        
-        [ Serializable ]
-        private class SimpleLinearRegressionContext  
-        { 
+    public class Regress
+    {
+
+        [Serializable]
+        private class SimpleLinearRegressionContext
+        {
             ///  <summary>
             ///  Y-axis intercept
             ///  </summary>
-            public double YInt; 
-            
-            public double Slope; 
-            
+            public double YInt;
+
+            public double Slope;
+
             ///  <remarks>1-based</remarks>
-            public double[] X; 
-            
+            public double[] X;
+
             ///  <remarks>1-based</remarks>
-            public double[] Y; 
-            public int DF; 
-            public double CIT; 
-            public double P0; 
-            public double SUMX; 
-            public double SSX; 
-            public double SSY; 
-            public double SSREG; 
-            public double MS; 
-            public double PERT; 
-            public double A; 
-            public double G; 
-            public int N; 
-        } 
-        
-        
+            public double[] Y;
+            public int DF;
+            public double CIT;
+            public double P0;
+            public double SUMX;
+            public double SSX;
+            public double SSY;
+            public double SSREG;
+            public double MS;
+            public double PERT;
+            public double A;
+            public double G;
+            public int N;
+        }
+
+
         ///  <summary>
         ///  The equivalent of the PASS_* variables in SD2, so PASS_X is X in this class
         ///  </summary>
         ///  <remarks></remarks>
-        private class MultipleLinearRegressionContext  
-        { 
-            public double[] ARG; 
-            public double[] B; 
-            public double[] COV; 
-            public double DEV; 
-            public double DEVX; 
-            public int DF; 
-            public int DFX; 
-            public bool DoC; 
-            public double[] DV; 
-            public int ERR; 
-            public double[] FV; 
-            public double[] H1; 
-            public double[,] H; 
-            public string[] Label; 
-            public double LLX; 
-            public int N; 
-            public string outcomeTitle; 
-            public int P; 
-            public double[] R; 
-            public double[,] R2; 
-            public int RANK; 
-            public double[] RV; 
-            public int[] RXI; 
-            
+        [Serializable]
+        private class MultipleLinearRegressionContext
+        {
+            public double[] ARG;
+            public double[] B;
+            public double[] COV;
+            public double DEV;
+            public double DEVX;
+            public int DF;
+            public int DFX;
+            public bool DoC;
+            public double[] DV;
+            public int ERR;
+            public double[] FV;
+            public double[] H1;
+            public double[,] H;
+            public string[] Label;
+            public double LLX;
+            public int N;
+            public string outcomeTitle;
+            public int P;
+            public double[] R;
+            public double[,] R2;
+            public int RANK;
+            public double[] RV;
+            public int[] RXI;
+
             ///  <summary>
             ///  Weights
             ///  </summary>
-            public double[] S; 
-            
-            public double[] SE; 
-            public double SSREG; 
-            public double SSY; 
-            public double[] SV; 
-            public double[] T; 
-            
+            public double[] S;
+
+            public double[] SE;
+            public double SSREG;
+            public double SSY;
+            public double[] SV;
+            public double[] T;
+
             ///  <remarks>1-based when used as predictor titles, 0-based when used for polynomial regression</remarks>
-            public string[] Titles; 
-            
-            public double TOL; 
-            public double[] V1; 
-            public double[,] V; 
-            public double[] VIF; 
-            public string warn; 
-            public bool WEIGHT; 
-            public string weightTitle; 
-            public double[] WT; 
-            public double[,] X; 
-            public double[] X1; 
-            public double[] Y; 
-        } 
-        
-        
-        private static SimpleLinearRegressionContext GetSimpleLinearRegressionContext( ParameterBag Parameters ) 
-        { 
-            if ( Parameters.ContainsKey( "context" ) ) 
-            { 
-                return ( ( SimpleLinearRegressionContext )( Parameters[ "context" ].Data ) ); 
-            } 
-            
-            DataFrame fy = Parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = Parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable;
+            public string[] Titles;
+
+            public double TOL;
+            public double[] V1;
+            public double[,] V;
+            public double[] VIF;
+            public string warn;
+            public bool WEIGHT;
+            public string weightTitle;
+            public double[] WT;
+            public double[,] X;
+            public double[] X1;
+            public double[] Y;
+        }
+
+
+        private static SimpleLinearRegressionContext GetSimpleLinearRegressionContext(ParameterBag Parameters)
+        {
+            if (Parameters.ContainsKey("context"))
+            {
+                return ((SimpleLinearRegressionContext)(Parameters["context"].Data));
+            }
+
+            DataFrame fy = Parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = Parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
             SimpleLinearRegressionContext context = new SimpleLinearRegressionContext
                                                         {
                                                             Y = new double[vy.Length + 1 /* for VB to C# conversion */],
@@ -118,489 +120,489 @@ namespace StatsDirect.Builtins
                                                         };
 
             Array.Copy(vy.Data, 0, context.Y, 1, vy.Length);
-            Array.Copy(vx.Data, 0, context.X, 1, vx.Length); 
-            return context; 
-        } 
-        
-        
-        private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext( ParameterBag Parameters )
-        {
-            if ( Parameters.ContainsKey( "context" ) ) 
-            { 
-                return ( ( MultipleLinearRegressionContext )( Parameters[ "context" ].Data ) ); 
-            }
-            throw new Exception( "Expected to find a context parameter and didn't" );
+            Array.Copy(vx.Data, 0, context.X, 1, vx.Length);
+            return context;
         }
 
 
-        public static StepResult rptInterpolateXY( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( Parameters ); 
-            DataFrame fy = Parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = Parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            double newx = Parameters[ "newx" ].AsDouble; 
-            double newy = newx * context.Slope + context.YInt; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "v1", vx.Title + " = " +  newx.ToString() ); 
-            outputParameters.AddOutput( "v2", vy.Title + " = " + Host.RoundU( newy ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptInterpolateYX( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( Parameters ); 
-            DataFrame fy = Parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = Parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            double newy = Parameters[ "newy" ].AsDouble; 
-            double newx = ( newy - context.YInt ) / context.Slope; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "v1", vy.Title + " = " +  newy.ToString() ); 
-            outputParameters.AddOutput( "v2", vx.Title + " = " + Host.RoundU( newx ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptRanv( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( parameters ); 
-            DataFrame fy = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "reg_sum", host.RoundU( context.SSREG ) ); 
-            outputParameters.AddOutput( "reg_df", "1" ); 
-            outputParameters.AddOutput( "reg_mean", host.RoundU( context.SSREG ) ); 
-            outputParameters.AddOutput( "res_sum", host.RoundU( context.SSY - context.SSREG ) ); 
-            double res_df = vy.Length - 2; 
-            outputParameters.AddOutput( "res_df",  res_df.ToString() ); 
-            outputParameters.AddOutput( "res_mean", host.RoundU( ( context.SSY - context.SSREG ) / res_df ) ); 
-            outputParameters.AddOutput( "tot_sum", host.RoundU( context.SSY ) ); 
-            double tot_df = vy.Length - 1; 
-            outputParameters.AddOutput( "tot_df",  tot_df.ToString() ); 
-            double vr = context.SSREG / ( ( context.SSY - context.SSREG ) / res_df ); 
-            outputParameters.AddOutput( "f", host.RoundU( vr ) ); 
-            double prob = PDF.fvalp( vr, 1.0, res_df ); 
-            outputParameters.AddOutput( "p", host.pval( prob ) ); 
-            outputParameters.AddOutput( "r", host.RoundU( context.SSREG / context.SSY ) ); 
-            outputParameters.AddOutput( "mse", host.RoundU( Math.Sqrt( ( context.SSY - context.SSREG ) / res_df ) ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptSimpleLinearRegression( ITemplateHost host, ParameterBag parameters ) 
+        private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext(ParameterBag Parameters)
         {
-            double P0; double cit; double sumx ; double ssx ; double ssy ; double SDX ; double ssreg ; double mnsqr ; double seest ; double r ; double perf ;
+            if (Parameters.ContainsKey("context"))
+            {
+                return ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            }
+            throw new Exception("Expected to find a context parameter and didn't");
+        }
 
-            DataFrame fy = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( parameters ); 
-            
-            double REGGAMMA = parameters[ "gamma" ].AsDouble; 
-            if ( REGGAMMA <= 0.0 ) 
-            { 
-                throw new Exception( "GAMMA must be greater than zero" ); 
-            } 
-            
-            int nx = context.X.Length - 1; 
-            x_lsm( out perf, out sumx, out ssx, out ssy, out SDX, out ssreg, out mnsqr, out r, out seest, context ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            int degf = nx - 2; 
-            MathDbl.civ( degf, out cit, REGGAMMA, out P0 ); 
-            outputParameters.AddOutput( "eq_y", vy.Title + " = " + host.RoundU( context.Slope ) ); 
-            string lnk = context.YInt < 0.0 ? " " : " + "; 
-            outputParameters.AddOutput( "eq_x", vx.Title + lnk + host.RoundU( context.YInt ) ); 
-            if ( perf != 1 ) 
-            { 
-                IList<ParameterBag> seList = new List<ParameterBag>(); 
-                outputParameters.AddOutput( "*se", seList ); 
-                ParameterBag seParameters = new ParameterBag(); 
-                seList.Add( seParameters ); 
-                double SEB = seest / ( SDX * Math.Sqrt( nx - 1 ) ); 
-                seParameters.AddOutput( "slope_err", host.RoundU( SEB ) ); 
-                seParameters.AddOutput( "se_pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 2 ) ); 
-                seParameters.AddOutput( "se_from", host.RoundU( context.Slope - ( cit * SEB ) ) ); 
-                seParameters.AddOutput( "se_to", host.RoundU( context.Slope + ( cit * SEB ) ) ); 
-                seParameters.AddOutput( "se_r", host.RoundU( r ) ); 
-                seParameters.AddOutput( "se_r2", host.RoundU( r * r ) ); 
-                if ( nx > 3 ) 
-                { 
-                    IList<ParameterBag> ciList = new List<ParameterBag>(); 
-                    seParameters.AddOutput( "*ci", ciList ); 
-                    ParameterBag ciParameters = new ParameterBag(); 
-                    ciList.Add( ciParameters );
-                    double GAMMA = 1.0 - ( P0 / 2.0 );
+
+        public static StepResult rptInterpolateXY(ITemplateHost Host, ParameterBag Parameters)
+        {
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
+            DataFrame fy = Parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = Parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+            double newx = Parameters["newx"].AsDouble;
+            double newy = newx * context.Slope + context.YInt;
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("v1", vx.Title + " = " + newx.ToString());
+            outputParameters.AddOutput("v2", vy.Title + " = " + Host.RoundU(newy));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptInterpolateYX(ITemplateHost Host, ParameterBag Parameters)
+        {
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
+            DataFrame fy = Parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = Parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+            double newy = Parameters["newy"].AsDouble;
+            double newx = (newy - context.YInt) / context.Slope;
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("v1", vy.Title + " = " + newy.ToString());
+            outputParameters.AddOutput("v2", vx.Title + " = " + Host.RoundU(newx));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptRanv(ITemplateHost host, ParameterBag parameters)
+        {
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("reg_sum", host.RoundU(context.SSREG));
+            outputParameters.AddOutput("reg_df", "1");
+            outputParameters.AddOutput("reg_mean", host.RoundU(context.SSREG));
+            outputParameters.AddOutput("res_sum", host.RoundU(context.SSY - context.SSREG));
+            double res_df = vy.Length - 2;
+            outputParameters.AddOutput("res_df", res_df.ToString());
+            outputParameters.AddOutput("res_mean", host.RoundU((context.SSY - context.SSREG) / res_df));
+            outputParameters.AddOutput("tot_sum", host.RoundU(context.SSY));
+            double tot_df = vy.Length - 1;
+            outputParameters.AddOutput("tot_df", tot_df.ToString());
+            double vr = context.SSREG / ((context.SSY - context.SSREG) / res_df);
+            outputParameters.AddOutput("f", host.RoundU(vr));
+            double prob = PDF.fvalp(vr, 1.0, res_df);
+            outputParameters.AddOutput("p", host.pval(prob));
+            outputParameters.AddOutput("r", host.RoundU(context.SSREG / context.SSY));
+            outputParameters.AddOutput("mse", host.RoundU(Math.Sqrt((context.SSY - context.SSREG) / res_df)));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptSimpleLinearRegression(ITemplateHost host, ParameterBag parameters)
+        {
+            double P0; double cit; double sumx; double ssx; double ssy; double SDX; double ssreg; double mnsqr; double seest; double r; double perf;
+
+            DataFrame fy = parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+
+            double REGGAMMA = parameters["gamma"].AsDouble;
+            if (REGGAMMA <= 0.0)
+            {
+                throw new Exception("GAMMA must be greater than zero");
+            }
+
+            int nx = context.X.Length - 1;
+            x_lsm(out perf, out sumx, out ssx, out ssy, out SDX, out ssreg, out mnsqr, out r, out seest, context);
+            ParameterBag outputParameters = new ParameterBag();
+            int degf = nx - 2;
+            MathDbl.civ(degf, out cit, REGGAMMA, out P0);
+            outputParameters.AddOutput("eq_y", vy.Title + " = " + host.RoundU(context.Slope));
+            string lnk = context.YInt < 0.0 ? " " : " + ";
+            outputParameters.AddOutput("eq_x", vx.Title + lnk + host.RoundU(context.YInt));
+            if (perf != 1)
+            {
+                IList<ParameterBag> seList = new List<ParameterBag>();
+                outputParameters.AddOutput("*se", seList);
+                ParameterBag seParameters = new ParameterBag();
+                seList.Add(seParameters);
+                double SEB = seest / (SDX * Math.Sqrt(nx - 1));
+                seParameters.AddOutput("slope_err", host.RoundU(SEB));
+                seParameters.AddOutput("se_pc", Formatting.XRound(100 * (1.0 - P0), 2));
+                seParameters.AddOutput("se_from", host.RoundU(context.Slope - (cit * SEB)));
+                seParameters.AddOutput("se_to", host.RoundU(context.Slope + (cit * SEB)));
+                seParameters.AddOutput("se_r", host.RoundU(r));
+                seParameters.AddOutput("se_r2", host.RoundU(r * r));
+                if (nx > 3)
+                {
+                    IList<ParameterBag> ciList = new List<ParameterBag>();
+                    seParameters.AddOutput("*ci", ciList);
+                    ParameterBag ciParameters = new ParameterBag();
+                    ciList.Add(ciParameters);
+                    double GAMMA = 1.0 - (P0 / 2.0);
                     int fault;
-                    double rcit = PDF.gauinv( GAMMA, out fault ); 
-                    double fz = 0.5 * Math.Log( ( 1.0 + r ) / ( 1.0 - r ) ); 
-                    double fz1 = fz - ( rcit / Math.Sqrt( Convert.ToDouble( nx - 3 ) ) ); 
-                    double fz2 = fz + ( rcit / Math.Sqrt( Convert.ToDouble( nx - 3 ) ) ); 
-                    double con1 = ( Math.Exp( 2.0 * fz1 ) - 1.0 ) / ( Math.Exp( 2.0 * fz1 ) + 1.0 ); 
-                    double con2 = ( Math.Exp( 2.0 * fz2 ) - 1.0 ) / ( Math.Exp( 2.0 * fz2 ) + 1.0 ); 
-                    ciParameters.AddOutput( "ci_pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 1 ) ); 
-                    ciParameters.AddOutput( "ci_from", host.RoundU( con1 ) ); 
-                    ciParameters.AddOutput( "ci_to", host.RoundU( con2 ) ); 
+                    double rcit = PDF.gauinv(GAMMA, out fault);
+                    double fz = 0.5 * Math.Log((1.0 + r) / (1.0 - r));
+                    double fz1 = fz - (rcit / Math.Sqrt(Convert.ToDouble(nx - 3)));
+                    double fz2 = fz + (rcit / Math.Sqrt(Convert.ToDouble(nx - 3)));
+                    double con1 = (Math.Exp(2.0 * fz1) - 1.0) / (Math.Exp(2.0 * fz1) + 1.0);
+                    double con2 = (Math.Exp(2.0 * fz2) - 1.0) / (Math.Exp(2.0 * fz2) + 1.0);
+                    ciParameters.AddOutput("ci_pc", Formatting.XRound(100 * (1.0 - P0), 1));
+                    ciParameters.AddOutput("ci_from", host.RoundU(con1));
+                    ciParameters.AddOutput("ci_to", host.RoundU(con2));
                     // double af = 1; 
-                    int df = nx - 2; 
-                    double st = r * Math.Sqrt( Math.Abs( Convert.ToDouble( df ) / ( 1.0 - ( r * r ) ) ) ); 
-                    ciParameters.AddOutput( "df",  df.ToString() ); 
-                    ciParameters.AddOutput( "tdf", host.RoundU( st ) ); 
-                    double P = PDF.tvalp( Math.Abs( st ), Convert.ToDouble( df ) ); 
-                    if ( P > 1.0 - P )
-                    { 
-                        P = 1.0 - P; 
-                    } 
-                    P = 2.0 * P; 
-                    ciParameters.AddOutput( "p", host.pval( P ) ); 
-                    ciParameters.AddOutput( "pwr", Formatting.pwr( Power.rpower( 0.0, r, Convert.ToDouble( nx ), P0 ), P0 ) ); 
-                    string x = "Correlation coefficient is "; 
-                    if ( P > 0.05 )
-                    { 
-                        x = x + "not "; 
-                    } 
-                    ciParameters.AddOutput( "sig", x + "significantly different from zero" ); 
-                } 
-                else 
-                { 
-                    seParameters.AddOutput( "*ci", null ); 
-                } 
-                outputParameters.AddOutput( "*notcalc", null ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "*se", null ); 
-                IList<ParameterBag> notcalcList = new List<ParameterBag>(); 
-                outputParameters.AddOutput( "*notcalc", notcalcList ); 
-                ParameterBag notcalcParameters = new ParameterBag(); 
-                notcalcList.Add( notcalcParameters ); 
-                notcalcParameters.AddOutput( "r", host.RoundU( r ) ); 
-            } 
-            
-            context.DF = degf; 
-            context.CIT = cit; 
-            context.P0 = P0; 
-            context.SUMX = sumx; 
-            context.SSX = ssx; 
-            context.SSY = ssy; 
-            context.SSREG = ssreg; 
-            context.MS = mnsqr; 
-            outputParameters.Add( "context", new FilledParameter( true, context ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult plotSimpleLinearRegression( ITemplateHost host, ParameterBag Parameters ) 
-        { 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( Parameters ); 
-            DataFrame fy = Parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = Parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "mdnValue", context.Slope ); 
-            outputParameters.AddOutput( "interceptValue", context.YInt ); 
-            outputParameters.AddOutput( "xtitle", vx.Title ); 
-            outputParameters.AddOutput( "ytitle", vy.Title ); 
-            outputParameters.AddOutput( "chartIsFullWidth", true ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult plotResidualsSimple( ITemplateHost host, ParameterBag Parameters ) 
-        { 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( Parameters ); 
-            DataFrame fy = Parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = Parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            
-            int nx = vx.Length; 
+                    int df = nx - 2;
+                    double st = r * Math.Sqrt(Math.Abs(Convert.ToDouble(df) / (1.0 - (r * r))));
+                    ciParameters.AddOutput("df", df.ToString());
+                    ciParameters.AddOutput("tdf", host.RoundU(st));
+                    double P = PDF.tvalp(Math.Abs(st), Convert.ToDouble(df));
+                    if (P > 1.0 - P)
+                    {
+                        P = 1.0 - P;
+                    }
+                    P = 2.0 * P;
+                    ciParameters.AddOutput("p", host.pval(P));
+                    ciParameters.AddOutput("pwr", Formatting.pwr(Power.rpower(0.0, r, Convert.ToDouble(nx), P0), P0));
+                    string x = "Correlation coefficient is ";
+                    if (P > 0.05)
+                    {
+                        x = x + "not ";
+                    }
+                    ciParameters.AddOutput("sig", x + "significantly different from zero");
+                }
+                else
+                {
+                    seParameters.AddOutput("*ci", null);
+                }
+                outputParameters.AddOutput("*notcalc", null);
+            }
+            else
+            {
+                outputParameters.AddOutput("*se", null);
+                IList<ParameterBag> notcalcList = new List<ParameterBag>();
+                outputParameters.AddOutput("*notcalc", notcalcList);
+                ParameterBag notcalcParameters = new ParameterBag();
+                notcalcList.Add(notcalcParameters);
+                notcalcParameters.AddOutput("r", host.RoundU(r));
+            }
+
+            context.DF = degf;
+            context.CIT = cit;
+            context.P0 = P0;
+            context.SUMX = sumx;
+            context.SSX = ssx;
+            context.SSY = ssy;
+            context.SSREG = ssreg;
+            context.MS = mnsqr;
+            outputParameters.Add("context", new FilledParameter(true, context));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult plotSimpleLinearRegression(ITemplateHost host, ParameterBag Parameters)
+        {
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
+            DataFrame fy = Parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = Parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("mdnValue", context.Slope);
+            outputParameters.AddOutput("interceptValue", context.YInt);
+            outputParameters.AddOutput("xtitle", vx.Title);
+            outputParameters.AddOutput("ytitle", vy.Title);
+            outputParameters.AddOutput("chartIsFullWidth", true);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult plotResidualsSimple(ITemplateHost host, ParameterBag Parameters)
+        {
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
+            DataFrame fy = Parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = Parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+
+            int nx = vx.Length;
             ParameterBag outputParameters = new ParameterBag();
             double[] z = new double[nx - 1 + 1 /* for VB to C# conversion */ ];
-            double[] r = new double[nx - 1 + 1 /* for VB to C# conversion */]; 
-            for ( int j=0; j <= nx - 1; j++ ) 
-            { 
-                z[ j ] = vx.Data[j] * context.Slope + context.YInt; 
-                r[ j ] = vy.Data[j] - z[ j ]; 
-            } 
-            ChartRenderer ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            System.Drawing.Image chImage = ch.PlotXYAndReturnImage( host, z, r, "Fitted " + vy.Title, "Residuals (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false ); 
-            outputParameters.AddOutput( "residualsVsY", host.ImageToRtf( chImage ) ); 
-            
-            for ( int j=0; j <= nx - 1; j++ ) 
-            { 
-                z[ j ] = vx.Data[j] * context.Slope + context.YInt; 
-                r[ j ] = vy.Data[j] - z[ j ]; 
-                z[ j ] = vx.Data[j]; 
-            } 
-            ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            chImage = ch.PlotXYAndReturnImage( host, z, r, "Predictor: " + vx.Title, "Residuals (Y - y fit)", "Residuals vs. Predictor [linear regression]", true, 0, false ); 
-            outputParameters.AddOutput( "residualsVsPredictor", host.ImageToRtf( chImage ) );
+            double[] r = new double[nx - 1 + 1 /* for VB to C# conversion */];
+            for (int j = 0; j <= nx - 1; j++)
+            {
+                z[j] = vx.Data[j] * context.Slope + context.YInt;
+                r[j] = vy.Data[j] - z[j];
+            }
+            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
+            outputParameters.AddOutput("residualsVsY", ch.PlotXYAndReturnRtf(host, z, r, "Fitted " + vy.Title, "Residuals (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false));
+
+            for (int j = 0; j <= nx - 1; j++)
+            {
+                z[j] = vx.Data[j] * context.Slope + context.YInt;
+                r[j] = vy.Data[j] - z[j];
+                z[j] = vx.Data[j];
+            }
+            ch = new ChartRenderer(ChartDefinition.Empty());
+            outputParameters.AddOutput("residualsVsPredictor", ch.PlotXYAndReturnRtf(host, z, r, "Predictor: " + vx.Title, "Residuals (Y - y fit)", "Residuals vs. Predictor [linear regression]", true, 0, false));
 
             double xf;
-            ExFortran.Rank( r, z, 0, nx, 0, out xf );
-            for ( int j=0; j <= nx - 1; j++ ) 
-            { 
+            ExFortran.Rank(r, z, 0, nx, 0, out xf);
+            for (int j = 0; j <= nx - 1; j++)
+            {
                 //  van der Waerden normal scores, Conover P 396
                 int ifault;
-                z[ j ] = PDF.gauinv( z[ j ] / ( Convert.ToDouble( nx ) + 1.0 ), out ifault ); 
-                if ( ifault != 0 )
-                { 
-                    z[ j ] = Constant.MISSING; 
-                } 
-            } 
-            ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            chImage = ch.PlotXYAndReturnImage( host, r, z, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals [linear regression]", false, 0, false ); 
-            outputParameters.AddOutput( "residualsNormalPlot", host.ImageToRtf( chImage ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult PlotSeCi( ITemplateHost host, ParameterBag parameters ) 
+                z[j] = PDF.gauinv(z[j] / (Convert.ToDouble(nx) + 1.0), out ifault);
+                if (ifault != 0)
+                {
+                    z[j] = Constant.MISSING;
+                }
+            }
+            ch = new ChartRenderer(ChartDefinition.Empty());
+            outputParameters.AddOutput("residualsNormalPlot", ch.PlotXYAndReturnRtf(host, r, z, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals [linear regression]", false, 0, false));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult PlotSeCi(ITemplateHost host, ParameterBag parameters)
         {
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( parameters ); 
-            DataFrame fy = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            
-            int nx = vy.Length; 
-            double REGGAMMA = parameters[ "reggamma" ].AsDouble; 
-            CalcRcia( context, nx, REGGAMMA ); 
-            
-            ChartDefinition cd = new ChartDefinition(); 
-            cd.AddYSeries( vy.Data, vy.Title ); 
-            cd.AddXSeries( vx.Data, vx.Title ); 
-            ChartRenderer ch = new ChartRenderer( cd ); 
-            System.IO.Stream metaStream = new System.IO.MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            
-            double maxpcon = double.MinValue; 
-            double minpcon = double.MaxValue; 
-            if ( context.PERT != 0 )
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+
+            int nx = vy.Length;
+            double REGGAMMA = parameters["reggamma"].AsDouble;
+            CalcRcia(context, nx, REGGAMMA);
+
+            ChartDefinition cd = new ChartDefinition();
+            cd.AddYSeries(vy.Data, vy.Title);
+            cd.AddXSeries(vx.Data, vx.Title);
+            ChartRenderer ch = new ChartRenderer(cd);
+            ParameterBag outputParameters = new ParameterBag();
+            using (MemoryStream metaStream = new MemoryStream())
             {
-                double calcx;
-                for ( calcx=ch.DataMinX; calcx <= ch.DataMaxX; calcx+=( ch.DataMaxX - ch.DataMinX ) / 20.0 ) 
-                { 
-                    double calcy = context.Slope * calcx + context.YInt; 
-                    double sey = Math.Sqrt( context.MS * ( 1.0 / Convert.ToDouble( nx ) + Math.Pow( ( calcx - ( context.SUMX / Convert.ToDouble( nx ) ) ), 2.0 ) / context.SSX ) ); 
-                    double pconu = calcy + ( sey * context.PERT ); 
-                    double pconl = calcy - ( sey * context.PERT ); 
-                    if ( pconu > maxpcon )
-                    { 
-                        maxpcon = pconu; 
-                    } 
-                    if ( pconl < minpcon )
-                    { 
-                        minpcon = pconl; 
-                    } 
+                ch.StartMetafile(metaStream);
+
+                double maxpcon = double.MinValue;
+                double minpcon = double.MaxValue;
+                if (context.PERT != 0)
+                {
+                    double calcx;
+                    for (calcx = ch.DataMinX; calcx <= ch.DataMaxX; calcx += (ch.DataMaxX - ch.DataMinX) / 20.0)
+                    {
+                        double calcy = context.Slope * calcx + context.YInt;
+                        double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX));
+                        double pconu = calcy + (sey * context.PERT);
+                        double pconl = calcy - (sey * context.PERT);
+                        if (pconu > maxpcon)
+                        {
+                            maxpcon = pconu;
+                        }
+                        if (pconl < minpcon)
+                        {
+                            minpcon = pconl;
+                        }
+                    }
                 }
+                if (maxpcon > ch.DataMaxY)
+                {
+                    ch.DataMaxY = maxpcon;
+                }
+                if (minpcon < ch.DataMinY)
+                {
+                    ch.DataMinY = minpcon;
+                }
+
+                ch.PlotLinearRegressionInternal(host, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YInt, true, vx.Title, vy.Title);
+                if (context.PERT != 0)
+                {
+                    ch.plot_pert(context.PERT, context.Slope, context.YInt, nx, context.MS, context.SUMX, context.SSX, true);
+                }
+                ch.EndMetafile();
+                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
             }
-            if ( maxpcon > ch.DataMaxY )
-            { 
-                ch.DataMaxY = maxpcon; 
-            } 
-            if ( minpcon < ch.DataMinY )
-            { 
-                ch.DataMinY = minpcon; 
-            } 
-            
-            ch.PlotLinearRegressionInternal( host, "SE and " + Formatting.XRound( ( 1.0 - context.P0 ) * 100, 1 ) + "% CI for regression estimate", context.Slope, context.YInt, true, vx.Title, vy.Title ); 
-            if ( context.PERT != 0 ) 
-            { 
-                ch.plot_pert( context.PERT, context.Slope, context.YInt, nx, context.MS, context.SUMX, context.SSX, true ); 
-            } 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult PlotPredictionInterval( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( parameters ); 
-            DataFrame fy = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            double REGGAMMA = parameters[ "gamma" ].AsDouble; 
-            int nx = vy.Length; 
-            CalcRcia( context, nx, REGGAMMA );
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
 
 
-            ChartDefinition cd = new ChartDefinition(); 
-            cd.AddYSeries( vy.Data, vy.Title ); 
-            cd.AddXSeries( vx.Data, vx.Title ); 
-            ChartRenderer ch = new ChartRenderer( cd ); 
-            System.IO.Stream metaStream = new System.IO.MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            
-            double maxpcon = double.MinValue; 
-            double minpcon = double.MaxValue; 
-            if ( context.PERT != 0 )
+        public static StepResult PlotPredictionInterval(ITemplateHost host, ParameterBag parameters)
+        {
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+            double REGGAMMA = parameters["gamma"].AsDouble;
+            int nx = vy.Length;
+            CalcRcia(context, nx, REGGAMMA);
+
+            ParameterBag outputParameters = new ParameterBag();
+
+            ChartDefinition cd = new ChartDefinition();
+            cd.AddYSeries(vy.Data, vy.Title);
+            cd.AddXSeries(vx.Data, vx.Title);
+            ChartRenderer ch = new ChartRenderer(cd);
+            using (MemoryStream metaStream = new MemoryStream())
             {
-                double calcx;
-                for ( calcx=ch.DataMinX; calcx <= ch.DataMaxX; calcx+=( ch.DataMaxX - ch.DataMinX ) / 20.0 ) 
-                { 
-                    double calcy = context.Slope * calcx + context.YInt; 
-                    double sey = Math.Sqrt( context.MS * ( 1.0 + ( 1.0 / Convert.ToDouble( nx ) + Math.Pow( ( calcx - ( context.SUMX / Convert.ToDouble( nx ) ) ), 2.0 ) / context.SSX ) ) ); 
-                    double pconu = calcy + ( sey * context.PERT ); 
-                    double pconl = calcy - ( sey * context.PERT ); 
-                    if ( pconu > maxpcon )
-                    { 
-                        maxpcon = pconu; 
-                    } 
-                    if ( pconl < minpcon )
-                    { 
-                        minpcon = pconl; 
-                    } 
+                ch.StartMetafile(metaStream);
+
+                double maxpcon = double.MinValue;
+                double minpcon = double.MaxValue;
+                if (context.PERT != 0)
+                {
+                    double calcx;
+                    for (calcx = ch.DataMinX; calcx <= ch.DataMaxX; calcx += (ch.DataMaxX - ch.DataMinX) / 20.0)
+                    {
+                        double calcy = context.Slope * calcx + context.YInt;
+                        double sey = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
+                        double pconu = calcy + (sey * context.PERT);
+                        double pconl = calcy - (sey * context.PERT);
+                        if (pconu > maxpcon)
+                        {
+                            maxpcon = pconu;
+                        }
+                        if (pconl < minpcon)
+                        {
+                            minpcon = pconl;
+                        }
+                    }
                 }
+                if (maxpcon > ch.DataMaxY)
+                {
+                    ch.DataMaxY = maxpcon;
+                }
+                if (minpcon < ch.DataMinY)
+                {
+                    ch.DataMinY = minpcon;
+                }
+
+                ch.PlotLinearRegressionInternal(host, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YInt, true, vx.Title, vy.Title);
+
+                if (context.PERT != 0)
+                {
+                    ch.plot_pert(context.PERT, context.Slope, context.YInt, nx, context.MS, context.SUMX, context.SSX, false);
+                }
+                ch.EndMetafile();
+                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
             }
-            if ( maxpcon > ch.DataMaxY )
-            { 
-                ch.DataMaxY = maxpcon; 
-            } 
-            if ( minpcon < ch.DataMinY )
-            { 
-                ch.DataMinY = minpcon; 
-            } 
-            
-            ch.PlotLinearRegressionInternal( host, Formatting.XRound( ( 1.0 - context.P0 ) * 100, 1 ) + "% Prediction Interval", context.Slope, context.YInt, true, vx.Title, vy.Title ); 
-            
-            if ( context.PERT != 0 ) 
-            { 
-                ch.plot_pert( context.PERT, context.Slope, context.YInt, nx, context.MS, context.SUMX, context.SSX, false ); 
-            } 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptCiMeanY( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( parameters ); 
-            DataFrame fy = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            
-            int nx = vy.Length; 
-            double REGGAMMA = parameters[ "reggamma" ].AsDouble; 
-            CalcRcia( context, nx, REGGAMMA ); 
-            double XA = parameters[ "xa" ].AsDouble; 
-            double sey = Math.Sqrt( context.MS * ( 1.0 / Convert.ToDouble( nx ) + Math.Pow( ( XA - ( context.SUMX / Convert.ToDouble( nx ) ) ), 2.0 ) / context.SSX ) ); 
-            double ya = context.Slope * XA + context.YInt; 
-            double pcon = ya + ( sey * context.PERT ); 
-            double ncon = ya - ( sey * context.PERT ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "var_x", vx.Title + " = " + host.RoundU( XA ) ); 
-            outputParameters.AddOutput( "var_y", vy.Title + " = " + host.RoundU( ya ) ); 
-            outputParameters.AddOutput( "ci_y", vy.Title + " = " + host.RoundU( sey ) ); 
-            outputParameters.AddOutput( "pci", Formatting.XRound( 100 * ( 1.0 - context.P0 ), 1 ) ); 
-            outputParameters.AddOutput( "fromi", host.RoundU( ncon ) ); 
-            outputParameters.AddOutput( "toi", host.RoundU( pcon ) ); 
-            double spred = Math.Sqrt( context.MS * ( 1.0 + ( 1.0 / Convert.ToDouble( nx ) + Math.Pow( ( XA - ( context.SUMX / Convert.ToDouble( nx ) ) ), 2.0 ) / context.SSX ) ) ); 
-            pcon = ya + ( spred * context.PERT ); 
-            ncon = ya - ( spred * context.PERT ); 
-            outputParameters.AddOutput( "s_pred", host.RoundU( spred ) ); 
-            outputParameters.AddOutput( "pcp", Formatting.XRound( 100 * ( 1.0 - context.P0 ), 1 ) ); 
-            outputParameters.AddOutput( "fromp", host.RoundU( ncon ) ); 
-            outputParameters.AddOutput( "top", host.RoundU( pcon ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult CalcSimpleLinearRegressionCi( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( parameters ); 
-            DataFrame fy = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vy = fy.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fx = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vx = fx.Variables[ 0 ].AsDoubleVariable; 
-            double REGGAMMA = parameters[ "gamma" ].AsDouble; 
-            int nx = vy.Length; 
-            CalcRcia( context, nx, REGGAMMA ); 
-            
+
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptCiMeanY(ITemplateHost host, ParameterBag parameters)
+        {
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+
+            int nx = vy.Length;
+            double REGGAMMA = parameters["reggamma"].AsDouble;
+            CalcRcia(context, nx, REGGAMMA);
+            double XA = parameters["xa"].AsDouble;
+            double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX));
+            double ya = context.Slope * XA + context.YInt;
+            double pcon = ya + (sey * context.PERT);
+            double ncon = ya - (sey * context.PERT);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("var_x", vx.Title + " = " + host.RoundU(XA));
+            outputParameters.AddOutput("var_y", vy.Title + " = " + host.RoundU(ya));
+            outputParameters.AddOutput("ci_y", vy.Title + " = " + host.RoundU(sey));
+            outputParameters.AddOutput("pci", Formatting.XRound(100 * (1.0 - context.P0), 1));
+            outputParameters.AddOutput("fromi", host.RoundU(ncon));
+            outputParameters.AddOutput("toi", host.RoundU(pcon));
+            double spred = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
+            pcon = ya + (spred * context.PERT);
+            ncon = ya - (spred * context.PERT);
+            outputParameters.AddOutput("s_pred", host.RoundU(spred));
+            outputParameters.AddOutput("pcp", Formatting.XRound(100 * (1.0 - context.P0), 1));
+            outputParameters.AddOutput("fromp", host.RoundU(ncon));
+            outputParameters.AddOutput("top", host.RoundU(pcon));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult CalcSimpleLinearRegressionCi(ITemplateHost host, ParameterBag parameters)
+        {
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
+            DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
+            DataFrame fx = parameters["x"].AsDataFrame;
+            DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+            double REGGAMMA = parameters["gamma"].AsDouble;
+            int nx = vy.Length;
+            CalcRcia(context, nx, REGGAMMA);
+
             DataFrame outputFrame = new DataFrame();
-            DoubleVariable reg = new DoubleVariable {Title = "Reg~" + vy.Title};
+            DoubleVariable reg = new DoubleVariable { Title = "Reg~" + vy.Title };
 
-            reg.EnsureLength( nx ); 
-            outputFrame.Variables.Add( reg );
+            reg.EnsureLength(nx);
+            outputFrame.Variables.Add(reg);
 
-            DoubleVariable uci = new DoubleVariable {Title = "UCI~" + vy.Title};
+            DoubleVariable uci = new DoubleVariable { Title = "UCI~" + vy.Title };
 
-            uci.EnsureLength( nx ); 
-            outputFrame.Variables.Add( uci );
+            uci.EnsureLength(nx);
+            outputFrame.Variables.Add(uci);
 
-            DoubleVariable lci = new DoubleVariable {Title = "LCI~" + vy.Title};
+            DoubleVariable lci = new DoubleVariable { Title = "LCI~" + vy.Title };
 
-            lci.EnsureLength( nx ); 
-            outputFrame.Variables.Add( lci ); 
-            
-            for ( int j=0; j <= nx - 1; j++ ) 
-            { 
-                double sey = Math.Sqrt( context.MS * ( 1.0 / Convert.ToDouble( nx ) + Math.Pow( ( vy.Data[j] - ( context.SUMX / Convert.ToDouble( nx ) ) ), 2.0 ) / context.SSX ) ); 
-                double ya = context.Slope * vx.Data[j] + context.YInt; 
-                double pcon = ya + ( sey * context.PERT ); 
-                double ncon = ya - ( sey * context.PERT ); 
-                reg.set_Data( j, ya ); 
-                uci.set_Data( j, pcon ); 
-                lci.set_Data( j, ncon ); 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "data", outputFrame ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static void CalcRcia( SimpleLinearRegressionContext context, int nx, double REGGAMMA ) 
-        { 
-            const int degf = 0; 
-            double cit; double P0; 
-            MathDbl.civ( nx - 2, out cit, REGGAMMA, out P0 ); 
-            double pert = cit; 
-            context.DF = degf; 
-            context.CIT = cit; 
-            context.P0 = P0; 
-            context.PERT = pert; 
-        } 
-        
-        
-        public static StepResult RptPrincipalComponentsRegressionCorrelation( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            DataFrame frame = parameters[ "data" ].AsDataFrame; 
-            double[,] x; 
-            double[,] xc; 
-            double[,] xr; 
-            double[,] v; 
-            int N; 
+            lci.EnsureLength(nx);
+            outputFrame.Variables.Add(lci);
+
+            for (int j = 0; j <= nx - 1; j++)
+            {
+                double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((vy.Data[j] - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX));
+                double ya = context.Slope * vx.Data[j] + context.YInt;
+                double pcon = ya + (sey * context.PERT);
+                double ncon = ya - (sey * context.PERT);
+                reg.set_Data(j, ya);
+                uci.set_Data(j, pcon);
+                lci.set_Data(j, ncon);
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("data", outputFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static void CalcRcia(SimpleLinearRegressionContext context, int nx, double REGGAMMA)
+        {
+            const int degf = 0;
+            double cit; double P0;
+            MathDbl.civ(nx - 2, out cit, REGGAMMA, out P0);
+            double pert = cit;
+            context.DF = degf;
+            context.CIT = cit;
+            context.P0 = P0;
+            context.PERT = pert;
+        }
+
+
+        public static StepResult RptPrincipalComponentsRegressionCorrelation(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame frame = parameters["data"].AsDataFrame;
+            double[,] x;
+            double[,] xc;
+            double[,] xr;
+            double[,] v;
+            int N;
             int nx;
-            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 1, out N, out nx); 
-        } 
-        
-        
-        public static StepResult RptPrincipalComponentsRegressionCovariance( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            DataFrame frame = parameters[ "data" ].AsDataFrame; 
-            double[,] x; 
-            double[,] xc; 
-            double[,] xr; 
-            double[,] v; 
-            int N; 
+            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 1, out N, out nx);
+        }
+
+
+        public static StepResult RptPrincipalComponentsRegressionCovariance(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame frame = parameters["data"].AsDataFrame;
+            double[,] x;
+            double[,] xc;
+            double[,] xr;
+            double[,] v;
+            int N;
             int nx;
-            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 2, out N, out nx); 
+            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 2, out N, out nx);
         }
 
 
@@ -617,123 +619,122 @@ namespace StatsDirect.Builtins
         ///  <param name="nx">Set to the number of rows in the input</param>
         /// <param name="host"></param>
         /// <remarks></remarks>
-        private static StepResult CalcPrincipal( ITemplateHost host, DataFrame frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, int irv, out int N, out int nx ) 
-        { 
+        private static StepResult CalcPrincipal(ITemplateHost host, DataFrame frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, int irv, out int N, out int nx)
+        {
             int j; int i;
-            int ifault = 0; 
+            int ifault = 0;
             double[,] u; double[] w; double cum = 0; double dsum = 0;
 
 
             //  RTF_LoadTemplate("princ.rtf")
-            N = frame.VariableCount; 
-            nx = frame.Variables[ 0 ].Length;
+            N = frame.VariableCount;
+            nx = frame.Variables[0].Length;
             x = new double[N + 1 /* for VB to C# conversion */, nx + 1 /* for VB to C# conversion */];
-            bool[] revx = new bool[N + 1 /* for VB to C# conversion */ ]; 
-            int inx = 0; 
-            for ( j=1; j <= nx; j++ ) 
-            { 
-                bool iskip = false; 
-                for ( i=1; i <= N; i++ ) 
-                { 
-                    if ( frame.Variables[ i - 1 ].AsDoubleVariable.Data[j - 1] == Constant.MISSING )
-                    { 
-                        iskip = true; 
-                    } 
-                } 
-                if ( !( iskip ) ) 
-                { 
-                    inx = inx + 1; 
-                    for ( i=1; i <= N; i++ ) 
-                    { 
-                        x[ i, inx ] = frame.Variables[ i - 1 ].AsDoubleVariable.Data[j - 1]; 
-                    } 
-                } 
-            } 
-            nx = inx; 
-            
+            bool[] revx = new bool[N + 1 /* for VB to C# conversion */ ];
+            int inx = 0;
+            for (j = 1; j <= nx; j++)
+            {
+                bool iskip = false;
+                for (i = 1; i <= N; i++)
+                {
+                    if (frame.Variables[i - 1].AsDoubleVariable.Data[j - 1] == Constant.MISSING)
+                    {
+                        iskip = true;
+                    }
+                }
+                if (!(iskip))
+                {
+                    inx = inx + 1;
+                    for (i = 1; i <= N; i++)
+                    {
+                        x[i, inx] = frame.Variables[i - 1].AsDoubleVariable.Data[j - 1];
+                    }
+                }
+            }
+            nx = inx;
+
             // first do the pca to check for scale reversal like Stata alpha command without the asis subcommand
-            x_principal(N, ref nx, ref x, out xc, out xr, out u, out w, out v, ref irv, ref ifault); 
-            bool signrev = false; 
-            string revlab = ""; 
-            x_pscore1_corr( N, nx, x, v, irv, revx ); 
-            for ( i=1; i <= N; i++ ) 
-            { 
-                if ( !( revx[ i ] ) ) 
-                { 
-                    signrev = true; 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                } 
-            } 
-            if ( signrev ) 
-            { 
-                bool wasCancelled; 
-                bool shouldCorrect = host.GetBoolean( "Do you want StatsDirect to correct for possible scale reversal?", "Principal components", true, out wasCancelled ); 
-                if ( wasCancelled ) 
-                { 
-                    throw new TemplateOperationCancelledException(); 
-                } 
-                if ( shouldCorrect ) 
-                { 
-                    for ( i=1; i <= N; i++ ) 
-                    { 
-                        if ( !( revx[ i ] ) ) 
-                        { 
-                            for ( j=1; j <= nx; j++ ) 
-                            { 
-                                x[ i, j ] = -x[ i, j ]; 
-                            } 
-                            revlab = revlab + frame.Variables[ i - 1 ].Title + "; "; 
-                        } 
-                    } 
-                    if (  revlab.Length > 0 ) 
-                    { 
-                        revlab =  revlab.Substring( 0, revlab.Length - 2); 
-                        revlab = "Sign was reversed for: " + revlab; 
-                    } 
-                } 
-            } 
-            
+            x_principal(N, ref nx, ref x, out xc, out xr, out u, out w, out v, ref irv, ref ifault);
+            bool signrev = false;
+            string revlab = "";
+            x_pscore1_corr(N, nx, x, v, irv, revx);
+            for (i = 1; i <= N; i++)
+            {
+                if (!(revx[i]))
+                {
+                    signrev = true;
+                    break; /* TRANSWARNING: check that break is in correct scope */
+                }
+            }
+            if (signrev)
+            {
+                bool wasCancelled;
+                bool shouldCorrect = host.GetBoolean("Do you want StatsDirect to correct for possible scale reversal?", "Principal components", true, out wasCancelled);
+                if (wasCancelled)
+                {
+                    throw new TemplateOperationCancelledException();
+                }
+                if (shouldCorrect)
+                {
+                    for (i = 1; i <= N; i++)
+                    {
+                        if (!(revx[i]))
+                        {
+                            for (j = 1; j <= nx; j++)
+                            {
+                                x[i, j] = -x[i, j];
+                            }
+                            revlab = revlab + frame.Variables[i - 1].Title + "; ";
+                        }
+                    }
+                    if (revlab.Length > 0)
+                    {
+                        revlab = revlab.Substring(0, revlab.Length - 2);
+                        revlab = "Sign was reversed for: " + revlab;
+                    }
+                }
+            }
+
             // do the pca with the selected covariance or correlation approach
-            x_principal(N, ref nx, ref x, out xc, out xr, out u, out w, out v, ref irv, ref ifault); 
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( ifault == 0 ) 
-            { 
-                for ( j=1; j <= N; j++ ) 
-                { 
-                    dsum = dsum + w[ j ]; 
+            x_principal(N, ref nx, ref x, out xc, out xr, out u, out w, out v, ref irv, ref ifault);
+
+            ParameterBag outputParameters = new ParameterBag();
+            if (ifault == 0)
+            {
+                for (j = 1; j <= N; j++)
+                {
+                    dsum = dsum + w[j];
                 }
                 outputParameters.AddOutput("type", irv == 1 ? "correlation" : "covariance");
-                IList<ParameterBag> warnList = null; 
-                if ( revlab.Length > 0 ) 
-                { 
-                    warnList = new List<ParameterBag>(); 
-                    ParameterBag warnParameters = new ParameterBag(); 
-                    warnParameters.AddOutput( "warn", revlab ); 
-                    warnList.Add( warnParameters ); 
-                } 
-                outputParameters.AddOutput( "*warn", warnList ); 
-                IList<ParameterBag> tableList = new List<ParameterBag>(); 
-                for ( j=1; j <= N; j++ ) 
-                { 
-                    ParameterBag tableParameters = new ParameterBag(); 
-                    double prop = w[ j ] / dsum; 
-                    cum = cum + prop; 
-                    tableParameters.AddOutput( "comp", Formatting.XRound( Convert.ToDouble( j ), 0 ) ); 
-                    tableParameters.AddOutput( "eigen", host.RoundU( w[ j ] ) ); 
-                    tableParameters.AddOutput( "prop", Formatting.XRound( prop * 100.0, 2 ) ); 
-                    tableParameters.AddOutput( "cum", Formatting.XRound( cum * 100.0, 2 ) ); 
-                    tableList.Add( tableParameters ); 
-                } 
-                outputParameters.AddOutput( "*table", tableList ); 
+                IList<ParameterBag> warnList = null;
+                if (revlab.Length > 0)
+                {
+                    warnList = new List<ParameterBag>();
+                    ParameterBag warnParameters = new ParameterBag();
+                    warnParameters.AddOutput("warn", revlab);
+                    warnList.Add(warnParameters);
+                }
+                outputParameters.AddOutput("*warn", warnList);
+                IList<ParameterBag> tableList = new List<ParameterBag>();
+                for (j = 1; j <= N; j++)
+                {
+                    ParameterBag tableParameters = new ParameterBag();
+                    double prop = w[j] / dsum;
+                    cum = cum + prop;
+                    tableParameters.AddOutput("comp", Formatting.XRound(Convert.ToDouble(j), 0));
+                    tableParameters.AddOutput("eigen", host.RoundU(w[j]));
+                    tableParameters.AddOutput("prop", Formatting.XRound(prop * 100.0, 2));
+                    tableParameters.AddOutput("cum", Formatting.XRound(cum * 100.0, 2));
+                    tableList.Add(tableParameters);
+                }
+                outputParameters.AddOutput("*table", tableList);
             }
-            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext
-                                                          {X = x, H = xc, R2 = xr, V = v, ERR = irv, P = N, N = nx};
-            outputParameters.Add( "context", new FilledParameter( true, context ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
+            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { X = x, H = xc, R2 = xr, V = v, ERR = irv, P = N, N = nx };
+            outputParameters.Add("context", new FilledParameter(true, context));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
         ///  <summary>
         ///  
         ///  </summary>
@@ -748,253 +749,253 @@ namespace StatsDirect.Builtins
         ///  <param name="irv"></param>
         ///  <param name="ifault"></param>
         ///  <remarks></remarks>
-        private static void x_principal( int N, ref int nx, ref double[,] x, out double[,] xc, out double[,] xr, out double[,] u, out double[] w, out double[,] v, ref int irv, ref int ifault ) 
-        { 
+        private static void x_principal(int N, ref int nx, ref double[,] x, out double[,] xc, out double[,] xr, out double[,] u, out double[] w, out double[,] v, ref int irv, ref int ifault)
+        {
             int i; int j;
 
             xc = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
             xr = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
-            u = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */]; 
-            if ( irv == 1 ) 
-            { 
-                for ( j=1; j <= N; j++ ) 
-                { 
-                    for ( i=1; i <= N; i++ ) 
-                    { 
-                        Regress1.X_Comat( out xc[ j, i ], out xr[ j, i ], ref x, ref nx, ref j, ref i ); 
-                        u[ j, i ] = xr[ j, i ]; 
-                    } 
-                } 
-            } 
-            else 
-            { 
-                for ( j=1; j <= N; j++ ) 
-                { 
-                    for ( i=1; i <= N; i++ ) 
-                    { 
-                        Regress1.X_Comat( out xc[ j, i ], out xr[ j, i ], ref x, ref nx, ref j, ref i ); 
-                        u[ j, i ] = xc[ j, i ]; 
-                    } 
-                } 
+            u = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
+            if (irv == 1)
+            {
+                for (j = 1; j <= N; j++)
+                {
+                    for (i = 1; i <= N; i++)
+                    {
+                        Regress1.X_Comat(out xc[j, i], out xr[j, i], ref x, ref nx, ref j, ref i);
+                        u[j, i] = xr[j, i];
+                    }
+                }
+            }
+            else
+            {
+                for (j = 1; j <= N; j++)
+                {
+                    for (i = 1; i <= N; i++)
+                    {
+                        Regress1.X_Comat(out xc[j, i], out xr[j, i], ref x, ref nx, ref j, ref i);
+                        u[j, i] = xc[j, i];
+                    }
+                }
             }
             w = new double[N + 1 /* for VB to C# conversion */ ];
-            v = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */]; 
-            for ( i=1; i <= N; i++ ) 
-            { 
-                w[ i ] = 1.0; 
-            } 
-            Regress1.X_SVDCP( ref u, ref N, ref N, ref w, ref v, ref ifault ); 
-            double wmax = w[ 1 ]; 
-            for ( j=1; j <= N; j++ ) 
-            { 
-                if ( wmax < w[ j ] )
-                { 
-                    wmax = w[ j ]; 
-                } 
-            } 
-            double tol = wmax * Constant.EPSNEG; 
-            for ( j=1; j <= N; j++ ) 
-            { 
-                if ( w[ j ] < tol )
-                { 
-                    w[ j ] = 0.0; 
-                } 
-            } 
-            Regress1.X_Eigsrt( ref w, ref v, N ); 
-        } 
-        
-        
-        private static void x_pscore1_corr(int N, int nx, double[,] x, double[,] v, int irv, bool[] negcorr) 
-        { 
+            v = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
+            for (i = 1; i <= N; i++)
+            {
+                w[i] = 1.0;
+            }
+            Regress1.X_SVDCP(ref u, ref N, ref N, ref w, ref v, ref ifault);
+            double wmax = w[1];
+            for (j = 1; j <= N; j++)
+            {
+                if (wmax < w[j])
+                {
+                    wmax = w[j];
+                }
+            }
+            double tol = wmax * Constant.EPSNEG;
+            for (j = 1; j <= N; j++)
+            {
+                if (w[j] < tol)
+                {
+                    w[j] = 0.0;
+                }
+            }
+            Regress1.X_Eigsrt(ref w, ref v, N);
+        }
+
+
+        private static void x_pscore1_corr(int N, int nx, double[,] x, double[,] v, int irv, bool[] negcorr)
+        {
             int j;
-            int i; 
+            int i;
             double[] av = null; double[] sd = null;
 
             double[] ps = new double[nx + 1 /* for VB to C# conversion */];
-            double[] xx = new double[nx + 1 /* for VB to C# conversion */]; 
-            if ( irv == 1 ) 
+            double[] xx = new double[nx + 1 /* for VB to C# conversion */];
+            if (irv == 1)
             {
                 av = new double[N + 1 /* for VB to C# conversion */];
-                sd = new double[N + 1 /* for VB to C# conversion */ ]; 
-                for ( j=1; j <= N; j++ ) 
-                { 
-                    Regress1.x_avsd( x, nx, j, out av[ j ], out sd[ j ] ); 
-                } 
-            } 
-            for ( j=1; j <= nx; j++ ) 
-            { 
-                for ( i=1; i <= 1; i++ ) 
-                { 
-                    ps[ j ] = 0.0;
+                sd = new double[N + 1 /* for VB to C# conversion */ ];
+                for (j = 1; j <= N; j++)
+                {
+                    Regress1.x_avsd(x, nx, j, out av[j], out sd[j]);
+                }
+            }
+            for (j = 1; j <= nx; j++)
+            {
+                for (i = 1; i <= 1; i++)
+                {
+                    ps[j] = 0.0;
                     int k;
-                    for ( k=1; k <= N; k++ ) 
-                    { 
-                        if ( irv == 1 ) 
-                        { 
+                    for (k = 1; k <= N; k++)
+                    {
+                        if (irv == 1)
+                        {
                             //  References to av and sd in the following line are OK, because they are only referenced if irv=1 and are always set in this case.
                             Debug.Assert(null != av && null != sd);
-                            ps[ j ] = ps[ j ] + v[ k, i ] * ( ( x[ k, j ] - av[ k ] ) / sd[ k ] ); 
-                        } 
-                        else 
-                        { 
-                            ps[ j ] = ps[ j ] + v[ k, i ] * x[ k, j ]; 
-                        } 
-                    } 
-                } 
-            } 
-            for ( i=1; i <= N; i++ ) 
-            { 
-                for ( j=1; j <= nx; j++ ) 
-                { 
-                    xx[ j ] = x[ i, j ]; 
-                } 
-                negcorr[ i ] = MathDbl.corr( xx, ps, 1, nx, true ) < 0.0; 
-            } 
-        } 
-        
-        
-        private static void x_lsm( out double perf, out double sumx, out double ssx, out double ssy, out double sdx, out double ssreg, out double mnsqr, out double r, out double seest, SimpleLinearRegressionContext context ) 
-        { 
-            int nx = context.X.Length - 1; 
-            sumx = 0.0; 
-            double sumy = 0.0; 
-            double sumxy = 0.0;
-            context.Slope = 0.0; 
-            context.YInt = 0.0; 
-            double sys = 0.0; 
-            double sxs = 0.0; 
-            perf = 0.0; 
-            for ( int n=1; n <= nx; n++ ) 
-            { 
-                double x = context.X[ n ]; 
-                double y = context.Y[ n ]; 
-                sumx += x; 
-                sxs += ( x * x ); 
-                sumy += y; 
-                sys += ( y * y ); 
-                sumxy += ( x * y ); 
-            } 
-            ssx = sxs - ( ( sumx * sumx ) / Convert.ToDouble( nx ) ); 
-            ssy = sys - ( ( sumy * sumy ) / Convert.ToDouble( nx ) ); 
-            sdx = Math.Sqrt( ssx / Convert.ToDouble( nx - 1 ) ); 
-            double xy = sumxy - ( sumx * sumy / Convert.ToDouble( nx ) ); 
-            context.Slope = xy / ssx; 
-            context.YInt = ( sumy / Convert.ToDouble( nx ) ) - context.Slope * ( sumx / Convert.ToDouble( nx ) ); 
-            r = xy / Math.Sqrt( ssx * ssy ); 
-            if ( Math.Abs( r ) >= 1 )
-            { 
-                perf = 1.0; 
-            } 
-            ssreg = ( xy * xy ) / ssx; 
-            double ssres = ssy - ssreg; 
-            mnsqr = ssres / Convert.ToDouble( nx - 2 ); 
-            seest = mnsqr > 0.0 ? Math.Sqrt( mnsqr ) : Constant.MISSING; 
-        } 
-        
-        
-        public static StepResult RptMultipleLinearRegression( ITemplateHost host, ParameterBag parameters ) 
+                            ps[j] = ps[j] + v[k, i] * ((x[k, j] - av[k]) / sd[k]);
+                        }
+                        else
+                        {
+                            ps[j] = ps[j] + v[k, i] * x[k, j];
+                        }
+                    }
+                }
+            }
+            for (i = 1; i <= N; i++)
+            {
+                for (j = 1; j <= nx; j++)
+                {
+                    xx[j] = x[i, j];
+                }
+                negcorr[i] = MathDbl.corr(xx, ps, 1, nx, true) < 0.0;
+            }
+        }
+
+
+        private static void x_lsm(out double perf, out double sumx, out double ssx, out double ssy, out double sdx, out double ssreg, out double mnsqr, out double r, out double seest, SimpleLinearRegressionContext context)
         {
-            DataFrame outcomeFrame = parameters[ "outcome" ].AsDataFrame; 
-            DoubleVariable outcomeVariable = outcomeFrame.Variables[ 0 ].AsDoubleVariable; 
-            bool weighted = parameters.ContainsKey( "weights" ) && parameters[ "weights" ] != null; 
-            DoubleVariable weightsVariable; 
-            if ( weighted ) 
-            { 
-                DataFrame weightsFrame = parameters[ "weights" ].AsDataFrame; 
-                weightsVariable = weightsFrame.Variables[ 0 ].AsDoubleVariable; 
-            } 
-            else 
-            { 
+            int nx = context.X.Length - 1;
+            sumx = 0.0;
+            double sumy = 0.0;
+            double sumxy = 0.0;
+            context.Slope = 0.0;
+            context.YInt = 0.0;
+            double sys = 0.0;
+            double sxs = 0.0;
+            perf = 0.0;
+            for (int n = 1; n <= nx; n++)
+            {
+                double x = context.X[n];
+                double y = context.Y[n];
+                sumx += x;
+                sxs += (x * x);
+                sumy += y;
+                sys += (y * y);
+                sumxy += (x * y);
+            }
+            ssx = sxs - ((sumx * sumx) / Convert.ToDouble(nx));
+            ssy = sys - ((sumy * sumy) / Convert.ToDouble(nx));
+            sdx = Math.Sqrt(ssx / Convert.ToDouble(nx - 1));
+            double xy = sumxy - (sumx * sumy / Convert.ToDouble(nx));
+            context.Slope = xy / ssx;
+            context.YInt = (sumy / Convert.ToDouble(nx)) - context.Slope * (sumx / Convert.ToDouble(nx));
+            r = xy / Math.Sqrt(ssx * ssy);
+            if (Math.Abs(r) >= 1)
+            {
+                perf = 1.0;
+            }
+            ssreg = (xy * xy) / ssx;
+            double ssres = ssy - ssreg;
+            mnsqr = ssres / Convert.ToDouble(nx - 2);
+            seest = mnsqr > 0.0 ? Math.Sqrt(mnsqr) : Constant.MISSING;
+        }
+
+
+        public static StepResult RptMultipleLinearRegression(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame outcomeFrame = parameters["outcome"].AsDataFrame;
+            DoubleVariable outcomeVariable = outcomeFrame.Variables[0].AsDoubleVariable;
+            bool weighted = parameters.ContainsKey("weights") && parameters["weights"] != null;
+            DoubleVariable weightsVariable;
+            if (weighted)
+            {
+                DataFrame weightsFrame = parameters["weights"].AsDataFrame;
+                weightsVariable = weightsFrame.Variables[0].AsDoubleVariable;
+            }
+            else
+            {
                 //  Weights aren't in use, use all 1s
-                double[] allOnes = new double[outcomeVariable.Length - 1 + 1 /* for VB to C# conversion */ ]; 
-                for ( int i=0; i <= allOnes.Length - 1; i++ ) 
-                { 
-                    allOnes[ i ] = 1; 
-                } 
-                weightsVariable = new DoubleVariable( allOnes ); 
-            } 
-            bool calculateIntercept = parameters[ "calculateIntercept" ].AsBoolean; 
-            DataFrame predictorsFrame = parameters[ "predictors" ].AsDataFrame; 
-            
+                double[] allOnes = new double[outcomeVariable.Length - 1 + 1 /* for VB to C# conversion */ ];
+                for (int i = 0; i <= allOnes.Length - 1; i++)
+                {
+                    allOnes[i] = 1;
+                }
+                weightsVariable = new DoubleVariable(allOnes);
+            }
+            bool calculateIntercept = parameters["calculateIntercept"].AsBoolean;
+            DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
+
             //  ReDim PASSX(1, 1) - note 1 for calculate intercept, 0 for not
             //  y() is outcome data, cd(0) is its title
             //  wy() is weights, cd(1) is its title
             //  x(,) is predictors, xd() is titles of predictors
             //  Then in SD2 was transferred to ARR2(0) = y, arr2(1)=wy, arr2(2...) = predictors
-            
+
             //  calc_multi
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext();
-            int iq; 
+            int iq;
             // Arr2(0,n)=y data
             // Arr2(1,n)=weight data
-            context.N = outcomeVariable.Length; 
-            int ip = predictorsFrame.VariableCount; 
+            context.N = outcomeVariable.Length;
+            int ip = predictorsFrame.VariableCount;
             context.P = ip;
             context.Y = new double[context.N + 1 /* for VB to C# conversion */ ];
-            context.S = new double[context.N + 1 /* for VB to C# conversion */ ]; 
-            context.outcomeTitle = outcomeVariable.Title; 
-            context.weightTitle = weighted ? weightsVariable.Title : ""; 
-            if ( calculateIntercept ) 
-            { 
+            context.S = new double[context.N + 1 /* for VB to C# conversion */ ];
+            context.outcomeTitle = outcomeVariable.Title;
+            context.weightTitle = weighted ? weightsVariable.Title : "";
+            if (calculateIntercept)
+            {
                 // intercept
-                context.DoC = true; 
+                context.DoC = true;
                 context.P += 1;
-                context.X = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */]; 
-                iq = 1; 
-                for ( int j=1; j <= context.N; j++ ) 
-                { 
-                    context.X[ j, 1 ] = 1; 
-                } 
-            } 
-            else 
-            { 
+                context.X = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */];
+                iq = 1;
+                for (int j = 1; j <= context.N; j++)
+                {
+                    context.X[j, 1] = 1;
+                }
+            }
+            else
+            {
                 // no intercept
                 context.DoC = false;
-                context.X = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */]; 
-                iq = 0; 
+                context.X = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */];
+                iq = 0;
             }
-            context.Titles = new string[predictorsFrame.VariableCount + iq + 1 /* for VB to C# conversion */ ]; 
-            for ( int i=0; i <= predictorsFrame.VariableCount - 1; i++ ) 
-            { 
-                context.Titles[ i + 1 + iq ] = predictorsFrame.get_Variable( i ).Title; 
-            } 
-            int cnt = 0; 
-            for ( int j=0; j <= context.N - 1; j++ ) 
+            context.Titles = new string[predictorsFrame.VariableCount + iq + 1 /* for VB to C# conversion */ ];
+            for (int i = 0; i <= predictorsFrame.VariableCount - 1; i++)
+            {
+                context.Titles[i + 1 + iq] = predictorsFrame.get_Variable(i).Title;
+            }
+            int cnt = 0;
+            for (int j = 0; j <= context.N - 1; j++)
             {
                 bool OK = outcomeVariable.Data[j] != Constant.MISSING;
-                if ( weightsVariable.Data[j] == Constant.MISSING )
-                { 
-                    OK = false; 
-                } 
-                for ( int k=1; k <= ip; k++ ) 
-                { 
-                    if ( predictorsFrame.get_Variable( k - 1 ).AsDoubleVariable.Data[j] == Constant.MISSING )
-                    { 
-                        OK = false; 
-                    } 
-                } 
-                if ( OK ) 
-                { 
-                    cnt += 1; 
-                    context.Y[ cnt ] = outcomeVariable.Data[j]; 
-                    context.S[ cnt ] = weightsVariable.Data[j]; 
-                    for ( int k=1; k <= ip; k++ ) 
-                    { 
-                        context.X[ cnt, k + iq ] = predictorsFrame.get_Variable( k - 1 ).AsDoubleVariable.Data[j]; 
-                    } 
-                } 
-            } 
-            if ( context.N != cnt ) 
-            { 
-                host.Warning(  (context.N - cnt).ToString() + " observations dropped due to missing data." + "\r\n" + "Make sure that observations with missing data are not a subgroup", "Linear Regression" ); 
-                context.N = cnt; 
+                if (weightsVariable.Data[j] == Constant.MISSING)
+                {
+                    OK = false;
+                }
+                for (int k = 1; k <= ip; k++)
+                {
+                    if (predictorsFrame.get_Variable(k - 1).AsDoubleVariable.Data[j] == Constant.MISSING)
+                    {
+                        OK = false;
+                    }
+                }
+                if (OK)
+                {
+                    cnt += 1;
+                    context.Y[cnt] = outcomeVariable.Data[j];
+                    context.S[cnt] = weightsVariable.Data[j];
+                    for (int k = 1; k <= ip; k++)
+                    {
+                        context.X[cnt, k + iq] = predictorsFrame.get_Variable(k - 1).AsDoubleVariable.Data[j];
+                    }
+                }
             }
-            x_glin(context, context.Y, context.S, context.X, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out context.FV, ref context.DoC, ref context.N, ref context.P, ref context.ERR); 
-            return x_showmr( host, context, context.SE, context.B, true, context.N, context.P, false, context.ERR ); 
-        } 
-        
-        
-        private static void x_glin(MultipleLinearRegressionContext context, double[] yd, double[] weight, double[,] xd, out double[] SEB, out double[] bd, out double[] vif, ref double bss, ref double ctss, out double[,] xtxi, out double[] er, out double[] yfit, ref bool DoC, ref int nx, ref int P, ref int ifault ) 
+            if (context.N != cnt)
+            {
+                host.Warning((context.N - cnt).ToString() + " observations dropped due to missing data." + "\r\n" + "Make sure that observations with missing data are not a subgroup", "Linear Regression");
+                context.N = cnt;
+            }
+            x_glin(context, context.Y, context.S, context.X, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out context.FV, ref context.DoC, ref context.N, ref context.P, ref context.ERR);
+            return x_showmr(host, context, context.SE, context.B, true, context.N, context.P, false, context.ERR);
+        }
+
+
+        private static void x_glin(MultipleLinearRegressionContext context, double[] yd, double[] weight, double[,] xd, out double[] SEB, out double[] bd, out double[] vif, ref double bss, ref double ctss, out double[,] xtxi, out double[] er, out double[] yfit, ref bool DoC, ref int nx, ref int P, ref int ifault)
         {
             int i; int j;
             int iwtcol;
@@ -1002,30 +1003,30 @@ namespace StatsDirect.Builtins
             int nrmiss = 0;
             double rdf = 0; double rss = 0;
             double s;
-            context.warn = ""; 
+            context.warn = "";
             int original_p = P;
             SEB = new double[P + 1 /* for VB to C# conversion */ ];
             bd = new double[P * P + 1 /* for VB to C# conversion */];
             xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
             er = new double[nx + 1 /* for VB to C# conversion */ ];
-            yfit = new double[nx + 1 /* for VB to C# conversion */ ]; 
-            if ( DoC ) 
-            { 
-                incep = 1; 
-                indep = P - 1; 
-            } 
-            else 
-            { 
-                incep = 0; 
-                indep = P; 
-            } 
-            int iwt = 0; 
-            for ( i=1; i <= nx; i++ ) 
-            { 
-                if ( weight[ i ] != 1.0 )
-                { 
-                    iwt = 1; 
-                } 
+            yfit = new double[nx + 1 /* for VB to C# conversion */ ];
+            if (DoC)
+            {
+                incep = 1;
+                indep = P - 1;
+            }
+            else
+            {
+                incep = 0;
+                indep = P;
+            }
+            int iwt = 0;
+            for (i = 1; i <= nx; i++)
+            {
+                if (weight[i] != 1.0)
+                {
+                    iwt = 1;
+                }
             }
             double[,] xx = new double[nx + 1 /* for VB to C# conversion */, indep + 1 + iwt + 1 /* for VB to C# conversion */ ];
             double[,] r = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
@@ -1033,323 +1034,324 @@ namespace StatsDirect.Builtins
             double[] xmin = new double[P + 1 /* for VB to C# conversion */ ];
             double[] XMax = new double[P + 1 /* for VB to C# conversion */ ];
             double[] WK = new double[2 * (P + 1) + 1 /* for VB to C# conversion */ ];
-            int[] idum = new int[1 + 1 /* for VB to C# conversion */ ]; 
-            for ( i=1; i <= nx; i++ ) 
-            { 
-                for ( j=1 + incep; j <= indep + incep; j++ ) 
-                { 
-                    xx[ i, j - incep ] = xd[ i, j ]; 
-                } 
-                if ( iwt == 1 ) 
-                { 
-                    xx[ i, indep + 1 ] = weight[ i ]; 
-                    xx[ i, indep + 2 ] = yd[ i ]; 
-                } 
-                else 
-                { 
-                    xx[ i, indep + 1 ] = yd[ i ]; 
-                } 
-            } 
-            if ( iwt == 0 ) 
-            { 
-                iwtcol = 0; 
-            } 
-            else 
-            { 
-                iwtcol = indep + 1; 
-            } 
-            Regress1.glsqr( 0, incep, 0, nx, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, bd, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xmin, XMax, WK, ref ifault ); 
-            if ( irank != P & indep > 1 ) 
-            { 
-                int ctr = incep; 
-                for ( j=1 + incep; j <= P; j++ ) 
-                { 
-                    if ( r[ j, j ] == 0 ) 
-                    { 
-                        context.warn += context.Titles[ j ] + ", "; 
-                    } 
-                    else 
-                    { 
-                        ctr = ctr + 1; 
-                        for ( i=1; i <= nx; i++ ) 
-                        { 
-                            xd[ i, ctr ] = xx[ i, j - incep ]; 
-                        } 
+            int[] idum = new int[1 + 1 /* for VB to C# conversion */ ];
+            for (i = 1; i <= nx; i++)
+            {
+                for (j = 1 + incep; j <= indep + incep; j++)
+                {
+                    xx[i, j - incep] = xd[i, j];
+                }
+                if (iwt == 1)
+                {
+                    xx[i, indep + 1] = weight[i];
+                    xx[i, indep + 2] = yd[i];
+                }
+                else
+                {
+                    xx[i, indep + 1] = yd[i];
+                }
+            }
+            if (iwt == 0)
+            {
+                iwtcol = 0;
+            }
+            else
+            {
+                iwtcol = indep + 1;
+            }
+            Regress1.glsqr(0, incep, 0, nx, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, bd, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xmin, XMax, WK, ref ifault);
+            if (irank != P & indep > 1)
+            {
+                int ctr = incep;
+                for (j = 1 + incep; j <= P; j++)
+                {
+                    if (r[j, j] == 0)
+                    {
+                        context.warn += context.Titles[j] + ", ";
+                    }
+                    else
+                    {
+                        ctr = ctr + 1;
+                        for (i = 1; i <= nx; i++)
+                        {
+                            xd[i, ctr] = xx[i, j - incep];
+                        }
                         //  Swap the titles
-                        string temp = context.Titles[ ctr ]; 
-                        context.Titles[ ctr ] = context.Titles[ j ]; 
-                        context.Titles[ j ] = temp; 
-                    } 
-                } 
-                if (context.warn.Length > 0) 
-                { 
-                    context.warn = context.warn.Substring(0, context.warn.Length - 2) + " dropped from the model due to very high correlation with other variable(s) included."; 
-                } 
+                        string temp = context.Titles[ctr];
+                        context.Titles[ctr] = context.Titles[j];
+                        context.Titles[j] = temp;
+                    }
+                }
+                if (context.warn.Length > 0)
+                {
+                    context.warn = context.warn.Substring(0, context.warn.Length - 2) + " dropped from the model due to very high correlation with other variable(s) included.";
+                }
                 P = irank;
                 SEB = new double[P + 1 /* for VB to C# conversion */ ];
                 bd = new double[P * P + 1 /* for VB to C# conversion */];
                 xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
                 er = new double[nx + 1 /* for VB to C# conversion */];
-                yfit = new double[nx + 1 /* for VB to C# conversion */]; 
-                if ( DoC ) 
-                { 
-                    incep = 1; 
-                    indep = P - 1; 
-                } 
-                else 
-                { 
-                    incep = 0; 
-                    indep = P; 
+                yfit = new double[nx + 1 /* for VB to C# conversion */];
+                if (DoC)
+                {
+                    incep = 1;
+                    indep = P - 1;
+                }
+                else
+                {
+                    incep = 0;
+                    indep = P;
                 }
                 r = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
                 D = new double[P + 1 /* for VB to C# conversion */ ];
                 xmin = new double[P + 1 /* for VB to C# conversion */];
                 XMax = new double[P + 1 /* for VB to C# conversion */];
                 WK = new double[2 * (P + 1) + 1 /* for VB to C# conversion */];
-                idum = new int[1 + 1 /* for VB to C# conversion */]; 
-                for ( i=1; i <= nx; i++ ) 
-                { 
-                    for ( j=1 + incep; j <= indep + incep; j++ ) 
-                    { 
-                        xx[ i, j - incep ] = xd[ i, j ]; 
-                    } 
-                    if ( iwt == 1 ) 
-                    { 
-                        xx[ i, indep + 1 ] = weight[ i ]; 
-                        xx[ i, indep + 2 ] = yd[ i ]; 
-                    } 
-                    else 
-                    { 
-                        xx[ i, indep + 1 ] = yd[ i ]; 
-                    } 
-                } 
-                Regress1.glsqr( 0, incep, 0, nx, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, bd, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xmin, XMax, WK, ref ifault ); 
-            } 
-            if ( ifault != 0 ) 
-            { 
-                context.warn = "QR solution failed and SVD used, extreme results may be invalid."; 
+                idum = new int[1 + 1 /* for VB to C# conversion */];
+                for (i = 1; i <= nx; i++)
+                {
+                    for (j = 1 + incep; j <= indep + incep; j++)
+                    {
+                        xx[i, j - incep] = xd[i, j];
+                    }
+                    if (iwt == 1)
+                    {
+                        xx[i, indep + 1] = weight[i];
+                        xx[i, indep + 2] = yd[i];
+                    }
+                    else
+                    {
+                        xx[i, indep + 1] = yd[i];
+                    }
+                }
+                Regress1.glsqr(0, incep, 0, nx, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, bd, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xmin, XMax, WK, ref ifault);
+            }
+            if (ifault != 0)
+            {
+                context.warn = "QR solution failed and SVD used, extreme results may be invalid.";
                 P = original_p;
                 vif = new double[P + 1 /* for VB to C# conversion */ ];
                 SEB = new double[P + 1 /* for VB to C# conversion */ ];
                 bd = new double[P + 1 /* for VB to C# conversion */ ];
                 xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
                 er = new double[nx + 1 /* for VB to C# conversion */ ];
-                double[] sig = new double[nx + 1 /* for VB to C# conversion */ ]; 
-                for ( i=1; i <= P; i++ ) 
-                { 
-                    vif[ i ] = Constant.MISSING; 
-                } 
-                for ( i=1; i <= nx; i++ ) 
-                { 
-                    sig[ i ] = Math.Sqrt( 1.0 / weight[ i ] ); 
-                } 
-                x_glin_svd(yd, sig, xd, SEB, bd, bss, ctss, xtxi, er, out yfit, DoC, nx, P, out ifault ); 
-                return; 
+                double[] sig = new double[nx + 1 /* for VB to C# conversion */ ];
+                for (i = 1; i <= P; i++)
+                {
+                    vif[i] = Constant.MISSING;
+                }
+                for (i = 1; i <= nx; i++)
+                {
+                    sig[i] = Math.Sqrt(1.0 / weight[i]);
+                }
+                x_glin_svd(yd, sig, xd, SEB, bd, bss, ctss, xtxi, er, out yfit, DoC, nx, P, out ifault);
+                return;
             }
             double[,] covb = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-            vif = new double[P + 1 /* for VB to C# conversion */]; 
+            vif = new double[P + 1 /* for VB to C# conversion */];
             // variance inflation
-            if ( incep == 1 & r[ 1, 1 ] > 0.0 )
-            { 
-                vif[ 1 ] = Math.Pow( r[ 1, 1 ], 2.0 ); 
-            } 
-            for ( j=incep + 1; j <= P; j++ ) 
-            { 
-                if ( r[ j, j ] > 0.0 ) 
-                { 
-                    for ( i=incep + 1; i <= j; i++ ) 
-                    { 
-                        if ( r[ i, i ] > 0.0 )
-                        { 
-                            vif[ j ] = vif[ j ] + Math.Pow( r[ i, j ], 2.0 ); 
-                        } 
-                    } 
-                } 
-            } 
-            for ( j=1; j <= P; j++ ) 
-            { 
-                if ( r[ j, j ] <= 0.0 )
-                { 
-                    vif[ j ] = Constant.MISSING; 
-                } 
-            } 
-            Regress1.rcovarb( P, r, 1.0, covb, ref ifault ); 
-            for ( j=1; j <= P; j++ ) 
-            { 
-                if ( vif[ j ] != Constant.MISSING )
-                { 
-                    vif[ j ] = vif[ j ] * covb[ j, j ]; 
-                } 
-            } 
-            double rms = rss / rdf; 
-            Regress1.rcovarb( P, r, rms, covb, ref ifault ); 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                SEB[ i ] = Math.Sqrt( covb[ i, i ] ); 
-            } 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                for ( j=1; j <= P; j++ ) 
-                { 
-                    xtxi[ i, j ] = covb[ i, j ] / rms; 
-                } 
-            } 
-            for ( i=1; i <= nx; i++ ) 
-            { 
-                s = 0.0; 
-                for ( j=1; j <= P; j++ ) 
-                { 
-                    s = s + xd[ i, j ] * bd[ j ]; 
-                } 
-                yfit[ i ] = s; 
-                er[ i ] = yd[ i ] - s; 
-            } 
-            bss = 0.0; 
-            for ( i=1; i <= ( P - incep ); i++ ) 
-            { 
-                s = 0.0; 
-                j = incep + i; 
-                if ( r[ j, j ] > 0.0 )
+            if (incep == 1 & r[1, 1] > 0.0)
+            {
+                vif[1] = Math.Pow(r[1, 1], 2.0);
+            }
+            for (j = incep + 1; j <= P; j++)
+            {
+                if (r[j, j] > 0.0)
                 {
-                    int k;
-                    for ( k=0; k <= P - j; k++ ) 
-                    { 
-                        s = s + r[ j, j + k ] * bd[ j + k ]; 
+                    for (i = incep + 1; i <= j; i++)
+                    {
+                        if (r[i, i] > 0.0)
+                        {
+                            vif[j] = vif[j] + Math.Pow(r[i, j], 2.0);
+                        }
                     }
                 }
-                bss = bss + s * s; 
-            } 
-            ctss = bss + rss; 
-        } 
-        
-        
-        private static StepResult x_showmr( ITemplateHost Host, MultipleLinearRegressionContext context, double[] SEB, double[] bd, bool DoC, int nx, int P, bool pol, int errcode ) 
-        { 
+            }
+            for (j = 1; j <= P; j++)
+            {
+                if (r[j, j] <= 0.0)
+                {
+                    vif[j] = Constant.MISSING;
+                }
+            }
+            Regress1.rcovarb(P, r, 1.0, covb, ref ifault);
+            for (j = 1; j <= P; j++)
+            {
+                if (vif[j] != Constant.MISSING)
+                {
+                    vif[j] = vif[j] * covb[j, j];
+                }
+            }
+            double rms = rss / rdf;
+            Regress1.rcovarb(P, r, rms, covb, ref ifault);
+            for (i = 1; i <= P; i++)
+            {
+                SEB[i] = Math.Sqrt(covb[i, i]);
+            }
+            for (i = 1; i <= P; i++)
+            {
+                for (j = 1; j <= P; j++)
+                {
+                    xtxi[i, j] = covb[i, j] / rms;
+                }
+            }
+            for (i = 1; i <= nx; i++)
+            {
+                s = 0.0;
+                for (j = 1; j <= P; j++)
+                {
+                    s = s + xd[i, j] * bd[j];
+                }
+                yfit[i] = s;
+                er[i] = yd[i] - s;
+            }
+            bss = 0.0;
+            for (i = 1; i <= (P - incep); i++)
+            {
+                s = 0.0;
+                j = incep + i;
+                if (r[j, j] > 0.0)
+                {
+                    int k;
+                    for (k = 0; k <= P - j; k++)
+                    {
+                        s = s + r[j, j + k] * bd[j + k];
+                    }
+                }
+                bss = bss + s * s;
+            }
+            ctss = bss + rss;
+        }
+
+
+        private static StepResult x_showmr(ITemplateHost Host, MultipleLinearRegressionContext context, double[] SEB, double[] bd, bool DoC, int nx, int P, bool pol, int errcode)
+        {
             int i;
 
-            double rdf = Convert.ToDouble( nx - P ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "isPoly", pol ); 
-            if ( context.warn.Length > 0 || errcode != 0 ) 
-            { 
-                ParameterBag warnParameters = new ParameterBag(); 
-                warnParameters.AddOutput( "warn", context.warn ); 
-                IList<ParameterBag> warnList = new List<ParameterBag>(); 
-                warnList.Add( warnParameters ); 
-                outputParameters.AddOutput( "*warn", warnList ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "*warn", null ); 
-            } 
-            if ( errcode != 0 ) 
-            { 
-                outputParameters.AddOutput( "*row", null ); 
-            } 
-            else 
-            { 
-                IList<ParameterBag> rowList = new List<ParameterBag>(); 
-                outputParameters.AddOutput( "*row", rowList ); 
-                ParameterBag rowParameters = new ParameterBag(); 
-                rowList.Add( rowParameters ); 
-                IList<ParameterBag> colList = new List<ParameterBag>(); 
-                rowParameters.AddOutput( "*col", colList ); 
-                for ( i=1; i <= P; i++ ) 
-                { 
-                    ParameterBag colParameters = new ParameterBag(); 
-                    colList.Add( colParameters ); 
-                    double prob = PDF.tvalp( Math.Abs( bd[ i ] / SEB[ i ] ), Convert.ToDouble( nx - P ) ); 
-                    if ( prob > 1.0 - prob )
-                    { 
-                        prob = 1.0 - prob; 
-                    } 
-                    prob = 2.0 * prob; 
-                    if ( DoC ) 
-                    { 
-                        if ( i == 1 ) 
-                        { 
-                            colParameters.AddOutput( "label", "Intercept" ); 
-                            colParameters.AddOutput( "b", "0" ); 
-                        } 
-                        else 
-                        { 
-                            colParameters.AddOutput( "label", context.Titles[ i ] ); 
-                            colParameters.AddOutput( "b",  (i - 1).ToString() ); 
-                        } 
-                    } 
-                    else 
-                    { 
-                        colParameters.AddOutput( "label", context.Titles[ i ] ); 
-                        colParameters.AddOutput( "b",  i.ToString() ); 
-                    } 
-                    colParameters.AddOutput( "val_b", Host.RoundU( bd[ i ] ) );
+            double rdf = Convert.ToDouble(nx - P);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("isPoly", pol);
+            if (context.warn.Length > 0 || errcode != 0)
+            {
+                ParameterBag warnParameters = new ParameterBag();
+                warnParameters.AddOutput("warn", context.warn);
+                IList<ParameterBag> warnList = new List<ParameterBag>();
+                warnList.Add(warnParameters);
+                outputParameters.AddOutput("*warn", warnList);
+            }
+            else
+            {
+                outputParameters.AddOutput("*warn", null);
+            }
+            if (errcode != 0)
+            {
+                outputParameters.AddOutput("*row", null);
+            }
+            else
+            {
+                IList<ParameterBag> rowList = new List<ParameterBag>();
+                outputParameters.AddOutput("*row", rowList);
+                ParameterBag rowParameters = new ParameterBag();
+                rowList.Add(rowParameters);
+                IList<ParameterBag> colList = new List<ParameterBag>();
+                rowParameters.AddOutput("*col", colList);
+                for (i = 1; i <= P; i++)
+                {
+                    ParameterBag colParameters = new ParameterBag();
+                    colList.Add(colParameters);
+                    double prob = PDF.tvalp(Math.Abs(bd[i] / SEB[i]), Convert.ToDouble(nx - P));
+                    if (prob > 1.0 - prob)
+                    {
+                        prob = 1.0 - prob;
+                    }
+                    prob = 2.0 * prob;
+                    if (DoC)
+                    {
+                        if (i == 1)
+                        {
+                            colParameters.AddOutput("label", "Intercept");
+                            colParameters.AddOutput("b", "0");
+                        }
+                        else
+                        {
+                            colParameters.AddOutput("label", context.Titles[i]);
+                            colParameters.AddOutput("b", (i - 1).ToString());
+                        }
+                    }
+                    else
+                    {
+                        colParameters.AddOutput("label", context.Titles[i]);
+                        colParameters.AddOutput("b", i.ToString());
+                    }
+                    colParameters.AddOutput("val_b", Host.RoundU(bd[i]));
                     double t;
                     double rp;
-                    if ( SEB[ i ] != 0.0 ) 
-                    { 
-                        t = bd[ i ] / SEB[ i ]; 
-                        rp = t / Math.Sqrt( t * t + rdf ); 
-                    } 
-                    else 
-                    { 
-                        t = Constant.MISSING; 
-                        rp = Constant.MISSING; 
-                    } 
-                    if ( DoC == false || i > 1 ) 
-                    { 
-                        colParameters.AddOutput( "rp", "r = " + Host.RoundU( rp ) ); 
-                    } 
-                    else 
-                    { 
-                        colParameters.AddOutput( "rp", "" ); 
-                    } 
-                    colParameters.AddOutput( "t", Host.RoundU( t ) ); 
-                    colParameters.AddOutput( "p", Host.pval( prob ) ); 
-                } 
-                string transTemp4 = context.weightTitle; 
-                if ( transTemp4.Length > 0 ) 
-                { 
-                    rowParameters.AddOutput( "y", context.outcomeTitle + " (weighted by " + context.weightTitle + ")" ); 
-                } 
-                else 
-                { 
-                    rowParameters.AddOutput( "y", context.outcomeTitle ); 
-                } 
-                IList<ParameterBag> zList = new List<ParameterBag>(); 
-                rowParameters.AddOutput( "*z", zList );
+                    if (SEB[i] != 0.0)
+                    {
+                        t = bd[i] / SEB[i];
+                        rp = t / Math.Sqrt(t * t + rdf);
+                    }
+                    else
+                    {
+                        t = Constant.MISSING;
+                        rp = Constant.MISSING;
+                    }
+                    if (DoC == false || i > 1)
+                    {
+                        colParameters.AddOutput("rp", "r = " + Host.RoundU(rp));
+                    }
+                    else
+                    {
+                        colParameters.AddOutput("rp", "");
+                    }
+                    colParameters.AddOutput("t", Host.RoundU(t));
+                    colParameters.AddOutput("p", Host.pval(prob));
+                }
+                string transTemp4 = context.weightTitle;
+                if (transTemp4.Length > 0)
+                {
+                    rowParameters.AddOutput("y", context.outcomeTitle + " (weighted by " + context.weightTitle + ")");
+                }
+                else
+                {
+                    rowParameters.AddOutput("y", context.outcomeTitle);
+                }
+                IList<ParameterBag> zList = new List<ParameterBag>();
+                rowParameters.AddOutput("*z", zList);
                 int j;
-                for ( j=1; j <= P; j++ ) 
+                for (j = 1; j <= P; j++)
                 {
                     string z;
-                    if ( j > 1 & bd[ j ] >= 0.0 )
-                    { 
-                        z = " +"; 
-                    } else { z = " "; } 
-                    z = z + Host.RoundU( bd[ j ] ); 
-                    if ( j > 1 | !( DoC ) ) 
-                    { 
-                        z = z + " " + context.Titles[ j ]; 
-                    } 
-                    ParameterBag zParameters = new ParameterBag(); 
-                    zList.Add( zParameters ); 
-                    zParameters.AddOutput( "z", z ); 
-                } 
-            } 
-            outputParameters.Add( "context", new FilledParameter( true, context ) ); 
+                    if (j > 1 & bd[j] >= 0.0)
+                    {
+                        z = " +";
+                    }
+                    else { z = " "; }
+                    z = z + Host.RoundU(bd[j]);
+                    if (j > 1 | !(DoC))
+                    {
+                        z = z + " " + context.Titles[j];
+                    }
+                    ParameterBag zParameters = new ParameterBag();
+                    zList.Add(zParameters);
+                    zParameters.AddOutput("z", z);
+                }
+            }
+            outputParameters.Add("context", new FilledParameter(true, context));
             //  For best subset code
-            string[] predictorTitles = new string[P - 2 + 1 /* for VB to C# conversion */ ]; 
-            for ( i=2; i <= P; i++ ) 
-            { 
-                predictorTitles[ i - 2 ] = context.Titles[ i ]; 
-            } 
-            outputParameters[ "predictorTitles" ] = new FilledParameter( true, new DataFrame( new StringVariable( predictorTitles ) ) ); 
-            outputParameters[ "candidatePredictors" ] = new FilledParameter( true, x_prep_intermr( context ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static void x_glin_svd(double[] yd, double[] sig, double[,] xd, double[] SEB, double[] bd, double bss, double ctss, double[,] xtxi, double[] er, out double[] yfit, bool DoC, int nx, int P, out int ifault ) 
-        { 
+            string[] predictorTitles = new string[P - 2 + 1 /* for VB to C# conversion */ ];
+            for (i = 2; i <= P; i++)
+            {
+                predictorTitles[i - 2] = context.Titles[i];
+            }
+            outputParameters["predictorTitles"] = new FilledParameter(true, new DataFrame(new StringVariable(predictorTitles)));
+            outputParameters["candidatePredictors"] = new FilledParameter(true, x_prep_intermr(context));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static void x_glin_svd(double[] yd, double[] sig, double[,] xd, double[] SEB, double[] bd, double bss, double ctss, double[,] xtxi, double[] er, out double[] yfit, bool DoC, int nx, int P, out int ifault)
+        {
             int i;
             double wt;
 
@@ -1362,1307 +1364,1306 @@ namespace StatsDirect.Builtins
             double[,] vd = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
             double[] wd = new double[P + 1 /* for VB to C# conversion */];
             double[] cn = new double[P + 1 /* for VB to C# conversion */];
-            double[] hi = new double[nx + 1 /* for VB to C# conversion */ ]; 
-            bss = 0.0; 
-            ctss = 0.0; 
-            Regress1.X_SVGO( xd, yd, sig, nx, P, bd, ud, vd, wd, yfit, er, out ifault ); 
-            Regress1.X_SVDVRD( xd, vd, wd, nx, P, xtxi, cn, hi ); 
-            double sy = 0.0; 
-            double sn = 0.0; 
-            for ( i=1; i <= nx; i++ ) 
-            { 
-                wt = 1.0 / ( sig[ i ] * sig[ i ] ); 
-                sn = sn + wt; 
-                sy = sy + yd[ i ] * wt; 
-            } 
-            double ym = sy / sn; 
-            ctss = 0.0; 
-            bss = 0.0; 
-            if ( DoC ) 
-            { 
-                for ( i=1; i <= nx; i++ ) 
-                { 
-                    wt = 1.0 / ( sig[ i ] * sig[ i ] ); 
-                    ctss = ctss + ( yd[ i ] * wt - ym ) * ( yd[ i ] * wt - ym ); 
-                    bss = bss + ( yfit[ i ] - ym ) * ( yfit[ i ] - ym ); 
-                } 
-            } 
-            else 
-            { 
-                for ( i=1; i <= nx; i++ ) 
-                { 
-                    wt = 1.0 / ( sig[ i ] * sig[ i ] ); 
-                    ctss = ctss + ( yd[ i ] * wt ) * ( yd[ i ] * wt ); 
-                    bss = bss + ( yfit[ i ] ) * ( yfit[ i ] ); 
-                } 
-            } 
-            double rss = ctss - bss; 
-            double rdf = Convert.ToDouble( ( nx - 1 ) - ( P - 1 ) ); 
-            double rms = rss / rdf; 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                SEB[ i ] = Math.Sqrt( xtxi[ i, i ] * rms ); 
-            } 
-        } 
-        
-        
-        public static StepResult RptMultipleLinearRegressionAnova( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( parameters ); 
-            double ci = parameters[ "ci" ].AsDouble;
+            double[] hi = new double[nx + 1 /* for VB to C# conversion */ ];
+            bss = 0.0;
+            ctss = 0.0;
+            Regress1.X_SVGO(xd, yd, sig, nx, P, bd, ud, vd, wd, yfit, er, out ifault);
+            Regress1.X_SVDVRD(xd, vd, wd, nx, P, xtxi, cn, hi);
+            double sy = 0.0;
+            double sn = 0.0;
+            for (i = 1; i <= nx; i++)
+            {
+                wt = 1.0 / (sig[i] * sig[i]);
+                sn = sn + wt;
+                sy = sy + yd[i] * wt;
+            }
+            double ym = sy / sn;
+            ctss = 0.0;
+            bss = 0.0;
+            if (DoC)
+            {
+                for (i = 1; i <= nx; i++)
+                {
+                    wt = 1.0 / (sig[i] * sig[i]);
+                    ctss = ctss + (yd[i] * wt - ym) * (yd[i] * wt - ym);
+                    bss = bss + (yfit[i] - ym) * (yfit[i] - ym);
+                }
+            }
+            else
+            {
+                for (i = 1; i <= nx; i++)
+                {
+                    wt = 1.0 / (sig[i] * sig[i]);
+                    ctss = ctss + (yd[i] * wt) * (yd[i] * wt);
+                    bss = bss + (yfit[i]) * (yfit[i]);
+                }
+            }
+            double rss = ctss - bss;
+            double rdf = Convert.ToDouble((nx - 1) - (P - 1));
+            double rms = rss / rdf;
+            for (i = 1; i <= P; i++)
+            {
+                SEB[i] = Math.Sqrt(xtxi[i, i] * rms);
+            }
+        }
+
+
+        public static StepResult RptMultipleLinearRegressionAnova(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
+            double ci = parameters["ci"].AsDouble;
             double dw;
-            string extra; 
-            
-            double rdf = Convert.ToDouble( context.N - context.P );
+            string extra;
+
+            double rdf = Convert.ToDouble(context.N - context.P);
             double bdf = context.P == 1 || context.DoC == false ? context.P : context.P - 1;
-            double bms = context.SSREG / bdf; 
-            double rss = context.SSY - context.SSREG; 
-            double rms = rss / rdf; 
+            double bms = context.SSREG / bdf;
+            double rss = context.SSY - context.SSREG;
+            double rms = rss / rdf;
             double vr = bms / rms;
             int tdf = context.DoC ? context.N - 1 : context.N;
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "reg_sum", host.RoundU( context.SSREG ) ); 
-            outputParameters.AddOutput( "reg_df", Math.Floor(bdf).ToString() ); 
-            outputParameters.AddOutput( "reg_mean", host.RoundU( bms ) ); 
-            outputParameters.AddOutput( "res_sum", host.RoundU( context.SSY - context.SSREG ) ); 
-            outputParameters.AddOutput( "res_df", Math.Floor(rdf).ToString() ); 
-            outputParameters.AddOutput( "res_mean", host.RoundU( rms ) ); 
-            outputParameters.AddOutput( "tot_sum", host.RoundU( context.SSY ) ); 
-            outputParameters.AddOutput( "tot_df",  tdf.ToString() ); 
-            outputParameters.AddOutput( "mse", host.RoundU( Math.Sqrt( rms ) ) ); 
-            outputParameters.AddOutput( "f", host.RoundU( vr ) ); 
-            double prob = PDF.fvalp( vr, bdf, rdf ); 
-            outputParameters.AddOutput( "p", host.pval( prob ) ); 
-            double r2 = context.SSREG / context.SSY; 
-            double r = Math.Sqrt( r2 ); 
-            if (Math.Floor(bdf) == 1 & context.N > 3 ) 
-            { 
-                if ( context.DoC == false ) 
-                { 
-                    if ( context.B[ 1 ] < 0 )
-                    { 
-                        r = -r; 
-                    } 
-                } 
-                else 
-                { 
-                    if ( context.B[ 2 ] < 0 )
-                    { 
-                        r = -r; 
-                    } 
-                } 
-                double P0 = 1 - ci; 
-                double GAMMA = 1.0 - ( P0 / 2.0 );
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("reg_sum", host.RoundU(context.SSREG));
+            outputParameters.AddOutput("reg_df", Math.Floor(bdf).ToString());
+            outputParameters.AddOutput("reg_mean", host.RoundU(bms));
+            outputParameters.AddOutput("res_sum", host.RoundU(context.SSY - context.SSREG));
+            outputParameters.AddOutput("res_df", Math.Floor(rdf).ToString());
+            outputParameters.AddOutput("res_mean", host.RoundU(rms));
+            outputParameters.AddOutput("tot_sum", host.RoundU(context.SSY));
+            outputParameters.AddOutput("tot_df", tdf.ToString());
+            outputParameters.AddOutput("mse", host.RoundU(Math.Sqrt(rms)));
+            outputParameters.AddOutput("f", host.RoundU(vr));
+            double prob = PDF.fvalp(vr, bdf, rdf);
+            outputParameters.AddOutput("p", host.pval(prob));
+            double r2 = context.SSREG / context.SSY;
+            double r = Math.Sqrt(r2);
+            if (Math.Floor(bdf) == 1 & context.N > 3)
+            {
+                if (context.DoC == false)
+                {
+                    if (context.B[1] < 0)
+                    {
+                        r = -r;
+                    }
+                }
+                else
+                {
+                    if (context.B[2] < 0)
+                    {
+                        r = -r;
+                    }
+                }
+                double P0 = 1 - ci;
+                double GAMMA = 1.0 - (P0 / 2.0);
                 int ifault;
-                double rcit = PDF.gauinv( GAMMA, out ifault ); 
-                double fz = 0.5 * Math.Log( ( 1.0 + r ) / ( 1.0 - r ) ); 
-                double fz1 = fz - ( rcit / Math.Sqrt( Convert.ToDouble( context.N - 3 ) ) ); 
-                double fz2 = fz + ( rcit / Math.Sqrt( Convert.ToDouble( context.N - 3 ) ) ); 
-                double con1 = ( Math.Exp( 2.0 * fz1 ) - 1.0 ) / ( Math.Exp( 2.0 * fz1 ) + 1.0 ); 
-                double con2 = ( Math.Exp( 2.0 * fz2 ) - 1.0 ) / ( Math.Exp( 2.0 * fz2 ) + 1.0 ); 
-                extra = "  [" + Formatting.XRound( 100 * ( 1.0 - P0 ), 1 ) + "%CI = " + host.RoundU( con1 ) + " to " + host.RoundU( con2 ) + "]"; 
-            } 
-            else 
-            { 
-                extra = ""; 
-            } 
-            outputParameters.AddOutput( "r", host.RoundU( r ) + extra ); 
-            outputParameters.AddOutput( "r2", host.RoundU( r2 * 100 ) + "%" ); 
-            r2 = 1.0 - ( rss / Convert.ToDouble( context.N - context.P ) ) / ( context.SSY / Convert.ToDouble( context.N - 1 ) ); 
-            if ( r2 < 0.0 )
-            { 
-                r2 = 0.0; 
-            } 
-            outputParameters.AddOutput( "ra2", host.RoundU( r2 * 100 ) + "%" ); 
-            Regress1.x_dwsd( context.R, context.N, out dw ); 
-            outputParameters.AddOutput( "dw", host.RoundU( dw ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptMultipleLinearRegressionPrediction( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( parameters ); 
-            double GAMMA = parameters[ "ci" ].AsDouble; 
-            DataFrame candidatePredictors = parameters[ "candidatePredictors" ].AsDataFrame; 
-            
+                double rcit = PDF.gauinv(GAMMA, out ifault);
+                double fz = 0.5 * Math.Log((1.0 + r) / (1.0 - r));
+                double fz1 = fz - (rcit / Math.Sqrt(Convert.ToDouble(context.N - 3)));
+                double fz2 = fz + (rcit / Math.Sqrt(Convert.ToDouble(context.N - 3)));
+                double con1 = (Math.Exp(2.0 * fz1) - 1.0) / (Math.Exp(2.0 * fz1) + 1.0);
+                double con2 = (Math.Exp(2.0 * fz2) - 1.0) / (Math.Exp(2.0 * fz2) + 1.0);
+                extra = "  [" + Formatting.XRound(100 * (1.0 - P0), 1) + "%CI = " + host.RoundU(con1) + " to " + host.RoundU(con2) + "]";
+            }
+            else
+            {
+                extra = "";
+            }
+            outputParameters.AddOutput("r", host.RoundU(r) + extra);
+            outputParameters.AddOutput("r2", host.RoundU(r2 * 100) + "%");
+            r2 = 1.0 - (rss / Convert.ToDouble(context.N - context.P)) / (context.SSY / Convert.ToDouble(context.N - 1));
+            if (r2 < 0.0)
+            {
+                r2 = 0.0;
+            }
+            outputParameters.AddOutput("ra2", host.RoundU(r2 * 100) + "%");
+            Regress1.x_dwsd(context.R, context.N, out dw);
+            outputParameters.AddOutput("dw", host.RoundU(dw));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptMultipleLinearRegressionPrediction(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
+            double GAMMA = parameters["ci"].AsDouble;
+            DataFrame candidatePredictors = parameters["candidatePredictors"].AsDataFrame;
+
             int iq; int i;
             double P0; double cit;
             double cl; double pl;
 
             //  RTF_LoadTemplate("interpmr.rtf")
-            double[] newx = new double[context.P + 1 /* for VB to C# conversion */ ]; 
-            bool lsqmean = true; 
-            if ( context.DoC ) 
-            { 
-                iq = 1; 
-                newx[ 1 ] = 1.0; 
-            } 
-            else 
-            { 
-                iq = 0; 
-            } 
-            StringVariable valueVariable = candidatePredictors.get_Variable( 1 ).AsStringVariable; 
-            DoubleVariable oldValueVariable = candidatePredictors.get_Variable( 2 ).AsDoubleVariable; 
-            for ( i=1 + iq; i <= context.P; i++ ) 
-            { 
-                newx[ i ] = Parsing.Cdbl_Txt( valueVariable.Data[ i - 1 - iq ] ); 
-                if ( newx[ i ] != oldValueVariable.Data[i - 1 - iq] )
-                { 
-                    lsqmean = false; 
-                } 
-            } 
-            double newy = 0.0; 
-            for ( i=1; i <= context.P; i++ ) 
-            { 
-                newy = newy + ( newx[ i ] * context.B[ i ] ); 
-            } 
-            MathDbl.civ( context.N - context.P, out cit, GAMMA, out P0 ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> xList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*x", xList ); 
-            for ( i=1 + iq; i <= context.P; i++ ) 
-            { 
-                ParameterBag xParameters = new ParameterBag(); 
-                xParameters.AddOutput( "x", context.Titles[ i - iq ] + " = " + host.RoundU( newx[ i ] ) ); 
-            } 
-            string msg = lsqmean ? "  (least squares mean)" : ""; 
-            outputParameters.AddOutput( "y", context.outcomeTitle + " = " + host.RoundU( newy ) + msg ); 
-            double rdf = Convert.ToDouble( ( context.N - 1 ) - ( context.P - 1 ) ); 
-            double rss = context.SSY - context.SSREG; 
-            double rms = rss / rdf; 
-            Regress1.x_ciyp( newx, context.H, context.P, rms, cit, out cl, out pl ); 
-            outputParameters.AddOutput( "ci_pc", ( Formatting.XRound( 100 * ( 1.0 - P0 ), 1 ) ) ); 
-            outputParameters.AddOutput( "ci_from", host.RoundU( newy - cl ) ); 
-            outputParameters.AddOutput( "ci_to", host.RoundU( newy + cl ) ); 
-            outputParameters.AddOutput( "pred_pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 1 ) ); 
-            outputParameters.AddOutput( "pred_from", host.RoundU( newy - pl ) ); 
-            outputParameters.AddOutput( "pred_to", host.RoundU( newy + pl ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult PlotMultipleLinearRegressionResiduals( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( parameters ); 
+            double[] newx = new double[context.P + 1 /* for VB to C# conversion */ ];
+            bool lsqmean = true;
+            if (context.DoC)
+            {
+                iq = 1;
+                newx[1] = 1.0;
+            }
+            else
+            {
+                iq = 0;
+            }
+            StringVariable valueVariable = candidatePredictors.get_Variable(1).AsStringVariable;
+            DoubleVariable oldValueVariable = candidatePredictors.get_Variable(2).AsDoubleVariable;
+            for (i = 1 + iq; i <= context.P; i++)
+            {
+                newx[i] = Parsing.Cdbl_Txt(valueVariable.Data[i - 1 - iq]);
+                if (newx[i] != oldValueVariable.Data[i - 1 - iq])
+                {
+                    lsqmean = false;
+                }
+            }
+            double newy = 0.0;
+            for (i = 1; i <= context.P; i++)
+            {
+                newy = newy + (newx[i] * context.B[i]);
+            }
+            MathDbl.civ(context.N - context.P, out cit, GAMMA, out P0);
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> xList = new List<ParameterBag>();
+            outputParameters.AddOutput("*x", xList);
+            for (i = 1 + iq; i <= context.P; i++)
+            {
+                ParameterBag xParameters = new ParameterBag();
+                xParameters.AddOutput("x", context.Titles[i - iq] + " = " + host.RoundU(newx[i]));
+            }
+            string msg = lsqmean ? "  (least squares mean)" : "";
+            outputParameters.AddOutput("y", context.outcomeTitle + " = " + host.RoundU(newy) + msg);
+            double rdf = Convert.ToDouble((context.N - 1) - (context.P - 1));
+            double rss = context.SSY - context.SSREG;
+            double rms = rss / rdf;
+            Regress1.x_ciyp(newx, context.H, context.P, rms, cit, out cl, out pl);
+            outputParameters.AddOutput("ci_pc", (Formatting.XRound(100 * (1.0 - P0), 1)));
+            outputParameters.AddOutput("ci_from", host.RoundU(newy - cl));
+            outputParameters.AddOutput("ci_to", host.RoundU(newy + cl));
+            outputParameters.AddOutput("pred_pc", Formatting.XRound(100 * (1.0 - P0), 1));
+            outputParameters.AddOutput("pred_from", host.RoundU(newy - pl));
+            outputParameters.AddOutput("pred_to", host.RoundU(newy + pl));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult PlotMultipleLinearRegressionResiduals(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             int i; int j;
-            double[] r; 
-            
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> chartList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*chart", chartList ); 
-            
-            ChartRenderer ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            context.R[ 0 ] = Constant.MISSING; 
-            System.Drawing.Image chImage = ch.PlotXYAndReturnImage( host, context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false ); 
-            chartList.Add( new ParameterBag( "chart", new FilledParameter( false, host.ImageToRtf( chImage ) ) ) ); 
-            
-            for ( i=1; i <= context.P; i++ ) 
-            { 
-                if ( i > 1 | !( context.DoC ) ) 
+            double[] r;
+
+
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> chartList = new List<ParameterBag>();
+            outputParameters.AddOutput("*chart", chartList);
+
+            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
+            context.R[0] = Constant.MISSING;
+            chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false))));
+
+            for (i = 1; i <= context.P; i++)
+            {
+                if (i > 1 | !(context.DoC))
                 {
                     int k = context.DoC ? i - 1 : i;
-                    r = new double[context.N + 1 /* for VB to C# conversion */]; 
-                    r[ 0 ] = Constant.MISSING; 
-                    for ( j=1; j <= context.N; j++ ) 
-                    { 
-                        r[ j ] = context.X[ j, i ]; 
-                    } 
-                    ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                    chImage = ch.PlotXYAndReturnImage( host, r, context.R, "Predictor: " + context.Titles[ i ], "Residual (Y - y fit)", "Residuals vs. Predictor " +  k.ToString() + " [linear regression]", true, 0, false ); 
-                    chartList.Add( new ParameterBag( "chart", new FilledParameter( false, host.ImageToRtf( chImage ) ) ) ); 
-                } 
+                    r = new double[context.N + 1 /* for VB to C# conversion */];
+                    r[0] = Constant.MISSING;
+                    for (j = 1; j <= context.N; j++)
+                    {
+                        r[j] = context.X[j, i];
+                    }
+                    ch = new ChartRenderer(ChartDefinition.Empty());
+                    chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, 0, false))));
+                }
             }
             r = new double[context.N + 1 /* for VB to C# conversion */ ];
             double xf;
-            ExFortran.Rank( context.R, r, 1, context.N, 0, out xf ); 
-            for ( j=1; j <= context.N; j++ ) 
-            { 
+            ExFortran.Rank(context.R, r, 1, context.N, 0, out xf);
+            for (j = 1; j <= context.N; j++)
+            {
                 // van der Waerden normal scores, Conover P 396
                 int ifault;
-                r[ j ] = PDF.gauinv( r[ j ] / ( Convert.ToDouble( context.N ) + 1.0 ), out ifault ); 
-                if ( ifault != 0 )
-                { 
-                    r[ j ] = Constant.MISSING; 
-                } 
-            } 
-            ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            chImage = ch.PlotXYAndReturnImage( host, context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, 0, false ); 
-            chartList.Add( new ParameterBag( "chart", new FilledParameter( false, host.ImageToRtf( chImage ) ) ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptMultipleLinearRegressionParameterDetail( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( Parameters );
+                r[j] = PDF.gauinv(r[j] / (Convert.ToDouble(context.N) + 1.0), out ifault);
+                if (ifault != 0)
+                {
+                    r[j] = Constant.MISSING;
+                }
+            }
+            ch = new ChartRenderer(ChartDefinition.Empty());
+            chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, 0, false))));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptMultipleLinearRegressionParameterDetail(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(Parameters);
             int i; int iq = 0;
             double cit; double P0;
 
-            double GAMMA = Parameters[ "ci" ].AsDouble; 
-            int df = context.N - context.P; 
-            MathDbl.civ( df, out cit, GAMMA, out P0 ); 
-            if ( context.DoC )
-            { 
-                iq = 1; 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 2 ) ); 
-            IList<ParameterBag> vList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*v", vList ); 
-            for ( i=1; i <= context.P; i++ ) 
+            double GAMMA = Parameters["ci"].AsDouble;
+            int df = context.N - context.P;
+            MathDbl.civ(df, out cit, GAMMA, out P0);
+            if (context.DoC)
+            {
+                iq = 1;
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
+            IList<ParameterBag> vList = new List<ParameterBag>();
+            outputParameters.AddOutput("*v", vList);
+            for (i = 1; i <= context.P; i++)
             {
                 string Q;
-                if ( i == 1 && context.DoC )
-                { 
-                    Q = "constant"; 
-                } else { Q = context.Titles[ i - iq + 1 ]; } 
-                ParameterBag vParameters = new ParameterBag(); 
-                vList.Add( vParameters ); 
-                vParameters.AddOutput( "label", Q ); 
-                vParameters.AddOutput( "coef", Host.RoundU( context.B[ i ] ) ); 
-                vParameters.AddOutput( "err", Host.RoundU( context.SE[ i ] ) ); 
-                vParameters.AddOutput( "from", Host.RoundU( context.B[ i ] - cit * context.SE[ i ] ) ); 
-                vParameters.AddOutput( "to", Host.RoundU( context.B[ i ] + cit * context.SE[ i ] ) ); 
-            } 
-            bool used_svd = true; 
-            for ( i=1; i <= context.P; i++ ) 
-            { 
-                if ( context.VIF[ i ] != Constant.MISSING ) 
-                { 
-                    used_svd = false; 
+                if (i == 1 && context.DoC)
+                {
+                    Q = "constant";
+                }
+                else { Q = context.Titles[i - iq + 1]; }
+                ParameterBag vParameters = new ParameterBag();
+                vList.Add(vParameters);
+                vParameters.AddOutput("label", Q);
+                vParameters.AddOutput("coef", Host.RoundU(context.B[i]));
+                vParameters.AddOutput("err", Host.RoundU(context.SE[i]));
+                vParameters.AddOutput("from", Host.RoundU(context.B[i] - cit * context.SE[i]));
+                vParameters.AddOutput("to", Host.RoundU(context.B[i] + cit * context.SE[i]));
+            }
+            bool used_svd = true;
+            for (i = 1; i <= context.P; i++)
+            {
+                if (context.VIF[i] != Constant.MISSING)
+                {
+                    used_svd = false;
                     break;
-                } 
-            } 
-            if ( !( used_svd ) ) 
+                }
+            }
+            if (!(used_svd))
             {
                 double[] vif2 = new double[context.P + 1 /* for VB to C# conversion */ ];
-                string[] ti = new string[context.P + 1 /* for VB to C# conversion */ ]; 
-                double sumv = 0.0; 
-                for ( i=1; i <= context.P; i++ ) 
-                { 
-                    if ( i == 1 && context.DoC ) 
-                    { 
-                        ti[ i ] = "_*_"; 
-                    } 
-                    else 
-                    { 
-                        ti[ i ] = context.Titles[ i - iq + 1 ]; 
-                        sumv = sumv + context.VIF[ i ]; 
-                    } 
-                    vif2[ i ] = context.VIF[ i ]; 
+                string[] ti = new string[context.P + 1 /* for VB to C# conversion */ ];
+                double sumv = 0.0;
+                for (i = 1; i <= context.P; i++)
+                {
+                    if (i == 1 && context.DoC)
+                    {
+                        ti[i] = "_*_";
+                    }
+                    else
+                    {
+                        ti[i] = context.Titles[i - iq + 1];
+                        sumv = sumv + context.VIF[i];
+                    }
+                    vif2[i] = context.VIF[i];
                 }
                 int iv;
-                if ( context.DoC )
-                { 
-                    iv = context.P - 1; 
-                } else { iv = context.P; } 
-                double meanv = sumv / Convert.ToDouble( iv ); 
+                if (context.DoC)
+                {
+                    iv = context.P - 1;
+                }
+                else { iv = context.P; }
+                double meanv = sumv / Convert.ToDouble(iv);
                 // bubble sort
-                bool bsorted = false; 
-                while ( !( bsorted ) ) 
-                { 
-                    bsorted = true; 
-                    for ( i=context.P - 1; i >= 1; i-- ) 
-                    { 
-                        if ( vif2[ i + 1 ] > vif2[ i ] ) 
-                        { 
-                            bsorted = false; 
-                            double temp = vif2[ i ]; 
-                            string tempx = ti[ i ]; 
-                            vif2[ i ] = vif2[ i + 1 ]; 
-                            ti[ i ] = ti[ i + 1 ]; 
-                            vif2[ i + 1 ] = temp; 
-                            ti[ i + 1 ] = tempx; 
-                        } 
-                    } 
-                } 
+                bool bsorted = false;
+                while (!(bsorted))
+                {
+                    bsorted = true;
+                    for (i = context.P - 1; i >= 1; i--)
+                    {
+                        if (vif2[i + 1] > vif2[i])
+                        {
+                            bsorted = false;
+                            double temp = vif2[i];
+                            string tempx = ti[i];
+                            vif2[i] = vif2[i + 1];
+                            ti[i] = ti[i + 1];
+                            vif2[i + 1] = temp;
+                            ti[i + 1] = tempx;
+                        }
+                    }
+                }
                 // print for independent variables
-                IList<ParameterBag> vifList = new List<ParameterBag>(); 
-                outputParameters.AddOutput( "*vif", vifList ); 
-                for ( i=1; i <= context.P; i++ ) 
-                { 
-                    if ( ti[ i ] != "_*_" ) 
-                    { 
-                        ParameterBag vifParameters = new ParameterBag(); 
-                        vifList.Add( vifParameters ); 
-                        vifParameters.AddOutput( "label", ti[ i ] ); 
-                        vifParameters.AddOutput( "vif", Host.RoundU( vif2[ i ] ) );
+                IList<ParameterBag> vifList = new List<ParameterBag>();
+                outputParameters.AddOutput("*vif", vifList);
+                for (i = 1; i <= context.P; i++)
+                {
+                    if (ti[i] != "_*_")
+                    {
+                        ParameterBag vifParameters = new ParameterBag();
+                        vifList.Add(vifParameters);
+                        vifParameters.AddOutput("label", ti[i]);
+                        vifParameters.AddOutput("vif", Host.RoundU(vif2[i]));
                         vifParameters.AddOutput("x", vif2[i] > 20.0 ? Formatting.ASTERISK : "");
-                        vifParameters.AddOutput( "rvif", Host.RoundU( 1.0 / vif2[ i ] ) ); 
-                    } 
-                } 
-                outputParameters.AddOutput( "meanv", Host.RoundU( meanv ) ); 
-            } 
-            else 
-            { 
-                // not calc if SVD used cos no r matrix
-                outputParameters.AddOutput( "*vif", null ); 
-                outputParameters.AddOutput( "meanv", "not calculated" ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        public static StepResult RptXxi( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( parameters ); 
-            
-            double rdf = Convert.ToDouble( context.N - context.P ); 
-            double rss = context.SSY - context.SSREG; 
-            double rms = rss / rdf; 
-            //  If msgbox_x("Save matrices to a workbook as well as report?", vbYesNo + vbQuestion + vbDefaultButton2 + vbMsgBoxHelpButton, "Linear Regression", App.helpfile, ACTIVE_HELP_ID, Me) = vbYes Then
-            DataFrame frame = new DataFrame(); 
-            IList<Variable> pendedVariables = new List<Variable>(); 
-            for ( int i=1; i <= context.P; i++ ) 
-            { 
-                DoubleVariable vxxi = new DoubleVariable(); 
-                frame.Variables.Add( vxxi ); 
-                DoubleVariable vcv = new DoubleVariable(); 
-                pendedVariables.Add( vcv ); 
-                vxxi.Title = "XXi " +  i.ToString(); 
-                vxxi.EnsureLength( context.P ); 
-                vcv.Title = "Var-CoVar " +  i.ToString(); 
-                vcv.EnsureLength( context.P ); 
-                for ( int j=1; j <= context.P; j++ ) 
-                { 
-                    vxxi.set_Data( j - 1, context.H[ i, j ] ); 
-                    vcv.set_Data( j - 1, context.H[ i, j ] * rms ); 
-                } 
-            } 
-            //  Spacer
-            frame.Variables.Add( new DoubleVariable() ); 
-            //  Add all the cv variables
-            foreach ( Variable v in pendedVariables ) 
-            { 
-                frame.Variables.Add( v ); 
+                        vifParameters.AddOutput("rvif", Host.RoundU(1.0 / vif2[i]));
+                    }
+                }
+                outputParameters.AddOutput("meanv", Host.RoundU(meanv));
             }
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "data", frame ); 
-            
-            IList<ParameterBag> xxiList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*xxi", xxiList ); 
-            for ( int i=1; i <= context.P; i++ ) 
-            { 
-                string rw = ""; 
-                ParameterBag xxiParameters; 
-                for ( int j=1; j <= context.P; j++ ) 
-                { 
-                    rw = rw + host.RoundU( context.H[ j, i ] ) + "\t"; 
-                    if ( j % 4 == 0 & j < context.P ) 
-                    { 
-                        xxiParameters = new ParameterBag(); 
-                        xxiList.Add( xxiParameters ); 
-                        xxiParameters.AddOutput( "x", rw ); 
-                        rw = ""; 
-                    } 
-                } 
-                xxiParameters = new ParameterBag(); 
-                xxiList.Add( xxiParameters ); 
-                xxiParameters.AddOutput( "x", rw ); 
-            } 
-            
-            IList<ParameterBag> covarList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*covar", covarList ); 
-            for ( int i=1; i <= context.P; i++ ) 
-            { 
-                string rw = ""; 
-                ParameterBag covarParameters; 
-                for ( int j=1; j <= context.P; j++ ) 
-                { 
-                    rw += host.RoundU( rms * context.H[ j, i ] ) + "\t"; 
-                    if ( j % 4 == 0 & j < context.P ) 
-                    { 
-                        covarParameters = new ParameterBag(); 
-                        covarList.Add( covarParameters ); 
-                        covarParameters.AddOutput( "x", rw ); 
-                        rw = ""; 
-                    } 
-                } 
-                covarParameters = new ParameterBag(); 
-                covarList.Add( covarParameters ); 
-                covarParameters.AddOutput( "x", rw ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptMultipleLinearRegressionResiduals( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( parameters ); 
-            double ci = parameters[ "ci" ].AsDouble; 
-            bool shouldSaveFittedY = parameters[ "saveFittedY" ].AsBoolean; 
-            bool shouldSaveStudentisedResidual = parameters[ "saveStudentised" ].AsBoolean; 
-            bool shouldSaveJackknifeResidual = parameters[ "saveJackknife" ].AsBoolean;
+            else
+            {
+                // not calc if SVD used cos no r matrix
+                outputParameters.AddOutput("*vif", null);
+                outputParameters.AddOutput("meanv", "not calculated");
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+        public static StepResult RptXxi(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
+
+            double rdf = Convert.ToDouble(context.N - context.P);
+            double rss = context.SSY - context.SSREG;
+            double rms = rss / rdf;
+            //  If msgbox_x("Save matrices to a workbook as well as report?", vbYesNo + vbQuestion + vbDefaultButton2 + vbMsgBoxHelpButton, "Linear Regression", App.helpfile, ACTIVE_HELP_ID, Me) = vbYes Then
+            DataFrame frame = new DataFrame();
+            IList<Variable> pendedVariables = new List<Variable>();
+            for (int i = 1; i <= context.P; i++)
+            {
+                DoubleVariable vxxi = new DoubleVariable();
+                frame.Variables.Add(vxxi);
+                DoubleVariable vcv = new DoubleVariable();
+                pendedVariables.Add(vcv);
+                vxxi.Title = "XXi " + i.ToString();
+                vxxi.EnsureLength(context.P);
+                vcv.Title = "Var-CoVar " + i.ToString();
+                vcv.EnsureLength(context.P);
+                for (int j = 1; j <= context.P; j++)
+                {
+                    vxxi.set_Data(j - 1, context.H[i, j]);
+                    vcv.set_Data(j - 1, context.H[i, j] * rms);
+                }
+            }
+            //  Spacer
+            frame.Variables.Add(new DoubleVariable());
+            //  Add all the cv variables
+            foreach (Variable v in pendedVariables)
+            {
+                frame.Variables.Add(v);
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("data", frame);
+
+            IList<ParameterBag> xxiList = new List<ParameterBag>();
+            outputParameters.AddOutput("*xxi", xxiList);
+            for (int i = 1; i <= context.P; i++)
+            {
+                string rw = "";
+                ParameterBag xxiParameters;
+                for (int j = 1; j <= context.P; j++)
+                {
+                    rw = rw + host.RoundU(context.H[j, i]) + "\t";
+                    if (j % 4 == 0 & j < context.P)
+                    {
+                        xxiParameters = new ParameterBag();
+                        xxiList.Add(xxiParameters);
+                        xxiParameters.AddOutput("x", rw);
+                        rw = "";
+                    }
+                }
+                xxiParameters = new ParameterBag();
+                xxiList.Add(xxiParameters);
+                xxiParameters.AddOutput("x", rw);
+            }
+
+            IList<ParameterBag> covarList = new List<ParameterBag>();
+            outputParameters.AddOutput("*covar", covarList);
+            for (int i = 1; i <= context.P; i++)
+            {
+                string rw = "";
+                ParameterBag covarParameters;
+                for (int j = 1; j <= context.P; j++)
+                {
+                    rw += host.RoundU(rms * context.H[j, i]) + "\t";
+                    if (j % 4 == 0 & j < context.P)
+                    {
+                        covarParameters = new ParameterBag();
+                        covarList.Add(covarParameters);
+                        covarParameters.AddOutput("x", rw);
+                        rw = "";
+                    }
+                }
+                covarParameters = new ParameterBag();
+                covarList.Add(covarParameters);
+                covarParameters.AddOutput("x", rw);
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptMultipleLinearRegressionResiduals(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
+            double ci = parameters["ci"].AsDouble;
+            bool shouldSaveFittedY = parameters["saveFittedY"].AsBoolean;
+            bool shouldSaveStudentisedResidual = parameters["saveStudentised"].AsBoolean;
+            bool shouldSaveJackknifeResidual = parameters["saveJackknife"].AsBoolean;
 
             //  RTF_LoadTemplate("residm.rtf")
             // Check if we need to save the data
-            double alpha = 1.0 - ci; 
-            double hicrit = Math.Min( ( 3 * Convert.ToDouble( context.P ) ) / Convert.ToDouble( context.N ), 0.99 ); 
-            double srcrit = PDF.tfromp( alpha / 2.0, Convert.ToDouble( context.N - context.P ) ); 
-            double jackcrit = PDF.tfromp( alpha / 2.0, Convert.ToDouble( context.N - context.P - 1 ) ); 
-            double cdcrit = PDF.ffromp( Convert.ToDouble( context.N - context.P ), Convert.ToDouble( context.P ), alpha ); 
-            double dfcrit = 2.0 * Math.Sqrt( Convert.ToDouble( context.P ) / Convert.ToDouble( context.N ) );
+            double alpha = 1.0 - ci;
+            double hicrit = Math.Min((3 * Convert.ToDouble(context.P)) / Convert.ToDouble(context.N), 0.99);
+            double srcrit = PDF.tfromp(alpha / 2.0, Convert.ToDouble(context.N - context.P));
+            double jackcrit = PDF.tfromp(alpha / 2.0, Convert.ToDouble(context.N - context.P - 1));
+            double cdcrit = PDF.ffromp(Convert.ToDouble(context.N - context.P), Convert.ToDouble(context.P), alpha);
+            double dfcrit = 2.0 * Math.Sqrt(Convert.ToDouble(context.P) / Convert.ToDouble(context.N));
             double[] hi = new double[context.N + 1 /* for VB to C# conversion */];
             double[] sey = new double[context.N + 1 /* for VB to C# conversion */];
             double[] rstd = new double[context.N + 1 /* for VB to C# conversion */ ];
             double[] rstudent = new double[context.N + 1 /* for VB to C# conversion */];
             double[] cd = new double[context.N + 1 /* for VB to C# conversion */];
-            double[] dff = new double[context.N + 1 /* for VB to C# conversion */ ]; 
-            double rdf = Convert.ToDouble( context.N - context.P ); 
+            double[] dff = new double[context.N + 1 /* for VB to C# conversion */ ];
+            double rdf = Convert.ToDouble(context.N - context.P);
             //  root mean square is estimate of population variance
-            double rms = ( context.SSY - context.SSREG ) / rdf; 
+            double rms = (context.SSY - context.SSREG) / rdf;
             // double Con = ( rdf - 1.0 ) / rdf; - unused
-            for (int i=1; i <= context.N; i++ ) 
-            { 
-                double wt = context.S[ i ]; 
+            for (int i = 1; i <= context.N; i++)
+            {
+                double wt = context.S[i];
                 double xcx = 0.0;
                 int j;
-                for ( j=1; j <= context.P; j++ ) 
-                { 
+                for (j = 1; j <= context.P; j++)
+                {
                     double s = 0.0;
                     int k;
-                    for ( k=1; k <= context.P; k++ ) 
-                    { 
-                        s = s + context.H[ j, k ] * context.X[ i, k ]; 
-                    } 
-                    xcx = xcx + s * context.X[ i, j ]; 
-                } 
-                sey[ i ] = Math.Sqrt( rms * xcx ); 
-                hi[ i ] = wt * xcx; 
-                if ( wt == 0.0 | hi[ i ] == 0.0 ) 
-                { 
-                    rstudent[ i ] = Constant.MISSING; 
-                    rstd[ i ] = Constant.MISSING; 
-                    cd[ i ] = Constant.MISSING; 
-                    dff[ i ] = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    double varer = ( 1.0 - hi[ i ] ) / wt; 
-                    double SI = Math.Sqrt( ( wt * ( context.N - context.P ) * rms - Math.Pow( ( wt * context.R[ i ] ), 2.0 ) / ( 1.0 - hi[ i ] ) ) / ( rdf - 1.0 ) ); 
+                    for (k = 1; k <= context.P; k++)
+                    {
+                        s = s + context.H[j, k] * context.X[i, k];
+                    }
+                    xcx = xcx + s * context.X[i, j];
+                }
+                sey[i] = Math.Sqrt(rms * xcx);
+                hi[i] = wt * xcx;
+                if (wt == 0.0 | hi[i] == 0.0)
+                {
+                    rstudent[i] = Constant.MISSING;
+                    rstd[i] = Constant.MISSING;
+                    cd[i] = Constant.MISSING;
+                    dff[i] = Constant.MISSING;
+                }
+                else
+                {
+                    double varer = (1.0 - hi[i]) / wt;
+                    double SI = Math.Sqrt((wt * (context.N - context.P) * rms - Math.Pow((wt * context.R[i]), 2.0) / (1.0 - hi[i])) / (rdf - 1.0));
                     //  jackknife (SAS calls it rstudent) - see Kleinbaum
-                    rstudent[ i ] = ( wt * context.R[ i ] ) / ( SI * Math.Sqrt( 1.0 - hi[ i ] ) ); 
+                    rstudent[i] = (wt * context.R[i]) / (SI * Math.Sqrt(1.0 - hi[i]));
                     //  studentised residual, standardised residual is er(i)/sqr(rms)
-                    rstd[ i ] = context.R[ i ] / ( Math.Sqrt( rms * varer ) ); 
-                    cd[ i ] = ( rstd[ i ] * rstd[ i ] * ( hi[ i ] / ( 1.0 - hi[ i ] ) ) ) / Convert.ToDouble( context.P ); 
-                    dff[ i ] = Math.Sqrt( hi[ i ] / ( 1.0 - hi[ i ] ) ) * rstudent[ i ]; 
-                } 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> yfitList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*yfit", yfitList ); 
-            for (int i=1; i <= context.N; i++ ) 
-            { 
-                ParameterBag yfitParameters = new ParameterBag(); 
-                yfitList.Add( yfitParameters ); 
-                yfitParameters.AddOutput( "index",  i.ToString() ); 
-                yfitParameters.AddOutput( "y", host.RoundU( context.Y[ i ] ) ); 
-                yfitParameters.AddOutput( "fit_y", host.RoundU( context.FV[ i ] ) ); 
-                yfitParameters.AddOutput( "std_err", host.RoundU( sey[ i ] ) ); 
-                yfitParameters.AddOutput( "res", host.RoundU( context.R[ i ] ) ); 
-            } 
-            if ( shouldSaveFittedY ) 
-            { 
-                DataFrame yfitFrame = new DataFrame(); 
-                DoubleVariable vYFit = new DoubleVariable( context.N, "Y Fit" ); 
-                yfitFrame.Variables.Add( vYFit ); 
-                DoubleVariable vSdYFit = new DoubleVariable( context.N, "SD Y Fit" ); 
-                yfitFrame.Variables.Add( vSdYFit ); 
-                DoubleVariable vResidual = new DoubleVariable( context.N, "Residual" ); 
-                yfitFrame.Variables.Add( vResidual ); 
-                for (int i=1; i <= context.N; i++ ) 
-                { 
-                    vYFit.set_Data( i - 1, context.FV[ i ] ); 
-                    vSdYFit.set_Data( i - 1, sey[ i ] ); 
-                    vResidual.set_Data( i - 1, context.R[ i ] ); 
-                } 
-                outputParameters.AddOutput( "yfit", yfitFrame ); 
-            } 
-            IList<ParameterBag> studentisedList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*studentised", studentisedList ); 
-            for (int i=1; i <= context.N; i++ ) 
-            { 
-                ParameterBag studentisedParameters = new ParameterBag(); 
-                studentisedList.Add( studentisedParameters ); 
-                studentisedParameters.AddOutput( "index",  i.ToString() );
+                    rstd[i] = context.R[i] / (Math.Sqrt(rms * varer));
+                    cd[i] = (rstd[i] * rstd[i] * (hi[i] / (1.0 - hi[i]))) / Convert.ToDouble(context.P);
+                    dff[i] = Math.Sqrt(hi[i] / (1.0 - hi[i])) * rstudent[i];
+                }
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> yfitList = new List<ParameterBag>();
+            outputParameters.AddOutput("*yfit", yfitList);
+            for (int i = 1; i <= context.N; i++)
+            {
+                ParameterBag yfitParameters = new ParameterBag();
+                yfitList.Add(yfitParameters);
+                yfitParameters.AddOutput("index", i.ToString());
+                yfitParameters.AddOutput("y", host.RoundU(context.Y[i]));
+                yfitParameters.AddOutput("fit_y", host.RoundU(context.FV[i]));
+                yfitParameters.AddOutput("std_err", host.RoundU(sey[i]));
+                yfitParameters.AddOutput("res", host.RoundU(context.R[i]));
+            }
+            if (shouldSaveFittedY)
+            {
+                DataFrame yfitFrame = new DataFrame();
+                DoubleVariable vYFit = new DoubleVariable(context.N, "Y Fit");
+                yfitFrame.Variables.Add(vYFit);
+                DoubleVariable vSdYFit = new DoubleVariable(context.N, "SD Y Fit");
+                yfitFrame.Variables.Add(vSdYFit);
+                DoubleVariable vResidual = new DoubleVariable(context.N, "Residual");
+                yfitFrame.Variables.Add(vResidual);
+                for (int i = 1; i <= context.N; i++)
+                {
+                    vYFit.set_Data(i - 1, context.FV[i]);
+                    vSdYFit.set_Data(i - 1, sey[i]);
+                    vResidual.set_Data(i - 1, context.R[i]);
+                }
+                outputParameters.AddOutput("yfit", yfitFrame);
+            }
+            IList<ParameterBag> studentisedList = new List<ParameterBag>();
+            outputParameters.AddOutput("*studentised", studentisedList);
+            for (int i = 1; i <= context.N; i++)
+            {
+                ParameterBag studentisedParameters = new ParameterBag();
+                studentisedList.Add(studentisedParameters);
+                studentisedParameters.AddOutput("index", i.ToString());
                 studentisedParameters.AddOutput("index*", Math.Abs(rstd[i]) > srcrit ? Formatting.ASTERISK : "");
-                studentisedParameters.AddOutput( "stu", host.RoundU( rstd[ i ] ) );
+                studentisedParameters.AddOutput("stu", host.RoundU(rstd[i]));
                 studentisedParameters.AddOutput("stu*", Math.Abs(hi[i]) > hicrit ? Formatting.ASTERISK : "");
-                studentisedParameters.AddOutput( "hi", host.RoundU( hi[ i ] ) );
+                studentisedParameters.AddOutput("hi", host.RoundU(hi[i]));
                 studentisedParameters.AddOutput("hi*", Math.Abs(cd[i]) > cdcrit ? Formatting.ASTERISK : "");
-                studentisedParameters.AddOutput( "cook", host.RoundU( cd[ i ] ) ); 
-            } 
-            if ( shouldSaveStudentisedResidual ) 
-            { 
-                DataFrame studentisedFrame = new DataFrame(); 
-                DoubleVariable vResidual = new DoubleVariable( context.N, "Studentised Residual" ); 
-                studentisedFrame.Variables.Add( vResidual ); 
-                DoubleVariable vLeverage = new DoubleVariable( context.N, "Leverage" ); 
-                studentisedFrame.Variables.Add( vLeverage ); 
-                DoubleVariable vCook = new DoubleVariable( context.N, "Cook's Distance" ); 
-                studentisedFrame.Variables.Add( vCook ); 
-                for (int i=1; i <= context.N; i++ ) 
-                { 
-                    vResidual.set_Data( i - 1, rstd[ i ] ); 
-                    vLeverage.set_Data( i - 1, hi[ i ] ); 
-                    vCook.set_Data( i - 1, cd[ i ] ); 
-                } 
-                outputParameters.AddOutput( "studentised", studentisedFrame ); 
-            } 
-            IList<ParameterBag> jackknifeList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*jackknife", jackknifeList ); 
-            for (int i=1; i <= context.N; i++ ) 
-            { 
-                ParameterBag jackknifeParameters = new ParameterBag(); 
-                jackknifeList.Add( jackknifeParameters ); 
-                jackknifeParameters.AddOutput( "index",  i.ToString() );
+                studentisedParameters.AddOutput("cook", host.RoundU(cd[i]));
+            }
+            if (shouldSaveStudentisedResidual)
+            {
+                DataFrame studentisedFrame = new DataFrame();
+                DoubleVariable vResidual = new DoubleVariable(context.N, "Studentised Residual");
+                studentisedFrame.Variables.Add(vResidual);
+                DoubleVariable vLeverage = new DoubleVariable(context.N, "Leverage");
+                studentisedFrame.Variables.Add(vLeverage);
+                DoubleVariable vCook = new DoubleVariable(context.N, "Cook's Distance");
+                studentisedFrame.Variables.Add(vCook);
+                for (int i = 1; i <= context.N; i++)
+                {
+                    vResidual.set_Data(i - 1, rstd[i]);
+                    vLeverage.set_Data(i - 1, hi[i]);
+                    vCook.set_Data(i - 1, cd[i]);
+                }
+                outputParameters.AddOutput("studentised", studentisedFrame);
+            }
+            IList<ParameterBag> jackknifeList = new List<ParameterBag>();
+            outputParameters.AddOutput("*jackknife", jackknifeList);
+            for (int i = 1; i <= context.N; i++)
+            {
+                ParameterBag jackknifeParameters = new ParameterBag();
+                jackknifeList.Add(jackknifeParameters);
+                jackknifeParameters.AddOutput("index", i.ToString());
                 jackknifeParameters.AddOutput("index*", Math.Abs(rstudent[i]) > jackcrit ? Formatting.ASTERISK : "");
-                jackknifeParameters.AddOutput( "jack", host.RoundU( rstudent[ i ] ) );
+                jackknifeParameters.AddOutput("jack", host.RoundU(rstudent[i]));
                 jackknifeParameters.AddOutput("jack*", Math.Abs(dff[i]) > dfcrit ? Formatting.ASTERISK : "");
-                jackknifeParameters.AddOutput( "dfit", host.RoundU( dff[ i ] ) ); 
-            } 
-            if ( shouldSaveJackknifeResidual ) 
-            { 
-                DataFrame jackknifeFrame = new DataFrame(); 
-                DoubleVariable vResidual = new DoubleVariable( context.N, "Jackknife Residual" ); 
-                jackknifeFrame.Variables.Add( vResidual ); 
-                DoubleVariable vDFIT = new DoubleVariable( context.N, "DFIT" ); 
-                jackknifeFrame.Variables.Add( vDFIT ); 
-                for (int i=1; i <= context.N; i++ ) 
-                { 
-                    vResidual.set_Data( i - 1, rstudent[ i ] ); 
-                    vDFIT.set_Data( i - 1, dff[ i ] ); 
-                } 
-                outputParameters.AddOutput( "jackknife", jackknifeFrame ); 
-            } 
-            outputParameters.AddOutput( "zhi", host.RoundU( hicrit ) ); 
-            outputParameters.AddOutput( "zcook", host.RoundU( cdcrit ) ); 
-            outputParameters.AddOutput( "zstu", host.RoundU( srcrit ) ); 
-            outputParameters.AddOutput( "zjack", host.RoundU( jackcrit ) ); 
-            outputParameters.AddOutput( "zdfit", host.RoundU( dfcrit ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptMultipleLinearRegressionBestSubset( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( parameters ); 
-            bool[] selectedPredictors = ( ( bool[] )( parameters[ "selectedPredictors" ].Data ) ); 
-            bool shouldUseMaximumF = "maximumF".Equals( parameters[ "selector" ].AsString ); 
-            int errcode = 0; 
-            
-            int forced = 0; int C; int kept = 0; int[] keep = null; 
-            double maxf = 0; double maxr2 = 0; 
-            
+                jackknifeParameters.AddOutput("dfit", host.RoundU(dff[i]));
+            }
+            if (shouldSaveJackknifeResidual)
+            {
+                DataFrame jackknifeFrame = new DataFrame();
+                DoubleVariable vResidual = new DoubleVariable(context.N, "Jackknife Residual");
+                jackknifeFrame.Variables.Add(vResidual);
+                DoubleVariable vDFIT = new DoubleVariable(context.N, "DFIT");
+                jackknifeFrame.Variables.Add(vDFIT);
+                for (int i = 1; i <= context.N; i++)
+                {
+                    vResidual.set_Data(i - 1, rstudent[i]);
+                    vDFIT.set_Data(i - 1, dff[i]);
+                }
+                outputParameters.AddOutput("jackknife", jackknifeFrame);
+            }
+            outputParameters.AddOutput("zhi", host.RoundU(hicrit));
+            outputParameters.AddOutput("zcook", host.RoundU(cdcrit));
+            outputParameters.AddOutput("zstu", host.RoundU(srcrit));
+            outputParameters.AddOutput("zjack", host.RoundU(jackcrit));
+            outputParameters.AddOutput("zdfit", host.RoundU(dfcrit));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptMultipleLinearRegressionBestSubset(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
+            bool[] selectedPredictors = ((bool[])(parameters["selectedPredictors"].Data));
+            bool shouldUseMaximumF = "maximumF".Equals(parameters["selector"].AsString);
+            int errcode = 0;
+
+            int forced = 0; int C; int kept = 0; int[] keep = null;
+            double maxf = 0; double maxr2 = 0;
+
             //  RTF_LoadTemplate("subset.rtf")
-            double rmsorig = ( context.SSY - context.SSREG ) / Convert.ToDouble( ( context.N - 1 ) - ( context.P - 1 ) ); 
-            double mincp = ( ( context.SSY - context.SSREG ) / rmsorig ) - Convert.ToDouble( context.N - 2 * ( context.P + 1 ) ); 
-            int iq = 0; 
-            if ( context.DoC )
-            { 
-                iq = 1; 
+            double rmsorig = (context.SSY - context.SSREG) / Convert.ToDouble((context.N - 1) - (context.P - 1));
+            double mincp = ((context.SSY - context.SSREG) / rmsorig) - Convert.ToDouble(context.N - 2 * (context.P + 1));
+            int iq = 0;
+            if (context.DoC)
+            {
+                iq = 1;
             }
             double[] yfit;
-            int[] force = new int[context.P + 1 /* for VB to C# conversion */ ]; 
-            for ( C=0; C <= selectedPredictors.Length - 1; C++ ) 
-            { 
-                if ( selectedPredictors[ C ] ) 
-                { 
-                    forced = forced + 1; 
-                    force[ forced ] = C + 1 + iq; 
-                } 
-            } 
-            if ( context.DoC ) 
-            { 
-                forced = forced + 1; 
-                // create temp variable for copying values 
-                int[] transTemp12 = new int[forced + 1 /* for VB to C# conversion */ ]; 
-                Array.Copy( force, transTemp12, Math.Min( force.Length, transTemp12.Length ) ); 
-                force = transTemp12; 
-                force[ forced ] = 1; 
-            } 
-            for ( int j=1; j <= context.P; j++ ) 
+            int[] force = new int[context.P + 1 /* for VB to C# conversion */ ];
+            for (C = 0; C <= selectedPredictors.Length - 1; C++)
             {
-                int[] preds = new int[j + 1 /* for VB to C# conversion */ ]; 
-                for ( int i=1; i <= j; i++ ) 
-                { 
-                    preds[ i ] = i; 
-                } 
-                int at = j; 
-                do 
-                { 
-                    bool oktry = x_forceinc( forced, force, j, preds ); 
-                    if ( context.DoC ) 
-                    { 
-                        if ( j == 1 ) 
-                        { 
-                            oktry = false; 
-                        } 
-                        else 
-                        { 
-                            for ( int k=1; k <= j; k++ ) 
-                            { 
-                                if ( preds[ k ] == 1 & k != 1 ) 
-                                { 
-                                    int temp = preds[ k ]; 
-                                    preds[ k ] = preds[ 1 ]; 
-                                    preds[ 1 ] = temp; 
-                                } 
-                            } 
-                        } 
-                    } 
-                    if ( oktry ) 
-                    {
-                        double[,] tryx = new double[context.N + 1 /* for VB to C# conversion */, j + 1 /* for VB to C# conversion */]; 
-                        for ( int i=1; i <= context.N; i++ ) 
-                        { 
-                            for ( int k=1; k <= j; k++ ) 
-                            { 
-                                tryx[ i, k ] = context.X[ i, preds[ k ] ]; 
-                            } 
-                        } 
-                        x_glin(context, context.Y, context.S, tryx, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out yfit, ref context.DoC, ref context.N, ref j, ref errcode ); 
-                        if ( errcode == 0 ) 
-                        { 
-                            double rdf = Convert.ToDouble( ( context.N - 1 ) - ( j - 1 ) );
-                            double bdf = j > 1 ? Convert.ToDouble( j - 1 ) : Convert.ToDouble( j ); 
-                            double bms = context.SSREG / bdf; 
-                            double rms = ( context.SSY - context.SSREG ) / rdf; 
-                            double f = bms / rms; 
-                            double r2 = context.SSREG / context.SSY; 
-                            double cp = ( ( context.SSY - context.SSREG ) / rmsorig ) - Convert.ToDouble( context.N - 2 * ( j + 1 ) );
-                            bool isBetter = shouldUseMaximumF ? f > maxf : cp <= mincp;
-                            if ( isBetter ) 
-                            { 
-                                maxf = f; 
-                                mincp = cp; 
-                                maxr2 = r2; 
-                                kept = j;
-                                keep = new int[kept + 1 /* for VB to C# conversion */ ]; 
-                                for ( int k=1; k <= j; k++ ) 
-                                { 
-                                    keep[ k ] = preds[ k ]; 
-                                } 
-                            } 
-                        } 
-                        else 
-                        { 
-                            return new StepResult( StepSuccess.Failed, new ParameterBag() ); 
-                        } 
-                    } 
-                    for ( int L=j; L >= 0; L-- ) 
-                    { 
-                        if ( preds[ L ] < context.P - ( j - L ) ) 
-                        { 
-                            at = L; 
-                            break;
-                        } 
-                    } 
-                    if ( at == 0 || j == context.P )
-                    { 
-                        break;
-                    } 
-                    preds[ at ] = preds[ at ] + 1; 
-                    if ( at != j ) 
-                    { 
-                        for ( int Q=at + 1; Q <= j; Q++ ) 
-                        { 
-                            preds[ Q ] = preds[ at ] + ( Q - at ); 
-                        } 
-                        at = j; 
-                    } 
-                } 
-                while ( true ); 
-            } 
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> selectedList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*selected", selectedList ); 
-            for ( int j=1 + iq; j <= kept; j++ ) 
-            { 
-                ParameterBag selectedParameters = new ParameterBag(); 
-                selectedList.Add( selectedParameters ); 
-                selectedParameters.AddOutput( "label", context.Titles[ keep[ j ] - iq + 1 ] ); 
-            } 
-            outputParameters.AddOutput( "f", host.RoundU( maxf ) ); 
-            outputParameters.AddOutput( "r2", host.RoundU( maxr2 ) ); 
-            outputParameters.AddOutput( "cp", host.RoundU( mincp ) ); 
-            
-            //  Hack the data in the analysis to drop some of the predictors
-            context.P = kept;
-            double[,] newX = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */]; 
-            for ( int j=1; j <= context.N; j++ ) 
-            { 
-                for ( int k=1; k <= context.P; k++ ) 
-                { 
-                    newX[ j, k ] = context.X[ j, keep[ k ] ]; 
-                } 
-            } 
-            context.X = newX; 
-            for ( int j=1 + iq; j <= kept; j++ ) 
-            { 
-                int ix1 = j - iq + 1; 
-                int ix2 = keep[ j ] - iq + 1; 
-                string temp = context.Titles[ ix1 ]; 
-                context.Titles[ ix1 ] = context.Titles[ ix2 ]; 
-                context.Titles[ ix2 ] = temp; 
-            } 
-            // create temp variable for copying values 
-            string[] transTemp13 = new string[context.P + 1 /* for VB to C# conversion */ ]; 
-            Array.Copy( context.Titles, transTemp13, Math.Min( context.Titles.Length, transTemp13.Length ) ); 
-            context.Titles = transTemp13;
-            x_glin(context, context.Y, context.S, context.X, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out yfit, ref context.DoC, ref context.N, ref context.P, ref errcode); 
-            
-            ParameterBag otherParameters = x_showmr( host, context, context.SE, context.B, context.DoC, context.N, context.P, false, errcode ).ParameterBag; 
-            foreach ( KeyValuePair<string, FilledParameter> pair in otherParameters.Pairs ) 
-            { 
-                outputParameters[ pair.Key ] = pair.Value; 
-            }
-            outputParameters.AddOutput( "subsetApplied", true ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static bool x_forceinc( int forced, int[] force, int j, int[] preds )
-        {
-            if ( forced > 0 ) 
-            { 
-                int cnt = 0;
-                for (int i=1; i <= forced; i++ )
+                if (selectedPredictors[C])
                 {
-                    for (int k=1; k <= j; k++ ) 
-                    { 
-                        if ( force[ i ] == preds[ k ] )
-                        { 
-                            cnt++; 
-                        } 
+                    forced = forced + 1;
+                    force[forced] = C + 1 + iq;
+                }
+            }
+            if (context.DoC)
+            {
+                forced = forced + 1;
+                // create temp variable for copying values 
+                int[] transTemp12 = new int[forced + 1 /* for VB to C# conversion */ ];
+                Array.Copy(force, transTemp12, Math.Min(force.Length, transTemp12.Length));
+                force = transTemp12;
+                force[forced] = 1;
+            }
+            for (int j = 1; j <= context.P; j++)
+            {
+                int[] preds = new int[j + 1 /* for VB to C# conversion */ ];
+                for (int i = 1; i <= j; i++)
+                {
+                    preds[i] = i;
+                }
+                int at = j;
+                do
+                {
+                    bool oktry = x_forceinc(forced, force, j, preds);
+                    if (context.DoC)
+                    {
+                        if (j == 1)
+                        {
+                            oktry = false;
+                        }
+                        else
+                        {
+                            for (int k = 1; k <= j; k++)
+                            {
+                                if (preds[k] == 1 & k != 1)
+                                {
+                                    int temp = preds[k];
+                                    preds[k] = preds[1];
+                                    preds[1] = temp;
+                                }
+                            }
+                        }
+                    }
+                    if (oktry)
+                    {
+                        double[,] tryx = new double[context.N + 1 /* for VB to C# conversion */, j + 1 /* for VB to C# conversion */];
+                        for (int i = 1; i <= context.N; i++)
+                        {
+                            for (int k = 1; k <= j; k++)
+                            {
+                                tryx[i, k] = context.X[i, preds[k]];
+                            }
+                        }
+                        x_glin(context, context.Y, context.S, tryx, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out yfit, ref context.DoC, ref context.N, ref j, ref errcode);
+                        if (errcode == 0)
+                        {
+                            double rdf = Convert.ToDouble((context.N - 1) - (j - 1));
+                            double bdf = j > 1 ? Convert.ToDouble(j - 1) : Convert.ToDouble(j);
+                            double bms = context.SSREG / bdf;
+                            double rms = (context.SSY - context.SSREG) / rdf;
+                            double f = bms / rms;
+                            double r2 = context.SSREG / context.SSY;
+                            double cp = ((context.SSY - context.SSREG) / rmsorig) - Convert.ToDouble(context.N - 2 * (j + 1));
+                            bool isBetter = shouldUseMaximumF ? f > maxf : cp <= mincp;
+                            if (isBetter)
+                            {
+                                maxf = f;
+                                mincp = cp;
+                                maxr2 = r2;
+                                kept = j;
+                                keep = new int[kept + 1 /* for VB to C# conversion */ ];
+                                for (int k = 1; k <= j; k++)
+                                {
+                                    keep[k] = preds[k];
+                                }
+                            }
+                        }
+                        else
+                        {
+                            return new StepResult(StepSuccess.Failed, new ParameterBag());
+                        }
+                    }
+                    for (int L = j; L >= 0; L--)
+                    {
+                        if (preds[L] < context.P - (j - L))
+                        {
+                            at = L;
+                            break;
+                        }
+                    }
+                    if (at == 0 || j == context.P)
+                    {
+                        break;
+                    }
+                    preds[at] = preds[at] + 1;
+                    if (at != j)
+                    {
+                        for (int Q = at + 1; Q <= j; Q++)
+                        {
+                            preds[Q] = preds[at] + (Q - at);
+                        }
+                        at = j;
                     }
                 }
-                return cnt == forced; 
+                while (true);
+            }
+
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> selectedList = new List<ParameterBag>();
+            outputParameters.AddOutput("*selected", selectedList);
+            for (int j = 1 + iq; j <= kept; j++)
+            {
+                ParameterBag selectedParameters = new ParameterBag();
+                selectedList.Add(selectedParameters);
+                selectedParameters.AddOutput("label", context.Titles[keep[j] - iq + 1]);
+            }
+            outputParameters.AddOutput("f", host.RoundU(maxf));
+            outputParameters.AddOutput("r2", host.RoundU(maxr2));
+            outputParameters.AddOutput("cp", host.RoundU(mincp));
+
+            //  Hack the data in the analysis to drop some of the predictors
+            context.P = kept;
+            double[,] newX = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */];
+            for (int j = 1; j <= context.N; j++)
+            {
+                for (int k = 1; k <= context.P; k++)
+                {
+                    newX[j, k] = context.X[j, keep[k]];
+                }
+            }
+            context.X = newX;
+            for (int j = 1 + iq; j <= kept; j++)
+            {
+                int ix1 = j - iq + 1;
+                int ix2 = keep[j] - iq + 1;
+                string temp = context.Titles[ix1];
+                context.Titles[ix1] = context.Titles[ix2];
+                context.Titles[ix2] = temp;
+            }
+            // create temp variable for copying values 
+            string[] transTemp13 = new string[context.P + 1 /* for VB to C# conversion */ ];
+            Array.Copy(context.Titles, transTemp13, Math.Min(context.Titles.Length, transTemp13.Length));
+            context.Titles = transTemp13;
+            x_glin(context, context.Y, context.S, context.X, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out yfit, ref context.DoC, ref context.N, ref context.P, ref errcode);
+
+            ParameterBag otherParameters = x_showmr(host, context, context.SE, context.B, context.DoC, context.N, context.P, false, errcode).ParameterBag;
+            foreach (KeyValuePair<string, FilledParameter> pair in otherParameters.Pairs)
+            {
+                outputParameters[pair.Key] = pair.Value;
+            }
+            outputParameters.AddOutput("subsetApplied", true);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static bool x_forceinc(int forced, int[] force, int j, int[] preds)
+        {
+            if (forced > 0)
+            {
+                int cnt = 0;
+                for (int i = 1; i <= forced; i++)
+                {
+                    for (int k = 1; k <= j; k++)
+                    {
+                        if (force[i] == preds[k])
+                        {
+                            cnt++;
+                        }
+                    }
+                }
+                return cnt == forced;
             }
             return true;
         }
 
 
-        private static DataFrame x_prep_intermr( MultipleLinearRegressionContext context ) 
+        private static DataFrame x_prep_intermr(MultipleLinearRegressionContext context)
         {
-            int iq = context.DoC ? 1 : 0; 
-            
+            int iq = context.DoC ? 1 : 0;
+
             DataFrame frame = new DataFrame();
-            StringVariable keyVariable = new StringVariable {Title = "Name"};
-            frame.Variables.Add( keyVariable );
-            StringVariable valueVariable = new StringVariable {Title = "Value"};
-            frame.Variables.Add( valueVariable );
-            DoubleVariable oldValueVariable = new DoubleVariable {Title = "Old value"};
-            frame.Variables.Add( oldValueVariable ); 
-            
-            for (int j=1 + iq; j <= context.P; j++ ) 
-            { 
-                double mu = 0.0; 
-                double a = context.X[ 1, j ]; 
-                double b = Constant.MISSING; 
+            StringVariable keyVariable = new StringVariable { Title = "Name" };
+            frame.Variables.Add(keyVariable);
+            StringVariable valueVariable = new StringVariable { Title = "Value" };
+            frame.Variables.Add(valueVariable);
+            DoubleVariable oldValueVariable = new DoubleVariable { Title = "Old value" };
+            frame.Variables.Add(oldValueVariable);
+
+            for (int j = 1 + iq; j <= context.P; j++)
+            {
+                double mu = 0.0;
+                double a = context.X[1, j];
+                double b = Constant.MISSING;
                 bool bin = true;
                 int i;
-                for ( i=1; i <= context.N; i++ )
+                for (i = 1; i <= context.N; i++)
                 {
-                    double z = context.X[ i, j ];
-                    if ( z != Constant.MISSING ) 
-                    { 
-                        mu = mu + z; 
-                        if ( z != a ) 
-                        { 
-                            if ( z != b ) 
-                            { 
-                                if ( b == Constant.MISSING ) 
-                                { 
-                                    b = z; 
-                                } 
-                                else 
-                                { 
-                                    bin = false; 
-                                } 
-                            } 
-                        } 
+                    double z = context.X[i, j];
+                    if (z != Constant.MISSING)
+                    {
+                        mu = mu + z;
+                        if (z != a)
+                        {
+                            if (z != b)
+                            {
+                                if (b == Constant.MISSING)
+                                {
+                                    b = z;
+                                }
+                                else
+                                {
+                                    bin = false;
+                                }
+                            }
+                        }
                     }
                 }
-                if ( bin ) 
-                { 
-                    mu = 0.5; 
-                } 
-                else 
-                { 
-                    mu = mu / Convert.ToDouble( context.N ); 
-                } 
-                keyVariable.set_Data( j - 1 - iq, context.Titles[ j ] ); 
-                valueVariable.set_Data( j - 1 - iq,  mu.ToString() ); 
-                oldValueVariable.set_Data( j - 1 - iq, Parsing.Cdbl_Txt(  mu.ToString() ) ); 
-            } 
-            return frame; 
-        } 
-        
-        
-        public static StepResult rptPrincipalComponentsRegressionCoefficients( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( Parameters ); 
-            DataFrame frame = Parameters[ "data" ].AsDataFrame; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> pcList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*pc", pcList ); 
-            for ( int j=1; j <= context.P; j++ ) 
-            { 
-                ParameterBag pcParameters = new ParameterBag(); 
-                pcList.Add( pcParameters ); 
-                pcParameters.AddOutput( "pc",  j.ToString() ); 
-            } 
-            IList<ParameterBag> varList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*var", varList ); 
-            for ( int j=1; j <= context.P; j++ ) 
-            { 
-                ParameterBag varParameters = new ParameterBag(); 
-                varList.Add( varParameters ); 
-                varParameters.AddOutput( "lab", frame.Variables[ j - 1 ].Title ); 
-                IList<ParameterBag> resList = new List<ParameterBag>(); 
-                varParameters.AddOutput( "*res", resList ); 
-                for ( int i=1; i <= context.P; i++ ) 
-                { 
-                    ParameterBag resParameters = new ParameterBag(); 
-                    resList.Add( resParameters ); 
-                    resParameters.AddOutput( "res", Host.RoundU( context.V[ j, i ] ) ); 
-                } 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptCronbach( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( parameters ); 
-            DataFrame frame = parameters[ "data" ].AsDataFrame; 
-            int k = context.P; 
-            int N = context.N; 
-            double[,] x = context.X; 
-            double[,] r = context.R2; 
-            double totvar = 0; double alpha; double cl; 
-            double cco = parameters[ "ci" ].AsDouble; 
-            if ( cco <= 0.0 | cco >= 1.0 )
-            { 
-                cco = 0.95; 
-            } 
+                if (bin)
+                {
+                    mu = 0.5;
+                }
+                else
+                {
+                    mu = mu / Convert.ToDouble(context.N);
+                }
+                keyVariable.set_Data(j - 1 - iq, context.Titles[j]);
+                valueVariable.set_Data(j - 1 - iq, mu.ToString());
+                oldValueVariable.set_Data(j - 1 - iq, Parsing.Cdbl_Txt(mu.ToString()));
+            }
+            return frame;
+        }
+
+
+        public static StepResult rptPrincipalComponentsRegressionCoefficients(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(Parameters);
+            DataFrame frame = Parameters["data"].AsDataFrame;
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> pcList = new List<ParameterBag>();
+            outputParameters.AddOutput("*pc", pcList);
+            for (int j = 1; j <= context.P; j++)
+            {
+                ParameterBag pcParameters = new ParameterBag();
+                pcList.Add(pcParameters);
+                pcParameters.AddOutput("pc", j.ToString());
+            }
+            IList<ParameterBag> varList = new List<ParameterBag>();
+            outputParameters.AddOutput("*var", varList);
+            for (int j = 1; j <= context.P; j++)
+            {
+                ParameterBag varParameters = new ParameterBag();
+                varList.Add(varParameters);
+                varParameters.AddOutput("lab", frame.Variables[j - 1].Title);
+                IList<ParameterBag> resList = new List<ParameterBag>();
+                varParameters.AddOutput("*res", resList);
+                for (int i = 1; i <= context.P; i++)
+                {
+                    ParameterBag resParameters = new ParameterBag();
+                    resList.Add(resParameters);
+                    resParameters.AddOutput("res", Host.RoundU(context.V[j, i]));
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptCronbach(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
+            DataFrame frame = parameters["data"].AsDataFrame;
+            int k = context.P;
+            int N = context.N;
+            double[,] x = context.X;
+            double[,] r = context.R2;
+            double totvar = 0; double alpha; double cl;
+            double cco = parameters["ci"].AsDouble;
+            if (cco <= 0.0 | cco >= 1.0)
+            {
+                cco = 0.95;
+            }
             //  RTF_LoadTemplate("cronbach.rtf")
-            double[] qv = new double[k + 1 /* for VB to C# conversion */ ]; 
-            for ( int i=1; i <= N; i++ ) 
-            { 
-                x[ 0, i ] = 0.0; 
-                for ( int j=1; j <= k; j++ ) 
-                { 
-                    x[ 0, i ] = x[ 0, i ] + x[ j, i ]; 
-                } 
-            } 
-            for ( int j=0; j <= k; j++ ) 
+            double[] qv = new double[k + 1 /* for VB to C# conversion */ ];
+            for (int i = 1; i <= N; i++)
+            {
+                x[0, i] = 0.0;
+                for (int j = 1; j <= k; j++)
+                {
+                    x[0, i] = x[0, i] + x[j, i];
+                }
+            }
+            for (int j = 0; j <= k; j++)
             {
                 double av;
-                Regress1.x_avsd( x, N, j, out av, out qv[ j ] ); 
-                qv[ j ] = qv[ j ] * qv[ j ]; 
-                if ( j > 0 )
-                { 
-                    totvar = totvar + qv[ j ]; 
-                } 
-            } 
-            double talpha = ( Convert.ToDouble( k ) / Convert.ToDouble( k - 1 ) ) * ( 1.0 - ( totvar / qv[ 0 ] ) ); 
+                Regress1.x_avsd(x, N, j, out av, out qv[j]);
+                qv[j] = qv[j] * qv[j];
+                if (j > 0)
+                {
+                    totvar = totvar + qv[j];
+                }
+            }
+            double talpha = (Convert.ToDouble(k) / Convert.ToDouble(k - 1)) * (1.0 - (totvar / qv[0]));
             // Stata technical bulletin 56: SG 144
-            double f = PDF.ffromp( Convert.ToDouble( k - 1 ) * Convert.ToDouble( N - 1 ), Convert.ToDouble( N - 1 ), ( 1.0 - cco ) ); 
-            if ( f == Constant.MISSING ) 
-            { 
-                cl = Constant.MISSING; 
-            } 
-            else 
-            { 
-                cl = 1.0 - ( ( 1.0 - talpha ) * f ); 
-                if ( cl < 0.0 | cl > talpha )
-                { 
-                    cl = 0.0; 
-                } 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "raw_t", host.RoundU( talpha ) ); 
-            outputParameters.AddOutput( "pc", Formatting.XRound( cco * 100.0, 1 ) ); 
-            outputParameters.AddOutput( "raw_cl", host.RoundU( cl ) ); 
-            IList<ParameterBag> rawList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*raw", rawList ); 
-            for ( int L=1; L <= k; L++ ) 
-            { 
-                totvar = 0.0; 
-                for ( int i=1; i <= N; i++ ) 
-                { 
-                    x[ 0, i ] = 0.0; 
-                    for ( int j=1; j <= k; j++ ) 
-                    { 
-                        if ( j != L )
-                        { 
-                            x[ 0, i ] = x[ 0, i ] + x[ j, i ]; 
-                        } 
-                    } 
-                } 
-                for ( int j=0; j <= k; j++ ) 
-                { 
-                    if ( j != L ) 
-                    { 
-                        qv[ j ] = 0.0;
+            double f = PDF.ffromp(Convert.ToDouble(k - 1) * Convert.ToDouble(N - 1), Convert.ToDouble(N - 1), (1.0 - cco));
+            if (f == Constant.MISSING)
+            {
+                cl = Constant.MISSING;
+            }
+            else
+            {
+                cl = 1.0 - ((1.0 - talpha) * f);
+                if (cl < 0.0 | cl > talpha)
+                {
+                    cl = 0.0;
+                }
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("raw_t", host.RoundU(talpha));
+            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100.0, 1));
+            outputParameters.AddOutput("raw_cl", host.RoundU(cl));
+            IList<ParameterBag> rawList = new List<ParameterBag>();
+            outputParameters.AddOutput("*raw", rawList);
+            for (int L = 1; L <= k; L++)
+            {
+                totvar = 0.0;
+                for (int i = 1; i <= N; i++)
+                {
+                    x[0, i] = 0.0;
+                    for (int j = 1; j <= k; j++)
+                    {
+                        if (j != L)
+                        {
+                            x[0, i] = x[0, i] + x[j, i];
+                        }
+                    }
+                }
+                for (int j = 0; j <= k; j++)
+                {
+                    if (j != L)
+                    {
+                        qv[j] = 0.0;
                         double av;
-                        Regress1.x_avsd( x, N, j, out av, out qv[ j ] ); 
-                        qv[ j ] = qv[ j ] * qv[ j ]; 
-                        if ( j > 0 )
-                        { 
-                            totvar = totvar + qv[ j ]; 
-                        } 
-                    } 
-                } 
-                if ( k > 2 ) 
-                { 
-                    alpha = ( Convert.ToDouble( k - 1 ) / Convert.ToDouble( k - 2 ) ) * ( 1.0 - ( totvar / qv[ 0 ] ) ); 
-                } 
-                else 
-                { 
-                    alpha = Constant.MISSING; 
-                } 
-                ParameterBag rawParameters = new ParameterBag(); 
-                rawList.Add( rawParameters ); 
-                rawParameters.AddOutput( "lab", frame.Variables[ L - 1 ].Title ); 
-                rawParameters.AddOutput( "a", host.RoundU( alpha ) ); 
-                if ( alpha != Constant.MISSING && alpha - talpha > 0.1 ) 
-                { 
-                    rawParameters.AddOutput( "x", Formatting.ASTERISK ); 
-                } 
-                else 
-                { 
-                    rawParameters.AddOutput( "x", "" ); 
-                } 
-                rawParameters.AddOutput( "a-t", host.RoundU( alpha - talpha ) ); 
-            } 
+                        Regress1.x_avsd(x, N, j, out av, out qv[j]);
+                        qv[j] = qv[j] * qv[j];
+                        if (j > 0)
+                        {
+                            totvar = totvar + qv[j];
+                        }
+                    }
+                }
+                if (k > 2)
+                {
+                    alpha = (Convert.ToDouble(k - 1) / Convert.ToDouble(k - 2)) * (1.0 - (totvar / qv[0]));
+                }
+                else
+                {
+                    alpha = Constant.MISSING;
+                }
+                ParameterBag rawParameters = new ParameterBag();
+                rawList.Add(rawParameters);
+                rawParameters.AddOutput("lab", frame.Variables[L - 1].Title);
+                rawParameters.AddOutput("a", host.RoundU(alpha));
+                if (alpha != Constant.MISSING && alpha - talpha > 0.1)
+                {
+                    rawParameters.AddOutput("x", Formatting.ASTERISK);
+                }
+                else
+                {
+                    rawParameters.AddOutput("x", "");
+                }
+                rawParameters.AddOutput("a-t", host.RoundU(alpha - talpha));
+            }
             // FOR STANDARDIZED DATA (see SAS & SPSS)
-            double rtot = 0.0; 
-            int ctr = 0; 
-            for ( int i=2; i <= k; i++ ) 
-            { 
-                for ( int j=1; j <= i - 1; j++ ) 
-                { 
-                    rtot = rtot + r[ j, i ]; 
-                    ctr = ctr + 1; 
-                } 
-            } 
-            double rbar = rtot / Convert.ToDouble( ctr ); 
-            talpha = Convert.ToDouble( k ) * rbar / ( 1.0 + Convert.ToDouble( k - 1 ) * rbar ); 
+            double rtot = 0.0;
+            int ctr = 0;
+            for (int i = 2; i <= k; i++)
+            {
+                for (int j = 1; j <= i - 1; j++)
+                {
+                    rtot = rtot + r[j, i];
+                    ctr = ctr + 1;
+                }
+            }
+            double rbar = rtot / Convert.ToDouble(ctr);
+            talpha = Convert.ToDouble(k) * rbar / (1.0 + Convert.ToDouble(k - 1) * rbar);
             // Stata technical bulletin 56: SG 144
-            f = PDF.ffromp( Convert.ToDouble( k - 1 ) * Convert.ToDouble( N - 1 ), Convert.ToDouble( N - 1 ), ( 1.0 - cco ) ); 
-            if ( f == Constant.MISSING ) 
-            { 
-                cl = Constant.MISSING; 
-            } 
-            else 
-            { 
-                cl = 1.0 - ( ( 1.0 - talpha ) * f ); 
-                if ( cl < 0.0 | cl > talpha )
-                { 
-                    cl = 0.0; 
-                } 
-            } 
-            outputParameters.AddOutput( "standard_t", host.RoundU( talpha ) ); 
-            outputParameters.AddOutput( "standard_cl", host.RoundU( cl ) ); 
-            IList<ParameterBag> standardList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*standard", standardList ); 
-            for ( int L=1; L <= k; L++ ) 
-            { 
-                rtot = 0.0; 
-                ctr = 0; 
-                for ( int i=2; i <= k; i++ ) 
-                { 
-                    for ( int j=1; j <= i - 1; j++ ) 
-                    { 
-                        if ( j != L & i != L ) 
-                        { 
-                            rtot = rtot + r[ j, i ]; 
-                            ctr = ctr + 1; 
-                        } 
-                    } 
-                } 
-                rbar = rtot / Convert.ToDouble( ctr ); 
-                if ( k < 2 ) 
-                { 
-                    alpha = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    alpha = Convert.ToDouble( k - 1 ) * rbar / ( 1.0 + Convert.ToDouble( k - 2 ) * rbar ); 
-                } 
-                ParameterBag standardParameters = new ParameterBag(); 
-                standardList.Add( standardParameters ); 
-                standardParameters.AddOutput( "lab", frame.Variables[ L - 1 ].Title ); 
-                standardParameters.AddOutput( "a", host.RoundU( alpha ) ); 
-                if ( alpha != Constant.MISSING && alpha - talpha > 0.1 ) 
-                { 
-                    standardParameters.AddOutput( "x", Formatting.ASTERISK ); 
-                } 
-                else 
-                { 
-                    standardParameters.AddOutput( "x", "" ); 
-                } 
-                standardParameters.AddOutput( "a-t", host.RoundU( alpha - talpha ) ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptPrincipalComponentsRegressionScores( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( Parameters ); 
-            int N = context.P; 
-            int nx = context.N; 
-            double[,] x = context.X; 
-            double[,] v = context.V; 
+            f = PDF.ffromp(Convert.ToDouble(k - 1) * Convert.ToDouble(N - 1), Convert.ToDouble(N - 1), (1.0 - cco));
+            if (f == Constant.MISSING)
+            {
+                cl = Constant.MISSING;
+            }
+            else
+            {
+                cl = 1.0 - ((1.0 - talpha) * f);
+                if (cl < 0.0 | cl > talpha)
+                {
+                    cl = 0.0;
+                }
+            }
+            outputParameters.AddOutput("standard_t", host.RoundU(talpha));
+            outputParameters.AddOutput("standard_cl", host.RoundU(cl));
+            IList<ParameterBag> standardList = new List<ParameterBag>();
+            outputParameters.AddOutput("*standard", standardList);
+            for (int L = 1; L <= k; L++)
+            {
+                rtot = 0.0;
+                ctr = 0;
+                for (int i = 2; i <= k; i++)
+                {
+                    for (int j = 1; j <= i - 1; j++)
+                    {
+                        if (j != L & i != L)
+                        {
+                            rtot = rtot + r[j, i];
+                            ctr = ctr + 1;
+                        }
+                    }
+                }
+                rbar = rtot / Convert.ToDouble(ctr);
+                if (k < 2)
+                {
+                    alpha = Constant.MISSING;
+                }
+                else
+                {
+                    alpha = Convert.ToDouble(k - 1) * rbar / (1.0 + Convert.ToDouble(k - 2) * rbar);
+                }
+                ParameterBag standardParameters = new ParameterBag();
+                standardList.Add(standardParameters);
+                standardParameters.AddOutput("lab", frame.Variables[L - 1].Title);
+                standardParameters.AddOutput("a", host.RoundU(alpha));
+                if (alpha != Constant.MISSING && alpha - talpha > 0.1)
+                {
+                    standardParameters.AddOutput("x", Formatting.ASTERISK);
+                }
+                else
+                {
+                    standardParameters.AddOutput("x", "");
+                }
+                standardParameters.AddOutput("a-t", host.RoundU(alpha - talpha));
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptPrincipalComponentsRegressionScores(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(Parameters);
+            int N = context.P;
+            int nx = context.N;
+            double[,] x = context.X;
+            double[,] v = context.V;
             double[] av = null; double[] sd = null;
 
             //  RTF_LoadTemplate("prscores.rtf")
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> pcList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*pc", pcList ); 
-            for ( int j=1; j <= N; j++ ) 
-            { 
-                ParameterBag pcParameters = new ParameterBag(); 
-                pcList.Add( pcParameters ); 
-                pcParameters.AddOutput( "pc",  j.ToString() ); 
-            } 
-            if ( context.ERR == 1 ) 
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> pcList = new List<ParameterBag>();
+            outputParameters.AddOutput("*pc", pcList);
+            for (int j = 1; j <= N; j++)
+            {
+                ParameterBag pcParameters = new ParameterBag();
+                pcList.Add(pcParameters);
+                pcParameters.AddOutput("pc", j.ToString());
+            }
+            if (context.ERR == 1)
             {
                 av = new double[N + 1 /* for VB to C# conversion */];
-                sd = new double[N + 1 /* for VB to C# conversion */]; 
-                for ( int j=1; j <= N; j++ ) 
-                { 
-                    Regress1.x_avsd( x, nx, j, out av[ j ], out sd[ j ] ); 
-                } 
-            } 
-            IList<ParameterBag> rowList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*row", rowList ); 
-            for ( int j=1; j <= nx; j++ ) 
-            { 
-                ParameterBag rowParameters = new ParameterBag(); 
-                rowList.Add( rowParameters ); 
-                rowParameters.AddOutput( "row",  j.ToString() ); 
-                IList<ParameterBag> resList = new List<ParameterBag>(); 
-                rowParameters.AddOutput( "*res", resList ); 
-                for ( int i=1; i <= N; i++ ) 
-                { 
-                    double ps = 0.0; 
-                    for ( int k=1; k <= N; k++ ) 
-                    { 
-                        if ( context.ERR == 1 ) 
-                        { 
+                sd = new double[N + 1 /* for VB to C# conversion */];
+                for (int j = 1; j <= N; j++)
+                {
+                    Regress1.x_avsd(x, nx, j, out av[j], out sd[j]);
+                }
+            }
+            IList<ParameterBag> rowList = new List<ParameterBag>();
+            outputParameters.AddOutput("*row", rowList);
+            for (int j = 1; j <= nx; j++)
+            {
+                ParameterBag rowParameters = new ParameterBag();
+                rowList.Add(rowParameters);
+                rowParameters.AddOutput("row", j.ToString());
+                IList<ParameterBag> resList = new List<ParameterBag>();
+                rowParameters.AddOutput("*res", resList);
+                for (int i = 1; i <= N; i++)
+                {
+                    double ps = 0.0;
+                    for (int k = 1; k <= N; k++)
+                    {
+                        if (context.ERR == 1)
+                        {
                             Debug.Assert(null != av && null != sd);
-                            ps = ps + v[ k, i ] * ( ( x[ k, j ] - av[ k ] ) / sd[ k ] ); 
-                        } 
-                        else 
-                        { 
-                            ps = ps + v[ k, i ] * x[ k, j ]; 
-                        } 
-                    } 
-                    ParameterBag resParameters = new ParameterBag(); 
-                    resList.Add( resParameters ); 
-                    resParameters.AddOutput( "res", Host.RoundU( ps ) ); 
-                } 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptPrincipalComponentsRegressionMatrix( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext( Parameters ); 
-            DataFrame frame = Parameters[ "data" ].AsDataFrame; 
-            int N = context.P; 
-            double[,] xc = context.H; 
-            double[,] XR = context.R2; 
+                            ps = ps + v[k, i] * ((x[k, j] - av[k]) / sd[k]);
+                        }
+                        else
+                        {
+                            ps = ps + v[k, i] * x[k, j];
+                        }
+                    }
+                    ParameterBag resParameters = new ParameterBag();
+                    resList.Add(resParameters);
+                    resParameters.AddOutput("res", Host.RoundU(ps));
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptPrincipalComponentsRegressionMatrix(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(Parameters);
+            DataFrame frame = Parameters["data"].AsDataFrame;
+            int N = context.P;
+            double[,] xc = context.H;
+            double[,] XR = context.R2;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("type", context.ERR == 1 ? "Correlation" : "Variance-Covariance");
-            IList<ParameterBag> lab1List = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*lab1", lab1List ); 
-            for ( int j=1; j <= N; j++ ) 
-            { 
-                ParameterBag lab1Parameters = new ParameterBag(); 
-                lab1List.Add( lab1Parameters ); 
-                lab1Parameters.AddOutput( "lab", frame.Variables[ j - 1 ].Title ); 
-            } 
-            IList<ParameterBag> lab2List = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*lab2", lab2List ); 
-            for ( int j=1; j <= N; j++ ) 
-            { 
-                ParameterBag lab2Parameters = new ParameterBag(); 
-                lab2List.Add( lab2Parameters ); 
-                lab2Parameters.AddOutput( "lab", frame.Variables[ j - 1 ].Title ); 
-                IList<ParameterBag> resList = new List<ParameterBag>(); 
-                lab2Parameters.AddOutput( "*res", resList ); 
-                for ( int i=1; i <= N; i++ ) 
-                { 
-                    ParameterBag resParameters = new ParameterBag(); 
-                    resList.Add( resParameters );
+            IList<ParameterBag> lab1List = new List<ParameterBag>();
+            outputParameters.AddOutput("*lab1", lab1List);
+            for (int j = 1; j <= N; j++)
+            {
+                ParameterBag lab1Parameters = new ParameterBag();
+                lab1List.Add(lab1Parameters);
+                lab1Parameters.AddOutput("lab", frame.Variables[j - 1].Title);
+            }
+            IList<ParameterBag> lab2List = new List<ParameterBag>();
+            outputParameters.AddOutput("*lab2", lab2List);
+            for (int j = 1; j <= N; j++)
+            {
+                ParameterBag lab2Parameters = new ParameterBag();
+                lab2List.Add(lab2Parameters);
+                lab2Parameters.AddOutput("lab", frame.Variables[j - 1].Title);
+                IList<ParameterBag> resList = new List<ParameterBag>();
+                lab2Parameters.AddOutput("*res", resList);
+                for (int i = 1; i <= N; i++)
+                {
+                    ParameterBag resParameters = new ParameterBag();
+                    resList.Add(resParameters);
                     resParameters.AddOutput("res", Host.RoundU(context.ERR == 1 ? XR[j, i] : xc[j, i]));
-                } 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptLinearizedEstimates( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            DataFrame fY = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vY = fY.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fX = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( parameters ); 
-            int model = 0; 
-            if ( parameters.ContainsKey( "model" ) ) 
-            { 
-                model = int.Parse( parameters[ "model" ].AsString ); 
-            } 
-            
-            int nx = vY.Length; 
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptLinearizedEstimates(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame fY = parameters["y"].AsDataFrame;
+            DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
+            DataFrame fX = parameters["x"].AsDataFrame;
+            DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            int model = 0;
+            if (parameters.ContainsKey("model"))
+            {
+                model = int.Parse(parameters["model"].AsString);
+            }
+
+            int nx = vY.Length;
             context.N = nx;
             context.X = new double[nx + 1 /* for VB to C# conversion */ ];
-            context.Y = new double[nx + 1 /* for VB to C# conversion */ ]; 
-            ParameterBag outputParameters = new ParameterBag(); 
+            context.Y = new double[nx + 1 /* for VB to C# conversion */ ];
+            ParameterBag outputParameters = new ParameterBag();
             double perf; double mnsqr; double r = 0; double seest = 0;
             double sumx, ssx, sdx;
-            switch (model) 
+            switch (model)
             {
                 case 0:
-                    for ( int N=1; N <= nx; N++ ) 
-                    { 
-                        context.X[ N ] = vX.Data[N - 1]; 
-                        context.Y[ N ] = Math.Log( vY.Data[N - 1] ); 
+                    for (int N = 1; N <= nx; N++)
+                    {
+                        context.X[N] = vX.Data[N - 1];
+                        context.Y[N] = Math.Log(vY.Data[N - 1]);
                     }
-                    x_lsm( out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context ); 
-                    outputParameters.AddOutput( "modelDescription", "(Exponential)  Y = a * exp(b * x)" ); 
-                    context.A = Math.Exp( context.YInt ); 
-                    context.G = context.Slope; 
+                    x_lsm(out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context);
+                    outputParameters.AddOutput("modelDescription", "(Exponential)  Y = a * exp(b * x)");
+                    context.A = Math.Exp(context.YInt);
+                    context.G = context.Slope;
                     break;
                 case 1:
-                    for ( int N=1; N <= nx; N++ ) 
-                    { 
-                        context.X[ N ] = Math.Log( vX.Data[N - 1] ); 
-                        context.Y[ N ] = Math.Log( vY.Data[N - 1] ); 
-                    } 
-                    x_lsm( out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context ); 
-                    outputParameters.AddOutput( "modelDescription", "(Geometric / Power)  Y = a * x^b" ); 
-                    context.A = Math.Exp( context.YInt ); 
-                    context.G = context.Slope; 
+                    for (int N = 1; N <= nx; N++)
+                    {
+                        context.X[N] = Math.Log(vX.Data[N - 1]);
+                        context.Y[N] = Math.Log(vY.Data[N - 1]);
+                    }
+                    x_lsm(out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context);
+                    outputParameters.AddOutput("modelDescription", "(Geometric / Power)  Y = a * x^b");
+                    context.A = Math.Exp(context.YInt);
+                    context.G = context.Slope;
                     break;
                 case 2:
-                    for ( int N=1; N <= nx; N++ ) 
-                    { 
-                        context.X[ N ] = 1.0 / vX.Data[N - 1]; 
-                        context.Y[ N ] = 1.0 / vY.Data[N - 1]; 
-                    } 
-                    x_lsm( out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context ); 
-                    outputParameters.AddOutput( "modelDescription", "(Hyperbolic)  Y = x / (a + b * x)" ); 
-                    context.A = context.Slope; 
-                    context.G = context.YInt; 
+                    for (int N = 1; N <= nx; N++)
+                    {
+                        context.X[N] = 1.0 / vX.Data[N - 1];
+                        context.Y[N] = 1.0 / vY.Data[N - 1];
+                    }
+                    x_lsm(out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context);
+                    outputParameters.AddOutput("modelDescription", "(Hyperbolic)  Y = x / (a + b * x)");
+                    context.A = context.Slope;
+                    context.G = context.YInt;
                     break;
             }
-            
-            outputParameters.AddOutput( "lab_y", vY.Title ); 
-            outputParameters.AddOutput( "lab_x", vX.Title ); 
-            outputParameters.AddOutput( "a", host.RoundU( context.A ) ); 
-            outputParameters.AddOutput( "b", host.RoundU( context.G ) ); 
-            outputParameters.AddOutput( "r", host.RoundU( r ) ); 
-            outputParameters.AddOutput( "r2", host.RoundU( r * r ) ); 
-            outputParameters.AddOutput( "ste", host.RoundU( seest ) ); 
-            outputParameters.Add( "context", new FilledParameter( true, context ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptLinearizedEstimateInterpolation( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            DataFrame fY = Parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vY = fY.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fX = Parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( Parameters ); 
-            int model = 0; 
-            if ( Parameters.ContainsKey( "model" ) ) 
-            { 
-                model = int.Parse( Parameters[ "model" ].AsString ); 
-            } 
-            double newx = Parameters[ "newx" ].AsDouble; 
-            double newy = 0; 
-            switch ( model ) 
+
+            outputParameters.AddOutput("lab_y", vY.Title);
+            outputParameters.AddOutput("lab_x", vX.Title);
+            outputParameters.AddOutput("a", host.RoundU(context.A));
+            outputParameters.AddOutput("b", host.RoundU(context.G));
+            outputParameters.AddOutput("r", host.RoundU(r));
+            outputParameters.AddOutput("r2", host.RoundU(r * r));
+            outputParameters.AddOutput("ste", host.RoundU(seest));
+            outputParameters.Add("context", new FilledParameter(true, context));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptLinearizedEstimateInterpolation(ITemplateHost Host, ParameterBag Parameters)
+        {
+            DataFrame fY = Parameters["y"].AsDataFrame;
+            DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
+            DataFrame fX = Parameters["x"].AsDataFrame;
+            DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
+            int model = 0;
+            if (Parameters.ContainsKey("model"))
+            {
+                model = int.Parse(Parameters["model"].AsString);
+            }
+            double newx = Parameters["newx"].AsDouble;
+            double newy = 0;
+            switch (model)
             {
                 case 0:
-                    newy = Math.Exp( context.YInt ) * Math.Exp( context.Slope * newx ); 
+                    newy = Math.Exp(context.YInt) * Math.Exp(context.Slope * newx);
                     break;
                 case 1:
-                    newy = Math.Exp( context.YInt ) * Math.Pow( newx, context.Slope ); 
+                    newy = Math.Exp(context.YInt) * Math.Pow(newx, context.Slope);
                     break;
                 case 2:
-                    double denom = context.Slope + newx * context.YInt; 
-                    if ( denom == 0.0 )
-                    { 
-                        denom = 0.0000001; 
-                    } 
-                    newy = newx / denom; 
+                    double denom = context.Slope + newx * context.YInt;
+                    if (denom == 0.0)
+                    {
+                        denom = 0.0000001;
+                    }
+                    newy = newx / denom;
                     break;
             }
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "lab_x", vX.Title ); 
-            outputParameters.AddOutput( "res_x", Host.RoundU( newx ) ); 
-            outputParameters.AddOutput( "lab_y", vY.Title ); 
-            outputParameters.AddOutput( "res_y", Host.RoundU( newy ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptLinearizedEstimatePlot( ITemplateHost host, ParameterBag Parameters ) 
-        { 
-            DataFrame fY = Parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vY = fY.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fX = Parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; 
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext( Parameters ); 
-            int model = 0; 
-            if ( Parameters.ContainsKey( "model" ) ) 
-            { 
-                model = int.Parse( Parameters[ "model" ].AsString ); 
-            } 
-            ChartDefinition cd = new ChartDefinition(); 
-            cd.AddYSeries( vY.Data, vY.Title ); 
-            cd.AddXSeries( vX.Data, vX.Title );
-            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour)
-                                            {mxd = vY.Data, av = vX.Data};
-            cd.ChartOptions = aOptions; 
-            ChartRenderer ch = new ChartRenderer( cd ); 
-            System.IO.Stream metaStream = new System.IO.MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            ch.PlotLinearizedEstimationInternal( host, "", model, context.A, context.G, vX.Title, vY.Title ); 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptPolynomialRegression( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            DataFrame fY = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vY = fY.Variables[ 0 ].AsDoubleVariable; 
+
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("lab_x", vX.Title);
+            outputParameters.AddOutput("res_x", Host.RoundU(newx));
+            outputParameters.AddOutput("lab_y", vY.Title);
+            outputParameters.AddOutput("res_y", Host.RoundU(newy));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptLinearizedEstimatePlot(ITemplateHost host, ParameterBag Parameters)
+        {
+            DataFrame fY = Parameters["y"].AsDataFrame;
+            DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
+            DataFrame fX = Parameters["x"].AsDataFrame;
+            DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
+            int model = 0;
+            if (Parameters.ContainsKey("model"))
+            {
+                model = int.Parse(Parameters["model"].AsString);
+            }
+            ChartDefinition cd = new ChartDefinition();
+            cd.AddYSeries(vY.Data, vY.Title);
+            cd.AddXSeries(vX.Data, vX.Title);
+            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) { mxd = vY.Data, av = vX.Data };
+            cd.ChartOptions = aOptions;
+            ChartRenderer ch = new ChartRenderer(cd);
+            ParameterBag outputParameters = new ParameterBag();
+            using (MemoryStream metaStream = new MemoryStream())
+            {
+                ch.StartMetafile(metaStream);
+                ch.PlotLinearizedEstimationInternal(host, "", model, context.A, context.G, vX.Title, vY.Title);
+                ch.EndMetafile();
+                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptPolynomialRegression(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame fY = parameters["y"].AsDataFrame;
+            DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
             // DataFrame fX = parameters[ "x" ].AsDataFrame; unused
             // DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; unused
-            int P = int.Parse( parameters[ "degree" ].AsString ) + 1;
-            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext {N = vY.Length, P = P, DoC = true};
-            CalcPoly(parameters, context );
+            int P = int.Parse(parameters["degree"].AsString) + 1;
+            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { N = vY.Length, P = P, DoC = true };
+            CalcPoly(parameters, context);
             bool DoC = true;
-            x_glin(context, context.Y, context.S, context.X, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out context.FV, ref DoC, ref context.N, ref context.P, ref context.ERR); 
-            return x_showmr( host, context, context.SE, context.B, true, context.N, context.P, true, context.ERR ); 
+            x_glin(context, context.Y, context.S, context.X, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out context.FV, ref DoC, ref context.N, ref context.P, ref context.ERR);
+            return x_showmr(host, context, context.SE, context.B, true, context.N, context.P, true, context.ERR);
         }
 
 
@@ -2672,631 +2673,632 @@ namespace StatsDirect.Builtins
         /// <param name="parameters"></param>
         ///  <param name="context"></param>
         ///  <remarks></remarks>
-        private static void CalcPoly(ParameterBag parameters, MultipleLinearRegressionContext context ) 
-        { 
-            DataFrame fY = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vY = fY.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fX = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; 
+        private static void CalcPoly(ParameterBag parameters, MultipleLinearRegressionContext context)
+        {
+            DataFrame fY = parameters["y"].AsDataFrame;
+            DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
+            DataFrame fX = parameters["x"].AsDataFrame;
+            DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
             //  Sort X and Y in increasing order of X
-            Array.Sort( vX.Data, vY.Data ); 
+            Array.Sort(vX.Data, vY.Data);
             int deg = context.P - 1;
             context.Y = new double[context.N + 1 /* for VB to C# conversion */ ];
             context.S = new double[context.N + 1 /* for VB to C# conversion */ ];
             context.X = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */];
-            context.Titles = new string[context.N + 1 /* for VB to C# conversion */ ]; 
-            context.Titles[ 0 ] = vY.Title; 
-            context.Titles[ 1 ] = vX.Title; 
-            for ( int j=1; j <= context.N; j++ ) 
-            { 
-                context.X[ j, 1 ] = 1.0; 
-            } 
-            for ( int j=1; j <= deg; j++ ) 
-            { 
-                for ( int i=1; i <= context.N; i++ ) 
-                { 
-                    context.X[ i, j + 1 ] = Math.Pow( vX.Data[i - 1], Convert.ToDouble( j ) ); 
-                } 
-            } 
-            if ( context.P > deg ) 
-            { 
-                context.Titles[ 2 ] = context.Titles[ 1 ]; 
-                context.Titles[ 1 ] = context.Titles[ 0 ]; 
-                for ( int j=3; j <= context.P; j++ ) 
-                { 
-                    context.Titles[ j ] = context.Titles[ 2 ] + "^" +  (j - 1).ToString(); 
-                } 
-            } 
-            else 
-            { 
-                for ( int j=2; j <= deg; j++ ) 
-                { 
-                    context.Titles[ j ] = context.Titles[ 1 ] + "^" +  j.ToString(); 
-                } 
-            } 
-            for ( int j=1; j <= context.N; j++ ) 
-            { 
-                context.Y[ j ] = vY.Data[j - 1]; 
-                context.S[ j ] = 1.0; 
-            } 
-        } 
-        
-        
-        public static StepResult rptPolynomialRegressionInterpolation( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( Parameters[ "context" ].Data ) ); 
-            double[,] xtxi = context.H; 
-            double[] bd = context.B; 
-            double rss = context.SSY - context.SSREG; 
-            int nx = context.N; 
-            int P = context.P;
-            double[] newx = new double[P + 1 /* for VB to C# conversion */ ]; 
-            newx[ 1 ] = 1.0; 
-            double nwx = Parameters[ "newx" ].AsDouble; 
-            if ( P > 1 ) 
-            { 
-                for ( int N=2; N <= P; N++ ) 
-                { 
-                    newx[ N ] = Math.Pow( nwx, Convert.ToDouble( N - 1 ) ); 
-                } 
-            } 
-            double newy = 0; 
-            for ( int N=1; N <= P; N++ ) 
-            { 
-                newy = newy + ( newx[ N ] * bd[ N ] ); 
-            } 
-            double GAMMA = Parameters[ "gamma" ].AsDouble; 
-            double P0; double cit; 
-            MathDbl.civ( nx - P, out cit, GAMMA, out P0 ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> tableList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*table", tableList ); 
-            for ( int N=1; N <= P; N++ ) 
+            context.Titles = new string[context.N + 1 /* for VB to C# conversion */ ];
+            context.Titles[0] = vY.Title;
+            context.Titles[1] = vX.Title;
+            for (int j = 1; j <= context.N; j++)
             {
-                string Q = N == 1 ? "Intercept" : context.Titles[ N - 1 ]; 
-                ParameterBag tableParameters = new ParameterBag(); 
-                tableList.Add( tableParameters ); 
-                tableParameters.AddOutput( "lab", Q ); 
-                tableParameters.AddOutput( "res", Host.RoundU( newx[ N ] ) ); 
-            } 
-            outputParameters.AddOutput( "y_lab", context.Titles[ 0 ] ); 
-            outputParameters.AddOutput( "y_res", Host.RoundU( newy ) ); 
-            double rdf = Convert.ToDouble( ( nx - 1 ) - ( P - 1 ) ); 
-            double rms = rss / rdf; 
-            double cl; double pl; 
-            Regress1.x_ciyp( newx, xtxi, P, rms, cit, out cl, out pl ); 
-            outputParameters.AddOutput( "pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 1 ) ); 
-            outputParameters.AddOutput( "from_conf", Host.RoundU( newy - cl ) ); 
-            outputParameters.AddOutput( "to_conf", Host.RoundU( newy + cl ) ); 
-            outputParameters.AddOutput( "from_pred", Host.RoundU( newy - pl ) ); 
-            outputParameters.AddOutput( "to_pred", Host.RoundU( newy + pl ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptPolynomialRegressionPlot( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> chartList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*chart", chartList ); 
-            for ( int mode=0; mode <= 2; mode++ ) 
-            { 
-                ParameterBag chartParameters = new ParameterBag(); 
-                chartList.Add( chartParameters ); 
-                chartParameters.AddOutput( "chart", PlotPoly( host, parameters, mode, context.H, context.B, context.SSREG - context.SSY, context.N, context.P ) ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static string PlotPoly( ITemplateHost host, ParameterBag parameters, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P ) 
-        { 
-            DataFrame fY = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vY = fY.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fX = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; 
-            double GAMMA = parameters[ "gamma" ].AsDouble; 
-            double P0; double cit; 
-            MathDbl.civ( nx - P, out cit, GAMMA, out P0 ); 
-            string title = ""; 
+                context.X[j, 1] = 1.0;
+            }
+            for (int j = 1; j <= deg; j++)
+            {
+                for (int i = 1; i <= context.N; i++)
+                {
+                    context.X[i, j + 1] = Math.Pow(vX.Data[i - 1], Convert.ToDouble(j));
+                }
+            }
+            if (context.P > deg)
+            {
+                context.Titles[2] = context.Titles[1];
+                context.Titles[1] = context.Titles[0];
+                for (int j = 3; j <= context.P; j++)
+                {
+                    context.Titles[j] = context.Titles[2] + "^" + (j - 1).ToString();
+                }
+            }
+            else
+            {
+                for (int j = 2; j <= deg; j++)
+                {
+                    context.Titles[j] = context.Titles[1] + "^" + j.ToString();
+                }
+            }
+            for (int j = 1; j <= context.N; j++)
+            {
+                context.Y[j] = vY.Data[j - 1];
+                context.S[j] = 1.0;
+            }
+        }
+
+
+        public static StepResult rptPolynomialRegressionInterpolation(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            double[,] xtxi = context.H;
+            double[] bd = context.B;
+            double rss = context.SSY - context.SSREG;
+            int nx = context.N;
+            int P = context.P;
+            double[] newx = new double[P + 1 /* for VB to C# conversion */ ];
+            newx[1] = 1.0;
+            double nwx = Parameters["newx"].AsDouble;
+            if (P > 1)
+            {
+                for (int N = 2; N <= P; N++)
+                {
+                    newx[N] = Math.Pow(nwx, Convert.ToDouble(N - 1));
+                }
+            }
+            double newy = 0;
+            for (int N = 1; N <= P; N++)
+            {
+                newy = newy + (newx[N] * bd[N]);
+            }
+            double GAMMA = Parameters["gamma"].AsDouble;
+            double P0; double cit;
+            MathDbl.civ(nx - P, out cit, GAMMA, out P0);
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> tableList = new List<ParameterBag>();
+            outputParameters.AddOutput("*table", tableList);
+            for (int N = 1; N <= P; N++)
+            {
+                string Q = N == 1 ? "Intercept" : context.Titles[N - 1];
+                ParameterBag tableParameters = new ParameterBag();
+                tableList.Add(tableParameters);
+                tableParameters.AddOutput("lab", Q);
+                tableParameters.AddOutput("res", Host.RoundU(newx[N]));
+            }
+            outputParameters.AddOutput("y_lab", context.Titles[0]);
+            outputParameters.AddOutput("y_res", Host.RoundU(newy));
+            double rdf = Convert.ToDouble((nx - 1) - (P - 1));
+            double rms = rss / rdf;
+            double cl; double pl;
+            Regress1.x_ciyp(newx, xtxi, P, rms, cit, out cl, out pl);
+            outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 1));
+            outputParameters.AddOutput("from_conf", Host.RoundU(newy - cl));
+            outputParameters.AddOutput("to_conf", Host.RoundU(newy + cl));
+            outputParameters.AddOutput("from_pred", Host.RoundU(newy - pl));
+            outputParameters.AddOutput("to_pred", Host.RoundU(newy + pl));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptPolynomialRegressionPlot(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> chartList = new List<ParameterBag>();
+            outputParameters.AddOutput("*chart", chartList);
+            for (int mode = 0; mode <= 2; mode++)
+            {
+                ParameterBag chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", PlotPoly(host, parameters, mode, context.H, context.B, context.SSREG - context.SSY, context.N, context.P));
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static string PlotPoly(ITemplateHost host, ParameterBag parameters, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P)
+        {
+            DataFrame fY = parameters["y"].AsDataFrame;
+            DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
+            DataFrame fX = parameters["x"].AsDataFrame;
+            DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
+            double GAMMA = parameters["gamma"].AsDouble;
+            double P0; double cit;
+            MathDbl.civ(nx - P, out cit, GAMMA, out P0);
+            string title = "";
             // Select the title
-            switch ( mode ) 
+            switch (mode)
             {
                 case 0:
-                    title = ""; 
+                    title = "";
                     break;
                 case 1:
-                    title = ( Formatting.XRound( ( 1.0 - P0 ) * 100, 1 ) + "% CI for the regression estimate" ); 
+                    title = (Formatting.XRound((1.0 - P0) * 100, 1) + "% CI for the regression estimate");
                     break;
                 case 2:
-                    title = ( Formatting.XRound( ( 1.0 - P0 ) * 100, 1 ) + "% Prediction Interval" ); 
+                    title = (Formatting.XRound((1.0 - P0) * 100, 1) + "% Prediction Interval");
                     break;
             }
-            
-            ChartDefinition cd = new ChartDefinition(); 
-            cd.AddYSeries( vY.Data, vY.Title ); 
-            cd.AddXSeries( vX.Data, vX.Title );
-            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) {mxd = vY.Data, av = vX.Data};
-            cd.ChartOptions = aOptions; 
-            ChartRenderer ch = new ChartRenderer( cd ); 
-            System.IO.Stream metaStream = new System.IO.MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            ch.PlotPolynomialRegressionInternal( host, title, mode, xtxi, bd, rss, nx, P, GAMMA, vX.Title, vY.Title ); 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            return host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ); 
-        } 
-        
-        
-        public static StepResult RptAreaUnderCurve( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] bd = context.B; 
-            int nx = context.N; 
-            int P = context.P; 
-            DataFrame fY = parameters[ "y" ].AsDataFrame; 
-            DoubleVariable vY = fY.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame fX = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; 
+
+            ChartDefinition cd = new ChartDefinition();
+            cd.AddYSeries(vY.Data, vY.Title);
+            cd.AddXSeries(vX.Data, vX.Title);
+            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) { mxd = vY.Data, av = vX.Data };
+            cd.ChartOptions = aOptions;
+            ChartRenderer ch = new ChartRenderer(cd);
+            using (MemoryStream metaStream = new MemoryStream())
+            {
+                ch.StartMetafile(metaStream);
+                ch.PlotPolynomialRegressionInternal(host, title, mode, xtxi, bd, rss, nx, P, GAMMA, vX.Title, vY.Title);
+                ch.EndMetafile();
+                return host.ImageStreamToRtf(metaStream);
+            }
+        }
+
+
+        public static StepResult RptAreaUnderCurve(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] bd = context.B;
+            int nx = context.N;
+            int P = context.P;
+            DataFrame fY = parameters["y"].AsDataFrame;
+            DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
+            DataFrame fX = parameters["x"].AsDataFrame;
+            DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
             //  RTF_LoadTemplate("poly_auc.rtf")
-            ParameterBag outputParameters = new ParameterBag(); 
+            ParameterBag outputParameters = new ParameterBag();
             double auc = 0;
             outputParameters.AddOutput("poly_auc",
                                        x_qromb(vX.Data[0], vX.Data[vX.Length - 1], ref auc, bd, P)
                                            ? host.RoundU(auc)
                                            : Formatting.ERRR);
-            double aucg = x_giabaldi( nx, vY.Data, vX.Data ); 
-            outputParameters.AddOutput( "trap_auc", host.RoundU( aucg ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static bool x_qromb( double a, double b, ref double ss, double[] bd, int P ) 
-        { 
+            double aucg = x_giabaldi(nx, vY.Data, vX.Data);
+            outputParameters.AddOutput("trap_auc", host.RoundU(aucg));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static bool x_qromb(double a, double b, ref double ss, double[] bd, int P)
+        {
             bool x_qrombReturn = false;
-            double ds = 0; 
-            const double eps = 100.0 * Constant.EPSNEG; 
-            const int jmax = 16; 
-            const int jmaxp = jmax + 1; 
-            const int k = 5; 
+            double ds = 0;
+            const double eps = 100.0 * Constant.EPSNEG;
+            const int jmax = 16;
+            const int jmaxp = jmax + 1;
+            const int k = 5;
             const int km = k - 1;
             double[] h = new double[jmaxp + 1 /* for VB to C# conversion */ ];
-            double[] s = new double[jmaxp + 1 /* for VB to C# conversion */ ]; 
-            h[ 1 ] = 1.0; 
-            int j; 
-            for ( j=1; j <= jmax; j++ ) 
-            { 
-                Regress1.trapzd( a, b, ref s[ j ], j, bd, P ); 
-                if ( j >= k ) 
-                { 
-                    int ifault = 0; 
-                    Regress1.polint( h, s, j - km, k, 0.0, out ss, ref ds, ref ifault ); 
-                    if ( ifault != 0 ) 
-                    { 
-                        return false; 
-                    } 
-                    if ( Math.Abs( ds ) <= eps * Math.Abs( ss ) ) 
-                    { 
-                        return true; 
-                    } 
-                } 
-                s[ j + 1 ] = s[ j ]; 
-                h[ j + 1 ] = 0.25 * h[ j ]; 
-            } 
-            if ( j < jmax )
-            { 
-                x_qrombReturn = true; 
-            } 
+            double[] s = new double[jmaxp + 1 /* for VB to C# conversion */ ];
+            h[1] = 1.0;
+            int j;
+            for (j = 1; j <= jmax; j++)
+            {
+                Regress1.trapzd(a, b, ref s[j], j, bd, P);
+                if (j >= k)
+                {
+                    int ifault = 0;
+                    Regress1.polint(h, s, j - km, k, 0.0, out ss, ref ds, ref ifault);
+                    if (ifault != 0)
+                    {
+                        return false;
+                    }
+                    if (Math.Abs(ds) <= eps * Math.Abs(ss))
+                    {
+                        return true;
+                    }
+                }
+                s[j + 1] = s[j];
+                h[j + 1] = 0.25 * h[j];
+            }
+            if (j < jmax)
+            {
+                x_qrombReturn = true;
+            }
             return x_qrombReturn;
-        } 
-        
-        
-        private static double x_giabaldi( int nx, double[] y, double[] x ) 
-        { 
-            double ss = 0.0; 
-            for ( int i=1; i <= nx - 1; i++ ) 
-            { 
-                ss += ( ( ( y[ i ] + y[ i - 1 ] ) / 2.0 ) * Math.Abs( x[ i ] - x[ i - 1 ] ) ); 
-            } 
-            return ss; 
-        } 
-        
-        
-        public static StepResult RptPolynomialRegressionConfidence( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            int nx = context.N; 
-            int P = context.P; 
-            double[,] xtxi = context.H; 
-            double[] yfit = context.FV; 
-            double[,] x = context.X; 
-            double rss = context.SSY - context.SSREG; 
-            double rdf = Convert.ToDouble( ( nx - 1 ) - ( P - 1 ) ); 
-            double rms = rss / rdf; 
-            double GAMMA = parameters[ "gamma" ].AsDouble; 
-            double cit; double P0; 
-            MathDbl.civ( nx - P, out cit, GAMMA, out P0 ); 
-            DoubleVariable vYFit = new DoubleVariable( nx, "Fitted Y" ); 
-            DoubleVariable vsey = new DoubleVariable( nx, "SE of Y fit" ); 
-            DoubleVariable vcl = new DoubleVariable( nx, Formatting.XRound( 100.0 * ( 1.0 - P0 ), 1 ) + "% Conf Limit" ); 
-            DoubleVariable vpl = new DoubleVariable( nx, Formatting.XRound( 100.0 * ( 1.0 - P0 ), 1 ) + "% Pred Limit" ); 
-            for ( int k=1; k <= nx; k++ ) 
-            { 
-                double xcx = 0; 
-                double s; 
-                for ( int i=1; i <= P; i++ ) 
-                { 
-                    s = 0; 
-                    for ( int j=1; j <= P; j++ ) 
-                    { 
-                        s += xtxi[ i, j ] * x[ k, j ]; 
-                    } 
-                    xcx += s * x[ k, i ]; 
-                } 
-                double sey = Math.Sqrt( rms * xcx ); 
-                double cl = cit * sey; 
-                s = Math.Sqrt( rms * ( 1.0 + xcx ) ); 
-                double pl = cit * s; 
-                vYFit.set_Data( k - 1, yfit[ k ] ); 
-                vsey.set_Data( k - 1, sey ); 
-                vcl.set_Data( k - 1, cl ); 
-                vpl.set_Data( k - 1, pl ); 
-            } 
-            DataFrame outputFrame = new DataFrame(); 
-            outputFrame.Variables.Add( vYFit ); 
-            outputFrame.Variables.Add( vsey ); 
-            outputFrame.Variables.Add( vcl ); 
-            outputFrame.Variables.Add( vpl ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "results", outputFrame ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptPolynomialRegressionBackInterpolation( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] bd = context.B; 
-            int nx = context.N; 
-            int P = context.P; 
-            double[] yfit = context.FV; 
+        }
+
+
+        private static double x_giabaldi(int nx, double[] y, double[] x)
+        {
+            double ss = 0.0;
+            for (int i = 1; i <= nx - 1; i++)
+            {
+                ss += (((y[i] + y[i - 1]) / 2.0) * Math.Abs(x[i] - x[i - 1]));
+            }
+            return ss;
+        }
+
+
+        public static StepResult RptPolynomialRegressionConfidence(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            int nx = context.N;
+            int P = context.P;
+            double[,] xtxi = context.H;
+            double[] yfit = context.FV;
+            double[,] x = context.X;
+            double rss = context.SSY - context.SSREG;
+            double rdf = Convert.ToDouble((nx - 1) - (P - 1));
+            double rms = rss / rdf;
+            double GAMMA = parameters["gamma"].AsDouble;
+            double cit; double P0;
+            MathDbl.civ(nx - P, out cit, GAMMA, out P0);
+            DoubleVariable vYFit = new DoubleVariable(nx, "Fitted Y");
+            DoubleVariable vsey = new DoubleVariable(nx, "SE of Y fit");
+            DoubleVariable vcl = new DoubleVariable(nx, Formatting.XRound(100.0 * (1.0 - P0), 1) + "% Conf Limit");
+            DoubleVariable vpl = new DoubleVariable(nx, Formatting.XRound(100.0 * (1.0 - P0), 1) + "% Pred Limit");
+            for (int k = 1; k <= nx; k++)
+            {
+                double xcx = 0;
+                double s;
+                for (int i = 1; i <= P; i++)
+                {
+                    s = 0;
+                    for (int j = 1; j <= P; j++)
+                    {
+                        s += xtxi[i, j] * x[k, j];
+                    }
+                    xcx += s * x[k, i];
+                }
+                double sey = Math.Sqrt(rms * xcx);
+                double cl = cit * sey;
+                s = Math.Sqrt(rms * (1.0 + xcx));
+                double pl = cit * s;
+                vYFit.set_Data(k - 1, yfit[k]);
+                vsey.set_Data(k - 1, sey);
+                vcl.set_Data(k - 1, cl);
+                vpl.set_Data(k - 1, pl);
+            }
+            DataFrame outputFrame = new DataFrame();
+            outputFrame.Variables.Add(vYFit);
+            outputFrame.Variables.Add(vsey);
+            outputFrame.Variables.Add(vcl);
+            outputFrame.Variables.Add(vpl);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("results", outputFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptPolynomialRegressionBackInterpolation(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] bd = context.B;
+            int nx = context.N;
+            int P = context.P;
+            double[] yfit = context.FV;
             // DataFrame fY = parameters[ "y" ].AsDataFrame; unused
             // DoubleVariable vY = fY.Variables[ 0 ].AsDoubleVariable; unused
-            DataFrame fX = parameters[ "x" ].AsDataFrame; 
-            DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; 
+            DataFrame fX = parameters["x"].AsDataFrame;
+            DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
             long cnt = 0; bool fault = false;
-            double lastdif = 0; 
-            double y = parameters[ "newy" ].AsDouble; 
-            double YMax = yfit[ 1 ]; 
-            double YMin = yfit[ 1 ]; 
-            double XMax = vX.Data[0]; 
-            double xmin = XMax; 
-            for ( int j=1; j <= nx; j++ ) 
-            { 
-                if ( yfit[ j ] > YMax )
-                { 
-                    YMax = yfit[ j ]; 
-                } 
-                if ( yfit[ j ] < YMin )
-                { 
-                    YMin = yfit[ j ]; 
-                } 
-                double x = vX.Data[j - 1]; 
-                if ( x > XMax )
-                { 
-                    XMax = x; 
-                } 
-                if ( x < xmin )
-                { 
-                    XMax = x; 
-                } 
-            } 
-            if ( y > YMax | y < YMin ) 
-            { 
-                host.Error( "Y must lie within the fitted curve (" + host.RoundU( YMin ) + " to " + host.RoundU( YMax ) + ")", "Polynomial Interpolation" ); 
-                throw new TemplateOperationCancelledException(); 
+            double lastdif = 0;
+            double y = parameters["newy"].AsDouble;
+            double YMax = yfit[1];
+            double YMin = yfit[1];
+            double XMax = vX.Data[0];
+            double xmin = XMax;
+            for (int j = 1; j <= nx; j++)
+            {
+                if (yfit[j] > YMax)
+                {
+                    YMax = yfit[j];
+                }
+                if (yfit[j] < YMin)
+                {
+                    YMin = yfit[j];
+                }
+                double x = vX.Data[j - 1];
+                if (x > XMax)
+                {
+                    XMax = x;
+                }
+                if (x < xmin)
+                {
+                    XMax = x;
+                }
             }
-            double INC = ( XMax - xmin ) / 10.0; 
-            double yinc = ( YMax - YMin ) / 10.0; 
-            double gotx = xmin - INC; 
-            do 
-            { 
-                do 
-                { 
-                    cnt = cnt + 1; 
-                    if ( cnt > 10000 ) 
-                    { 
-                        fault = true; 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                    gotx = gotx + INC; 
-                    double goty = Regress1.polyfunc( gotx, bd, P ); 
-                    double dif = Math.Abs( goty - y ); 
-                    if ( dif == lastdif )
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                    lastdif = dif; 
-                    if ( dif < Math.Abs( yinc * 10 ) ) 
-                    { 
-                        yinc = yinc / 10.0; 
-                        gotx = gotx - INC; 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                while ( true ); 
-                INC = INC / 10.0; 
-                if ( INC < Constant.EPSNEG * 10.0 )
-                { 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                } 
-                if ( fault )
-                { 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                } 
-            } 
-            while ( true ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "y", host.RoundU( Regress1.polyfunc( gotx, bd, P ) ) ); 
-            outputParameters.AddOutput( "x", host.RoundU( gotx ) ); 
-            if ( fault )
-            { 
-                host.Error( "Error in calculation", "Polynomial Interpolation" ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters );
-        } 
-        
-        
-        public static StepResult RptLogisticRegression( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            int rows ;
-            int C ; int tot_obs ;
-            int i ; int j ;
-            int k ; 
-            double[] tt ; double[] tr ; double[] tw ;
+            if (y > YMax | y < YMin)
+            {
+                host.Error("Y must lie within the fitted curve (" + host.RoundU(YMin) + " to " + host.RoundU(YMax) + ")", "Polynomial Interpolation");
+                throw new TemplateOperationCancelledException();
+            }
+            double INC = (XMax - xmin) / 10.0;
+            double yinc = (YMax - YMin) / 10.0;
+            double gotx = xmin - INC;
+            do
+            {
+                do
+                {
+                    cnt = cnt + 1;
+                    if (cnt > 10000)
+                    {
+                        fault = true;
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                    gotx = gotx + INC;
+                    double goty = Regress1.polyfunc(gotx, bd, P);
+                    double dif = Math.Abs(goty - y);
+                    if (dif == lastdif)
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                    lastdif = dif;
+                    if (dif < Math.Abs(yinc * 10))
+                    {
+                        yinc = yinc / 10.0;
+                        gotx = gotx - INC;
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                while (true);
+                INC = INC / 10.0;
+                if (INC < Constant.EPSNEG * 10.0)
+                {
+                    break; /* TRANSWARNING: check that break is in correct scope */
+                }
+                if (fault)
+                {
+                    break; /* TRANSWARNING: check that break is in correct scope */
+                }
+            }
+            while (true);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("y", host.RoundU(Regress1.polyfunc(gotx, bd, P)));
+            outputParameters.AddOutput("x", host.RoundU(gotx));
+            if (fault)
+            {
+                host.Error("Error in calculation", "Polynomial Interpolation");
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
 
-            double accuracy = Parsing.Cdbl_Txt( parameters[ "accuracy" ].AsString ); 
-            if ( accuracy > 0.01 )
-            { 
-                accuracy = 0.01; 
-            } 
-            bool grouped = "grouped".Equals( parameters[ "grouping" ].AsString ); 
-            bool shouldCalculateIntercept = parameters[ "intercept" ].AsBoolean; 
-            bool hasWeights = parameters[ "weights" ].AsBoolean; 
-            
-            DoubleVariable responseVariable; 
-            if ( grouped ) 
-            { 
-                DataFrame totalFrame = parameters[ "total" ].AsDataFrame; 
-                DoubleVariable totalVariable = totalFrame.Variables[ 0 ].AsDoubleVariable; 
+
+        public static StepResult RptLogisticRegression(ITemplateHost host, ParameterBag parameters)
+        {
+            int rows;
+            int C; int tot_obs;
+            int i; int j;
+            int k;
+            double[] tt; double[] tr; double[] tw;
+
+            double accuracy = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
+            if (accuracy > 0.01)
+            {
+                accuracy = 0.01;
+            }
+            bool grouped = "grouped".Equals(parameters["grouping"].AsString);
+            bool shouldCalculateIntercept = parameters["intercept"].AsBoolean;
+            bool hasWeights = parameters["weights"].AsBoolean;
+
+            DoubleVariable responseVariable;
+            if (grouped)
+            {
+                DataFrame totalFrame = parameters["total"].AsDataFrame;
+                DoubleVariable totalVariable = totalFrame.Variables[0].AsDoubleVariable;
                 // Store the total Data
                 rows = totalVariable.Length;
                 tt = new double[rows + 1 /* for VB to C# conversion */];
                 tr = new double[rows + 1 /* for VB to C# conversion */];
-                tw = new double[rows + 1 /* for VB to C# conversion */]; 
-                tot_obs = 0; 
-                for ( C=1; C <= rows; C++ ) 
-                { 
-                    tt[ C ] = totalVariable.Data[C - 1]; 
-                    tot_obs = tot_obs + Convert.ToInt32( tt[ C ] ); 
-                } 
-                DataFrame responseFrame = parameters[ "response" ].AsDataFrame; 
-                responseVariable = responseFrame.Variables[ 0 ].AsDoubleVariable; 
+                tw = new double[rows + 1 /* for VB to C# conversion */];
+                tot_obs = 0;
+                for (C = 1; C <= rows; C++)
+                {
+                    tt[C] = totalVariable.Data[C - 1];
+                    tot_obs = tot_obs + Convert.ToInt32(tt[C]);
+                }
+                DataFrame responseFrame = parameters["response"].AsDataFrame;
+                responseVariable = responseFrame.Variables[0].AsDoubleVariable;
                 // Store the response Data
-                for ( C=1; C <= rows; C++ ) 
-                { 
-                    tr[ C ] = responseVariable.Data[C - 1]; 
-                } 
-            } 
-            else 
-            { 
-                DataFrame responseFrame = parameters[ "response" ].AsDataFrame; 
-                responseVariable = responseFrame.Variables[ 0 ].AsDoubleVariable; 
+                for (C = 1; C <= rows; C++)
+                {
+                    tr[C] = responseVariable.Data[C - 1];
+                }
+            }
+            else
+            {
+                DataFrame responseFrame = parameters["response"].AsDataFrame;
+                responseVariable = responseFrame.Variables[0].AsDoubleVariable;
                 rows = responseVariable.Length;
                 tt = new double[rows + 1 /* for VB to C# conversion */];
                 tr = new double[rows + 1 /* for VB to C# conversion */];
-                tw = new double[rows + 1 /* for VB to C# conversion */]; 
+                tw = new double[rows + 1 /* for VB to C# conversion */];
                 // Store the response Data
-                for ( C=1; C <= rows; C++ ) 
-                { 
-                    tr[ C ] = responseVariable.Data[C - 1]; 
-                    if ( tr[ C ] > 1.0 & tr[ C ] != Constant.MISSING ) 
-                    { 
-                        host.Error( "Response data must be either 0 (not responded) or 1 (responded), if you want to use grouped response data then please select this option at the start", "Logistic Regression" ); 
-                        throw new TemplateOperationCancelledException(); 
-                    } 
-                } 
+                for (C = 1; C <= rows; C++)
+                {
+                    tr[C] = responseVariable.Data[C - 1];
+                    if (tr[C] > 1.0 & tr[C] != Constant.MISSING)
+                    {
+                        host.Error("Response data must be either 0 (not responded) or 1 (responded), if you want to use grouped response data then please select this option at the start", "Logistic Regression");
+                        throw new TemplateOperationCancelledException();
+                    }
+                }
                 // Total observations = rows
-                tot_obs = rows; 
+                tot_obs = rows;
                 // set denominator/total as 1
-                for ( C=1; C <= rows; C++ ) 
-                { 
-                    tt[ C ] = 1.0; 
-                } 
-            } 
-            if ( hasWeights ) 
-            { 
-                DataFrame weightsFrame = parameters[ "weights" ].AsDataFrame; 
-                DoubleVariable weightsVariable = weightsFrame.Variables[ 0 ].AsDoubleVariable; 
+                for (C = 1; C <= rows; C++)
+                {
+                    tt[C] = 1.0;
+                }
+            }
+            if (hasWeights)
+            {
+                DataFrame weightsFrame = parameters["weights"].AsDataFrame;
+                DoubleVariable weightsVariable = weightsFrame.Variables[0].AsDoubleVariable;
                 // Store the weight Data
-                for ( C=1; C <= rows; C++ ) 
-                { 
-                    tw[ C ] = weightsVariable.Data[C - 1]; 
-                } 
-            } 
-            else 
-            { 
-                for ( C=1; C <= rows; C++ ) 
-                { 
-                    tw[ C ] = 1.0; 
-                } 
-            } 
-            DataFrame predictorsFrame = parameters[ "predictors" ].AsDataFrame; 
+                for (C = 1; C <= rows; C++)
+                {
+                    tw[C] = weightsVariable.Data[C - 1];
+                }
+            }
+            else
+            {
+                for (C = 1; C <= rows; C++)
+                {
+                    tw[C] = 1.0;
+                }
+            }
+            DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
             // Store the predictors
             int prd = predictorsFrame.VariableCount - 1;
-            double[,] pt = new double[prd + 1 /* for VB to C# conversion */, rows + 1 /* for VB to C# conversion */];  
-            for ( C=0; C <= prd; C++ ) 
-            { 
-                DoubleVariable v = predictorsFrame.Variables[ C ].AsDoubleVariable; 
+            double[,] pt = new double[prd + 1 /* for VB to C# conversion */, rows + 1 /* for VB to C# conversion */];
+            for (C = 0; C <= prd; C++)
+            {
+                DoubleVariable v = predictorsFrame.Variables[C].AsDoubleVariable;
                 double[] data = v.Data;
-                int r ;
-                for ( r=1; r <= rows; r++ ) 
-                { 
-                    pt[ C, r ] = data[ r - 1 ]; 
-                } 
-            } 
+                int r;
+                for (r = 1; r <= rows; r++)
+                {
+                    pt[C, r] = data[r - 1];
+                }
+            }
             // check predictors for categorical data not yet dummied
-            if ( prd + 2 >= tot_obs ) 
-            { 
-                host.Error( "You must have more observations than parameters", "Logistic Regression" ); 
-                throw new TemplateOperationCancelledException(); 
+            if (prd + 2 >= tot_obs)
+            {
+                host.Error("You must have more observations than parameters", "Logistic Regression");
+                throw new TemplateOperationCancelledException();
                 // TRANSWARNING: Unreachable code detected and removed 
-            } 
+            }
             // stack entries with duplicate covariate patterns
             // IEB July 2009: don't stack missing observations in the response as the subsequent dropper won't work
-            int cutrows = 0; 
-            for ( i=1; i <= rows - 1; i++ ) 
-            { 
-                for ( j=i + 1; j <= rows; j++ ) 
-                { 
-                    if ( tw[ j ] == 1.0 & tr[ j ] != Constant.MISSING ) 
-                    { 
-                        bool snap = true; 
-                        for ( k=0; k <= prd; k++ ) 
-                        { 
-                            if ( pt[ k, j ] != pt[ k, i ] ) 
-                            { 
-                                snap = false; 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
-                            } 
-                        } 
-                        if ( snap ) 
-                        { 
-                            tt[ i ] += tt[ j ]; 
-                            tr[ i ] += tr[ j ]; 
-                            tw[ j ] = Constant.MISSING; 
-                            cutrows += 1; 
-                        } 
-                    } 
-                } 
-            } 
+            int cutrows = 0;
+            for (i = 1; i <= rows - 1; i++)
+            {
+                for (j = i + 1; j <= rows; j++)
+                {
+                    if (tw[j] == 1.0 & tr[j] != Constant.MISSING)
+                    {
+                        bool snap = true;
+                        for (k = 0; k <= prd; k++)
+                        {
+                            if (pt[k, j] != pt[k, i])
+                            {
+                                snap = false;
+                                break; /* TRANSWARNING: check that break is in correct scope */
+                            }
+                        }
+                        if (snap)
+                        {
+                            tt[i] += tt[j];
+                            tr[i] += tr[j];
+                            tw[j] = Constant.MISSING;
+                            cutrows += 1;
+                        }
+                    }
+                }
+            }
             //  At this point we have merged rows where there are duplicate covariate patterns, and all other rows have MISSING in the weights.  There are rows - cutrows valid rows in the arrays, but they could be anywhere!
-            int newrows = rows - cutrows; 
+            int newrows = rows - cutrows;
             //  Copy down the remaining observations
             //  0 = tt = total observations
             //  1 = tr = responses
             //  2 = tw = weights
             //  3+ = pt = predictors
-            int targetRow = 1; 
-            for ( int sourceRow=1; sourceRow <= rows; sourceRow++ ) 
-            { 
-                if ( tw[ sourceRow ] != Constant.MISSING ) 
-                { 
+            int targetRow = 1;
+            for (int sourceRow = 1; sourceRow <= rows; sourceRow++)
+            {
+                if (tw[sourceRow] != Constant.MISSING)
+                {
                     //  This row is valid; if necessary, copy it down to our current target row
-                    if ( sourceRow != targetRow ) 
-                    { 
-                        tt[ targetRow ] = tt[ sourceRow ]; 
-                        tr[ targetRow ] = tr[ sourceRow ]; 
-                        tw[ targetRow ] = tw[ sourceRow ]; 
-                        for ( int pred=0; pred <= prd; pred++ ) 
-                        { 
-                            pt[ pred, targetRow ] = pt[ pred, sourceRow ]; 
-                        } 
-                    } 
-                    targetRow += 1; 
-                } 
-            } 
-            Debug.Assert( targetRow == newrows + 1 ); 
+                    if (sourceRow != targetRow)
+                    {
+                        tt[targetRow] = tt[sourceRow];
+                        tr[targetRow] = tr[sourceRow];
+                        tw[targetRow] = tw[sourceRow];
+                        for (int pred = 0; pred <= prd; pred++)
+                        {
+                            pt[pred, targetRow] = pt[pred, sourceRow];
+                        }
+                    }
+                    targetRow += 1;
+                }
+            }
+            Debug.Assert(targetRow == newrows + 1);
             //  At this point, tt, tr, tw and pt contain valid data from row 1 to row newrows inclusive
 
             bool Weight = false; int irank = 0; int idf = 0;
-            double dev = 0; double devx ; double llx ;
-            string warn ;
-            const int maxit = 200; 
-            int cnt = 0; 
-            int fault; 
+            double dev = 0; double devx; double llx;
+            string warn;
+            const int maxit = 200;
+            int cnt = 0;
+            int fault;
             int N = newrows;
             double[] t = new double[N + 1 /* for VB to C# conversion */];
             double[] y = new double[N + 1 /* for VB to C# conversion */ ];
             double[] wt = new double[N + 1 /* for VB to C# conversion */];
-            int[] rxi = new int[1 + 1 /* for VB to C# conversion */]; 
-            int M = predictorsFrame.VariableCount; 
-            int ip = M; 
-            bool mean = shouldCalculateIntercept; 
-            if ( mean )
-            { 
-                ip = ip + 1; 
-            } 
+            int[] rxi = new int[1 + 1 /* for VB to C# conversion */];
+            int M = predictorsFrame.VariableCount;
+            int ip = M;
+            bool mean = shouldCalculateIntercept;
+            if (mean)
+            {
+                ip = ip + 1;
+            }
             double tol = accuracy;
             double[,] x = new double[N + 1 /* for VB to C# conversion */, ip + 1 /* for VB to C# conversion */];
-            string[] Label = new string[ip + 1 /* for VB to C# conversion */ ]; 
-            string transTemp5 = responseVariable.Title; 
-            Label[ 0 ] = transTemp5.Trim(); 
-            for ( j=1; j <= M; j++ ) 
-            { 
-                string transTemp6 = predictorsFrame.Variables[ j - 1 ].Title; 
-                Label[ j ] = transTemp6.Trim(); 
-            } 
-            for ( j=1; j <= N; j++ ) 
+            string[] Label = new string[ip + 1 /* for VB to C# conversion */ ];
+            string transTemp5 = responseVariable.Title;
+            Label[0] = transTemp5.Trim();
+            for (j = 1; j <= M; j++)
             {
-                bool ok = tt[ j ] != Constant.MISSING;
-                if ( tr[ j ] == Constant.MISSING )
-                { 
-                    ok = false; 
-                } 
-                if ( Weight && tw[ j ] == Constant.MISSING )
-                { 
-                    ok = false; 
-                } 
-                for ( k=0; k <= M - 1; k++ ) 
-                { 
-                    if ( pt[ k, j ] == Constant.MISSING )
-                    { 
-                        ok = false; 
-                    } 
-                } 
-                if ( ok ) 
-                { 
-                    cnt = cnt + 1; 
-                    t[ cnt ] = tt[ j ]; 
-                    y[ cnt ] = tr[ j ]; 
-                    if ( y[ cnt ] == 0.0 )
-                    { 
-                        y[ cnt ] = Constant.EPSNEG; 
-                    } 
-                    if ( y[ cnt ] == t[ cnt ] )
-                    { 
-                        y[ cnt ] = y[ cnt ] - Constant.EPSNEG; 
-                    } 
-                    if ( Weight ) 
-                    { 
-                        wt[ cnt ] = tw[ j ]; 
-                    } 
-                    else 
-                    { 
-                        wt[ cnt ] = 1.0; 
-                    } 
-                    for ( k=1; k <= M; k++ ) 
-                    { 
-                        x[ cnt, k ] = pt[ k - 1, j ]; 
-                    } 
-                } 
-            } 
-            if ( N != cnt ) 
-            { 
-                x_dropper( host, N - cnt, "Logistic regression" ); 
-                N = cnt; 
-            } 
-            //  get intercept deviance - drop predictors
-            double[,] x2 = new double[N + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */]; 
-            for ( j=1; j <= N; j++ ) 
-            { 
-                x2[ j, 0 ] = 1; 
-                x2[ j, 1 ] = 1; 
+                string transTemp6 = predictorsFrame.Variables[j - 1].Title;
+                Label[j] = transTemp6.Trim();
             }
-            int[] isx = new int[1 + 1 /* for VB to C# conversion */ ]; 
-            isx[ 1 ] = 1;
+            for (j = 1; j <= N; j++)
+            {
+                bool ok = tt[j] != Constant.MISSING;
+                if (tr[j] == Constant.MISSING)
+                {
+                    ok = false;
+                }
+                if (Weight && tw[j] == Constant.MISSING)
+                {
+                    ok = false;
+                }
+                for (k = 0; k <= M - 1; k++)
+                {
+                    if (pt[k, j] == Constant.MISSING)
+                    {
+                        ok = false;
+                    }
+                }
+                if (ok)
+                {
+                    cnt = cnt + 1;
+                    t[cnt] = tt[j];
+                    y[cnt] = tr[j];
+                    if (y[cnt] == 0.0)
+                    {
+                        y[cnt] = Constant.EPSNEG;
+                    }
+                    if (y[cnt] == t[cnt])
+                    {
+                        y[cnt] = y[cnt] - Constant.EPSNEG;
+                    }
+                    if (Weight)
+                    {
+                        wt[cnt] = tw[j];
+                    }
+                    else
+                    {
+                        wt[cnt] = 1.0;
+                    }
+                    for (k = 1; k <= M; k++)
+                    {
+                        x[cnt, k] = pt[k - 1, j];
+                    }
+                }
+            }
+            if (N != cnt)
+            {
+                x_dropper(host, N - cnt, "Logistic regression");
+                N = cnt;
+            }
+            //  get intercept deviance - drop predictors
+            double[,] x2 = new double[N + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
+            for (j = 1; j <= N; j++)
+            {
+                x2[j, 0] = 1;
+                x2[j, 1] = 1;
+            }
+            int[] isx = new int[1 + 1 /* for VB to C# conversion */ ];
+            isx[1] = 1;
             double[] b = new double[1 + 1 /* for VB to C# conversion */ ];
             double[] se = new double[N + 1 /* for VB to C# conversion */ ];
             double[] cov = new double[1 + 1 /* for VB to C# conversion */];
@@ -3304,25 +3306,25 @@ namespace StatsDirect.Builtins
             double[] var = new double[N + 1 /* for VB to C# conversion */];
             double[] dr = new double[N + 1 /* for VB to C# conversion */];
             double[] h = new double[N + 1 /* for VB to C# conversion */];
-            double[] offst = new double[N + 1 /* for VB to C# conversion */ ]; 
-            string msg = ""; 
-            Regress1.X_LOGIREG( false, false, ref Weight, N, x2, 1, isx, 1, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg );
-            int idfx = idf; 
-            if ( mean == false ) 
-            { 
-                llx = Constant.MISSING; 
-                devx = Constant.MISSING; 
-            } 
-            else 
-            { 
-                llx = x_loglik_l(Weight, N, wt, y, t, fvl ); 
-                devx = dev; 
-            } 
+            double[] offst = new double[N + 1 /* for VB to C# conversion */ ];
+            string msg = "";
+            Regress1.X_LOGIREG(false, false, ref Weight, N, x2, 1, isx, 1, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
+            int idfx = idf;
+            if (mean == false)
+            {
+                llx = Constant.MISSING;
+                devx = Constant.MISSING;
+            }
+            else
+            {
+                llx = x_loglik_l(Weight, N, wt, y, t, fvl);
+                devx = dev;
+            }
             //  calculate full model
-            isx = new int[ip + 1 /* for VB to C# conversion */]; 
-            for ( j=1; j <= ip; j++ ) 
-            { 
-                isx[ j ] = j; 
+            isx = new int[ip + 1 /* for VB to C# conversion */];
+            for (j = 1; j <= ip; j++)
+            {
+                isx[j] = j;
             }
             b = new double[ip + 1 /* for VB to C# conversion */];
             se = new double[N + 1 /* for VB to C# conversion */];
@@ -3331,1411 +3333,1420 @@ namespace StatsDirect.Builtins
             var = new double[N + 1 /* for VB to C# conversion */ ];
             dr = new double[N + 1 /* for VB to C# conversion */];
             h = new double[N + 1 /* for VB to C# conversion */];
-            offst = new double[N + 1 /* for VB to C# conversion */ ]; 
-            msg = ""; 
-            Regress1.X_LOGIREG( mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg ); 
-            if ( fault != 0 & fault != 10 & fault != 9 ) 
-            { 
-                switch ( fault ) 
+            offst = new double[N + 1 /* for VB to C# conversion */ ];
+            msg = "";
+            Regress1.X_LOGIREG(mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
+            if (fault != 0 & fault != 10 & fault != 9)
+            {
+                switch (fault)
                 {
                     case 4:
-                        msg = "subjects < 0"; 
+                        msg = "subjects < 0";
                         break;
                     case 5:
-                        msg = "responders > subjects or responders < 0"; 
+                        msg = "responders > subjects or responders < 0";
                         break;
                     case 6:
-                        msg = "boundary hit, try dropping predictors"; 
+                        msg = "boundary hit, try dropping predictors";
                         break;
                     case 8:
-                        msg = "failed to converge in " +  maxit.ToString() + " iterations"; 
+                        msg = "failed to converge in " + maxit.ToString() + " iterations";
                         break;
                     case 99:
-                        msg = "not enough memory for this calculation"; 
+                        msg = "not enough memory for this calculation";
                         break;
                     default:
-                        msg = "Logit_err " +  fault + 1.ToString(); 
+                        msg = "Logit_err " + fault + 1.ToString();
                         break;
                 }
-                
-                host.Error( msg, "Logistic Regression" ); 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( fault == 9 ) 
-            { 
-                warn = Formatting.WRNCOLON + "rank changed, consider dropping predictors"; 
-            } 
-            else 
-            { 
-                warn = ""; 
-            } 
-            if ( irank != ip ) 
-            { 
-                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0 )
-                { 
-                    warn = warn + Formatting.RTFCRLF; 
-                } 
-                warn = warn + Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model"; 
-            } 
-            if ( idf <= 0 ) 
-            { 
-                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0 )
-                { 
-                    warn = warn + Formatting.RTFCRLF; 
-                } 
-                warn = warn + Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)"; 
-            } 
-            if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ msg.Length > 0 ) 
-            { 
-                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0 ) 
-                { 
-                    warn = warn + Formatting.RTFCRLF + msg; 
-                } 
-                else 
-                { 
-                    warn = msg; 
-                } 
-            } 
-            IList<ParameterBag> warnList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*warn", warnList ); 
-            if ( warn.Length > 0 ) 
-            { 
-                ParameterBag warnParameters = new ParameterBag(); 
-                warnList.Add( warnParameters ); 
-                warnParameters.AddOutput( "warn", warn ); 
-            } 
-            outputParameters.AddOutput( "dev", host.RoundU( dev ) ); 
-            outputParameters.AddOutput( "df",  idf.ToString() ); 
-            double prob = PDF.chivalp( dev, Convert.ToDouble( idf ) ); 
-            outputParameters.AddOutput( "p", host.pval( prob ) ); 
-            warn = prob < 0.05 ? Formatting.ASTERISK : ""; 
-            outputParameters.AddOutput( "w", warn ); 
-            double x2dev = devx - dev; 
-            if ( x2dev < 0.0 )
-            { 
-                x2dev = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "x2", host.RoundU( x2dev ) ); 
-            outputParameters.AddOutput( "df_lr",  (idfx - idf).ToString() );
+
+                host.Error(msg, "Logistic Regression");
+                throw new TemplateOperationCancelledException();
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            if (fault == 9)
+            {
+                warn = Formatting.WRNCOLON + "rank changed, consider dropping predictors";
+            }
+            else
+            {
+                warn = "";
+            }
+            if (irank != ip)
+            {
+                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0)
+                {
+                    warn = warn + Formatting.RTFCRLF;
+                }
+                warn = warn + Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model";
+            }
+            if (idf <= 0)
+            {
+                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0)
+                {
+                    warn = warn + Formatting.RTFCRLF;
+                }
+                warn = warn + Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)";
+            }
+            if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ msg.Length > 0)
+            {
+                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0)
+                {
+                    warn = warn + Formatting.RTFCRLF + msg;
+                }
+                else
+                {
+                    warn = msg;
+                }
+            }
+            IList<ParameterBag> warnList = new List<ParameterBag>();
+            outputParameters.AddOutput("*warn", warnList);
+            if (warn.Length > 0)
+            {
+                ParameterBag warnParameters = new ParameterBag();
+                warnList.Add(warnParameters);
+                warnParameters.AddOutput("warn", warn);
+            }
+            outputParameters.AddOutput("dev", host.RoundU(dev));
+            outputParameters.AddOutput("df", idf.ToString());
+            double prob = PDF.chivalp(dev, Convert.ToDouble(idf));
+            outputParameters.AddOutput("p", host.pval(prob));
+            warn = prob < 0.05 ? Formatting.ASTERISK : "";
+            outputParameters.AddOutput("w", warn);
+            double x2dev = devx - dev;
+            if (x2dev < 0.0)
+            {
+                x2dev = Constant.MISSING;
+            }
+            outputParameters.AddOutput("x2", host.RoundU(x2dev));
+            outputParameters.AddOutput("df_lr", (idfx - idf).ToString());
             outputParameters.AddOutput("p_lr",
                                        idfx > 0
                                            ? host.pval(PDF.chivalp(x2dev, Convert.ToDouble(idfx - idf)))
                                            : Formatting.ASTERISK);
-            IList<ParameterBag> varList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*var", varList ); 
-            for ( i=1; i <= ip; i++ ) 
-            { 
-                if ( se[ i ] == 0 ) 
-                { 
-                    prob = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    prob = 2.0 * ( 1.0 - PDF.alnorm( Math.Abs( b[ i ] / se[ i ] ) ) ); 
-                } 
-                ParameterBag varParameters = new ParameterBag(); 
-                varList.Add( varParameters ); 
-                if ( mean )
+            IList<ParameterBag> varList = new List<ParameterBag>();
+            outputParameters.AddOutput("*var", varList);
+            for (i = 1; i <= ip; i++)
+            {
+                if (se[i] == 0)
+                {
+                    prob = Constant.MISSING;
+                }
+                else
+                {
+                    prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[i] / se[i])));
+                }
+                ParameterBag varParameters = new ParameterBag();
+                varList.Add(varParameters);
+                if (mean)
                 {
                     varParameters.AddOutput("lab", i == 1 ? "Intercept" : Label[i - 1]);
-                    varParameters.AddOutput( "idx",  (i - 1).ToString() );
+                    varParameters.AddOutput("idx", (i - 1).ToString());
                 }
-                else 
-                { 
-                    varParameters.AddOutput( "lab", Label[ i ] ); 
-                    varParameters.AddOutput( "idx",  i.ToString() ); 
-                } 
-                varParameters.AddOutput( "res", host.RoundU( b[ i ] ) );
+                else
+                {
+                    varParameters.AddOutput("lab", Label[i]);
+                    varParameters.AddOutput("idx", i.ToString());
+                }
+                varParameters.AddOutput("res", host.RoundU(b[i]));
                 double z;
-                if ( se[ i ] == 0.0 ) 
-                { 
-                    z = Constant.MISSING; 
-                    varParameters.AddOutput( "z", host.RoundU( z ) ); 
-                    varParameters.AddOutput( "p", "* error: drop this variable *" ); 
-                } 
-                else 
-                { 
-                    z = b[ i ] / se[ i ]; 
-                    varParameters.AddOutput( "z", host.RoundU( z ) ); 
-                    varParameters.AddOutput( "p_var", host.pval( prob ) ); 
-                } 
-            } 
-            string tx = "logit "; 
-            string transTemp7 = Label[ 0 ]; 
-            if (transTemp7.Length > 0 )
-            { 
-                tx = tx + Label[ 0 ]; 
-            } else { tx = tx + "Y"; } 
-            tx += " = "; 
-            for ( j=1; j <= ip; j++ ) 
-            { 
-                if ( j > 1 & b[ j ] >= 0.0 )
-                { 
-                    tx = tx + "+"; 
-                } 
-                tx = tx + host.RoundU( b[ j ] );
-                string Q = mean ? (j > 1 ? Label[j - 1] : " ") : Label[j];
-                if (Q.Length == 0 )
-                { 
-                    tx = tx + " X" +  j.ToString(); 
-                } else { tx = tx + " " + Q + " "; } 
-            } 
-            outputParameters.AddOutput( "logit", tx ); 
-            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext(); 
-            outputParameters.Add( "context", new FilledParameter( true, context ) ); 
-            context.SE = se; 
-            context.B = b; 
-            context.T = t; 
-            context.X = x; 
-            context.Y = y; 
-            context.FV = fvl; 
-            context.R = dr; 
-            context.H1 = h; 
-            context.V1 = var; 
-            context.N = N; 
-            context.DoC = mean; 
-            context.Label = Label; 
-            context.P = ip; 
-            context.COV = cov; 
-            context.WT = wt; 
-            context.RXI = rxi; 
-            context.WEIGHT = Weight; 
-            context.RANK = irank; 
-            context.DF = idf; 
-            context.TOL = tol; 
-            context.ERR = M; 
-            context.DEV = dev; 
-            context.DEVX = devx; 
-            context.LLX = llx; 
-            context.DFX = idfx; 
-            outputParameters[ "candidatePredictors" ] = new FilledParameter( true, x_prep_interlr( context ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static double x_loglik_p(bool weight, int N, double[] wt, double[] y, double[] fvl ) 
-        {
-            double ll = 0; 
-            int i; 
-            
-            for ( i=1; i <= N; i++ )
-            {
-                double ww = weight ? wt[ i ] : 1.0;
-                ll += ww * y[ i ] * Math.Log( fvl[ i ] ) - ww * fvl[ i ] - ww * PDF.alogam( y[ i ] + 1.0 );
+                if (se[i] == 0.0)
+                {
+                    z = Constant.MISSING;
+                    varParameters.AddOutput("z", host.RoundU(z));
+                    varParameters.AddOutput("p", "* error: drop this variable *");
+                }
+                else
+                {
+                    z = b[i] / se[i];
+                    varParameters.AddOutput("z", host.RoundU(z));
+                    varParameters.AddOutput("p_var", host.pval(prob));
+                }
             }
-            return ll; 
-        } 
-        
-        
-        private static double x_loglik_l(bool weight, int N, double[] wt, double[] y, double[] t, double[] fvl ) 
+            string tx = "logit ";
+            string transTemp7 = Label[0];
+            if (transTemp7.Length > 0)
+            {
+                tx = tx + Label[0];
+            }
+            else { tx = tx + "Y"; }
+            tx += " = ";
+            for (j = 1; j <= ip; j++)
+            {
+                if (j > 1 & b[j] >= 0.0)
+                {
+                    tx = tx + "+";
+                }
+                tx = tx + host.RoundU(b[j]);
+                string Q = mean ? (j > 1 ? Label[j - 1] : " ") : Label[j];
+                if (Q.Length == 0)
+                {
+                    tx = tx + " X" + j.ToString();
+                }
+                else { tx = tx + " " + Q + " "; }
+            }
+            outputParameters.AddOutput("logit", tx);
+            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext();
+            outputParameters.Add("context", new FilledParameter(true, context));
+            context.SE = se;
+            context.B = b;
+            context.T = t;
+            context.X = x;
+            context.Y = y;
+            context.FV = fvl;
+            context.R = dr;
+            context.H1 = h;
+            context.V1 = var;
+            context.N = N;
+            context.DoC = mean;
+            context.Label = Label;
+            context.P = ip;
+            context.COV = cov;
+            context.WT = wt;
+            context.RXI = rxi;
+            context.WEIGHT = Weight;
+            context.RANK = irank;
+            context.DF = idf;
+            context.TOL = tol;
+            context.ERR = M;
+            context.DEV = dev;
+            context.DEVX = devx;
+            context.LLX = llx;
+            context.DFX = idfx;
+            outputParameters["candidatePredictors"] = new FilledParameter(true, x_prep_interlr(context));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static double x_loglik_p(bool weight, int N, double[] wt, double[] y, double[] fvl)
         {
-            double ll = 0; 
-            for (int i=1; i <= N; i++ ) 
-            { 
-                double PP = fvl[ i ] / t[ i ];
-                double ww = weight ? wt[ i ] : 1.0; 
-                if ( PP != 0.0 )
-                { 
-                    ll = ww * ll + y[ i ] * Math.Log( PP ) + ww * ( t[ i ] - y[ i ] ) * Math.Log( 1.0 - PP ); 
-                } 
-            } 
-            return ll; 
-        } 
-        
-        
-        private static void x_dropper( ITemplateHost Host, long Q, string Caption ) 
-        { 
-            Host.Warning(  Q.ToString() + " observations dropped due to missing data." + "\r\n" + "Make sure that observations with missing data are not a subgroup.", Caption ); 
-        } 
-        
-        
-        public static StepResult RptLogisticRegressionFit( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] t = context.T; 
-            double[] y = context.Y; 
-            double[] fvl = context.FV; 
-            double[] dr = context.R; 
-            double[] hi = context.H1; 
+            double ll = 0;
+            int i;
+
+            for (i = 1; i <= N; i++)
+            {
+                double ww = weight ? wt[i] : 1.0;
+                ll += ww * y[i] * Math.Log(fvl[i]) - ww * fvl[i] - ww * PDF.alogam(y[i] + 1.0);
+            }
+            return ll;
+        }
+
+
+        private static double x_loglik_l(bool weight, int N, double[] wt, double[] y, double[] t, double[] fvl)
+        {
+            double ll = 0;
+            for (int i = 1; i <= N; i++)
+            {
+                double PP = fvl[i] / t[i];
+                double ww = weight ? wt[i] : 1.0;
+                if (PP != 0.0)
+                {
+                    ll = ww * ll + y[i] * Math.Log(PP) + ww * (t[i] - y[i]) * Math.Log(1.0 - PP);
+                }
+            }
+            return ll;
+        }
+
+
+        private static void x_dropper(ITemplateHost Host, long Q, string Caption)
+        {
+            Host.Warning(Q.ToString() + " observations dropped due to missing data." + "\r\n" + "Make sure that observations with missing data are not a subgroup.", Caption);
+        }
+
+
+        public static StepResult RptLogisticRegressionFit(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] t = context.T;
+            double[] y = context.Y;
+            double[] fvl = context.FV;
+            double[] dr = context.R;
+            double[] hi = context.H1;
             // double[] var = context.V1; 
-            int nx = context.N; 
-            bool DoC = context.DoC; 
-            string[] Label = context.Label; 
-            int P = context.P; 
-            double[] cov = context.COV; 
-            double[] wt = context.WT; 
-            bool Weight = context.WEIGHT; 
-            double[,] x = context.X; 
-            int j ; 
-            double xi ;
-            double ww ;
-
-            ParameterBag outputParameters = new ParameterBag(); 
-            List<ParameterBag> predictorsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*predictors", predictorsList ); 
-            for ( int i=1; i <= Label.Length - 2; i++ ) 
-            { 
-                ParameterBag predictorsParameters = new ParameterBag(); 
-                predictorsList.Add( predictorsParameters ); 
-                predictorsParameters.AddOutput( "lab", Label[ i ] ); 
-            } 
-            List<ParameterBag> predictorValuesList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*predictorValues", predictorValuesList ); 
-            for ( j=1; j <= nx; j++ ) 
-            { 
-                ParameterBag predictorValuesParameters = new ParameterBag(); 
-                predictorValuesList.Add( predictorValuesParameters ); 
-                predictorValuesParameters.AddOutput( "idx", j ); 
-                List<ParameterBag> predictorsList2 = new List<ParameterBag>(); 
-                predictorValuesParameters.AddOutput( "*pred", predictorsList2 ); 
-                for ( int i=1; i <= Label.Length - 2; i++ ) 
-                { 
-                    ParameterBag predictorsParameters = new ParameterBag(); 
-                    predictorsList2.Add( predictorsParameters ); 
-                    predictorsParameters.AddOutput( "val", x[ j, i ].ToString() ); 
-                } 
-            } 
-            
-            IList<ParameterBag> devianceList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*deviance", devianceList ); 
-            for ( int i=1; i <= nx; i++ ) 
-            { 
-                ParameterBag devianceParameters = new ParameterBag(); 
-                devianceList.Add( devianceParameters ); 
-                devianceParameters.AddOutput( "idx",  i.ToString() ); 
-                devianceParameters.AddOutput( "sub", host.RoundU( t[ i ] ) ); 
-                double ry = y[ i ] <= Constant.EPSNEG ? 0.0 : y[ i ]; 
-                devianceParameters.AddOutput( "res", host.RoundU( ry ) ); 
-                ry = fvl[ i ];
-                ry = t[i] != 0.0 ? ry/t[i] : Constant.MISSING;
-                devianceParameters.AddOutput( "fit", host.RoundU( ry ) ); 
-                devianceParameters.AddOutput( "dev", host.RoundU( dr[ i ] ) ); 
-            } 
-            IList<ParameterBag> pearsonList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*pearson", pearsonList ); 
-            for ( int i=1; i <= nx; i++ ) 
-            { 
-                ParameterBag pearsonParameters = new ParameterBag(); 
-                pearsonList.Add( pearsonParameters ); 
-                pearsonParameters.AddOutput( "idx",  i.ToString() ); 
-                double PP = fvl[ i ] / t[ i ]; 
-                ww = Weight ? wt[ i ] : 1.0; 
-                if ( PP != 0.0 )
-                { 
-                    xi = ( ( y[ i ] - t[ i ] * PP ) * Math.Sqrt( ww ) ) / Math.Sqrt( t[ i ] * PP * ( 1.0 - PP ) ); 
-                } else { xi = Constant.MISSING; } 
-                pearsonParameters.AddOutput( "res", host.RoundU( xi ) ); 
-                pearsonParameters.AddOutput( "lev", host.RoundU( hi[ i ] ) );
-                double xis ;
-                if ( 1.0 - hi[ i ] > 0.0 & xi != Constant.MISSING )
-                { 
-                    xis = xi / Math.Sqrt( 1.0 - hi[ i ] ); 
-                } else { xis = Constant.MISSING; } 
-                pearsonParameters.AddOutput( "sres", host.RoundU( xis ) ); 
-            } 
-            IList<ParameterBag> deltaList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*delta", deltaList ); 
-            for ( int i=1; i <= nx; i++ ) 
-            { 
-                ParameterBag deltaParameters = new ParameterBag(); 
-                deltaList.Add( deltaParameters ); 
-                deltaParameters.AddOutput( "idx",  i.ToString() ); 
-                double PP = fvl[ i ] / t[ i ]; 
-                ww = Weight ? wt[ i ] : 1.0; 
-                // IEB July 2009
-                double c ;
-                double cbar ;
-                double d ;
-                double dc ;
-                if ( PP * ( 1.0 - PP ) != 0.0 ) 
-                { 
-                    xi = ( ( y[ i ] - t[ i ] * PP ) * Math.Sqrt( ww ) ) / Math.Sqrt( t[ i ] * PP * ( 1.0 - PP ) ); 
-                    c = ( Math.Pow( xi, 2.0 ) * hi[ i ] ) / Math.Pow( ( 1.0 - hi[ i ] ), 2.0 ); 
-                    cbar = ( Math.Pow( xi, 2.0 ) * hi[ i ] ) / ( 1.0 - hi[ i ] ); 
-                    d = Math.Pow( dr[ i ], 2.0 ) + cbar; 
-                    dc = cbar / hi[ i ]; 
-                } 
-                else 
-                { 
-                    xi = Constant.MISSING; 
-                    c = Constant.MISSING; 
-                    cbar = Constant.MISSING; 
-                    d = Constant.MISSING; 
-                    dc = Constant.MISSING; 
-                } 
-                deltaParameters.AddOutput( "c", host.RoundU( cbar ) ); 
-                deltaParameters.AddOutput( "bar", host.RoundU( c ) ); 
-                deltaParameters.AddOutput( "dev", host.RoundU( d ) ); 
-                deltaParameters.AddOutput( "chi", host.RoundU( dc ) ); 
-            } 
-            IList<ParameterBag> covarList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*covar", covarList ); 
-            for ( int i=1; i <= P; i++ ) 
-            { 
-                for ( j=i; j <= P; j++ ) 
-                { 
-                    ParameterBag covarParameters = new ParameterBag(); 
-                    covarList.Add( covarParameters ); 
-                    string x1 = qlbli( Label, i, DoC ); 
-                    string x2 = qlbli( Label, j, DoC ); 
-                    covarParameters.AddOutput( "lab", x1 + " vs. " + x2 ); 
-                    covarParameters.AddOutput( "cov", host.RoundU( cov[ ( ( int )(Math.Floor((double) j * ( j - 1 ) / 2 + i) ) ) ] ) ); 
-                } 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult GridLogisticRegressionFit( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] t = context.T; 
-            double[] y = context.Y; 
-            double[] fvl = context.FV; 
-            double[] dr = context.R; 
-            double[] hi = context.H1; 
-            int nx = context.N; 
-            double[] wt = context.WT; 
+            int nx = context.N;
+            bool DoC = context.DoC;
+            string[] Label = context.Label;
+            int P = context.P;
+            double[] cov = context.COV;
+            double[] wt = context.WT;
             bool Weight = context.WEIGHT;
+            double[,] x = context.X;
+            int j;
+            double xi;
+            double ww;
 
-            bool trials = parameters[ "trials" ].AsBoolean; 
-            bool events = parameters[ "events" ].AsBoolean; 
-            bool eventProbability = parameters[ "eventProbability" ].AsBoolean; 
-            bool devianceResidual = parameters[ "devianceResidual" ].AsBoolean; 
-            bool pearsonResidual = parameters[ "pearsonResidual" ].AsBoolean; 
-            bool leverage = parameters[ "leverage" ].AsBoolean; 
-            bool stdPearsonResidual = parameters[ "stdPearsonResidual" ].AsBoolean; 
-            bool deltaBeta = parameters[ "deltaBeta" ].AsBoolean; 
-            bool stdDeltaBeta = parameters[ "stdDeltaBeta" ].AsBoolean; 
-            bool deltaDeviance = parameters[ "deltaDeviance" ].AsBoolean; 
-            bool deltaChiSquare = parameters[ "deltaChiSquare" ].AsBoolean; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( trials || events || eventProbability || devianceResidual || pearsonResidual || leverage || stdPearsonResidual || deltaBeta || stdDeltaBeta || deltaDeviance || deltaChiSquare ) 
-            { 
-                //  Make up all the variables (it's fast!) then only include the ones we need
-                DoubleVariable trialsVariable = new DoubleVariable( nx, "Trials" ); 
-                DoubleVariable eventsVariable = new DoubleVariable( nx, "Events" ); 
-                DoubleVariable eventProbabilityVariable = new DoubleVariable( nx, "Event Probability" ); 
-                DoubleVariable devianceResidualVariable = new DoubleVariable( nx, "Deviance Residual" ); 
-                DoubleVariable pearsonResidualVariable = new DoubleVariable( nx, "Pearson Residual" ); 
-                DoubleVariable leverageVariable = new DoubleVariable( nx, "Leverage" ); 
-                DoubleVariable stdPearsonResidualVariable = new DoubleVariable( nx, "Std Pearson Residual" ); 
-                DoubleVariable deltaBetaVariable = new DoubleVariable( nx, "Delta Beta" ); 
-                DoubleVariable stdDeltaBetaVariable = new DoubleVariable( nx, "Std Delta Beta" ); 
-                DoubleVariable deltaDevianceVariable = new DoubleVariable( nx, "Delta Deviance" ); 
-                DoubleVariable deltaChiSquareVariable = new DoubleVariable( nx, "Delta Chi-Square" ); 
-                for ( int i=1; i <= nx; i++ ) 
-                { 
-                    // Check for each save option
-                    if ( trials ) 
-                    { // Trials
-                    
-                        trialsVariable.set_Data( i - 1, t[ i ] ); 
-                    }
-                    double ry;
-                    if ( events )
-                    {
-                        // Events
+            ParameterBag outputParameters = new ParameterBag();
+            List<ParameterBag> predictorsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*predictors", predictorsList);
+            for (int i = 1; i <= Label.Length - 2; i++)
+            {
+                ParameterBag predictorsParameters = new ParameterBag();
+                predictorsList.Add(predictorsParameters);
+                predictorsParameters.AddOutput("lab", Label[i]);
+            }
+            List<ParameterBag> predictorValuesList = new List<ParameterBag>();
+            outputParameters.AddOutput("*predictorValues", predictorValuesList);
+            for (j = 1; j <= nx; j++)
+            {
+                ParameterBag predictorValuesParameters = new ParameterBag();
+                predictorValuesList.Add(predictorValuesParameters);
+                predictorValuesParameters.AddOutput("idx", j);
+                List<ParameterBag> predictorsList2 = new List<ParameterBag>();
+                predictorValuesParameters.AddOutput("*pred", predictorsList2);
+                for (int i = 1; i <= Label.Length - 2; i++)
+                {
+                    ParameterBag predictorsParameters = new ParameterBag();
+                    predictorsList2.Add(predictorsParameters);
+                    predictorsParameters.AddOutput("val", x[j, i].ToString());
+                }
+            }
 
-                        ry = y[ i ] <= Constant.EPSNEG ? 0.0 : y[ i ];
-                        eventsVariable.set_Data( i - 1, ry );
-                    }
-                    if ( eventProbability ) 
-                    { // Fitted pi
-                    
-                        ry = fvl[ i ];
-                        ry = t[i] != 0.0 ? ry/t[i] : Constant.MISSING;
-                        eventProbabilityVariable.set_Data( i - 1, ry ); 
-                    } 
-                    if ( devianceResidual ) 
-                    { // Deviance residuals
-                    
-                        devianceResidualVariable.set_Data( i - 1, dr[ i ] ); 
-                    } 
-                    double PP = fvl[ i ] / t[ i ]; 
-                    double ww = Weight ? wt[ i ] : 1.0; 
-                    double xi = ( ( y[ i ] - t[ i ] * PP ) * Math.Sqrt( ww ) ) / Math.Sqrt( t[ i ] * PP * ( 1.0 - PP ) );
-                    double xis = 1.0 - hi[i] > 0.0 ? xi/Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
-                    if ( pearsonResidual ) 
-                    { // Pearson residuals
-                    
-                        pearsonResidualVariable.set_Data( i - 1, xi ); 
-                    } 
-                    if ( leverage ) 
-                    { // Leverage HI
-                    
-                        leverageVariable.set_Data( i - 1, hi[ i ] ); 
-                    } 
-                    if ( stdPearsonResidual ) 
-                    { // Standardised Pearson residual
-                    
-                        stdPearsonResidualVariable.set_Data( i - 1, xis ); 
-                    } 
-                    PP = fvl[ i ] / t[ i ]; 
-                    ww = Weight ? wt[ i ] : 1.0; 
-                    // IEB July 2009
-                    double C;
-                    double cbar;
-                    double D;
-                    double dc;
-                    if ( PP * ( 1.0 - PP ) != 0.0 ) 
-                    { 
-                        xi = ( ( y[ i ] - t[ i ] * PP ) * Math.Sqrt( ww ) ) / Math.Sqrt( t[ i ] * PP * ( 1.0 - PP ) ); 
-                        C = ( Math.Pow( xi, 2.0 ) * hi[ i ] ) / Math.Pow( ( 1.0 - hi[ i ] ), 2.0 ); 
-                        cbar = ( Math.Pow( xi, 2.0 ) * hi[ i ] ) / ( 1.0 - hi[ i ] ); 
-                        D = Math.Pow( dr[ i ], 2.0 ) + cbar; 
-                        dc = cbar / hi[ i ]; 
-                    } 
-                    else 
-                    { 
-                        xi = Constant.MISSING; 
-                        C = Constant.MISSING; 
-                        cbar = Constant.MISSING; 
-                        D = Constant.MISSING; 
-                        dc = Constant.MISSING; 
-                    } 
-                    if ( deltaBeta ) 
-                    { // delta beta
-                    
-                        deltaBetaVariable.set_Data( i - 1, cbar ); 
-                    } 
-                    if ( stdDeltaBeta ) 
-                    { // std delta beta
-                    
-                        stdDeltaBetaVariable.set_Data( i - 1, C ); 
-                    } 
-                    if ( deltaDeviance ) 
-                    { // delta dev
-                    
-                        deltaDevianceVariable.set_Data( i - 1, D ); 
-                    } 
-                    if ( deltaChiSquare ) 
-                    { // delta chisq
-                    
-                        deltaChiSquareVariable.set_Data( i - 1, dc ); 
-                    } 
-                } 
-                DataFrame resultsFrame = new DataFrame(); 
-                if ( trials ) 
-                { // Trials
-                
-                    resultsFrame.Variables.Add( trialsVariable ); 
-                } 
-                if ( events ) 
-                { // Events
-                
-                    resultsFrame.Variables.Add( eventsVariable ); 
-                } 
-                if ( eventProbability ) 
-                { // Fitted pi
-                
-                    resultsFrame.Variables.Add( eventProbabilityVariable ); 
-                } 
-                if ( devianceResidual ) 
-                { // Deviance residuals
-                
-                    resultsFrame.Variables.Add( devianceResidualVariable ); 
-                } 
-                if ( pearsonResidual ) 
-                { // Pearson residuals
-                
-                    resultsFrame.Variables.Add( pearsonResidualVariable ); 
-                } 
-                if ( leverage ) 
-                { // Leverage HI
-                
-                    resultsFrame.Variables.Add( leverageVariable ); 
-                } 
-                if ( stdPearsonResidual ) 
-                { // Standardised Pearson residual
-                
-                    resultsFrame.Variables.Add( stdPearsonResidualVariable ); 
-                } 
-                if ( deltaBeta ) 
-                { // delta beta
-                
-                    resultsFrame.Variables.Add( deltaBetaVariable ); 
-                } 
-                if ( stdDeltaBeta ) 
-                { // std delta beta
-                
-                    resultsFrame.Variables.Add( stdDeltaBetaVariable ); 
-                } 
-                if ( deltaDeviance ) 
-                { // delta dev
-                
-                    resultsFrame.Variables.Add( deltaDevianceVariable ); 
-                } 
-                if ( deltaChiSquare ) 
-                { // delta chisq
-                
-                    resultsFrame.Variables.Add( deltaChiSquareVariable ); 
-                } 
-                outputParameters.AddOutput( "results", resultsFrame ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static string qlbli( string[] label, int i, bool DoC ) 
-        {
-            string x; 
-            
-            if ( DoC ) 
-                x = i == 1 ? "Intercept" : label[ i - 1 ]; 
-            else 
-                x = label[ i ]; 
-            if (x.Length == 0 )
-            { 
-                x = "b" +  i.ToString(); 
-            } 
-            return x; 
-        } 
-        
-        
-        public static StepResult PlotLogisticRegressionDiagnostics( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] t = context.T; 
-            double[] y = context.Y; 
-            double[] fvl = context.FV; 
-            double[] dr = context.R; 
-            double[] hi = context.H1; 
-            int nx = context.N; 
-            double[] wt = context.WT; 
-            bool weight = context.WEIGHT; 
-            
-            if ( context.DF <= 0 ) 
-            { 
-                host.Error( "Plots are not relevant for a saturated model.", "Logistic Regression" ); 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            
-            double[] yy1 = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[] yy2 = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[] yy3 = new double[nx + 1 /* for VB to C# conversion */];
-            double[] yy4 = new double[nx + 1 /* for VB to C# conversion */];
-            double[] xx = new double[nx + 1 /* for VB to C# conversion */]; 
-            // diagnostic plots
-            const string ep = "Event Probability (pi)"; 
-            const string lv = "Leverage (Hi)"; 
-            const string db = "Delta Beta"; 
-            const string dbs = "Delta Beta Std"; 
-            const string dd = "Delta Deviance"; 
-            const string dx = "Delta Chi-square"; 
-            for (int i=1; i <= nx; i++ ) 
-            { 
-                double PP = fvl[ i ] / t[ i ];
-                double ww = weight ? wt[ i ] : 1.0; 
+            IList<ParameterBag> devianceList = new List<ParameterBag>();
+            outputParameters.AddOutput("*deviance", devianceList);
+            for (int i = 1; i <= nx; i++)
+            {
+                ParameterBag devianceParameters = new ParameterBag();
+                devianceList.Add(devianceParameters);
+                devianceParameters.AddOutput("idx", i.ToString());
+                devianceParameters.AddOutput("sub", host.RoundU(t[i]));
+                double ry = y[i] <= Constant.EPSNEG ? 0.0 : y[i];
+                devianceParameters.AddOutput("res", host.RoundU(ry));
+                ry = fvl[i];
+                ry = t[i] != 0.0 ? ry / t[i] : Constant.MISSING;
+                devianceParameters.AddOutput("fit", host.RoundU(ry));
+                devianceParameters.AddOutput("dev", host.RoundU(dr[i]));
+            }
+            IList<ParameterBag> pearsonList = new List<ParameterBag>();
+            outputParameters.AddOutput("*pearson", pearsonList);
+            for (int i = 1; i <= nx; i++)
+            {
+                ParameterBag pearsonParameters = new ParameterBag();
+                pearsonList.Add(pearsonParameters);
+                pearsonParameters.AddOutput("idx", i.ToString());
+                double PP = fvl[i] / t[i];
+                ww = Weight ? wt[i] : 1.0;
+                if (PP != 0.0)
+                {
+                    xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
+                }
+                else { xi = Constant.MISSING; }
+                pearsonParameters.AddOutput("res", host.RoundU(xi));
+                pearsonParameters.AddOutput("lev", host.RoundU(hi[i]));
+                double xis;
+                if (1.0 - hi[i] > 0.0 & xi != Constant.MISSING)
+                {
+                    xis = xi / Math.Sqrt(1.0 - hi[i]);
+                }
+                else { xis = Constant.MISSING; }
+                pearsonParameters.AddOutput("sres", host.RoundU(xis));
+            }
+            IList<ParameterBag> deltaList = new List<ParameterBag>();
+            outputParameters.AddOutput("*delta", deltaList);
+            for (int i = 1; i <= nx; i++)
+            {
+                ParameterBag deltaParameters = new ParameterBag();
+                deltaList.Add(deltaParameters);
+                deltaParameters.AddOutput("idx", i.ToString());
+                double PP = fvl[i] / t[i];
+                ww = Weight ? wt[i] : 1.0;
                 // IEB July 2009
                 double c;
                 double cbar;
                 double d;
                 double dc;
-                if ( PP * ( 1.0 - PP ) != 0.0 ) 
-                { 
-                    double xi = ( ( y[ i ] - t[ i ] * PP ) * Math.Sqrt( ww ) ) / Math.Sqrt( t[ i ] * PP * ( 1.0 - PP ) ); 
-                    c = ( Math.Pow( xi, 2.0 ) * hi[ i ] ) / Math.Pow( ( 1.0 - hi[ i ] ), 2.0 ); 
-                    cbar = ( Math.Pow( xi, 2.0 ) * hi[ i ] ) / ( 1.0 - hi[ i ] ); 
-                    d = Math.Pow( dr[ i ], 2.0 ) + cbar; 
-                    dc = cbar / hi[ i ]; 
-                } 
-                else 
-                { 
-                    c = Constant.MISSING; 
-                    cbar = Constant.MISSING; 
-                    d = Constant.MISSING; 
-                    dc = Constant.MISSING; 
-                } 
-                yy1[ i ] = c; 
-                yy2[ i ] = cbar; 
-                yy3[ i ] = d; 
-                yy4[ i ] = dc; 
-                xx[ i ] = PP; 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            List<ParameterBag> chartsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*chart", chartsList );
+                if (PP * (1.0 - PP) != 0.0)
+                {
+                    xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
+                    c = (Math.Pow(xi, 2.0) * hi[i]) / Math.Pow((1.0 - hi[i]), 2.0);
+                    cbar = (Math.Pow(xi, 2.0) * hi[i]) / (1.0 - hi[i]);
+                    d = Math.Pow(dr[i], 2.0) + cbar;
+                    dc = cbar / hi[i];
+                }
+                else
+                {
+                    xi = Constant.MISSING;
+                    c = Constant.MISSING;
+                    cbar = Constant.MISSING;
+                    d = Constant.MISSING;
+                    dc = Constant.MISSING;
+                }
+                deltaParameters.AddOutput("c", host.RoundU(cbar));
+                deltaParameters.AddOutput("bar", host.RoundU(c));
+                deltaParameters.AddOutput("dev", host.RoundU(d));
+                deltaParameters.AddOutput("chi", host.RoundU(dc));
+            }
+            IList<ParameterBag> covarList = new List<ParameterBag>();
+            outputParameters.AddOutput("*covar", covarList);
+            for (int i = 1; i <= P; i++)
+            {
+                for (j = i; j <= P; j++)
+                {
+                    ParameterBag covarParameters = new ParameterBag();
+                    covarList.Add(covarParameters);
+                    string x1 = qlbli(Label, i, DoC);
+                    string x2 = qlbli(Label, j, DoC);
+                    covarParameters.AddOutput("lab", x1 + " vs. " + x2);
+                    covarParameters.AddOutput("cov", host.RoundU(cov[((int)(Math.Floor((double)j * (j - 1) / 2 + i)))]));
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult GridLogisticRegressionFit(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] t = context.T;
+            double[] y = context.Y;
+            double[] fvl = context.FV;
+            double[] dr = context.R;
+            double[] hi = context.H1;
+            int nx = context.N;
+            double[] wt = context.WT;
+            bool Weight = context.WEIGHT;
+
+            bool trials = parameters["trials"].AsBoolean;
+            bool events = parameters["events"].AsBoolean;
+            bool eventProbability = parameters["eventProbability"].AsBoolean;
+            bool devianceResidual = parameters["devianceResidual"].AsBoolean;
+            bool pearsonResidual = parameters["pearsonResidual"].AsBoolean;
+            bool leverage = parameters["leverage"].AsBoolean;
+            bool stdPearsonResidual = parameters["stdPearsonResidual"].AsBoolean;
+            bool deltaBeta = parameters["deltaBeta"].AsBoolean;
+            bool stdDeltaBeta = parameters["stdDeltaBeta"].AsBoolean;
+            bool deltaDeviance = parameters["deltaDeviance"].AsBoolean;
+            bool deltaChiSquare = parameters["deltaChiSquare"].AsBoolean;
+            ParameterBag outputParameters = new ParameterBag();
+            if (trials || events || eventProbability || devianceResidual || pearsonResidual || leverage || stdPearsonResidual || deltaBeta || stdDeltaBeta || deltaDeviance || deltaChiSquare)
+            {
+                //  Make up all the variables (it's fast!) then only include the ones we need
+                DoubleVariable trialsVariable = new DoubleVariable(nx, "Trials");
+                DoubleVariable eventsVariable = new DoubleVariable(nx, "Events");
+                DoubleVariable eventProbabilityVariable = new DoubleVariable(nx, "Event Probability");
+                DoubleVariable devianceResidualVariable = new DoubleVariable(nx, "Deviance Residual");
+                DoubleVariable pearsonResidualVariable = new DoubleVariable(nx, "Pearson Residual");
+                DoubleVariable leverageVariable = new DoubleVariable(nx, "Leverage");
+                DoubleVariable stdPearsonResidualVariable = new DoubleVariable(nx, "Std Pearson Residual");
+                DoubleVariable deltaBetaVariable = new DoubleVariable(nx, "Delta Beta");
+                DoubleVariable stdDeltaBetaVariable = new DoubleVariable(nx, "Std Delta Beta");
+                DoubleVariable deltaDevianceVariable = new DoubleVariable(nx, "Delta Deviance");
+                DoubleVariable deltaChiSquareVariable = new DoubleVariable(nx, "Delta Chi-Square");
+                for (int i = 1; i <= nx; i++)
+                {
+                    // Check for each save option
+                    if (trials)
+                    { // Trials
+
+                        trialsVariable.set_Data(i - 1, t[i]);
+                    }
+                    double ry;
+                    if (events)
+                    {
+                        // Events
+
+                        ry = y[i] <= Constant.EPSNEG ? 0.0 : y[i];
+                        eventsVariable.set_Data(i - 1, ry);
+                    }
+                    if (eventProbability)
+                    { // Fitted pi
+
+                        ry = fvl[i];
+                        ry = t[i] != 0.0 ? ry / t[i] : Constant.MISSING;
+                        eventProbabilityVariable.set_Data(i - 1, ry);
+                    }
+                    if (devianceResidual)
+                    { // Deviance residuals
+
+                        devianceResidualVariable.set_Data(i - 1, dr[i]);
+                    }
+                    double PP = fvl[i] / t[i];
+                    double ww = Weight ? wt[i] : 1.0;
+                    double xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
+                    double xis = 1.0 - hi[i] > 0.0 ? xi / Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
+                    if (pearsonResidual)
+                    { // Pearson residuals
+
+                        pearsonResidualVariable.set_Data(i - 1, xi);
+                    }
+                    if (leverage)
+                    { // Leverage HI
+
+                        leverageVariable.set_Data(i - 1, hi[i]);
+                    }
+                    if (stdPearsonResidual)
+                    { // Standardised Pearson residual
+
+                        stdPearsonResidualVariable.set_Data(i - 1, xis);
+                    }
+                    PP = fvl[i] / t[i];
+                    ww = Weight ? wt[i] : 1.0;
+                    // IEB July 2009
+                    double C;
+                    double cbar;
+                    double D;
+                    double dc;
+                    if (PP * (1.0 - PP) != 0.0)
+                    {
+                        xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
+                        C = (Math.Pow(xi, 2.0) * hi[i]) / Math.Pow((1.0 - hi[i]), 2.0);
+                        cbar = (Math.Pow(xi, 2.0) * hi[i]) / (1.0 - hi[i]);
+                        D = Math.Pow(dr[i], 2.0) + cbar;
+                        dc = cbar / hi[i];
+                    }
+                    else
+                    {
+                        xi = Constant.MISSING;
+                        C = Constant.MISSING;
+                        cbar = Constant.MISSING;
+                        D = Constant.MISSING;
+                        dc = Constant.MISSING;
+                    }
+                    if (deltaBeta)
+                    { // delta beta
+
+                        deltaBetaVariable.set_Data(i - 1, cbar);
+                    }
+                    if (stdDeltaBeta)
+                    { // std delta beta
+
+                        stdDeltaBetaVariable.set_Data(i - 1, C);
+                    }
+                    if (deltaDeviance)
+                    { // delta dev
+
+                        deltaDevianceVariable.set_Data(i - 1, D);
+                    }
+                    if (deltaChiSquare)
+                    { // delta chisq
+
+                        deltaChiSquareVariable.set_Data(i - 1, dc);
+                    }
+                }
+                DataFrame resultsFrame = new DataFrame();
+                if (trials)
+                { // Trials
+
+                    resultsFrame.Variables.Add(trialsVariable);
+                }
+                if (events)
+                { // Events
+
+                    resultsFrame.Variables.Add(eventsVariable);
+                }
+                if (eventProbability)
+                { // Fitted pi
+
+                    resultsFrame.Variables.Add(eventProbabilityVariable);
+                }
+                if (devianceResidual)
+                { // Deviance residuals
+
+                    resultsFrame.Variables.Add(devianceResidualVariable);
+                }
+                if (pearsonResidual)
+                { // Pearson residuals
+
+                    resultsFrame.Variables.Add(pearsonResidualVariable);
+                }
+                if (leverage)
+                { // Leverage HI
+
+                    resultsFrame.Variables.Add(leverageVariable);
+                }
+                if (stdPearsonResidual)
+                { // Standardised Pearson residual
+
+                    resultsFrame.Variables.Add(stdPearsonResidualVariable);
+                }
+                if (deltaBeta)
+                { // delta beta
+
+                    resultsFrame.Variables.Add(deltaBetaVariable);
+                }
+                if (stdDeltaBeta)
+                { // std delta beta
+
+                    resultsFrame.Variables.Add(stdDeltaBetaVariable);
+                }
+                if (deltaDeviance)
+                { // delta dev
+
+                    resultsFrame.Variables.Add(deltaDevianceVariable);
+                }
+                if (deltaChiSquare)
+                { // delta chisq
+
+                    resultsFrame.Variables.Add(deltaChiSquareVariable);
+                }
+                outputParameters.AddOutput("results", resultsFrame);
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static string qlbli(string[] label, int i, bool DoC)
+        {
+            string x;
+
+            if (DoC)
+                x = i == 1 ? "Intercept" : label[i - 1];
+            else
+                x = label[i];
+            if (x.Length == 0)
+            {
+                x = "b" + i.ToString();
+            }
+            return x;
+        }
+
+
+        public static StepResult PlotLogisticRegressionDiagnostics(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] t = context.T;
+            double[] y = context.Y;
+            double[] fvl = context.FV;
+            double[] dr = context.R;
+            double[] hi = context.H1;
+            int nx = context.N;
+            double[] wt = context.WT;
+            bool weight = context.WEIGHT;
+
+            if (context.DF <= 0)
+            {
+                host.Error("Plots are not relevant for a saturated model.", "Logistic Regression");
+                throw new TemplateOperationCancelledException();
+            }
+
+            double[] yy1 = new double[nx + 1 /* for VB to C# conversion */ ];
+            double[] yy2 = new double[nx + 1 /* for VB to C# conversion */ ];
+            double[] yy3 = new double[nx + 1 /* for VB to C# conversion */];
+            double[] yy4 = new double[nx + 1 /* for VB to C# conversion */];
+            double[] xx = new double[nx + 1 /* for VB to C# conversion */];
+            // diagnostic plots
+            const string ep = "Event Probability (pi)";
+            const string lv = "Leverage (Hi)";
+            const string db = "Delta Beta";
+            const string dbs = "Delta Beta Std";
+            const string dd = "Delta Deviance";
+            const string dx = "Delta Chi-square";
+            for (int i = 1; i <= nx; i++)
+            {
+                double PP = fvl[i] / t[i];
+                double ww = weight ? wt[i] : 1.0;
+                // IEB July 2009
+                double c;
+                double cbar;
+                double d;
+                double dc;
+                if (PP * (1.0 - PP) != 0.0)
+                {
+                    double xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
+                    c = (Math.Pow(xi, 2.0) * hi[i]) / Math.Pow((1.0 - hi[i]), 2.0);
+                    cbar = (Math.Pow(xi, 2.0) * hi[i]) / (1.0 - hi[i]);
+                    d = Math.Pow(dr[i], 2.0) + cbar;
+                    dc = cbar / hi[i];
+                }
+                else
+                {
+                    c = Constant.MISSING;
+                    cbar = Constant.MISSING;
+                    d = Constant.MISSING;
+                    dc = Constant.MISSING;
+                }
+                yy1[i] = c;
+                yy2[i] = cbar;
+                yy3[i] = d;
+                yy4[i] = dc;
+                xx[i] = PP;
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            List<ParameterBag> chartsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*chart", chartsList);
             //  Ensure the zeroth element isn't plotted
-            xx[ 0 ] = Constant.MISSING; 
-            hi[ 0 ] = Constant.MISSING; 
-            
+            xx[0] = Constant.MISSING;
+            hi[0] = Constant.MISSING;
+
             //  delta beta vs. proportion
-            string chart = host.ImageToRtf( new ChartRenderer( ChartDefinition.Empty() ).PlotXYAndReturnImage( host, xx, yy1, ep, db, db + " vs. " + ep, false, 0, false ) ); 
-            chartsList.Add( new ParameterBag( "chart", new FilledParameter( false, chart ) ) ); 
+            string chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, xx, yy1, ep, db, db + " vs. " + ep, false, 0, false);
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
             //  std delta beta vs. proportion
-            chart = host.ImageToRtf( new ChartRenderer( ChartDefinition.Empty() ).PlotXYAndReturnImage( host, xx, yy2, ep, dbs, dbs + " vs. " + ep, false, 0, false ) ); 
-            chartsList.Add( new ParameterBag( "chart", new FilledParameter( false, chart ) ) ); 
+            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, xx, yy2, ep, dbs, dbs + " vs. " + ep, false, 0, false);
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
             //  delta deviance vs. proportion
-            chart = host.ImageToRtf( new ChartRenderer( ChartDefinition.Empty() ).PlotXYAndReturnImage( host, xx, yy3, ep, dd, dd + " vs. " + ep, false, 0, false ) ); 
-            chartsList.Add( new ParameterBag( "chart", new FilledParameter( false, chart ) ) ); 
+            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, xx, yy3, ep, dd, dd + " vs. " + ep, false, 0, false);
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
             //  delta x2 vs. proportion
-            chart = host.ImageToRtf( new ChartRenderer( ChartDefinition.Empty() ).PlotXYZAndReturnImage( xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, 0 ) ); 
-            chartsList.Add( new ParameterBag( "chart", new FilledParameter( false, chart ) ) ); 
+            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYZAndReturnRtf(host, xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, 0);
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
             //  delta beta vs. hi
-            chart = host.ImageToRtf( new ChartRenderer( ChartDefinition.Empty() ).PlotXYAndReturnImage( host, hi, yy1, lv, db, db + " vs. " + lv, false, 0, false ) ); 
-            chartsList.Add( new ParameterBag( "chart", new FilledParameter( false, chart ) ) ); 
+            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, hi, yy1, lv, db, db + " vs. " + lv, false, 0, false);
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
             //  delta beta std vs. hi
-            chart = host.ImageToRtf( new ChartRenderer( ChartDefinition.Empty() ).PlotXYAndReturnImage( host, hi, yy2, lv, dbs, dbs + " vs. " + lv, false, 0, false ) ); 
-            chartsList.Add( new ParameterBag( "chart", new FilledParameter( false, chart ) ) ); 
+            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, hi, yy2, lv, dbs, dbs + " vs. " + lv, false, 0, false);
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
             //  delta deviance vs. hi
-            chart = host.ImageToRtf( new ChartRenderer( ChartDefinition.Empty() ).PlotXYAndReturnImage( host, hi, yy3, lv, dd, dd + " vs. " + lv, false, 0, false ) ); 
-            chartsList.Add( new ParameterBag( "chart", new FilledParameter( false, chart ) ) ); 
+            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, hi, yy3, lv, dd, dd + " vs. " + lv, false, 0, false);
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
             //  delta x2 vs. hi
-            chart = host.ImageToRtf( new ChartRenderer( ChartDefinition.Empty() ).PlotXYAndReturnImage( host, hi, yy4, lv, dx, dx + " vs. " + lv, false, 0, false ) ); 
-            chartsList.Add( new ParameterBag( "chart", new FilledParameter( false, chart ) ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private struct Tri 
-        { 
-            public double D; 
-            public double r; 
-            public double s; 
-        } 
-        
-        
+            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, hi, yy4, lv, dx, dx + " vs. " + lv, false, 0, false);
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private struct Tri
+        {
+            public double D;
+            public double r;
+            public double s;
+        }
+
+
         private class TriByDAscending : IComparer<Tri>
         {
-            private int Compare( Tri x, Tri y )
+            private int Compare(Tri x, Tri y)
             {
-                if ( x.D > y.D ) 
-                    return 1; 
-                if ( x.D == y.D ) 
-                    return 0; 
+                if (x.D > y.D)
+                    return 1;
+                if (x.D == y.D)
+                    return 0;
                 return -1;
             }
 
             // interface methods implemented by Compare
-            int IComparer<Tri>.Compare( Tri x, Tri y )
-            { 
-                return Compare( x, y );
+            int IComparer<Tri>.Compare(Tri x, Tri y)
+            {
+                return Compare(x, y);
             }
-        } 
-        
-        
-        public static StepResult rptPoissonRegressionModel( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( Parameters[ "context" ].Data ) ); 
-            double[] b = context.B; 
-            double[] se = context.SE; 
-            int P = context.P; 
-            string[] Label = context.Label; 
-            bool DoC = context.DoC; 
-            double dev = context.DEV; 
-            int irank = context.RANK; 
-            int idf = context.DF; 
-            double tol = context.TOL; 
-            int M = context.ERR; 
-            int N = context.N; 
-            double[] fvl = context.FV; 
-            double[] y = context.Y; 
-            bool Weight = context.WEIGHT; 
-            double[] wt = context.WT; 
-            double devx = context.DEVX; 
-            double llx = context.LLX; 
-            int idfx = context.DFX; 
+        }
+
+
+        public static StepResult rptPoissonRegressionModel(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            double[] b = context.B;
+            double[] se = context.SE;
+            int P = context.P;
+            string[] Label = context.Label;
+            bool DoC = context.DoC;
+            double dev = context.DEV;
+            int irank = context.RANK;
+            int idf = context.DF;
+            double tol = context.TOL;
+            int M = context.ERR;
+            int N = context.N;
+            double[] fvl = context.FV;
+            double[] y = context.Y;
+            bool Weight = context.WEIGHT;
+            double[] wt = context.WT;
+            double devx = context.DEVX;
+            double llx = context.LLX;
+            int idfx = context.DFX;
             int i; int iq = 0;
             double ll = 0; double x2 = 0;
             double r2; double r2i; double sp;
             double s_x2dev; double s_x2; double s_dev;
-            double prob = 0; 
-            string Q; 
-            
-            if ( idf > 0 ) 
-            { 
-                x2 = 0.0; 
-                for ( i=1; i <= N; i++ )
+            double prob = 0;
+            string Q;
+
+            if (idf > 0)
+            {
+                x2 = 0.0;
+                for (i = 1; i <= N; i++)
                 {
-                    double ww = Weight ? wt[ i ] : 1.0;
-                    x2 = x2 + ( Math.Pow( ( ( y[ i ] - fvl[ i ] ) * Math.Sqrt( ww ) ), 2.0 ) ) / Math.Max( fvl[ i ], Constant.EPSNEG );
+                    double ww = Weight ? wt[i] : 1.0;
+                    x2 = x2 + (Math.Pow(((y[i] - fvl[i]) * Math.Sqrt(ww)), 2.0)) / Math.Max(fvl[i], Constant.EPSNEG);
                 }
-                ll = x_loglik_p(Weight, N, wt, y, fvl ); 
-            } 
+                ll = x_loglik_p(Weight, N, wt, y, fvl);
+            }
             //  RTF_LoadTemplate("pr_det.rtf")
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( DoC )
-            { 
-                iq = 1; 
-            } 
-            outputParameters.AddOutput( "acc", Host.RoundU( tol ) ); 
-            outputParameters.AddOutput( "ll", Host.RoundU( ll ) ); 
-            outputParameters.AddOutput( "dev", Host.RoundU( dev ) ); 
-            outputParameters.AddOutput( "df",  idf.ToString() ); 
-            outputParameters.AddOutput( "rank",  irank.ToString() ); 
-            outputParameters.AddOutput( "aka", Host.RoundU( dev + 2 * ( 1 + M ) ) ); 
-            outputParameters.AddOutput( "sch", Host.RoundU( dev + ( 2 + M ) * Math.Log( N ) ) ); 
-            outputParameters.AddOutput( "devx", Host.RoundU( devx ) ); 
-            double x2dev = devx - dev; 
-            if ( x2dev < 0.0 ) 
-            { 
-                x2dev = Constant.MISSING; 
-                r2 = Constant.MISSING; 
-            } 
-            else 
-            { 
-                r2 = x2dev / devx; 
-            } 
-            if ( llx == Constant.MISSING ) 
-            { 
-                r2i = Constant.MISSING; 
-            } 
-            else 
-            { 
-                r2i = 1.0 - ll / llx; 
-            } 
-            if ( idf > 0 & x2 != 0.0 ) 
-            { 
-                sp = x2 / Convert.ToDouble( N - P ); 
-                s_x2dev = x2dev / sp; 
-                s_x2 = x2 / sp; 
-                s_dev = dev / sp; 
-            } 
-            else 
-            { 
-                sp = Constant.MISSING; 
-                s_x2dev = Constant.MISSING; 
-                s_x2 = Constant.MISSING; 
-                s_dev = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "x2dev", Host.RoundU( x2dev ) ); 
-            outputParameters.AddOutput( "x2df",  (idfx - idf).ToString() ); 
-            if ( idf > 0 ) 
-            { 
-                outputParameters.AddOutput( "x2p", Host.pval( PDF.chivalp( x2dev, Convert.ToDouble( idfx - idf ) ) ) ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "x2p", "* saturated model: goodness of fit not valid" ); 
-                x2dev = Constant.MISSING; 
-                x2 = Constant.MISSING; 
-                dev = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "r2", Host.RoundU( r2 ) ); 
-            outputParameters.AddOutput( "r2i", Host.RoundU( r2i ) ); 
-            outputParameters.AddOutput( "x2_pearson", Host.RoundU( x2 ) ); 
-            outputParameters.AddOutput( "idf",  idf.ToString() ); 
-            outputParameters.AddOutput( "p_pearson", Host.pval( PDF.chivalp( x2, Convert.ToDouble( idf ) ) ) ); 
-            outputParameters.AddOutput( "dev_gf", Host.RoundU( dev ) ); 
-            outputParameters.AddOutput( "p_dev", Host.pval( PDF.chivalp( dev, Convert.ToDouble( idf ) ) ) ); 
+            ParameterBag outputParameters = new ParameterBag();
+            if (DoC)
+            {
+                iq = 1;
+            }
+            outputParameters.AddOutput("acc", Host.RoundU(tol));
+            outputParameters.AddOutput("ll", Host.RoundU(ll));
+            outputParameters.AddOutput("dev", Host.RoundU(dev));
+            outputParameters.AddOutput("df", idf.ToString());
+            outputParameters.AddOutput("rank", irank.ToString());
+            outputParameters.AddOutput("aka", Host.RoundU(dev + 2 * (1 + M)));
+            outputParameters.AddOutput("sch", Host.RoundU(dev + (2 + M) * Math.Log(N)));
+            outputParameters.AddOutput("devx", Host.RoundU(devx));
+            double x2dev = devx - dev;
+            if (x2dev < 0.0)
+            {
+                x2dev = Constant.MISSING;
+                r2 = Constant.MISSING;
+            }
+            else
+            {
+                r2 = x2dev / devx;
+            }
+            if (llx == Constant.MISSING)
+            {
+                r2i = Constant.MISSING;
+            }
+            else
+            {
+                r2i = 1.0 - ll / llx;
+            }
+            if (idf > 0 & x2 != 0.0)
+            {
+                sp = x2 / Convert.ToDouble(N - P);
+                s_x2dev = x2dev / sp;
+                s_x2 = x2 / sp;
+                s_dev = dev / sp;
+            }
+            else
+            {
+                sp = Constant.MISSING;
+                s_x2dev = Constant.MISSING;
+                s_x2 = Constant.MISSING;
+                s_dev = Constant.MISSING;
+            }
+            outputParameters.AddOutput("x2dev", Host.RoundU(x2dev));
+            outputParameters.AddOutput("x2df", (idfx - idf).ToString());
+            if (idf > 0)
+            {
+                outputParameters.AddOutput("x2p", Host.pval(PDF.chivalp(x2dev, Convert.ToDouble(idfx - idf))));
+            }
+            else
+            {
+                outputParameters.AddOutput("x2p", "* saturated model: goodness of fit not valid");
+                x2dev = Constant.MISSING;
+                x2 = Constant.MISSING;
+                dev = Constant.MISSING;
+            }
+            outputParameters.AddOutput("r2", Host.RoundU(r2));
+            outputParameters.AddOutput("r2i", Host.RoundU(r2i));
+            outputParameters.AddOutput("x2_pearson", Host.RoundU(x2));
+            outputParameters.AddOutput("idf", idf.ToString());
+            outputParameters.AddOutput("p_pearson", Host.pval(PDF.chivalp(x2, Convert.ToDouble(idf))));
+            outputParameters.AddOutput("dev_gf", Host.RoundU(dev));
+            outputParameters.AddOutput("p_dev", Host.pval(PDF.chivalp(dev, Convert.ToDouble(idf))));
             // scaled for overdispersion
-            outputParameters.AddOutput( "sp", Host.RoundU( sp ) ); 
-            outputParameters.AddOutput( "x2dev_scaled", Host.RoundU( s_x2dev ) ); 
-            outputParameters.AddOutput( "x2p_scaled", Host.pval( PDF.chivalp( s_x2dev, Convert.ToDouble( idfx - idf ) ) ) ); 
-            outputParameters.AddOutput( "x2_scaled", Host.RoundU( s_x2 ) ); 
-            outputParameters.AddOutput( "p_p_scaled", Host.pval( PDF.chivalp( s_x2, Convert.ToDouble( idf ) ) ) ); 
-            outputParameters.AddOutput( "dev_scaled", Host.RoundU( s_dev ) ); 
-            outputParameters.AddOutput( "p_dev_scaled", Host.pval( PDF.chivalp( s_dev, Convert.ToDouble( idf ) ) ) ); 
-            
-            IList<ParameterBag> unscaledList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*unscaled", unscaledList ); 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                ParameterBag unscaledParameters = new ParameterBag(); 
-                unscaledList.Add( unscaledParameters ); 
-                if ( i == 1 && DoC )
-                { 
-                    Q = "Constant"; 
-                } else { Q = Label[ i - iq ]; } 
-                unscaledParameters.AddOutput( "par", Q ); 
-                unscaledParameters.AddOutput( "coef", Host.RoundU( b[ i ] ) ); 
-                unscaledParameters.AddOutput( "err", Host.RoundU( se[ i ] ) ); 
-            } 
-            
-            IList<ParameterBag> scaledList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*scaled", scaledList ); 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                ParameterBag scaledParameters = new ParameterBag(); 
-                scaledList.Add( scaledParameters ); 
-                if ( i == 1 && DoC )
-                { 
-                    Q = "Constant"; 
-                } else { Q = Label[ i - iq ]; }
-                double sse = sp == Constant.MISSING ? Constant.MISSING : Math.Sqrt( se[ i ] * se[ i ] * sp );
+            outputParameters.AddOutput("sp", Host.RoundU(sp));
+            outputParameters.AddOutput("x2dev_scaled", Host.RoundU(s_x2dev));
+            outputParameters.AddOutput("x2p_scaled", Host.pval(PDF.chivalp(s_x2dev, Convert.ToDouble(idfx - idf))));
+            outputParameters.AddOutput("x2_scaled", Host.RoundU(s_x2));
+            outputParameters.AddOutput("p_p_scaled", Host.pval(PDF.chivalp(s_x2, Convert.ToDouble(idf))));
+            outputParameters.AddOutput("dev_scaled", Host.RoundU(s_dev));
+            outputParameters.AddOutput("p_dev_scaled", Host.pval(PDF.chivalp(s_dev, Convert.ToDouble(idf))));
+
+            IList<ParameterBag> unscaledList = new List<ParameterBag>();
+            outputParameters.AddOutput("*unscaled", unscaledList);
+            for (i = 1; i <= P; i++)
+            {
+                ParameterBag unscaledParameters = new ParameterBag();
+                unscaledList.Add(unscaledParameters);
+                if (i == 1 && DoC)
+                {
+                    Q = "Constant";
+                }
+                else { Q = Label[i - iq]; }
+                unscaledParameters.AddOutput("par", Q);
+                unscaledParameters.AddOutput("coef", Host.RoundU(b[i]));
+                unscaledParameters.AddOutput("err", Host.RoundU(se[i]));
+            }
+
+            IList<ParameterBag> scaledList = new List<ParameterBag>();
+            outputParameters.AddOutput("*scaled", scaledList);
+            for (i = 1; i <= P; i++)
+            {
+                ParameterBag scaledParameters = new ParameterBag();
+                scaledList.Add(scaledParameters);
+                if (i == 1 && DoC)
+                {
+                    Q = "Constant";
+                }
+                else { Q = Label[i - iq]; }
+                double sse = sp == Constant.MISSING ? Constant.MISSING : Math.Sqrt(se[i] * se[i] * sp);
                 double z;
-                if ( sse == 0.0 | sse == Constant.MISSING ) 
-                { 
-                    z = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    z = b[ i ] / sse; 
-                    prob = 2.0 * ( 1.0 - PDF.alnorm( Math.Abs( b[ i ] ) / sse ) ); 
-                } 
-                scaledParameters.AddOutput( "par", Q ); 
-                scaledParameters.AddOutput( "err", Host.RoundU( sse ) ); 
-                scaledParameters.AddOutput( "z", Host.RoundU( z ) ); 
-                scaledParameters.AddOutput( "p", Host.pval( prob ) ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptLogisticRegressionModel( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( Parameters[ "context" ].Data ) ); 
-            double[] b = context.B; 
-            double[] se = context.SE; 
-            int P = context.P; 
-            string[] Label = context.Label; 
-            bool DoC = context.DoC; 
-            double dev = context.DEV; 
-            int irank = context.RANK; 
-            int idf = context.DF; 
-            double tol = context.TOL; 
-            int M = context.ERR; 
-            int N = context.N; 
-            double[] fvl = context.FV; 
-            double[] t = context.T; 
-            double[] y = context.Y; 
-            bool weight = context.WEIGHT; 
-            double[] wt = context.WT; 
-            double devx = context.DEVX; 
-            double llx = context.LLX; 
+                if (sse == 0.0 | sse == Constant.MISSING)
+                {
+                    z = Constant.MISSING;
+                }
+                else
+                {
+                    z = b[i] / sse;
+                    prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[i]) / sse));
+                }
+                scaledParameters.AddOutput("par", Q);
+                scaledParameters.AddOutput("err", Host.RoundU(sse));
+                scaledParameters.AddOutput("z", Host.RoundU(z));
+                scaledParameters.AddOutput("p", Host.pval(prob));
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptLogisticRegressionModel(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            double[] b = context.B;
+            double[] se = context.SE;
+            int P = context.P;
+            string[] Label = context.Label;
+            bool DoC = context.DoC;
+            double dev = context.DEV;
+            int irank = context.RANK;
+            int idf = context.DF;
+            double tol = context.TOL;
+            int M = context.ERR;
+            int N = context.N;
+            double[] fvl = context.FV;
+            double[] t = context.T;
+            double[] y = context.Y;
+            bool weight = context.WEIGHT;
+            double[] wt = context.WT;
+            double devx = context.DEVX;
+            double llx = context.LLX;
             int idfx = context.DFX;
 
             int hldf = 0; int i;
-            int iq = 0; 
+            int iq = 0;
             double x2 = 0; double ll = 0;
             double chat = 0;
             double r2; double r2i;
-            if ( idf > 0 ) 
-            { 
-                x2 = 0.0; 
+            if (idf > 0)
+            {
+                x2 = 0.0;
                 int ntot = 0;
                 double PP;
-                for ( i=1; i <= N; i++ ) 
-                { 
-                    PP = fvl[ i ] / t[ i ]; 
-                    double ww = weight ? wt[ i ] : 1; 
-                    if ( PP != 0.0 ) 
-                    { 
-                        x2 = x2 + ( Math.Pow( ( ( y[ i ] - t[ i ] * PP ) * Math.Sqrt( ww ) ), 2.0 ) ) / ( t[ i ] * PP * ( 1.0 - PP ) ); 
-                    } 
-                    ntot += Convert.ToInt32( t[ i ] ); 
-                } 
-                ll = x_loglik_l(weight, N, wt, y, t, fvl );
+                for (i = 1; i <= N; i++)
+                {
+                    PP = fvl[i] / t[i];
+                    double ww = weight ? wt[i] : 1;
+                    if (PP != 0.0)
+                    {
+                        x2 = x2 + (Math.Pow(((y[i] - t[i] * PP) * Math.Sqrt(ww)), 2.0)) / (t[i] * PP * (1.0 - PP));
+                    }
+                    ntot += Convert.ToInt32(t[i]);
+                }
+                ll = x_loglik_l(weight, N, wt, y, t, fvl);
                 double[] OBS = new double[10 + 1 /* for VB to C# conversion */];
                 double[] tot = new double[10 + 1 /* for VB to C# conversion */];
                 double[] mpi = new double[10 + 1 /* for VB to C# conversion */ ];
-                Tri[] z = new Tri[N + 1 /* for VB to C# conversion */ ]; 
-                for ( i=1; i <= N; i++ ) 
-                { 
-                    PP = fvl[ i ] / t[ i ]; 
-                    z[ i ].D = PP; 
-                    z[ i ].r = y[ i ]; 
-                    z[ i ].s = t[ i ]; 
-                } 
-                Array.Sort( z, 1, N, new TriByDAscending() ); 
-                int ctr = 1; 
-                double ndiv = Convert.ToDouble( ntot ) / 10.0; 
-                double ncut = Math.Floor(ndiv); 
-                double ncum = 0; 
-                for ( i=1; i <= N; i++ ) 
-                { 
-                    if ( ncum >= ncut & ctr <= 10 ) 
-                    { 
-                        ctr = ctr + 1; 
-                        double transTemp8 = Math.Max( ncum + ndiv, ctr * ndiv ); 
-                        ncut = Math.Floor(transTemp8); 
-                    } 
-                    tot[ ctr ] = tot[ ctr ] + z[ i ].s; 
-                    ncum = ncum + z[ i ].s; 
-                    OBS[ ctr ] = OBS[ ctr ] + z[ i ].r; 
-                    mpi[ ctr ] = mpi[ ctr ] + z[ i ].D * z[ i ].s; 
-                    if ( ncum >= ntot )
-                    { 
+                Tri[] z = new Tri[N + 1 /* for VB to C# conversion */ ];
+                for (i = 1; i <= N; i++)
+                {
+                    PP = fvl[i] / t[i];
+                    z[i].D = PP;
+                    z[i].r = y[i];
+                    z[i].s = t[i];
+                }
+                Array.Sort(z, 1, N, new TriByDAscending());
+                int ctr = 1;
+                double ndiv = Convert.ToDouble(ntot) / 10.0;
+                double ncut = Math.Floor(ndiv);
+                double ncum = 0;
+                for (i = 1; i <= N; i++)
+                {
+                    if (ncum >= ncut & ctr <= 10)
+                    {
+                        ctr = ctr + 1;
+                        double transTemp8 = Math.Max(ncum + ndiv, ctr * ndiv);
+                        ncut = Math.Floor(transTemp8);
+                    }
+                    tot[ctr] = tot[ctr] + z[i].s;
+                    ncum = ncum + z[i].s;
+                    OBS[ctr] = OBS[ctr] + z[i].r;
+                    mpi[ctr] = mpi[ctr] + z[i].D * z[i].s;
+                    if (ncum >= ntot)
+                    {
                         break;
-                    } 
-                } 
-                hldf = ctr - 2; 
-                chat = 0.0; 
-                for ( i=1; i <= ctr; i++ ) 
-                { 
-                    if ( tot[ i ] > 0.0 & mpi[ i ] > 0.0 ) 
-                    { 
-                        double numer = ( OBS[ i ] - mpi[ i ] ) * ( OBS[ i ] - mpi[ i ] ); 
-                        mpi[ i ] = mpi[ i ] / tot[ i ]; 
-                        chat = chat + numer / ( tot[ i ] * mpi[ i ] * ( 1.0 - mpi[ i ] ) ); 
-                    } 
-                } 
-            } 
-            if ( DoC )
-            { 
-                iq = 1; 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "acc", Host.RoundU( tol ) ); 
-            outputParameters.AddOutput( "ll", Host.RoundU( ll ) ); 
-            outputParameters.AddOutput( "dev", Host.RoundU( dev ) ); 
-            outputParameters.AddOutput( "idf",  idf.ToString() ); 
-            outputParameters.AddOutput( "rank",  irank.ToString() ); 
-            outputParameters.AddOutput( "aka", Host.RoundU( dev + 2 * ( 1 + M ) ) ); 
-            outputParameters.AddOutput( "sch", Host.RoundU( dev + ( 2 + M ) * Math.Log( N ) ) ); 
-            outputParameters.AddOutput( "devx", Host.RoundU( devx ) ); 
-            double x2dev = devx - dev; 
-            if ( devx == Constant.MISSING ) 
-            { 
-                x2dev = Constant.MISSING; 
-                r2 = Constant.MISSING; 
-            } 
-            else 
-            { 
-                r2 = x2dev / devx; 
-            } 
-            if ( llx == Constant.MISSING ) 
-            { 
-                r2i = Constant.MISSING; 
-            } 
-            else 
-            { 
-                r2i = 1.0 - ll / llx; 
-            } 
-            outputParameters.AddOutput( "x2dev", Host.RoundU( x2dev ) ); 
-            outputParameters.AddOutput( "x2df",  (idfx - idf).ToString() );
+                    }
+                }
+                hldf = ctr - 2;
+                chat = 0.0;
+                for (i = 1; i <= ctr; i++)
+                {
+                    if (tot[i] > 0.0 & mpi[i] > 0.0)
+                    {
+                        double numer = (OBS[i] - mpi[i]) * (OBS[i] - mpi[i]);
+                        mpi[i] = mpi[i] / tot[i];
+                        chat = chat + numer / (tot[i] * mpi[i] * (1.0 - mpi[i]));
+                    }
+                }
+            }
+            if (DoC)
+            {
+                iq = 1;
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("acc", Host.RoundU(tol));
+            outputParameters.AddOutput("ll", Host.RoundU(ll));
+            outputParameters.AddOutput("dev", Host.RoundU(dev));
+            outputParameters.AddOutput("idf", idf.ToString());
+            outputParameters.AddOutput("rank", irank.ToString());
+            outputParameters.AddOutput("aka", Host.RoundU(dev + 2 * (1 + M)));
+            outputParameters.AddOutput("sch", Host.RoundU(dev + (2 + M) * Math.Log(N)));
+            outputParameters.AddOutput("devx", Host.RoundU(devx));
+            double x2dev = devx - dev;
+            if (devx == Constant.MISSING)
+            {
+                x2dev = Constant.MISSING;
+                r2 = Constant.MISSING;
+            }
+            else
+            {
+                r2 = x2dev / devx;
+            }
+            if (llx == Constant.MISSING)
+            {
+                r2i = Constant.MISSING;
+            }
+            else
+            {
+                r2i = 1.0 - ll / llx;
+            }
+            outputParameters.AddOutput("x2dev", Host.RoundU(x2dev));
+            outputParameters.AddOutput("x2df", (idfx - idf).ToString());
             outputParameters.AddOutput("x2p",
                                        idfx > 0
                                            ? Host.pval(PDF.chivalp(x2dev, Convert.ToDouble(idfx - idf)))
                                            : Formatting.ASTERISK);
-            outputParameters.AddOutput( "r2", Host.RoundU( r2 ) ); 
-            outputParameters.AddOutput( "r2i", Host.RoundU( r2i ) ); 
-            outputParameters.AddOutput( "x2", Host.RoundU( x2 ) ); 
-            if ( idf <= 0 ) 
-            { 
-                x2 = Constant.MISSING; 
-                dev = Constant.MISSING; 
-                chat = Constant.MISSING; 
-                outputParameters.AddOutput( "p", "* saturated model: can't assess goodness of fit" ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "p", Host.pval( PDF.chivalp( x2, Convert.ToDouble( idf ) ) ) ); 
-            } 
-            outputParameters.AddOutput( "dev_good", Host.RoundU( dev ) ); 
-            outputParameters.AddOutput( "df_good",  idf.ToString() ); 
-            outputParameters.AddOutput( "p_good", Host.pval( PDF.chivalp( dev, Convert.ToDouble( idf ) ) ) ); 
-            outputParameters.AddOutput( "hl", Host.RoundU( chat ) ); 
-            outputParameters.AddOutput( "df_hl",  hldf.ToString() ); 
-            double hlp = hldf < 1 ? Constant.MISSING : PDF.chivalp( chat, Convert.ToDouble( hldf ) ); 
-            outputParameters.AddOutput( "p_hl", Host.pval( hlp ) ); 
-            List<ParameterBag> parametersList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*parameters", parametersList ); 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                ParameterBag parametersParameters = new ParameterBag(); 
-                parametersList.Add( parametersParameters );
+            outputParameters.AddOutput("r2", Host.RoundU(r2));
+            outputParameters.AddOutput("r2i", Host.RoundU(r2i));
+            outputParameters.AddOutput("x2", Host.RoundU(x2));
+            if (idf <= 0)
+            {
+                x2 = Constant.MISSING;
+                dev = Constant.MISSING;
+                chat = Constant.MISSING;
+                outputParameters.AddOutput("p", "* saturated model: can't assess goodness of fit");
+            }
+            else
+            {
+                outputParameters.AddOutput("p", Host.pval(PDF.chivalp(x2, Convert.ToDouble(idf))));
+            }
+            outputParameters.AddOutput("dev_good", Host.RoundU(dev));
+            outputParameters.AddOutput("df_good", idf.ToString());
+            outputParameters.AddOutput("p_good", Host.pval(PDF.chivalp(dev, Convert.ToDouble(idf))));
+            outputParameters.AddOutput("hl", Host.RoundU(chat));
+            outputParameters.AddOutput("df_hl", hldf.ToString());
+            double hlp = hldf < 1 ? Constant.MISSING : PDF.chivalp(chat, Convert.ToDouble(hldf));
+            outputParameters.AddOutput("p_hl", Host.pval(hlp));
+            List<ParameterBag> parametersList = new List<ParameterBag>();
+            outputParameters.AddOutput("*parameters", parametersList);
+            for (i = 1; i <= P; i++)
+            {
+                ParameterBag parametersParameters = new ParameterBag();
+                parametersList.Add(parametersParameters);
                 string Q = i == 1 && DoC ? "Constant" : Label[i - iq];
-                parametersParameters.AddOutput( "par", Q ); 
-                parametersParameters.AddOutput( "coef", Host.RoundU( b[ i ] ) ); 
-                parametersParameters.AddOutput( "err", Host.RoundU( se[ i ] ) ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptPoissonRegressionIrr( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[,] x = context.X; 
-            double[] b = context.B; 
-            double[] se = context.SE; 
-            int P = context.P; 
-            int nx = context.N; 
-            string[] Label = context.Label; 
-            bool DoC = context.DoC; 
+                parametersParameters.AddOutput("par", Q);
+                parametersParameters.AddOutput("coef", Host.RoundU(b[i]));
+                parametersParameters.AddOutput("err", Host.RoundU(se[i]));
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptPoissonRegressionIrr(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[,] x = context.X;
+            double[] b = context.B;
+            double[] se = context.SE;
+            int P = context.P;
+            int nx = context.N;
+            string[] Label = context.Label;
+            bool DoC = context.DoC;
             int i;
             int j; int L;
             double cit; double rr; double lci; double uci; double P0;
             //  RTF_LoadTemplate("pr_irr.rtf")
-            double GAMMA = parameters[ "gamma" ].AsDouble; 
-            MathDbl.civ( 0, out cit, GAMMA, out P0 ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> popList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*pop", popList ); 
-            
-            //  Whole study
-            ParameterBag popParameters = new ParameterBag(); 
-            popList.Add( popParameters ); 
-            popParameters.AddOutput( "pop", "whole study (baseline relative risk)" ); 
-            popParameters.AddOutput( "pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 2 ) ); 
-            IList<ParameterBag> parList = new List<ParameterBag>(); 
-            popParameters.AddOutput( "*par", parList ); 
-            int iq = DoC ? 1 : 0; 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                if ( i != 1 || DoC == false ) 
-                { 
-                    ParameterBag parParameters = new ParameterBag(); 
-                    parList.Add( parParameters ); 
-                    parParameters.AddOutput( "par", Label[ i - iq ] ); 
-                    parParameters.AddOutput( "est", host.RoundU( b[ i ] ) ); 
-                    rr = Formatting.SafeExp( b[ i ] ); 
-                    if ( rr != Constant.MISSING ) 
-                    { 
-                        lci = Formatting.SafeExp( b[ i ] - se[ i ] * cit ); 
-                        uci = Formatting.SafeExp( b[ i ] + se[ i ] * cit ); 
-                    } 
-                    else 
-                    { 
-                        lci = Constant.MISSING; 
-                        uci = Constant.MISSING; 
-                    } 
-                    parParameters.AddOutput( "irr", host.RoundU( rr ) ); 
-                    parParameters.AddOutput( "ci", host.RoundU( lci ) + "  to  " + host.RoundU( uci ) ); 
-                } 
-            } 
-            // relative to dichotomous covariates
-            int[] nsel = new int[P + 1 /* for VB to C# conversion */]; 
-            int ctr = 0;
-            OptionDescriptor descriptor = new OptionDescriptor
-                                              {Title = "Select covariate for sub-population relative risk"};
+            double GAMMA = parameters["gamma"].AsDouble;
+            MathDbl.civ(0, out cit, GAMMA, out P0);
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> popList = new List<ParameterBag>();
+            outputParameters.AddOutput("*pop", popList);
 
-            SelectionBoxDescriptor sb = new SelectionBoxDescriptor(); 
-            descriptor.SelectionBoxes.Add( sb ); 
-            sb.Title = "Covariate"; 
-            for ( L=1; L <= P; L++ )
+            //  Whole study
+            ParameterBag popParameters = new ParameterBag();
+            popList.Add(popParameters);
+            popParameters.AddOutput("pop", "whole study (baseline relative risk)");
+            popParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
+            IList<ParameterBag> parList = new List<ParameterBag>();
+            popParameters.AddOutput("*par", parList);
+            int iq = DoC ? 1 : 0;
+            for (i = 1; i <= P; i++)
             {
-                bool OK = true;
-                if ( L > 1 || DoC == false ) 
+                if (i != 1 || DoC == false)
                 {
-                    int k = DoC ? L - 1 : L;
-                    for ( j=1; j <= nx; j++ ) 
-                    { 
-                        if ( x[ j, k ] != 0.0 & x[ j, k ] != 1.0 ) 
-                        { 
-                            OK = false; 
-                            break;
-                        } 
-                    } 
-                    if ( OK ) 
-                    { 
-                        sb.Labels.Add( Label[ L - iq ] ); 
-                        nsel[ ctr ] = L; 
-                        ctr = ctr + 1; 
-                    } 
+                    ParameterBag parParameters = new ParameterBag();
+                    parList.Add(parParameters);
+                    parParameters.AddOutput("par", Label[i - iq]);
+                    parParameters.AddOutput("est", host.RoundU(b[i]));
+                    rr = Formatting.SafeExp(b[i]);
+                    if (rr != Constant.MISSING)
+                    {
+                        lci = Formatting.SafeExp(b[i] - se[i] * cit);
+                        uci = Formatting.SafeExp(b[i] + se[i] * cit);
+                    }
+                    else
+                    {
+                        lci = Constant.MISSING;
+                        uci = Constant.MISSING;
+                    }
+                    parParameters.AddOutput("irr", host.RoundU(rr));
+                    parParameters.AddOutput("ci", host.RoundU(lci) + "  to  " + host.RoundU(uci));
                 }
             }
-            if ( ctr >= 1 & P - iq > 1 ) 
-            { 
-                if ( host.DisplayOptions( descriptor ) ) 
-                { 
-                    L = nsel[ sb.SelectedIndex ]; 
-                    for ( j=2; j >= 1; j-- )
+            // relative to dichotomous covariates
+            int[] nsel = new int[P + 1 /* for VB to C# conversion */];
+            int ctr = 0;
+            OptionDescriptor descriptor = new OptionDescriptor { Title = "Select covariate for sub-population relative risk" };
+
+            SelectionBoxDescriptor sb = new SelectionBoxDescriptor();
+            descriptor.SelectionBoxes.Add(sb);
+            sb.Title = "Covariate";
+            for (L = 1; L <= P; L++)
+            {
+                bool OK = true;
+                if (L > 1 || DoC == false)
+                {
+                    int k = DoC ? L - 1 : L;
+                    for (j = 1; j <= nx; j++)
                     {
-                        double bx = Formatting.SafeExp( b[ L ] );
-                        if ( bx != Constant.MISSING ) 
-                        { 
-                            popParameters = new ParameterBag(); 
-                            popList.Add( popParameters ); 
-                            popParameters.AddOutput( "pop", Label[ L - iq ] + " = " +  (j - 1).ToString() ); 
-                            popParameters.AddOutput( "pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 2 ) ); 
-                            parList = new List<ParameterBag>(); 
-                            popParameters.AddOutput( "*par", parList ); 
-                            if ( j == 1 )
-                            { 
-                                bx = 1.0 / bx; 
-                            } 
-                            for ( i=1; i <= P; i++ ) 
-                            { 
-                                if ( ( i != 1 | DoC == false ) & i != L ) 
-                                { 
-                                    ParameterBag parParameters = new ParameterBag(); 
-                                    parList.Add( parParameters ); 
-                                    parParameters.AddOutput( "par", Label[ i - iq ] ); 
-                                    parParameters.AddOutput( "est", host.RoundU( b[ i ] ) ); 
-                                    rr = Formatting.SafeExp( b[ i ] ) * bx; 
-                                    if ( rr != Constant.MISSING ) 
-                                    { 
-                                        lci = Formatting.SafeExp( b[ i ] * bx - se[ i ] * cit * bx ); 
-                                        uci = Formatting.SafeExp( b[ i ] * bx + se[ i ] * cit * bx ); 
-                                    } 
-                                    else 
-                                    { 
-                                        lci = Constant.MISSING; 
-                                        uci = Constant.MISSING; 
-                                    } 
-                                    parParameters.AddOutput( "irr", host.RoundU( rr ) ); 
-                                    parParameters.AddOutput( "ci", host.RoundU( lci ) + "  to  " + host.RoundU( uci ) ); 
-                                } 
-                            } 
+                        if (x[j, k] != 0.0 & x[j, k] != 1.0)
+                        {
+                            OK = false;
+                            break;
                         }
                     }
-                } 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptLogisticRegressionOdds( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( Parameters[ "context" ].Data ) ); 
-            double[] b = context.B; 
-            double[] se = context.SE; 
-            int P = context.P; 
-            string[] Label = context.Label; 
-            bool DoC = context.DoC; 
+                    if (OK)
+                    {
+                        sb.Labels.Add(Label[L - iq]);
+                        nsel[ctr] = L;
+                        ctr = ctr + 1;
+                    }
+                }
+            }
+            if (ctr >= 1 & P - iq > 1)
+            {
+                if (host.DisplayOptions(descriptor))
+                {
+                    L = nsel[sb.SelectedIndex];
+                    for (j = 2; j >= 1; j--)
+                    {
+                        double bx = Formatting.SafeExp(b[L]);
+                        if (bx != Constant.MISSING)
+                        {
+                            popParameters = new ParameterBag();
+                            popList.Add(popParameters);
+                            popParameters.AddOutput("pop", Label[L - iq] + " = " + (j - 1).ToString());
+                            popParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
+                            parList = new List<ParameterBag>();
+                            popParameters.AddOutput("*par", parList);
+                            if (j == 1)
+                            {
+                                bx = 1.0 / bx;
+                            }
+                            for (i = 1; i <= P; i++)
+                            {
+                                if ((i != 1 | DoC == false) & i != L)
+                                {
+                                    ParameterBag parParameters = new ParameterBag();
+                                    parList.Add(parParameters);
+                                    parParameters.AddOutput("par", Label[i - iq]);
+                                    parParameters.AddOutput("est", host.RoundU(b[i]));
+                                    rr = Formatting.SafeExp(b[i]) * bx;
+                                    if (rr != Constant.MISSING)
+                                    {
+                                        lci = Formatting.SafeExp(b[i] * bx - se[i] * cit * bx);
+                                        uci = Formatting.SafeExp(b[i] * bx + se[i] * cit * bx);
+                                    }
+                                    else
+                                    {
+                                        lci = Constant.MISSING;
+                                        uci = Constant.MISSING;
+                                    }
+                                    parParameters.AddOutput("irr", host.RoundU(rr));
+                                    parParameters.AddOutput("ci", host.RoundU(lci) + "  to  " + host.RoundU(uci));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptLogisticRegressionOdds(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            double[] b = context.B;
+            double[] se = context.SE;
+            int P = context.P;
+            string[] Label = context.Label;
+            bool DoC = context.DoC;
             int i; int iq = 0;
             double cit;
             double P0;
 
-            double GAMMA = Parameters[ "gamma" ].AsDouble; 
-            MathDbl.civ( 0, out cit, GAMMA, out P0 ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 2 ) ); 
-            if ( DoC )
-            { 
-                iq = 1; 
-            } 
-            List<ParameterBag> parametersList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*parameters", parametersList ); 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                ParameterBag parametersParameters = new ParameterBag(); 
-                parametersList.Add( parametersParameters );
+            double GAMMA = Parameters["gamma"].AsDouble;
+            MathDbl.civ(0, out cit, GAMMA, out P0);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
+            if (DoC)
+            {
+                iq = 1;
+            }
+            List<ParameterBag> parametersList = new List<ParameterBag>();
+            outputParameters.AddOutput("*parameters", parametersList);
+            for (i = 1; i <= P; i++)
+            {
+                ParameterBag parametersParameters = new ParameterBag();
+                parametersList.Add(parametersParameters);
                 string Q = i == 1 && DoC ? "Constant" : Label[i - iq];
-                parametersParameters.AddOutput( "par", Q ); 
-                parametersParameters.AddOutput( "est", Host.RoundU( b[ i ] ) ); 
-                if ( i > 1 || DoC == false ) 
-                { 
-                    double odr = Formatting.SafeExp( b[ i ] ); 
-                    double lci = Formatting.SafeExp( b[ i ] - se[ i ] * cit ); 
-                    double uci = Formatting.SafeExp( b[ i ] + se[ i ] * cit ); 
-                    parametersParameters.AddOutput( "odds", Host.RoundU( odr ) ); 
-                    parametersParameters.AddOutput( "ci", Host.RoundU( lci ) + "  to  " + Host.RoundU( uci ) ); 
-                } 
-                else 
-                { 
-                    parametersParameters.AddOutput( "odds", "" ); 
-                    parametersParameters.AddOutput( "ci", "" ); 
-                } 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptLogisticRegressionClassification( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            int N = context.N; 
-            double[] fvl = context.FV; 
-            double[] t = context.T; 
+                parametersParameters.AddOutput("par", Q);
+                parametersParameters.AddOutput("est", Host.RoundU(b[i]));
+                if (i > 1 || DoC == false)
+                {
+                    double odr = Formatting.SafeExp(b[i]);
+                    double lci = Formatting.SafeExp(b[i] - se[i] * cit);
+                    double uci = Formatting.SafeExp(b[i] + se[i] * cit);
+                    parametersParameters.AddOutput("odds", Host.RoundU(odr));
+                    parametersParameters.AddOutput("ci", Host.RoundU(lci) + "  to  " + Host.RoundU(uci));
+                }
+                else
+                {
+                    parametersParameters.AddOutput("odds", "");
+                    parametersParameters.AddOutput("ci", "");
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptLogisticRegressionClassification(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            int N = context.N;
+            double[] fvl = context.FV;
+            double[] t = context.T;
             double[] y = context.Y;
 
             double zc; double zl;
             double sns; double spe; double ppv; double nnv; double lrpos; double thetal; double thetau; double lrneg;
             int tp; int fn; int fp; int tn; int i;
 
-            ParameterBag outputParameters = new ParameterBag(); 
-            double co = parameters[ "cutoff" ].AsDouble; 
-            if ( co <= 0.0 || co >= 1.0 )
-            { 
-                co = 0.5; 
-            } 
-            double GAMMA = parameters[ "gamma" ].AsDouble; 
-            MathDbl.civ( 0, out zc, GAMMA, out zl );
-            x_lclass(t, fvl, y, N, out tp, out fp, out fn, out tn, co); 
-            outputParameters.AddOutput( "tp",  tp.ToString() ); 
-            outputParameters.AddOutput( "fp",  fp.ToString() ); 
-            outputParameters.AddOutput( "totc",  tp + fp.ToString() ); 
-            outputParameters.AddOutput( "fn",  fn.ToString() ); 
-            outputParameters.AddOutput( "tn",  tn.ToString() ); 
-            outputParameters.AddOutput( "totnoc",  tn + fn.ToString() ); 
-            outputParameters.AddOutput( "tote",  tp + fn.ToString() ); 
-            outputParameters.AddOutput( "totnoe",  fp + tn.ToString() ); 
-            outputParameters.AddOutput( "co", Formatting.XRound( co, 2 ) ); 
-            double a = Convert.ToDouble( tp ); 
-            double b = Convert.ToDouble( fp ); 
-            double C = Convert.ToDouble( fn ); 
-            double D = Convert.ToDouble( tn ); 
-            if ( tp + fn > 0 )
-            { 
-                sns = 100.0 * a / ( a + C ); 
-            } else { sns = Constant.MISSING; } 
-            outputParameters.AddOutput( "sens", Formatting.XRound( sns, 2 ) ); 
-            if ( tn + fp > 0 )
-            { 
-                spe = 100.0 * D / ( b + D ); 
-            } else { spe = Constant.MISSING; } 
-            outputParameters.AddOutput( "spec", Formatting.XRound( spe, 2 ) ); 
-            if ( tp + fp > 0 )
-            { 
-                ppv = 100.0 * a / ( a + b ); 
-            } else { ppv = Constant.MISSING; } 
-            outputParameters.AddOutput( "+ve", Formatting.XRound( ppv, 2 ) ); 
-            if ( ( tn + fn ) > 0 )
-            { 
-                nnv = 100.0 * ( 1.0 - D / ( D + C ) ); 
-            } else { nnv = Constant.MISSING; } 
-            outputParameters.AddOutput( "npv", Formatting.XRound( 100.0 - nnv, 2 ) ); 
-            outputParameters.AddOutput( "-ve", Formatting.XRound( nnv, 2 ) ); 
-            outputParameters.AddOutput( "cc", Formatting.XRound( 100.0 * ( a + D ) / ( a + b + C + D ), 2 ) ); 
-            outputParameters.AddOutput( "pc", Formatting.XRound( 100.0 * ( 1.0 - zl ), 2 ) ); 
-            if ( tp + fn > 0 & fp + tn > 0 & fp > 0 & tp > 0 ) 
-            { 
-                lrpos = ( a / ( a + C ) ) / ( b / ( b + D ) ); 
-                x_lrci( b, a, b + D, a + C, zc, out thetal, out thetau ); 
-            } 
-            else 
-            { 
-                lrpos = Constant.MISSING; 
-                thetal = Constant.MISSING; 
-                thetau = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "lr+", host.RoundU( lrpos ) ); 
-            outputParameters.AddOutput( "from+", host.RoundU( thetal ) ); 
-            outputParameters.AddOutput( "to+", host.RoundU( thetau ) ); 
-            if ( tp + fn > 0 & fp + tn > 0 & tn > 0 & fn > 0 ) 
-            { 
-                lrneg = ( C / ( a + C ) ) / ( D / ( D + b ) ); 
-                x_lrci( D, C, b + D, a + C, zc, out thetal, out thetau ); 
-            } 
-            else 
-            { 
-                lrneg = Constant.MISSING; 
-                thetal = Constant.MISSING; 
-                thetau = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "lr-", host.RoundU( lrneg ) ); 
-            outputParameters.AddOutput( "from-", host.RoundU( thetal ) ); 
-            outputParameters.AddOutput( "to-", host.RoundU( thetau ) ); 
-            double XMax = 0.0; 
-            co = 0.0; 
+            ParameterBag outputParameters = new ParameterBag();
+            double co = parameters["cutoff"].AsDouble;
+            if (co <= 0.0 || co >= 1.0)
+            {
+                co = 0.5;
+            }
+            double GAMMA = parameters["gamma"].AsDouble;
+            MathDbl.civ(0, out zc, GAMMA, out zl);
+            x_lclass(t, fvl, y, N, out tp, out fp, out fn, out tn, co);
+            outputParameters.AddOutput("tp", tp.ToString());
+            outputParameters.AddOutput("fp", fp.ToString());
+            outputParameters.AddOutput("totc", tp + fp.ToString());
+            outputParameters.AddOutput("fn", fn.ToString());
+            outputParameters.AddOutput("tn", tn.ToString());
+            outputParameters.AddOutput("totnoc", tn + fn.ToString());
+            outputParameters.AddOutput("tote", tp + fn.ToString());
+            outputParameters.AddOutput("totnoe", fp + tn.ToString());
+            outputParameters.AddOutput("co", Formatting.XRound(co, 2));
+            double a = Convert.ToDouble(tp);
+            double b = Convert.ToDouble(fp);
+            double C = Convert.ToDouble(fn);
+            double D = Convert.ToDouble(tn);
+            if (tp + fn > 0)
+            {
+                sns = 100.0 * a / (a + C);
+            }
+            else { sns = Constant.MISSING; }
+            outputParameters.AddOutput("sens", Formatting.XRound(sns, 2));
+            if (tn + fp > 0)
+            {
+                spe = 100.0 * D / (b + D);
+            }
+            else { spe = Constant.MISSING; }
+            outputParameters.AddOutput("spec", Formatting.XRound(spe, 2));
+            if (tp + fp > 0)
+            {
+                ppv = 100.0 * a / (a + b);
+            }
+            else { ppv = Constant.MISSING; }
+            outputParameters.AddOutput("+ve", Formatting.XRound(ppv, 2));
+            if ((tn + fn) > 0)
+            {
+                nnv = 100.0 * (1.0 - D / (D + C));
+            }
+            else { nnv = Constant.MISSING; }
+            outputParameters.AddOutput("npv", Formatting.XRound(100.0 - nnv, 2));
+            outputParameters.AddOutput("-ve", Formatting.XRound(nnv, 2));
+            outputParameters.AddOutput("cc", Formatting.XRound(100.0 * (a + D) / (a + b + C + D), 2));
+            outputParameters.AddOutput("pc", Formatting.XRound(100.0 * (1.0 - zl), 2));
+            if (tp + fn > 0 & fp + tn > 0 & fp > 0 & tp > 0)
+            {
+                lrpos = (a / (a + C)) / (b / (b + D));
+                x_lrci(b, a, b + D, a + C, zc, out thetal, out thetau);
+            }
+            else
+            {
+                lrpos = Constant.MISSING;
+                thetal = Constant.MISSING;
+                thetau = Constant.MISSING;
+            }
+            outputParameters.AddOutput("lr+", host.RoundU(lrpos));
+            outputParameters.AddOutput("from+", host.RoundU(thetal));
+            outputParameters.AddOutput("to+", host.RoundU(thetau));
+            if (tp + fn > 0 & fp + tn > 0 & tn > 0 & fn > 0)
+            {
+                lrneg = (C / (a + C)) / (D / (D + b));
+                x_lrci(D, C, b + D, a + C, zc, out thetal, out thetau);
+            }
+            else
+            {
+                lrneg = Constant.MISSING;
+                thetal = Constant.MISSING;
+                thetau = Constant.MISSING;
+            }
+            outputParameters.AddOutput("lr-", host.RoundU(lrneg));
+            outputParameters.AddOutput("from-", host.RoundU(thetal));
+            outputParameters.AddOutput("to-", host.RoundU(thetau));
+            double XMax = 0.0;
+            co = 0.0;
             double cmax = co;
             const int stps = 100;
             double[] ry = new double[stps + 1 /* for VB to C# conversion */ ];
-            double[] rx = new double[stps + 1 /* for VB to C# conversion */ ]; 
-            for ( i=1; i <= stps; i++ ) 
-            { 
-                co = co + 0.01; 
-                x_lclass( t, fvl, y, N, out tp, out fp, out fn, out tn, co ); 
-                if ( tp + fn > 0 & tn + fp > 0 ) 
-                { 
-                    double sens = Convert.ToDouble( tp ) / Convert.ToDouble( tp + fn ); 
-                    double sec = Convert.ToDouble( tn ) / Convert.ToDouble( tn + fp ); 
-                    ry[ i ] = sens; 
-                    rx[ i ] = 1.0 - sec; 
-                    if ( sens + sec > XMax ) 
-                    { 
-                        XMax = sens + sec; 
-                        cmax = co; 
-                    } 
-                } 
-            } 
-            double auc = MathDbl.trapezoid_xy_roc( rx, ry, 1, stps ); 
-            outputParameters.AddOutput( "cmax", Formatting.XRound( cmax, 3 ) ); 
-            outputParameters.AddOutput( "area", host.RoundU( auc ) ); 
-            ChartRenderer ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            ch.SetBox0To1(); 
-            outputParameters.AddOutput( "chart", host.ImageToRtf( ch.PlotXYAndReturnImage( host, rx, ry, "1-specificity", "sensitivity", "", false, -99, false ) ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptLogisticRegressionBootstrap( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] se; 
-            double[] b = context.B; 
-            double[] t = context.T; 
-            double[,] x = context.X; 
-            double[] y = context.Y; 
-            double[] fvl; 
-            double[] dr; 
-            double[] h; 
-            double[] var; 
-            int N = context.N; 
-            bool mean = context.DoC; 
-            string[] Label = context.Label; 
-            int ip = context.P; 
-            double[] cov; 
-            double[] wt = context.WT; 
-            bool Weight = context.WEIGHT; 
-            int irank = context.RANK; 
-            int idf = context.DF; 
-            double tol = context.TOL; 
-            int M = context.ERR; 
-            double dev = context.DEV; 
-            
+            double[] rx = new double[stps + 1 /* for VB to C# conversion */ ];
+            for (i = 1; i <= stps; i++)
+            {
+                co = co + 0.01;
+                x_lclass(t, fvl, y, N, out tp, out fp, out fn, out tn, co);
+                if (tp + fn > 0 & tn + fp > 0)
+                {
+                    double sens = Convert.ToDouble(tp) / Convert.ToDouble(tp + fn);
+                    double sec = Convert.ToDouble(tn) / Convert.ToDouble(tn + fp);
+                    ry[i] = sens;
+                    rx[i] = 1.0 - sec;
+                    if (sens + sec > XMax)
+                    {
+                        XMax = sens + sec;
+                        cmax = co;
+                    }
+                }
+            }
+            double auc = MathDbl.trapezoid_xy_roc(rx, ry, 1, stps);
+            outputParameters.AddOutput("cmax", Formatting.XRound(cmax, 3));
+            outputParameters.AddOutput("area", host.RoundU(auc));
+            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
+            ch.SetBox0To1();
+            outputParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, rx, ry, "1-specificity", "sensitivity", "", false, -99, false));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptLogisticRegressionBootstrap(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] se;
+            double[] b = context.B;
+            double[] t = context.T;
+            double[,] x = context.X;
+            double[] y = context.Y;
+            double[] fvl;
+            double[] dr;
+            double[] h;
+            double[] var;
+            int N = context.N;
+            bool mean = context.DoC;
+            string[] Label = context.Label;
+            int ip = context.P;
+            double[] cov;
+            double[] wt = context.WT;
+            bool Weight = context.WEIGHT;
+            int irank = context.RANK;
+            int idf = context.DF;
+            double tol = context.TOL;
+            int M = context.ERR;
+            double dev = context.DEV;
+
             int j; int i;
             int fault = 0;
             int iq = 0;
             double cit; double P0; double[] offst;
-            string msg; 
-            
-            
-            
-            double GAMMA = parameters[ "gamma" ].AsDouble; 
-            MathDbl.civ( 0, out cit, GAMMA, out P0 );
+            string msg;
+
+
+
+            double GAMMA = parameters["gamma"].AsDouble;
+            MathDbl.civ(0, out cit, GAMMA, out P0);
             int[] isx = new int[ip + 1 /* for VB to C# conversion */ ];
-            double[] ob = new double[ip + 1 /* for VB to C# conversion */ ]; 
-            for ( j=1; j <= ip; j++ ) 
-            { 
-                isx[ j ] = j; 
-                ob[ j ] = Formatting.SafeExp( b[ j ] ); 
-            } 
-            int gtot = 0; 
-            for ( j=1; j <= N; j++ ) 
-            { 
-                gtot += Convert.ToInt32( t[ j ] ); 
-            } 
-            int boots = parameters[ "boots" ].AsInt32; 
-            host.StartProgress( "Bootstrapping " +  boots.ToString() + " iterations, click stop to abort..." );
+            double[] ob = new double[ip + 1 /* for VB to C# conversion */ ];
+            for (j = 1; j <= ip; j++)
+            {
+                isx[j] = j;
+                ob[j] = Formatting.SafeExp(b[j]);
+            }
+            int gtot = 0;
+            for (j = 1; j <= N; j++)
+            {
+                gtot += Convert.ToInt32(t[j]);
+            }
+            int boots = parameters["boots"].AsInt32;
+            host.StartProgress("Bootstrapping " + boots.ToString() + " iterations, click stop to abort...");
             double[,] qo = new double[ip + 1 /* for VB to C# conversion */, boots + 1 /* for VB to C# conversion */];
             double[] theta = new double[ip + 1 /* for VB to C# conversion */ ];
             double[] ql = new double[ip + 1 /* for VB to C# conversion */];
-            double[] qu = new double[ip + 1 /* for VB to C# conversion */ ]; 
-            int booted = 0; 
-            MersenneTwister rng = new MersenneTwister(); 
-            for ( i=1; i <= boots; i++ ) 
-            { 
-                if ( host.UpdateProgress( i / (double)boots ) ) 
-                { 
-                    fault = 1; 
+            double[] qu = new double[ip + 1 /* for VB to C# conversion */ ];
+            int booted = 0;
+            MersenneTwister rng = new MersenneTwister();
+            for (i = 1; i <= boots; i++)
+            {
+                if (host.UpdateProgress(i / (double)boots))
+                {
+                    fault = 1;
                     break;
                 }
                 double[] rndy = new double[N + 1 /* for VB to C# conversion */];
                 double[] rndt = new double[N + 1 /* for VB to C# conversion */];
-                double[] rndwt = new double[N + 1 /* for VB to C# conversion */]; 
-                for ( j=1; j <= gtot; j++ ) 
-                { 
-                    int pick = Convert.ToInt32( ( gtot - 1 ) * rng.NextDouble() ) + 1; 
+                double[] rndwt = new double[N + 1 /* for VB to C# conversion */];
+                for (j = 1; j <= gtot; j++)
+                {
+                    int pick = Convert.ToInt32((gtot - 1) * rng.NextDouble()) + 1;
                     int pivot = 0;
                     int k;
-                    for ( k=1; k <= N; k++ ) 
-                    { 
-                        pivot += Convert.ToInt32( t[ k ] ); 
-                        if ( pick <= pivot ) 
-                        { 
-                            rndt[ k ] = rndt[ k ] + 1; 
-                            if ( rng.NextDouble() <= ( Convert.ToInt64( y[ k ] ) / (double)Convert.ToInt64( t[ k ] ) ) )
-                            { 
-                                rndy[ k ] = rndy[ k ] + 1; 
-                            } 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                } 
-                for ( j=1; j <= N; j++ ) 
-                { 
-                    if ( rndy[ j ] == 0.0 )
-                    { 
-                        rndy[ j ] = Constant.EPSNEG; 
-                    } 
-                    if ( rndy[ j ] == rndt[ j ] )
-                    { 
-                        rndy[ j ] = rndy[ j ] - Constant.EPSNEG; 
-                    } 
-                    if ( rndt[ j ] == 0.0 ) 
-                    { 
-                        rndwt[ j ] = 0.0; 
-                    } 
-                    else 
-                    { 
-                        rndwt[ j ] = wt[ j ]; 
-                    } 
+                    for (k = 1; k <= N; k++)
+                    {
+                        pivot += Convert.ToInt32(t[k]);
+                        if (pick <= pivot)
+                        {
+                            rndt[k] = rndt[k] + 1;
+                            if (rng.NextDouble() <= (Convert.ToInt64(y[k]) / (double)Convert.ToInt64(t[k])))
+                            {
+                                rndy[k] = rndy[k] + 1;
+                            }
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                }
+                for (j = 1; j <= N; j++)
+                {
+                    if (rndy[j] == 0.0)
+                    {
+                        rndy[j] = Constant.EPSNEG;
+                    }
+                    if (rndy[j] == rndt[j])
+                    {
+                        rndy[j] = rndy[j] - Constant.EPSNEG;
+                    }
+                    if (rndt[j] == 0.0)
+                    {
+                        rndwt[j] = 0.0;
+                    }
+                    else
+                    {
+                        rndwt[j] = wt[j];
+                    }
                 }
                 b = new double[ip + 1 /* for VB to C# conversion */];
                 se = new double[N + 1 /* for VB to C# conversion */];
@@ -4744,90 +4755,90 @@ namespace StatsDirect.Builtins
                 var = new double[N + 1 /* for VB to C# conversion */];
                 dr = new double[N + 1 /* for VB to C# conversion */];
                 h = new double[N + 1 /* for VB to C# conversion */];
-                offst = new double[N + 1 /* for VB to C# conversion */ ]; 
+                offst = new double[N + 1 /* for VB to C# conversion */ ];
                 msg = "";
                 bool iweight = true;
-                Regress1.X_LOGIREG( mean, false, ref iweight, N, x, M, isx, ip, rndy, rndt, rndwt, ref dev, ref idf, b, ref irank, se, cov, tol, 50, fvl, var, dr, h, offst, out fault, ref msg ); 
-                if ( fault == 0 ) 
-                { 
-                    booted = booted + 1; 
-                    for ( j=1; j <= ip; j++ ) 
-                    { 
-                        qo[ j, booted ] = Formatting.SafeExp( b[ j ] ); 
-                        if ( qo[ j, booted ] < 1000.0 * ob[ j ] )
-                        { 
-                            theta[ j ] = theta[ j ] + qo[ j, booted ]; 
-                        } 
-                    } 
-                } 
-            } 
-            host.FinishProgress(); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( fault != 0 ) 
-            { 
-                host.Error( "Bootstrap aborted", "Logistic regression" ); 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            
-            for ( j=1; j <= ip; j++ ) 
-            { 
-                theta[ j ] = theta[ j ] / Convert.ToDouble( booted ); 
-            } 
-            for ( j=1; j <= ip; j++ ) 
+                Regress1.X_LOGIREG(mean, false, ref iweight, N, x, M, isx, ip, rndy, rndt, rndwt, ref dev, ref idf, b, ref irank, se, cov, tol, 50, fvl, var, dr, h, offst, out fault, ref msg);
+                if (fault == 0)
+                {
+                    booted = booted + 1;
+                    for (j = 1; j <= ip; j++)
+                    {
+                        qo[j, booted] = Formatting.SafeExp(b[j]);
+                        if (qo[j, booted] < 1000.0 * ob[j])
+                        {
+                            theta[j] = theta[j] + qo[j, booted];
+                        }
+                    }
+                }
+            }
+            host.FinishProgress();
+            ParameterBag outputParameters = new ParameterBag();
+            if (fault != 0)
             {
-                double[] qq = new double[booted + 1 /* for VB to C# conversion */ ]; 
-                int ctr = 0; 
-                for ( i=1; i <= booted; i++ ) 
-                { 
-                    qq[ i ] = qo[ j, i ]; 
-                    if ( qq[ i ] <= ob[ j ] )
-                    { 
-                        ctr = ctr + 1; 
-                    } 
-                } 
-                Array.Sort( qq, 1, booted ); 
+                host.Error("Bootstrap aborted", "Logistic regression");
+                throw new TemplateOperationCancelledException();
+            }
+
+            for (j = 1; j <= ip; j++)
+            {
+                theta[j] = theta[j] / Convert.ToDouble(booted);
+            }
+            for (j = 1; j <= ip; j++)
+            {
+                double[] qq = new double[booted + 1 /* for VB to C# conversion */ ];
+                int ctr = 0;
+                for (i = 1; i <= booted; i++)
+                {
+                    qq[i] = qo[j, i];
+                    if (qq[i] <= ob[j])
+                    {
+                        ctr = ctr + 1;
+                    }
+                }
+                Array.Sort(qq, 1, booted);
                 double z0 = ctr / (double)booted;
                 int ifault;
-                z0 = PDF.gauinv( z0, out ifault ); 
-                double P1 = PDF.alnorm( 2.0 * z0 - cit ); 
-                double P2 = PDF.alnorm( 2.0 * z0 + cit ); 
-                ql[ j ] = qq[ Convert.ToInt32( Convert.ToDouble( booted - 1 ) * P1 ) + 1 ]; 
-                qu[ j ] = qq[ Convert.ToInt32( Convert.ToDouble( booted - 1 ) * P2 ) + 1 ]; 
-            } 
+                z0 = PDF.gauinv(z0, out ifault);
+                double P1 = PDF.alnorm(2.0 * z0 - cit);
+                double P2 = PDF.alnorm(2.0 * z0 + cit);
+                ql[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * P1) + 1];
+                qu[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * P2) + 1];
+            }
             // RTF_LoadTemplate("lr_bootstrap.rtf")
-            if ( boots == booted ) 
-            { 
-                outputParameters.AddOutput( "boots",  booted.ToString() ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "boots",  booted.ToString() + ", warning: " +  (boots - booted).ToString() + " re-samples were dropped because they caused error in the regression" ); 
-            } 
-            outputParameters.AddOutput( "pc", Formatting.XRound( 100 * ( 1.0 - P0 ), 2 ) ); 
-            if ( mean )
-            { 
-                iq = 1; 
-            } 
-            List<ParameterBag> parametersList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*parameters", parametersList ); 
-            for ( i=1; i <= ip; i++ ) 
-            { 
-                ParameterBag parametersParameters = new ParameterBag(); 
-                parametersList.Add( parametersParameters );
+            if (boots == booted)
+            {
+                outputParameters.AddOutput("boots", booted.ToString());
+            }
+            else
+            {
+                outputParameters.AddOutput("boots", booted.ToString() + ", warning: " + (boots - booted).ToString() + " re-samples were dropped because they caused error in the regression");
+            }
+            outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
+            if (mean)
+            {
+                iq = 1;
+            }
+            List<ParameterBag> parametersList = new List<ParameterBag>();
+            outputParameters.AddOutput("*parameters", parametersList);
+            for (i = 1; i <= ip; i++)
+            {
+                ParameterBag parametersParameters = new ParameterBag();
+                parametersList.Add(parametersParameters);
                 string Q = i == 1 && mean ? "Constant" : Label[i - iq];
-                parametersParameters.AddOutput( "par", Q ); 
-                parametersParameters.AddOutput( "obs", host.RoundU( ob[ i ] ) ); 
-                if ( i > 1 | mean == false ) 
-                { 
-                    parametersParameters.AddOutput( "bias", host.RoundU( theta[ i ] - ob[ i ] ) ); 
-                    parametersParameters.AddOutput( "ci", host.RoundU( ql[ i ] ) + "  to  " + host.RoundU( qu[ i ] ) ); 
-                } 
-                else 
-                { 
-                    parametersParameters.AddOutput( "bias", "" ); 
-                    parametersParameters.AddOutput( "ci", "" ); 
-                } 
-            } 
+                parametersParameters.AddOutput("par", Q);
+                parametersParameters.AddOutput("obs", host.RoundU(ob[i]));
+                if (i > 1 | mean == false)
+                {
+                    parametersParameters.AddOutput("bias", host.RoundU(theta[i] - ob[i]));
+                    parametersParameters.AddOutput("ci", host.RoundU(ql[i]) + "  to  " + host.RoundU(qu[i]));
+                }
+                else
+                {
+                    parametersParameters.AddOutput("bias", "");
+                    parametersParameters.AddOutput("ci", "");
+                }
+            }
             //  recalculate full model
             b = new double[ip + 1 /* for VB to C# conversion */];
             se = new double[N + 1 /* for VB to C# conversion */];
@@ -4836,510 +4847,510 @@ namespace StatsDirect.Builtins
             var = new double[N + 1 /* for VB to C# conversion */ ];
             dr = new double[N + 1 /* for VB to C# conversion */ ];
             h = new double[N + 1 /* for VB to C# conversion */];
-            offst = new double[N + 1 /* for VB to C# conversion */ ]; 
-            msg = ""; 
-            Regress1.X_LOGIREG( mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, 50, fvl, var, dr, h, offst, out fault, ref msg ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptLogisticRegressionPrediction( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] b = context.B; 
-            int P = context.P; 
-            string[] Label = context.Label; 
-            double[] cov = context.COV; 
-            bool DoC = context.DoC; 
-            
+            offst = new double[N + 1 /* for VB to C# conversion */ ];
+            msg = "";
+            Regress1.X_LOGIREG(mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, 50, fvl, var, dr, h, offst, out fault, ref msg);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptLogisticRegressionPrediction(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] b = context.B;
+            int P = context.P;
+            string[] Label = context.Label;
+            double[] cov = context.COV;
+            bool DoC = context.DoC;
+
             int iq; int i; int j;
             double P0; double cit;
             double lcl; double ucl;
 
 
             ParameterBag outputParameters = new ParameterBag();
-            double[] newx = new double[P + 1 /* for VB to C# conversion */ ]; 
-            bool lsqmean = true; 
-            if ( DoC ) 
-            { 
-                iq = 1; 
-                newx[ 1 ] = 1.0; 
-            } 
-            else 
-            { 
-                iq = 0; 
-            } 
-            DataFrame candidatePredictors = parameters[ "candidatePredictors" ].AsDataFrame; 
+            double[] newx = new double[P + 1 /* for VB to C# conversion */ ];
+            bool lsqmean = true;
+            if (DoC)
+            {
+                iq = 1;
+                newx[1] = 1.0;
+            }
+            else
+            {
+                iq = 0;
+            }
+            DataFrame candidatePredictors = parameters["candidatePredictors"].AsDataFrame;
             //  Predictors are guaranteed to be in the same order as the labels
-            StringVariable valueVariable = candidatePredictors.get_Variable( 1 ).AsStringVariable; 
-            DoubleVariable oldValueVariable = candidatePredictors.get_Variable( 2 ).AsDoubleVariable; 
-            for ( i=1; i <= P - iq; i++ ) 
-            { 
-                newx[ i + 1 ] = Parsing.Cdbl_Txt( valueVariable.Data[ i - 1 ] ); 
-                if ( newx[ i + 1 ] != oldValueVariable.Data[i - 1] )
-                { 
-                    lsqmean = false; 
-                } 
-            } 
-            double newy = 0.0; 
-            for ( i=1; i <= P; i++ ) 
-            { 
-                newy = newy + ( newx[ i ] * b[ i ] ); 
-            } 
-            double GAMMA = parameters[ "gamma" ].AsDouble; 
-            MathDbl.civ( 0, out cit, GAMMA, out P0 ); 
-            List<ParameterBag> predictorsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*predictors", predictorsList ); 
-            for ( i=1; i <= P - iq; i++ ) 
-            { 
-                ParameterBag predictorsParameters = new ParameterBag(); 
-                predictorsList.Add( predictorsParameters ); 
-                predictorsParameters.AddOutput( "x", Label[ i ] + " = " + host.RoundU( newx[ i + iq ] ) ); 
-            } 
-            string msg = lsqmean ? "  (regression mean)" : ""; 
+            StringVariable valueVariable = candidatePredictors.get_Variable(1).AsStringVariable;
+            DoubleVariable oldValueVariable = candidatePredictors.get_Variable(2).AsDoubleVariable;
+            for (i = 1; i <= P - iq; i++)
+            {
+                newx[i + 1] = Parsing.Cdbl_Txt(valueVariable.Data[i - 1]);
+                if (newx[i + 1] != oldValueVariable.Data[i - 1])
+                {
+                    lsqmean = false;
+                }
+            }
+            double newy = 0.0;
+            for (i = 1; i <= P; i++)
+            {
+                newy = newy + (newx[i] * b[i]);
+            }
+            double GAMMA = parameters["gamma"].AsDouble;
+            MathDbl.civ(0, out cit, GAMMA, out P0);
+            List<ParameterBag> predictorsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*predictors", predictorsList);
+            for (i = 1; i <= P - iq; i++)
+            {
+                ParameterBag predictorsParameters = new ParameterBag();
+                predictorsList.Add(predictorsParameters);
+                predictorsParameters.AddOutput("x", Label[i] + " = " + host.RoundU(newx[i + iq]));
+            }
+            string msg = lsqmean ? "  (regression mean)" : "";
             //  sd of Y from covariance matrix as sqr(xVx')
-            double sey = 0.0; 
-            for ( j=1; j <= P; j++ ) 
-            { 
-                double s = 0.0; 
-                for ( i=1; i <= P; i++ ) 
-                { 
+            double sey = 0.0;
+            for (j = 1; j <= P; j++)
+            {
+                double s = 0.0;
+                for (i = 1; i <= P; i++)
+                {
                     // unpack the upper triangular packed form of the covariance matrix
                     int ii;
                     int jj;
-                    if ( j >= i ) 
-                    { 
-                        jj = j; 
-                        ii = i; 
-                    } 
-                    else 
-                    { 
-                        jj = i; 
-                        ii = j; 
-                    } 
-                    s = s + cov[ ( ( int )( Math.Floor((double) jj * ( jj - 1 ) / 2 + ii) ) ) ] * newx[ i ]; 
-                } 
-                sey = sey + s * newx[ j ]; 
-            } 
-            if ( sey >= 0.0 ) 
-            { 
-                sey = Math.Sqrt( sey ); 
+                    if (j >= i)
+                    {
+                        jj = j;
+                        ii = i;
+                    }
+                    else
+                    {
+                        jj = i;
+                        ii = j;
+                    }
+                    s = s + cov[((int)(Math.Floor((double)jj * (jj - 1) / 2 + ii)))] * newx[i];
+                }
+                sey = sey + s * newx[j];
+            }
+            if (sey >= 0.0)
+            {
+                sey = Math.Sqrt(sey);
                 double cl = cit * sey;
-                lcl = newy - cl; 
-                ucl = newy + cl; 
+                lcl = newy - cl;
+                ucl = newy + cl;
                 //  transform to outcome probability scale
-                newy = pfromlogit( newy ); 
-                lcl = pfromlogit( lcl ); 
-                ucl = pfromlogit( ucl ); 
-            } 
-            else 
-            { 
-                newy = pfromlogit( newy ); 
-                lcl = Constant.MISSING; 
-                ucl = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "y", "Response proportion = " + host.RoundU( newy ) + msg ); 
-            outputParameters.AddOutput( "pc", ( Formatting.XRound( 100 * ( 1.0 - P0 ), 1 ) ) ); 
-            outputParameters.AddOutput( "from", host.RoundU( lcl ) ); 
-            outputParameters.AddOutput( "to", host.RoundU( ucl ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static void x_lrci( double fp, double tp, double column2total, double column1total, double zc, out double thetal, out double thetau ) 
+                newy = pfromlogit(newy);
+                lcl = pfromlogit(lcl);
+                ucl = pfromlogit(ucl);
+            }
+            else
+            {
+                newy = pfromlogit(newy);
+                lcl = Constant.MISSING;
+                ucl = Constant.MISSING;
+            }
+            outputParameters.AddOutput("y", "Response proportion = " + host.RoundU(newy) + msg);
+            outputParameters.AddOutput("pc", (Formatting.XRound(100 * (1.0 - P0), 1)));
+            outputParameters.AddOutput("from", host.RoundU(lcl));
+            outputParameters.AddOutput("to", host.RoundU(ucl));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static void x_lrci(double fp, double tp, double column2total, double column1total, double zc, out double thetal, out double thetau)
         {
             double lastz = 0;
 
-            double x0 = fp; 
-            double x1 = tp; 
-            double n0 = column2total; 
-            if ( n0 == x0 )
-            { 
-                n0 = n0 + 0.5; 
-            } 
-            double n1 = column1total; 
-            if ( n1 == x1 )
-            { 
-                n1 = n1 + 0.5; 
+            double x0 = fp;
+            double x1 = tp;
+            double n0 = column2total;
+            if (n0 == x0)
+            {
+                n0 = n0 + 0.5;
             }
-            double uhat = ( 1.0 / ( x1 + 0.5 ) ) + ( 1.0 / ( x0 + 0.5 ) ) - ( 1.0 / ( n0 + 0.5 ) ) - ( 1.0 / ( n1 + 0.5 ) ); 
+            double n1 = column1total;
+            if (n1 == x1)
+            {
+                n1 = n1 + 0.5;
+            }
+            double uhat = (1.0 / (x1 + 0.5)) + (1.0 / (x0 + 0.5)) - (1.0 / (n0 + 0.5)) - (1.0 / (n1 + 0.5));
             double N = n0 + n1;
-            double logthetahat = Math.Log( ( x1 + 0.5 ) / ( n1 + 0.5 ) ) - Math.Log( ( x0 + 0.5 ) / ( n0 + 0.5 ) ); 
-            thetau = Math.Exp( logthetahat ) * Math.Exp( zc * Math.Sqrt( uhat ) ); 
-            thetal = Math.Exp( logthetahat ) * Math.Exp( -zc * Math.Sqrt( uhat ) ); 
-            for (int i=1; i <= 2; i++ ) 
-            { 
+            double logthetahat = Math.Log((x1 + 0.5) / (n1 + 0.5)) - Math.Log((x0 + 0.5) / (n0 + 0.5));
+            thetau = Math.Exp(logthetahat) * Math.Exp(zc * Math.Sqrt(uhat));
+            thetal = Math.Exp(logthetahat) * Math.Exp(-zc * Math.Sqrt(uhat));
+            for (int i = 1; i <= 2; i++)
+            {
                 double za2 = zc;
-                double temptheta1 = i == 1 ? thetau : thetal; 
+                double temptheta1 = i == 1 ? thetau : thetal;
                 double temptheta2 = 0.9 * temptheta1;
                 double a;
                 double b;
                 double c;
-                double ztemp1 = x_lrz(temptheta1, out a, out b, out c, N, n0, n1, x0, x1); 
-                double diff1 = Math.Abs( za2 - Math.Abs( ztemp1 ) );
-                double ztemp2 = x_lrz(temptheta2, out a, out b, out c, N, n0, n1, x0, x1); 
-                double diff2 = Math.Abs( za2 - Math.Abs( ztemp2 ) );
+                double ztemp1 = x_lrz(temptheta1, out a, out b, out c, N, n0, n1, x0, x1);
+                double diff1 = Math.Abs(za2 - Math.Abs(ztemp1));
+                double ztemp2 = x_lrz(temptheta2, out a, out b, out c, N, n0, n1, x0, x1);
+                double diff2 = Math.Abs(za2 - Math.Abs(ztemp2));
                 double theta1;
                 double theta0;
                 double z1;
                 double z0;
                 double zcritical;
-                x_lrdiff( diff1, diff2, out theta1, out theta0, temptheta1, temptheta2, out z1, out z0, ztemp1, ztemp2, out zcritical ); 
+                x_lrdiff(diff1, diff2, out theta1, out theta0, temptheta1, temptheta2, out z1, out z0, ztemp1, ztemp2, out zcritical);
                 int cnt = 0;
                 double theta2;
-                do 
-                { 
-                    if ( i == 1 )
-                    { 
-                        za2 = -zc; 
-                    } 
-                    theta2 = Math.Exp( Math.Log( theta0 ) + ( ( za2 - z0 ) / ( z1 - z0 ) ) * Math.Log( theta1 / theta0 ) ); 
-                    temptheta1 = theta1; 
+                do
+                {
+                    if (i == 1)
+                    {
+                        za2 = -zc;
+                    }
+                    theta2 = Math.Exp(Math.Log(theta0) + ((za2 - z0) / (z1 - z0)) * Math.Log(theta1 / theta0));
+                    temptheta1 = theta1;
                     temptheta2 = theta2;
-                    ztemp2 = x_lrz(temptheta2, out a, out b, out c, N, n0, n1, x0, x1); 
-                    ztemp1 = z1; 
-                    diff1 = Math.Abs( za2 - ztemp1 ); 
-                    diff2 = Math.Abs( za2 - ztemp2 );
-                    x_lrdiff(diff1, diff2, out theta1, out theta0, temptheta1, temptheta2, out z1, out z0, ztemp1, ztemp2, out zcritical); 
-                    cnt = cnt + 1; 
-                    if ( cnt > 5000 )
-                    { 
+                    ztemp2 = x_lrz(temptheta2, out a, out b, out c, N, n0, n1, x0, x1);
+                    ztemp1 = z1;
+                    diff1 = Math.Abs(za2 - ztemp1);
+                    diff2 = Math.Abs(za2 - ztemp2);
+                    x_lrdiff(diff1, diff2, out theta1, out theta0, temptheta1, temptheta2, out z1, out z0, ztemp1, ztemp2, out zcritical);
+                    cnt = cnt + 1;
+                    if (cnt > 5000)
+                    {
                         break;
-                    } 
-                    if ( zcritical == lastz && zcritical < 0.001 )
-                    { 
+                    }
+                    if (zcritical == lastz && zcritical < 0.001)
+                    {
                         break;
-                    } 
-                    lastz = zcritical; 
-                } 
-                while (  ! ( zcritical < 0.00000001 ) ); 
-                if ( i == 1 )
-                { 
-                    thetau = theta2; 
-                } else { thetal = theta2; } 
-            } 
-        } 
-        
-        
-        private static double x_lrptilde( double theta, double a, double b, double C ) 
-        { 
-            double pest1 = ( -b + Math.Sqrt( b * b - 4.0 * a * C ) ) / 2.0 / a; 
-            double pest2 = ( -b - Math.Sqrt( b * b - 4.0 * a * C ) ) / 2.0 / a; 
-            if ( pest1 > 1.0 || pest1 < 0.0 ) 
-                return pest2; 
-            if ( pest2 > 1.0 || pest2 < 0.0 ) 
-                return pest1; 
-            if ( ( pest1 * theta ) > 1.0 || ( pest1 * theta ) < 0.0 ) 
-                return pest2; 
-            return pest1;
-        } 
-        
-        
-        private static double x_lrz( double thetahat, out double a, out double b, out double c, double N, double n0, double n1, double x0, double x1 ) 
-        { 
-            
-            a = N * thetahat; 
-            b = -( ( x0 + n1 ) * thetahat + x1 + n0 ); 
-            c = x0 + x1; 
-            double p0tilde = x_lrptilde( thetahat, a, b, c ); 
-            double p1tilde = p0tilde * thetahat; 
-            double q0tilde = 1.0 - p0tilde; 
-            double q1tilde = 1.0 - p1tilde; 
-            double utilde = ( q0tilde / ( n0 * p0tilde ) ) + ( q1tilde / ( n1 * p1tilde ) ); 
-            double vtilde = 1.0 / utilde; 
-            return ( ( ( x1 ) - ( n1 * p1tilde ) ) / q1tilde ) / Math.Sqrt( vtilde ); 
-        } 
-        
-        
-        private static double pfromlogit( double x ) 
+                    }
+                    lastz = zcritical;
+                }
+                while (!(zcritical < 0.00000001));
+                if (i == 1)
+                {
+                    thetau = theta2;
+                }
+                else { thetal = theta2; }
+            }
+        }
+
+
+        private static double x_lrptilde(double theta, double a, double b, double C)
         {
-            double y = Formatting.SafeExp( -x );
-            y = y != Constant.MISSING && y != 1.0 ? 1.0/(1.0 + y) : Constant.MISSING;
-            return y; 
-        } 
-        
-        
-        private static void x_lclass(double[] t, double[] fvl, double[] y, int N, out int tp, out int fp, out int fn, out int tn, double co ) 
-        { 
+            double pest1 = (-b + Math.Sqrt(b * b - 4.0 * a * C)) / 2.0 / a;
+            double pest2 = (-b - Math.Sqrt(b * b - 4.0 * a * C)) / 2.0 / a;
+            if (pest1 > 1.0 || pest1 < 0.0)
+                return pest2;
+            if (pest2 > 1.0 || pest2 < 0.0)
+                return pest1;
+            if ((pest1 * theta) > 1.0 || (pest1 * theta) < 0.0)
+                return pest2;
+            return pest1;
+        }
+
+
+        private static double x_lrz(double thetahat, out double a, out double b, out double c, double N, double n0, double n1, double x0, double x1)
+        {
+
+            a = N * thetahat;
+            b = -((x0 + n1) * thetahat + x1 + n0);
+            c = x0 + x1;
+            double p0tilde = x_lrptilde(thetahat, a, b, c);
+            double p1tilde = p0tilde * thetahat;
+            double q0tilde = 1.0 - p0tilde;
+            double q1tilde = 1.0 - p1tilde;
+            double utilde = (q0tilde / (n0 * p0tilde)) + (q1tilde / (n1 * p1tilde));
+            double vtilde = 1.0 / utilde;
+            return (((x1) - (n1 * p1tilde)) / q1tilde) / Math.Sqrt(vtilde);
+        }
+
+
+        private static double pfromlogit(double x)
+        {
+            double y = Formatting.SafeExp(-x);
+            y = y != Constant.MISSING && y != 1.0 ? 1.0 / (1.0 + y) : Constant.MISSING;
+            return y;
+        }
+
+
+        private static void x_lclass(double[] t, double[] fvl, double[] y, int N, out int tp, out int fp, out int fn, out int tn, double co)
+        {
             // updated 15 Aug 2001
-            tp = 0; 
-            fn = 0; 
-            fp = 0; 
-            tn = 0; 
+            tp = 0;
+            fn = 0;
+            fp = 0;
+            tn = 0;
             //  a=true positives TP, b=false positives FP, c=false negatives FN, d=true negatives TN
             //  sens = a/(a+c), spec = d/(b+d)
-            for (int j=1; j <= N; j++ ) 
-            { 
-                double P = fvl[ j ] / t[ j ]; 
-                int obsTot = Convert.ToInt32( t[ j ] ); 
-                int obsPos = Convert.ToInt32( y[ j ] ); 
-                int obsNeg = obsTot - obsPos; 
-                if ( P >= co ) 
-                { 
-                    tp = tp + obsPos; 
-                    fp = fp + obsNeg; 
-                } 
-                else 
-                { 
-                    tn = tn + obsNeg; 
-                    fn = fn + obsPos; 
-                } 
-            } 
-        } 
-        
-        
-        private static void x_lrdiff( double diff1, double diff2, out double theta1, out double theta0, double temptheta1, double temptheta2, out double z1, out double z0, double ztemp1, double ztemp2, out double zcritical ) 
-        { 
-            if ( diff1 < diff2 ) 
-            { 
-                theta1 = temptheta1; 
-                theta0 = temptheta2; 
-                z1 = ztemp1; 
-                z0 = ztemp2; 
-                zcritical = diff1; 
-            } 
-            else 
-            { 
-                theta0 = temptheta1; 
-                theta1 = temptheta2; 
-                z0 = ztemp1; 
-                z1 = ztemp2; 
-                zcritical = diff2; 
-            } 
-        } 
-        
-        
-        private static DataFrame x_prep_interlr( MultipleLinearRegressionContext context ) 
-        {
-            int iq = context.DoC ? 1 : 0; 
-            
-            DataFrame frame = new DataFrame();
-            StringVariable keyVariable = new StringVariable {Title = "Name"};
-            frame.Variables.Add( keyVariable );
-            StringVariable valueVariable = new StringVariable {Title = "Value"};
-            frame.Variables.Add( valueVariable );
-            DoubleVariable oldValueVariable = new DoubleVariable {Title = "Old value"};
-            frame.Variables.Add( oldValueVariable ); 
-            
-            for (int j=1; j <= context.P - iq; j++ ) 
-            { 
-                double mu = 0.0; 
-                double a = context.X[ 1, j ]; 
-                double b = Constant.MISSING; 
-                bool bin = true;
-                for (int i=1; i <= context.N; i++ )
+            for (int j = 1; j <= N; j++)
+            {
+                double P = fvl[j] / t[j];
+                int obsTot = Convert.ToInt32(t[j]);
+                int obsPos = Convert.ToInt32(y[j]);
+                int obsNeg = obsTot - obsPos;
+                if (P >= co)
                 {
-                    double z = context.X[ i, j ];
-                    if ( z != Constant.MISSING ) 
-                    { 
-                        mu = mu + z; 
-                        if ( z != a ) 
-                        { 
-                            if ( z != b ) 
-                            { 
-                                if ( b == Constant.MISSING ) 
-                                { 
-                                    b = z; 
-                                } 
-                                else 
-                                { 
-                                    bin = false; 
-                                } 
-                            } 
-                        } 
-                    }
+                    tp = tp + obsPos;
+                    fp = fp + obsNeg;
                 }
-                if ( bin ) 
-                { 
-                    string t = context.Label[ j ]; 
-                    int px = t.IndexOf("(", StringComparison.Ordinal) + 1; 
-                    if ( px == 0 ) 
-                    { 
-                        mu = 0.5; 
-                    } 
-                    else 
-                    { 
-                        //  Deal with multiple predictors with the same name - stored as name(...
-                        int k = 1; 
-                        t = t.Substring( 0, px - 1); 
-                        for (int i=1; i <= context.Label.Length - 1; i++ )
+                else
+                {
+                    tn = tn + obsNeg;
+                    fn = fn + obsPos;
+                }
+            }
+        }
+
+
+        private static void x_lrdiff(double diff1, double diff2, out double theta1, out double theta0, double temptheta1, double temptheta2, out double z1, out double z0, double ztemp1, double ztemp2, out double zcritical)
+        {
+            if (diff1 < diff2)
+            {
+                theta1 = temptheta1;
+                theta0 = temptheta2;
+                z1 = ztemp1;
+                z0 = ztemp2;
+                zcritical = diff1;
+            }
+            else
+            {
+                theta0 = temptheta1;
+                theta1 = temptheta2;
+                z0 = ztemp1;
+                z1 = ztemp2;
+                zcritical = diff2;
+            }
+        }
+
+
+        private static DataFrame x_prep_interlr(MultipleLinearRegressionContext context)
+        {
+            int iq = context.DoC ? 1 : 0;
+
+            DataFrame frame = new DataFrame();
+            StringVariable keyVariable = new StringVariable { Title = "Name" };
+            frame.Variables.Add(keyVariable);
+            StringVariable valueVariable = new StringVariable { Title = "Value" };
+            frame.Variables.Add(valueVariable);
+            DoubleVariable oldValueVariable = new DoubleVariable { Title = "Old value" };
+            frame.Variables.Add(oldValueVariable);
+
+            for (int j = 1; j <= context.P - iq; j++)
+            {
+                double mu = 0.0;
+                double a = context.X[1, j];
+                double b = Constant.MISSING;
+                bool bin = true;
+                for (int i = 1; i <= context.N; i++)
+                {
+                    double z = context.X[i, j];
+                    if (z != Constant.MISSING)
+                    {
+                        mu = mu + z;
+                        if (z != a)
                         {
-                            string t2 = context.Label[ i ];
-                            if (t2.IndexOf(t, StringComparison.Ordinal) + 1 != 0 )
-                            { 
-                                k = k + 1; 
+                            if (z != b)
+                            {
+                                if (b == Constant.MISSING)
+                                {
+                                    b = z;
+                                }
+                                else
+                                {
+                                    bin = false;
+                                }
                             }
                         }
-                        mu = 1.0 / Convert.ToDouble( k ); 
-                    } 
-                } 
-                else 
-                { 
-                    mu = mu / Convert.ToDouble( context.N ); 
-                } 
-                keyVariable.set_Data( j - 1, context.Label[ j ] ); 
-                valueVariable.set_Data( j - 1,  mu.ToString() ); 
-                oldValueVariable.set_Data( j - 1, Parsing.Cdbl_Txt(  mu.ToString() ) ); 
-            } 
-            return frame; 
-        } 
-        
-        public static StepResult RptPoissonRegression( ITemplateHost host, ParameterBag parameters ) 
+                    }
+                }
+                if (bin)
+                {
+                    string t = context.Label[j];
+                    int px = t.IndexOf("(", StringComparison.Ordinal) + 1;
+                    if (px == 0)
+                    {
+                        mu = 0.5;
+                    }
+                    else
+                    {
+                        //  Deal with multiple predictors with the same name - stored as name(...
+                        int k = 1;
+                        t = t.Substring(0, px - 1);
+                        for (int i = 1; i < context.Label.Length; i++)
+                        {
+                            if (null != context.Label[i] && context.Label[i].Contains(t))
+                            {
+                                k++;
+                            }
+                        }
+                        mu = 1.0 / Convert.ToDouble(k);
+                    }
+                }
+                else
+                {
+                    mu = mu / Convert.ToDouble(context.N);
+                }
+                keyVariable.set_Data(j - 1, context.Label[j]);
+                valueVariable.set_Data(j - 1, mu.ToString());
+                oldValueVariable.set_Data(j - 1, Parsing.Cdbl_Txt(mu.ToString()));
+            }
+            return frame;
+        }
+
+        public static StepResult RptPoissonRegression(ITemplateHost host, ParameterBag parameters)
         {
             int C; int i; int j;
 
             //  Dim PASSX(4, 1) As Double ' (1, 1) = calc intercept (1 = yes); (2, 1) = accuracy; (3, 1) = weights (1 = yes); (4, 1) = ptime (1 = yes)
-            double tol = Parsing.Cdbl_Txt( parameters[ "accuracy" ].AsString ); 
-            if ( tol > 0.01 )
-            { 
-                tol = 0.01; 
-            } 
-            bool ptime = "true".Equals( parameters[ "has-exposure" ].AsString ); 
-            bool weighted = parameters[ "weights" ].AsBoolean; 
-            bool intercept = parameters[ "intercept" ].AsBoolean; 
-            
-            DataFrame responseFrame = parameters[ "response" ].AsDataFrame; 
-            DoubleVariable responseVariable = responseFrame.Variables[ 0 ].AsDoubleVariable; 
+            double tol = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
+            if (tol > 0.01)
+            {
+                tol = 0.01;
+            }
+            bool ptime = "true".Equals(parameters["has-exposure"].AsString);
+            bool weighted = parameters["weights"].AsBoolean;
+            bool intercept = parameters["intercept"].AsBoolean;
+
+            DataFrame responseFrame = parameters["response"].AsDataFrame;
+            DoubleVariable responseVariable = responseFrame.Variables[0].AsDoubleVariable;
             int rows = responseVariable.Length;
             double[] y = new double[rows + 1 /* for VB to C# conversion */];
             double[] t = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] wt = new double[rows + 1 /* for VB to C# conversion */ ]; 
-            for ( C=1; C <= rows; C++ ) 
-            { 
-                y[ C ] = responseVariable.Data[C - 1]; 
-            } 
-            
-            if ( ptime ) 
-            { 
-                DataFrame exposureFrame = parameters[ "exposure" ].AsDataFrame; 
-                DoubleVariable exposureVariable = exposureFrame.Variables[ 0 ].AsDoubleVariable; 
-                for ( C=1; C <= rows; C++ ) 
-                { 
-                    t[ C ] = exposureVariable.Data[C - 1]; 
-                } 
-            } 
-            
-            if ( weighted ) 
-            { 
-                DataFrame weightFrame = parameters[ "weight" ].AsDataFrame; 
-                DoubleVariable weightVariable = weightFrame.Variables[ 0 ].AsDoubleVariable; 
-                for ( C=1; C <= rows; C++ ) 
-                { 
-                    wt[ C ] = weightVariable.Data[C - 1]; 
-                } 
-            } 
-            
-            DataFrame predictorsFrame = parameters[ "predictors" ].AsDataFrame; 
+            double[] wt = new double[rows + 1 /* for VB to C# conversion */ ];
+            for (C = 1; C <= rows; C++)
+            {
+                y[C] = responseVariable.Data[C - 1];
+            }
+
+            if (ptime)
+            {
+                DataFrame exposureFrame = parameters["exposure"].AsDataFrame;
+                DoubleVariable exposureVariable = exposureFrame.Variables[0].AsDoubleVariable;
+                for (C = 1; C <= rows; C++)
+                {
+                    t[C] = exposureVariable.Data[C - 1];
+                }
+            }
+
+            if (weighted)
+            {
+                DataFrame weightFrame = parameters["weight"].AsDataFrame;
+                DoubleVariable weightVariable = weightFrame.Variables[0].AsDoubleVariable;
+                for (C = 1; C <= rows; C++)
+                {
+                    wt[C] = weightVariable.Data[C - 1];
+                }
+            }
+
+            DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
             // Store the predictors
             int prd = predictorsFrame.VariableCount;
             double[,] x = new double[rows + 1 /* for VB to C# conversion */, prd + 1 /* for VB to C# conversion */];
-            for ( C=1; C <= prd; C++ ) 
-            { 
-                DoubleVariable v = predictorsFrame.Variables[ C - 1 ].AsDoubleVariable;
-                int r;
-                for ( r=1; r <= rows; r++ ) 
-                { 
-                    x[ r, C ] = v.Data[r - 1]; 
-                    if ( x[ r, C ] == Constant.MISSING )
-                    { 
-                        wt[ r ] = Constant.MISSING; 
-                    } 
-                } 
-            } 
-            
-            // is n<p
-            if ( prd + 1 >= rows ) 
-            { 
-                host.Error( "You must have more observations than parameters", "Poisson regression" ); 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            //  Copy down the remaining observations
-            int targetRow = 1; 
-            for ( int sourceRow=1; sourceRow <= rows; sourceRow++ ) 
+            for (C = 1; C <= prd; C++)
             {
-                bool OK = y[ sourceRow ] != Constant.MISSING;
-                if ( t[ sourceRow ] == Constant.MISSING )
-                { 
-                    OK = false; 
-                } 
-                if ( weighted && wt[ sourceRow ] == Constant.MISSING )
-                { 
-                    OK = false; 
-                } 
-                if ( ptime && t[ sourceRow ] <= 0.0 )
-                { 
-                    OK = false; 
-                } 
-                for ( int pred=1; pred <= prd; pred++ ) 
-                { 
-                    if ( x[ sourceRow, pred ] == Constant.MISSING )
-                    { 
-                        OK = false; 
-                    } 
-                } 
-                if ( OK ) 
-                { 
+                DoubleVariable v = predictorsFrame.Variables[C - 1].AsDoubleVariable;
+                int r;
+                for (r = 1; r <= rows; r++)
+                {
+                    x[r, C] = v.Data[r - 1];
+                    if (x[r, C] == Constant.MISSING)
+                    {
+                        wt[r] = Constant.MISSING;
+                    }
+                }
+            }
+
+            // is n<p
+            if (prd + 1 >= rows)
+            {
+                host.Error("You must have more observations than parameters", "Poisson regression");
+                throw new TemplateOperationCancelledException();
+            }
+            //  Copy down the remaining observations
+            int targetRow = 1;
+            for (int sourceRow = 1; sourceRow <= rows; sourceRow++)
+            {
+                bool OK = y[sourceRow] != Constant.MISSING;
+                if (t[sourceRow] == Constant.MISSING)
+                {
+                    OK = false;
+                }
+                if (weighted && wt[sourceRow] == Constant.MISSING)
+                {
+                    OK = false;
+                }
+                if (ptime && t[sourceRow] <= 0.0)
+                {
+                    OK = false;
+                }
+                for (int pred = 1; pred <= prd; pred++)
+                {
+                    if (x[sourceRow, pred] == Constant.MISSING)
+                    {
+                        OK = false;
+                    }
+                }
+                if (OK)
+                {
                     //  This row is valid; if necessary, copy it down to our current target row
-                    if ( sourceRow != targetRow ) 
-                    { 
-                        y[ targetRow ] = y[ sourceRow ]; 
-                        if ( ptime ) 
-                        { 
-                            t[ targetRow ] = t[ sourceRow ]; 
-                        } 
-                        else 
-                        { 
-                            t[ targetRow ] = 1.0; 
-                        } 
-                        if ( weighted )
-                        { 
-                            wt[ targetRow ] = wt[ sourceRow ]; 
-                        } 
-                        for ( int pred=1; pred <= prd; pred++ ) 
-                        { 
-                            x[ targetRow, pred ] = x[ sourceRow, pred ]; 
-                        } 
-                    } 
-                    targetRow += 1; 
-                } 
-            } 
+                    if (sourceRow != targetRow)
+                    {
+                        y[targetRow] = y[sourceRow];
+                        if (ptime)
+                        {
+                            t[targetRow] = t[sourceRow];
+                        }
+                        else
+                        {
+                            t[targetRow] = 1.0;
+                        }
+                        if (weighted)
+                        {
+                            wt[targetRow] = wt[sourceRow];
+                        }
+                        for (int pred = 1; pred <= prd; pred++)
+                        {
+                            x[targetRow, pred] = x[sourceRow, pred];
+                        }
+                    }
+                    targetRow += 1;
+                }
+            }
             //  At this point, y, pt, wt and x contain valid data from row 1 to row targetrow - 1 inclusive
             // int ctr = 0; 
             string warn;
             const int maxit = 200;
             int irank = 0; int idf = 0;
             double dev = 0; double devx; double llx;
-            int fault; 
+            int fault;
             int N = rows;
-            int[] rxi = new int[1 + 1 /* for VB to C# conversion */ ]; 
-            int M = prd; 
-            int ip = M; 
-            bool mean = intercept; 
-            if ( mean )
-            { 
-                ip = ip + 1; 
+            int[] rxi = new int[1 + 1 /* for VB to C# conversion */ ];
+            int M = prd;
+            int ip = M;
+            bool mean = intercept;
+            if (mean)
+            {
+                ip = ip + 1;
             }
-            string[] label = new string[ip + 1 /* for VB to C# conversion */ ]; 
-            label[ 0 ] = responseVariable.Title; 
-            for ( j=1; j <= prd; j++ ) 
-            { 
-                label[ j ] = predictorsFrame.Variables[ j - 1 ].Title; 
-            } 
-            if ( N != targetRow - 1 ) 
-            { 
-                x_dropper( host, N - ( targetRow - 1 ), "Poisson regression" ); 
-                N = targetRow - 1; 
-            } 
-            bool uoffset = ptime; 
+            string[] label = new string[ip + 1 /* for VB to C# conversion */ ];
+            label[0] = responseVariable.Title;
+            for (j = 1; j <= prd; j++)
+            {
+                label[j] = predictorsFrame.Variables[j - 1].Title;
+            }
+            if (N != targetRow - 1)
+            {
+                x_dropper(host, N - (targetRow - 1), "Poisson regression");
+                N = targetRow - 1;
+            }
+            bool uoffset = ptime;
             //  get intercept deviance - drop predictors
-            double[,] x2 = new double[N + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */]; 
-            for ( j=1; j <= N; j++ ) 
-            { 
-                x2[ j, 0 ] = 1; 
-                x2[ j, 1 ] = 1; 
+            double[,] x2 = new double[N + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
+            for (j = 1; j <= N; j++)
+            {
+                x2[j, 0] = 1;
+                x2[j, 1] = 1;
             }
-            int[] isx = new int[1 + 1 /* for VB to C# conversion */]; 
-            isx[ 1 ] = 1;
+            int[] isx = new int[1 + 1 /* for VB to C# conversion */];
+            isx[1] = 1;
             double[] b = new double[1 + 1 /* for VB to C# conversion */];
             double[] se = new double[N + 1 /* for VB to C# conversion */];
             double[] cov = new double[1 + 1 /* for VB to C# conversion */];
@@ -5347,33 +5358,33 @@ namespace StatsDirect.Builtins
             double[] var = new double[N + 1 /* for VB to C# conversion */ ];
             double[] dr = new double[N + 1 /* for VB to C# conversion */ ];
             double[] h = new double[N + 1 /* for VB to C# conversion */];
-            double[] offst = new double[N + 1 /* for VB to C# conversion */ ]; 
+            double[] offst = new double[N + 1 /* for VB to C# conversion */ ];
             //  use offset of log(exposure) if exposure specified
-            if ( uoffset ) 
-            { 
-                for ( j=1; j <= N; j++ ) 
-                { 
-                    offst[ j ] = Math.Log( t[ j ] ); 
-                } 
-            } 
-            string msg = ""; 
-            Regress1.X_POISREG( false, uoffset, ref weighted, N, x2, 1, isx, 1, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg ); 
-            int idfx = idf; 
-            if ( !( mean ) ) 
-            { 
-                llx = Constant.MISSING; 
-                devx = Constant.MISSING; 
-            } 
-            else 
-            { 
-                llx = x_loglik_p(weighted, N, wt, y, fvl ); 
-                devx = dev; 
-            } 
+            if (uoffset)
+            {
+                for (j = 1; j <= N; j++)
+                {
+                    offst[j] = Math.Log(t[j]);
+                }
+            }
+            string msg = "";
+            Regress1.X_POISREG(false, uoffset, ref weighted, N, x2, 1, isx, 1, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
+            int idfx = idf;
+            if (!(mean))
+            {
+                llx = Constant.MISSING;
+                devx = Constant.MISSING;
+            }
+            else
+            {
+                llx = x_loglik_p(weighted, N, wt, y, fvl);
+                devx = dev;
+            }
             //  calculate full model
-            isx = new int[ip + 1 /* for VB to C# conversion */ ]; 
-            for ( j=1; j <= ip; j++ ) 
-            { 
-                isx[ j ] = j; 
+            isx = new int[ip + 1 /* for VB to C# conversion */ ];
+            for (j = 1; j <= ip; j++)
+            {
+                isx[j] = j;
             }
             b = new double[ip + 1 /* for VB to C# conversion */];
             se = new double[N + 1 /* for VB to C# conversion */];
@@ -5381,174 +5392,176 @@ namespace StatsDirect.Builtins
             fvl = new double[N + 1 /* for VB to C# conversion */ ];
             var = new double[N + 1 /* for VB to C# conversion */ ];
             dr = new double[N + 1 /* for VB to C# conversion */ ];
-            h = new double[N + 1 /* for VB to C# conversion */ ]; 
-            Regress1.X_POISREG( mean, uoffset, ref weighted, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg ); 
-            if ( fault != 0 & fault != 10 & fault != 9 ) 
-            { 
-                switch ( fault ) 
+            h = new double[N + 1 /* for VB to C# conversion */ ];
+            Regress1.X_POISREG(mean, uoffset, ref weighted, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
+            if (fault != 0 & fault != 10 & fault != 9)
+            {
+                switch (fault)
                 {
                     case 4:
-                        msg = "subjects < 0"; 
+                        msg = "subjects < 0";
                         break;
                     case 5:
-                        msg = "responders > subjects or responders < 0"; 
+                        msg = "responders > subjects or responders < 0";
                         break;
                     case 6:
-                        msg = "boundary hit, try dropping predictors"; 
+                        msg = "boundary hit, try dropping predictors";
                         break;
                     case 8:
-                        msg = "failed to converge in " +  maxit.ToString() + " iterations"; 
+                        msg = "failed to converge in " + maxit.ToString() + " iterations";
                         break;
                     case 99:
-                        msg = "not enough memory for this calculation"; 
+                        msg = "not enough memory for this calculation";
                         break;
                     default:
-                        msg = "Poisn_err " +  fault + 1.ToString(); 
+                        msg = "Poisn_err " + fault + 1.ToString();
                         break;
                 }
-                
-                host.Error( msg, "Poisson regression" ); 
-                throw new TemplateOperationCancelledException(); 
-            } 
+
+                host.Error(msg, "Poisson regression");
+                throw new TemplateOperationCancelledException();
+            }
             //  RTF_LoadTemplate("poisreg.rtf")
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( fault == 9 ) 
-            { 
-                warn = Formatting.WRNCOLON + "rank changed, consider dropping predictors"; 
-            } 
-            else 
-            { 
-                warn = ""; 
-            } 
-            if ( irank != ip ) 
-            { 
-                if (warn.Length > 0 )
-                { 
-                    warn += Formatting.RTFCRLF; 
-                } 
-                warn += Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model"; 
-            } 
-            if ( idf <= 0 ) 
-            { 
-                if (warn.Length > 0 )
-                { 
-                    warn = warn + Formatting.RTFCRLF; 
-                } 
-                warn = warn + Formatting.WRNCOLON + "saturated model"; 
-            } 
-            if (msg.Length > 0 ) 
-            { 
-                if (warn.Length > 0 ) 
-                { 
-                    warn = warn + Formatting.RTFCRLF + msg; 
-                } 
-                else 
-                { 
-                    warn = msg; 
-                } 
-            } 
-            if (warn.Length > 0 ) 
-            { 
-                IList<ParameterBag> warnList = new List<ParameterBag>(); 
-                outputParameters.AddOutput( "*warn", warnList ); 
-                ParameterBag warnParameters = new ParameterBag(); 
-                warnList.Add( warnParameters ); 
-                warnParameters.AddOutput( "warn", warn ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "*warn", null ); 
-            } 
-            outputParameters.AddOutput( "dev", host.RoundU( dev ) ); 
-            outputParameters.AddOutput( "df_dev",  idf.ToString() ); 
-            double prob = PDF.chivalp( dev, Convert.ToDouble( idf ) ); 
-            outputParameters.AddOutput( "p_dev", host.pval( prob ) ); 
-            warn = prob < 0.05 ? Formatting.ASTERISK : ""; 
-            outputParameters.AddOutput( "w", warn ); 
-            double x2dev = devx - dev; 
-            if ( x2dev < 0.0 )
-            { 
-                x2dev = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "x2", host.RoundU( x2dev ) ); 
-            outputParameters.AddOutput( "df_x2",  (idfx - idf).ToString() );
+            ParameterBag outputParameters = new ParameterBag();
+            if (fault == 9)
+            {
+                warn = Formatting.WRNCOLON + "rank changed, consider dropping predictors";
+            }
+            else
+            {
+                warn = "";
+            }
+            if (irank != ip)
+            {
+                if (warn.Length > 0)
+                {
+                    warn += Formatting.RTFCRLF;
+                }
+                warn += Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model";
+            }
+            if (idf <= 0)
+            {
+                if (warn.Length > 0)
+                {
+                    warn = warn + Formatting.RTFCRLF;
+                }
+                warn = warn + Formatting.WRNCOLON + "saturated model";
+            }
+            if (msg.Length > 0)
+            {
+                if (warn.Length > 0)
+                {
+                    warn = warn + Formatting.RTFCRLF + msg;
+                }
+                else
+                {
+                    warn = msg;
+                }
+            }
+            if (warn.Length > 0)
+            {
+                IList<ParameterBag> warnList = new List<ParameterBag>();
+                outputParameters.AddOutput("*warn", warnList);
+                ParameterBag warnParameters = new ParameterBag();
+                warnList.Add(warnParameters);
+                warnParameters.AddOutput("warn", warn);
+            }
+            else
+            {
+                outputParameters.AddOutput("*warn", null);
+            }
+            outputParameters.AddOutput("dev", host.RoundU(dev));
+            outputParameters.AddOutput("df_dev", idf.ToString());
+            double prob = PDF.chivalp(dev, Convert.ToDouble(idf));
+            outputParameters.AddOutput("p_dev", host.pval(prob));
+            warn = prob < 0.05 ? Formatting.ASTERISK : "";
+            outputParameters.AddOutput("w", warn);
+            double x2dev = devx - dev;
+            if (x2dev < 0.0)
+            {
+                x2dev = Constant.MISSING;
+            }
+            outputParameters.AddOutput("x2", host.RoundU(x2dev));
+            outputParameters.AddOutput("df_x2", (idfx - idf).ToString());
             outputParameters.AddOutput("p_x2",
                                        idf > 0
                                            ? host.pval(PDF.chivalp(x2dev, Convert.ToDouble(idfx - idf)))
                                            : Formatting.ASTERISK);
-            IList<ParameterBag> predList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*pred", predList ); 
-            for ( i=1; i <= ip; i++ ) 
-            { 
-                if ( se[ i ] == 0 ) 
-                { 
-                    prob = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    prob = 2.0 * ( 1.0 - PDF.alnorm( Math.Abs( b[ i ] / se[ i ] ) ) ); 
-                } 
-                ParameterBag predParameters = new ParameterBag(); 
-                predList.Add( predParameters ); 
-                if ( mean )
+            IList<ParameterBag> predList = new List<ParameterBag>();
+            outputParameters.AddOutput("*pred", predList);
+            for (i = 1; i <= ip; i++)
+            {
+                if (se[i] == 0)
+                {
+                    prob = Constant.MISSING;
+                }
+                else
+                {
+                    prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[i] / se[i])));
+                }
+                ParameterBag predParameters = new ParameterBag();
+                predList.Add(predParameters);
+                if (mean)
                 {
                     predParameters.AddOutput("lab", i == 1 ? "Intercept" : label[i - 1]);
-                    predParameters.AddOutput( "idx",  (i - 1).ToString() );
+                    predParameters.AddOutput("idx", (i - 1).ToString());
                 }
-                else 
-                { 
-                    predParameters.AddOutput( "lab", label[ i ] ); 
-                    predParameters.AddOutput( "idx",  i.ToString() ); 
-                } 
-                predParameters.AddOutput( "res", host.RoundU( b[ i ] ) );
+                else
+                {
+                    predParameters.AddOutput("lab", label[i]);
+                    predParameters.AddOutput("idx", i.ToString());
+                }
+                predParameters.AddOutput("res", host.RoundU(b[i]));
                 double z;
-                if ( se[ i ] == 0.0 ) 
-                { 
-                    z = Constant.MISSING; 
-                    predParameters.AddOutput( "z", host.RoundU( z ) ); 
-                    predParameters.AddOutput( "p", "* error: drop this variable *" ); 
-                } 
-                else 
-                { 
-                    z = b[ i ] / se[ i ]; 
-                    predParameters.AddOutput( "z", host.RoundU( z ) ); 
-                    predParameters.AddOutput( "p", host.pval( prob ) ); 
-                } 
-            } 
-            string tx = "log "; 
-            string transTemp10 = label[ 0 ]; 
-            if (transTemp10.Length > 0 )
-            { 
-                tx = tx + label[ 0 ]; 
-            } else { tx = tx + "Y"; } 
-            if ( uoffset ) 
-            { 
-                string transTemp11 = label[ 1 ]; 
-                if (transTemp11.Length > 0 )
-                { 
-                    tx = tx + " [offset log(" + label[ 1 ] + ")]"; 
-                } else { tx = tx + " [offset log(exposure)]"; } 
-            } 
-            tx = tx + " = "; 
-            for ( j=1; j <= ip; j++ ) 
-            { 
-                if ( j > 1 & b[ j ] >= 0.0 )
-                { 
-                    tx = tx + "+"; 
-                } 
-                tx = tx + host.RoundU( b[ j ] );
+                if (se[i] == 0.0)
+                {
+                    z = Constant.MISSING;
+                    predParameters.AddOutput("z", host.RoundU(z));
+                    predParameters.AddOutput("p", "* error: drop this variable *");
+                }
+                else
+                {
+                    z = b[i] / se[i];
+                    predParameters.AddOutput("z", host.RoundU(z));
+                    predParameters.AddOutput("p", host.pval(prob));
+                }
+            }
+            string tx = "log ";
+            string transTemp10 = label[0];
+            if (transTemp10.Length > 0)
+            {
+                tx = tx + label[0];
+            }
+            else { tx = tx + "Y"; }
+            if (uoffset)
+            {
+                string transTemp11 = label[1];
+                if (transTemp11.Length > 0)
+                {
+                    tx = tx + " [offset log(" + label[1] + ")]";
+                }
+                else { tx = tx + " [offset log(exposure)]"; }
+            }
+            tx = tx + " = ";
+            for (j = 1; j <= ip; j++)
+            {
+                if (j > 1 & b[j] >= 0.0)
+                {
+                    tx = tx + "+";
+                }
+                tx = tx + host.RoundU(b[j]);
                 string Q;
-                if ( mean ) 
-                { 
-                    Q = j > 1 ? label[ j - 1 ] : " "; 
-                } 
-                else 
-                { 
-                    Q = label[ j ]; 
+                if (mean)
+                {
+                    Q = j > 1 ? label[j - 1] : " ";
+                }
+                else
+                {
+                    Q = label[j];
                 }
                 tx += Q.Length == 0 ? " X" + j.ToString() : " " + Q + " ";
-            } 
-            outputParameters.AddOutput( "logit", tx );
+            }
+            outputParameters.AddOutput("logit", tx);
 
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext
                                                           {
@@ -5578,608 +5591,606 @@ namespace StatsDirect.Builtins
                                                               X = x,
                                                               Y = y
                                                           };
-            outputParameters.Add( "context", new FilledParameter( true, context ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptPoissonRegressionFit( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] t = context.T; 
-            double[] y = context.Y; 
-            double[] fvl = context.FV; 
-            double[] dr = context.R; 
-            double[] hi = context.H1; 
-            int nx = context.N; 
-            bool DoC = context.DoC; 
-            string[] label = context.Label; 
-            int P = context.P; 
-            double[] cov = context.COV; 
-            double[] wt = context.WT; 
-            bool Weight = context.WEIGHT; 
+            outputParameters.Add("context", new FilledParameter(true, context));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptPoissonRegressionFit(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] t = context.T;
+            double[] y = context.Y;
+            double[] fvl = context.FV;
+            double[] dr = context.R;
+            double[] hi = context.H1;
+            int nx = context.N;
+            bool DoC = context.DoC;
+            string[] label = context.Label;
+            int P = context.P;
+            double[] cov = context.COV;
+            double[] wt = context.WT;
+            bool Weight = context.WEIGHT;
             double[,] x = context.X;
 
             double ww;
 
             //  RTF_LoadTemplate("pr_fit.rtf") = True
-            ParameterBag outputParameters = new ParameterBag(); 
-            List<ParameterBag> predictorsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*predictors", predictorsList ); 
-            for ( int i=1; i <= label.Length - 2; i++ ) 
-            { 
-                ParameterBag predictorsParameters = new ParameterBag(); 
-                predictorsList.Add( predictorsParameters ); 
-                predictorsParameters.AddOutput( "lab", label[ i ] ); 
-            } 
-            List<ParameterBag> predictorValuesList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*predictorValues", predictorValuesList ); 
-            for ( int j=1; j <= nx; j++ ) 
-            { 
-                ParameterBag predictorValuesParameters = new ParameterBag(); 
-                predictorValuesList.Add( predictorValuesParameters ); 
-                predictorValuesParameters.AddOutput( "idx", j ); 
-                List<ParameterBag> predictorsList2 = new List<ParameterBag>(); 
-                predictorValuesParameters.AddOutput( "*pred", predictorsList2 ); 
-                for ( int i=1; i <= label.Length - 2; i++ ) 
-                { 
-                    ParameterBag predictorsParameters = new ParameterBag(); 
-                    predictorsList2.Add( predictorsParameters ); 
-                    predictorsParameters.AddOutput( "val", x[ j, i ].ToString() ); 
-                } 
-            } 
-            
-            IList<ParameterBag> eventsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*events", eventsList ); 
-            for ( int i=1; i <= nx; i++ ) 
-            { 
-                ParameterBag eventsParameters = new ParameterBag(); 
-                eventsList.Add( eventsParameters ); 
-                eventsParameters.AddOutput( "idx",  i.ToString() ); 
-                eventsParameters.AddOutput( "obs", host.RoundU( y[ i ] ) ); 
-                eventsParameters.AddOutput( "fit", host.RoundU( fvl[ i ] ) );
-                double ry = t[i] != 0.0 ? y[i]/t[i] : Constant.MISSING;
-                eventsParameters.AddOutput( "iro", host.RoundU( ry ) );
-                ry = t[i] != 0.0 ? fvl[i]/t[i] : Constant.MISSING;
-                eventsParameters.AddOutput( "ire", host.RoundU( ry ) ); 
-            } 
-            
-            IList<ParameterBag> residualsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*residuals", residualsList ); 
-            for ( int i=1; i <= nx; i++ ) 
-            { 
-                ParameterBag residualsParameters = new ParameterBag(); 
-                residualsList.Add( residualsParameters ); 
-                residualsParameters.AddOutput( "idx",  i.ToString() ); 
-                residualsParameters.AddOutput( "yr", host.RoundU( y[ i ] - fvl[ i ] ) ); 
-                ww = Weight ? wt[ i ] : 1.0;
+            ParameterBag outputParameters = new ParameterBag();
+            List<ParameterBag> predictorsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*predictors", predictorsList);
+            for (int i = 1; i <= label.Length - 2; i++)
+            {
+                ParameterBag predictorsParameters = new ParameterBag();
+                predictorsList.Add(predictorsParameters);
+                predictorsParameters.AddOutput("lab", label[i]);
+            }
+            List<ParameterBag> predictorValuesList = new List<ParameterBag>();
+            outputParameters.AddOutput("*predictorValues", predictorValuesList);
+            for (int j = 1; j <= nx; j++)
+            {
+                ParameterBag predictorValuesParameters = new ParameterBag();
+                predictorValuesList.Add(predictorValuesParameters);
+                predictorValuesParameters.AddOutput("idx", j);
+                List<ParameterBag> predictorsList2 = new List<ParameterBag>();
+                predictorValuesParameters.AddOutput("*pred", predictorsList2);
+                for (int i = 1; i <= label.Length - 2; i++)
+                {
+                    ParameterBag predictorsParameters = new ParameterBag();
+                    predictorsList2.Add(predictorsParameters);
+                    predictorsParameters.AddOutput("val", x[j, i].ToString());
+                }
+            }
+
+            IList<ParameterBag> eventsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*events", eventsList);
+            for (int i = 1; i <= nx; i++)
+            {
+                ParameterBag eventsParameters = new ParameterBag();
+                eventsList.Add(eventsParameters);
+                eventsParameters.AddOutput("idx", i.ToString());
+                eventsParameters.AddOutput("obs", host.RoundU(y[i]));
+                eventsParameters.AddOutput("fit", host.RoundU(fvl[i]));
+                double ry = t[i] != 0.0 ? y[i] / t[i] : Constant.MISSING;
+                eventsParameters.AddOutput("iro", host.RoundU(ry));
+                ry = t[i] != 0.0 ? fvl[i] / t[i] : Constant.MISSING;
+                eventsParameters.AddOutput("ire", host.RoundU(ry));
+            }
+
+            IList<ParameterBag> residualsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*residuals", residualsList);
+            for (int i = 1; i <= nx; i++)
+            {
+                ParameterBag residualsParameters = new ParameterBag();
+                residualsList.Add(residualsParameters);
+                residualsParameters.AddOutput("idx", i.ToString());
+                residualsParameters.AddOutput("yr", host.RoundU(y[i] - fvl[i]));
+                ww = Weight ? wt[i] : 1.0;
                 double ftr;
-                if ( fvl[ i ] <= 0.0 )
-                { 
-                    ftr = Constant.MISSING; 
-                } else { ftr = Math.Sqrt( y[ i ] ) * Math.Sqrt( ww ) + Math.Sqrt( y[ i ] + 1.0 ) * Math.Sqrt( ww ) - Math.Sqrt( 4.0 * fvl[ i ] + 1.0 ) * Math.Sqrt( ww ); } 
-                residualsParameters.AddOutput( "ftr", host.RoundU( ftr ) ); 
-                residualsParameters.AddOutput( "dev", host.RoundU( dr[ i ] ) ); 
-            } 
-            
-            IList<ParameterBag> pearsonList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*pearson", pearsonList ); 
-            for ( int i=1; i <= nx; i++ ) 
-            { 
-                ParameterBag pearsonParameters = new ParameterBag(); 
-                pearsonList.Add( pearsonParameters ); 
-                pearsonParameters.AddOutput( "idx",  i.ToString() ); 
-                ww = Weight ? wt[ i ] : 1;
-                double xi = fvl[i] == 0.0 ? Constant.MISSING : (Math.Pow((y[i] - fvl[i]), 2.0))/fvl[i];
-                pearsonParameters.AddOutput( "res", host.RoundU( xi ) ); 
-                pearsonParameters.AddOutput( "lev", host.RoundU( hi[ i ] ) ); 
+                if (fvl[i] <= 0.0)
+                {
+                    ftr = Constant.MISSING;
+                }
+                else { ftr = Math.Sqrt(y[i]) * Math.Sqrt(ww) + Math.Sqrt(y[i] + 1.0) * Math.Sqrt(ww) - Math.Sqrt(4.0 * fvl[i] + 1.0) * Math.Sqrt(ww); }
+                residualsParameters.AddOutput("ftr", host.RoundU(ftr));
+                residualsParameters.AddOutput("dev", host.RoundU(dr[i]));
+            }
+
+            IList<ParameterBag> pearsonList = new List<ParameterBag>();
+            outputParameters.AddOutput("*pearson", pearsonList);
+            for (int i = 1; i <= nx; i++)
+            {
+                ParameterBag pearsonParameters = new ParameterBag();
+                pearsonList.Add(pearsonParameters);
+                pearsonParameters.AddOutput("idx", i.ToString());
+                ww = Weight ? wt[i] : 1;
+                double xi = fvl[i] == 0.0 ? Constant.MISSING : (Math.Pow((y[i] - fvl[i]), 2.0)) / fvl[i];
+                pearsonParameters.AddOutput("res", host.RoundU(xi));
+                pearsonParameters.AddOutput("lev", host.RoundU(hi[i]));
                 // IEB July 2009
                 double xis;
-                if ( fvl[ i ] == 0.0 ) 
-                { 
+                if (fvl[i] == 0.0)
+                {
                     // xi = Constant.MISSING; never used
-                    xis = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    xi = ( ( y[ i ] - fvl[ i ] ) * Math.Sqrt( ww ) ) / Math.Sqrt( fvl[ i ] ); 
-                    if ( 1.0 - hi[ i ] > 0.0 )
-                    { 
-                        xis = xi / Math.Sqrt( 1.0 - hi[ i ] ); 
-                    } else { xis = Constant.MISSING; } 
-                } 
-                pearsonParameters.AddOutput( "sres", host.RoundU( xis ) ); 
-            } 
-            
-            IList<ParameterBag> covarList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*covar", covarList ); 
-            for ( int i=1; i <= P; i++ ) 
-            { 
-                for ( int j=i; j <= P; j++ ) 
-                { 
-                    ParameterBag covarParameters = new ParameterBag(); 
-                    covarList.Add( covarParameters ); 
-                    string x1 = qlbli( label, i, DoC ); 
-                    string x2 = qlbli( label, j, DoC ); 
-                    covarParameters.AddOutput( "lab", x1 + " vs. " + x2 ); 
-                    covarParameters.AddOutput( "cov", host.RoundU( cov[ ( ( ( int )(Math.Floor((double) j * ( j - 1 ) / 2 + i) ) ) ) ] ) ); 
-                } 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult GridPoissonRegressionFit( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            double[] t = context.T; 
-            double[] y = context.Y; 
-            double[] fvl = context.FV; 
-            double[] dr = context.R; 
-            double[] hi = context.H1; 
-            int nx = context.N; 
-            double[] wt = context.WT; 
+                    xis = Constant.MISSING;
+                }
+                else
+                {
+                    xi = ((y[i] - fvl[i]) * Math.Sqrt(ww)) / Math.Sqrt(fvl[i]);
+                    if (1.0 - hi[i] > 0.0)
+                    {
+                        xis = xi / Math.Sqrt(1.0 - hi[i]);
+                    }
+                    else { xis = Constant.MISSING; }
+                }
+                pearsonParameters.AddOutput("sres", host.RoundU(xis));
+            }
+
+            IList<ParameterBag> covarList = new List<ParameterBag>();
+            outputParameters.AddOutput("*covar", covarList);
+            for (int i = 1; i <= P; i++)
+            {
+                for (int j = i; j <= P; j++)
+                {
+                    ParameterBag covarParameters = new ParameterBag();
+                    covarList.Add(covarParameters);
+                    string x1 = qlbli(label, i, DoC);
+                    string x2 = qlbli(label, j, DoC);
+                    covarParameters.AddOutput("lab", x1 + " vs. " + x2);
+                    covarParameters.AddOutput("cov", host.RoundU(cov[(((int)(Math.Floor((double)j * (j - 1) / 2 + i))))]));
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult GridPoissonRegressionFit(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[] t = context.T;
+            double[] y = context.Y;
+            double[] fvl = context.FV;
+            double[] dr = context.R;
+            double[] hi = context.H1;
+            int nx = context.N;
+            double[] wt = context.WT;
             bool Weight = context.WEIGHT;
-            bool expectedEvents = parameters[ "expectedEvents" ].AsBoolean; 
-            bool expectedIncidence = parameters[ "expectedIncidence" ].AsBoolean; 
-            bool residualEvents = parameters[ "residualEvents" ].AsBoolean; 
-            bool freemanTukeyResidual = parameters[ "freemanTukeyResidual" ].AsBoolean; 
-            bool devianceResidual = parameters[ "devianceResidual" ].AsBoolean; 
-            bool pearsonResidual = parameters[ "pearsonResidual" ].AsBoolean; 
-            bool leverage = parameters[ "leverage" ].AsBoolean; 
-            bool stdPearsonResidual = parameters[ "stdPearsonResidual" ].AsBoolean; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            DataFrame resultsFrame = new DataFrame(); 
-            if ( expectedEvents || expectedIncidence || residualEvents || freemanTukeyResidual || devianceResidual || pearsonResidual || leverage || stdPearsonResidual ) 
-            { 
+            bool expectedEvents = parameters["expectedEvents"].AsBoolean;
+            bool expectedIncidence = parameters["expectedIncidence"].AsBoolean;
+            bool residualEvents = parameters["residualEvents"].AsBoolean;
+            bool freemanTukeyResidual = parameters["freemanTukeyResidual"].AsBoolean;
+            bool devianceResidual = parameters["devianceResidual"].AsBoolean;
+            bool pearsonResidual = parameters["pearsonResidual"].AsBoolean;
+            bool leverage = parameters["leverage"].AsBoolean;
+            bool stdPearsonResidual = parameters["stdPearsonResidual"].AsBoolean;
+            ParameterBag outputParameters = new ParameterBag();
+            DataFrame resultsFrame = new DataFrame();
+            if (expectedEvents || expectedIncidence || residualEvents || freemanTukeyResidual || devianceResidual || pearsonResidual || leverage || stdPearsonResidual)
+            {
                 //  Make up all the variables (it's fast!) then only include the ones we need
-                DoubleVariable expectedEventsVariable = new DoubleVariable( nx, "Expected events" ); 
-                DoubleVariable expectedIncidenceVariable = new DoubleVariable( nx, "Expected incidence" ); 
-                DoubleVariable residualEventsVariable = new DoubleVariable( nx, "Residual events" ); 
-                DoubleVariable freemanTukeyResidualVariable = new DoubleVariable( nx, "Freeman-Tukey residual" ); 
-                DoubleVariable devianceResidualVariable = new DoubleVariable( nx, "Deviance Residual" ); 
-                DoubleVariable pearsonResidualVariable = new DoubleVariable( nx, "Pearson Residual" ); 
-                DoubleVariable leverageVariable = new DoubleVariable( nx, "Leverage" ); 
-                DoubleVariable stdPearsonResidualVariable = new DoubleVariable( nx, "Std Pearson Residual" ); 
-                for ( int i=1; i <= nx; i++ ) 
-                { 
+                DoubleVariable expectedEventsVariable = new DoubleVariable(nx, "Expected events");
+                DoubleVariable expectedIncidenceVariable = new DoubleVariable(nx, "Expected incidence");
+                DoubleVariable residualEventsVariable = new DoubleVariable(nx, "Residual events");
+                DoubleVariable freemanTukeyResidualVariable = new DoubleVariable(nx, "Freeman-Tukey residual");
+                DoubleVariable devianceResidualVariable = new DoubleVariable(nx, "Deviance Residual");
+                DoubleVariable pearsonResidualVariable = new DoubleVariable(nx, "Pearson Residual");
+                DoubleVariable leverageVariable = new DoubleVariable(nx, "Leverage");
+                DoubleVariable stdPearsonResidualVariable = new DoubleVariable(nx, "Std Pearson Residual");
+                for (int i = 1; i <= nx; i++)
+                {
                     // Check for each save option
-                    if ( expectedEvents ) 
+                    if (expectedEvents)
                     { // Events
-                    
-                        expectedEventsVariable.set_Data( i - 1, fvl[ i ] ); 
-                    } 
-                    if ( expectedIncidence )
+
+                        expectedEventsVariable.set_Data(i - 1, fvl[i]);
+                    }
+                    if (expectedIncidence)
                     {
                         // Incidence
 
-                        double ry = t[i] != 0.0 ? fvl[i]/t[i] : Constant.MISSING;
-                        expectedIncidenceVariable.set_Data( i - 1, ry );
+                        double ry = t[i] != 0.0 ? fvl[i] / t[i] : Constant.MISSING;
+                        expectedIncidenceVariable.set_Data(i - 1, ry);
                     }
-                    if ( residualEvents ) 
+                    if (residualEvents)
                     { // Residual
-                    
-                        residualEventsVariable.set_Data( i - 1, y[ i ] - fvl[ i ] ); 
+
+                        residualEventsVariable.set_Data(i - 1, y[i] - fvl[i]);
                     }
                     double ww;
-                    if ( freemanTukeyResidual ) 
+                    if (freemanTukeyResidual)
                     { // Freeman-Tukey
-                    
-                        ww = Weight ? wt[ i ] : 1.0;
+
+                        ww = Weight ? wt[i] : 1.0;
                         double ftr = fvl[i] <= 0.0
                                          ? Constant.MISSING
-                                         : Math.Sqrt(y[i])*Math.Sqrt(ww) + Math.Sqrt(y[i] + 1.0)*Math.Sqrt(ww) -
-                                           Math.Sqrt(4.0*fvl[i] + 1.0)*Math.Sqrt(ww);
-                        freemanTukeyResidualVariable.set_Data( i - 1, ftr ); 
-                    } 
-                    if ( devianceResidual ) 
+                                         : Math.Sqrt(y[i]) * Math.Sqrt(ww) + Math.Sqrt(y[i] + 1.0) * Math.Sqrt(ww) -
+                                           Math.Sqrt(4.0 * fvl[i] + 1.0) * Math.Sqrt(ww);
+                        freemanTukeyResidualVariable.set_Data(i - 1, ftr);
+                    }
+                    if (devianceResidual)
                     { // Deviance residuals
-                    
-                        devianceResidualVariable.set_Data( i - 1, dr[ i ] ); 
-                    } 
-                    ww = Weight ? wt[ i ] : 1.0;
-                    double xi = fvl[i] == 0.0 ? Constant.MISSING : (Math.Pow((y[i] - fvl[i]), 2.0))/fvl[i];
-                    if ( pearsonResidual ) 
-                    { // Pearson chi-square residuals
-                    
-                        pearsonResidualVariable.set_Data( i - 1, xi ); 
-                    } 
-                    if ( leverage ) 
-                    { // Leverage HI
-                    
-                        leverageVariable.set_Data( i - 1, hi[ i ] ); 
-                    } 
-                    if ( stdPearsonResidual ) 
-                    { // Standardised Pearson residual
-                    
-                        xi = ( ( y[ i ] - fvl[ i ] ) * Math.Sqrt( ww ) ) / Math.Sqrt( fvl[ i ] );
-                        double xis = 1.0 - hi[i] > 0.0 ? xi/Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
-                        stdPearsonResidualVariable.set_Data( i - 1, xis ); 
-                    } 
-                } 
-                if ( expectedEvents ) 
-                { 
-                    resultsFrame.Variables.Add( expectedEventsVariable ); 
-                } 
-                if ( expectedIncidence ) 
-                { 
-                    resultsFrame.Variables.Add( expectedIncidenceVariable ); 
-                } 
-                if ( residualEvents ) 
-                { 
-                    resultsFrame.Variables.Add( residualEventsVariable ); 
-                } 
-                if ( freemanTukeyResidual ) 
-                { 
-                    resultsFrame.Variables.Add( freemanTukeyResidualVariable ); 
-                } 
-                if ( devianceResidual ) 
-                { // Deviance residuals
-                
-                    resultsFrame.Variables.Add( devianceResidualVariable ); 
-                } 
-                if ( pearsonResidual ) 
-                { // Pearson residuals
-                
-                    resultsFrame.Variables.Add( pearsonResidualVariable ); 
-                } 
-                if ( leverage ) 
-                { // Leverage HI
-                
-                    resultsFrame.Variables.Add( leverageVariable ); 
-                } 
-                if ( stdPearsonResidual ) 
-                { // Standardised Pearson residual
-                
-                    resultsFrame.Variables.Add( stdPearsonResidualVariable ); 
-                } 
-            } 
-            outputParameters.AddOutput( "results", resultsFrame ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptPoissonRegressionResiduals( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            int nx = context.N; 
-            double[] yfit = context.FV; 
-            double[] dr = context.R; 
-            double[,] xd = context.X; 
-            string[] Label = context.Label; 
-            int P = context.P; 
-            bool Intercept = context.DoC; 
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            IList<ParameterBag> chartList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*chart", chartList );
 
-            double[] r = new double[nx + 1 /* for VB to C# conversion */ ]; 
-            r[ 0 ] = Constant.MISSING; //  Avoid drawing a point at (0,0)
-            for ( int j=1; j <= nx; j++ ) 
-            { 
-                r[ j ] = Math.Abs( dr[ j ] ); 
-            } 
-            ChartRenderer ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            System.Drawing.Image chImage = ch.PlotXYAndReturnImage( host, yfit, r, "Fitted Y", "Abs(Deviance residual)", "Absolute Residuals vs. Fitted Y [Poisson regression]", false, 0, false ); 
-            ParameterBag chartParameters = new ParameterBag(); 
-            chartList.Add( chartParameters ); 
-            chartParameters.AddOutput( "chart", host.ImageToRtf( chImage ) ); 
-            for ( int i=1; i <= P; i++ ) 
-            { 
-                if ( i > 1 | Intercept == false ) 
-                { 
+                        devianceResidualVariable.set_Data(i - 1, dr[i]);
+                    }
+                    ww = Weight ? wt[i] : 1.0;
+                    double xi = fvl[i] == 0.0 ? Constant.MISSING : (Math.Pow((y[i] - fvl[i]), 2.0)) / fvl[i];
+                    if (pearsonResidual)
+                    { // Pearson chi-square residuals
+
+                        pearsonResidualVariable.set_Data(i - 1, xi);
+                    }
+                    if (leverage)
+                    { // Leverage HI
+
+                        leverageVariable.set_Data(i - 1, hi[i]);
+                    }
+                    if (stdPearsonResidual)
+                    { // Standardised Pearson residual
+
+                        xi = ((y[i] - fvl[i]) * Math.Sqrt(ww)) / Math.Sqrt(fvl[i]);
+                        double xis = 1.0 - hi[i] > 0.0 ? xi / Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
+                        stdPearsonResidualVariable.set_Data(i - 1, xis);
+                    }
+                }
+                if (expectedEvents)
+                {
+                    resultsFrame.Variables.Add(expectedEventsVariable);
+                }
+                if (expectedIncidence)
+                {
+                    resultsFrame.Variables.Add(expectedIncidenceVariable);
+                }
+                if (residualEvents)
+                {
+                    resultsFrame.Variables.Add(residualEventsVariable);
+                }
+                if (freemanTukeyResidual)
+                {
+                    resultsFrame.Variables.Add(freemanTukeyResidualVariable);
+                }
+                if (devianceResidual)
+                { // Deviance residuals
+
+                    resultsFrame.Variables.Add(devianceResidualVariable);
+                }
+                if (pearsonResidual)
+                { // Pearson residuals
+
+                    resultsFrame.Variables.Add(pearsonResidualVariable);
+                }
+                if (leverage)
+                { // Leverage HI
+
+                    resultsFrame.Variables.Add(leverageVariable);
+                }
+                if (stdPearsonResidual)
+                { // Standardised Pearson residual
+
+                    resultsFrame.Variables.Add(stdPearsonResidualVariable);
+                }
+            }
+            outputParameters.AddOutput("results", resultsFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptPoissonRegressionResiduals(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            int nx = context.N;
+            double[] yfit = context.FV;
+            double[] dr = context.R;
+            double[,] xd = context.X;
+            string[] Label = context.Label;
+            int P = context.P;
+            bool Intercept = context.DoC;
+
+            ParameterBag outputParameters = new ParameterBag();
+            IList<ParameterBag> chartList = new List<ParameterBag>();
+            outputParameters.AddOutput("*chart", chartList);
+
+            double[] r = new double[nx + 1 /* for VB to C# conversion */ ];
+            r[0] = Constant.MISSING; //  Avoid drawing a point at (0,0)
+            for (int j = 1; j <= nx; j++)
+            {
+                r[j] = Math.Abs(dr[j]);
+            }
+            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
+            ParameterBag chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, yfit, r, "Fitted Y", "Abs(Deviance residual)", "Absolute Residuals vs. Fitted Y [Poisson regression]", false, 0, false));
+            for (int i = 1; i <= P; i++)
+            {
+                if (i > 1 | Intercept == false)
+                {
                     bool OK = false;
                     int k = Intercept ? i - 1 : i;
-                    r = new double[nx + 1 /* for VB to C# conversion */ ]; 
-                    for ( int j=1; j <= nx; j++ ) 
-                    { 
-                        r[ j ] = xd[ j, k ]; 
-                        if ( !( OK ) ) 
-                        { 
-                            if ( r[ j ] != 1.0 & r[ j ] != 0.0 & r[ j ] != -1.0 )
-                            { 
-                                OK = true; 
-                            } 
-                        } 
-                    } 
-                    if ( OK ) 
-                    { 
-                        ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                        chImage = ch.PlotXYAndReturnImage( host, r, dr, "Predictor: " + Label[ k ], "Deviance residual", "Residuals vs. Predictor " +  k.ToString() + " [Poisson regression]", true, 0, false ); 
-                        chartParameters = new ParameterBag(); 
-                        chartList.Add( chartParameters ); 
-                        chartParameters.AddOutput( "chart", host.ImageToRtf( chImage ) ); 
-                    } 
-                } 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public enum ProbitModel 
-        { 
+                    r = new double[nx + 1 /* for VB to C# conversion */ ];
+                    for (int j = 1; j <= nx; j++)
+                    {
+                        r[j] = xd[j, k];
+                        if (!(OK))
+                        {
+                            if (r[j] != 1.0 & r[j] != 0.0 & r[j] != -1.0)
+                            {
+                                OK = true;
+                            }
+                        }
+                    }
+                    if (OK)
+                    {
+                        ch = new ChartRenderer(ChartDefinition.Empty());
+                        chartParameters = new ParameterBag();
+                        chartList.Add(chartParameters);
+                        chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, r, dr, "Predictor: " + Label[k], "Deviance residual", "Residuals vs. Predictor " + k.ToString() + " [Poisson regression]", true, 0, false));
+                    }
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public enum ProbitModel
+        {
             Probit = 1,
             Logit = 2,
-        } 
-        
-        
-        public static StepResult RptProbit( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            return RptProbitOrLogit( host, parameters, ProbitModel.Probit ); 
-        } 
-        
-        
-        public static StepResult RptLogit( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            return RptProbitOrLogit( host, parameters, ProbitModel.Logit ); 
-        } 
-        
-        
-        private static StepResult RptProbitOrLogit( ITemplateHost host, ParameterBag parameters, ProbitModel model ) 
+        }
+
+
+        public static StepResult RptProbit(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame doseFrame = parameters[ "dose" ].AsDataFrame; 
-            DoubleVariable doseVariable = doseFrame.Variables[ 0 ].AsDoubleVariable;
+            return RptProbitOrLogit(host, parameters, ProbitModel.Probit);
+        }
+
+
+        public static StepResult RptLogit(ITemplateHost host, ParameterBag parameters)
+        {
+            return RptProbitOrLogit(host, parameters, ProbitModel.Logit);
+        }
+
+
+        private static StepResult RptProbitOrLogit(ITemplateHost host, ParameterBag parameters, ProbitModel model)
+        {
+            DataFrame doseFrame = parameters["dose"].AsDataFrame;
+            DoubleVariable doseVariable = doseFrame.Variables[0].AsDoubleVariable;
             ColumnData[] cd = new ColumnData[2 + 1 /* for VB to C# conversion */ ];
-            cd[0] = new ColumnData {Title = doseVariable.Title};
+            cd[0] = new ColumnData { Title = doseVariable.Title };
 
             int rows = doseVariable.Length;
-            double[] dv = new double[rows + 1 /* for VB to C# conversion */]; 
-            for ( int row=1; row <= rows; row++ ) 
-            { 
-                dv[ row ] = doseVariable.Data[row - 1]; 
-            } 
-            
-            DataFrame subjectsFrame = parameters[ "subjects" ].AsDataFrame; 
-            DoubleVariable subjectsVariable = subjectsFrame.Variables[ 0 ].AsDoubleVariable;
-            cd[1] = new ColumnData {Title = subjectsVariable.Title};
-            double[] sv = new double[rows + 1 /* for VB to C# conversion */ ]; 
-            for ( int row=1; row <= rows; row++ ) 
-            { 
-                sv[ row ] = subjectsVariable.Data[row - 1]; 
-            } 
-            
-            DataFrame respondersFrame = parameters[ "responders" ].AsDataFrame; 
-            DoubleVariable respondersVariable = respondersFrame.Variables[ 0 ].AsDoubleVariable;
-            cd[2] = new ColumnData {Title = respondersVariable.Title};
+            double[] dv = new double[rows + 1 /* for VB to C# conversion */];
+            for (int row = 1; row <= rows; row++)
+            {
+                dv[row] = doseVariable.Data[row - 1];
+            }
+
+            DataFrame subjectsFrame = parameters["subjects"].AsDataFrame;
+            DoubleVariable subjectsVariable = subjectsFrame.Variables[0].AsDoubleVariable;
+            cd[1] = new ColumnData { Title = subjectsVariable.Title };
+            double[] sv = new double[rows + 1 /* for VB to C# conversion */ ];
+            for (int row = 1; row <= rows; row++)
+            {
+                sv[row] = subjectsVariable.Data[row - 1];
+            }
+
+            DataFrame respondersFrame = parameters["responders"].AsDataFrame;
+            DoubleVariable respondersVariable = respondersFrame.Variables[0].AsDoubleVariable;
+            cd[2] = new ColumnData { Title = respondersVariable.Title };
             // Store the Responders Data
-            double[] rv = new double[rows + 1 /* for VB to C# conversion */ ]; 
-            for ( int row=1; row <= rows; row++ ) 
-            { 
-                rv[ row ] = respondersVariable.Data[row - 1]; 
-            } 
-            
-            double ici = Parsing.Cdbl_Txt( parameters[ "conf" ].AsString ) / 100.0; 
-            bool clog = parameters[ "calc-log10-doses" ].AsBoolean; 
+            double[] rv = new double[rows + 1 /* for VB to C# conversion */ ];
+            for (int row = 1; row <= rows; row++)
+            {
+                rv[row] = respondersVariable.Data[row - 1];
+            }
+
+            double ici = Parsing.Cdbl_Txt(parameters["conf"].AsString) / 100.0;
+            bool clog = parameters["calc-log10-doses"].AsBoolean;
             // Get the data into the Public arrays
             //  0 = dv, 1 = sv, 2 = rv
             //  calc_probit(PASS_ERR, PASS_X(), PASS_Y(), PASS_R(), Pass_H(), PASS_N, PASS_DOC, PASS_P, PASS_DF)
 
-            int ifa = 0; 
+            int ifa = 0;
             int laps = 0;
-            int nc = 0; int nrc = 0; int icount = 0; int ifault; int ifault2 = 0; 
+            int nc = 0; int nrc = 0; int icount = 0; int ifault; int ifault2 = 0;
             double t; double seh = 0; double se = 0;
             double a = 0; double b = 0; double varb = 0; double sw = 0; double S1 = 0; double S2 = 0; double s3 = 0; double cse = 0; double cseh = 0;
             double I1 = 0; double XM = 0;
             double C2 = 0;
-            double dose50 = 0; double doseq = 0; double nohetllm = 0; 
-            double nohetulm = 0; double hetllm = 0; double hetulm = 0; double nohetllq = 0; double nohetulq = 0; double hetllq = 0; double hetulq = 0; double TM = 0; double ym = 0; double del = 0; double s4 = 0; double s6 = 0; 
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            int N; int nx = 0; 
-            
-            int k = rows; 
+            double dose50 = 0; double doseq = 0; double nohetllm = 0;
+            double nohetulm = 0; double hetllm = 0; double hetulm = 0; double nohetllq = 0; double nohetulq = 0; double hetllq = 0; double hetulq = 0; double TM = 0; double ym = 0; double del = 0; double s4 = 0; double s6 = 0;
+
+            ParameterBag outputParameters = new ParameterBag();
+            int N; int nx = 0;
+
+            int k = rows;
             double C1 = 0.0;
             double[] D = new double[k + 1 /* for VB to C# conversion */ ];
             double[] s = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] r = new double[k + 1 /* for VB to C# conversion */ ]; 
-            for ( N=1; N <= k; N++ ) 
-            { 
-                if ( dv[ N ] != Constant.MISSING & sv[ N ] != Constant.MISSING & rv[ N ] != Constant.MISSING ) 
-                { 
-                    if ( dv[ N ] == 0 & C1 == 0.0 ) 
-                    { 
-                        nc = Convert.ToInt32( sv[ N ] ); 
-                        nrc = Convert.ToInt32( rv[ N ] ); 
-                        C1 = -1.0; 
-                    } 
-                    else 
-                    { 
-                        nx = nx + 1; 
-                        D[ nx ] = dv[ N ]; 
-                        s[ nx ] = sv[ N ]; 
-                        r[ nx ] = rv[ N ]; 
-                    } 
-                } 
-            } 
-            k = nx; 
+            double[] r = new double[k + 1 /* for VB to C# conversion */ ];
+            for (N = 1; N <= k; N++)
+            {
+                if (dv[N] != Constant.MISSING & sv[N] != Constant.MISSING & rv[N] != Constant.MISSING)
+                {
+                    if (dv[N] == 0 & C1 == 0.0)
+                    {
+                        nc = Convert.ToInt32(sv[N]);
+                        nrc = Convert.ToInt32(rv[N]);
+                        C1 = -1.0;
+                    }
+                    else
+                    {
+                        nx = nx + 1;
+                        D[nx] = dv[N];
+                        s[nx] = sv[N];
+                        r[nx] = rv[N];
+                    }
+                }
+            }
+            k = nx;
             // create temp variable for copying values 
-            double[] transTemp14 = new double[k + 1 /* for VB to C# conversion */]; 
-            Array.Copy( D, transTemp14, Math.Min( D.Length, transTemp14.Length ) ); 
+            double[] transTemp14 = new double[k + 1 /* for VB to C# conversion */];
+            Array.Copy(D, transTemp14, Math.Min(D.Length, transTemp14.Length));
             D = transTemp14;
             // create temp variable for copying values 
-            double[] transTemp15 = new double[k + 1 /* for VB to C# conversion */ ]; 
-            Array.Copy( s, transTemp15, Math.Min( s.Length, transTemp15.Length ) ); 
+            double[] transTemp15 = new double[k + 1 /* for VB to C# conversion */ ];
+            Array.Copy(s, transTemp15, Math.Min(s.Length, transTemp15.Length));
             s = transTemp15;
             // create temp variable for copying values 
-            double[] transTemp16 = new double[k + 1 /* for VB to C# conversion */]; 
-            Array.Copy( r, transTemp16, Math.Min( r.Length, transTemp16.Length ) ); 
-            r = transTemp16; 
-            bool wasCancelled; 
-            if ( C1 == 0.0 ) 
-            { 
-                nc = host.GetInteger( "How many control subjects do you have?", "Probit analysis", 0, out wasCancelled ); 
-                if ( wasCancelled ) 
-                { 
-                    throw new TemplateOperationCancelledException(); 
-                } 
-                if ( nc > 0 ) 
-                { 
-                    nrc = host.GetInteger( "How many control subjects responded?", "Probit analysis", 0, out wasCancelled ); 
-                    if ( wasCancelled ) 
-                    { 
-                        throw new TemplateOperationCancelledException(); 
-                    } 
-                    C1 = -1.0; 
-                } 
-            } 
-            double qld = host.GetDouble( "Two values are calculated for the independent variable (Dose, Stimulus etc)" + "\r\n" + "\r\n" + "The first gives 50% proportional response (ED50, LD50 etc) and the other X%." + "\r\n" + "\r\n" + "Enter the other centile (X) (0 to 100)", "Probit Analysis", 90.0, out wasCancelled ); 
-            if ( wasCancelled ) 
-            { 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            if ( qld >= 100.0 | qld <= 0.0 )
-            { 
-                qld = 90.0; 
+            double[] transTemp16 = new double[k + 1 /* for VB to C# conversion */];
+            Array.Copy(r, transTemp16, Math.Min(r.Length, transTemp16.Length));
+            r = transTemp16;
+            bool wasCancelled;
+            if (C1 == 0.0)
+            {
+                nc = host.GetInteger("How many control subjects do you have?", "Probit analysis", 0, out wasCancelled);
+                if (wasCancelled)
+                {
+                    throw new TemplateOperationCancelledException();
+                }
+                if (nc > 0)
+                {
+                    nrc = host.GetInteger("How many control subjects responded?", "Probit analysis", 0, out wasCancelled);
+                    if (wasCancelled)
+                    {
+                        throw new TemplateOperationCancelledException();
+                    }
+                    C1 = -1.0;
+                }
+            }
+            double qld = host.GetDouble("Two values are calculated for the independent variable (Dose, Stimulus etc)" + "\r\n" + "\r\n" + "The first gives 50% proportional response (ED50, LD50 etc) and the other X%." + "\r\n" + "\r\n" + "Enter the other centile (X) (0 to 100)", "Probit Analysis", 90.0, out wasCancelled);
+            if (wasCancelled)
+            {
+                throw new TemplateOperationCancelledException();
+            }
+            if (qld >= 100.0 | qld <= 0.0)
+            {
+                qld = 90.0;
             }
             double[] P = new double[k + 1 /* for VB to C# conversion */ ];
             double[] w = new double[k + 1 /* for VB to C# conversion */ ];
             double[] y = new double[k + 1 /* for VB to C# conversion */ ];
             double[] pob = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] x = new double[k + 1 /* for VB to C# conversion */ ]; 
-            x_sortbydose( ref D, ref s, ref r, k ); 
-            double C = 0; 
-            x_probits( model, k, ref C1, ref C, ref nc, nrc, clog, qld, D, s, ref r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out ifault ); 
-            if ( ifault == 0 )
-            { 
-                x_qdcl( ref model, ref k, out C2, ref ici, ref clog, ref qld, ref dose50, ref doseq, ref a, ref b, ref nohetllm, ref nohetulm, ref hetllm, ref hetulm, ref nohetllq, ref nohetulq, ref hetllq, ref hetulq, ref C, out se, ref cse, out seh, ref cseh, ref I1, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref sw, out varb, ref icount, out ifault2 ); 
+            double[] x = new double[k + 1 /* for VB to C# conversion */ ];
+            x_sortbydose(ref D, ref s, ref r, k);
+            double C = 0;
+            x_probits(model, k, ref C1, ref C, ref nc, nrc, clog, qld, D, s, ref r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out ifault);
+            if (ifault == 0)
+            {
+                x_qdcl(ref model, ref k, out C2, ref ici, ref clog, ref qld, ref dose50, ref doseq, ref a, ref b, ref nohetllm, ref nohetulm, ref hetllm, ref hetulm, ref nohetllq, ref nohetulq, ref hetllq, ref hetulq, ref C, out se, ref cse, out seh, ref cseh, ref I1, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref sw, out varb, ref icount, out ifault2);
             }
             outputParameters.AddOutput("title",
                                        model == ProbitModel.Probit ? "probit sigmoid curve" : "logit sigmoid curve");
-            x_profolt( ifault, host ); 
-            if ( ifault != 0 ) 
-            { 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            outputParameters.AddOutput( "a", host.RoundU( a ) ); 
-            outputParameters.AddOutput( "b", host.RoundU( b ) ); 
-            x_profolt( ifault2, host ); 
-            if ( ifault != 0 ) 
-            { 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            double hetp = PDF.chivalp( C, I1 ); 
-            outputParameters.AddOutput( "mxd", host.RoundU( dose50 ) ); 
-            if ( hetp < 0.05 ) 
-            { 
-                outputParameters.AddOutput( "het", "(Heterogeneity)" ); 
-                outputParameters.AddOutput( "from", host.RoundU( hetllm ) ); 
-                outputParameters.AddOutput( "to", host.RoundU( hetulm ) ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "het", "(No Heterogeneity)" ); 
-                outputParameters.AddOutput( "from", host.RoundU( nohetllm ) ); 
-                outputParameters.AddOutput( "to", host.RoundU( nohetulm ) ); 
-            } 
-            outputParameters.AddOutput( "centile", host.RoundU( qld ) ); 
-            outputParameters.AddOutput( "dose", host.RoundU( doseq ) ); 
-            if ( hetp < 0.05 ) 
-            { 
-                outputParameters.AddOutput( "het_cent", "(Heterogeneity)" ); 
-                outputParameters.AddOutput( "from_cent", host.RoundU( hetllq ) ); 
-                outputParameters.AddOutput( "to_cent", host.RoundU( hetulq ) ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "het_cent", "(No Heterogeneity)" ); 
-                outputParameters.AddOutput( "from_cent", host.RoundU( nohetllq ) ); 
-                outputParameters.AddOutput( "to_cent", host.RoundU( nohetulq ) ); 
-            } 
-            outputParameters.AddOutput( "dev", host.RoundU( C ) ); 
-            outputParameters.AddOutput( "df",  I1.ToString() ); 
-            outputParameters.AddOutput( "p", host.pval( hetp ) ); 
-            if ( hetp < 0.05 ) 
-            { 
-                t = b / seh; 
-            } 
-            else 
-            { 
-                t = b / se; 
-            } 
-            outputParameters.AddOutput( "t_slope", host.RoundU( t ) ); 
-            outputParameters.AddOutput( "df_slope",  I1.ToString() ); 
-            double tp = PDF.tvalp( t, I1 ); 
-            if ( tp > 1.0 - tp )
-            { 
-                tp = 1.0 - tp; 
-            } 
-            tp = 2.0 * tp; 
-            outputParameters.AddOutput( "p_slope", host.pval( tp ) ); 
-            if ( tp > 0.05 ) 
-            { 
-                IList<ParameterBag> warnList = new List<ParameterBag>(); 
-                warnList.Add( new ParameterBag() ); 
-                outputParameters.AddOutput( "*warn", warnList ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "*warn", null ); 
+            x_profolt(ifault, host);
+            if (ifault != 0)
+            {
+                throw new TemplateOperationCancelledException();
             }
-            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext
-                                                          {ARG = new double[18 + 1 /* for VB to C# conversion */]};
+            outputParameters.AddOutput("a", host.RoundU(a));
+            outputParameters.AddOutput("b", host.RoundU(b));
+            x_profolt(ifault2, host);
+            if (ifault != 0)
+            {
+                throw new TemplateOperationCancelledException();
+            }
+            double hetp = PDF.chivalp(C, I1);
+            outputParameters.AddOutput("mxd", host.RoundU(dose50));
+            if (hetp < 0.05)
+            {
+                outputParameters.AddOutput("het", "(Heterogeneity)");
+                outputParameters.AddOutput("from", host.RoundU(hetllm));
+                outputParameters.AddOutput("to", host.RoundU(hetulm));
+            }
+            else
+            {
+                outputParameters.AddOutput("het", "(No Heterogeneity)");
+                outputParameters.AddOutput("from", host.RoundU(nohetllm));
+                outputParameters.AddOutput("to", host.RoundU(nohetulm));
+            }
+            outputParameters.AddOutput("centile", host.RoundU(qld));
+            outputParameters.AddOutput("dose", host.RoundU(doseq));
+            if (hetp < 0.05)
+            {
+                outputParameters.AddOutput("het_cent", "(Heterogeneity)");
+                outputParameters.AddOutput("from_cent", host.RoundU(hetllq));
+                outputParameters.AddOutput("to_cent", host.RoundU(hetulq));
+            }
+            else
+            {
+                outputParameters.AddOutput("het_cent", "(No Heterogeneity)");
+                outputParameters.AddOutput("from_cent", host.RoundU(nohetllq));
+                outputParameters.AddOutput("to_cent", host.RoundU(nohetulq));
+            }
+            outputParameters.AddOutput("dev", host.RoundU(C));
+            outputParameters.AddOutput("df", I1.ToString());
+            outputParameters.AddOutput("p", host.pval(hetp));
+            if (hetp < 0.05)
+            {
+                t = b / seh;
+            }
+            else
+            {
+                t = b / se;
+            }
+            outputParameters.AddOutput("t_slope", host.RoundU(t));
+            outputParameters.AddOutput("df_slope", I1.ToString());
+            double tp = PDF.tvalp(t, I1);
+            if (tp > 1.0 - tp)
+            {
+                tp = 1.0 - tp;
+            }
+            tp = 2.0 * tp;
+            outputParameters.AddOutput("p_slope", host.pval(tp));
+            if (tp > 0.05)
+            {
+                IList<ParameterBag> warnList = new List<ParameterBag>();
+                warnList.Add(new ParameterBag());
+                outputParameters.AddOutput("*warn", warnList);
+            }
+            else
+            {
+                outputParameters.AddOutput("*warn", null);
+            }
+            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { ARG = new double[18 + 1 /* for VB to C# conversion */] };
 
-            context.ARG[ 1 ] = a; 
-            context.ARG[ 2 ] = b; 
-            context.ARG[ 3 ] = t; 
-            context.ARG[ 4 ] = varb; 
-            context.ARG[ 5 ] = sw; 
-            context.ARG[ 6 ] = S1; 
-            context.ARG[ 7 ] = S2; 
-            context.ARG[ 8 ] = s3; 
-            context.ARG[ 9 ] = seh; 
-            context.ARG[ 10 ] = se; 
-            context.ARG[ 11 ] = cse; 
-            context.ARG[ 12 ] = cseh; 
-            context.ARG[ 13 ] = hetp; 
-            context.ARG[ 14 ] = I1; 
-            context.ARG[ 15 ] = XM; 
-            context.ARG[ 16 ] = ici; 
-            context.ARG[ 17 ] = C1; 
-            context.ARG[ 18 ] = C2; 
-            context.ERR = (int)model; 
-            context.X1 = D; 
-            context.Y = s; 
-            context.R = r; 
-            context.H1 = P; 
-            context.N = ifa; 
-            context.DoC = clog; 
-            context.P = laps; 
-            context.DF = k; 
-            context.DV = dv; 
-            context.SV = sv; 
+            context.ARG[1] = a;
+            context.ARG[2] = b;
+            context.ARG[3] = t;
+            context.ARG[4] = varb;
+            context.ARG[5] = sw;
+            context.ARG[6] = S1;
+            context.ARG[7] = S2;
+            context.ARG[8] = s3;
+            context.ARG[9] = seh;
+            context.ARG[10] = se;
+            context.ARG[11] = cse;
+            context.ARG[12] = cseh;
+            context.ARG[13] = hetp;
+            context.ARG[14] = I1;
+            context.ARG[15] = XM;
+            context.ARG[16] = ici;
+            context.ARG[17] = C1;
+            context.ARG[18] = C2;
+            context.ERR = (int)model;
+            context.X1 = D;
+            context.Y = s;
+            context.R = r;
+            context.H1 = P;
+            context.N = ifa;
+            context.DoC = clog;
+            context.P = laps;
+            context.DF = k;
+            context.DV = dv;
+            context.SV = sv;
             context.RV = rv;
-            context.Label = new string[2 + 1 /* for VB to C# conversion */ ]; 
-            context.Label[ 0 ] = doseVariable.Title; 
-            context.Label[ 1 ] = subjectsVariable.Title; 
-            context.Label[ 2 ] = respondersVariable.Title; 
-            outputParameters.Add( "context", new FilledParameter( true, context ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static void x_sortbydose( ref double[] D, ref double[] s, ref double[] r, int k ) 
+            context.Label = new string[2 + 1 /* for VB to C# conversion */ ];
+            context.Label[0] = doseVariable.Title;
+            context.Label[1] = subjectsVariable.Title;
+            context.Label[2] = respondersVariable.Title;
+            outputParameters.Add("context", new FilledParameter(true, context));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static void x_sortbydose(ref double[] D, ref double[] s, ref double[] r, int k)
         {
-            Tri[] swp = new Tri[k + 1 /* for VB to C# conversion */ ]; 
-            for ( int i=1; i <= k; i++ ) 
-            { 
-                swp[ i ].D = D[ i ]; 
-                swp[ i ].s = s[ i ]; 
-                swp[ i ].r = r[ i ]; 
-            } 
-            Array.Sort( swp, 1, k, new TriByDAscending() ); 
-            for ( int i=1; i <= k; i++ ) 
-            { 
-                D[ i ] = swp[ i ].D; 
-                s[ i ] = swp[ i ].s; 
-                r[ i ] = swp[ i ].r; 
-            } 
-        } 
-        
-        
-        public static void x_probits(ProbitModel Model, int k, ref double C1, ref double C, ref int nc, int nrc, bool clog, double qld, double[] D, double[] s, ref double[] r, double[] P, double[] w, double[] y, double[] pob, double[] x, ref double a, ref double b, ref int laps, ref double S1, ref double S2, ref double s3, ref double s4, ref double s6, ref double del, ref double TM, ref double XM, ref double ym, ref double sw, ref int icount, out int ifault )
-         
-        { 
+            Tri[] swp = new Tri[k + 1 /* for VB to C# conversion */ ];
+            for (int i = 1; i <= k; i++)
+            {
+                swp[i].D = D[i];
+                swp[i].s = s[i];
+                swp[i].r = r[i];
+            }
+            Array.Sort(swp, 1, k, new TriByDAscending());
+            for (int i = 1; i <= k; i++)
+            {
+                D[i] = swp[i].D;
+                s[i] = swp[i].s;
+                r[i] = swp[i].r;
+            }
+        }
+
+
+        public static void x_probits(ProbitModel Model, int k, ref double C1, ref double C, ref int nc, int nrc, bool clog, double qld, double[] D, double[] s, ref double[] r, double[] P, double[] w, double[] y, double[] pob, double[] x, ref double a, ref double b, ref int laps, ref double S1, ref double S2, ref double s3, ref double s4, ref double s6, ref double del, ref double TM, ref double XM, ref double ym, ref double sw, ref int icount, out int ifault)
+        {
             int i;
             double PP;
             double s1l; double s2l; double s3l; double s4l = 0; double s6l = 0; double dell = 0;
@@ -6188,771 +6199,776 @@ namespace StatsDirect.Builtins
             double dsq;
 
             double[] Y2 = new double[k + 1 /* for VB to C# conversion */];
-            double[] t2 = new double[k + 1 /* for VB to C# conversion */]; 
+            double[] t2 = new double[k + 1 /* for VB to C# conversion */];
             //  ***  CALCULATE EXPERIMENTAL VALUE OF NATURAL MORTALITY (C1) AND RESET
             //  ***  CPOOL
-            double rc = nrc; 
-            double cpool = -1.0; 
-            if ( C1 < 0.0 ) 
-            { 
-                C1 = rc / Convert.ToDouble( nc ); 
-                cpool = C1; 
-            } 
-            if ( C1 < 0.0 ) 
-            { 
-                ifault = 1; 
-                return; 
-            } 
-            double dc = 0.0; 
-            C = C1; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                x[ i ] = D[ i ]; 
-            } 
+            double rc = nrc;
+            double cpool = -1.0;
+            if (C1 < 0.0)
+            {
+                C1 = rc / Convert.ToDouble(nc);
+                cpool = C1;
+            }
+            if (C1 < 0.0)
+            {
+                ifault = 1;
+                return;
+            }
+            double dc = 0.0;
+            C = C1;
+            for (i = 1; i <= k; i++)
+            {
+                x[i] = D[i];
+            }
             //  ***  CHECK THAT NUMBER OF DOSE LEVELS >2
-            ifault = 2; 
-            if ( k <= 2 )
-            { 
-                return; 
-            } 
+            ifault = 2;
+            if (k <= 2)
+            {
+                return;
+            }
             //  ***  CHECK DOSE LEVELS ARE ALL POSITIVE
-            ifault = 3; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                if ( x[ i ] < 0.0 )
-                { 
-                    return; 
-                } 
-            } 
+            ifault = 3;
+            for (i = 1; i <= k; i++)
+            {
+                if (x[i] < 0.0)
+                {
+                    return;
+                }
+            }
             //  ***  IF LOG CONVERSION REQUIRED , CHECK DOSE LEVELS > 0 THEN CONVERT TO
             //  ***  COMMON LOGS
-            if ( clog ) 
-            { 
-                for ( i=1; i <= k; i++ ) 
-                { 
-                    if ( x[ i ] > 0.0 ) 
-                    { 
-                        x[ i ] = Math.Log( x[ i ] ) / Math.Log( 10.0 ); 
-                    } 
-                    else 
-                    { 
-                        ifault = 4; 
-                        return; 
-                    } 
-                } 
-            } 
+            if (clog)
+            {
+                for (i = 1; i <= k; i++)
+                {
+                    if (x[i] > 0.0)
+                    {
+                        x[i] = Math.Log(x[i]) / Math.Log(10.0);
+                    }
+                    else
+                    {
+                        ifault = 4;
+                        return;
+                    }
+                }
+            }
             //  ***  CHECK FOR RESPONDERS > SUBJECTS, AND SUBJECTS < 1,  AND CALCULATE
             //  ***  PROPORTIONS RESPONDING
-            for ( i=1; i <= k; i++ ) 
-            { 
-                if ( s[ i ] > 0.0 ) 
-                { 
-                    if ( ( s[ i ] - r[ i ] ) < 0.0 ) 
-                    { 
-                        ifault = 1; 
-                        return; 
-                    } 
-                    P[ i ] = r[ i ] / s[ i ]; 
-                } 
-            } 
+            for (i = 1; i <= k; i++)
+            {
+                if (s[i] > 0.0)
+                {
+                    if ((s[i] - r[i]) < 0.0)
+                    {
+                        ifault = 1;
+                        return;
+                    }
+                    P[i] = r[i] / s[i];
+                }
+            }
             //  ***  CHECK THAT NO PROPORTIONS RESPONDING (P) ARE LOWER THAN OR EQUAL
             //  ***  TO THE EXPERIMENTAL VALUE OF NATURAL MORTALITY (CPOOL) (IF THERE
             //  ***  IS NO CONTROL DATA CPOOL WILL BE -1)
-            int j = 0; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                if ( P[ i ] - cpool <= 0.0 )
-                { 
-                    j = i; 
-                } 
-            } 
-            if ( j > 0 ) 
-            { 
-                for ( i=1; i <= j; i++ ) 
-                { 
-                    nc = nc + Convert.ToInt32( s[ i ] ); 
-                    rc = rc + r[ i ]; 
-                } 
-                C1 = rc / Convert.ToDouble( nc ); 
-                C = C1; 
-                ifault = 6; 
-                if ( k - j <= 2 )
-                { 
-                    return; 
-                } 
-            } 
+            int j = 0;
+            for (i = 1; i <= k; i++)
+            {
+                if (P[i] - cpool <= 0.0)
+                {
+                    j = i;
+                }
+            }
+            if (j > 0)
+            {
+                for (i = 1; i <= j; i++)
+                {
+                    nc = nc + Convert.ToInt32(s[i]);
+                    rc = rc + r[i];
+                }
+                C1 = rc / Convert.ToDouble(nc);
+                C = C1;
+                ifault = 6;
+                if (k - j <= 2)
+                {
+                    return;
+                }
+            }
             //  ***  CALCULATE INITIAL ESTIMATE OF A AND B FOR THE PROBIT EQUTION
             //  ***  CALCULATE OBSERVED PROBITS (POB), USING P ADJUSTED BY THE
             //  ***  EXPERIMENTAL VALUE OF NATURAL MORTALITY AND ADDING OR SUBTRACTING
             //  ***  -.5 IF PROPORTION RESPONDING IS 0.0 OR 1.0
             //  ***  CALCULATE EXPECTED PROBITS (Y) USING THESE INITIAL ESTIMATES
-            double sm = 0.0; 
-            double sumxz = 0.0; 
-            double sumx = 0.0; 
-            double sumz = 0.0; 
-            double sumxx = 0.0; 
-            for ( i=j + 1; i <= k; i++ ) 
-            { 
-                sm = sm + 1.0; 
-                PP = ( P[ i ] - C ) / ( 1.0 - C ); 
-                if ( PP <= 0.0 ) 
-                { 
-                    PP = ( ( 0.5 / s[ i ] ) - C ) / ( 1.0 - C ); 
-                } 
-                else 
-                { 
-                    if ( PP >= 1.0 )
-                    { 
-                        PP = ( ( ( r[ i ] - 0.5 ) / s[ i ] ) - C ) / ( 1.0 - C ); 
-                    } 
-                } 
+            double sm = 0.0;
+            double sumxz = 0.0;
+            double sumx = 0.0;
+            double sumz = 0.0;
+            double sumxx = 0.0;
+            for (i = j + 1; i <= k; i++)
+            {
+                sm = sm + 1.0;
+                PP = (P[i] - C) / (1.0 - C);
+                if (PP <= 0.0)
+                {
+                    PP = ((0.5 / s[i]) - C) / (1.0 - C);
+                }
+                else
+                {
+                    if (PP >= 1.0)
+                    {
+                        PP = (((r[i] - 0.5) / s[i]) - C) / (1.0 - C);
+                    }
+                }
                 int ifa;
-                double z = Model == ProbitModel.Probit ? PDF.gauinv(PP, out ifa) : 0.5*Math.Log(PP/(1.0 - PP));
-                pob[ i ] = z; 
-                sumxz = sumxz + z * x[ i ]; 
-                sumx = sumx + x[ i ]; 
-                sumz = sumz + z; 
-                sumxx = sumxx + x[ i ] * x[ i ]; 
-            } 
-            XM = sumx / sm; 
-            double zm = sumz / sm; 
-            b = ( sumxz - XM * sumz ) / ( sumxx - XM * sumx ); 
-            a = zm - b * XM; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                y[ i ] = a + b * x[ i ]; 
-            } 
+                double z = Model == ProbitModel.Probit ? PDF.gauinv(PP, out ifa) : 0.5 * Math.Log(PP / (1.0 - PP));
+                pob[i] = z;
+                sumxz = sumxz + z * x[i];
+                sumx = sumx + x[i];
+                sumz = sumz + z;
+                sumxx = sumxx + x[i] * x[i];
+            }
+            XM = sumx / sm;
+            double zm = sumz / sm;
+            b = (sumxz - XM * sumz) / (sumxx - XM * sumx);
+            a = zm - b * XM;
+            for (i = 1; i <= k; i++)
+            {
+                y[i] = a + b * x[i];
+            }
             //  ***  CALCULATE THE EXPECTED PROBITS ITERATIVELY  *******************
             //  ***  CALCULATE WEIGHTS(W) AND AUXILIARY VARIATE(T)
-            do 
-            { 
-                icount = 0; 
-                for ( i=1; i <= k; i++ ) 
-                { 
-                    double v = y[ i ];
+            do
+            {
+                icount = 0;
+                for (i = 1; i <= k; i++)
+                {
+                    double v = y[i];
                     double dd;
                     double Q;
-                    if ( Model == ProbitModel.Probit ) 
-                    { 
-                        PP = PDF.alnorm( v ); 
-                        Q = 1.0 - PP; 
-                        dd = 0.398942280401433 * Math.Exp( -v * v / 2.0 ); 
-                    } 
-                    else 
-                    { 
-                        PP = Math.Exp( v * 2.0 ) / ( 1.0 + Math.Exp( v * 2.0 ) ); 
-                        Q = 1.0 - PP; 
-                        dd = 2.0 * Q * PP; 
-                    } 
-                    if ( Q <= 0.0 | Q >= 1.0 ) 
-                    { 
-                        icount = icount + 1; 
-                        w[ i ] = 0.0; 
-                        t2[ i ] = 0.0; 
-                    } 
-                    else 
-                    { 
-                        w[ i ] = dd * dd / ( Q * ( PP + C / ( 1.0 - C ) ) ); 
-                        t2[ i ] = Q / dd; 
-                    } 
+                    if (Model == ProbitModel.Probit)
+                    {
+                        PP = PDF.alnorm(v);
+                        Q = 1.0 - PP;
+                        dd = 0.398942280401433 * Math.Exp(-v * v / 2.0);
+                    }
+                    else
+                    {
+                        PP = Math.Exp(v * 2.0) / (1.0 + Math.Exp(v * 2.0));
+                        Q = 1.0 - PP;
+                        dd = 2.0 * Q * PP;
+                    }
+                    if (Q <= 0.0 | Q >= 1.0)
+                    {
+                        icount = icount + 1;
+                        w[i] = 0.0;
+                        t2[i] = 0.0;
+                    }
+                    else
+                    {
+                        w[i] = dd * dd / (Q * (PP + C / (1.0 - C)));
+                        t2[i] = Q / dd;
+                    }
                     //  ***  CALCULATE WORKING PROBITS (Y2)
-                    double ap = ( P[ i ] - C ) / ( 1.0 - C ); 
-                    if ( y[ i ] <= 0.0 ) 
-                    { 
-                        if ( dd == 0.0 ) 
-                        { 
-                            Y2[ i ] = y[ i ] - PP + ap; 
-                        } 
-                        else 
-                        { 
-                            Y2[ i ] = y[ i ] - PP / dd + ap / dd; 
-                        } 
-                    } 
-                    else 
-                    { 
-                        if ( dd == 0.0 ) 
-                        { 
-                            Y2[ i ] = y[ i ] + Q - ( 1.0 - ap ); 
-                        } 
-                        else 
-                        { 
-                            Y2[ i ] = y[ i ] + Q / dd - ( 1.0 - ap ) / dd; 
-                        } 
-                    } 
-                } 
+                    double ap = (P[i] - C) / (1.0 - C);
+                    if (y[i] <= 0.0)
+                    {
+                        if (dd == 0.0)
+                        {
+                            Y2[i] = y[i] - PP + ap;
+                        }
+                        else
+                        {
+                            Y2[i] = y[i] - PP / dd + ap / dd;
+                        }
+                    }
+                    else
+                    {
+                        if (dd == 0.0)
+                        {
+                            Y2[i] = y[i] + Q - (1.0 - ap);
+                        }
+                        else
+                        {
+                            Y2[i] = y[i] + Q / dd - (1.0 - ap) / dd;
+                        }
+                    }
+                }
                 //  ***  CHECK THAT THER ARE NOT TOO MANY DOSE LEVELS WITH 0 WEIGHTS
-                ifault = 7; 
-                if ( k - icount < 2 )
-                { 
-                    return; 
-                } 
+                ifault = 7;
+                if (k - icount < 2)
+                {
+                    return;
+                }
                 //  ***  CALCULATE VALUES OF COEFFICIENTS in EQUATIONS (S1 TO S7)
                 //  ***  FINNEY, PROBIT ANALYSIS (1971) PAGE 130
-                double swxx = 0.0; 
-                double swx = 0.0; 
-                swl = 0.0; 
-                double swxy = 0.0; 
-                double swy = 0.0; 
-                double swyy = 0.0; 
-                double swxt = 0.0; 
-                double swtt = 0.0; 
-                double swt = 0.0; 
-                double swty = 0.0; 
-                for ( i=1; i <= k; i++ ) 
-                { 
-                    swxt = swxt + s[ i ] * w[ i ] * x[ i ] * t2[ i ]; 
-                    swt = swt + s[ i ] * w[ i ] * t2[ i ]; 
-                    swtt = swtt + s[ i ] * w[ i ] * t2[ i ] * t2[ i ]; 
-                    swty = swty + s[ i ] * w[ i ] * t2[ i ] * Y2[ i ]; 
-                    swxx = swxx + s[ i ] * w[ i ] * x[ i ] * x[ i ]; 
-                    swx = swx + s[ i ] * w[ i ] * x[ i ]; 
-                    swl = swl + s[ i ] * w[ i ]; 
-                    swxy = swxy + s[ i ] * w[ i ] * x[ i ] * Y2[ i ]; 
-                    swy = swy + s[ i ] * w[ i ] * Y2[ i ]; 
-                    swyy = swyy + s[ i ] * w[ i ] * Y2[ i ] * Y2[ i ]; 
-                } 
-                s1l = swxx - ( swx * swx ) / swl; 
-                s2l = swxy - ( swx * swy ) / swl; 
-                s3l = swyy - ( swy * swy ) / swl; 
-                if ( C > 0 ) 
-                { 
-                    s4l = swtt - ( swt * swt ) / swl + Convert.ToDouble( nc ) * ( 1.0 - C ) / C; 
-                    s5 = swty - ( swt * swy ) / swl + Convert.ToDouble( nc ) * ( C1 - C ) / C; 
-                    s6l = swxt - ( swx * swt ) / swl; 
-                    double s7 = s6l * s6l; 
-                    dell = s1l * s4l - s7; 
-                } 
-                ym = swy / swl; 
-                XM = swx / swl; 
-                TM = swt / swl; 
+                double swxx = 0.0;
+                double swx = 0.0;
+                swl = 0.0;
+                double swxy = 0.0;
+                double swy = 0.0;
+                double swyy = 0.0;
+                double swxt = 0.0;
+                double swtt = 0.0;
+                double swt = 0.0;
+                double swty = 0.0;
+                for (i = 1; i <= k; i++)
+                {
+                    swxt = swxt + s[i] * w[i] * x[i] * t2[i];
+                    swt = swt + s[i] * w[i] * t2[i];
+                    swtt = swtt + s[i] * w[i] * t2[i] * t2[i];
+                    swty = swty + s[i] * w[i] * t2[i] * Y2[i];
+                    swxx = swxx + s[i] * w[i] * x[i] * x[i];
+                    swx = swx + s[i] * w[i] * x[i];
+                    swl = swl + s[i] * w[i];
+                    swxy = swxy + s[i] * w[i] * x[i] * Y2[i];
+                    swy = swy + s[i] * w[i] * Y2[i];
+                    swyy = swyy + s[i] * w[i] * Y2[i] * Y2[i];
+                }
+                s1l = swxx - (swx * swx) / swl;
+                s2l = swxy - (swx * swy) / swl;
+                s3l = swyy - (swy * swy) / swl;
+                if (C > 0)
+                {
+                    s4l = swtt - (swt * swt) / swl + Convert.ToDouble(nc) * (1.0 - C) / C;
+                    s5 = swty - (swt * swy) / swl + Convert.ToDouble(nc) * (C1 - C) / C;
+                    s6l = swxt - (swx * swt) / swl;
+                    double s7 = s6l * s6l;
+                    dell = s1l * s4l - s7;
+                }
+                ym = swy / swl;
+                XM = swx / swl;
+                TM = swt / swl;
                 //  ***  CALCULATE NEW A, B AND DC USING COEFFICIENTS
-                ifault = 7; 
-                if ( s1l == 0 )
-                { 
-                    return; 
-                } 
-                b = s2l / s1l; 
-                if ( C > 0.0 ) 
-                { 
-                    b = ( s4l * s2l - s6l * s5 ) / dell; 
-                    dc = ( 1.0 - C ) * ( s5 * s1l - s6l * s2l ) / dell; 
-                } 
-                a = ym - b * XM - ( dc * TM ) / ( 1.0 - C ); 
+                ifault = 7;
+                if (s1l == 0)
+                {
+                    return;
+                }
+                b = s2l / s1l;
+                if (C > 0.0)
+                {
+                    b = (s4l * s2l - s6l * s5) / dell;
+                    dc = (1.0 - C) * (s5 * s1l - s6l * s2l) / dell;
+                }
+                a = ym - b * XM - (dc * TM) / (1.0 - C);
                 //  ***  CALCULATE NEW EXPECTED PROBITS (STORE in T TEMPORARILY) AND
                 //  ***  ADD CHANGE in NATURAL MORTALITY TO ESTIMATE. COMPARE NEW EXPECTED
                 //  ***  PROBITS WITH OLD AND IF CHANGE > 1D-9 RETURN TO BEGINING OF
                 //  ***  ITERATIVE CYCLE
-                dsq = 0.0; 
-                for ( i=1; i <= k; i++ ) 
-                { 
-                    double t = a + b * x[ i ]; 
-                    dsq = dsq + ( y[ i ] - t ) * ( y[ i ] - t ); 
-                    y[ i ] = t; 
-                } 
-                C = C + dc; 
-                laps = laps + 1; 
-                if ( laps > 300 ) 
-                { 
-                    ifault = 10; 
-                    return; 
-                } 
-            } 
-            while (  ! ( dsq < Constant.EPSILON ) ); 
+                dsq = 0.0;
+                for (i = 1; i <= k; i++)
+                {
+                    double t = a + b * x[i];
+                    dsq = dsq + (y[i] - t) * (y[i] - t);
+                    y[i] = t;
+                }
+                C = C + dc;
+                laps = laps + 1;
+                if (laps > 300)
+                {
+                    ifault = 10;
+                    return;
+                }
+            }
+            while (!(dsq < Constant.EPSILON));
             //  ***  CHECK THAT THERE ARE NOT TOO MANY DOSE LEVELS WITH 0 WEIGHTS
-            ifault = 7; 
-            if ( k - icount <= 2 )
-            { 
-                return; 
-            } 
-            //  ***  ADJUST P BY THE FINAL ESTIMATE OF NATURAL MORTALITY
-            for ( i=1; i <= k; i++ ) 
-            { 
-                P[ i ] = ( P[ i ] - C ) / ( 1.0 - C ); 
-            } 
-            //  ***  FINAL ESTIMATE OF NATURAL MORTALITY
-            if ( C > 0.0 )
+            ifault = 7;
+            if (k - icount <= 2)
             {
-            } 
-            S1 = s1l; 
-            S2 = s2l; 
-            s3 = s3l; 
-            s4 = s4l; 
-            s6 = s6l; 
-            sw = swl; 
-            del = dell; 
-            ifault = 0; 
-        } 
-        
-        
-        public static void x_profolt( int ifault, ITemplateHost host ) 
+                return;
+            }
+            //  ***  ADJUST P BY THE FINAL ESTIMATE OF NATURAL MORTALITY
+            for (i = 1; i <= k; i++)
+            {
+                P[i] = (P[i] - C) / (1.0 - C);
+            }
+            //  ***  FINAL ESTIMATE OF NATURAL MORTALITY
+            if (C > 0.0)
+            {
+            }
+            S1 = s1l;
+            S2 = s2l;
+            s3 = s3l;
+            s4 = s4l;
+            s6 = s6l;
+            sw = swl;
+            del = dell;
+            ifault = 0;
+        }
+
+
+        public static void x_profolt(int ifault, ITemplateHost host)
         {
-            if ( ifault != 0 ) 
+            if (ifault != 0)
             {
                 string msg;
-                switch ( ifault ) 
+                switch (ifault)
                 {
                     case 1:
-                        msg = "Responders > Subjects"; 
+                        msg = "Responders > Subjects";
                         break;
                     case 2:
-                        msg = "Dose levels < 2"; 
+                        msg = "Dose levels < 2";
                         break;
                     case 3:
-                        msg = "Negative dose level"; 
+                        msg = "Negative dose level";
                         break;
                     case 4:
-                        msg = "> 1 Dose level <= 0"; 
+                        msg = "> 1 Dose level <= 0";
                         break;
                     case 6:
-                        msg = "Too few dose levels after adjusting for controls"; 
+                        msg = "Too few dose levels after adjusting for controls";
                         break;
                     case 7:
-                        msg = "Too many dose levels with zero weights"; 
+                        msg = "Too many dose levels with zero weights";
                         break;
-                    case 8: case 9:
-                        msg = "Slope insignificant, can not calculate confidence limits"; 
+                    case 8:
+                    case 9:
+                        msg = "Slope insignificant, can not calculate confidence limits";
                         break;
                     case 10:
-                        msg = "Convergent solution not reached within 300 cycles"; 
+                        msg = "Convergent solution not reached within 300 cycles";
                         break;
                     default:
-                        msg = "Unknown error"; 
+                        msg = "Unknown error";
                         break;
                 }
-                
-                host.Error( msg, "Fault in Probit Analysis" ); 
-            } 
-        } 
-        
-        
-        private static void x_qdcl( ref ProbitModel Model, ref int k, out double C2, ref double ici, ref bool clog, ref double qld, ref double dose50, ref double doseq, ref double a, ref double b, ref double nohetllm, ref double nohetulm, ref double hetllm, ref double hetulm, ref double nohetllq, ref double nohetulq, ref double hetllq, ref double hetulq, ref double C, out double se, ref double cse, out double seh, ref double cseh, ref double I1, ref double S1, ref double S2, ref double s3, ref double s4, ref 
-        double s6, ref double del, ref double TM, ref double XM, ref double sw, out double varb, ref int icount, out int ifault ) 
+
+                host.Error(msg, "Fault in Probit Analysis");
+            }
+        }
+
+
+        private static void x_qdcl(ref ProbitModel Model, ref int k, out double C2, ref double ici, ref bool clog, ref double qld, ref double dose50, ref double doseq, ref double a, ref double b, ref double nohetllm, ref double nohetulm, ref double hetllm, ref double hetulm, ref double nohetllq, ref double nohetulq, ref double hetllq, ref double hetulq, ref double C, out double se, ref double cse, out double seh, ref double cseh, ref double I1, ref double S1, ref double S2, ref double s3, ref double s4, ref 
+        double s6, ref double del, ref double TM, ref double XM, ref double sw, out double varb, ref int icount, out int ifault)
         {
             double covar = 0;
             double vardcb = 0;
-            double g = 0; 
-            
-            int ibit = 0; 
+            double g = 0;
+
+            int ibit = 0;
             //  ***  PUT C2 = C, NATURAL MORTALITY. (C BECOMES THE CHI-SQUARED VALUE)
-            C2 = C; 
-            C = s3 - b * S2; 
+            C2 = C;
+            C = s3 - b * S2;
             //  ***  CALCULATE THE VARIANCE OF B (VARB),(THE FORMULA IS DIFFERENT IF
             //  ***  THERE IS CONTROL DATA). CALCULATE THE DEGREES OF FREEDOM (I).
-            if ( C2 <= 0.0 ) 
-            { 
-                varb = 1.0 / S1; 
-            } 
-            else 
-            { 
-                varb = s4 / del; 
-            } 
-            int i = k - 2 - icount; 
+            if (C2 <= 0.0)
+            {
+                varb = 1.0 / S1;
+            }
+            else
+            {
+                varb = s4 / del;
+            }
+            int i = k - 2 - icount;
             //  ***  WRITE CHI-SQUARE VALUE, AND STANDARD ERROR OF B FOR HETEROGENEITY
             //  ***  AND NO HETEROGENEITY
-            se = Math.Sqrt( varb ); 
-            seh = se * Math.Sqrt( C / Convert.ToDouble( i ) ); 
+            se = Math.Sqrt(varb);
+            seh = se * Math.Sqrt(C / Convert.ToDouble(i));
             //  ***  IF THERE ARE CONTROL DATA CALCULATE AND PRINT THE STANDARD ERROR
             //  ***  OF C FOR NO HETEROGENEITY AND HETEROGENEITY
-            if ( C2 > 0.0 ) 
-            { 
-                cse = ( 1.0 - C2 ) * Math.Sqrt( S1 / del ); 
-                cseh = cse * Math.Sqrt( C / Convert.ToDouble( i ) ); 
-            } 
+            if (C2 > 0.0)
+            {
+                cse = (1.0 - C2) * Math.Sqrt(S1 / del);
+                cseh = cse * Math.Sqrt(C / Convert.ToDouble(i));
+            }
             //  ***  CALCULATE  AND PRINT THE VALUES FOR LETHAL DOSES 50 OR 90 (Z).
             //  ***  CONVERT IT IF LOGS HAVE BEEN USED. (IBIT RECORDS WHETHER LETHAL
             //  ***  DOSE 50 OR LETHAL DOSE Q IS BEING CALCULATED)
-            do 
-            { 
+            do
+            {
                 int ifa;
-                double qldz ;
-                if ( ibit == 1 ) 
-                { 
-                    if ( Model == ProbitModel.Probit ) 
-                    { 
-                        qldz = PDF.gauinv( qld / 100.0, out ifa ); 
-                    } 
-                    else 
-                    { 
-                        qldz = qld / 100.0; 
-                        qldz = 0.5 * Math.Log( qldz / ( 1.0 - qldz ) ); 
-                    } 
-                } 
-                else 
-                { 
-                    qldz = 0.0; 
-                } 
-                double pdose = ( qldz - a ) / b; 
-                double dose = clog ? Math.Exp( pdose * Math.Log( 10.0 ) ) : pdose; 
+                double qldz;
+                if (ibit == 1)
+                {
+                    if (Model == ProbitModel.Probit)
+                    {
+                        qldz = PDF.gauinv(qld / 100.0, out ifa);
+                    }
+                    else
+                    {
+                        qldz = qld / 100.0;
+                        qldz = 0.5 * Math.Log(qldz / (1.0 - qldz));
+                    }
+                }
+                else
+                {
+                    qldz = 0.0;
+                }
+                double pdose = (qldz - a) / b;
+                double dose = clog ? Math.Exp(pdose * Math.Log(10.0)) : pdose;
                 //  ***  FOR BOTH LETHAL DOSES CALCULATE THE CONFIDENCE LIMITS FOR
                 //  ***  NO HETEROGENEITY AND HETEROGENEITY (HET RECORDS WHETHER NO
                 //  ***  HETEROGENEITY OR HETEROGENEITY BEING PERFORMED) ***************
                 //  ***  RECORD in ICL AND PRINT WHICH CONFIDENCE LIMITS ARE BEING
                 //  ***  CALCULATED AND PUT THE NORMAL DEVIATE FOR THOSE LIMITS in T.
-                ifa = 0; 
-                double t = PDF.gauinv( ici + ( ( 1.0 - ici ) / 2.0 ), out ifa ); 
-                int het = 1; 
-                double vx = pdose - XM; 
-                varb = 1.0 / S1; 
+                ifa = 0;
+                double t = PDF.gauinv(ici + ((1.0 - ici) / 2.0), out ifa);
+                int het = 1;
+                double vx = pdose - XM;
+                varb = 1.0 / S1;
                 //  ***  IF THERE IS CONTROL DATA THE FORMULA FOR CONFIDENCE LIMITS IS
                 //  ***  MORE COMPLICATED, CALCULATE SOME EXTRA TERMS HERE
-                if ( C2 > 0.0 ) 
-                { 
-                    varb = s4 / del; 
-                    vardcb = S1 / del; 
-                    covar = -s6 / del; 
-                } 
+                if (C2 > 0.0)
+                {
+                    varb = s4 / del;
+                    vardcb = S1 / del;
+                    covar = -s6 / del;
+                }
                 //  ***  IF HETEROGENEITY CONFIDENCE LIMITS BEING CALCULATED, MULTIPLY
                 //  ***  VALUES in EQUATION BY THE CHI-SQUARE VALUE DIVIDED BY THE DEGREES
                 //  ***  OF FREEDOM AND PUT T VALUE FOR CONFIDENCE LIMITS INT.
-                do 
-                { 
-                    if ( het == 2 ) 
-                    { 
-                        varb = varb * C / Convert.ToDouble( i ); 
-                        I1 = Convert.ToDouble( i ); 
-                        t = PDF.tfromp( ( 1.0 - ici ) / 2.0, I1 ); 
-                    } 
-                    else 
-                    { 
-                        g = t * t * varb / ( b * b ); 
-                    } 
+                do
+                {
+                    if (het == 2)
+                    {
+                        varb = varb * C / Convert.ToDouble(i);
+                        I1 = Convert.ToDouble(i);
+                        t = PDF.tfromp((1.0 - ici) / 2.0, I1);
+                    }
+                    else
+                    {
+                        g = t * t * varb / (b * b);
+                    }
                     //  ***  TEST FOR INSIGNIFICANCE OF SLOPE, IF IT IS PRESENT PRINT MESSAGE
                     //  ***  AND DISCONTINUE CALCULATIONS FOR THIS LETHAL DOSE
-                    ifault = 9; 
-                    if ( g - 1.0 > 0.0 )
-                    { 
-                        return; 
-                    } 
+                    ifault = 9;
+                    if (g - 1.0 > 0.0)
+                    {
+                        return;
+                    }
                     //  ***  CALCULATE MORE TERMS in THE EQUATIONS FOR CONFIDENCE LIMITS
-                    double gi = 1.0 - g; 
-                    double pf1 = pdose + g * vx / gi; 
-                    double pf2 = t / ( Math.Abs( b ) * gi ); 
-                    double pf3 = gi / sw + varb * vx * vx; 
-                    if ( het == 2 )
-                    { 
-                        pf3 = ( gi * C ) / ( sw * Convert.ToDouble( i ) ) + varb * vx * vx; 
-                    } 
-                    if ( C2 > 0.0 ) 
-                    { 
-                        if ( het == 2 ) 
-                        { 
-                            vardcb = vardcb * C / Convert.ToDouble( i ); 
-                            covar = covar * C / Convert.ToDouble( i ); 
-                        } 
-                        pf1 = pf1 - g * TM * covar / ( varb * gi ); 
-                        double pf3a = 1.0 / sw + TM * TM * vardcb; 
-                        if ( het == 2 )
-                        { 
-                            pf3a = C / ( sw * Convert.ToDouble( i ) ) + TM * TM * vardcb; 
-                        } 
-                        pf3 = pf3a - 2 * vx * TM * covar + vx * vx * varb - g * ( pf3a - TM * TM * covar * covar / varb ); 
-                    } 
-                    ifault = 8; 
-                    if ( pf3 < 0.0 )
-                    { 
-                        return; 
-                    } 
-                    double pf4 = pf2 * Math.Sqrt( pf3 ); 
-                    double ans1 = pf1 + pf4; 
-                    double ans2 = pf1 - pf4; 
+                    double gi = 1.0 - g;
+                    double pf1 = pdose + g * vx / gi;
+                    double pf2 = t / (Math.Abs(b) * gi);
+                    double pf3 = gi / sw + varb * vx * vx;
+                    if (het == 2)
+                    {
+                        pf3 = (gi * C) / (sw * Convert.ToDouble(i)) + varb * vx * vx;
+                    }
+                    if (C2 > 0.0)
+                    {
+                        if (het == 2)
+                        {
+                            vardcb = vardcb * C / Convert.ToDouble(i);
+                            covar = covar * C / Convert.ToDouble(i);
+                        }
+                        pf1 = pf1 - g * TM * covar / (varb * gi);
+                        double pf3a = 1.0 / sw + TM * TM * vardcb;
+                        if (het == 2)
+                        {
+                            pf3a = C / (sw * Convert.ToDouble(i)) + TM * TM * vardcb;
+                        }
+                        pf3 = pf3a - 2 * vx * TM * covar + vx * vx * varb - g * (pf3a - TM * TM * covar * covar / varb);
+                    }
+                    ifault = 8;
+                    if (pf3 < 0.0)
+                    {
+                        return;
+                    }
+                    double pf4 = pf2 * Math.Sqrt(pf3);
+                    double ans1 = pf1 + pf4;
+                    double ans2 = pf1 - pf4;
                     //  ***  IF LOG CONVERSION HAS BEEN USED CONVERT THE VALUES OF THE
                     //  ***  CONFIDENCE LIMITS
-                    if ( clog ) 
-                    { 
-                        ans1 = Math.Exp( ans1 * Math.Log( 10.0 ) ); 
-                        ans2 = Math.Exp( ans2 * Math.Log( 10.0 ) ); 
-                    } 
+                    if (clog)
+                    {
+                        ans1 = Math.Exp(ans1 * Math.Log(10.0));
+                        ans2 = Math.Exp(ans2 * Math.Log(10.0));
+                    }
                     //  ***  SET THE CONFIDENCE LIMITS FOR NO HETEROGENEITY. PUT HET=2
                     //  ***  THEN GO BACK AND CALCULATE CONFIDENCE LIMITS FOR HETEROGENEITY
-                    if ( ibit == 0 ) 
-                    { 
-                        if ( het == 1 ) 
-                        { 
-                            het = 2; 
-                            nohetllm = ans2; 
-                            nohetulm = ans1; 
-                        } 
-                        else 
-                        { 
-                            hetllm = ans2; 
-                            hetulm = ans1; 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                    else 
-                    { 
-                        if ( het == 1 ) 
-                        { 
-                            het = 2; 
-                            nohetllq = ans2; 
-                            nohetulq = ans1; 
-                        } 
-                        else 
-                        { 
-                            hetllq = ans2; 
-                            hetulq = ans1; 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                } 
-                while ( true ); 
+                    if (ibit == 0)
+                    {
+                        if (het == 1)
+                        {
+                            het = 2;
+                            nohetllm = ans2;
+                            nohetulm = ans1;
+                        }
+                        else
+                        {
+                            hetllm = ans2;
+                            hetulm = ans1;
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                    else
+                    {
+                        if (het == 1)
+                        {
+                            het = 2;
+                            nohetllq = ans2;
+                            nohetulq = ans1;
+                        }
+                        else
+                        {
+                            hetllq = ans2;
+                            hetulq = ans1;
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                }
+                while (true);
                 //  ***  IF LETHAL DOSE 50 HAS JUST BEEN CALCULATED THEN GO BACK AND
                 //  ***  DO LETHAL DOSE 90
-                if ( ibit == 0 ) 
-                { 
-                    dose50 = dose; 
-                    ibit = 1; 
-                } 
-                else 
-                { 
-                    doseq = dose; 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                } 
-            } 
-            while ( true ); 
-            ifault = 0; 
-        } 
-        
-        
-        public static StepResult PlotProbit( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            int Model = context.ERR; 
-            double[] x = context.X1; 
-            double[] y = context.H1; 
-            double a = context.ARG[ 1 ]; 
-            double b = context.ARG[ 2 ]; 
-            double t; 
-            double sw = context.ARG[ 5 ]; 
-            double S1 = context.ARG[ 6 ]; 
-            double ici = context.ARG[ 16 ]; 
+                if (ibit == 0)
+                {
+                    dose50 = dose;
+                    ibit = 1;
+                }
+                else
+                {
+                    doseq = dose;
+                    break; /* TRANSWARNING: check that break is in correct scope */
+                }
+            }
+            while (true);
+            ifault = 0;
+        }
+
+
+        public static StepResult PlotProbit(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            int Model = context.ERR;
+            double[] x = context.X1;
+            double[] y = context.H1;
+            double a = context.ARG[1];
+            double b = context.ARG[2];
+            double t;
+            double sw = context.ARG[5];
+            double S1 = context.ARG[6];
+            double ici = context.ARG[16];
             bool clog = context.DoC;
-            if ( context.ARG[ 13 ] < 0.05 ) 
-            { 
-                t = PDF.tfromp( ici + ( ( 1.0 - ici ) / 2.0 ), context.ARG[ 14 ] ); 
-            } 
+            if (context.ARG[13] < 0.05)
+            {
+                t = PDF.tfromp(ici + ((1.0 - ici) / 2.0), context.ARG[14]);
+            }
             else
             {
                 int ifa;
-                t = PDF.gauinv( ici + ( ( 1.0 - ici ) / 2.0 ), out ifa );
+                t = PDF.gauinv(ici + ((1.0 - ici) / 2.0), out ifa);
             }
 
-            string YAxisTitle = context.Label[ 2 ] + " / " + context.Label[ 1 ]; 
-            string XAxisTitle = context.Label[ 0 ]; 
-            y[ 0 ] = Constant.MISSING; //  Force no point at (0,0)
-            x[ 0 ] = Constant.MISSING; 
-            ChartDefinition cd = new ChartDefinition(); 
-            cd.AddYSeries( y, YAxisTitle ); 
-            cd.AddXSeries( x, XAxisTitle ); 
-            ChartRenderer ch = new ChartRenderer( cd ); 
-            System.IO.Stream metaStream = new System.IO.MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            ch.PlotLogitInternal( host, "Proportional Response with " + Formatting.XRound( ici * 100, 1 ) + "% CI", Model, clog, t, sw, S1, a, b, XAxisTitle, YAxisTitle ); 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptProbitInterpolateX( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            int Model = context.ERR; 
-            double a = context.ARG[ 1 ]; 
-            double b = context.ARG[ 2 ]; 
-            bool clog = context.DoC; 
-            double C2 = context.ARG[ 18 ]; 
-            string[] Label = context.Label; 
-            
-            // Interpolate X value
-            double xval = parameters[ "newx" ].AsDouble; 
-            if ( xval < 0 ) 
-            { 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            //  RTF_LoadTemplate("intprobx.rtf") Then
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( xval == 0.0 )
-            { 
-                xval = 1.0E-30; 
-            } 
-            if ( clog )
-            { 
-                xval = Math.Log( xval ) / Math.Log( 10.0 ); 
-            } 
-            double yval = a + b * xval; 
-            outputParameters.AddOutput( "x_lab", Label[ 0 ] ); 
-            outputParameters.AddOutput( "x", host.RoundU( xval ) ); 
-            if ( Model == 1 ) 
-            { 
-                yval = PDF.alnorm( yval ); 
-            } 
-            else 
-            { 
-                yval = Math.Exp( yval * 2.0 ) / ( 1.0 + Math.Exp( yval * 2.0 ) ); 
-            } 
-            outputParameters.AddOutput( "resp", host.RoundU( yval ) ); 
-            if ( C2 > 0 ) 
-            { 
-                yval = C2 + yval * ( 1.0 - C2 ); 
-                outputParameters.AddOutput( "mort", "Incorporating natural mortality, proportional response = " +  yval.ToString() ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "mort", "" ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptProbitInterpolateY( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( parameters[ "context" ].Data ) ); 
-            int Model = context.ERR; 
-            double a = context.ARG[ 1 ]; 
-            double b = context.ARG[ 2 ]; 
-            bool clog = context.DoC; 
-            double C2 = context.ARG[ 18 ]; 
+            string YAxisTitle = context.Label[2] + " / " + context.Label[1];
+            string XAxisTitle = context.Label[0];
+            y[0] = Constant.MISSING; //  Force no point at (0,0)
+            x[0] = Constant.MISSING;
+            ChartDefinition cd = new ChartDefinition();
+            cd.AddYSeries(y, YAxisTitle);
+            cd.AddXSeries(x, XAxisTitle);
+            cd.ScaleParameters.X.ScaleType = clog ? ScaleType.LogNatural : ScaleType.Linear;
+
+            ParameterBag outputParameters = new ParameterBag();
+
+            ChartRenderer ch = new ChartRenderer(cd);
+            using (MemoryStream metaStream = new MemoryStream())
+            {
+                ch.StartMetafile(metaStream);
+                ch.PlotLogitInternal(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle);
+                ch.EndMetafile();
+                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptProbitInterpolateX(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            int Model = context.ERR;
+            double a = context.ARG[1];
+            double b = context.ARG[2];
+            bool clog = context.DoC;
+            double C2 = context.ARG[18];
             string[] Label = context.Label;
-            double qdose; 
-            
+
+            // Interpolate X value
+            double xval = parameters["newx"].AsDouble;
+            if (xval < 0)
+            {
+                throw new TemplateOperationCancelledException();
+            }
+            //  RTF_LoadTemplate("intprobx.rtf") Then
+            ParameterBag outputParameters = new ParameterBag();
+            if (xval == 0.0)
+            {
+                xval = 1.0E-30;
+            }
+            if (clog)
+            {
+                xval = Math.Log(xval) / Math.Log(10.0);
+            }
+            double yval = a + b * xval;
+            outputParameters.AddOutput("x_lab", Label[0]);
+            outputParameters.AddOutput("x", host.RoundU(xval));
+            if (Model == 1)
+            {
+                yval = PDF.alnorm(yval);
+            }
+            else
+            {
+                yval = Math.Exp(yval * 2.0) / (1.0 + Math.Exp(yval * 2.0));
+            }
+            outputParameters.AddOutput("resp", host.RoundU(yval));
+            if (C2 > 0)
+            {
+                yval = C2 + yval * (1.0 - C2);
+                outputParameters.AddOutput("mort", "Incorporating natural mortality, proportional response = " + yval.ToString());
+            }
+            else
+            {
+                outputParameters.AddOutput("mort", "");
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptProbitInterpolateY(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            int Model = context.ERR;
+            double a = context.ARG[1];
+            double b = context.ARG[2];
+            bool clog = context.DoC;
+            double C2 = context.ARG[18];
+            string[] Label = context.Label;
+            double qdose;
+
             // Interpolate Y value
-            double yval = parameters[ "newy" ].AsDouble; 
-            if ( yval <= 0 || yval >= 1 ) 
-            { 
-                throw new TemplateOperationCancelledException(); 
-            } 
+            double yval = parameters["newy"].AsDouble;
+            if (yval <= 0 || yval >= 1)
+            {
+                throw new TemplateOperationCancelledException();
+            }
             // RTF_LoadTemplate("intproby.rtf") Then
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "resp", host.RoundU( yval ) );
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("resp", host.RoundU(yval));
             outputParameters.AddOutput("mort", C2 > 0 ? "Not considering natural mortality." : "");
-            if ( Model == 1 )
+            if (Model == 1)
             {
                 int ifa;
-                qdose = PDF.gauinv( yval, out ifa );
+                qdose = PDF.gauinv(yval, out ifa);
             }
-            else 
-            { 
-                qdose = 0.5 * Math.Log( yval / ( 1.0 - yval ) ); 
-            } 
-            qdose = ( qdose - a ) / b; 
-            if ( clog )
-            { 
-                qdose = Math.Exp( qdose * Math.Log( 10.0 ) ); 
-            } 
-            outputParameters.AddOutput( "x_lab", Label[ 0 ] ); 
-            outputParameters.AddOutput( "x", host.RoundU( qdose ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult rptProbitMore( ITemplateHost Host, ParameterBag Parameters ) 
-        { 
-            MultipleLinearRegressionContext context = ( ( MultipleLinearRegressionContext )( Parameters[ "context" ].Data ) ); 
-            int Model = context.ERR; 
-            double a = context.ARG[ 1 ]; 
-            double b = context.ARG[ 2 ]; 
-            double varb = context.ARG[ 4 ]; 
+            else
+            {
+                qdose = 0.5 * Math.Log(yval / (1.0 - yval));
+            }
+            qdose = (qdose - a) / b;
+            if (clog)
+            {
+                qdose = Math.Exp(qdose * Math.Log(10.0));
+            }
+            outputParameters.AddOutput("x_lab", Label[0]);
+            outputParameters.AddOutput("x", host.RoundU(qdose));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult rptProbitMore(ITemplateHost Host, ParameterBag Parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            int Model = context.ERR;
+            double a = context.ARG[1];
+            double b = context.ARG[2];
+            double varb = context.ARG[4];
             // double sw = context.ARG[ 5 ]; 
-            double S1 = context.ARG[ 6 ]; 
-            double S2 = context.ARG[ 7 ]; 
-            double S3 = context.ARG[ 8 ]; 
-            double seh = context.ARG[ 9 ]; 
-            double se = context.ARG[ 10 ]; 
-            double cse = context.ARG[ 11 ]; 
-            double cseh = context.ARG[ 12 ]; 
-            double hetp = context.ARG[ 13 ]; 
+            double S1 = context.ARG[6];
+            double S2 = context.ARG[7];
+            double S3 = context.ARG[8];
+            double seh = context.ARG[9];
+            double se = context.ARG[10];
+            double cse = context.ARG[11];
+            double cseh = context.ARG[12];
+            double hetp = context.ARG[13];
             // double ici = context.ARG[ 16 ]; 
-            bool clog = context.DoC; 
+            bool clog = context.DoC;
             // int nx = context.DF; 
-            double C1 = context.ARG[ 17 ]; 
-            double C2 = context.ARG[ 18 ]; 
-            int laps = context.P; 
-            int k = context.DF; 
+            double C1 = context.ARG[17];
+            double C2 = context.ARG[18];
+            int laps = context.P;
+            int k = context.DF;
             // string[] Label = context.Label; 
-            double[] dv = context.DV; 
-            double[] sv = context.SV; 
-            double[] rv = context.RV; 
+            double[] dv = context.DV;
+            double[] sv = context.SV;
+            double[] rv = context.RV;
             int i;
 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "itr",  laps.ToString() ); 
-            outputParameters.AddOutput( "sxx", Host.RoundU( S1 ) ); 
-            outputParameters.AddOutput( "sxy", Host.RoundU( S2 ) ); 
-            outputParameters.AddOutput( "syy", Host.RoundU( S3 ) ); 
-            outputParameters.AddOutput( "var_b", Host.RoundU( varb ) ); 
-            if ( hetp < 0.05 ) 
-            { 
-                outputParameters.AddOutput( "het", "with heterogeneity" ); 
-                outputParameters.AddOutput( "seb", Host.RoundU( seh ) ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "het", "without heterogeneity" ); 
-                outputParameters.AddOutput( "seb", Host.RoundU( se ) ); 
-            } 
-            if ( C1 != 0 ) 
-            { 
-                IList<ParameterBag> naturalList = new List<ParameterBag>(); 
-                outputParameters.AddOutput( "*natural", naturalList ); 
-                ParameterBag naturalParameters = new ParameterBag(); 
-                naturalList.Add( naturalParameters ); 
-                naturalParameters.AddOutput( "c", Host.RoundU( C2 ) ); 
-                if ( hetp < 0.05 ) 
-                { 
-                    naturalParameters.AddOutput( "het_c", "with heterogeneity" ); 
-                    naturalParameters.AddOutput( "seb_c", Host.RoundU( cseh ) ); 
-                } 
-                else 
-                { 
-                    naturalParameters.AddOutput( "het_c", "without heterogeneity" ); 
-                    naturalParameters.AddOutput( "seb_c", Host.RoundU( cse ) ); 
-                } 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "*natural", null ); 
-            } 
-            IList<ParameterBag> obsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*obs", obsList ); 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                double xval = dv[ i ]; 
-                if ( xval == 0 )
-                { 
-                    xval = 1.0E-30; 
-                } 
-                if ( clog )
-                { 
-                    xval = Math.Log( xval ) / Math.Log( 10.0 ); 
-                } 
-                double yval = a + b * xval; 
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("itr", laps.ToString());
+            outputParameters.AddOutput("sxx", Host.RoundU(S1));
+            outputParameters.AddOutput("sxy", Host.RoundU(S2));
+            outputParameters.AddOutput("syy", Host.RoundU(S3));
+            outputParameters.AddOutput("var_b", Host.RoundU(varb));
+            if (hetp < 0.05)
+            {
+                outputParameters.AddOutput("het", "with heterogeneity");
+                outputParameters.AddOutput("seb", Host.RoundU(seh));
+            }
+            else
+            {
+                outputParameters.AddOutput("het", "without heterogeneity");
+                outputParameters.AddOutput("seb", Host.RoundU(se));
+            }
+            if (C1 != 0)
+            {
+                IList<ParameterBag> naturalList = new List<ParameterBag>();
+                outputParameters.AddOutput("*natural", naturalList);
+                ParameterBag naturalParameters = new ParameterBag();
+                naturalList.Add(naturalParameters);
+                naturalParameters.AddOutput("c", Host.RoundU(C2));
+                if (hetp < 0.05)
+                {
+                    naturalParameters.AddOutput("het_c", "with heterogeneity");
+                    naturalParameters.AddOutput("seb_c", Host.RoundU(cseh));
+                }
+                else
+                {
+                    naturalParameters.AddOutput("het_c", "without heterogeneity");
+                    naturalParameters.AddOutput("seb_c", Host.RoundU(cse));
+                }
+            }
+            else
+            {
+                outputParameters.AddOutput("*natural", null);
+            }
+            IList<ParameterBag> obsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*obs", obsList);
+            for (i = 1; i <= k; i++)
+            {
+                double xval = dv[i];
+                if (xval == 0)
+                {
+                    xval = 1.0E-30;
+                }
+                if (clog)
+                {
+                    xval = Math.Log(xval) / Math.Log(10.0);
+                }
+                double yval = a + b * xval;
                 // int ifa = 0; 
-                if ( Model == 1 ) 
-                { 
-                    yval = PDF.alnorm( yval ); 
-                } 
-                else 
-                { 
-                    yval = Math.Exp( yval * 2.0 ) / ( 1.0 + Math.Exp( yval * 2.0 ) ); 
-                } 
-                yval = C2 + yval * ( 1.0 - C2 ); 
-                double ex = yval * sv[ i ]; 
-                ParameterBag obsParameters = new ParameterBag(); 
-                obsList.Add( obsParameters ); 
-                obsParameters.AddOutput( "obs",  i.ToString() ); 
-                obsParameters.AddOutput( "sub", Host.RoundU( sv[ i ] ) ); 
-                obsParameters.AddOutput( "res", Host.RoundU( rv[ i ] ) ); 
-                obsParameters.AddOutput( "exp", Host.RoundU( ex ) ); 
-                obsParameters.AddOutput( "dev", Host.RoundU( rv[ i ] - ex ) ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-    } 
-    
-    
-} 
+                if (Model == 1)
+                {
+                    yval = PDF.alnorm(yval);
+                }
+                else
+                {
+                    yval = Math.Exp(yval * 2.0) / (1.0 + Math.Exp(yval * 2.0));
+                }
+                yval = C2 + yval * (1.0 - C2);
+                double ex = yval * sv[i];
+                ParameterBag obsParameters = new ParameterBag();
+                obsList.Add(obsParameters);
+                obsParameters.AddOutput("obs", i.ToString());
+                obsParameters.AddOutput("sub", Host.RoundU(sv[i]));
+                obsParameters.AddOutput("res", Host.RoundU(rv[i]));
+                obsParameters.AddOutput("exp", Host.RoundU(ex));
+                obsParameters.AddOutput("dev", Host.RoundU(rv[i] - ex));
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+    }
+
+
+}

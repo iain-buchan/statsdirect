@@ -14,7 +14,8 @@
         </integer>
         <integer>
           <name>b</name>
-          <prompt>Number of subjects per block (0 for random)</prompt>
+          <prompt>Number of subjects per block (blank for random)</prompt>
+          <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <must-request>true</must-request>
         </integer>
         <integer>

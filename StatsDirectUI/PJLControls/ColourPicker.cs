@@ -28,23 +28,18 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Diagnostics;
 
-namespace PJLControls
+namespace StatsDirect.PJLControls
 {
 	/// <summary>
 	/// A control with a combo-box like UI that allows the user to select a color
 	/// from a fixed color palette.
 	/// </summary>
 	/// <remarks>
-	/// This control simulates a combo-box style UI but drops down a <see cref="PJLControls.ColorPanel">ColorPanel</see>
+	/// This control simulates a combo-box style UI but drops down a <see cref="ColorPanel">ColorPanel</see>
 	/// to allow the user to select a color.
 	/// </remarks>
 	public class ColorPicker : UserControl
 	{
-		/// <summary> 
-		/// Required designer variable.
-		/// </summary>
-		private Container components;
-
 		const bool           defaultAutoSize         = true;
 		const bool           defaultDisplayColor     = true;
 		const bool           defaultDisplayColorName = false;
@@ -56,7 +51,6 @@ namespace PJLControls
 		private Size           padding           = new Size(1,2);
 		private ButtonState    buttonState       = ButtonState.Normal;
 		private Rectangle      comboButtonRectangle;
-		private ColorPanelForm popup; 
 		private bool           bDisplayColor     = defaultDisplayColor;
 		private bool           bDisplayColorName = defaultDisplayColorName;
 		private bool           autoSize          = defaultAutoSize;
@@ -83,27 +77,6 @@ namespace PJLControls
 			Trace.WriteLine( string.Format( "IsHandleCreated={0}", IsHandleCreated ) );
 
 			SetStyle( ControlStyles.CacheText, true );
-		}
-
-		/// <summary> 
-		/// Overloaded. Releases the resources used by the Component.
-		/// </summary>
-		protected override void Dispose( bool disposing )
-		{
-			if( disposing )
-			{
-				if(components != null)
-				{
-					components.Dispose();
-				}
-			}
-			base.Dispose( disposing );
-
-			if( null != popup )
-			{
-				popup.Dispose();
-				popup = null;
-			}
 		}
 
 		#region Component Designer generated code
@@ -164,56 +137,55 @@ namespace PJLControls
 
 			// fill rectangle with window color or control color if disabled
 			KnownColor color_background = (Enabled) ? (KnownColor.Window) : (KnownColor.Control);
-			SolidBrush br = new SolidBrush(	Color.FromKnownColor( color_background ) );
-	
-			Rectangle r = ClientRectangle;
-			r.Inflate( -borderSize.Width, -borderSize.Height );
-			e.Graphics.FillRectangle( br, r );
-
-			if( Focused && Enabled )
+			using (SolidBrush br = new SolidBrush(	Color.FromKnownColor( color_background ) ))
 			{
-				// add focus rectangle
-				Rectangle rh = new Rectangle( r.Location, new Size(r.Width-GetComboButtonRectangle().Width, r.Height ));
-				rh.Inflate(-1,-1);
-				br.Color = Color.FromKnownColor(KnownColor.Highlight);
-				e.Graphics.FillRectangle(br,rh);
+
+			    Rectangle r = ClientRectangle;
+			    r.Inflate(-borderSize.Width, -borderSize.Height);
+			    e.Graphics.FillRectangle(br, r);
+
+			    if (Focused && Enabled)
+			    {
+			        // add focus rectangle
+			        Rectangle rh = new Rectangle(r.Location, new Size(r.Width - GetComboButtonRectangle().Width, r.Height));
+			        rh.Inflate(-1, -1);
+			        br.Color = Color.FromKnownColor(KnownColor.Highlight);
+			        e.Graphics.FillRectangle(br, rh);
+			    }
+
+			    // draw rectangle of pick color
+			    Point text_p;
+
+			    if (bDisplayColor)
+			    {
+			        // draw a rectangle of the chosen color
+			        br.Color = panel_color;
+			        Rectangle r1 = r;
+			        r1.Width = 30;
+			        r1.Inflate(-2, -2);
+
+			        ControlPaint.DrawBorder3D(e.Graphics, r1, Border3DStyle.Flat, Border3DSide.All);
+			        r1.Inflate(-1, -1);
+			        e.Graphics.FillRectangle(br, r1);
+
+			        text_p = new Point(r1.Right + padding.Width, (ClientRectangle.Height - Font.Height) / 2);
+			    }
+			    else
+			    {
+			        text_p = new Point(r.Left + padding.Width, (ClientRectangle.Height - Font.Height) / 2);
+			    }
+
+			    // draw text in fore color or control dark if disabled
+			    br.Color =
+			        (Enabled) ? ((Focused) ? Color.FromKnownColor(KnownColor.HighlightText) : (ForeColor)) : (Color.FromKnownColor(KnownColor.ControlDark));
+
+			    string text = (bDisplayColorName) ? (panel_color.Name) : (base.Text);
+
+			    e.Graphics.DrawString(text, Font, br, text_p);
+
+			    // draw combo button
+			    ControlPaint.DrawComboButton(e.Graphics, GetComboButtonRectangle(), buttonState);
 			}
-
-			// draw rectangle of pick color
-			Point text_p;
-
-			if( bDisplayColor )
-			{
-				// draw a rectangle of the chosen color
-				br.Color = panel_color;
-				Rectangle r1 = r;
-				r1.Width = 30;
-				r1.Inflate( -2, -2 );
-
-				ControlPaint.DrawBorder3D(e.Graphics, r1, Border3DStyle.Flat, Border3DSide.All );
-				r1.Inflate( -1, -1 );
-				e.Graphics.FillRectangle( br, r1 );
-
-				text_p = new Point( r1.Right + padding.Width, (ClientRectangle.Height - Font.Height)/2 );
-			}
-			else
-			{
-				text_p = new Point( r.Left + padding.Width, (ClientRectangle.Height - Font.Height)/2 );
-			}
-
-			// draw text in fore color or control dark if disabled
-			br.Color = 
-				(Enabled) ? ( (Focused) ? Color.FromKnownColor(KnownColor.HighlightText) : (ForeColor) ) :	(Color.FromKnownColor(KnownColor.ControlDark));
-
-			string text = (bDisplayColorName) ? (panel_color.Name) : (base.Text);
-
-			e.Graphics.DrawString( text, Font, br, text_p );
-
-			// draw combo button
-			ControlPaint.DrawComboButton( e.Graphics, GetComboButtonRectangle(), buttonState );
-			
-			// clean up brushes
-			br.Dispose();
 
 		    base.OnPaint(e);
 		}
@@ -310,52 +282,48 @@ namespace PJLControls
 		/// </summary>
 		public void ShowDropdown()
 		{
-			Point p = new Point( Left, Bottom );
-			Point q = Parent.PointToScreen(p);
+		    Point p = new Point(Left, Bottom);
+		    Point q = Parent.PointToScreen(p);
 
-			if( null == popup )
-			{
-			    popup = new ColorPanelForm
-			                {
-			                    Top = q.Y,
-			                    Left = q.X,
-			                    ColorSet = panel_colorSet,
-			                    ColorSortOrder = panel_colorSortOrder,
-			                    ColorWellSize = panel_colorWellSize,
-			                    PanelBorderStyle = panel_PanelBorderStyle,
-			                    Columns = panel_columns,
-			                    CustomColors = panel_customColors,
-			                    Color = panel_color
-			                };
-
+		    using (ColorPanelForm popup = new ColorPanelForm
+		                                  {
+		                                      Top = q.Y,
+		                                      Left = q.X,
+		                                      ColorSet = panel_colorSet,
+		                                      ColorSortOrder = panel_colorSortOrder,
+		                                      ColorWellSize = panel_colorWellSize,
+		                                      PanelBorderStyle = panel_PanelBorderStyle,
+		                                      Columns = panel_columns,
+		                                      CustomColors = panel_customColors,
+		                                      Color = panel_color
+		                                  })
+		    {
 
 
-			    // set color after colorSet since changing the colorSet
-			    // resets the color to black
 
-			    if( panel_columns <= 0 )
-				{
-					Trace.WriteLine( string.Format( "Setting '{0}' width = {1}", popup.Name, Width ) );
-					popup.ParentWidth = Width;
-				}
-			}
+		        // set color after colorSet since changing the colorSet
+		        // resets the color to black
 
-			if( DialogResult.OK == popup.ShowDialog(this) )
-			{
-				panel_color = popup.Color;
-				OnColorChanged( new ColorChangedEventArgs(panel_color) );
-			}
+		        if (panel_columns <= 0)
+		        {
+		            Trace.WriteLine(string.Format("Setting '{0}' width = {1}", popup.Name, Width));
+		            popup.ParentWidth = Width;
+		        }
 
-			popup.Dispose();
-			popup = null;
+		    if (DialogResult.OK == popup.ShowDialog(this))
+		    {
+		        panel_color = popup.Color;
+		        OnColorChanged(new ColorChangedEventArgs(panel_color));
+		    }
 		}
+	}
 		
 		/// <summary>
 		/// Overrides OnMouseUp.
 		/// </summary>
 		/// <remarks>
 		/// When the user releases the mouse over the combo button after having pressed it, the 
-		/// contained <see cref="PJLControls.ColorPanel">ColorPanel</see> is displayed.
+		/// contained <see cref="ColorPanel">ColorPanel</see> is displayed.
 		/// </remarks>
 		/// <param name="e"></param>
 		protected override void OnMouseUp(MouseEventArgs e)
@@ -389,11 +357,6 @@ namespace PJLControls
 				}
 
 				ClientSize = new Size(w,h);
-
-				if( null != popup )
-				{
-					popup.ParentWidth = w;
-				}
 			}
 			
 			comboButtonRectangle = new Rectangle();
@@ -491,10 +454,6 @@ namespace PJLControls
 			set
 			{
 				panel_PanelBorderStyle = value;
-				if( null != popup )
-				{
-					popup.PanelBorderStyle = value;
-				}
 			}
 		}
 
@@ -511,10 +470,6 @@ namespace PJLControls
 			set
 			{
 				panel_color = value;
-				if( null != popup )
-				{
-					popup.Color = value;
-				}
 				Refresh();
 			}
 		}
@@ -538,7 +493,7 @@ namespace PJLControls
 
 		/// <summary>
 		/// Set/get the set of colors displayed by the contained 
-		/// <see cref="PJLControls.ColorPanel">ColorPanel</see> control.<br></br><br></br>
+		/// <see cref="ColorPanel">ColorPanel</see> control.<br></br><br></br>
 		/// See <see cref="PJLControls.ColorSet">ColorSet</see>.
 		/// </summary>
 		[Browsable(true), Category("ColorPicker"), DefaultValue(ColorPanel.defaultColorSet)]
@@ -552,10 +507,6 @@ namespace PJLControls
 			set
 			{
 				panel_colorSet = value;
-				if( null != popup )
-				{
-					popup.ColorSet = value;
-				}
 			}
 		}
 
@@ -573,10 +524,6 @@ namespace PJLControls
 			set
 			{
 				panel_colorWellSize = value;
-				if( null != popup )
-				{
-					popup.ColorWellSize = value;
-				}
 			}
 		}
 
@@ -599,7 +546,7 @@ namespace PJLControls
 
 		/// <summary>
 		/// Set/get the order in which colors in the palette or the contained 
-		/// <see cref="PJLControls.ColorPanel">ColorPanel</see> should be sorted.<br></br><br></br>
+		/// <see cref="ColorPanel">ColorPanel</see> should be sorted.<br></br><br></br>
 		/// See <see cref="PJLControls.ColorSortOrder">ColorSortOrder</see>.
 		/// </summary>
 		[Browsable(true), Category("ColorPicker"), DefaultValue(ColorPanel.defaultColorSortOrder)]
@@ -613,10 +560,6 @@ namespace PJLControls
 			set
 			{
 				panel_colorSortOrder = value;
-				if( null != popup )
-				{
-					popup.ColorSortOrder = value;
-				}
 			}
 		}
 
@@ -735,18 +678,11 @@ namespace PJLControls
 		public int Columns
 		{
 			get {
-			    return null != popup ? popup.Columns : panel_columns;
+			    return panel_columns;
 			}
 		    set
 			{
-				if( null != popup )
-				{
-					popup.Columns = value;
-				}
-				else
-				{
 					panel_columns = value <= 0 ? 0 : value;
-				}
 			}
 		}
 
@@ -758,7 +694,7 @@ namespace PJLControls
 		public Color[] CustomColors
 		{
 			get {
-			    return null != popup ? popup.CustomColors : panel_customColors;
+			    return panel_customColors;
 			}
 		    set
 			{

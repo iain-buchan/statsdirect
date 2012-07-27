@@ -103,7 +103,7 @@ namespace StatsDirect.Templates
 
         #region IFillable Members
 
-        string IFillable.FillerToUse
+        public string FillerToUse
         {
             get { return "OptionDescriptor"; }
         }

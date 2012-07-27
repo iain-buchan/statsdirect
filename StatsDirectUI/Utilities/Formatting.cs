@@ -430,52 +430,41 @@ namespace StatsDirect.Utilities
         /// </returns>
         private static string GetRtfImage(Image _image)
         {
-            // Used to store the enhanced metafile
-            MemoryStream _stream = null;
-
-            // Used to create the metafile and draw the image
-            Graphics _graphics = null;
-
-            // The enhanced metafile
-            Metafile _metaFile = null;
-
             // Handle to the device context used to create the metafile
 
-            try
+            StringBuilder _rtf = new StringBuilder();
+            using (MemoryStream _stream = new MemoryStream())
             {
-                StringBuilder _rtf = new StringBuilder();
-                _stream = new MemoryStream();
 
                 // Get a graphics context from the RichTextBox
-                using (_graphics = Graphics.FromImage(new Bitmap(_image.Width, _image.Height, PixelFormat.Format32bppArgb)))
+                using (Bitmap b = new Bitmap(_image.Width, _image.Height, PixelFormat.Format32bppArgb))
                 {
+                    using (Graphics _graphics = Graphics.FromImage(b))
+                    {
 
-                    // Get the device context from the graphics context
-                    IntPtr _hdc = _graphics.GetHdc();
+                        // Get the device context from the graphics context
+                        IntPtr _hdc = _graphics.GetHdc();
 
-                    // Create a new Enhanced Metafile from the device context
-                    _metaFile = new Metafile(_stream, _hdc);
+                        // Create a new Enhanced Metafile from the device context
+                        Metafile _metaFile = new Metafile(_stream, _hdc);
 
-                    // Release the device context
-                    _graphics.ReleaseHdc(_hdc);
-                }
+                        // Release the device context
+                        _graphics.ReleaseHdc(_hdc);
 
-                // Get a graphics context from the Enhanced Metafile
-                using (_graphics = Graphics.FromImage(_metaFile))
-                {
+                        // Get a graphics context from the Enhanced Metafile
+                        using (Graphics _graphics2 = Graphics.FromImage(_metaFile))
+                        {
+                            // Draw the image on the Enhanced Metafile
+                            _graphics2.DrawImage(_image, new Rectangle(0, 0, _image.Width, _image.Height));
+                        }
 
-                    // Draw the image on the Enhanced Metafile
-                    _graphics.DrawImage(_image, new Rectangle(0, 0, _image.Width, _image.Height));
-
-                }
-
-                // Get the handle of the Enhanced Metafile
-                IntPtr _hEmf = _metaFile.GetHenhmetafile();
+                        // Get the handle of the Enhanced Metafile
+                        IntPtr _hEmf = _metaFile.GetHenhmetafile();
 
 #if WANT_WMF
-				// A call to EmfToWmfBits with a null buffer return the size of the
-				// buffer need to store the WMF bits.  Use this to get the buffer
-				// size.
+    // A call to EmfToWmfBits with a null buffer return the size of the
+    // buffer need to store the WMF bits.  Use this to get the buffer
+    // size.
 				uint _bufferSize = GdipEmfToWmfBits(_hEmf, 0, null, MM_ANISOTROPIC,
 					EmfToWmfBitsFlags.EmfToWmfBitsFlagsDefault);
 
@@ -486,28 +475,22 @@ namespace StatsDirect.Utilities
 				// buffer and returns the number of bits in the WMF.  
 				uint _convertedSize = GdipEmfToWmfBits(_hEmf, _bufferSize, _buffer, MM_ANISOTROPIC,
 					EmfToWmfBitsFlags.EmfToWmfBitsFlagsDefault);
-#else // EMF
-                uint _bufferSize = GetEnhMetaFileBits(_hEmf, 0, null);
-                byte[] _buffer = new byte[_bufferSize];
-                GetEnhMetaFileBits(_hEmf, _bufferSize, _buffer);
+#else
+                        // EMF
+                        uint _bufferSize = GetEnhMetaFileBits(_hEmf, 0, null);
+                        byte[] _buffer = new byte[_bufferSize];
+                        GetEnhMetaFileBits(_hEmf, _bufferSize, _buffer);
 #endif
 
-                // Append the bits to the RTF string
-                foreach (byte t in _buffer)
-                {
-                    _rtf.Append(String.Format("{0:X2}", t));
-                }
+                        // Append the bits to the RTF string
+                        foreach (byte t in _buffer)
+                        {
+                            _rtf.Append(String.Format("{0:X2}", t));
+                        }
 
-                return _rtf.ToString();
-            }
-            finally
-            {
-                if (_graphics != null)
-                    _graphics.Dispose();
-                if (_metaFile != null)
-                    _metaFile.Dispose();
-                if (_stream != null)
-                    _stream.Close();
+                        return _rtf.ToString();
+                    }
+                }
             }
         }
     }

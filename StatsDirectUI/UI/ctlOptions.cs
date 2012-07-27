@@ -134,7 +134,7 @@ namespace StatsDirect.UI
 
         #region IFillParameterBag Members
 
-        Control IFillParameterBag.Fill(ParameterBag outputParameters)
+        Control IFillParameterBag.Fill(ParameterBag outputParameters, bool doValidation)
         {
             FillDescriptorFromForm();
             foreach (CheckBoxDescriptor cb in optionDescriptor.CheckBoxes)

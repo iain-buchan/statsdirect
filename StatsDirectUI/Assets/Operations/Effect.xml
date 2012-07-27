@@ -11,8 +11,8 @@
         </confidence-interval>
         <option>
           <name>type</name>
-          <format-hint>effectOptions</format-hint>
           <prompt>Which type of effect size meta-analysis?</prompt>
+          <format-hint>effectOptions</format-hint>
           <options>
             <option value="d">Standardized effect size (d) from mean, n and sd</option>
             <option value="g">Standardized effect size (d) from g and n</option>

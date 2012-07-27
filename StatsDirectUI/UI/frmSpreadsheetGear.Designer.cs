@@ -36,7 +36,6 @@ namespace StatsDirect.UI
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pageSetupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.printPreviewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.printToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -81,6 +80,7 @@ namespace StatsDirect.UI
             this.defaultFontToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lockSheetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sheetSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pageSetupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pnlSpreadsheetGear = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.formulaBar = new SpreadsheetGear.Windows.Forms.FormulaBar();
@@ -147,7 +147,7 @@ namespace StatsDirect.UI
             this.exportDataToolStripMenuItem});
             this.fileToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.MatchOnly;
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
             this.fileToolStripMenuItem.Tag = "#{help=1144}";
             this.fileToolStripMenuItem.Text = "&File";
             // 
@@ -158,7 +158,7 @@ namespace StatsDirect.UI
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+S";
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.saveToolStripMenuItem.Tag = "#{help=1151}";
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
@@ -168,7 +168,7 @@ namespace StatsDirect.UI
             this.saveAsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.saveAsToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.saveAsToolStripMenuItem.Tag = "#{help=1152}";
             this.saveAsToolStripMenuItem.Text = "S&ave As...";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
@@ -178,25 +178,16 @@ namespace StatsDirect.UI
             this.closeToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.closeToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.closeToolStripMenuItem.Tag = "#{help=1330}";
             this.closeToolStripMenuItem.Text = "&Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
-            // 
-            // pageSetupToolStripMenuItem
-            // 
-            this.pageSetupToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
-            this.pageSetupToolStripMenuItem.Name = "pageSetupToolStripMenuItem";
-            this.pageSetupToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.pageSetupToolStripMenuItem.Tag = "#{help=1303}";
-            this.pageSetupToolStripMenuItem.Text = "Page Setup...";
-            this.pageSetupToolStripMenuItem.Click += new System.EventHandler(this.pageSetupToolStripMenuItem_Click);
             // 
             // printPreviewToolStripMenuItem
             // 
             this.printPreviewToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
             this.printPreviewToolStripMenuItem.Name = "printPreviewToolStripMenuItem";
-            this.printPreviewToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.printPreviewToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.printPreviewToolStripMenuItem.Tag = "#{help=1305}";
             this.printPreviewToolStripMenuItem.Text = "Print Preview";
             this.printPreviewToolStripMenuItem.Click += new System.EventHandler(this.printPreviewToolStripMenuItem_Click);
@@ -208,7 +199,7 @@ namespace StatsDirect.UI
             this.printToolStripMenuItem.Name = "printToolStripMenuItem";
             this.printToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+P";
             this.printToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
-            this.printToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.printToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.printToolStripMenuItem.Tag = "#{help=1306}";
             this.printToolStripMenuItem.Text = "&Print...";
             this.printToolStripMenuItem.Click += new System.EventHandler(this.printToolStripMenuItem_Click);
@@ -217,7 +208,7 @@ namespace StatsDirect.UI
             // 
             this.importDataToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
             this.importDataToolStripMenuItem.Name = "importDataToolStripMenuItem";
-            this.importDataToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.importDataToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.importDataToolStripMenuItem.Tag = "#{help=1369}";
             this.importDataToolStripMenuItem.Text = "Import Data...";
             this.importDataToolStripMenuItem.Click += new System.EventHandler(this.importDataToolStripMenuItem_Click);
@@ -226,7 +217,7 @@ namespace StatsDirect.UI
             // 
             this.exportDataToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
             this.exportDataToolStripMenuItem.Name = "exportDataToolStripMenuItem";
-            this.exportDataToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.exportDataToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.exportDataToolStripMenuItem.Tag = "#{help=1143}";
             this.exportDataToolStripMenuItem.Text = "Export Data...";
             this.exportDataToolStripMenuItem.Click += new System.EventHandler(this.exportDataToolStripMenuItem_Click);
@@ -257,7 +248,7 @@ namespace StatsDirect.UI
             this.describeColumnDataToolStripMenuItem});
             this.editToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
+            this.editToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.editToolStripMenuItem.Tag = "#{help=1344}";
             this.editToolStripMenuItem.Text = "&Edit";
             // 
@@ -267,9 +258,9 @@ namespace StatsDirect.UI
             this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             this.undoToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+Z";
             this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            this.undoToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-            this.undoToolStripMenuItem.Text = "Undo";
+            this.undoToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.undoToolStripMenuItem.Tag = "#{help=1387}";
+            this.undoToolStripMenuItem.Text = "Undo";
             this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
             // 
             // redoToolStripMenuItem
@@ -277,21 +268,21 @@ namespace StatsDirect.UI
             this.redoToolStripMenuItem.Image = global::StatsDirect.UI.Properties.Resources.redo;
             this.redoToolStripMenuItem.Name = "redoToolStripMenuItem";
             this.redoToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+Y";
-            this.redoToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-            this.redoToolStripMenuItem.Text = "Redo";
+            this.redoToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.redoToolStripMenuItem.Tag = "#{help=1387}";
+            this.redoToolStripMenuItem.Text = "Redo";
             this.redoToolStripMenuItem.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(208, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(195, 6);
             // 
             // cutToolStripMenuItem
             // 
             this.cutToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.cutToolStripMenuItem.Name = "cutToolStripMenuItem";
-            this.cutToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.cutToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.cutToolStripMenuItem.Tag = "#{help=1336}";
             this.cutToolStripMenuItem.Text = "Cut";
             this.cutToolStripMenuItem.Click += new System.EventHandler(this.cutToolStripMenuItem_Click);
@@ -300,7 +291,7 @@ namespace StatsDirect.UI
             // 
             this.copyToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
-            this.copyToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.copyToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.copyToolStripMenuItem.Tag = "#{help=1288}";
             this.copyToolStripMenuItem.Text = "Copy";
             this.copyToolStripMenuItem.Click += new System.EventHandler(this.copyToolStripMenuItem_Click);
@@ -309,7 +300,7 @@ namespace StatsDirect.UI
             // 
             this.pasteToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.pasteToolStripMenuItem.Name = "pasteToolStripMenuItem";
-            this.pasteToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.pasteToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.pasteToolStripMenuItem.Tag = "#{help=1304}";
             this.pasteToolStripMenuItem.Text = "Paste";
             this.pasteToolStripMenuItem.Click += new System.EventHandler(this.pasteToolStripMenuItem_Click);
@@ -317,7 +308,7 @@ namespace StatsDirect.UI
             // pasteSpecialToolStripMenuItem
             // 
             this.pasteSpecialToolStripMenuItem.Name = "pasteSpecialToolStripMenuItem";
-            this.pasteSpecialToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.pasteSpecialToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.pasteSpecialToolStripMenuItem.Tag = "#{help=1378}";
             this.pasteSpecialToolStripMenuItem.Text = "Paste Special...";
             this.pasteSpecialToolStripMenuItem.Click += new System.EventHandler(this.pasteSpecialToolStripMenuItem_Click);
@@ -327,7 +318,7 @@ namespace StatsDirect.UI
             this.fillDownToolStripMenuItem.Name = "fillDownToolStripMenuItem";
             this.fillDownToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+D";
             this.fillDownToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.D)));
-            this.fillDownToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.fillDownToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.fillDownToolStripMenuItem.Tag = "#{help=1345}";
             this.fillDownToolStripMenuItem.Text = "Fill Down";
             this.fillDownToolStripMenuItem.Click += new System.EventHandler(this.fillDownToolStripMenuItem_Click);
@@ -337,7 +328,7 @@ namespace StatsDirect.UI
             this.fillRightToolStripMenuItem.Name = "fillRightToolStripMenuItem";
             this.fillRightToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+R";
             this.fillRightToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.R)));
-            this.fillRightToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.fillRightToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.fillRightToolStripMenuItem.Tag = "#{help=1346}";
             this.fillRightToolStripMenuItem.Text = "Fill Right";
             this.fillRightToolStripMenuItem.Click += new System.EventHandler(this.fillRightToolStripMenuItem_Click);
@@ -345,13 +336,13 @@ namespace StatsDirect.UI
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(208, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(195, 6);
             // 
             // findToolStripMenuItem
             // 
             this.findToolStripMenuItem.Name = "findToolStripMenuItem";
             this.findToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+F";
-            this.findToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.findToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.findToolStripMenuItem.Tag = "#{help=1347}";
             this.findToolStripMenuItem.Text = "&Find...";
             this.findToolStripMenuItem.Click += new System.EventHandler(this.findToolStripMenuItem_Click);
@@ -360,7 +351,7 @@ namespace StatsDirect.UI
             // 
             this.replaceToolStripMenuItem.Name = "replaceToolStripMenuItem";
             this.replaceToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+H";
-            this.replaceToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.replaceToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.replaceToolStripMenuItem.Tag = "#{help=1381}";
             this.replaceToolStripMenuItem.Text = "&Replace...";
             this.replaceToolStripMenuItem.Click += new System.EventHandler(this.replaceToolStripMenuItem_Click);
@@ -370,7 +361,7 @@ namespace StatsDirect.UI
             this.goToCellToolStripMenuItem.Name = "goToCellToolStripMenuItem";
             this.goToCellToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+G";
             this.goToCellToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G)));
-            this.goToCellToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.goToCellToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.goToCellToolStripMenuItem.Tag = "#{help=1366}";
             this.goToCellToolStripMenuItem.Text = "&Go To Cell...";
             this.goToCellToolStripMenuItem.Click += new System.EventHandler(this.goToCellToolStripMenuItem_Click);
@@ -378,13 +369,13 @@ namespace StatsDirect.UI
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(208, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(195, 6);
             // 
             // clearSelectionToolStripMenuItem
             // 
             this.clearSelectionToolStripMenuItem.Name = "clearSelectionToolStripMenuItem";
             this.clearSelectionToolStripMenuItem.ShortcutKeyDisplayString = "Del";
-            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.clearSelectionToolStripMenuItem.Tag = "#{help=1329}";
             this.clearSelectionToolStripMenuItem.Text = "Clear Selection";
             this.clearSelectionToolStripMenuItem.Click += new System.EventHandler(this.clearSelectionToolStripMenuItem_Click);
@@ -392,7 +383,7 @@ namespace StatsDirect.UI
             // deleteSpecialToolStripMenuItem
             // 
             this.deleteSpecialToolStripMenuItem.Name = "deleteSpecialToolStripMenuItem";
-            this.deleteSpecialToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.deleteSpecialToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.deleteSpecialToolStripMenuItem.Tag = "#{help=1342}";
             this.deleteSpecialToolStripMenuItem.Text = "Delete Special...";
             this.deleteSpecialToolStripMenuItem.Click += new System.EventHandler(this.deleteSpecialToolStripMenuItem_Click);
@@ -400,7 +391,7 @@ namespace StatsDirect.UI
             // deleteRowToolStripMenuItem
             // 
             this.deleteRowToolStripMenuItem.Name = "deleteRowToolStripMenuItem";
-            this.deleteRowToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.deleteRowToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.deleteRowToolStripMenuItem.Tag = "#{help=1341}";
             this.deleteRowToolStripMenuItem.Text = "Delete Row";
             this.deleteRowToolStripMenuItem.Click += new System.EventHandler(this.deleteRowToolStripMenuItem_Click);
@@ -408,7 +399,7 @@ namespace StatsDirect.UI
             // deleteColumnToolStripMenuItem
             // 
             this.deleteColumnToolStripMenuItem.Name = "deleteColumnToolStripMenuItem";
-            this.deleteColumnToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.deleteColumnToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.deleteColumnToolStripMenuItem.Tag = "#{help=1340}";
             this.deleteColumnToolStripMenuItem.Text = "Delete Column";
             this.deleteColumnToolStripMenuItem.Click += new System.EventHandler(this.deleteColumnToolStripMenuItem_Click);
@@ -416,7 +407,7 @@ namespace StatsDirect.UI
             // deleteSheetToolStripMenuItem
             // 
             this.deleteSheetToolStripMenuItem.Name = "deleteSheetToolStripMenuItem";
-            this.deleteSheetToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.deleteSheetToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.deleteSheetToolStripMenuItem.Tag = "#{help=1343}";
             this.deleteSheetToolStripMenuItem.Text = "Delete Sheet";
             this.deleteSheetToolStripMenuItem.Click += new System.EventHandler(this.deleteSheetToolStripMenuItem_Click);
@@ -424,15 +415,15 @@ namespace StatsDirect.UI
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(208, 6);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(195, 6);
             // 
             // describeColumnDataToolStripMenuItem
             // 
             this.describeColumnDataToolStripMenuItem.Name = "describeColumnDataToolStripMenuItem";
             this.describeColumnDataToolStripMenuItem.ShortcutKeyDisplayString = "F9";
             this.describeColumnDataToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F9;
-            this.describeColumnDataToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-            this.describeColumnDataToolStripMenuItem.Tag = "#{help=1043}";
+            this.describeColumnDataToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.describeColumnDataToolStripMenuItem.Tag = "#{help=1045}";
             this.describeColumnDataToolStripMenuItem.Text = "Describe Column Data";
             this.describeColumnDataToolStripMenuItem.Click += new System.EventHandler(this.describeColumnDataToolStripMenuItem_Click);
             // 
@@ -452,7 +443,7 @@ namespace StatsDirect.UI
             // cellsToolStripMenuItem1
             // 
             this.cellsToolStripMenuItem1.Name = "cellsToolStripMenuItem1";
-            this.cellsToolStripMenuItem1.Size = new System.Drawing.Size(117, 22);
+            this.cellsToolStripMenuItem1.Size = new System.Drawing.Size(109, 22);
             this.cellsToolStripMenuItem1.Tag = "#{help=1370}";
             this.cellsToolStripMenuItem1.Text = "Cells...";
             this.cellsToolStripMenuItem1.Click += new System.EventHandler(this.cellsToolStripMenuItem1_Click);
@@ -460,7 +451,7 @@ namespace StatsDirect.UI
             // rowToolStripMenuItem
             // 
             this.rowToolStripMenuItem.Name = "rowToolStripMenuItem";
-            this.rowToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.rowToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.rowToolStripMenuItem.Tag = "#{help=1373}";
             this.rowToolStripMenuItem.Text = "Row";
             this.rowToolStripMenuItem.Click += new System.EventHandler(this.rowToolStripMenuItem_Click);
@@ -468,7 +459,7 @@ namespace StatsDirect.UI
             // columnToolStripMenuItem
             // 
             this.columnToolStripMenuItem.Name = "columnToolStripMenuItem";
-            this.columnToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.columnToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.columnToolStripMenuItem.Tag = "#{help=1371}";
             this.columnToolStripMenuItem.Text = "Column";
             this.columnToolStripMenuItem.Click += new System.EventHandler(this.columnToolStripMenuItem_Click);
@@ -476,9 +467,9 @@ namespace StatsDirect.UI
             // sheetToolStripMenuItem
             // 
             this.sheetToolStripMenuItem.Name = "sheetToolStripMenuItem";
-            this.sheetToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
-            this.sheetToolStripMenuItem.Text = "Sheet";
+            this.sheetToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.sheetToolStripMenuItem.Tag = "#{help=1374}";
+            this.sheetToolStripMenuItem.Text = "Sheet";
             this.sheetToolStripMenuItem.Click += new System.EventHandler(this.sheetToolStripMenuItem_Click);
             // 
             // formatToolStripMenuItem
@@ -494,14 +485,14 @@ namespace StatsDirect.UI
             this.pageSetupToolStripMenuItem});
             this.formatToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
             this.formatToolStripMenuItem.Name = "formatToolStripMenuItem";
-            this.formatToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
+            this.formatToolStripMenuItem.Size = new System.Drawing.Size(53, 20);
             this.formatToolStripMenuItem.Tag = "#{help=1296}";
             this.formatToolStripMenuItem.Text = "F&ormat";
             // 
             // cellsToolStripMenuItem
             // 
             this.cellsToolStripMenuItem.Name = "cellsToolStripMenuItem";
-            this.cellsToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.cellsToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.cellsToolStripMenuItem.Tag = "#{help=1349}";
             this.cellsToolStripMenuItem.Text = "Cells...";
             this.cellsToolStripMenuItem.Click += new System.EventHandler(this.cellsToolStripMenuItem_Click);
@@ -512,14 +503,14 @@ namespace StatsDirect.UI
             this.rowHideToolStripMenuItem,
             this.rowUnhideToolStripMenuItem});
             this.formatRowToolStripMenuItem.Name = "formatRowToolStripMenuItem";
-            this.formatRowToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.formatRowToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.formatRowToolStripMenuItem.Tag = "#{help=1352}";
             this.formatRowToolStripMenuItem.Text = "Row";
             // 
             // rowHideToolStripMenuItem
             // 
             this.rowHideToolStripMenuItem.Name = "rowHideToolStripMenuItem";
-            this.rowHideToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+            this.rowHideToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.rowHideToolStripMenuItem.Tag = "#{help=1368}";
             this.rowHideToolStripMenuItem.Text = "Hide";
             this.rowHideToolStripMenuItem.Click += new System.EventHandler(this.rowHideToolStripMenuItem_Click);
@@ -527,7 +518,7 @@ namespace StatsDirect.UI
             // rowUnhideToolStripMenuItem
             // 
             this.rowUnhideToolStripMenuItem.Name = "rowUnhideToolStripMenuItem";
-            this.rowUnhideToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+            this.rowUnhideToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.rowUnhideToolStripMenuItem.Tag = "#{help=1389}";
             this.rowUnhideToolStripMenuItem.Text = "Unhide";
             this.rowUnhideToolStripMenuItem.Click += new System.EventHandler(this.rowUnhideToolStripMenuItem_Click);
@@ -539,14 +530,14 @@ namespace StatsDirect.UI
             this.columnUnhideToolStripMenuItem,
             this.autoFitWidthToolStripMenuItem});
             this.formatColumnToolStripMenuItem.Name = "formatColumnToolStripMenuItem";
-            this.formatColumnToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.formatColumnToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.formatColumnToolStripMenuItem.Tag = "#{help=1350}";
             this.formatColumnToolStripMenuItem.Text = "Column";
             // 
             // columnHideToolStripMenuItem
             // 
             this.columnHideToolStripMenuItem.Name = "columnHideToolStripMenuItem";
-            this.columnHideToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.columnHideToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.columnHideToolStripMenuItem.Tag = "#{help=1367}";
             this.columnHideToolStripMenuItem.Text = "Hide";
             this.columnHideToolStripMenuItem.Click += new System.EventHandler(this.columnHideToolStripMenuItem_Click);
@@ -554,7 +545,7 @@ namespace StatsDirect.UI
             // columnUnhideToolStripMenuItem
             // 
             this.columnUnhideToolStripMenuItem.Name = "columnUnhideToolStripMenuItem";
-            this.columnUnhideToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.columnUnhideToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.columnUnhideToolStripMenuItem.Tag = "#{help=1388}";
             this.columnUnhideToolStripMenuItem.Text = "Unhide";
             this.columnUnhideToolStripMenuItem.Click += new System.EventHandler(this.columnUnhideToolStripMenuItem_Click);
@@ -562,7 +553,7 @@ namespace StatsDirect.UI
             // autoFitWidthToolStripMenuItem
             // 
             this.autoFitWidthToolStripMenuItem.Name = "autoFitWidthToolStripMenuItem";
-            this.autoFitWidthToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.autoFitWidthToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.autoFitWidthToolStripMenuItem.Tag = "#{help=1328}";
             this.autoFitWidthToolStripMenuItem.Text = "Auto-fit Width";
             this.autoFitWidthToolStripMenuItem.Click += new System.EventHandler(this.autoFitWidthToolStripMenuItem_Click);
@@ -570,7 +561,7 @@ namespace StatsDirect.UI
             // freezePanesToolStripMenuItem
             // 
             this.freezePanesToolStripMenuItem.Name = "freezePanesToolStripMenuItem";
-            this.freezePanesToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.freezePanesToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.freezePanesToolStripMenuItem.Tag = "#{help=1353}";
             this.freezePanesToolStripMenuItem.Text = "Freeze Panes";
             this.freezePanesToolStripMenuItem.Click += new System.EventHandler(this.freezePanesToolStripMenuItem_Click);
@@ -578,7 +569,7 @@ namespace StatsDirect.UI
             // defaultFontToolStripMenuItem
             // 
             this.defaultFontToolStripMenuItem.Name = "defaultFontToolStripMenuItem";
-            this.defaultFontToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.defaultFontToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.defaultFontToolStripMenuItem.Tag = "#{help=1337}";
             this.defaultFontToolStripMenuItem.Text = "Default Font...";
             this.defaultFontToolStripMenuItem.Click += new System.EventHandler(this.defaultFontToolStripMenuItem_Click);
@@ -586,7 +577,7 @@ namespace StatsDirect.UI
             // lockSheetToolStripMenuItem
             // 
             this.lockSheetToolStripMenuItem.Name = "lockSheetToolStripMenuItem";
-            this.lockSheetToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.lockSheetToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.lockSheetToolStripMenuItem.Tag = "#{help=1375}";
             this.lockSheetToolStripMenuItem.Text = "Lock Sheet";
             this.lockSheetToolStripMenuItem.Click += new System.EventHandler(this.lockSheetToolStripMenuItem_Click);
@@ -594,10 +585,19 @@ namespace StatsDirect.UI
             // sheetSettingsToolStripMenuItem
             // 
             this.sheetSettingsToolStripMenuItem.Name = "sheetSettingsToolStripMenuItem";
-            this.sheetSettingsToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.sheetSettingsToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.sheetSettingsToolStripMenuItem.Tag = "#{help=1386}";
             this.sheetSettingsToolStripMenuItem.Text = "Sheet Settings...";
             this.sheetSettingsToolStripMenuItem.Click += new System.EventHandler(this.sheetSettingsToolStripMenuItem_Click);
+            // 
+            // pageSetupToolStripMenuItem
+            // 
+            this.pageSetupToolStripMenuItem.MergeAction = System.Windows.Forms.MergeAction.Replace;
+            this.pageSetupToolStripMenuItem.Name = "pageSetupToolStripMenuItem";
+            this.pageSetupToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.pageSetupToolStripMenuItem.Tag = "#{help=1303}";
+            this.pageSetupToolStripMenuItem.Text = "Page Setup...";
+            this.pageSetupToolStripMenuItem.Click += new System.EventHandler(this.pageSetupToolStripMenuItem_Click);
             // 
             // pnlSpreadsheetGear
             // 

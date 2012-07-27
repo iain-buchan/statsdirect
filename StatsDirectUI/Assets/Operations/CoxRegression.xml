@@ -26,8 +26,7 @@
         </frame>
         <frame>
           <name>predictors</name>
-          <prompt>Select data for PREDICTORS (skip if none)</prompt>
-          <cancel-skips-parameter>Skip</cancel-skips-parameter>
+          <prompt>Select data for PREDICTORS</prompt>
           <validator>CheckForNonDummiedCategories</validator>
           <same-length-as>times</same-length-as>
           <mode>NumericReplaceMissing</mode>

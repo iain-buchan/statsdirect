@@ -48,7 +48,7 @@ namespace StatsDirect.UI
                 File.Copy(addInSourcePath, addInTargetPath);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             return false;
@@ -94,7 +94,7 @@ namespace StatsDirect.UI
                 excelObject.GetType().InvokeMember("quit", BindingFlags.InvokeMethod, null, excelObject, null);
                 return isInstalled;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -139,7 +139,7 @@ namespace StatsDirect.UI
                 //Clean up: Close Excel
 			    excelObject.GetType().InvokeMember("quit", BindingFlags.InvokeMethod, null, excelObject, null);
 			}
-			catch(Exception ex)
+			catch(Exception)
 			{
 			}
         }

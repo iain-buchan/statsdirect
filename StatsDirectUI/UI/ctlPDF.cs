@@ -95,35 +95,49 @@ namespace StatsDirect.UI
 
         private void btn_lcl_Click(Object sender, EventArgs e)
         {
-            if (Parsing.Cdbl_Txt(combo_cl.Text) >= 100.0)
+            try
             {
-                combo_cl.Text = 99.99.ToString();
+                if (Parsing.Cdbl_Txt(combo_cl.Text) >= 100.0)
+                {
+                    combo_cl.Text = 99.99.ToString();
+                }
+                if (Parsing.Cdbl_Txt(combo_cl.Text) <= 0.0)
+                {
+                    combo_cl.Text = 0.01.ToString();
+                }
+                double cl = Parsing.Cdbl_Txt(combo_cl.Text) / 100.0;
+                double P = (1.0 - cl) / 2.0;
+                edup.Text = P.ToString();
+                edup_DblClick(null, EventArgs.Empty);
             }
-            if (Parsing.Cdbl_Txt(combo_cl.Text) <= 0.0)
+            catch (Exception ex)
             {
-                combo_cl.Text = 0.01.ToString();
+                FriendlyError(ex);
             }
-            double cl = Parsing.Cdbl_Txt(combo_cl.Text) / 100.0;
-            double P = (1.0 - cl) / 2.0;
-            edup.Text = P.ToString();
-            edup_DblClick(null, EventArgs.Empty);
         }
 
 
         private void btn_ucl_Click(Object sender, EventArgs e)
         {
-            if (Parsing.Cdbl_Txt(combo_cl.Text) >= 100.0)
+            try
             {
-                combo_cl.Text = 99.99.ToString();
+                if (Parsing.Cdbl_Txt(combo_cl.Text) >= 100.0)
+                {
+                    combo_cl.Text = 99.99.ToString();
+                }
+                if (Parsing.Cdbl_Txt(combo_cl.Text) <= 0.0)
+                {
+                    combo_cl.Text = 0.01.ToString();
+                }
+                double cl = Parsing.Cdbl_Txt(combo_cl.Text) / 100.0;
+                double P = (1.0 - cl) / 2.0;
+                ed2p.Text = P.ToString();
+                ed2p_DblClick(null, EventArgs.Empty);
             }
-            if (Parsing.Cdbl_Txt(combo_cl.Text) <= 0.0)
+            catch (Exception ex)
             {
-                combo_cl.Text = 0.01.ToString();
+                FriendlyError(ex);
             }
-            double cl = Parsing.Cdbl_Txt(combo_cl.Text) / 100.0;
-            double P = (1.0 - cl) / 2.0;
-            ed2p.Text = P.ToString();
-            ed2p_DblClick(null, EventArgs.Empty);
         }
 
 
@@ -157,43 +171,48 @@ namespace StatsDirect.UI
 
         private void ed2p_DblClick(object sender, EventArgs e)
         {
-            if (inv)
+            try
             {
-                double P = Parsing.Cdbl_Txt(ed2p.Text);
-                if (P < 0)
+                if (inv)
                 {
-                    P = 0.0;
-                }
-                if (P > 1)
-                {
-                    P = 1.0;
-                }
-                ed2p.Text = pval15(P);
-                if (Convert.ToString(lbpdf.Tag) != "p")
-                {
-                    P = P / 2.0;
-                    if (P > 1.0 - P)
+                    double P = Parsing.Cdbl_Txt(ed2p.Text);
+                    if (P < 0)
                     {
-                        P = 1.0 - P;
+                        P = 0.0;
                     }
-                    edlp.Text = pval15(1.0 - P);
-                    edup.Text = pval15(P);
+                    if (P > 1)
+                    {
+                        P = 1.0;
+                    }
+                    ed2p.Text = pval15(P);
+                    if (Convert.ToString(lbpdf.Tag) != "p")
+                    {
+                        P = P / 2.0;
+                        if (P > 1.0 - P)
+                        {
+                            P = 1.0 - P;
+                        }
+                        edlp.Text = pval15(1.0 - P);
+                        edup.Text = pval15(P);
+                    }
+                    xFromP(P, 3);
                 }
-                xFromP(P, 3);
+            }
+            catch (Exception ex)
+            {
+                FriendlyError(ex);
             }
         }
 
 
         private void ed2p_GotFocus(object sender, EventArgs e)
         {
-
             Calc.Tag = "ed2p";
         }
 
 
         private void ed2p_LostFocus(object sender, EventArgs e)
         {
-
             if (holdit)
             {
                 return;
@@ -205,68 +224,71 @@ namespace StatsDirect.UI
 
         private void eddf_dblclick(object sender, EventArgs e)
         {
-            double df = Parsing.Cdbl_Txt(eddf.Text);
-            if ((Convert.ToString(lbpdf.Tag) == "s" | Convert.ToString(lbpdf.Tag) == "k") & edpdf.Text.Length > 0)
+            try
             {
-                int N;
-                if (Convert.ToString(lbpdf.Tag) == "s")
+                double df = Parsing.Cdbl_Txt(eddf.Text);
+                if ((Convert.ToString(lbpdf.Tag) == "s" | Convert.ToString(lbpdf.Tag) == "k") & edpdf.Text.Length > 0)
                 {
-                    N = ((int)(Math.Floor(df)));
-                    double rh = Parsing.Cdbl_Txt(edpdf.Text);
-                    if (N < 4 | rh < 0.0 | rh > 1.0)
+                    int N;
+                    if (Convert.ToString(lbpdf.Tag) == "s")
                     {
-                        eddf2.Text = Formatting.ERRR;
+                        N = ((int)(Math.Floor(df)));
+                        double rh = Parsing.Cdbl_Txt(edpdf.Text);
+                        if (N < 4 | rh < 0.0 | rh > 1.0)
+                        {
+                            eddf2.Text = Formatting.ERRR;
+                        }
+                        else
+                        {
+                            eddf2.Text = Convert.ToInt32(((1.0 - rh) * (N * (Math.Pow(N, 2) - 1))) / 6).ToString();
+                        }
+                        pfromx();
                     }
                     else
                     {
-                        eddf2.Text = Convert.ToInt32(((1.0 - rh) * (N * (Math.Pow(N, 2) - 1))) / 6).ToString();
+                        N = Convert.ToInt32(df);
+                        double tau = Parsing.Cdbl_Txt(edpdf.Text);
+                        if (N < 4 | tau < 0.0 | tau > 1.0)
+                        {
+                            eddf2.Text = Formatting.ERRR;
+                        }
+                        else
+                        {
+                            eddf2.Text = Convert.ToInt32(tau * (N * (N - 1) / 2.0)).ToString();
+                        }
+                        pfromx();
                     }
-                    pfromx();
                 }
                 else
                 {
-                    N = Convert.ToInt32(df);
-                    double tau = Parsing.Cdbl_Txt(edpdf.Text);
-                    if (N < 4 | tau < 0.0 | tau > 1.0)
+                    if (df < 0)
                     {
-                        eddf2.Text = Formatting.ERRR;
+                        df = 0;
+                    }
+                    eddf.Text = xval15(df);
+                    if (eddf2.Visible && eddf2.Text.Length == 0)
+                    {
+                        eddf2.Focus();
                     }
                     else
                     {
-                        eddf2.Text = Convert.ToInt32(tau * (N * (N - 1) / 2.0)).ToString();
+                        pfromx();
                     }
-                    pfromx();
                 }
             }
-            else
+            catch (Exception ex)
             {
-                if (df < 0)
-                {
-                    df = 0;
-                }
-                eddf.Text = xval15(df);
-                if (eddf2.Visible && eddf2.Text.Length == 0)
-                {
-                    eddf2.Focus();
-                }
-                else
-                {
-                    pfromx();
-                }
+                FriendlyError(ex);
             }
         }
-
 
         private void eddf_GotFocus(object sender, EventArgs e)
         {
-
             Calc.Tag = "eddf";
         }
 
-
         private void eddf_KeyPress(object sender, KeyPressEventArgs e)
         {
-
             if (e.KeyChar == 13)
             {
                 e.Handled = true;
@@ -281,10 +303,8 @@ namespace StatsDirect.UI
             }
         }
 
-
         private void eddf_LostFocus(object sender, EventArgs e)
         {
-
             if (holdit)
             {
                 return;
@@ -292,39 +312,41 @@ namespace StatsDirect.UI
             eddf_dblclick(null, EventArgs.Empty);
         }
 
-
         private void eddf2_DblClick(object sender, EventArgs e)
         {
-            if (Convert.ToString(lbpdf.Tag) != "p" & Convert.ToString(lbpdf.Tag) != "nct")
+            try
             {
-                int df = Parsing.Cint_Txt(eddf2.Text);
-                if (Convert.ToString(lbpdf.Tag) != "b")
+                if (Convert.ToString(lbpdf.Tag) != "p" & Convert.ToString(lbpdf.Tag) != "nct")
                 {
-                    if (df < 1)
+                    int df = Parsing.Cint_Txt(eddf2.Text);
+                    if (Convert.ToString(lbpdf.Tag) != "b")
                     {
-                        df = 1;
+                        if (df < 1)
+                        {
+                            df = 1;
+                        }
                     }
+                    eddf2.Text = df.ToString();
                 }
-                eddf2.Text = df.ToString();
+                else
+                {
+                    eddf2.Text = xval15(Parsing.Cdbl_Txt(eddf2.Text));
+                }
+                pfromx();
             }
-            else
+            catch (Exception ex)
             {
-                eddf2.Text = xval15(Parsing.Cdbl_Txt(eddf2.Text));
+                FriendlyError(ex);
             }
-            pfromx();
         }
-
 
         private void eddf2_GotFocus(object sender, EventArgs e)
         {
-
             Calc.Tag = "eddf2";
         }
 
-
         private void eddf2_KeyPress(object sender, KeyPressEventArgs e)
         {
-
             if (e.KeyChar == 13)
             {
                 e.Handled = true;
@@ -339,7 +361,6 @@ namespace StatsDirect.UI
             }
         }
 
-
         private void eddf2_LostFocus(object sender, EventArgs e)
         {
 
@@ -350,48 +371,50 @@ namespace StatsDirect.UI
             eddf2_DblClick(null, EventArgs.Empty);
         }
 
-
         private void edlp_DblClick(object sender, EventArgs e)
         {
-            if (inv)
+            try
             {
-                double P = Parsing.Cdbl_Txt(edlp.Text);
-                if (P < 0.0)
+                if (inv)
                 {
-                    P = 0.0;
+                    double P = Parsing.Cdbl_Txt(edlp.Text);
+                    if (P < 0.0)
+                    {
+                        P = 0.0;
+                    }
+                    if (P > 1.0)
+                    {
+                        P = 1.0;
+                    }
+                    edlp.Text = pval15(P);
+                    edup.Text = pval15(1.0 - P);
+                    double p2;
+                    if (P > 1.0 - P)
+                    {
+                        p2 = 1.0 - P;
+                    }
+                    else
+                    {
+                        p2 = P;
+                    }
+                    p2 = 2.0 * p2;
+                    ed2p.Text = pval15(p2);
+                    xFromP(1.0 - P, 1);
                 }
-                if (P > 1.0)
-                {
-                    P = 1.0;
-                }
-                edlp.Text = pval15(P);
-                edup.Text = pval15(1.0 - P);
-                double p2;
-                if (P > 1.0 - P)
-                {
-                    p2 = 1.0 - P;
-                }
-                else
-                {
-                    p2 = P;
-                }
-                p2 = 2.0 * p2;
-                ed2p.Text = pval15(p2);
-                xFromP(1.0 - P, 1);
+            }
+            catch (Exception ex)
+            {
+                FriendlyError(ex);
             }
         }
 
-
         private void edlp_GotFocus(object sender, EventArgs e)
         {
-
             Calc.Tag = "edlp";
         }
 
-
         private void edlp_LostFocus(object sender, EventArgs e)
         {
-
             if (holdit)
             {
                 return;
@@ -403,12 +426,18 @@ namespace StatsDirect.UI
 
         private void edpdf_DblClick(object sender, EventArgs e)
         {
-
-            edpdf.Text = xval15(Parsing.Cdbl_Txt(edpdf.Text));
-            if (eddf.Visible && eddf.Text.Length == 0)
-                eddf.Focus();
-            else
-                pfromx();
+            try
+            {
+                edpdf.Text = xval15(Parsing.Cdbl_Txt(edpdf.Text));
+                if (eddf.Visible && eddf.Text.Length == 0)
+                    eddf.Focus();
+                else
+                    pfromx();
+            }
+            catch (Exception ex)
+            {
+                FriendlyError(ex);
+            }
         }
 
         private void edpdf_GotFocus(object sender, EventArgs e)
@@ -435,24 +464,30 @@ namespace StatsDirect.UI
             edpdf_DblClick(null, EventArgs.Empty);
         }
 
-
         private void edup_DblClick(object sender, EventArgs e)
         {
-            if (inv)
+            try
             {
-                double P = Parsing.Cdbl_Txt(edup.Text);
-                if (P < 0.0)
-                    P = 0.0;
-                if (P > 1.0)
-                    P = 1.0;
-                edup.Text = pval15(P);
-                if (Convert.ToString(lbpdf.Tag) != "p")
+                if (inv)
                 {
-                    edlp.Text = pval15(1.0 - P);
-                    double P2 = 2.0 * (P > 1.0 - P ? 1.0 - P : P);
-                    ed2p.Text = pval15(P2);
+                    double P = Parsing.Cdbl_Txt(edup.Text);
+                    if (P < 0.0)
+                        P = 0.0;
+                    if (P > 1.0)
+                        P = 1.0;
+                    edup.Text = pval15(P);
+                    if (Convert.ToString(lbpdf.Tag) != "p")
+                    {
+                        edlp.Text = pval15(1.0 - P);
+                        double P2 = 2.0 * (P > 1.0 - P ? 1.0 - P : P);
+                        ed2p.Text = pval15(P2);
+                    }
+                    xFromP(P, 2);
                 }
-                xFromP(P, 2);
+            }
+            catch (Exception ex)
+            {
+                FriendlyError(ex);
             }
         }
 
@@ -742,8 +777,15 @@ namespace StatsDirect.UI
 
         private void SaveClick(Object sender, EventArgs e)
         {
-            string toOutput = @"{\rtf1\ansi" + tempsave.Trim() + @"\par}";
-            host.OutputReport(toOutput, null, null, null);
+            try
+            {
+                string toOutput = @"{\rtf1\ansi" + tempsave.Trim() + @"\par}";
+                host.OutputReport(toOutput, null, null, null);
+            }
+            catch (Exception ex)
+            {
+                FriendlyError(ex);
+            }
         }
 
 
@@ -1088,6 +1130,11 @@ namespace StatsDirect.UI
             }
 
             holdit = false;
+        }
+
+        private void FriendlyError(Exception ex)
+        {
+            SDApplication.SoleInstance.FriendlyError("StatsDirect couldn't calculate that function", ex, false);
         }
     }
 }

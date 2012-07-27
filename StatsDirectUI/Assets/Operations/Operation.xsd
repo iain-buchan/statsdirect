@@ -95,19 +95,20 @@
   </xs:complexType>
   <xs:complexType name="Parameter" abstract="true">
     <xs:choice maxOccurs="unbounded">
-      <xs:element minOccurs="0" maxOccurs="1" name="force-default" type="xs:boolean" />
-      <xs:element minOccurs="0" maxOccurs="1" name="must-request" type="xs:boolean" />
-      <xs:element minOccurs="0" maxOccurs="1" name="cancel-skips-parameter" type="xs:string" />
-      <xs:element minOccurs="1" maxOccurs="1" name="prompt" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="prompt-precedes-parameter" type="xs:boolean" />
-      <xs:element minOccurs="0" maxOccurs="1" name="rubric" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="requires-parameter" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="acquire-if-true" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="cancel-skips-parameter" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="force-default" type="xs:boolean" />
+      <xs:element minOccurs="1" maxOccurs="1" name="help" type="sdop:HelpTip" />
+      <xs:element minOccurs="1" maxOccurs="1" name="lifetime" type="sdop:Lifetime" />
+      <xs:element minOccurs="1" maxOccurs="1" name="must-request" type="xs:boolean" />
       <xs:element minOccurs="1" maxOccurs="1" name="name" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="title" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="validator" type="sdop:ValidationMode" />
-      <xs:element minOccurs="0" maxOccurs="1" name="validation-fail-message" type="xs:string" />
-      <xs:element minOccurs="0" maxOccurs="1" name="lifetime" type="sdop:Lifetime" />
-      <xs:element minOccurs="0" maxOccurs="1" name="help" type="sdop:HelpTip" />
+      <xs:element minOccurs="1" maxOccurs="1" name="prompt" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="prompt-precedes-parameter" type="xs:boolean" />
+      <xs:element minOccurs="1" maxOccurs="1" name="requires-parameter" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="rubric" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="title" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="validation-fail-message" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="validator" type="sdop:ValidationMode" />
     </xs:choice>
   </xs:complexType>
   <xs:complexType name="DoubleParameter">
@@ -216,10 +217,10 @@
     <xs:complexContent mixed="false">
       <xs:extension base="sdop:Parameter">
         <xs:choice maxOccurs="unbounded">
-          <xs:element minOccurs="0" maxOccurs="1" name="format-hint" type="xs:string" />
+          <xs:element minOccurs="1" maxOccurs="1" name="format-hint" type="xs:string" />
           <xs:element minOccurs="1" maxOccurs="1" name="options" type="sdop:ArrayOfOptionOption" />
-          <xs:element minOccurs="0" maxOccurs="1" name="default-value" type="xs:string" />
-          <xs:element minOccurs="0" maxOccurs="1" name="format-type" type="sdop:OptionFormatType" />
+          <xs:element minOccurs="1" maxOccurs="1" name="default-value" type="xs:string" />
+          <xs:element minOccurs="1" maxOccurs="1" name="format-type" type="sdop:OptionFormatType" />
         </xs:choice>
       </xs:extension>
     </xs:complexContent>

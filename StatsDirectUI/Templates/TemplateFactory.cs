@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 
 namespace StatsDirect.Templates
 {
@@ -34,6 +36,7 @@ namespace StatsDirect.Templates
         /// <returns>A collection of the user operations</returns>
         private static void LoadOperations()
         {
+            Dictionary<string, Exception> loadErrors = new Dictionary<string, Exception>();
             operations = new Dictionary<string, Operation>();
             System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(Operation));
             DirectoryInfo di = new DirectoryInfo(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, Numerics.Properties.Settings.Default.OperationsDirectory));
@@ -43,12 +46,19 @@ namespace StatsDirect.Templates
                 // Asking a DirectoryInfo for all files of the pattern "*.xml" gets eg. "scatter.xml~" - so we do it the hard way.
                 if (".xml".Equals(info.Extension.ToLower()))
                 {
-                    TextReader fs = info.OpenText();
-                    Operation o = (Operation)s.Deserialize(fs);
-                    foreach (string name in o.Names)
-                        operations.Add(name, o);
-                    fs.Close();
-                    o.FixAfterLoading();
+                    try
+                    {
+                        TextReader fs = info.OpenText();
+                        Operation o = (Operation)s.Deserialize(fs);
+                        foreach (string name in o.Names)
+                            operations.Add(name, o);
+                        fs.Close();
+                        o.FixAfterLoading();
+                    }
+                    catch (Exception ex)
+                    {
+                        loadErrors[info.Name] = ex;
+                    }
                 }
             }
 

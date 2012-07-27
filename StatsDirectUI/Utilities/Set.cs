@@ -16,7 +16,7 @@ using System.Collections.Generic;
 namespace Lambda.Collections.Generic
 {
     [Serializable]
-    public class Set<T> : ICollection<T>, ICollection
+    public sealed class Set<T> : ICollection<T>, ICollection
     {
         private struct Dummy { }
         private static readonly Dummy dummy = new Dummy();

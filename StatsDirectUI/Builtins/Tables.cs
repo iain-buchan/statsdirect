@@ -1,19 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using InvalidDataException = StatsDirect.Templates.InvalidDataException;
 
 namespace StatsDirect.Builtins
 {
-    public class Tables  
-    { 
+    public class Tables
+    {
         private struct Namevar
-        { 
-            public string Ti; 
-            public double x; 
+        {
+            public string Ti;
+            public double x;
         }
 
         private class NamevarAscending : IComparer<Namevar>
@@ -37,188 +39,188 @@ namespace StatsDirect.Builtins
         ///  <param name="cat"></param>
         /// <param name="LowerBound"></param>
         /// <remarks></remarks>
-        private static void SortName( int cats, Namevar[] cat, int LowerBound ) 
+        private static void SortName(int cats, Namevar[] cat, int LowerBound)
         {
             Array.Sort(cat, LowerBound, cats, new NamevarAscending());
-        } 
-        
-        public static StepResult s_fisher( ITemplateHost host, ref int a, ref int b, ref int c, ref int d, ref int fault ) 
+        }
+
+        public static StepResult s_fisher(ITemplateHost host, ref int a, ref int b, ref int c, ref int d, ref int fault)
         {
             int t;
             double ptwo = 0; double z_pone = 0;
 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "tab_a1", a.ToString() ); 
-            outputParameters.AddOutput( "tab_b1", b.ToString()); 
-            outputParameters.AddOutput( "tab_a2", c.ToString() ); 
-            outputParameters.AddOutput( "tab_b2", d.ToString()); 
-            if ( a > d ) 
-            { 
-                t = a; 
-                a = d; 
-                d = t; 
-            } 
-            if ( b > c ) 
-            { 
-                t = b; 
-                b = c; 
-                c = t; 
-            } 
-            int p = a + b; 
-            int Q = c + d; 
-            int r = a + c; 
-            int s = b + d; 
-            int N = p + Q; 
-            if ( p <= 0 || Q <= 0 || r <= 0 || s <= 0 ) 
-                throw new InvalidDataException(); 
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("tab_a1", a.ToString());
+            outputParameters.AddOutput("tab_b1", b.ToString());
+            outputParameters.AddOutput("tab_a2", c.ToString());
+            outputParameters.AddOutput("tab_b2", d.ToString());
+            if (a > d)
+            {
+                t = a;
+                a = d;
+                d = t;
+            }
+            if (b > c)
+            {
+                t = b;
+                b = c;
+                c = t;
+            }
+            int p = a + b;
+            int Q = c + d;
+            int r = a + c;
+            int s = b + d;
+            int N = p + Q;
+            if (p <= 0 || Q <= 0 || r <= 0 || s <= 0)
+                throw new InvalidDataException();
 
-            outputParameters.AddOutput( "tab3_a1",  a.ToString() ); 
-            outputParameters.AddOutput( "tab3_b1",  b.ToString() ); 
-            outputParameters.AddOutput( "tab3_c1",  p.ToString() ); 
-            outputParameters.AddOutput( "tab3_a2",  c.ToString() ); 
-            outputParameters.AddOutput( "tab3_b2",  d.ToString() ); 
-            outputParameters.AddOutput( "tab3_c2",  Q.ToString() ); 
-            outputParameters.AddOutput( "tab3_a3",  r.ToString() ); 
-            outputParameters.AddOutput( "tab3_b3",  s.ToString() ); 
-            outputParameters.AddOutput( "tab3_c3",  N.ToString() ); 
-            double b0 = 1.0; 
-            double n1 = N; 
-            double S1 = s; 
-            do 
-            { 
-                if ( b0 > 1.0E+300 | S1 <= 0.0 ) 
-                { 
-                    fault = 1; 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                } 
-                b0 = b0 * n1 / S1; 
-                S1 = S1 - 1.0; 
-                n1 = n1 - 1.0; 
-            } 
-            while ( n1 > Convert.ToDouble( Q ) ); 
-            double E1 = Convert.ToDouble( p * r ) / Convert.ToDouble( N ); 
-            outputParameters.AddOutput( "exp_a", host.RoundU( E1 ) ); 
-            if ( fault != 0 ) 
-            { 
-                fisherp( ref a, ref b, ref c, ref d, ref z_pone, ref ptwo, out fault ); 
-                outputParameters.AddOutput( "tail_1", "" ); 
-                if ( fault != 0 ) 
-                { 
-                    outputParameters.AddOutput( "p_1", "err" ); 
-                    outputParameters.AddOutput( "p_1d", "err" ); 
-                    outputParameters.AddOutput( "tail_2", "" ); 
-                    outputParameters.AddOutput( "p_2", "err" ); 
-                } 
-                else 
-                { 
-                    outputParameters.AddOutput( "p_1", host.pval( z_pone ) ); 
-                    outputParameters.AddOutput( "p_1d", host.pval( z_pone * 2.0 ) ); 
-                    outputParameters.AddOutput( "tail_2", "" ); 
-                    outputParameters.AddOutput( "p_2", host.pval( ptwo ) ); 
-                } 
-                const string x = "not calculated"; 
-                outputParameters.AddOutput( "mid_p", x ); 
-                outputParameters.AddOutput( "mid_p_2", x ); 
-            } 
-            else 
+            outputParameters.AddOutput("tab3_a1", a.ToString());
+            outputParameters.AddOutput("tab3_b1", b.ToString());
+            outputParameters.AddOutput("tab3_c1", p.ToString());
+            outputParameters.AddOutput("tab3_a2", c.ToString());
+            outputParameters.AddOutput("tab3_b2", d.ToString());
+            outputParameters.AddOutput("tab3_c2", Q.ToString());
+            outputParameters.AddOutput("tab3_a3", r.ToString());
+            outputParameters.AddOutput("tab3_b3", s.ToString());
+            outputParameters.AddOutput("tab3_c3", N.ToString());
+            double b0 = 1.0;
+            double n1 = N;
+            double S1 = s;
+            do
+            {
+                if (b0 > 1.0E+300 | S1 <= 0.0)
+                {
+                    fault = 1;
+                    break; /* TRANSWARNING: check that break is in correct scope */
+                }
+                b0 = b0 * n1 / S1;
+                S1 = S1 - 1.0;
+                n1 = n1 - 1.0;
+            }
+            while (n1 > Convert.ToDouble(Q));
+            double E1 = Convert.ToDouble(p * r) / Convert.ToDouble(N);
+            outputParameters.AddOutput("exp_a", host.RoundU(E1));
+            if (fault != 0)
+            {
+                fisherp(ref a, ref b, ref c, ref d, ref z_pone, ref ptwo, out fault);
+                outputParameters.AddOutput("tail_1", "");
+                if (fault != 0)
+                {
+                    outputParameters.AddOutput("p_1", "err");
+                    outputParameters.AddOutput("p_1d", "err");
+                    outputParameters.AddOutput("tail_2", "");
+                    outputParameters.AddOutput("p_2", "err");
+                }
+                else
+                {
+                    outputParameters.AddOutput("p_1", host.pval(z_pone));
+                    outputParameters.AddOutput("p_1d", host.pval(z_pone * 2.0));
+                    outputParameters.AddOutput("tail_2", "");
+                    outputParameters.AddOutput("p_2", host.pval(ptwo));
+                }
+                const string x = "not calculated";
+                outputParameters.AddOutput("mid_p", x);
+                outputParameters.AddOutput("mid_p_2", x);
+            }
+            else
             {
                 double[] f1 = new double[p + 1 + 1 /* for VB to C# conversion */ ];
                 double[] g1 = new double[p + 1 + 1 /* for VB to C# conversion */ ];
-                double[] h1 = new double[p + 1 + 1 /* for VB to C# conversion */ ]; 
-                int A1 = 0; 
-                int Q1 = Q - r; 
-                int P1 = p; 
-                int r1 = r; 
-                double h = 1.0 / b0; 
-                double f = h; 
-                f1[ 1 ] = f; 
-                h1[ 1 ] = h;
-                g1[ 1 ] = 1.0;
+                double[] h1 = new double[p + 1 + 1 /* for VB to C# conversion */ ];
+                int A1 = 0;
+                int Q1 = Q - r;
+                int P1 = p;
+                int r1 = r;
+                double h = 1.0 / b0;
+                double f = h;
+                f1[1] = f;
+                h1[1] = h;
+                g1[1] = 1.0;
                 int A2;
-                do 
-                { 
-                    A1 = A1 + 1; 
-                    Q1 = Q1 + 1; 
-                    h = h * Convert.ToDouble( P1 ) / Convert.ToDouble( A1 ) * Convert.ToDouble( r1 ) / Convert.ToDouble( Q1 ); 
-                    f = f + h; 
-                    A2 = A1 + 1; 
-                    f1[ A2 ] = f; 
-                    h1[ A2 ] = h; 
-                    P1 = P1 - 1; 
-                    r1 = r1 - 1; 
-                } 
-                while ( P1 > 0 ); 
+                do
+                {
+                    A1 = A1 + 1;
+                    Q1 = Q1 + 1;
+                    h = h * Convert.ToDouble(P1) / Convert.ToDouble(A1) * Convert.ToDouble(r1) / Convert.ToDouble(Q1);
+                    f = f + h;
+                    A2 = A1 + 1;
+                    f1[A2] = f;
+                    h1[A2] = h;
+                    P1 = P1 - 1;
+                    r1 = r1 - 1;
+                }
+                while (P1 > 0);
                 // UPPER TAIL PROBABILITIES WOULD BE SUBJECT TO SUBTRACTION ERRORS
                 // IF CALCULATED BY 1 - F. THEREFORE:
                 double g = 0.0;
                 int j;
-                for ( j=A2; j >= 2; j-- ) 
-                { 
-                    g = g + h1[ j ]; 
-                    g1[ j ] = g; 
-                } 
-                A1 = a + 1; 
-                h = 1.0000000000001 * h1[ A1 ];
+                for (j = A2; j >= 2; j--)
+                {
+                    g = g + h1[j];
+                    g1[j] = g;
+                }
+                A1 = a + 1;
+                h = 1.0000000000001 * h1[A1];
                 double mid_p;
-                if ( a > E1 ) 
-                { 
-                    g = g1[ A1 ]; 
-                    f = 0.0; 
-                    for ( j=1; j <= A2; j++ ) 
-                    { 
-                        if ( h1[ j ] > h )
-                        { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                        f = f1[ j ]; 
-                    } 
-                    double g2 = g * 2.0; 
-                    if ( g2 > 1.0 )
-                    { 
-                        g2 = 1.0; 
-                    } 
-                    outputParameters.AddOutput( "tail_1", "(upper tail)" ); 
-                    outputParameters.AddOutput( "p_1", host.pval( g ) ); 
-                    outputParameters.AddOutput( "p_1d", host.pval( g2 ) ); 
-                    mid_p = g - h1[ A1 ] / 2.0; 
-                } 
-                else 
-                { 
-                    f = f1[ A1 ]; 
-                    g = 0.0; 
-                    for ( j=A2; j >= 1; j-- ) 
-                    { 
-                        if ( h1[ j ] > h )
-                        { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                        g = g1[ j ]; 
-                    } 
-                    double f2 = 2.0 * f; 
-                    if ( f2 > 1.0 )
-                    { 
-                        f2 = 1.0; 
-                    } 
-                    outputParameters.AddOutput( "tail_1", "(lower tail)" ); 
-                    outputParameters.AddOutput( "p_1", host.pval( f ) ); 
-                    outputParameters.AddOutput( "p_1d", host.pval( f2 ) ); 
-                    mid_p = f - h1[ A1 ] / 2.0; 
-                } 
-                double z = f + g; 
-                if ( z > 1.0 )
-                { 
-                    z = 1.0; 
-                } 
-                outputParameters.AddOutput( "tail_2", "(by summation)" ); 
-                outputParameters.AddOutput( "p_2", host.pval( z ) ); 
-                outputParameters.AddOutput( "mid_p", host.pval( mid_p ) ); 
-                outputParameters.AddOutput( "mid_p_2", host.pval( Math.Min( mid_p * 2.0, 1.0 ) ) ); 
-            } 
-            fault = 0; 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
+                if (a > E1)
+                {
+                    g = g1[A1];
+                    f = 0.0;
+                    for (j = 1; j <= A2; j++)
+                    {
+                        if (h1[j] > h)
+                        {
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                        f = f1[j];
+                    }
+                    double g2 = g * 2.0;
+                    if (g2 > 1.0)
+                    {
+                        g2 = 1.0;
+                    }
+                    outputParameters.AddOutput("tail_1", "(upper tail)");
+                    outputParameters.AddOutput("p_1", host.pval(g));
+                    outputParameters.AddOutput("p_1d", host.pval(g2));
+                    mid_p = g - h1[A1] / 2.0;
+                }
+                else
+                {
+                    f = f1[A1];
+                    g = 0.0;
+                    for (j = A2; j >= 1; j--)
+                    {
+                        if (h1[j] > h)
+                        {
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                        g = g1[j];
+                    }
+                    double f2 = 2.0 * f;
+                    if (f2 > 1.0)
+                    {
+                        f2 = 1.0;
+                    }
+                    outputParameters.AddOutput("tail_1", "(lower tail)");
+                    outputParameters.AddOutput("p_1", host.pval(f));
+                    outputParameters.AddOutput("p_1d", host.pval(f2));
+                    mid_p = f - h1[A1] / 2.0;
+                }
+                double z = f + g;
+                if (z > 1.0)
+                {
+                    z = 1.0;
+                }
+                outputParameters.AddOutput("tail_2", "(by summation)");
+                outputParameters.AddOutput("p_2", host.pval(z));
+                outputParameters.AddOutput("mid_p", host.pval(mid_p));
+                outputParameters.AddOutput("mid_p_2", host.pval(Math.Min(mid_p * 2.0, 1.0)));
+            }
+            fault = 0;
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
         ///  <summary>
         ///  
         ///  </summary>
@@ -233,163 +235,163 @@ namespace StatsDirect.Builtins
         ///  <param name="maxm"></param>
         ///  <param name="medm"></param>
         ///  <remarks></remarks>
-        private static void kappa_hat( DataFrame frame, int N, string poscat, out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm ) 
+        private static void kappa_hat(DataFrame frame, int N, string poscat, out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm)
         {
             double[] qm = new double[N - 1 + 1 /* for VB to C# conversion */ ];
-            double[] qx = new double[N - 1 + 1 /* for VB to C# conversion */ ]; 
+            double[] qx = new double[N - 1 + 1 /* for VB to C# conversion */ ];
             //  IEB Aug 2007: Corrected to allow for complete non-rating of a subject
-            for ( int i=0; i <= N - 1; i++ ) 
-            { 
-                for ( int j=0; j <= frame.VariableCount - 1; j++ ) 
-                { 
-                    ClassifierVariable v = frame.Variables[ j ].AsClassifierVariable; 
+            for (int i = 0; i <= N - 1; i++)
+            {
+                for (int j = 0; j <= frame.VariableCount - 1; j++)
+                {
+                    ClassifierVariable v = frame.Variables[j].AsClassifierVariable;
                     //  Find the first missing label
-                    int M; 
-                    for ( M=0; M <= v.GroupCount - 1; M++ ) 
-                    { 
-                        if ( v.get_Group( M ).Label == Formatting.MISSINGLABEL )
-                        { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                    if ( v.Data[i] != Convert.ToDouble( M ) & v.Data[i] != Constant.MISSING )
-                    { 
-                        qm[ i ] = qm[ i ] + 1.0; 
-                    } 
-                    for ( M=0; M <= v.GroupCount - 1; M++ ) 
-                    { 
-                        if ( v.get_Group( M ).Label == poscat )
-                        { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                    if ( v.Data[i] == Convert.ToDouble( M ) & v.Data[i] != Constant.MISSING )
-                    { 
-                        qx[ i ] = qx[ i ] + 1.0; 
-                    } 
-                } 
-            } 
-            mbar = 0.0; 
-            mbarh = 0.0; 
-            double xn = 0; 
-            minm = double.MaxValue; 
-            maxm = double.MinValue; 
-            for ( int i=0; i <= N - 1; i++ ) 
-            { 
-                mbar = mbar + qm[ i ]; 
-                if ( qm[ i ] != 0.0 ) 
-                { 
-                    mbarh = mbarh + 1.0 / qm[ i ]; 
-                    xn += 1; 
-                } 
-                if ( qm[ i ] < minm )
-                { 
-                    minm = qm[ i ]; 
-                } 
-                if ( qm[ i ] > maxm )
-                { 
-                    maxm = qm[ i ]; 
-                } 
-            } 
-            medm = Describe.Median( qm, 0, N - 1 ); 
-            mbar = mbar / xn; 
-            mbarh = xn / mbarh; 
-            pbar = 0.0; 
-            for ( int i=0; i <= N - 1; i++ ) 
-            { 
-                pbar = pbar + qx[ i ]; 
-            } 
-            pbar = pbar / ( xn * mbar ); 
-            double bx = 0.0; 
-            double wx = 0.0; 
-            for ( int i=0; i <= N - 1; i++ ) 
-            { 
-                if ( qm[ i ] != 0 ) 
-                { 
-                    bx = bx + ( Math.Pow( ( qx[ i ] - qm[ i ] * pbar ), 2.0 ) ) / qm[ i ]; 
-                    wx = wx + ( qx[ i ] * ( qm[ i ] - qx[ i ] ) ) / qm[ i ]; 
-                } 
-            } 
-            bx = bx / xn; 
-            wx = wx / ( xn * ( mbar - 1.0 ) ); 
-            k = ( bx - wx ) / ( bx + ( mbar - 1.0 ) * wx ); 
-        } 
-        
-        
-        private static void x_symmetrise_xtab( ref int xcats, ref Namevar[] xcat, ref int ycats, ref Namevar[] ycat, int LowerBound ) 
-        { 
+                    int M;
+                    for (M = 0; M <= v.GroupCount - 1; M++)
+                    {
+                        if (v.get_Group(M).Label == Formatting.MISSINGLABEL)
+                        {
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                    if (v.Data[i] != Convert.ToDouble(M) & v.Data[i] != Constant.MISSING)
+                    {
+                        qm[i] = qm[i] + 1.0;
+                    }
+                    for (M = 0; M <= v.GroupCount - 1; M++)
+                    {
+                        if (v.get_Group(M).Label == poscat)
+                        {
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                    if (v.Data[i] == Convert.ToDouble(M) & v.Data[i] != Constant.MISSING)
+                    {
+                        qx[i] = qx[i] + 1.0;
+                    }
+                }
+            }
+            mbar = 0.0;
+            mbarh = 0.0;
+            double xn = 0;
+            minm = double.MaxValue;
+            maxm = double.MinValue;
+            for (int i = 0; i <= N - 1; i++)
+            {
+                mbar = mbar + qm[i];
+                if (qm[i] != 0.0)
+                {
+                    mbarh = mbarh + 1.0 / qm[i];
+                    xn += 1;
+                }
+                if (qm[i] < minm)
+                {
+                    minm = qm[i];
+                }
+                if (qm[i] > maxm)
+                {
+                    maxm = qm[i];
+                }
+            }
+            medm = Describe.Median(qm, 0, N - 1);
+            mbar = mbar / xn;
+            mbarh = xn / mbarh;
+            pbar = 0.0;
+            for (int i = 0; i <= N - 1; i++)
+            {
+                pbar = pbar + qx[i];
+            }
+            pbar = pbar / (xn * mbar);
+            double bx = 0.0;
+            double wx = 0.0;
+            for (int i = 0; i <= N - 1; i++)
+            {
+                if (qm[i] != 0)
+                {
+                    bx = bx + (Math.Pow((qx[i] - qm[i] * pbar), 2.0)) / qm[i];
+                    wx = wx + (qx[i] * (qm[i] - qx[i])) / qm[i];
+                }
+            }
+            bx = bx / xn;
+            wx = wx / (xn * (mbar - 1.0));
+            k = (bx - wx) / (bx + (mbar - 1.0) * wx);
+        }
+
+
+        private static void x_symmetrise_xtab(ref int xcats, ref Namevar[] xcat, ref int ycats, ref Namevar[] ycat, int LowerBound)
+        {
             int i;
-            Namevar[] maxcat = new Namevar[xcats + ycats - 1 + LowerBound + 1 /* for VB to C# conversion */ ]; 
+            Namevar[] maxcat = new Namevar[xcats + ycats - 1 + LowerBound + 1 /* for VB to C# conversion */ ];
             // fill in the gaps if non-contiguous series - 12/02/05 --->
-            for ( i=LowerBound; i <= xcats - 1 + LowerBound; i++ ) 
-            { 
-                maxcat[ i ] = xcat[ i ]; 
-            } 
-            for ( i=LowerBound; i <= ycats - 1 + LowerBound; i++ ) 
-            { 
-                maxcat[ xcats + i ] = ycat[ i ]; 
-            } 
-            SortName( xcats + ycats, maxcat, LowerBound ); 
-            for ( i=LowerBound + 1; i <= xcats + ycats - 1 + LowerBound; i++ ) 
-            { 
-                if ( maxcat[ i - 1 ].Ti == maxcat[ i ].Ti )
-                { 
-                    maxcat[ i - 1 ].Ti = ""; 
-                } 
-            } 
-            SortName( xcats + ycats, maxcat, LowerBound ); 
-            int g = 1; 
-            for ( i=xcats + ycats - 1 + LowerBound; i >= LowerBound; i-- ) 
-            { 
-                if ( maxcat[ i ].Ti == "" ) 
-                { 
-                    g = i + 1; 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                } 
-            } 
-            int maxcats = xcats + ycats - g + LowerBound; 
+            for (i = LowerBound; i <= xcats - 1 + LowerBound; i++)
+            {
+                maxcat[i] = xcat[i];
+            }
+            for (i = LowerBound; i <= ycats - 1 + LowerBound; i++)
+            {
+                maxcat[xcats + i] = ycat[i];
+            }
+            SortName(xcats + ycats, maxcat, LowerBound);
+            for (i = LowerBound + 1; i <= xcats + ycats - 1 + LowerBound; i++)
+            {
+                if (maxcat[i - 1].Ti == maxcat[i].Ti)
+                {
+                    maxcat[i - 1].Ti = "";
+                }
+            }
+            SortName(xcats + ycats, maxcat, LowerBound);
+            int g = 1;
+            for (i = xcats + ycats - 1 + LowerBound; i >= LowerBound; i--)
+            {
+                if (maxcat[i].Ti == "")
+                {
+                    g = i + 1;
+                    break; /* TRANSWARNING: check that break is in correct scope */
+                }
+            }
+            int maxcats = xcats + ycats - g + LowerBound;
             // create temp variable for copying values 
-            Namevar[] transTemp14 = new Namevar[maxcats - 1 + LowerBound + 1 /* for VB to C# conversion */ ]; 
-            Array.Copy( xcat, transTemp14, Math.Min( xcat.Length, transTemp14.Length ) ); 
+            Namevar[] transTemp14 = new Namevar[maxcats - 1 + LowerBound + 1 /* for VB to C# conversion */ ];
+            Array.Copy(xcat, transTemp14, Math.Min(xcat.Length, transTemp14.Length));
             xcat = transTemp14;
             // create temp variable for copying values 
-            Namevar[] transTemp15 = new Namevar[maxcats - 1 + LowerBound + 1 /* for VB to C# conversion */ ]; 
-            Array.Copy( ycat, transTemp15, Math.Min( ycat.Length, transTemp15.Length ) ); 
-            ycat = transTemp15; 
-            for ( i=LowerBound; i <= maxcats - 1 + LowerBound; i++ ) 
+            Namevar[] transTemp15 = new Namevar[maxcats - 1 + LowerBound + 1 /* for VB to C# conversion */ ];
+            Array.Copy(ycat, transTemp15, Math.Min(ycat.Length, transTemp15.Length));
+            ycat = transTemp15;
+            for (i = LowerBound; i <= maxcats - 1 + LowerBound; i++)
             {
                 int j;
-                if ( xcat[ i ].Ti != maxcat[ g + i - LowerBound ].Ti ) 
-                { 
+                if (xcat[i].Ti != maxcat[g + i - LowerBound].Ti)
+                {
                     //  Shuffle the end of the array up
-                    for ( j=maxcats - 2 + LowerBound; j >= i; j-- ) 
-                    { 
-                        xcat[ j + 1 ] = xcat[ j ]; 
-                    } 
-                    xcat[ i ].Ti = maxcat[ g + i - LowerBound ].Ti; 
-                    xcat[ i ].x = -Constant.MISSING; 
-                } 
-                if ( ycat[ i ].Ti != maxcat[ g + i - LowerBound ].Ti ) 
-                { 
-                    for ( j=maxcats - 2 + LowerBound; j >= i; j-- ) 
-                    { 
-                        ycat[ j + 1 ] = ycat[ j ]; 
-                    } 
-                    ycat[ i ].Ti = maxcat[ g + i - LowerBound ].Ti; 
-                    ycat[ i ].x = -Constant.MISSING; 
-                } 
-            } 
-            xcats = maxcats; 
-            ycats = maxcats; 
-        } 
-        
-        
-        public static void x_kappa_ci_22( int n1, int n2, int n3, double z, ref double ka, ref double lwr, ref double upr, out int fault ) 
+                    for (j = maxcats - 2 + LowerBound; j >= i; j--)
+                    {
+                        xcat[j + 1] = xcat[j];
+                    }
+                    xcat[i].Ti = maxcat[g + i - LowerBound].Ti;
+                    xcat[i].x = -Constant.MISSING;
+                }
+                if (ycat[i].Ti != maxcat[g + i - LowerBound].Ti)
+                {
+                    for (j = maxcats - 2 + LowerBound; j >= i; j--)
+                    {
+                        ycat[j + 1] = ycat[j];
+                    }
+                    ycat[i].Ti = maxcat[g + i - LowerBound].Ti;
+                    ycat[i].x = -Constant.MISSING;
+                }
+            }
+            xcats = maxcats;
+            ycats = maxcats;
+        }
+
+
+        public static void x_kappa_ci_22(int n1, int n2, int n3, double z, ref double ka, ref double lwr, ref double upr, out int fault)
         {
             //       This program calculates a Donner-Eliasziw goodness-of-fit
             //       CI for Scott-Cohen pi/kappa for one or more 2*2 tables.
             //       95% by default, else change z.
-            
+
             //       Input:  3i6  n1 (1,1)
             //                    n2 (1,0) or (0,1)
             //                    n3(0, 0)
@@ -398,41 +400,41 @@ namespace StatsDirect.Builtins
             // 
             //       Output:  point estimate and CI by closed form solution of cubic.
             //       If n2=0 and hence kappa=1, also give quadratic solution.
-            fault = 2; 
-            double zsq = z * z; 
-            if ( n1 + n2 == 0 || n2 + n3 == 0 )
-            { 
-                return; 
-            } 
-            double a1 = Convert.ToDouble( n1 ); 
-            double a2 = Convert.ToDouble( n2 ); 
-            double a3 = Convert.ToDouble( n3 ); 
-            double an = a1 + a2 + a3; 
-            double P = ( a1 + 0.5 * a2 ) / an; 
-            double pq = P * ( 1.0 - P ); 
-            ka = 1.0 - a2 / ( 2.0 * an * pq ); 
-            double den = pq * ( zsq + an ); 
-            double y3 = ( a2 + ( 1.0 - 2.0 * pq ) * zsq ) / den - 1.0; 
-            den = 4.0 * an * pq * den; 
-            double y2 = ( a2 * a2 - 4.0 * an * pq * ( 1.0 - 4.0 * pq ) * zsq ) / den - 1.0; 
-            double y1 = ( Math.Pow( ( a2 - 2.0 * an * pq ), 2.0 ) + 4.0 * an * an * pq * pq ) / den - 1.0; 
-            double vv = ( Math.Pow( y3, 3.0 ) ) / 27.0 - ( y2 * y3 - 3.0 * y1 ) / 6.0; 
-            double w = ( Math.Pow( y3, 2.0 ) ) / 9.0 - y2 / 3.0; 
-            w = Math.Pow( w, 1.5 ); 
-            double th = Math.Acos( vv / w ); 
-            double th120 = ( th + 2.0 * Constant.PI ) / 3.0; 
-            double th300 = ( th + 5.0 * Constant.PI ) / 3.0; 
-            double b = ( Math.Pow( y3, 2.0 ) ) / 9.0 - y2 / 3.0; 
-            b = Math.Pow( b, 0.5 ); 
-            lwr = b * ( Math.Cos( th120 ) + ( Math.Pow( 3.0, 0.5 ) ) * Math.Sin( th120 ) ) - y3 / 3.0; 
-            upr = 2.0 * b * Math.Cos( th300 ) - y3 / 3.0; 
-            if ( n2 == 0 ) 
-            { 
-                upr = 1.0; 
-                double a = zsq * ( Math.Pow( P, 2.0 ) + Math.Pow( ( 1.0 - P ), 2.0 ) ) / pq; 
-                lwr = ( -a + Math.Pow( ( Math.Pow( a, 2.0 ) - 4.0 * ( zsq + an ) * ( zsq - an ) ), 0.5 ) ) / ( 2.0 * ( zsq + an ) ); 
-            } 
-            fault = 0; 
+            fault = 2;
+            double zsq = z * z;
+            if (n1 + n2 == 0 || n2 + n3 == 0)
+            {
+                return;
+            }
+            double a1 = Convert.ToDouble(n1);
+            double a2 = Convert.ToDouble(n2);
+            double a3 = Convert.ToDouble(n3);
+            double an = a1 + a2 + a3;
+            double P = (a1 + 0.5 * a2) / an;
+            double pq = P * (1.0 - P);
+            ka = 1.0 - a2 / (2.0 * an * pq);
+            double den = pq * (zsq + an);
+            double y3 = (a2 + (1.0 - 2.0 * pq) * zsq) / den - 1.0;
+            den = 4.0 * an * pq * den;
+            double y2 = (a2 * a2 - 4.0 * an * pq * (1.0 - 4.0 * pq) * zsq) / den - 1.0;
+            double y1 = (Math.Pow((a2 - 2.0 * an * pq), 2.0) + 4.0 * an * an * pq * pq) / den - 1.0;
+            double vv = (Math.Pow(y3, 3.0)) / 27.0 - (y2 * y3 - 3.0 * y1) / 6.0;
+            double w = (Math.Pow(y3, 2.0)) / 9.0 - y2 / 3.0;
+            w = Math.Pow(w, 1.5);
+            double th = Math.Acos(vv / w);
+            double th120 = (th + 2.0 * Constant.PI) / 3.0;
+            double th300 = (th + 5.0 * Constant.PI) / 3.0;
+            double b = (Math.Pow(y3, 2.0)) / 9.0 - y2 / 3.0;
+            b = Math.Pow(b, 0.5);
+            lwr = b * (Math.Cos(th120) + (Math.Pow(3.0, 0.5)) * Math.Sin(th120)) - y3 / 3.0;
+            upr = 2.0 * b * Math.Cos(th300) - y3 / 3.0;
+            if (n2 == 0)
+            {
+                upr = 1.0;
+                double a = zsq * (Math.Pow(P, 2.0) + Math.Pow((1.0 - P), 2.0)) / pq;
+                lwr = (-a + Math.Pow((Math.Pow(a, 2.0) - 4.0 * (zsq + an) * (zsq - an)), 0.5)) / (2.0 * (zsq + an));
+            }
+            fault = 0;
         }
 
 
@@ -460,88 +462,88 @@ namespace StatsDirect.Builtins
         ///  <param name="spi"></param>
         ///  <param name="ierror"></param>
         ///  <remarks>The double version</remarks>
-        public static void Kappa( ITemplateHost host, double[,] o, double[,] w, int g, ref double k, ref double sek, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror ) 
-        { 
+        public static void Kappa(ITemplateHost host, double[,] o, double[,] w, int g, ref double k, ref double sek, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror)
+        {
             int i; int j;
 
             ierror = true;
             double[] pidot = new double[g - 1 + 1 /* for VB to C# conversion */ ];
             double[] pdotj = new double[g - 1 + 1 /* for VB to C# conversion */ ];
-            double[] crtot = new double[g - 1 + 1 /* for VB to C# conversion */ ]; 
-            double gt = 0.0; 
-            for ( i=0; i <= g - 1; i++ ) 
-            { 
-                for ( j=0; j <= g - 1; j++ ) 
-                { 
-                    pdotj[ i ] = pdotj[ i ] + o[ i, j ]; 
-                    pidot[ j ] = pidot[ j ] + o[ i, j ]; 
-                    gt = gt + o[ i, j ]; 
-                } 
-            } 
-            for ( i=0; i <= g - 1; i++ ) 
-            { 
-                crtot[ i ] = crtot[ i ] + pdotj[ i ] + pidot[ i ]; 
-            } 
-            if ( gt <= 0.0 ) 
-            { 
-                throw new InvalidDataException(); 
-            } 
-            po = 0.0; 
-            pe = 0.0; 
-            double px = 0.0; 
-            for ( i=0; i <= g - 1; i++ ) 
-            { 
-                pdotj[ i ] = pdotj[ i ] / gt; 
-                pidot[ i ] = pidot[ i ] / gt; 
-                po = po + o[ i, i ] / gt; 
-                pe = pe + pdotj[ i ] * pidot[ i ]; 
-                px = px + pdotj[ i ] * pidot[ i ] * ( pdotj[ i ] + pidot[ i ] ); 
-            } 
-            k = ( po - pe ) / ( 1.0 - pe ); 
-            sek = ( 1.0 / ( ( 1.0 - pe ) * Math.Sqrt( gt ) ) ) * Math.Sqrt( pe + pe * pe - px ); 
-            kcil = k - cit * sek; 
-            kciu = k + cit * sek; 
-            pow = 0.0; 
-            pew = 0.0; 
-            for ( i=0; i <= g - 1; i++ ) 
-            { 
-                for ( j=0; j <= g - 1; j++ ) 
-                { 
-                    pow = pow + w[ i, j ] * ( o[ i, j ] / gt ); 
-                    pew = pew + w[ i, j ] * pidot[ i ] * pdotj[ j ]; 
-                } 
-            } 
-            kw = ( pow - pew ) / ( 1.0 - pew ); 
-            sekw = 1.0 / ( ( 1.0 - pew ) * Math.Sqrt( gt ) );
+            double[] crtot = new double[g - 1 + 1 /* for VB to C# conversion */ ];
+            double gt = 0.0;
+            for (i = 0; i <= g - 1; i++)
+            {
+                for (j = 0; j <= g - 1; j++)
+                {
+                    pdotj[i] = pdotj[i] + o[i, j];
+                    pidot[j] = pidot[j] + o[i, j];
+                    gt = gt + o[i, j];
+                }
+            }
+            for (i = 0; i <= g - 1; i++)
+            {
+                crtot[i] = crtot[i] + pdotj[i] + pidot[i];
+            }
+            if (gt <= 0.0)
+            {
+                throw new InvalidDataException();
+            }
+            po = 0.0;
+            pe = 0.0;
+            double px = 0.0;
+            for (i = 0; i <= g - 1; i++)
+            {
+                pdotj[i] = pdotj[i] / gt;
+                pidot[i] = pidot[i] / gt;
+                po = po + o[i, i] / gt;
+                pe = pe + pdotj[i] * pidot[i];
+                px = px + pdotj[i] * pidot[i] * (pdotj[i] + pidot[i]);
+            }
+            k = (po - pe) / (1.0 - pe);
+            sek = (1.0 / ((1.0 - pe) * Math.Sqrt(gt))) * Math.Sqrt(pe + pe * pe - px);
+            kcil = k - cit * sek;
+            kciu = k + cit * sek;
+            pow = 0.0;
+            pew = 0.0;
+            for (i = 0; i <= g - 1; i++)
+            {
+                for (j = 0; j <= g - 1; j++)
+                {
+                    pow = pow + w[i, j] * (o[i, j] / gt);
+                    pew = pew + w[i, j] * pidot[i] * pdotj[j];
+                }
+            }
+            kw = (pow - pew) / (1.0 - pew);
+            sekw = 1.0 / ((1.0 - pew) * Math.Sqrt(gt));
             double[] wibar = new double[g - 1 + 1 /* for VB to C# conversion */ ];
-            double[] wjbar = new double[g - 1 + 1 /* for VB to C# conversion */ ]; 
-            for ( i=0; i <= g - 1; i++ ) 
-            { 
-                for ( j=0; j <= g - 1; j++ ) 
-                { 
-                    wibar[ i ] = wibar[ i ] + w[ i, j ] * pdotj[ j ]; 
-                    wjbar[ j ] = wjbar[ j ] + w[ i, j ] * pidot[ i ]; 
-                } 
-            } 
-            px = 0.0; 
-            for ( i=0; i <= g - 1; i++ ) 
-            { 
-                for ( j=0; j <= g - 1; j++ ) 
-                { 
-                    px = px + pidot[ i ] * pdotj[ j ] * Math.Pow( ( w[ i, j ] - ( wibar[ i ] + wjbar[ j ] ) ), 2.0 ); 
-                } 
-            } 
-            sekw = sekw * Math.Sqrt( px - Math.Pow( pew, 2.0 ) ); 
-            kwcil = kw - cit * sekw; 
-            kwciu = kw + cit * sekw; 
+            double[] wjbar = new double[g - 1 + 1 /* for VB to C# conversion */ ];
+            for (i = 0; i <= g - 1; i++)
+            {
+                for (j = 0; j <= g - 1; j++)
+                {
+                    wibar[i] = wibar[i] + w[i, j] * pdotj[j];
+                    wjbar[j] = wjbar[j] + w[i, j] * pidot[i];
+                }
+            }
+            px = 0.0;
+            for (i = 0; i <= g - 1; i++)
+            {
+                for (j = 0; j <= g - 1; j++)
+                {
+                    px = px + pidot[i] * pdotj[j] * Math.Pow((w[i, j] - (wibar[i] + wjbar[j])), 2.0);
+                }
+            }
+            sekw = sekw * Math.Sqrt(px - Math.Pow(pew, 2.0));
+            kwcil = kw - cit * sekw;
+            kwciu = kw + cit * sekw;
             // Scott's pi
-            spe = 0.0; 
-            for ( i=0; i <= g - 1; i++ ) 
-            { 
-                spe = spe + Math.Pow( ( crtot[ i ] / ( gt * 2.0 ) ), 2.0 ); 
-            } 
-            spi = ( po - spe ) / ( 1.0 - spe ); 
-            ierror = false; 
+            spe = 0.0;
+            for (i = 0; i <= g - 1; i++)
+            {
+                spe = spe + Math.Pow((crtot[i] / (gt * 2.0)), 2.0);
+            }
+            spi = (po - spe) / (1.0 - spe);
+            ierror = false;
         }
 
 
@@ -569,90 +571,90 @@ namespace StatsDirect.Builtins
         ///  <param name="spi"></param>
         ///  <param name="ierror"></param>
         ///  <remarks>The integer version</remarks>
-        public static void Kappa( ITemplateHost host, int[,] o, double[,] w, int g, ref double k, ref double sek, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror ) 
-        { 
-            
+        public static void Kappa(ITemplateHost host, int[,] o, double[,] w, int g, ref double k, ref double sek, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror)
+        {
+
             ierror = true;
             double[] pidot = new double[g - 1 + 1 /* for VB to C# conversion */ ];
             double[] pdotj = new double[g - 1 + 1 /* for VB to C# conversion */ ];
-            double[] crtot = new double[g - 1 + 1 /* for VB to C# conversion */ ]; 
-            double gt = 0.0; 
-            for ( int i=0; i <= g - 1; i++ ) 
-            { 
-                for ( int j=0; j <= g - 1; j++ ) 
-                { 
-                    pdotj[ i ] += o[ i, j ]; 
-                    pidot[ j ] += o[ i, j ]; 
-                    gt += o[ i, j ]; 
-                } 
-            } 
-            for ( int i=0; i <= g - 1; i++ ) 
-            { 
-                crtot[ i ] += pdotj[ i ] + pidot[ i ]; 
-            } 
-            if ( gt <= 0.0 ) 
-            { 
-                throw new InvalidDataException(); 
-            } 
-            po = 0.0; 
-            pe = 0.0; 
-            double px = 0.0; 
-            for ( int i=0; i <= g - 1; i++ ) 
-            { 
-                pdotj[ i ] /= gt; 
-                pidot[ i ] /= gt; 
-                po += o[ i, i ] / gt; 
-                pe += pdotj[ i ] * pidot[ i ]; 
-                px += pdotj[ i ] * pidot[ i ] * ( pdotj[ i ] + pidot[ i ] ); 
-            } 
-            k = ( po - pe ) / ( 1.0 - pe ); 
-            sek = ( 1.0 / ( ( 1.0 - pe ) * Math.Sqrt( gt ) ) ) * Math.Sqrt( pe + pe * pe - px ); 
-            kcil = k - cit * sek; 
-            kciu = k + cit * sek; 
-            pow = 0.0; 
-            pew = 0.0; 
-            for ( int i=0; i <= g - 1; i++ ) 
-            { 
-                for ( int j=0; j <= g - 1; j++ ) 
-                { 
-                    pow += w[ i, j ] * ( o[ i, j ] / gt ); 
-                    pew += w[ i, j ] * pidot[ i ] * pdotj[ j ]; 
-                } 
-            } 
-            kw = ( pow - pew ) / ( 1.0 - pew ); 
-            sekw = 1.0 / ( ( 1.0 - pew ) * Math.Sqrt( gt ) );
+            double[] crtot = new double[g - 1 + 1 /* for VB to C# conversion */ ];
+            double gt = 0.0;
+            for (int i = 0; i <= g - 1; i++)
+            {
+                for (int j = 0; j <= g - 1; j++)
+                {
+                    pdotj[i] += o[i, j];
+                    pidot[j] += o[i, j];
+                    gt += o[i, j];
+                }
+            }
+            for (int i = 0; i <= g - 1; i++)
+            {
+                crtot[i] += pdotj[i] + pidot[i];
+            }
+            if (gt <= 0.0)
+            {
+                throw new InvalidDataException();
+            }
+            po = 0.0;
+            pe = 0.0;
+            double px = 0.0;
+            for (int i = 0; i <= g - 1; i++)
+            {
+                pdotj[i] /= gt;
+                pidot[i] /= gt;
+                po += o[i, i] / gt;
+                pe += pdotj[i] * pidot[i];
+                px += pdotj[i] * pidot[i] * (pdotj[i] + pidot[i]);
+            }
+            k = (po - pe) / (1.0 - pe);
+            sek = (1.0 / ((1.0 - pe) * Math.Sqrt(gt))) * Math.Sqrt(pe + pe * pe - px);
+            kcil = k - cit * sek;
+            kciu = k + cit * sek;
+            pow = 0.0;
+            pew = 0.0;
+            for (int i = 0; i <= g - 1; i++)
+            {
+                for (int j = 0; j <= g - 1; j++)
+                {
+                    pow += w[i, j] * (o[i, j] / gt);
+                    pew += w[i, j] * pidot[i] * pdotj[j];
+                }
+            }
+            kw = (pow - pew) / (1.0 - pew);
+            sekw = 1.0 / ((1.0 - pew) * Math.Sqrt(gt));
             double[] wibar = new double[g - 1 + 1 /* for VB to C# conversion */ ];
-            double[] wjbar = new double[g - 1 + 1 /* for VB to C# conversion */ ]; 
-            for ( int i=0; i <= g - 1; i++ ) 
-            { 
-                for ( int j=0; j <= g - 1; j++ ) 
-                { 
-                    wibar[ i ] += w[ i, j ] * pdotj[ j ]; 
-                    wjbar[ j ] += w[ i, j ] * pidot[ i ]; 
-                } 
-            } 
-            px = 0.0; 
-            for ( int i=0; i <= g - 1; i++ ) 
-            { 
-                for ( int j=0; j <= g - 1; j++ ) 
-                { 
-                    px += pidot[ i ] * pdotj[ j ] * Math.Pow( ( w[ i, j ] - ( wibar[ i ] + wjbar[ j ] ) ), 2.0 ); 
-                } 
-            } 
-            sekw = sekw * Math.Sqrt( px - Math.Pow( pew, 2.0 ) ); 
-            kwcil = kw - cit * sekw; 
-            kwciu = kw + cit * sekw; 
+            double[] wjbar = new double[g - 1 + 1 /* for VB to C# conversion */ ];
+            for (int i = 0; i <= g - 1; i++)
+            {
+                for (int j = 0; j <= g - 1; j++)
+                {
+                    wibar[i] += w[i, j] * pdotj[j];
+                    wjbar[j] += w[i, j] * pidot[i];
+                }
+            }
+            px = 0.0;
+            for (int i = 0; i <= g - 1; i++)
+            {
+                for (int j = 0; j <= g - 1; j++)
+                {
+                    px += pidot[i] * pdotj[j] * Math.Pow((w[i, j] - (wibar[i] + wjbar[j])), 2.0);
+                }
+            }
+            sekw = sekw * Math.Sqrt(px - Math.Pow(pew, 2.0));
+            kwcil = kw - cit * sekw;
+            kwciu = kw + cit * sekw;
             // Scott's pi
-            spe = 0.0; 
-            for ( int i=0; i <= g - 1; i++ ) 
-            { 
-                spe += Math.Pow( ( crtot[ i ] / ( gt * 2.0 ) ), 2.0 ); 
-            } 
-            spi = ( po - spe ) / ( 1.0 - spe ); 
-            ierror = false; 
-        } 
-        
-        
+            spe = 0.0;
+            for (int i = 0; i <= g - 1; i++)
+            {
+                spe += Math.Pow((crtot[i] / (gt * 2.0)), 2.0);
+            }
+            spi = (po - spe) / (1.0 - spe);
+            ierror = false;
+        }
+
+
         ///  <summary>
         ///  
         ///  </summary>
@@ -662,812 +664,819 @@ namespace StatsDirect.Builtins
         ///  <param name="x2m"></param>
         ///  <param name="dfm"></param>
         ///  <remarks>Maxwell AE. Comparing the classification of subjects by two independent judges. British Journal of Psychiatry 1970;116:651-655.</remarks>
-        public static void maxwell( double[,] o, int k, ref double x2, ref double x2m, out int dfm ) 
-        { 
+        public static void maxwell(double[,] o, int k, ref double x2, ref double x2m, out int dfm)
+        {
             int i; int j; int ifault = 0;
 
             double[] rtot = new double[k - 1 + 1 /* for VB to C# conversion */ ];
             double[] ctot = new double[k - 1 + 1 /* for VB to C# conversion */ ];
             double[] D = new double[k - 1 + 1 /* for VB to C# conversion */ ];
             double[,] v = new double[k - 1 + 1 /* for VB to C# conversion */, k - 1 + 1 /* for VB to C# conversion */];
-            double[,] z = new double[k - 1 + 1 /* for VB to C# conversion */, k - 1 + 1 /* for VB to C# conversion */]; 
+            double[,] z = new double[k - 1 + 1 /* for VB to C# conversion */, k - 1 + 1 /* for VB to C# conversion */];
             //  get row and column totals and delta vector
-            for ( i=0; i <= k - 1; i++ ) 
-            { 
-                for ( j=0; j <= k - 1; j++ ) 
-                { 
-                    rtot[ i ] += o[ i, j ]; 
-                    ctot[ j ] += o[ i, j ]; 
-                } 
-            } 
-            for ( i=0; i <= k - 1; i++ ) 
-            { 
-                D[ i ] = rtot[ i ] - ctot[ i ]; 
-            } 
+            for (i = 0; i <= k - 1; i++)
+            {
+                for (j = 0; j <= k - 1; j++)
+                {
+                    rtot[i] += o[i, j];
+                    ctot[j] += o[i, j];
+                }
+            }
+            for (i = 0; i <= k - 1; i++)
+            {
+                D[i] = rtot[i] - ctot[i];
+            }
             //  get variance/covariance matrix and invert it
-            for ( i=0; i <= k - 1; i++ ) 
-            { 
-                for ( j=0; j <= k - 1; j++ ) 
-                { 
-                    if ( i == j ) 
-                    { 
-                        v[ i, i ] = rtot[ i ] + ctot[ i ] - 2.0 * o[ i, i ]; 
-                    } 
-                    else 
-                    { 
-                        v[ j, i ] = -( o[ j, i ] + o[ i, j ] ); 
-                    } 
-                } 
-            } 
-            MathDbl.gaussj( v, 0, k - 1, z, 1, ref ifault ); 
-            if ( ifault != 0 ) 
-            { 
-                x2 = Constant.MISSING; 
-            } 
-            else 
-            { 
+            for (i = 0; i <= k - 1; i++)
+            {
+                for (j = 0; j <= k - 1; j++)
+                {
+                    if (i == j)
+                    {
+                        v[i, i] = rtot[i] + ctot[i] - 2.0 * o[i, i];
+                    }
+                    else
+                    {
+                        v[j, i] = -(o[j, i] + o[i, j]);
+                    }
+                }
+            }
+            MathDbl.gaussj(v, 0, k - 1, z, 1, ref ifault);
+            if (ifault != 0)
+            {
+                x2 = Constant.MISSING;
+            }
+            else
+            {
                 //  cumulate the chi-square statistic
-                for ( i=0; i <= k - 2; i++ ) 
-                { 
-                    for ( j=0; j <= k - 2; j++ ) 
-                    { 
-                        x2 += v[ i, j ] * D[ i ] * D[ j ]; 
-                    } 
-                } 
-            } 
+                for (i = 0; i <= k - 2; i++)
+                {
+                    for (j = 0; j <= k - 2; j++)
+                    {
+                        x2 += v[i, j] * D[i] * D[j];
+                    }
+                }
+            }
             // general McNemar
-            dfm = ( ( int )( Math.Floor(k / 2.0 * ( k - 1 )) ) ); 
-            for ( i=0; i <= k - 2; i++ ) 
-            { 
-                for ( j=i + 1; j <= k - 1; j++ ) 
-                { 
-                    if ( o[ i, j ] + o[ j, i ] > 0.0 ) 
-                    { 
-                        x2m += ( ( o[ i, j ] - o[ j, i ] ) * ( o[ i, j ] - o[ j, i ] ) ) / ( o[ i, j ] + o[ j, i ] ); 
+            dfm = ((int)(Math.Floor(k / 2.0 * (k - 1))));
+            for (i = 0; i <= k - 2; i++)
+            {
+                for (j = i + 1; j <= k - 1; j++)
+                {
+                    if (o[i, j] + o[j, i] > 0.0)
+                    {
+                        x2m += ((o[i, j] - o[j, i]) * (o[i, j] - o[j, i])) / (o[i, j] + o[j, i]);
                         //   Else
                         //    x2m = MISSING
                         //    Exit sub
-                    } 
-                } 
-            } 
-        } 
-        
-        
-        public static StepResult RptKappa( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            double cco = parameters[ "ci" ].AsDouble; 
-            double cit; double P; 
-            if ( cco > 0 ) 
-            { 
-                P = ( 1.0 - cco ) / 2.0;
+                    }
+                }
+            }
+        }
+
+
+        public static StepResult RptKappa(ITemplateHost host, ParameterBag parameters)
+        {
+            double cco = parameters["ci"].AsDouble;
+            double cit; double P;
+            if (cco > 0)
+            {
+                P = (1.0 - cco) / 2.0;
                 int ifault;
-                cit = PDF.gauinv( 1.0 - P, out ifault ); 
-            } 
-            else 
-            { 
+                cit = PDF.gauinv(1.0 - P, out ifault);
+            }
+            else
+            {
                 cco = 0.95;
                 int ifault;
-                cit = PDF.gauinv(0.975, out ifault ); 
-            } 
-            
-            DataFrame frame = parameters[ "responses" ].AsDataFrame; 
-            int raters = frame.VariableCount; 
-            
+                cit = PDF.gauinv(0.975, out ifault);
+            }
+
+            DataFrame frame = parameters["responses"].AsDataFrame;
+            int raters = frame.VariableCount;
+
             // ieb june05 update to exclude missing data categories
             // do crosstabs if two raters --->
-            if ( raters == 2 ) 
-            { 
-                ClassifierVariable v0 = frame.Variables[ 0 ].AsClassifierVariable; 
-                int N = v0.Length; 
+            if (raters == 2)
+            {
+                ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
+                int N = v0.Length;
                 int ycats = 0;
                 double[] y = new double[N - 1 + 1 /* for VB to C# conversion */ ];
-                Namevar[] ycat = new Namevar[v0.GroupCount - 1 + 1 /* for VB to C# conversion */ ]; 
-                string ylab = v0.Title; 
-                for ( int i=0; i <= v0.GroupCount - 1; i++ ) 
-                { 
-                    if ( v0.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                    { 
-                        ycat[ ycats ].Ti = v0.Groups[ i ].Label; 
-                        ycat[ ycats ].x = Convert.ToDouble( i ); 
-                        ycats = ycats + 1; 
-                    } 
-                } 
+                Namevar[] ycat = new Namevar[v0.GroupCount - 1 + 1 /* for VB to C# conversion */ ];
+                string ylab = v0.Title;
+                for (int i = 0; i <= v0.GroupCount - 1; i++)
+                {
+                    if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
+                    {
+                        ycat[ycats].Ti = v0.Groups[i].Label;
+                        ycat[ycats].x = Convert.ToDouble(i);
+                        ycats = ycats + 1;
+                    }
+                }
                 // create temp variable for copying values 
-                Namevar[] transTemp16 = new Namevar[ycats - 1 + 1 /* for VB to C# conversion */ ]; 
-                Array.Copy( ycat, transTemp16, Math.Min( ycat.Length, transTemp16.Length ) ); 
-                ycat = transTemp16; 
-                for ( int i=0; i <= N - 1; i++ ) 
-                { 
-                    y[ i ] = v0.Data[i]; 
-                } 
-                SortName( ycats, ycat, 0 ); 
-                ClassifierVariable v1 = frame.Variables[ 1 ].AsClassifierVariable; 
+                Namevar[] transTemp16 = new Namevar[ycats - 1 + 1 /* for VB to C# conversion */ ];
+                Array.Copy(ycat, transTemp16, Math.Min(ycat.Length, transTemp16.Length));
+                ycat = transTemp16;
+                for (int i = 0; i <= N - 1; i++)
+                {
+                    y[i] = v0.Data[i];
+                }
+                SortName(ycats, ycat, 0);
+                ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
                 int xcats = 0;
                 double[] x = new double[N - 1 + 1 /* for VB to C# conversion */ ];
-                Namevar[] xcat = new Namevar[v1.GroupCount - 1 + 1 /* for VB to C# conversion */ ]; 
-                string xlab = v1.Title; 
-                for ( int i=0; i <= v1.GroupCount - 1; i++ ) 
-                { 
-                    if ( v1.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                    { 
-                        xcat[ xcats ].Ti = v1.Groups[ i ].Label; 
-                        xcat[ xcats ].x = Convert.ToDouble( i ); 
-                        xcats = xcats + 1; 
-                    } 
-                } 
+                Namevar[] xcat = new Namevar[v1.GroupCount - 1 + 1 /* for VB to C# conversion */ ];
+                string xlab = v1.Title;
+                for (int i = 0; i <= v1.GroupCount - 1; i++)
+                {
+                    if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
+                    {
+                        xcat[xcats].Ti = v1.Groups[i].Label;
+                        xcat[xcats].x = Convert.ToDouble(i);
+                        xcats = xcats + 1;
+                    }
+                }
                 // create temp variable for copying values 
-                Namevar[] transTemp17 = new Namevar[xcats - 1 + 1 /* for VB to C# conversion */]; 
-                Array.Copy( xcat, transTemp17, Math.Min( xcat.Length, transTemp17.Length ) ); 
-                xcat = transTemp17; 
-                for ( int i=0; i <= N - 1; i++ ) 
-                { 
-                    x[ i ] = v1.Data[i]; 
-                } 
-                SortName( xcats, xcat, 0 ); 
-                x_symmetrise_xtab( ref xcats, ref xcat, ref ycats, ref ycat, 0 );
+                Namevar[] transTemp17 = new Namevar[xcats - 1 + 1 /* for VB to C# conversion */];
+                Array.Copy(xcat, transTemp17, Math.Min(xcat.Length, transTemp17.Length));
+                xcat = transTemp17;
+                for (int i = 0; i <= N - 1; i++)
+                {
+                    x[i] = v1.Data[i];
+                }
+                SortName(xcats, xcat, 0);
+                x_symmetrise_xtab(ref xcats, ref xcat, ref ycats, ref ycat, 0);
                 double[,] xt = new double[xcats - 1 + 1 /* for VB to C# conversion */, ycats - 1 + 1 /* for VB to C# conversion */];
-                for ( int i=0; i <= xcats - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= ycats - 1; j++ ) 
-                    { 
-                        for ( int kv=0; kv <= N - 1; kv++ ) 
-                        { 
-                            if ( x[ kv ] == xcat[ i ].x & y[ kv ] == ycat[ j ].x )
-                            { 
-                                xt[ i, j ] += 1; 
-                            } 
+                for (int i = 0; i <= xcats - 1; i++)
+                {
+                    for (int j = 0; j <= ycats - 1; j++)
+                    {
+                        for (int kv = 0; kv <= N - 1; kv++)
+                        {
+                            if (x[kv] == xcat[i].x & y[kv] == ycat[j].x)
+                            {
+                                xt[i, j] += 1;
+                            }
                         }
-                    } 
-                } 
-                int g = Math.Max( xcats, ycats );
+                    }
+                }
+                int g = Math.Max(xcats, ycats);
                 double[,] o = new double[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */];
-                double[,] w = new double[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */]; 
-                for ( int i=0; i <= g - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= g - 1; j++ ) 
-                    { 
-                        o[ i, j ] = 0.0; 
-                        w[ i, j ] = 0.0; 
-                    } 
-                } 
-                for ( int i=0; i <= ycats - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= xcats - 1; j++ ) 
-                    { 
-                        o[ i, j ] = xt[ j, i ]; 
-                    } 
-                } 
+                double[,] w = new double[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */];
+                for (int i = 0; i <= g - 1; i++)
+                {
+                    for (int j = 0; j <= g - 1; j++)
+                    {
+                        o[i, j] = 0.0;
+                        w[i, j] = 0.0;
+                    }
+                }
+                for (int i = 0; i <= ycats - 1; i++)
+                {
+                    for (int j = 0; j <= xcats - 1; j++)
+                    {
+                        o[i, j] = xt[j, i];
+                    }
+                }
                 // <------- xtab
-                
+
                 //  xt, o and w are now zero-based, were 1-based.
-                
+
                 // weights --->
-                int wtype = int.Parse( parameters[ "method" ].AsString ); 
-                if ( wtype == 3 ) 
-                { 
-                    DataFrame weights = parameters[ "weights" ].AsDataFrame; 
-                    for ( int i=0; i <= weights.VariableCount - 1; i++ ) 
-                    { 
-                        DoubleVariable v = weights.Variables[ i ].AsDoubleVariable; 
-                        for ( int j=0; j <= v.Length - 1; j++ ) 
-                        { 
-                            w[ i, j ] = v.Data[j]; 
-                            if ( w[ i, j ] == Constant.MISSING )
-                            { 
-                                w[ i, j ] = 0.0; 
-                            } 
-                        } 
-                    } 
-                } 
+                int wtype = int.Parse(parameters["method"].AsString);
+                if (wtype == 3)
+                {
+                    DataFrame weights = parameters["weights"].AsDataFrame;
+                    for (int i = 0; i <= weights.VariableCount - 1; i++)
+                    {
+                        DoubleVariable v = weights.Variables[i].AsDoubleVariable;
+                        for (int j = 0; j <= v.Length - 1; j++)
+                        {
+                            w[i, j] = v.Data[j];
+                            if (w[i, j] == Constant.MISSING)
+                            {
+                                w[i, j] = 0.0;
+                            }
+                        }
+                    }
+                }
                 // ---> write crosstab if 2 raters
-                ParameterBag outputParameters = new ParameterBag(); 
-                outputParameters.AddOutput( "ylab", ylab ); 
-                outputParameters.AddOutput( "xlab", xlab ); 
-                ICollection<ParameterBag> xList = new List<ParameterBag>(); 
-                for ( int i=0; i <= xcats - 1; i++ ) 
-                { 
-                    ParameterBag xValues = new ParameterBag(); 
-                    xValues.AddOutput( "x", xcat[ i ].Ti ); 
-                    xList.Add( xValues ); 
-                } 
-                outputParameters.AddOutput( "*x", xList ); 
-                ICollection<ParameterBag> yList = new List<ParameterBag>(); 
-                for ( int i=0; i <= ycats - 1; i++ ) 
-                { 
-                    ParameterBag yValues = new ParameterBag(); 
-                    yValues.AddOutput( "y", ycat[ i ].Ti ); 
-                    ICollection<ParameterBag> totList = new List<ParameterBag>(); 
-                    for ( int j=0; j <= xcats - 1; j++ ) 
-                    { 
-                        ParameterBag totValues = new ParameterBag(); 
-                        totValues.AddOutput( "tot", host.RoundU( xt[ j, i ] ) ); 
-                        totList.Add( totValues ); 
-                    } 
-                    yValues.AddOutput( "*tot", totList ); 
-                    yList.Add( yValues ); 
-                } 
-                outputParameters.AddOutput( "*y", yList ); 
+                ParameterBag outputParameters = new ParameterBag();
+                outputParameters.AddOutput("ylab", ylab);
+                outputParameters.AddOutput("xlab", xlab);
+                ICollection<ParameterBag> xList = new List<ParameterBag>();
+                for (int i = 0; i <= xcats - 1; i++)
+                {
+                    ParameterBag xValues = new ParameterBag();
+                    xValues.AddOutput("x", xcat[i].Ti);
+                    xList.Add(xValues);
+                }
+                outputParameters.AddOutput("*x", xList);
+                ICollection<ParameterBag> yList = new List<ParameterBag>();
+                for (int i = 0; i <= ycats - 1; i++)
+                {
+                    ParameterBag yValues = new ParameterBag();
+                    yValues.AddOutput("y", ycat[i].Ti);
+                    ICollection<ParameterBag> totList = new List<ParameterBag>();
+                    for (int j = 0; j <= xcats - 1; j++)
+                    {
+                        ParameterBag totValues = new ParameterBag();
+                        totValues.AddOutput("tot", host.RoundU(xt[j, i]));
+                        totList.Add(totValues);
+                    }
+                    yValues.AddOutput("*tot", totList);
+                    yList.Add(yValues);
+                }
+                outputParameters.AddOutput("*y", yList);
                 // <--- xtab
-                if ( wtype != 3 ) 
-                { 
-                    for ( int i=0; i <= g - 1; i++ ) 
-                    { 
-                        for ( int j=0; j <= g - 1; j++ ) 
-                        { 
-                            switch ( wtype ) 
+                if (wtype != 3)
+                {
+                    for (int i = 0; i <= g - 1; i++)
+                    {
+                        for (int j = 0; j <= g - 1; j++)
+                        {
+                            switch (wtype)
                             {
                                 case 2:
-                                    w[ i, j ] = 1.0 - Math.Pow( ( Convert.ToDouble( i - j ) / Convert.ToDouble( g - 1 ) ), 2.0 ); 
+                                    w[i, j] = 1.0 - Math.Pow((Convert.ToDouble(i - j) / Convert.ToDouble(g - 1)), 2.0);
                                     break;
                                 default:
-                                    w[ i, j ] = 1.0 - Convert.ToDouble( Math.Abs( i - j ) ) / Convert.ToDouble( g - 1 ); 
+                                    w[i, j] = 1.0 - Convert.ToDouble(Math.Abs(i - j)) / Convert.ToDouble(g - 1);
                                     break;
                             }
-                            
-                        } 
-                    } 
-                } 
-                double k = 0.0; 
-                double sek = 0; 
-                double kcil = 0; 
-                double kciu = 0; 
-                double kw = 0; 
-                double sekw = 0; 
-                double kwcil = 0; 
-                double kwciu = 0; 
-                double po = 0; 
-                double pe = 0; 
-                double pow = 0; 
-                double pew = 0; 
-                double spe = 0; 
-                double spi = 0; 
-                bool ierror; 
-                Kappa( host, o, w, g, ref k, ref sek, ref kcil, ref kciu, ref kw, ref sekw, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out ierror ); 
-                if ( !( ierror ) ) 
-                { 
-                    outputParameters.AddOutput( "po", Formatting.XRound( po * 100, 2 ) ); 
-                    outputParameters.AddOutput( "pe", Formatting.XRound( pe * 100, 2 ) ); 
-                    outputParameters.AddOutput( "kappa", host.RoundU( k ) ); 
-                    outputParameters.AddInput( "kDouble", k ); 
-                    outputParameters.AddOutput( "se", host.RoundU( sek ) ); 
-                    outputParameters.AddOutput( "pc", host.RoundU( cco * 100 ) ); 
-                    outputParameters.AddOutput( "from", host.RoundU( kcil ) ); 
-                    outputParameters.AddOutput( "to", host.RoundU( kciu ) ); 
-                    outputParameters.AddOutput( "z", host.RoundU( 0.0 == sek ? 0 : k / sek ) ); 
-                    if ( sek != 0.0 )
-                    { 
-                        P = 1.0 - PDF.alnorm( k / sek ); 
-                    } else { P = Constant.MISSING; } 
-                    outputParameters.AddOutput( "p", host.pval( P ) ); 
-                    
-                    switch ( wtype ) 
+
+                        }
+                    }
+                }
+                double k = 0.0;
+                double sek = 0;
+                double kcil = 0;
+                double kciu = 0;
+                double kw = 0;
+                double sekw = 0;
+                double kwcil = 0;
+                double kwciu = 0;
+                double po = 0;
+                double pe = 0;
+                double pow = 0;
+                double pew = 0;
+                double spe = 0;
+                double spi = 0;
+                bool ierror;
+                Kappa(host, o, w, g, ref k, ref sek, ref kcil, ref kciu, ref kw, ref sekw, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out ierror);
+                if (!(ierror))
+                {
+                    outputParameters.AddOutput("po", Formatting.XRound(po * 100, 2));
+                    outputParameters.AddOutput("pe", Formatting.XRound(pe * 100, 2));
+                    outputParameters.AddOutput("kappa", host.RoundU(k));
+                    outputParameters.AddInput("kDouble", k);
+                    outputParameters.AddOutput("se", host.RoundU(sek));
+                    outputParameters.AddOutput("pc", host.RoundU(cco * 100));
+                    outputParameters.AddOutput("from", host.RoundU(kcil));
+                    outputParameters.AddOutput("to", host.RoundU(kciu));
+                    outputParameters.AddOutput("z", host.RoundU(0.0 == sek ? 0 : k / sek));
+                    if (sek != 0.0)
+                    {
+                        P = 1.0 - PDF.alnorm(k / sek);
+                    }
+                    else { P = Constant.MISSING; }
+                    outputParameters.AddOutput("p", host.pval(P));
+
+                    switch (wtype)
                     {
                         case 3:
-                            outputParameters.AddOutput( "methodName", "user defined" ); 
+                            outputParameters.AddOutput("methodName", "user defined");
                             break;
                         case 2:
-                            outputParameters.AddOutput( "methodName", "1-[(i-j)/(1-k)]?" ); 
+                            outputParameters.AddOutput("methodName", "1-[(i-j)/(1-k)]?");
                             break;
                         default:
-                            outputParameters.AddOutput( "methodName", "1-abs(i-j)/(1-k)" ); 
+                            outputParameters.AddOutput("methodName", "1-abs(i-j)/(1-k)");
                             break;
                     }
-                    
-                    ICollection<ParameterBag> weightList = new List<ParameterBag>(); 
-                    for ( int i=0; i <= ycats - 1; i++ ) 
-                    { 
-                        ParameterBag weightValues = new ParameterBag(); 
-                        ICollection<ParameterBag> totList = new List<ParameterBag>(); 
-                        for ( int j=0; j <= xcats - 1; j++ ) 
-                        { 
-                            ParameterBag totValues = new ParameterBag(); 
-                            totValues.AddOutput( "tot", host.RoundU( w[ i, j ] ) ); 
-                            totList.Add( totValues ); 
-                        } 
-                        weightValues.AddOutput( "*tot", totList ); 
-                        weightList.Add( weightValues ); 
-                    } 
-                    outputParameters.AddOutput( "*weights", weightList ); 
-                    outputParameters.AddOutput( "pow", Formatting.XRound( pow * 100, 2 ) ); 
-                    outputParameters.AddOutput( "pew", Formatting.XRound( pew * 100, 2 ) ); 
-                    outputParameters.AddOutput( "kappaw", host.RoundU( kw ) ); 
-                    outputParameters.AddInput( "kwDouble", kw ); 
-                    outputParameters.AddOutput( "sekw", host.RoundU( sekw ) ); 
-                    outputParameters.AddOutput( "pcw", Formatting.XRound( cco * 100, 1 ) ); 
-                    outputParameters.AddOutput( "fromw", host.RoundU( kwcil ) ); 
-                    outputParameters.AddOutput( "tow", host.RoundU( kwciu ) ); 
-                    outputParameters.AddOutput( "zw", host.RoundU( 0.0 == sekw ? 0 : kw / sekw ) ); 
-                    if ( sekw != 0.0 )
-                    { 
-                        P = 1.0 - PDF.alnorm( kw / sekw ); 
-                    } else { P = Constant.MISSING; } 
-                    outputParameters.AddOutput( "pw", host.pval( P ) ); 
-                    outputParameters.AddOutput( "pocopy", Formatting.XRound( po * 100, 2 ) ); 
-                    outputParameters.AddOutput( "spe", Formatting.XRound( spe * 100, 2 ) ); 
-                    outputParameters.AddOutput( "spi", host.RoundU( spi ) ); 
-                    
-                    if ( g == 2 ) 
-                    { 
-                        double ka = 0; 
-                        double lwr = 0; 
-                        double upr = 0; 
-                        int fault; 
-                        x_kappa_ci_22( Convert.ToInt32( o[ 0, 0 ] ), Convert.ToInt32( o[ 0, 1 ] + o[ 1, 0 ] ), Convert.ToInt32( o[ 1, 1 ] ), cit, ref ka, ref lwr, ref upr, out fault ); 
-                        if ( fault == 0 ) 
-                        { 
-                            ICollection<ParameterBag> deciList = new List<ParameterBag>(); 
-                            ParameterBag deciValues = new ParameterBag(); 
-                            deciValues.AddOutput( "pc", Formatting.XRound( cco * 100, 1 ) ); 
-                            deciValues.AddOutput( "lwr", host.RoundU( lwr ) ); 
-                            deciValues.AddOutput( "upr", host.RoundU( upr ) ); 
-                            deciList.Add( deciValues ); 
-                            outputParameters.AddOutput( "*deci", deciList ); 
-                        } 
-                        else 
-                        { 
-                            outputParameters.AddOutput( "*deci", null ); 
-                        } 
-                    } 
-                    else 
-                    { 
-                        outputParameters.AddOutput( "deci", null ); 
-                    } 
-                    
+
+                    ICollection<ParameterBag> weightList = new List<ParameterBag>();
+                    for (int i = 0; i <= ycats - 1; i++)
+                    {
+                        ParameterBag weightValues = new ParameterBag();
+                        ICollection<ParameterBag> totList = new List<ParameterBag>();
+                        for (int j = 0; j <= xcats - 1; j++)
+                        {
+                            ParameterBag totValues = new ParameterBag();
+                            totValues.AddOutput("tot", host.RoundU(w[i, j]));
+                            totList.Add(totValues);
+                        }
+                        weightValues.AddOutput("*tot", totList);
+                        weightList.Add(weightValues);
+                    }
+                    outputParameters.AddOutput("*weights", weightList);
+                    outputParameters.AddOutput("pow", Formatting.XRound(pow * 100, 2));
+                    outputParameters.AddOutput("pew", Formatting.XRound(pew * 100, 2));
+                    outputParameters.AddOutput("kappaw", host.RoundU(kw));
+                    outputParameters.AddInput("kwDouble", kw);
+                    outputParameters.AddOutput("sekw", host.RoundU(sekw));
+                    outputParameters.AddOutput("pcw", Formatting.XRound(cco * 100, 1));
+                    outputParameters.AddOutput("fromw", host.RoundU(kwcil));
+                    outputParameters.AddOutput("tow", host.RoundU(kwciu));
+                    outputParameters.AddOutput("zw", host.RoundU(0.0 == sekw ? 0 : kw / sekw));
+                    if (sekw != 0.0)
+                    {
+                        P = 1.0 - PDF.alnorm(kw / sekw);
+                    }
+                    else { P = Constant.MISSING; }
+                    outputParameters.AddOutput("pw", host.pval(P));
+                    outputParameters.AddOutput("pocopy", Formatting.XRound(po * 100, 2));
+                    outputParameters.AddOutput("spe", Formatting.XRound(spe * 100, 2));
+                    outputParameters.AddOutput("spi", host.RoundU(spi));
+
+                    if (g == 2)
+                    {
+                        double ka = 0;
+                        double lwr = 0;
+                        double upr = 0;
+                        int fault;
+                        x_kappa_ci_22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, ref ka, ref lwr, ref upr, out fault);
+                        if (fault == 0)
+                        {
+                            ICollection<ParameterBag> deciList = new List<ParameterBag>();
+                            ParameterBag deciValues = new ParameterBag();
+                            deciValues.AddOutput("pc", Formatting.XRound(cco * 100, 1));
+                            deciValues.AddOutput("lwr", host.RoundU(lwr));
+                            deciValues.AddOutput("upr", host.RoundU(upr));
+                            deciList.Add(deciValues);
+                            outputParameters.AddOutput("*deci", deciList);
+                        }
+                        else
+                        {
+                            outputParameters.AddOutput("*deci", null);
+                        }
+                    }
+                    else
+                    {
+                        outputParameters.AddOutput("deci", null);
+                    }
+
                     // Maxwell's test
-                    double x2 = 0; 
-                    double x2m = 0; 
-                    int dfm; 
-                    maxwell( o, g, ref x2, ref x2m, out dfm ); 
-                    if ( x2 == Constant.MISSING ) 
-                    { 
-                        outputParameters.AddOutput( "x2", host.RoundU( x2 ) ); 
-                        outputParameters.AddOutput( "df", host.RoundU( x2 ) ); 
-                        outputParameters.AddOutput( "pmaxwell", host.RoundU( x2 ) ); 
-                    } 
-                    else 
-                    { 
-                        outputParameters.AddOutput( "x2", host.RoundU( x2 ) ); 
-                        outputParameters.AddOutput( "df",  (g - 1).ToString() ); 
-                        outputParameters.AddOutput( "pmaxwell", host.pval( PDF.chivalp( x2, Convert.ToDouble( g - 1 ) ) ) ); 
-                    } 
-                    
+                    double x2 = 0;
+                    double x2m = 0;
+                    int dfm;
+                    maxwell(o, g, ref x2, ref x2m, out dfm);
+                    if (x2 == Constant.MISSING)
+                    {
+                        outputParameters.AddOutput("x2", host.RoundU(x2));
+                        outputParameters.AddOutput("df", host.RoundU(x2));
+                        outputParameters.AddOutput("pmaxwell", host.RoundU(x2));
+                    }
+                    else
+                    {
+                        outputParameters.AddOutput("x2", host.RoundU(x2));
+                        outputParameters.AddOutput("df", (g - 1).ToString());
+                        outputParameters.AddOutput("pmaxwell", host.pval(PDF.chivalp(x2, Convert.ToDouble(g - 1))));
+                    }
+
                     // general McNemar
-                    if ( x2m == Constant.MISSING ) 
-                    { 
-                        outputParameters.AddOutput( "x2m", "[not calculated - zero cells]" ); 
-                        outputParameters.AddOutput( "dfmcnemar",  dfm.ToString() ); 
-                        outputParameters.AddOutput( "pmcnemar", "" ); 
-                    } 
-                    else 
-                    { 
-                        outputParameters.AddOutput( "x2m", host.RoundU( x2m ) ); 
-                        outputParameters.AddOutput( "dfmcnemar",  dfm.ToString() ); 
-                        outputParameters.AddOutput( "pmcnemar", host.pval( PDF.chivalp( x2m, Convert.ToDouble( dfm ) ) ) ); 
-                    } 
-                    return new StepResult( StepSuccess.Success, outputParameters ); 
+                    if (x2m == Constant.MISSING)
+                    {
+                        outputParameters.AddOutput("x2m", "[not calculated - zero cells]");
+                        outputParameters.AddOutput("dfmcnemar", dfm.ToString());
+                        outputParameters.AddOutput("pmcnemar", "");
+                    }
+                    else
+                    {
+                        outputParameters.AddOutput("x2m", host.RoundU(x2m));
+                        outputParameters.AddOutput("dfmcnemar", dfm.ToString());
+                        outputParameters.AddOutput("pmcnemar", host.pval(PDF.chivalp(x2m, Convert.ToDouble(dfm))));
+                    }
+                    return new StepResult(StepSuccess.Success, outputParameters);
                 }
                 throw new InvalidDataException();
                 // <----wt
-                
-            } 
-            else 
-            { 
+
+            }
+            else
+            {
                 //  More than two raters
-                IList<string> categoryList = new List<string>(); 
-                foreach ( Variable v in frame.Variables ) 
-                { 
-                    foreach ( Group gr in v.AsClassifierVariable.Groups ) 
-                    { 
-                        string nm = gr.Label; 
-                        if ( !( categoryList.Contains( nm ) ) && !( Formatting.MISSINGLABEL.Equals( nm ) ) ) 
-                        { 
-                            categoryList.Add( nm ); 
-                        } 
+                IList<string> categoryList = new List<string>();
+                foreach (Variable v in frame.Variables)
+                {
+                    foreach (Group gr in v.AsClassifierVariable.Groups)
+                    {
+                        string nm = gr.Label;
+                        if (!(categoryList.Contains(nm)) && !(Formatting.MISSINGLABEL.Equals(nm)))
+                        {
+                            categoryList.Add(nm);
+                        }
                     }
                 }
                 int cats = categoryList.Count;
-                string[] catz = new string[cats - 1 + 1 /* for VB to C# conversion */ ]; 
-                for ( int i=0; i <= cats - 1; i++ ) 
-                { 
-                    catz[ i ] = categoryList[ i ]; 
-                } 
+                string[] catz = new string[cats - 1 + 1 /* for VB to C# conversion */ ];
+                for (int i = 0; i <= cats - 1; i++)
+                {
+                    catz[i] = categoryList[i];
+                }
                 Array.Sort(catz, 0, cats);
-                ParameterBag outputParameters = new ParameterBag(); 
-                outputParameters.AddOutput( "categories", cats ); //  To ensure that any test on the result can find the number of categories
-                if ( cats == 2 ) 
-                { 
+                ParameterBag outputParameters = new ParameterBag();
+                outputParameters.AddOutput("categories", cats); //  To ensure that any test on the result can find the number of categories
+                if (cats == 2)
+                {
                     // ----> Fleiss Cuzick for > 2 raters and 2 responses
-                    int N = frame.Variables[ 0 ].Length; // subjects
-                    double k; 
-                    double mbar; 
-                    double mbarh; 
-                    double pbar; 
-                    double minm; 
-                    double maxm; 
-                    double medm; 
-                    kappa_hat( frame, N, catz[ 0 ], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm ); 
-                    double sek = ( 1.0 / ( ( mbar - 1.0 ) * Math.Sqrt( Convert.ToDouble( N ) * mbarh ) ) ) * Math.Sqrt( 2.0 * ( mbarh - 1.0 ) + ( ( mbar - mbarh ) * ( 1.0 - 4.0 * pbar * ( 1.0 - pbar ) ) ) / ( mbar * pbar * ( 1.0 - pbar ) ) ); 
-                    double z; 
-                    if ( sek != 0.0 )
-                    { 
-                        z = k / sek; 
-                    } else { z = Constant.MISSING; } 
-                    string ratz; 
-                    if ( minm == maxm )
-                    { 
-                        ratz =  raters.ToString(); 
-                    } else { ratz =  Convert.ToInt64( minm ).ToString() + " to " +  Convert.ToInt64( maxm ).ToString() + " (median " + host.RoundU( medm ) + ")"; } 
-                    outputParameters.AddOutput( "r", ratz ); 
-                    outputParameters.AddOutput( "k", host.RoundU( k ) ); 
-                    outputParameters.AddOutput( "se", host.RoundU( sek ) ); 
-                    outputParameters.AddOutput( "z", host.RoundU( z ) ); 
-                    outputParameters.AddOutput( "p", host.pval( 1.0 - PDF.alnorm( z ) ) ); 
-                    
-                    double ll = k - cit * sek; 
-                    double ul = k + cit * sek; 
-                    outputParameters.AddOutput( "pc", Formatting.XRound( 100.0 * cco, 2 ) ); 
-                    outputParameters.AddOutput( "ll", host.RoundU( ll ) ); 
-                    outputParameters.AddOutput( "ul", host.RoundU( ul ) ); 
+                    int N = frame.Variables[0].Length; // subjects
+                    double k;
+                    double mbar;
+                    double mbarh;
+                    double pbar;
+                    double minm;
+                    double maxm;
+                    double medm;
+                    kappa_hat(frame, N, catz[0], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
+                    double sek = (1.0 / ((mbar - 1.0) * Math.Sqrt(Convert.ToDouble(N) * mbarh))) * Math.Sqrt(2.0 * (mbarh - 1.0) + ((mbar - mbarh) * (1.0 - 4.0 * pbar * (1.0 - pbar))) / (mbar * pbar * (1.0 - pbar)));
+                    double z;
+                    if (sek != 0.0)
+                    {
+                        z = k / sek;
+                    }
+                    else { z = Constant.MISSING; }
+                    string ratz;
+                    if (minm == maxm)
+                    {
+                        ratz = raters.ToString();
+                    }
+                    else { ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")"; }
+                    outputParameters.AddOutput("r", ratz);
+                    outputParameters.AddOutput("k", host.RoundU(k));
+                    outputParameters.AddOutput("se", host.RoundU(sek));
+                    outputParameters.AddOutput("z", host.RoundU(z));
+                    outputParameters.AddOutput("p", host.pval(1.0 - PDF.alnorm(z)));
+
+                    double ll = k - cit * sek;
+                    double ul = k + cit * sek;
+                    outputParameters.AddOutput("pc", Formatting.XRound(100.0 * cco, 2));
+                    outputParameters.AddOutput("ll", host.RoundU(ll));
+                    outputParameters.AddOutput("ul", host.RoundU(ul));
                     // <----wt m x 2
-                } 
-                else 
-                { 
+                }
+                else
+                {
                     // ----> Landis and Koch (Fleiss, Nee, Landis se) kappa for raters and categories > 2
-                    int N = frame.Variables[ 0 ].Length; // subjects
-                    double mx = Convert.ToDouble( raters ); 
-                    double kbarn = 0.0; 
-                    double kbard = 0.0; 
+                    int N = frame.Variables[0].Length; // subjects
+                    double mx = Convert.ToDouble(raters);
+                    double kbarn = 0.0;
+                    double kbard = 0.0;
                     double se2 = 0.0;
                     double[] sej = new double[cats - 1 + 1 /* for VB to C# conversion */ ];
-                    double[] kj = new double[cats - 1 + 1 /* for VB to C# conversion */ ]; 
-                    double minm = 0; 
-                    double maxm = 0; 
-                    double medm = 0; 
-                    for ( int i=0; i <= cats - 1; i++ ) 
-                    { 
-                        double k; 
-                        double mbar; 
-                        double mbarh; 
-                        double pbar; 
-                        kappa_hat( frame, N, catz[ i ], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm ); 
-                        double qbar = 1.0 - pbar; 
-                        kj[ i ] = k; 
-                        sej[ i ] = Math.Sqrt( 2.0 / ( Convert.ToDouble( N ) * mx * ( mx - 1.0 ) ) ); 
-                        kbarn = kbarn + pbar * qbar * k; 
-                        kbard = kbard + pbar * qbar; 
-                        se2 = se2 + pbar * qbar * ( qbar - pbar ); 
+                    double[] kj = new double[cats - 1 + 1 /* for VB to C# conversion */ ];
+                    double minm = 0;
+                    double maxm = 0;
+                    double medm = 0;
+                    for (int i = 0; i <= cats - 1; i++)
+                    {
+                        double k;
+                        double mbar;
+                        double mbarh;
+                        double pbar;
+                        kappa_hat(frame, N, catz[i], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
+                        double qbar = 1.0 - pbar;
+                        kj[i] = k;
+                        sej[i] = Math.Sqrt(2.0 / (Convert.ToDouble(N) * mx * (mx - 1.0)));
+                        kbarn = kbarn + pbar * qbar * k;
+                        kbard = kbard + pbar * qbar;
+                        se2 = se2 + pbar * qbar * (qbar - pbar);
                     }
-                    double kbar = kbard != 0.0 ? kbarn/kbard : Constant.MISSING;
-                    double sek; 
-                    if ( Math.Pow( kbard, 2.0 ) - se2 < 0.0 ) 
-                    { 
-                        sek = Constant.MISSING; 
-                    } 
-                    else 
-                    { 
-                        sek = ( Math.Sqrt( 2.0 ) / ( kbard * Math.Sqrt( Convert.ToDouble( N ) * mx * ( mx - 1.0 ) ) ) ) * Math.Sqrt( Math.Pow( kbard, 2.0 ) - se2 ); 
-                    } 
-                    double z; 
-                    if ( sek != 0.0 & sek != Constant.MISSING )
-                    { 
-                        z = kbar / sek; 
-                    } else { z = Constant.MISSING; } 
-                    outputParameters.AddOutput( "cats",  cats.ToString() ); 
-                    string ratz; 
-                    if ( minm == maxm )
-                    { 
-                        ratz =  raters.ToString(); 
-                    } else { ratz =  Convert.ToInt64( minm ).ToString() + " to " +  Convert.ToInt64( maxm ).ToString() + " (median " + host.RoundU( medm ) + ")"; } 
-                    outputParameters.AddOutput( "r", ratz ); 
-                    if ( minm == maxm ) 
-                    { 
-                        ICollection<ParameterBag> catList = new List<ParameterBag>(); 
-                        for ( int i=0; i <= cats - 1; i++ ) 
-                        { 
-                            ParameterBag catValues = new ParameterBag(); 
-                            catValues.AddOutput( "resp", catz[ i ] ); 
-                            catValues.AddOutput( "k", host.RoundU( kj[ i ] ) ); 
-                            catValues.AddOutput( "se", host.RoundU( sej[ i ] ) ); 
-                            double zz; 
-                            if ( sej[ i ] != 0.0 )
-                            { 
-                                zz = kj[ i ] / sej[ i ]; 
-                            } else { zz = 0.0; } 
-                            catValues.AddOutput( "z", host.RoundU( zz ) ); 
-                            catValues.AddOutput( "p", host.pval( 1.0 - PDF.alnorm( zz ) ) ); 
-                            catList.Add( catValues ); 
-                        } 
-                        outputParameters.AddOutput( "*", catList ); 
-                        outputParameters.AddOutput( "kc", host.RoundU( kbar ) ); 
+                    double kbar = kbard != 0.0 ? kbarn / kbard : Constant.MISSING;
+                    double sek;
+                    if (Math.Pow(kbard, 2.0) - se2 < 0.0)
+                    {
+                        sek = Constant.MISSING;
+                    }
+                    else
+                    {
+                        sek = (Math.Sqrt(2.0) / (kbard * Math.Sqrt(Convert.ToDouble(N) * mx * (mx - 1.0)))) * Math.Sqrt(Math.Pow(kbard, 2.0) - se2);
+                    }
+                    double z;
+                    if (sek != 0.0 & sek != Constant.MISSING)
+                    {
+                        z = kbar / sek;
+                    }
+                    else { z = Constant.MISSING; }
+                    outputParameters.AddOutput("cats", cats.ToString());
+                    string ratz;
+                    if (minm == maxm)
+                    {
+                        ratz = raters.ToString();
+                    }
+                    else { ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")"; }
+                    outputParameters.AddOutput("r", ratz);
+                    if (minm == maxm)
+                    {
+                        ICollection<ParameterBag> catList = new List<ParameterBag>();
+                        for (int i = 0; i <= cats - 1; i++)
+                        {
+                            ParameterBag catValues = new ParameterBag();
+                            catValues.AddOutput("resp", catz[i]);
+                            catValues.AddOutput("k", host.RoundU(kj[i]));
+                            catValues.AddOutput("se", host.RoundU(sej[i]));
+                            double zz;
+                            if (sej[i] != 0.0)
+                            {
+                                zz = kj[i] / sej[i];
+                            }
+                            else { zz = 0.0; }
+                            catValues.AddOutput("z", host.RoundU(zz));
+                            catValues.AddOutput("p", host.pval(1.0 - PDF.alnorm(zz)));
+                            catList.Add(catValues);
+                        }
+                        outputParameters.AddOutput("*", catList);
+                        outputParameters.AddOutput("kc", host.RoundU(kbar));
                         //  outputParameters.AddOutput("sec", Host.RoundU(sek))
-                        outputParameters.AddOutput( "zc", host.RoundU( z ) );
+                        outputParameters.AddOutput("zc", host.RoundU(z));
                         outputParameters.AddOutput("p",
                                                    z != Constant.MISSING
                                                        ? host.pval(1.0 - PDF.alnorm(z))
                                                        : Formatting.ASTERISK);
 
-                        double ll = kbar - cit * sek; 
-                        double ul = kbar + cit * sek; 
-                        outputParameters.AddOutput( "pc", Formatting.XRound( 100.0 * cco, 2 ) ); 
-                        outputParameters.AddOutput( "ll", host.RoundU( ll ) ); 
-                        outputParameters.AddOutput( "ul", host.RoundU( ul ) ); 
-                    } 
-                    else 
-                    { 
-                        ICollection<ParameterBag> catList = new List<ParameterBag>(); 
-                        for ( int i=0; i <= cats - 1; i++ ) 
-                        { 
-                            ParameterBag catValues = new ParameterBag(); 
-                            catValues.AddOutput( "resp", catz[ i ] ); 
-                            catValues.AddOutput( "k", host.RoundU( kj[ i ] ) ); 
-                            catValues.AddOutput( "se", Formatting.ASTERISK ); 
-                            catValues.AddOutput( "z", Formatting.ASTERISK ); 
-                            catValues.AddOutput( "p", Formatting.ASTERISK ); 
-                            catList.Add( catValues ); 
-                        } 
-                        outputParameters.AddOutput( "*", catList ); 
-                        outputParameters.AddOutput( "kc", host.RoundU( kbar ) ); 
-                        outputParameters.AddOutput( "sec", Formatting.ASTERISK ); 
-                        outputParameters.AddOutput( "zc", Formatting.ASTERISK ); 
-                        outputParameters.AddOutput( "p", "* number of ratings per subject not constant, so tests do not apply" ); 
-                        outputParameters.AddOutput( "kw", Formatting.ASTERISK ); 
-                        outputParameters.AddOutput( "pw", Formatting.ASTERISK ); 
-                    } 
+                        double ll = kbar - cit * sek;
+                        double ul = kbar + cit * sek;
+                        outputParameters.AddOutput("pc", Formatting.XRound(100.0 * cco, 2));
+                        outputParameters.AddOutput("ll", host.RoundU(ll));
+                        outputParameters.AddOutput("ul", host.RoundU(ul));
+                    }
+                    else
+                    {
+                        ICollection<ParameterBag> catList = new List<ParameterBag>();
+                        for (int i = 0; i <= cats - 1; i++)
+                        {
+                            ParameterBag catValues = new ParameterBag();
+                            catValues.AddOutput("resp", catz[i]);
+                            catValues.AddOutput("k", host.RoundU(kj[i]));
+                            catValues.AddOutput("se", Formatting.ASTERISK);
+                            catValues.AddOutput("z", Formatting.ASTERISK);
+                            catValues.AddOutput("p", Formatting.ASTERISK);
+                            catList.Add(catValues);
+                        }
+                        outputParameters.AddOutput("*", catList);
+                        outputParameters.AddOutput("kc", host.RoundU(kbar));
+                        outputParameters.AddOutput("sec", Formatting.ASTERISK);
+                        outputParameters.AddOutput("zc", Formatting.ASTERISK);
+                        outputParameters.AddOutput("p", "* number of ratings per subject not constant, so tests do not apply");
+                        outputParameters.AddOutput("kw", Formatting.ASTERISK);
+                        outputParameters.AddOutput("pw", Formatting.ASTERISK);
+                    }
                     // <----wt m x k
                 }
 
-                double[, ,] agreeData = new double[frame.Variables[0].Length + 1 /* for VB to C# conversion */, raters + 1 /* for VB to C# conversion */, 2]; 
-                for ( int rater=0; rater <= raters - 1; rater++ ) 
-                { 
-                    double[] data = frame.Variables[ rater ].AsClassifierVariable.Data; 
-                    for ( int row=0; row <= data.Length - 1; row++ ) 
-                    { 
-                        agreeData[ row + 1, rater + 1, 1 ] = data[ row ] + 1; 
-                    } 
-                } 
-                double delta; 
-                double edel; 
-                double var; 
-                double gam; 
-                double r; 
-                Agreement.Agree( frame.Variables[ 0 ].Length, raters, 1, agreeData, out delta, out edel, out var, out gam, out r, out P ); 
-                outputParameters.AddOutput( "kw", host.RoundU( r ) ); 
-                outputParameters.AddOutput( "pw", host.pval( P ) ); 
-                
-                return new StepResult( StepSuccess.Success, outputParameters ); 
-            } 
-        } 
-        
-        
-        public static StepResult RptKappaSimulateExactP( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            int iter = parameters[ "iterations" ].AsInt32; 
-            int seed = parameters[ "seed" ].AsInt32; 
-            double cco = parameters[ "ci" ].AsDouble; 
-            double originalK = parameters[ "kDouble" ].AsDouble; 
-            double originalKW = parameters[ "kwDouble" ].AsDouble; 
-            double cit; 
-            if ( cco > 0 ) 
-            { 
-                double P = ( 1.0 - cco ) / 2.0;
+                double[, ,] agreeData = new double[frame.Variables[0].Length + 1 /* for VB to C# conversion */, raters + 1 /* for VB to C# conversion */, 2];
+                for (int rater = 0; rater <= raters - 1; rater++)
+                {
+                    double[] data = frame.Variables[rater].AsClassifierVariable.Data;
+                    for (int row = 0; row <= data.Length - 1; row++)
+                    {
+                        agreeData[row + 1, rater + 1, 1] = data[row] + 1;
+                    }
+                }
+                double delta;
+                double edel;
+                double var;
+                double gam;
+                double r;
+                Agreement.Agree(frame.Variables[0].Length, raters, 1, agreeData, out delta, out edel, out var, out gam, out r, out P);
+                outputParameters.AddOutput("kw", host.RoundU(r));
+                outputParameters.AddOutput("pw", host.pval(P));
+
+                return new StepResult(StepSuccess.Success, outputParameters);
+            }
+        }
+
+
+        public static StepResult RptKappaSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        {
+            int iter = parameters["iterations"].AsInt32;
+            int seed = parameters["seed"].AsInt32;
+            double cco = parameters["ci"].AsDouble;
+            double originalK = parameters["kDouble"].AsDouble;
+            double originalKW = parameters["kwDouble"].AsDouble;
+            double cit;
+            if (cco > 0)
+            {
+                double P = (1.0 - cco) / 2.0;
                 int ifault;
-                cit = PDF.gauinv( 1.0 - P, out ifault ); 
-            } 
-            else 
-            { 
+                cit = PDF.gauinv(1.0 - P, out ifault);
+            }
+            else
+            {
                 cco = 0.95;
                 int ifault;
-                cit = PDF.gauinv(0.975, out ifault); 
-            } 
-            
-            bool alreadyCrosstabbed = parameters.ContainsKey( "responsesCrosstab" ); 
-            int g; 
-            int[,] o; 
-            if ( alreadyCrosstabbed ) 
-            { 
-                DataFrame frame = parameters[ "responsesCrosstab" ].AsDataFrame; 
-                int rows = frame.MaxRows; 
-                int cols = frame.VariableCount; 
+                cit = PDF.gauinv(0.975, out ifault);
+            }
+
+            bool alreadyCrosstabbed = parameters.ContainsKey("responsesCrosstab");
+            int g;
+            int[,] o;
+            if (alreadyCrosstabbed)
+            {
+                DataFrame frame = parameters["responsesCrosstab"].AsDataFrame;
+                int rows = frame.MaxRows;
+                int cols = frame.VariableCount;
 
                 if (rows != cols)
                     throw new InvalidDataException("A crosstab for kappa exact P must be square");
 
-                g = Math.Max( rows, cols );
-                o = new int[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */]; 
-                
-                for ( int i=0; i <= g - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= g - 1; j++ ) 
-                    { 
-                        o[ i, j ] = 0; 
-                    } 
-                } 
-                
-                for ( int i=0; i <= rows - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= cols - 1; j++ ) 
-                    { 
-                        double transTemp0 = frame.Variables[ j ].AsDoubleVariable.Data[i]; 
-                        o[ i, j ] = ( ( int )( Math.Floor(transTemp0) ) ); 
-                    } 
-                } 
-            } 
-            else 
-            { 
-                DataFrame frame = parameters[ "responses" ].AsDataFrame; 
-                int raters = frame.VariableCount; 
-                if ( raters != 2 ) 
-                { 
-                    throw new NotImplementedException(); 
-                } 
-                ClassifierVariable v0 = frame.Variables[ 0 ].AsClassifierVariable; 
-                int N = v0.Length; 
+                g = Math.Max(rows, cols);
+                o = new int[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */];
+
+                for (int i = 0; i <= g - 1; i++)
+                {
+                    for (int j = 0; j <= g - 1; j++)
+                    {
+                        o[i, j] = 0;
+                    }
+                }
+
+                for (int i = 0; i <= rows - 1; i++)
+                {
+                    for (int j = 0; j <= cols - 1; j++)
+                    {
+                        double transTemp0 = frame.Variables[j].AsDoubleVariable.Data[i];
+                        o[i, j] = ((int)(Math.Floor(transTemp0)));
+                    }
+                }
+            }
+            else
+            {
+                DataFrame frame = parameters["responses"].AsDataFrame;
+                int raters = frame.VariableCount;
+                if (raters != 2)
+                {
+                    throw new NotImplementedException();
+                }
+                ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
+                int N = v0.Length;
                 int ycats = 0;
                 double[] y = new double[N - 1 + 1 /* for VB to C# conversion */ ];
                 Namevar[] ycat = new Namevar[v0.GroupCount - 1 + 1 /* for VB to C# conversion */ ];
-                for ( int i=0; i <= v0.GroupCount - 1; i++ ) 
-                { 
-                    if ( v0.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                    { 
-                        ycat[ ycats ].Ti = v0.Groups[ i ].Label; 
-                        ycat[ ycats ].x = Convert.ToDouble( i ); 
-                        ycats = ycats + 1; 
-                    } 
-                } 
+                for (int i = 0; i <= v0.GroupCount - 1; i++)
+                {
+                    if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
+                    {
+                        ycat[ycats].Ti = v0.Groups[i].Label;
+                        ycat[ycats].x = Convert.ToDouble(i);
+                        ycats = ycats + 1;
+                    }
+                }
                 // create temp variable for copying values 
-                Namevar[] transTemp18 = new Namevar[ycats - 1 + 1 /* for VB to C# conversion */ ]; 
-                Array.Copy( ycat, transTemp18, Math.Min( ycat.Length, transTemp18.Length ) ); 
-                ycat = transTemp18; 
-                for ( int i=0; i <= N - 1; i++ ) 
-                { 
-                    y[ i ] = v0.Data[i]; 
-                } 
-                SortName( ycats, ycat, 0 ); 
-                ClassifierVariable v1 = frame.Variables[ 1 ].AsClassifierVariable; 
+                Namevar[] transTemp18 = new Namevar[ycats - 1 + 1 /* for VB to C# conversion */ ];
+                Array.Copy(ycat, transTemp18, Math.Min(ycat.Length, transTemp18.Length));
+                ycat = transTemp18;
+                for (int i = 0; i <= N - 1; i++)
+                {
+                    y[i] = v0.Data[i];
+                }
+                SortName(ycats, ycat, 0);
+                ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
                 int xcats = 0;
                 double[] x = new double[N - 1 + 1 /* for VB to C# conversion */ ];
                 Namevar[] xcat = new Namevar[v1.GroupCount - 1 + 1 /* for VB to C# conversion */ ];
-                for ( int i=0; i <= v1.GroupCount - 1; i++ ) 
-                { 
-                    if ( v1.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                    { 
-                        xcat[ xcats ].Ti = v1.Groups[ i ].Label; 
-                        xcat[ xcats ].x = Convert.ToDouble( i ); 
-                        xcats = xcats + 1; 
-                    } 
-                } 
+                for (int i = 0; i <= v1.GroupCount - 1; i++)
+                {
+                    if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
+                    {
+                        xcat[xcats].Ti = v1.Groups[i].Label;
+                        xcat[xcats].x = Convert.ToDouble(i);
+                        xcats = xcats + 1;
+                    }
+                }
                 // create temp variable for copying values 
-                Namevar[] transTemp19 = new Namevar[xcats - 1 + 1 /* for VB to C# conversion */]; 
-                Array.Copy( xcat, transTemp19, Math.Min( xcat.Length, transTemp19.Length ) ); 
-                xcat = transTemp19; 
-                for ( int i=0; i <= N - 1; i++ ) 
-                { 
-                    x[ i ] = v1.Data[i]; 
-                } 
-                SortName( xcats, xcat, 0 ); 
-                x_symmetrise_xtab( ref xcats, ref xcat, ref ycats, ref ycat, 0 );
-                double[,] xt = new double[xcats - 1 + 1 /* for VB to C# conversion */, ycats - 1 + 1 /* for VB to C# conversion */]; 
-                double tot = 0.0; 
-                for ( int i=0; i <= xcats - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= ycats - 1; j++ ) 
-                    { 
-                        for ( int kv=0; kv <= N - 1; kv++ ) 
-                        { 
-                            if ( x[ kv ] == xcat[ i ].x & y[ kv ] == ycat[ j ].x )
-                            { 
-                                xt[ i, j ] = xt[ i, j ] + 1; 
-                            } 
-                        } 
-                        tot = tot + xt[ i, j ]; 
-                    } 
-                } 
-                g = Math.Max( xcats, ycats );
-                o = new int[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */]; 
-                for ( int i=0; i <= g - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= g - 1; j++ ) 
-                    { 
-                        o[ i, j ] = 0; 
-                    } 
-                } 
-                for ( int i=0; i <= ycats - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= xcats - 1; j++ ) 
-                    { 
-                        o[ i, j ] = Convert.ToInt32( xt[ j, i ] ); 
-                    } 
-                } 
+                Namevar[] transTemp19 = new Namevar[xcats - 1 + 1 /* for VB to C# conversion */];
+                Array.Copy(xcat, transTemp19, Math.Min(xcat.Length, transTemp19.Length));
+                xcat = transTemp19;
+                for (int i = 0; i <= N - 1; i++)
+                {
+                    x[i] = v1.Data[i];
+                }
+                SortName(xcats, xcat, 0);
+                x_symmetrise_xtab(ref xcats, ref xcat, ref ycats, ref ycat, 0);
+                double[,] xt = new double[xcats - 1 + 1 /* for VB to C# conversion */, ycats - 1 + 1 /* for VB to C# conversion */];
+                double tot = 0.0;
+                for (int i = 0; i <= xcats - 1; i++)
+                {
+                    for (int j = 0; j <= ycats - 1; j++)
+                    {
+                        for (int kv = 0; kv <= N - 1; kv++)
+                        {
+                            if (x[kv] == xcat[i].x & y[kv] == ycat[j].x)
+                            {
+                                xt[i, j] = xt[i, j] + 1;
+                            }
+                        }
+                        tot = tot + xt[i, j];
+                    }
+                }
+                g = Math.Max(xcats, ycats);
+                o = new int[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */];
+                for (int i = 0; i <= g - 1; i++)
+                {
+                    for (int j = 0; j <= g - 1; j++)
+                    {
+                        o[i, j] = 0;
+                    }
+                }
+                for (int i = 0; i <= ycats - 1; i++)
+                {
+                    for (int j = 0; j <= xcats - 1; j++)
+                    {
+                        o[i, j] = Convert.ToInt32(xt[j, i]);
+                    }
+                }
                 // <------- xtab
-            } 
-            
-            
+            }
+
+
             // xt, o and w are now zero-based, were 1-based.
-            
+
             // weights --->
-            double[,] w = new double[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */]; 
-            for ( int i=0; i <= g - 1; i++ ) 
-            { 
-                for ( int j=0; j <= g - 1; j++ ) 
-                { 
-                    w[ i, j ] = 0.0; 
-                } 
-            } 
-            
-            int wtype = int.Parse( parameters[ "method" ].AsString ); 
-            if ( wtype == 3 ) 
-            { 
-                DataFrame weights = parameters[ "weights" ].AsDataFrame; 
-                for ( int i=0; i <= weights.VariableCount - 1; i++ ) 
-                { 
-                    DoubleVariable v = weights.Variables[ i ].AsDoubleVariable; 
-                    for ( int j=0; j <= v.Length - 1; j++ ) 
-                    { 
-                        w[ i, j ] = v.Data[j]; 
-                        if ( w[ i, j ] == Constant.MISSING )
-                        { 
-                            w[ i, j ] = 0.0; 
-                        } 
-                    } 
-                } 
-            } 
-            if ( wtype != 3 ) 
-            { 
-                for ( int i=0; i <= g - 1; i++ ) 
-                { 
-                    for ( int j=0; j <= g - 1; j++ ) 
-                    { 
-                        switch ( wtype ) 
+            double[,] w = new double[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */];
+            for (int i = 0; i <= g - 1; i++)
+            {
+                for (int j = 0; j <= g - 1; j++)
+                {
+                    w[i, j] = 0.0;
+                }
+            }
+
+            int wtype = int.Parse(parameters["method"].AsString);
+            if (wtype == 3)
+            {
+                DataFrame weights = parameters["weights"].AsDataFrame;
+                for (int i = 0; i <= weights.VariableCount - 1; i++)
+                {
+                    DoubleVariable v = weights.Variables[i].AsDoubleVariable;
+                    for (int j = 0; j <= v.Length - 1; j++)
+                    {
+                        w[i, j] = v.Data[j];
+                        if (w[i, j] == Constant.MISSING)
+                        {
+                            w[i, j] = 0.0;
+                        }
+                    }
+                }
+            }
+            if (wtype != 3)
+            {
+                for (int i = 0; i <= g - 1; i++)
+                {
+                    for (int j = 0; j <= g - 1; j++)
+                    {
+                        switch (wtype)
                         {
                             case 2:
-                                w[ i, j ] = 1.0 - Math.Pow( ( Convert.ToDouble( i - j ) / Convert.ToDouble( g - 1 ) ), 2.0 ); 
+                                w[i, j] = 1.0 - Math.Pow((Convert.ToDouble(i - j) / Convert.ToDouble(g - 1)), 2.0);
                                 break;
                             default:
-                                w[ i, j ] = 1.0 - Convert.ToDouble( Math.Abs( i - j ) ) / Convert.ToDouble( g - 1 ); 
+                                w[i, j] = 1.0 - Convert.ToDouble(Math.Abs(i - j)) / Convert.ToDouble(g - 1);
                                 break;
                         }
-                        
-                    } 
-                } 
-            } 
-            int ierror = 0; 
-            int exactR = 0; 
-            int exactIter = 0; 
-            int exactRW = 0; 
-            int exactIterW = 0; 
-            KappaResample( host, o, w, g, cit, originalK, originalKW, iter, ref exactR, ref exactIter, ref exactRW, ref exactIterW, seed, ref ierror ); 
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( ierror == 0 ) 
-            { 
+
+                    }
+                }
+            }
+            int ierror = 0;
+            int exactR = 0;
+            int exactIter = 0;
+            int exactRW = 0;
+            int exactIterW = 0;
+            KappaResample(host, o, w, g, cit, originalK, originalKW, iter, ref exactR, ref exactIter, ref exactRW, ref exactIterW, seed, ref ierror);
+
+            ParameterBag outputParameters = new ParameterBag();
+            if (ierror == 0)
+            {
                 //  Kappa
-                double exactP = Convert.ToDouble( exactR ) / Convert.ToDouble( exactIter ); 
-                outputParameters.AddOutput( "p", host.pval( exactP ) ); 
-                double ll; double ul; 
-                string warn; 
-                MathDbl.binci( Convert.ToDouble( exactR ), Convert.ToDouble( exactIter ), out ll, out ul, cco, out warn ); 
-                outputParameters.AddOutput( "ll", host.RoundU( ll ) ); 
-                outputParameters.AddOutput( "ul", host.RoundU( ul ) + warn ); 
-                
+                double exactP = Convert.ToDouble(exactR) / Convert.ToDouble(exactIter);
+                outputParameters.AddOutput("p", host.pval(exactP));
+                double ll; double ul;
+                string warn;
+                MathDbl.binci(Convert.ToDouble(exactR), Convert.ToDouble(exactIter), out ll, out ul, cco, out warn);
+                outputParameters.AddOutput("ll", host.RoundU(ll));
+                outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
+
                 //  Weighted kappa
-                double exactPW = Convert.ToDouble( exactRW ) / Convert.ToDouble( exactIterW ); 
-                outputParameters.AddOutput( "pw", host.pval( exactPW ) ); 
-                double llw; double ulw; 
-                string warnw; 
-                MathDbl.binci( Convert.ToDouble( exactRW ), Convert.ToDouble( exactIterW ), out llw, out ulw, cco, out warnw ); 
-                outputParameters.AddOutput( "llw", host.RoundU( llw ) ); 
-                outputParameters.AddOutput( "ulw", host.RoundU( ulw ) + warnw ); 
-                
+                double exactPW = Convert.ToDouble(exactRW) / Convert.ToDouble(exactIterW);
+                outputParameters.AddOutput("pw", host.pval(exactPW));
+                double llw; double ulw;
+                string warnw;
+                MathDbl.binci(Convert.ToDouble(exactRW), Convert.ToDouble(exactIterW), out llw, out ulw, cco, out warnw);
+                outputParameters.AddOutput("llw", host.RoundU(llw));
+                outputParameters.AddOutput("ulw", host.RoundU(ulw) + warnw);
+
                 //  Common
-                outputParameters.AddOutput( "pc", Formatting.XRound( 100.0 * cco, 2 ) ); 
-                outputParameters.AddOutput( "k", iter.ToString( "N0" ) ); 
-                outputParameters.AddOutput( "seed_fmt", seed.ToString() ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "p", "P = * (cancelled)" ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
+                outputParameters.AddOutput("pc", Formatting.XRound(100.0 * cco, 2));
+                outputParameters.AddOutput("k", iter.ToString("N0"));
+                outputParameters.AddOutput("seed_fmt", seed.ToString());
+            }
+            else
+            {
+                outputParameters.AddOutput("p", "P = * (cancelled)");
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
         }
 
 
@@ -1489,227 +1498,227 @@ namespace StatsDirect.Builtins
         /// <param name="exactIter"></param>
         /// <param name="exactRW"></param>
         /// <remarks></remarks>
-        private static void KappaResample( ITemplateHost host, int[,] o, double[,] w, int g, double cit, double originalK, double originalKW, int iter, ref int exactR, ref int exactIter, ref int exactRW, ref int exactIterW, int iseed, ref int ierror ) 
+        private static void KappaResample(ITemplateHost host, int[,] o, double[,] w, int g, double cit, double originalK, double originalKW, int iter, ref int exactR, ref int exactIter, ref int exactRW, ref int exactIterW, int iseed, ref int ierror)
         {
             int[] ncolt = new int[g - 1 + 1 /* for VB to C# conversion */ ];
             int[] nrowt = new int[g - 1 + 1 /* for VB to C# conversion */ ];
             int ntotal = 0;
             int i;
             int j;
-            MersenneTwister rng = new MersenneTwister(); 
-            
-            int boots_divisor = Math.Max( 1, iter / 1000 ); 
-            
-            host.StartProgress( "Simulating exact P" ); 
-            
-            if ( iseed != 0 )
-            { 
-                rng.Seed( iseed ); 
-            } 
+            MersenneTwister rng = new MersenneTwister();
+
+            int boots_divisor = Math.Max(1, iter / 1000);
+
+            host.StartProgress("Simulating exact P");
+
+            if (iseed != 0)
+            {
+                rng.Seed(iseed);
+            }
             else
             {
                 rng.Seed();
-            } 
-            
-            for ( j=0; j <= g - 1; j++ ) 
-            { 
-                for ( i=0; i <= g - 1; i++ ) 
-                { 
-                    nrowt[ j ] += o[ j, i ]; 
-                    ncolt[ i ] += o[ j, i ]; 
-                } 
-            } 
-            
-            int maxtot = 5000000; 
+            }
+
+            for (j = 0; j <= g - 1; j++)
+            {
+                for (i = 0; i <= g - 1; i++)
+                {
+                    nrowt[j] += o[j, i];
+                    ncolt[i] += o[j, i];
+                }
+            }
+
+            int maxtot = 5000000;
             bool primed = false;
 
             double[] fact = new double[g - 1 + 1 /* for VB to C# conversion */];
-            int[] jwork = new int[g - 1 + 1 /* for VB to C# conversion */]; 
-            
-            int missingSek = 0; 
-            int missingSekw = 0; 
-            int r = 0; 
-            int rw = 0; 
-            for ( i=1; i <= iter; i++ ) 
-            { 
-                if ( i % boots_divisor == 0 ) 
-                { 
-                    if ( host.UpdateProgress( i / (double)iter ) ) 
-                    { 
+            int[] jwork = new int[g - 1 + 1 /* for VB to C# conversion */];
+
+            int missingSek = 0;
+            int missingSekw = 0;
+            int r = 0;
+            int rw = 0;
+            for (i = 1; i <= iter; i++)
+            {
+                if (i % boots_divisor == 0)
+                {
+                    if (host.UpdateProgress(i / (double)iter))
+                    {
                         ierror = -1; //  Interrupted
                         break;
-                    } 
-                } 
-                Chi.Rcont2( 0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng );
+                    }
+                }
+                Chi.Rcont2(0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
                     throw new InvalidDataException();
-                double k = 0.0; 
-                double sek = 0; 
-                double kcil = 0; 
-                double kciu = 0; 
-                double kw = 0; 
-                double sekw = 0; 
-                double kwcil = 0; 
-                double kwciu = 0; 
-                double po = 0; 
-                double pe = 0; 
-                double pow = 0; 
-                double pew = 0; 
-                double spe = 0; 
-                double spi = 0; 
-                bool wasError; 
-                Kappa( host, o, w, g, ref k, ref sek, ref kcil, ref kciu, ref kw, ref sekw, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out wasError ); 
-                if ( !( wasError ) ) 
+                double k = 0.0;
+                double sek = 0;
+                double kcil = 0;
+                double kciu = 0;
+                double kw = 0;
+                double sekw = 0;
+                double kwcil = 0;
+                double kwciu = 0;
+                double po = 0;
+                double pe = 0;
+                double pow = 0;
+                double pew = 0;
+                double spe = 0;
+                double spi = 0;
+                bool wasError;
+                Kappa(host, o, w, g, ref k, ref sek, ref kcil, ref kciu, ref kw, ref sekw, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out wasError);
+                if (!(wasError))
                 {
-                    if ( sek != 0.0 ) 
-                    { 
-                        if ( k >= originalK )
-                        { 
-                            r += 1; 
-                        } 
-                    } 
-                    else 
-                    { 
-                        missingSek += 1; 
+                    if (sek != 0.0)
+                    {
+                        if (k >= originalK)
+                        {
+                            r += 1;
+                        }
+                    }
+                    else
+                    {
+                        missingSek += 1;
                     }
 
-                    if ( sekw != 0.0 ) 
-                    { 
-                        if ( kw >= originalKW )
-                        { 
-                            rw += 1; 
-                        } 
-                    } 
-                    else 
-                    { 
-                        missingSekw += 1; 
-                    } 
-                } 
-                else 
-                { 
-                    throw new InvalidDataException(); 
-                } 
-            } 
-            
+                    if (sekw != 0.0)
+                    {
+                        if (kw >= originalKW)
+                        {
+                            rw += 1;
+                        }
+                    }
+                    else
+                    {
+                        missingSekw += 1;
+                    }
+                }
+                else
+                {
+                    throw new InvalidDataException();
+                }
+            }
+
             //  Ensure we deal with zero results by removing them from numerator (already done, they never got in there) and denominator
-            exactR = r; 
-            exactIter = iter - missingSek; 
-            exactRW = rw; 
-            exactIterW = iter - missingSekw; 
-            
-            host.FinishProgress(); 
-        } 
-        
-        
-        public static StepResult RptKappaSizeWeights( ITemplateHost host, ParameterBag parameters ) 
+            exactR = r;
+            exactIter = iter - missingSek;
+            exactRW = rw;
+            exactIterW = iter - missingSekw;
+
+            host.FinishProgress();
+        }
+
+
+        public static StepResult RptKappaSizeWeights(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame frame = parameters[ "responses" ].AsDataFrame; 
-            
-            ClassifierVariable v0 = frame.Variables[ 0 ].AsClassifierVariable; 
-            int N = v0.Length; 
+            DataFrame frame = parameters["responses"].AsDataFrame;
+
+            ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
+            int N = v0.Length;
             int ycats = 0;
             double[] y = new double[N - 1 + 1 /* for VB to C# conversion */];
-            Namevar[] ycat = new Namevar[v0.GroupCount - 1 + 1 /* for VB to C# conversion */ ]; 
-            for ( int i=0; i < v0.GroupCount; i++ ) 
-            { 
-                if ( v0.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                { 
-                    ycat[ ycats ].Ti = v0.Groups[ i ].Label; 
-                    ycat[ ycats ].x = Convert.ToDouble( i ); 
-                    ycats = ycats + 1; 
-                } 
-            } 
+            Namevar[] ycat = new Namevar[v0.GroupCount - 1 + 1 /* for VB to C# conversion */ ];
+            for (int i = 0; i < v0.GroupCount; i++)
+            {
+                if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
+                {
+                    ycat[ycats].Ti = v0.Groups[i].Label;
+                    ycat[ycats].x = Convert.ToDouble(i);
+                    ycats = ycats + 1;
+                }
+            }
             // create temp variable for copying values 
-            Namevar[] transTemp20 = new Namevar[ycats - 1 + 1 /* for VB to C# conversion */ ]; 
-            Array.Copy( ycat, transTemp20, Math.Min( ycat.Length, transTemp20.Length ) ); 
-            ycat = transTemp20; 
-            for ( int i=0; i <= N - 1; i++ ) 
-            { 
-                y[ i ] = v0.Data[i]; 
-            } 
-            SortName( ycats, ycat, 0 ); 
-            ClassifierVariable v1 = frame.Variables[ 1 ].AsClassifierVariable; 
+            Namevar[] transTemp20 = new Namevar[ycats - 1 + 1 /* for VB to C# conversion */ ];
+            Array.Copy(ycat, transTemp20, Math.Min(ycat.Length, transTemp20.Length));
+            ycat = transTemp20;
+            for (int i = 0; i <= N - 1; i++)
+            {
+                y[i] = v0.Data[i];
+            }
+            SortName(ycats, ycat, 0);
+            ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
             int xcats = 0;
             double[] x = new double[N - 1 + 1 /* for VB to C# conversion */ ];
-            Namevar[] xcat = new Namevar[v1.GroupCount - 1 + 1 /* for VB to C# conversion */ ]; 
-            for ( int i=0; i <= v1.GroupCount - 1; i++ ) 
-            { 
-                if ( v1.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                { 
-                    xcat[ xcats ].Ti = v1.Groups[ i ].Label; 
-                    xcat[ xcats ].x = Convert.ToDouble( i ); 
-                    xcats = xcats + 1; 
-                } 
-            } 
+            Namevar[] xcat = new Namevar[v1.GroupCount - 1 + 1 /* for VB to C# conversion */ ];
+            for (int i = 0; i <= v1.GroupCount - 1; i++)
+            {
+                if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
+                {
+                    xcat[xcats].Ti = v1.Groups[i].Label;
+                    xcat[xcats].x = Convert.ToDouble(i);
+                    xcats = xcats + 1;
+                }
+            }
             // create temp variable for copying values 
-            Namevar[] transTemp21 = new Namevar[xcats - 1 + 1 /* for VB to C# conversion */ ]; 
-            Array.Copy( xcat, transTemp21, Math.Min( xcat.Length, transTemp21.Length ) ); 
-            xcat = transTemp21; 
-            for ( int i=0; i <= N - 1; i++ ) 
-            { 
-                x[ i ] = v1.Data[i]; 
-            } 
-            SortName( xcats, xcat, 0 ); 
-            x_symmetrise_xtab( ref xcats, ref xcat, ref ycats, ref ycat, 0 ); 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "ycats", ycats ); 
-            outputParameters.AddOutput( "xcats", xcats ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptChiGfSimulateExactP( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            int iterations = parameters[ "iterations" ].AsInt32; 
-            int seed = parameters[ "seed" ].AsInt32; 
-            double ci = parameters[ "ci" ].AsDouble; 
-            double x2 = parameters[ "x2" ].AsDouble; 
-            DataFrame observedFrame = parameters[ "observed" ].AsDataFrame; 
-            DoubleVariable observed = observedFrame.get_Variable( 0 ).AsDoubleVariable; 
-            DataFrame expectedFrame = parameters[ "expected" ].AsDataFrame; 
-            DoubleVariable expected = expectedFrame.get_Variable( 0 ).AsDoubleVariable; 
-            
+            Namevar[] transTemp21 = new Namevar[xcats - 1 + 1 /* for VB to C# conversion */ ];
+            Array.Copy(xcat, transTemp21, Math.Min(xcat.Length, transTemp21.Length));
+            xcat = transTemp21;
+            for (int i = 0; i <= N - 1; i++)
+            {
+                x[i] = v1.Data[i];
+            }
+            SortName(xcats, xcat, 0);
+            x_symmetrise_xtab(ref xcats, ref xcat, ref ycats, ref ycat, 0);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("ycats", ycats);
+            outputParameters.AddOutput("xcats", xcats);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptChiGfSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        {
+            int iterations = parameters["iterations"].AsInt32;
+            int seed = parameters["seed"].AsInt32;
+            double ci = parameters["ci"].AsDouble;
+            double x2 = parameters["x2"].AsDouble;
+            DataFrame observedFrame = parameters["observed"].AsDataFrame;
+            DoubleVariable observed = observedFrame.get_Variable(0).AsDoubleVariable;
+            DataFrame expectedFrame = parameters["expected"].AsDataFrame;
+            DoubleVariable expected = expectedFrame.get_Variable(0).AsDoubleVariable;
+
             //  Observed data is grouped frequencies.
-            double[] observedData = observed.Data; 
+            double[] observedData = observed.Data;
             //  Expected data may be probabilities or counts; we'll scale them later.
-            double[] expectedData = expected.Data; 
-            
+            double[] expectedData = expected.Data;
+
             int nx = observed.Length;
 
             int[] xn = new int[nx + 1 /* for VB to C# conversion */ ];
             double[] p = new double[nx + 1 /* for VB to C# conversion */ ];
-            double expectedTotal = Math.Round( expected.Sum, 12 ); 
-            for ( int N=0; N <= nx - 1; N++ ) 
-            { 
-                xn[ N + 1 ] = Convert.ToInt32( observedData[ N ] ); 
-                p[ N + 1 ] = expectedData[ N ] / expectedTotal; 
-            } 
-            
-            int r; 
-            bool OK; 
-            ResampleX2GF( host, xn, p, observed.Length, x2, out r, iterations, seed, out OK ); 
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            if ( OK ) 
-            { 
-                double exactP = Convert.ToDouble( r ) / Convert.ToDouble( iterations ); 
-                outputParameters.AddOutput( "p", host.pval( exactP ) ); 
+            double expectedTotal = Math.Round(expected.Sum, 12);
+            for (int N = 0; N <= nx - 1; N++)
+            {
+                xn[N + 1] = Convert.ToInt32(observedData[N]);
+                p[N + 1] = expectedData[N] / expectedTotal;
+            }
+
+            int r;
+            bool OK;
+            ResampleX2GF(host, xn, p, observed.Length, x2, out r, iterations, seed, out OK);
+
+            ParameterBag outputParameters = new ParameterBag();
+            if (OK)
+            {
+                double exactP = Convert.ToDouble(r) / Convert.ToDouble(iterations);
+                outputParameters.AddOutput("p", host.pval(exactP));
                 //  CI
-                double ll; double ul; 
-                string warn; 
-                MathDbl.binci( Convert.ToDouble( r ), Convert.ToDouble( iterations ), out ll, out ul, ci, out warn ); 
-                outputParameters.AddOutput( "pc", Formatting.XRound( 100.0 * ci, 2 ) ); 
-                outputParameters.AddOutput( "ll", host.RoundU( ll ) ); 
-                outputParameters.AddOutput( "ul", host.RoundU( ul ) + warn ); 
-                outputParameters.AddOutput( "k", iterations.ToString( "N0" ) ); 
-                outputParameters.AddOutput( "seed_fmt", seed.ToString() ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "p", "P = * (cancelled)" ); 
-            } 
-            
-            return new StepResult( StepSuccess.Success, outputParameters ); 
+                double ll; double ul;
+                string warn;
+                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(iterations), out ll, out ul, ci, out warn);
+                outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
+                outputParameters.AddOutput("ll", host.RoundU(ll));
+                outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
+                outputParameters.AddOutput("k", iterations.ToString("N0"));
+                outputParameters.AddOutput("seed_fmt", seed.ToString());
+            }
+            else
+            {
+                outputParameters.AddOutput("p", "P = * (cancelled)");
+            }
+
+            return new StepResult(StepSuccess.Success, outputParameters);
         }
 
 
@@ -1726,57 +1735,57 @@ namespace StatsDirect.Builtins
         ///  <param name="iseed">RNG seed</param>
         /// <param name="ok"></param>
         /// <remarks></remarks>
-        private static void ResampleX2GF( ITemplateHost host, int[] x, double[] p, int k, double x2, out int r, int iter, int iseed, out bool ok ) 
-        { 
-            int ntot = 0; 
-            for ( int i=1; i <= k; i++ ) 
-            { 
-                ntot += x[ i ]; 
+        private static void ResampleX2GF(ITemplateHost host, int[] x, double[] p, int k, double x2, out int r, int iter, int iseed, out bool ok)
+        {
+            int ntot = 0;
+            for (int i = 1; i <= k; i++)
+            {
+                ntot += x[i];
             }
-            double[] pp = new double[k + 1 /* for VB to C# conversion */ ]; 
-            pp[ 1 ] = Math.Round( p[ 1 ], 12 ); 
-            for ( int i=2; i <= k; i++ ) 
-            { 
-                pp[ i ] = Math.Round( p[ i ] + pp[ i - 1 ], 12 ); 
-            } 
-            r = 0; 
-            host.StartProgress( "Simulating exact P" ); 
-            MersenneTwister rng = new MersenneTwister( iseed ); 
-            for ( int l=1; l <= iter; l++ ) 
-            { 
-                Array.Clear( x, 1, k ); 
-                for ( int i=1; i <= ntot; i++ ) 
-                { 
-                    double pr = rng.NextDouble(); 
-                    int j; 
-                    for ( j=1; j <= k; j++ ) 
-                    { 
-                        if ( pr <= pp[ j ] )
-                        { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                    if ( j > k )
-                    { 
-                        j = k; 
-                    } 
-                    x[ j ] += 1; 
-                } 
-                if ( x2gf( x, p, k ) >= x2 )
-                { 
-                    r += 1; 
-                } 
-                if ( host.UpdateProgress( Convert.ToDouble( l ) / iter ) ) 
-                { 
-                    ok = false; 
-                    return ; 
-                } 
-            } 
-            ok = true; 
-            host.FinishProgress(); 
-        } 
-        
-        
+            double[] pp = new double[k + 1 /* for VB to C# conversion */ ];
+            pp[1] = Math.Round(p[1], 12);
+            for (int i = 2; i <= k; i++)
+            {
+                pp[i] = Math.Round(p[i] + pp[i - 1], 12);
+            }
+            r = 0;
+            host.StartProgress("Simulating exact P");
+            MersenneTwister rng = new MersenneTwister(iseed);
+            for (int l = 1; l <= iter; l++)
+            {
+                Array.Clear(x, 1, k);
+                for (int i = 1; i <= ntot; i++)
+                {
+                    double pr = rng.NextDouble();
+                    int j;
+                    for (j = 1; j <= k; j++)
+                    {
+                        if (pr <= pp[j])
+                        {
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                    if (j > k)
+                    {
+                        j = k;
+                    }
+                    x[j] += 1;
+                }
+                if (x2gf(x, p, k) >= x2)
+                {
+                    r += 1;
+                }
+                if (host.UpdateProgress(Convert.ToDouble(l) / iter))
+                {
+                    ok = false;
+                    return;
+                }
+            }
+            ok = true;
+            host.FinishProgress();
+        }
+
+
         ///  <summary>
         ///  Compute chi-square goodness of fit for k observed counts with probability p for each cell
         ///  </summary>
@@ -1785,162 +1794,162 @@ namespace StatsDirect.Builtins
         ///  <param name="k"></param>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        private static double x2gf( int[] x, double[] p, int k ) 
-        { 
-            int nt = 0; 
-            for ( int i=1; i <= k; i++ ) 
-            { 
-                nt += x[ i ]; 
-            } 
-            double x2 = 0.0; 
-            for ( int i=1; i <= k; i++ ) 
-            { 
-                double xe = nt * p[ i ]; 
-                x2 += ( ( x[ i ] - xe ) * ( x[ i ] - xe ) ) / xe; 
-            } 
-            return x2; 
-        } 
-        
-        
-        public static StepResult RptChiSquareGoodnessOfFit( ITemplateHost host, ParameterBag parameters ) 
-        { 
-            const string cgft = "Chi-square goodness of fit test"; 
-            
-            DataFrame observedFrame = parameters[ "observed" ].AsDataFrame; 
-            DoubleVariable observed = observedFrame.get_Variable( 0 ).AsDoubleVariable; 
-            DataFrame expectedFrame = parameters[ "expected" ].AsDataFrame; 
-            DoubleVariable expected = expectedFrame.get_Variable( 0 ).AsDoubleVariable; 
-            StringVariable namesVariable = null; 
-            if ( parameters.ContainsKey( "names" ) ) 
-            { 
-                namesVariable = parameters[ "names" ].AsDataFrame.Variables[ 0 ].AsStringVariable; 
-            } 
-            
+        private static double x2gf(int[] x, double[] p, int k)
+        {
+            int nt = 0;
+            for (int i = 1; i <= k; i++)
+            {
+                nt += x[i];
+            }
+            double x2 = 0.0;
+            for (int i = 1; i <= k; i++)
+            {
+                double xe = nt * p[i];
+                x2 += ((x[i] - xe) * (x[i] - xe)) / xe;
+            }
+            return x2;
+        }
+
+
+        public static StepResult RptChiSquareGoodnessOfFit(ITemplateHost host, ParameterBag parameters)
+        {
+            const string cgft = "Chi-square goodness of fit test";
+
+            DataFrame observedFrame = parameters["observed"].AsDataFrame;
+            DoubleVariable observed = observedFrame.get_Variable(0).AsDoubleVariable;
+            DataFrame expectedFrame = parameters["expected"].AsDataFrame;
+            DoubleVariable expected = expectedFrame.get_Variable(0).AsDoubleVariable;
+            StringVariable namesVariable = null;
+            if (parameters.ContainsKey("names"))
+            {
+                namesVariable = parameters["names"].AsDataFrame.Variables[0].AsStringVariable;
+            }
+
             //  Observed data is grouped frequencies.
-            double[] observedData = observed.Data; 
+            double[] observedData = observed.Data;
             //  Expected data may be probabilities or counts; we'll scale them later.
-            double[] expectedData = expected.Data; 
-            
-            int nx = observed.Length; 
-            
-            if ( nx < 2 ) 
-            { 
-                host.Error( "Too few categories, use at least three for the chi-square goodness of fit test.", cgft ); 
-                throw new TemplateOperationCancelledException(); 
-            } 
-            if ( nx == 2 ) 
-            { 
-                host.Error( "Only two categories, use binomial methods such as the single proportion test.", cgft ); 
-                throw new TemplateOperationCancelledException(); 
+            double[] expectedData = expected.Data;
+
+            int nx = observed.Length;
+
+            if (nx < 2)
+            {
+                host.Error("Too few categories, use at least three for the chi-square goodness of fit test.", cgft);
+                throw new TemplateOperationCancelledException();
+            }
+            if (nx == 2)
+            {
+                host.Error("Only two categories, use binomial methods such as the single proportion test.", cgft);
+                throw new TemplateOperationCancelledException();
             }
 
             double[] xn = new double[nx - 1 + 1 /* for VB to C# conversion */ ];
-            double[] xe = new double[nx - 1 + 1 /* for VB to C# conversion */ ]; 
-            double observedTotal = observed.Sum; 
-            double expectedTotal = expected.Sum; 
-            bool expectedIsProbability = expectedTotal <= 1.0; 
-            for ( int N=0; N <= nx - 1; N++ ) 
-            { 
-                xn[ N ] = observedData[ N ]; 
-                xe[ N ] = expectedData[ N ] / expectedTotal * observedTotal; 
-            } 
+            double[] xe = new double[nx - 1 + 1 /* for VB to C# conversion */ ];
+            double observedTotal = observed.Sum;
+            double expectedTotal = expected.Sum;
+            bool expectedIsProbability = expectedTotal <= 1.0;
+            for (int N = 0; N <= nx - 1; N++)
+            {
+                xn[N] = observedData[N];
+                xe[N] = expectedData[N] / expectedTotal * observedTotal;
+            }
             //  At this point, we know that both xn and xe add up to observedTotal
-            
-            int df = nx - 1; 
-            
-            int expectedsBelow5 = 0; 
-            for ( int N=0; N <= nx - 1; N++ ) 
-            { 
-                if ( xe[ N ] <= 0 ) 
-                { 
-                    host.Error( "Can not have expected value < = 0.", cgft ); 
-                    throw new TemplateOperationCancelledException(); 
-                } 
-                if ( xe[ N ] < 5 )
-                { 
-                    expectedsBelow5 += 1; 
-                } 
-            } 
-            string w2; 
-            if ( !( ( expectedIsProbability || Convert.ToInt32( expectedTotal ) == Convert.ToInt32( observedTotal ) ) ) ) 
-            { 
-                w2 = Formatting.WRNCOLON + "total expected not equal to total observed"; 
-                host.Error( w2, cgft ); 
-            } 
-            else 
-            { 
-                w2 = ""; 
-            } 
-            string warn = ""; 
-            if ( expectedsBelow5 > 0 )
-            { 
-                warn += Formatting.XRound( 100 * Convert.ToDouble( expectedsBelow5 ) / Convert.ToDouble( nx ), 1 ) + "% of the expected frequencies < 5"; 
-            } 
-            if ( observedTotal < 20 ) 
-            { 
-                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0 )
-                { 
-                    warn += " and "; 
-                } 
-                warn += "total number < 20"; 
-            } 
-            if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0 )
-            { 
-                warn += Formatting.RTFCRLF + Formatting.WRNCOLON; 
-            } 
-            if ( observedTotal < 20 | ( Convert.ToDouble( expectedsBelow5 ) / Convert.ToDouble( nx ) > 0.2 ) )
-            { 
-                warn += "TEST MAY NOT BE RELIABLE"; 
-            } 
-            if ( w2.Length > 0 )
-            { 
-                warn += "  *(" + w2 + ")*"; 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "ti", observed.Title ); 
-            outputParameters.AddOutput( "n",  observedTotal.ToString() ); 
-            
-            double x2 = 0.0; 
-            IList<ParameterBag> frequenciesList = new List<ParameterBag>(); 
-            for ( int i=0; i <= nx - 1; i++ ) 
-            { 
-                ParameterBag frequenciesParameters = new ParameterBag(); 
-                string tx = ( i + 1 ).ToString(); 
-                if ( namesVariable != null ) 
-                { 
-                    tx = namesVariable.Data[ i ]; 
-                } 
-                frequenciesParameters.AddOutput( "x", tx ); 
-                frequenciesParameters.AddOutput( "o",  xn[ i ].ToString() ); 
-                frequenciesParameters.AddOutput( "e", host.RoundU( xe[ i ] ) ); 
-                x2 += ( ( xn[ i ] - xe[ i ] ) * ( xn[ i ] - xe[ i ] ) ) / xe[ i ]; 
-                frequenciesList.Add( frequenciesParameters ); 
-            } 
-            
-            outputParameters.AddOutput( "*frequencies", frequenciesList ); 
-            outputParameters.AddOutput( "chi2", host.RoundU( x2 ) ); 
-            outputParameters.AddOutput( "df",  df.ToString() ); 
-            outputParameters.AddOutput( "p", host.pval( PDF.chivalp( x2, Convert.ToDouble( df ) ) ) ); 
-            if ( warn.Length > 0 ) 
-            { 
-                IList<ParameterBag> warnList = new List<ParameterBag>(); 
-                ParameterBag warnParameters = new ParameterBag(); 
-                warnParameters.AddOutput( "warn", warn ); 
-                warnList.Add( warnParameters ); 
-                outputParameters.AddOutput( "*warn", warnList ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "*warn", null ); 
-            } 
-            
+
+            int df = nx - 1;
+
+            int expectedsBelow5 = 0;
+            for (int N = 0; N <= nx - 1; N++)
+            {
+                if (xe[N] <= 0)
+                {
+                    host.Error("Can not have expected value < = 0.", cgft);
+                    throw new TemplateOperationCancelledException();
+                }
+                if (xe[N] < 5)
+                {
+                    expectedsBelow5 += 1;
+                }
+            }
+            string w2;
+            if (!((expectedIsProbability || Convert.ToInt32(expectedTotal) == Convert.ToInt32(observedTotal))))
+            {
+                w2 = Formatting.WRNCOLON + "total expected not equal to total observed";
+                host.Error(w2, cgft);
+            }
+            else
+            {
+                w2 = "";
+            }
+            string warn = "";
+            if (expectedsBelow5 > 0)
+            {
+                warn += Formatting.XRound(100 * Convert.ToDouble(expectedsBelow5) / Convert.ToDouble(nx), 1) + "% of the expected frequencies < 5";
+            }
+            if (observedTotal < 20)
+            {
+                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0)
+                {
+                    warn += " and ";
+                }
+                warn += "total number < 20";
+            }
+            if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0)
+            {
+                warn += Formatting.RTFCRLF + Formatting.WRNCOLON;
+            }
+            if (observedTotal < 20 | (Convert.ToDouble(expectedsBelow5) / Convert.ToDouble(nx) > 0.2))
+            {
+                warn += "TEST MAY NOT BE RELIABLE";
+            }
+            if (w2.Length > 0)
+            {
+                warn += "  *(" + w2 + ")*";
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("ti", observed.Title);
+            outputParameters.AddOutput("n", observedTotal.ToString());
+
+            double x2 = 0.0;
+            IList<ParameterBag> frequenciesList = new List<ParameterBag>();
+            for (int i = 0; i <= nx - 1; i++)
+            {
+                ParameterBag frequenciesParameters = new ParameterBag();
+                string tx = (i + 1).ToString();
+                if (namesVariable != null)
+                {
+                    tx = namesVariable.Data[i];
+                }
+                frequenciesParameters.AddOutput("x", tx);
+                frequenciesParameters.AddOutput("o", xn[i].ToString());
+                frequenciesParameters.AddOutput("e", host.RoundU(xe[i]));
+                x2 += ((xn[i] - xe[i]) * (xn[i] - xe[i])) / xe[i];
+                frequenciesList.Add(frequenciesParameters);
+            }
+
+            outputParameters.AddOutput("*frequencies", frequenciesList);
+            outputParameters.AddOutput("chi2", host.RoundU(x2));
+            outputParameters.AddOutput("df", df.ToString());
+            outputParameters.AddOutput("p", host.pval(PDF.chivalp(x2, Convert.ToDouble(df))));
+            if (warn.Length > 0)
+            {
+                IList<ParameterBag> warnList = new List<ParameterBag>();
+                ParameterBag warnParameters = new ParameterBag();
+                warnParameters.AddOutput("warn", warn);
+                warnList.Add(warnParameters);
+                outputParameters.AddOutput("*warn", warnList);
+            }
+            else
+            {
+                outputParameters.AddOutput("*warn", null);
+            }
+
             //  Remember a few values in case the user then wants to simulate exact P
-            outputParameters.AddInput( "x2", x2 ); 
-            
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
+            outputParameters.AddInput("x2", x2);
+
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
         //  Old version
         // Public Shared Function rptChiGood(ByVal Host As ITemplateHost, ByVal Parameters As ParameterBag) As StepResult
         //     Dim x() As Double, xn() As Double, xe() As Double, totxe As Double, totob As Double, x2 As Double
@@ -1949,18 +1958,18 @@ namespace StatsDirect.Builtins
         //     Dim w2 As String
         //     Dim warn As String = ""
         //     Dim cgft As String = "Chi-square goodness of fit test"
-        
+
         //     Dim frame As DataFrame = Parameters("data").AsDataFrame
         //     Dim individualOrGrouped As String = Parameters("individualOrGrouped").AsString
         //     Dim isIndividual As Boolean = "I".Equals(individualOrGrouped)
-        
+
         //     Dim chiGFOptions As ChiSquareGoodnessOfFitOptions = New ChiSquareGoodnessOfFitOptions()
-        
+
         //     If isIndividual Then
         //         ' Data is individual observations
         //         Dim soleVariable As ClassifierVariable = frame.Variables(0).AsClassifierVariable
         //         Dim soleData() As Double = soleVariable.Data
-        
+
         //         ReDim x(1)
         //         x(1) = soleData(0)
         //         nx = 1
@@ -1992,12 +2001,12 @@ namespace StatsDirect.Builtins
         //         ' Data is grouped frequencies.  We may or may not have group names.
         //         Dim frequenciesVariable As DoubleVariable = frame.Variables(0).AsDoubleVariable
         //         Dim soleData() As Double = frequenciesVariable.Data
-        
+
         //         Dim namesVariable As StringVariable = Nothing
         //         If Parameters.ContainsKey("names") Then
         //             namesVariable = Parameters("names").AsDataFrame.Variables(0).AsStringVariable
         //         End If
-        
+
         //         nx = frequenciesVariable.Length
         //         ReDim x(nx), xn(nx), xe(nx)
         //         total = 0
@@ -2025,7 +2034,7 @@ namespace StatsDirect.Builtins
         //         Host.Error("Only two categories, use binomial methods such as the single proportion test.", cgft)
         //         Throw New TemplateOperationCancelledException()
         //     End If
-        
+
         //     ' Set up the rest of the options
         //     For N = 1 To nx
         //         chiGFOptions.xn.Add(xn(N))
@@ -2036,7 +2045,7 @@ namespace StatsDirect.Builtins
         //     chiGFOptions.n = total
         //     chiGFOptions.total = total
         //     chiGFOptions.df = df
-        
+
         //     If Not Host.Amend(chiGFOptions, Parameters) Then
         //         Throw New TemplateOperationCancelledException()
         //     End If
@@ -2045,7 +2054,7 @@ namespace StatsDirect.Builtins
         //     For N = 1 To nx
         //         xe(N) = CDbl(chiGFOptions.xe(N - 1))
         //     Next
-        
+
         //     totxe = 0.0
         //     totob = 0.0
         //     OK = 0
@@ -2101,324 +2110,327 @@ namespace StatsDirect.Builtins
         //         outputParameters.AddOutput("*warn", Nothing)
         //     End If
         //     If Err.Number <> 0 Then Host.Error(Err.Description, "Chi-Square Goodness of Fit")
-        
+
         //     Return New StepResult(StepSuccess.Success, outputParameters)
         // End Function
-        
-        public static StepResult RptCrosstabs( ITemplateHost host, ParameterBag parameters ) 
-        { 
+
+        public static StepResult RptCrosstabs(ITemplateHost host, ParameterBag parameters)
+        {
             double[] z = null;
             string zlab = null;
-            int zcats = 0; int r ; int i ;
-            int C ;
+            int zcats = 0; int r; int i;
+            int C;
             bool abort = false;
             bool strat = false;
-            Namevar[] zcat = null; 
-            
+            Namevar[] zcat = null;
+
             //  First classifier
-            DataFrame c1Frame = parameters[ "c1" ].AsDataFrame; 
-            ClassifierVariable c1Variable = c1Frame.Variables[ 0 ].AsClassifierVariable; 
-            int N = c1Variable.Length; 
+            DataFrame c1Frame = parameters["c1"].AsDataFrame;
+            ClassifierVariable c1Variable = c1Frame.Variables[0].AsClassifierVariable;
+            int N = c1Variable.Length;
             int ycats = c1Variable.GroupCount;
             double[] y = new double[N + 1 /* for VB to C# conversion */ ];
-            Namevar[] ycat = new Namevar[ycats + 1 /* for VB to C# conversion */ ]; 
-            string ylab = c1Variable.Title; 
-            int cnt = 0; 
-            for ( i=0; i <= ycats - 1; i++ ) 
-            { 
-                if ( c1Variable.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                { 
-                    cnt = cnt + 1; 
-                    ycat[ cnt ].Ti = c1Variable.Groups[ i ].Label; 
-                    ycat[ cnt ].x = Convert.ToDouble( i ); 
-                } 
-            } 
-            ycats = cnt; 
-            for ( r=1; r <= N; r++ ) 
-            { 
-                y[ r ] = c1Variable.Data[r - 1]; 
-            } 
-            SortName( ycats, ycat, 1 ); 
-            
+            Namevar[] ycat = new Namevar[ycats + 1 /* for VB to C# conversion */ ];
+            string ylab = c1Variable.Title;
+            int cnt = 0;
+            for (i = 0; i <= ycats - 1; i++)
+            {
+                if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
+                {
+                    cnt = cnt + 1;
+                    ycat[cnt].Ti = c1Variable.Groups[i].Label;
+                    ycat[cnt].x = Convert.ToDouble(i);
+                }
+            }
+            ycats = cnt;
+            for (r = 1; r <= N; r++)
+            {
+                y[r] = c1Variable.Data[r - 1];
+            }
+            SortName(ycats, ycat, 1);
+
             //  Second classifier
-            DataFrame c2Frame = parameters[ "c2" ].AsDataFrame; 
-            
+            DataFrame c2Frame = parameters["c2"].AsDataFrame;
+
             // Maybe go to three factors if one column classifier
-            if ( c2Frame.VariableCount == 1 ) 
-            { 
-                strat = parameters.ContainsKey( "c3" ) && parameters[ "c3" ] != null; 
-                if ( strat ) 
-                { 
-                    DataFrame c3Frame = parameters[ "c3" ].AsDataFrame; 
-                    ClassifierVariable c3Variable = c3Frame.Variables[ 0 ].AsClassifierVariable; 
+            if (c2Frame.VariableCount == 1)
+            {
+                strat = parameters.ContainsKey("c3") && parameters["c3"] != null;
+                if (strat)
+                {
+                    DataFrame c3Frame = parameters["c3"].AsDataFrame;
+                    ClassifierVariable c3Variable = c3Frame.Variables[0].AsClassifierVariable;
                     zcats = c3Variable.GroupCount;
                     z = new double[N + 1 /* for VB to C# conversion */];
-                    zcat = new Namevar[zcats + 1 /* for VB to C# conversion */ ]; 
-                    zlab = c3Variable.Title; 
-                    cnt = 0; 
-                    for ( i=0; i <= zcats - 1; i++ ) 
-                    { 
-                        if ( c3Variable.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                        { 
-                            cnt = cnt + 1; 
-                            zcat[ cnt ].Ti = c3Variable.Groups[ i ].Label; 
-                            zcat[ cnt ].x = Convert.ToDouble( i ); 
-                        } 
-                    } 
-                    zcats = cnt; 
-                    for ( r=1; r <= N; r++ ) 
-                    { 
-                        z[ r ] = c3Variable.Data[r - 1]; 
-                    } 
-                    SortName( zcats, zcat, 1 ); 
-                    strat = zcats > 1; 
-                } 
-            } 
-            
-            ParameterBag outputParameters = new ParameterBag(); 
-            List<ParameterBag> columnsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*columns", columnsList ); 
-            for ( C=0; C <= c2Frame.VariableCount - 1; C++ ) 
-            { 
-                ClassifierVariable c2Variable = c2Frame.Variables[ C ].AsClassifierVariable; 
+                    zcat = new Namevar[zcats + 1 /* for VB to C# conversion */ ];
+                    zlab = c3Variable.Title;
+                    cnt = 0;
+                    for (i = 0; i <= zcats - 1; i++)
+                    {
+                        if (c3Variable.Groups[i].Label != Formatting.MISSINGLABEL)
+                        {
+                            cnt = cnt + 1;
+                            zcat[cnt].Ti = c3Variable.Groups[i].Label;
+                            zcat[cnt].x = Convert.ToDouble(i);
+                        }
+                    }
+                    zcats = cnt;
+                    for (r = 1; r <= N; r++)
+                    {
+                        z[r] = c3Variable.Data[r - 1];
+                    }
+                    SortName(zcats, zcat, 1);
+                    strat = zcats > 1;
+                }
+            }
+
+            ParameterBag outputParameters = new ParameterBag();
+            List<ParameterBag> columnsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*columns", columnsList);
+            for (C = 0; C <= c2Frame.VariableCount - 1; C++)
+            {
+                ClassifierVariable c2Variable = c2Frame.Variables[C].AsClassifierVariable;
                 int xcats = c2Variable.GroupCount;
                 double[] x = new double[N + 1 /* for VB to C# conversion */ ];
-                Namevar[] xcat = new Namevar[xcats + 1 /* for VB to C# conversion */ ]; 
-                string xlab = c2Variable.Title; 
-                cnt = 0; 
-                for ( i=0; i <= xcats - 1; i++ ) 
-                { 
-                    if ( c2Variable.Groups[ i ].Label != Formatting.MISSINGLABEL ) 
-                    { 
-                        cnt = cnt + 1; 
-                        xcat[ cnt ].Ti = c2Variable.Groups[ i ].Label; 
-                        xcat[ cnt ].x = Convert.ToDouble( i ); 
-                    } 
-                } 
-                xcats = cnt; 
-                for ( r=1; r <= N; r++ ) 
-                { 
-                    x[ r ] = c2Variable.Data[r - 1]; 
-                } 
-                SortName( xcats, xcat, 1 ); 
-                
-                bool OK = true; 
-                bool wasCancelled; 
-                if ( ycats > 10 || xcats > 10 ) 
-                { 
-                    OK = host.GetBoolean( "Table = " +  ycats.ToString() + " rows by " +  xcats.ToString() + " columns" + "\r\n" + "Continue?", "Crosstabs: Large table warning", false, out wasCancelled ); 
-                    if ( wasCancelled ) 
-                    { 
-                        throw new TemplateOperationCancelledException(); 
-                    } 
-                } 
-                
-                if ( !( x_symmetrical( xcats, xcat, ycats, ycat, false ) ) ) 
-                { 
-                    bool symmetrise = host.GetBoolean( "This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled ); 
-                    if ( wasCancelled ) 
-                    { 
-                        throw new TemplateOperationCancelledException(); 
-                    } 
-                    if ( symmetrise ) 
-                    { 
-                        x_symmetrise_xtab( ref xcats, ref xcat, ref ycats, ref ycat, 1 ); 
-                    } 
-                } 
-                
-                if ( !( OK ) ) 
-                { 
-                    continue; /* TRANSWARNING: check that continue is in correct scope */ 
-                } 
-                
-                ParameterBag columnsParameters = new ParameterBag(); 
-                columnsList.Add( columnsParameters );
-                double tot;
-                int j ;
-                int k ;
-                if ( strat ) 
-                { 
-                    // three factor xtab ---->
-                    double cco = parameters[ "cco" ].AsDouble;
-                    double[, ,] zt = new double[xcats + 1 /* for VB to C# conversion */, ycats + 1 /* for VB to C# conversion */, zcats + 1 /* for VB to C# conversion */]; 
-                    tot = 0.0;
-                    int M ;
-                    for ( i=1; i <= xcats; i++ ) 
-                    { 
-                        for ( j=1; j <= ycats; j++ ) 
-                        { 
-                            for ( M=1; M <= zcats; M++ ) 
-                            { 
-                                for ( k=1; k <= N; k++ ) 
-                                { 
-                                    if ( x[ k ] == xcat[ i ].x & y[ k ] == ycat[ j ].x & z[ k ] == zcat[ M ].x )
-                                    { 
-                                        zt[ i, j, M ] = zt[ i, j, M ] + 1; 
-                                    } 
-                                } 
-                                tot = tot + zt[ i, j, M ]; 
-                            } 
-                        } 
-                    }
-                    y = null; 
-                    z = null; 
-                    //  RTF_LoadTemplate("xtabz.rtf")
-                    List<ParameterBag> xtabzList = new List<ParameterBag>(); 
-                    columnsParameters.AddOutput( "*xtabz", xtabzList ); 
-                    ParameterBag xtabzParameters = new ParameterBag(); 
-                    xtabzList.Add( xtabzParameters ); 
-                    xtabzParameters.AddOutput( "ylab", ylab ); 
-                    xtabzParameters.AddOutput( "xlab", xlab ); 
-                    xtabzParameters.AddOutput( "zlab", zlab ); 
-                    List<ParameterBag> zList = new List<ParameterBag>(); 
-                    xtabzParameters.AddOutput( "*z", zList ); 
-                    for ( M=1; M <= zcats; M++ ) 
-                    { 
-                        ParameterBag zParameters = new ParameterBag(); 
-                        zList.Add( zParameters ); 
-                        zParameters.AddOutput( "z", zcat[ M ].Ti ); 
-                        List<ParameterBag> xList = new List<ParameterBag>(); 
-                        zParameters.AddOutput( "*x", xList ); 
-                        for ( i=1; i <= xcats; i++ ) 
-                        { 
-                            ParameterBag xParameters = new ParameterBag(); 
-                            xList.Add( xParameters ); 
-                            xParameters.AddOutput( "x", xcat[ i ].Ti ); 
-                        } 
-                        List<ParameterBag> yList = new List<ParameterBag>(); 
-                        zParameters.AddOutput( "*y", yList ); 
-                        for ( i=1; i <= ycats; i++ ) 
-                        { 
-                            ParameterBag yParameters = new ParameterBag(); 
-                            yList.Add( yParameters ); 
-                            yParameters.AddOutput( "y", ycat[ i ].Ti ); 
-                            List<ParameterBag> totList = new List<ParameterBag>(); 
-                            yParameters.AddOutput( "*tot", totList ); 
-                            for ( j=1; j <= xcats; j++ ) 
-                            { 
-                                ParameterBag totParameters = new ParameterBag(); 
-                                totList.Add( totParameters ); 
-                                totParameters.AddOutput( "tot", host.RoundU( zt[ j, i, M ] ) ); 
-                            } 
-                        } 
-                    } 
-                    if ( xcats == 2 && ycats == 2 ) 
+                Namevar[] xcat = new Namevar[xcats + 1 /* for VB to C# conversion */ ];
+                string xlab = c2Variable.Title;
+                cnt = 0;
+                for (i = 0; i <= xcats - 1; i++)
+                {
+                    if (c2Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
-                        OptionDescriptor d = new OptionDescriptor {Title = "Which type of study produced your data?"};
+                        cnt = cnt + 1;
+                        xcat[cnt].Ti = c2Variable.Groups[i].Label;
+                        xcat[cnt].x = Convert.ToDouble(i);
+                    }
+                }
+                xcats = cnt;
+                for (r = 1; r <= N; r++)
+                {
+                    x[r] = c2Variable.Data[r - 1];
+                }
+                SortName(xcats, xcat, 1);
 
-                        d.CheckBoxes.Add( new CheckBoxDescriptor( "casecontrol", "Case-control study", false, true ) ); 
-                        d.CheckBoxes.Add( new CheckBoxDescriptor( "cohort", "Cohort study", false, true ) ); 
-                        d.CheckBoxes.Add( new CheckBoxDescriptor( "neither", "Neither", false, true ) ); 
-                        if ( host.DisplayOptions( d ) ) 
-                        { 
-                            if ( d.CheckBoxes[ 0 ].Checked ) 
-                            { 
-                                ParameterBag mantelParameters = TabMh( host, cco, ref zcats, ref zt, ref zcat ); 
-                                if ( mantelParameters != null ) 
-                                { 
-                                    List<ParameterBag> mantelList = new List<ParameterBag>(); 
-                                    columnsParameters.AddOutput( "*mantel", mantelList ); 
-                                    mantelList.Add( mantelParameters ); 
-                                } 
-                            } 
-                            else if ( d.CheckBoxes[ 1 ].Checked ) 
-                            { 
-                                ParameterBag rrmetaParameters = tab_rr( host, cco, ref zcats, ref zt, ref zcat ); 
-                                if ( rrmetaParameters != null ) 
-                                { 
-                                    List<ParameterBag> rrmetaList = new List<ParameterBag>(); 
-                                    columnsParameters.AddOutput( "*rrmeta", rrmetaList ); 
-                                    rrmetaList.Add( rrmetaParameters ); 
-                                } 
-                            } 
-                        } 
-                    } 
-                    else 
-                    { 
-                        ParameterBag gencmhParameters = tab_cmh( host, ref zcats, ref ycats, ref xcats, ref zt, ref ylab, ref xlab, ref zlab ); 
-                        if ( gencmhParameters != null ) 
-                        { 
-                            List<ParameterBag> gencmhList = new List<ParameterBag>(); 
-                            columnsParameters.AddOutput( "*gencmh", gencmhList ); 
-                            gencmhList.Add( gencmhParameters ); 
-                        } 
-                    } 
+                bool OK = true;
+                bool wasCancelled;
+                if (ycats > 10 || xcats > 10)
+                {
+                    OK = host.GetBoolean("Table = " + ycats.ToString() + " rows by " + xcats.ToString() + " columns" + "\r\n" + "Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
+                    if (wasCancelled)
+                    {
+                        throw new TemplateOperationCancelledException();
+                    }
+                }
+
+                if (!(x_symmetrical(xcats, xcat, ycats, ycat, false)))
+                {
+                    bool symmetrise = host.GetBoolean("This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
+                    if (wasCancelled)
+                    {
+                        throw new TemplateOperationCancelledException();
+                    }
+                    if (symmetrise)
+                    {
+                        x_symmetrise_xtab(ref xcats, ref xcat, ref ycats, ref ycat, 1);
+                    }
+                }
+
+                if (!(OK))
+                {
+                    continue; /* TRANSWARNING: check that continue is in correct scope */
+                }
+
+                ParameterBag columnsParameters = new ParameterBag();
+                columnsList.Add(columnsParameters);
+                double tot;
+                int j;
+                int k;
+                if (strat)
+                {
+                    // three factor xtab ---->
+                    double cco = parameters["cco"].AsDouble;
+                    double[, ,] zt = new double[xcats + 1 /* for VB to C# conversion */, ycats + 1 /* for VB to C# conversion */, zcats + 1 /* for VB to C# conversion */];
+                    tot = 0.0;
+                    int M;
+                    for (i = 1; i <= xcats; i++)
+                    {
+                        for (j = 1; j <= ycats; j++)
+                        {
+                            for (M = 1; M <= zcats; M++)
+                            {
+                                for (k = 1; k <= N; k++)
+                                {
+                                    if (x[k] == xcat[i].x & y[k] == ycat[j].x & z[k] == zcat[M].x)
+                                    {
+                                        zt[i, j, M] = zt[i, j, M] + 1;
+                                    }
+                                }
+                                tot = tot + zt[i, j, M];
+                            }
+                        }
+                    }
+                    y = null;
+                    z = null;
+                    //  RTF_LoadTemplate("xtabz.rtf")
+                    List<ParameterBag> xtabzList = new List<ParameterBag>();
+                    columnsParameters.AddOutput("*xtabz", xtabzList);
+                    ParameterBag xtabzParameters = new ParameterBag();
+                    xtabzList.Add(xtabzParameters);
+                    xtabzParameters.AddOutput("ylab", ylab);
+                    xtabzParameters.AddOutput("xlab", xlab);
+                    xtabzParameters.AddOutput("zlab", zlab);
+                    List<ParameterBag> zList = new List<ParameterBag>();
+                    xtabzParameters.AddOutput("*z", zList);
+                    for (M = 1; M <= zcats; M++)
+                    {
+                        ParameterBag zParameters = new ParameterBag();
+                        zList.Add(zParameters);
+                        zParameters.AddOutput("z", zcat[M].Ti);
+                        List<ParameterBag> xList = new List<ParameterBag>();
+                        zParameters.AddOutput("*x", xList);
+                        for (i = 1; i <= xcats; i++)
+                        {
+                            ParameterBag xParameters = new ParameterBag();
+                            xList.Add(xParameters);
+                            xParameters.AddOutput("x", xcat[i].Ti);
+                        }
+                        List<ParameterBag> yList = new List<ParameterBag>();
+                        zParameters.AddOutput("*y", yList);
+                        for (i = 1; i <= ycats; i++)
+                        {
+                            ParameterBag yParameters = new ParameterBag();
+                            yList.Add(yParameters);
+                            yParameters.AddOutput("y", ycat[i].Ti);
+                            List<ParameterBag> totList = new List<ParameterBag>();
+                            yParameters.AddOutput("*tot", totList);
+                            for (j = 1; j <= xcats; j++)
+                            {
+                                ParameterBag totParameters = new ParameterBag();
+                                totList.Add(totParameters);
+                                totParameters.AddOutput("tot", host.RoundU(zt[j, i, M]));
+                            }
+                        }
+                    }
+                    if (xcats == 2 && ycats == 2)
+                    {
+                        OptionDescriptor d = new OptionDescriptor { Title = "Which type of study produced your data?" };
+
+                        d.CheckBoxes.Add(new CheckBoxDescriptor("casecontrol", "Case-control study", false, true));
+                        d.CheckBoxes.Add(new CheckBoxDescriptor("cohort", "Cohort study", false, true));
+                        d.CheckBoxes.Add(new CheckBoxDescriptor("neither", "Neither", false, true));
+                        if (host.DisplayOptions(d))
+                        {
+                            if (d.CheckBoxes[0].Checked)
+                            {
+                                ParameterBag mantelParameters = TabMh(host, cco, ref zcats, ref zt, ref zcat);
+                                if (mantelParameters != null)
+                                {
+                                    List<ParameterBag> mantelList = new List<ParameterBag>();
+                                    columnsParameters.AddOutput("*mantel", mantelList);
+                                    mantelList.Add(mantelParameters);
+                                }
+                            }
+                            else if (d.CheckBoxes[1].Checked)
+                            {
+                                ParameterBag rrmetaParameters = tab_rr(host, cco, ref zcats, ref zt, ref zcat);
+                                if (rrmetaParameters != null)
+                                {
+                                    List<ParameterBag> rrmetaList = new List<ParameterBag>();
+                                    columnsParameters.AddOutput("*rrmeta", rrmetaList);
+                                    rrmetaList.Add(rrmetaParameters);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ParameterBag gencmhParameters = tab_cmh(host, ref zcats, ref ycats, ref xcats, ref zt, ref ylab, ref xlab, ref zlab);
+                        if (gencmhParameters != null)
+                        {
+                            List<ParameterBag> gencmhList = new List<ParameterBag>();
+                            columnsParameters.AddOutput("*gencmh", gencmhList);
+                            gencmhList.Add(gencmhParameters);
+                        }
+                    }
                     // three factor  <-----
-                } 
-                else 
-                { 
+                }
+                else
+                {
                     // two factor xtab ---->
-                    double cco = parameters[ "cco" ].AsDouble;
-                    double[,] xt = new double[xcats + 1 /* for VB to C# conversion */, ycats + 1 /* for VB to C# conversion */]; 
-                    tot = 0.0; 
-                    for ( i=1; i <= xcats; i++ ) 
-                    { 
-                        for ( j=1; j <= ycats; j++ ) 
-                        { 
-                            for ( k=1; k <= N; k++ ) 
-                            { 
-                                if ( x[ k ] == xcat[ i ].x & y[ k ] == ycat[ j ].x )
-                                { 
-                                    xt[ i, j ] += 1; 
-                                } 
-                            } 
-                            tot += xt[ i, j ]; 
-                        } 
-                    } 
+                    double cco = parameters["cco"].AsDouble;
+                    double[,] xt = new double[xcats + 1 /* for VB to C# conversion */, ycats + 1 /* for VB to C# conversion */];
+                    tot = 0.0;
+                    for (i = 1; i <= xcats; i++)
+                    {
+                        for (j = 1; j <= ycats; j++)
+                        {
+                            for (k = 1; k <= N; k++)
+                            {
+                                if (x[k] == xcat[i].x & y[k] == ycat[j].x)
+                                {
+                                    xt[i, j] += 1;
+                                }
+                            }
+                            tot += xt[i, j];
+                        }
+                    }
                     //  RTF_LoadTemplate("xtab.rtf")
-                    List<ParameterBag> xtabList = new List<ParameterBag>(); 
-                    columnsParameters.AddOutput( "*xtab", xtabList ); 
-                    ParameterBag xtabParameters = new ParameterBag(); 
-                    xtabList.Add( xtabParameters ); 
-                    xtabParameters.AddOutput( "ylab", ylab ); 
-                    xtabParameters.AddOutput( "xlab", xlab ); 
-                    List<ParameterBag> xList = new List<ParameterBag>(); 
-                    xtabParameters.AddOutput( "*x", xList ); 
-                    for ( i=1; i <= xcats; i++ ) 
-                    { 
-                        ParameterBag xParameters = new ParameterBag(); 
-                        xList.Add( xParameters ); 
-                        xParameters.AddOutput( "x", xcat[ i ].Ti ); 
-                    } 
-                    List<ParameterBag> yList = new List<ParameterBag>(); 
-                    xtabParameters.AddOutput( "*y", yList ); 
-                    for ( i=1; i <= ycats; i++ ) 
-                    { 
-                        ParameterBag yParameters = new ParameterBag(); 
-                        yList.Add( yParameters ); 
-                        yParameters.AddOutput( "y", ycat[ i ].Ti ); 
-                        List<ParameterBag> totList = new List<ParameterBag>(); 
-                        yParameters.AddOutput( "*tot", totList ); 
-                        for ( j=1; j <= xcats; j++ ) 
-                        { 
-                            ParameterBag totParameters = new ParameterBag(); 
-                            totList.Add( totParameters ); 
-                            totParameters.AddOutput( "tot", host.RoundU( xt[ j, i ] ) ); 
-                        } 
-                    } 
-                    List<ParameterBag> chirxcList = new List<ParameterBag>(); 
-                    columnsParameters.AddOutput( "*chirxc", chirxcList ); 
-                    if ( tot > 0.0 & !( abort ) ) 
-                    { 
+                    List<ParameterBag> xtabList = new List<ParameterBag>();
+                    columnsParameters.AddOutput("*xtab", xtabList);
+                    ParameterBag xtabParameters = new ParameterBag();
+                    xtabList.Add(xtabParameters);
+                    xtabParameters.AddOutput("ylab", ylab);
+                    xtabParameters.AddOutput("xlab", xlab);
+                    List<ParameterBag> xList = new List<ParameterBag>();
+                    xtabParameters.AddOutput("*x", xList);
+                    for (i = 1; i <= xcats; i++)
+                    {
+                        ParameterBag xParameters = new ParameterBag();
+                        xList.Add(xParameters);
+                        xParameters.AddOutput("x", xcat[i].Ti);
+                    }
+                    List<ParameterBag> yList = new List<ParameterBag>();
+                    xtabParameters.AddOutput("*y", yList);
+                    for (i = 1; i <= ycats; i++)
+                    {
+                        ParameterBag yParameters = new ParameterBag();
+                        yList.Add(yParameters);
+                        yParameters.AddOutput("y", ycat[i].Ti);
+                        List<ParameterBag> totList = new List<ParameterBag>();
+                        yParameters.AddOutput("*tot", totList);
+                        for (j = 1; j <= xcats; j++)
+                        {
+                            ParameterBag totParameters = new ParameterBag();
+                            totList.Add(totParameters);
+                            totParameters.AddOutput("tot", host.RoundU(xt[j, i]));
+                        }
+                    }
+                    List<ParameterBag> chirxcList = new List<ParameterBag>();
+                    columnsParameters.AddOutput("*chirxc", chirxcList);
+                    if (tot > 0.0 & !(abort))
+                    {
                         //  RTF_LoadTemplate("chirxc.rtf") Then
                         double[,] w;
-                        MathDbl.transpose_cr_rc( xt, out w ); 
-                        bool Ask = ( C == 0 ); 
+                        MathDbl.transpose_cr_rc(xt, out w);
+                        bool doExact = parameters["doExact"].AsBoolean;
+                        bool pc = parameters["show_pc"].AsBoolean;
+                        bool xp = parameters["xp"].AsBoolean;
+                        bool cs = parameters["cs"].AsBoolean;
+                        bool xs = parameters["xs"].AsBoolean;
+                        bool specifyScores = parameters["specify_scores"].AsBoolean;
+
                         // w() was passed to a FORTRAN routine so must redim to (1 to c, 1 to r)
-                        ParameterBag chirxcParameters = s_chi( host, ref cco, w, ycats, xcats, out abort, Ask ).ParameterBag; 
-                        if ( !( abort ) ) 
-                        { 
-                            chirxcList.Add( chirxcParameters ); 
-                        } 
-                    } 
+                        ParameterBag chirxcParameters = s_chi(host, ref cco, w, ycats, xcats, doExact, pc, xp, cs, xs, specifyScores).ParameterBag;
+                        chirxcList.Add(chirxcParameters);
+                    }
                 } // two factor <-----
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static ParameterBag tab_cmh( ITemplateHost host, ref int istrata, ref int irows, ref int icols, ref double[,,] zt, ref string ylab, ref string xlab, ref string zlab ) 
-        { 
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static ParameterBag tab_cmh(ITemplateHost host, ref int istrata, ref int irows, ref int icols, ref double[, ,] zt, ref string ylab, ref string xlab, ref string zlab)
+        {
             int i;
             int ierr;
             double x21; double df1; double P1; double x22; double df2; double P2; double x23; double df3; double P3;
@@ -2426,139 +2438,139 @@ namespace StatsDirect.Builtins
 
             double[] tbl = new double[istrata * irows * icols + 1 /* for VB to C# conversion */ ];
             double[] row_score = new double[icols + 1 /* for VB to C# conversion */ ];
-            double[] col_score = new double[irows + 1 /* for VB to C# conversion */ ]; 
-            int ctr = 0; 
-            double ntot = 0; 
-            string cscores = ""; 
-            string rscores = ""; 
-            for ( i=1; i <= icols; i++ )
+            double[] col_score = new double[irows + 1 /* for VB to C# conversion */ ];
+            int ctr = 0;
+            double ntot = 0;
+            string cscores = "";
+            string rscores = "";
+            for (i = 1; i <= icols; i++)
             {
                 int j;
-                for ( j=1; j <= istrata; j++ )
+                for (j = 1; j <= istrata; j++)
                 {
                     int k;
-                    for ( k=1; k <= irows; k++ ) 
-                    { 
-                        ctr = ctr + 1; 
-                        tbl[ ctr ] = zt[ i, k, j ]; 
-                        ntot = ntot + tbl[ ctr ]; 
+                    for (k = 1; k <= irows; k++)
+                    {
+                        ctr = ctr + 1;
+                        tbl[ctr] = zt[i, k, j];
+                        ntot = ntot + tbl[ctr];
                     }
                 }
             }
-            for ( i=1; i <= irows; i++ ) 
-            { 
-                col_score[ i ] = Convert.ToDouble( i ); 
-            } 
-            for ( i=1; i <= icols; i++ ) 
-            { 
-                row_score[ i ] = Convert.ToDouble( i ); 
-            } 
+            for (i = 1; i <= irows; i++)
+            {
+                col_score[i] = Convert.ToDouble(i);
+            }
+            for (i = 1; i <= icols; i++)
+            {
+                row_score[i] = Convert.ToDouble(i);
+            }
             // ask for scores --->
-            ScoresOptions sOptions = new ScoresOptions {Title1 = ylab, Title2 = xlab};
-            for ( i=1; i <= icols; i++ ) 
-            { 
-                sOptions.Values2.Add( row_score[ i ] ); 
-            } 
-            for ( i=1; i <= irows; i++ ) 
-            { 
-                sOptions.Values1.Add( col_score[ i ] ); 
-            } 
-            bool userOk = host.Amend( sOptions, null ); 
-            if ( userOk ) 
-            { 
-                for ( i=1; i <= icols; i++ ) 
-                { 
-                    row_score[ i ] = sOptions.Values2[ i - 1 ]; 
-                } 
-                for ( i=1; i <= irows; i++ ) 
-                { 
-                    col_score[ i ] = sOptions.Values1[ i - 1 ]; 
-                } 
-            } 
-            else 
-            { 
-                return null; 
-            } 
+            ScoresOptions sOptions = new ScoresOptions { Title1 = ylab, Title2 = xlab };
+            for (i = 1; i <= icols; i++)
+            {
+                sOptions.Values2.Add(row_score[i]);
+            }
+            for (i = 1; i <= irows; i++)
+            {
+                sOptions.Values1.Add(col_score[i]);
+            }
+            bool userOk = host.Amend(sOptions, null);
+            if (userOk)
+            {
+                for (i = 1; i <= icols; i++)
+                {
+                    row_score[i] = sOptions.Values2[i - 1];
+                }
+                for (i = 1; i <= irows; i++)
+                {
+                    col_score[i] = sOptions.Values1[i - 1];
+                }
+            }
+            else
+            {
+                return null;
+            }
             // <---
-            gencmh( istrata, irows, icols, tbl, row_score, col_score, 3, out x21, out df1, out P1, out ierr ); 
-            if ( ierr != 0 ) 
-            { 
-                x21 = Constant.MISSING; 
-                P1 = Constant.MISSING; 
-            } 
-            gencmh( istrata, irows, icols, tbl, row_score, col_score, 2, out x22, out df2, out P2, out ierr ); 
-            if ( ierr != 0 ) 
-            { 
-                x22 = Constant.MISSING; 
-                P2 = Constant.MISSING; 
-            } 
-            gencmh( istrata, irows, icols, tbl, row_score, col_score, 1, out x23, out df3, out P3, out ierr ); 
-            if ( ierr != 0 ) 
-            { 
-                x23 = Constant.MISSING; 
-                P3 = Constant.MISSING; 
-            } 
+            gencmh(istrata, irows, icols, tbl, row_score, col_score, 3, out x21, out df1, out P1, out ierr);
+            if (ierr != 0)
+            {
+                x21 = Constant.MISSING;
+                P1 = Constant.MISSING;
+            }
+            gencmh(istrata, irows, icols, tbl, row_score, col_score, 2, out x22, out df2, out P2, out ierr);
+            if (ierr != 0)
+            {
+                x22 = Constant.MISSING;
+                P2 = Constant.MISSING;
+            }
+            gencmh(istrata, irows, icols, tbl, row_score, col_score, 1, out x23, out df3, out P3, out ierr);
+            if (ierr != 0)
+            {
+                x23 = Constant.MISSING;
+                P3 = Constant.MISSING;
+            }
             //  note transposition of row and column scores
             //  row scores are scores for each column entry in the row and vice versa
-            for ( i=1; i <= icols; i++ )
+            for (i = 1; i <= icols; i++)
             {
                 ender = i < icols ? ", " : "";
-                cscores = cscores +  row_score[ i ].ToString() + ender;
+                cscores = cscores + row_score[i].ToString() + ender;
             }
-            for ( i=1; i <= irows; i++ )
+            for (i = 1; i <= irows; i++)
             {
                 ender = i < irows ? ", " : "";
-                rscores = rscores +  col_score[ i ].ToString() + ender;
+                rscores = rscores + col_score[i].ToString() + ender;
             }
             //  RTF_LoadTemplate("gencmh.rtf")
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "ylab", ylab ); 
-            outputParameters.AddOutput( "xlab", xlab ); 
-            outputParameters.AddOutput( "zlab", zlab ); 
-            outputParameters.AddOutput( "rscore", rscores ); 
-            outputParameters.AddOutput( "cscore", cscores ); 
-            outputParameters.AddOutput( "x21", host.RoundU( x21 ) ); 
-            outputParameters.AddOutput( "df1",  Convert.ToInt64( df1 ).ToString() ); 
-            outputParameters.AddOutput( "p1", host.pval( P1 ) ); 
-            outputParameters.AddOutput( "x22", host.RoundU( x22 ) ); 
-            outputParameters.AddOutput( "df2",  Convert.ToInt64( df2 ).ToString() ); 
-            outputParameters.AddOutput( "p2", host.pval( P2 ) ); 
-            outputParameters.AddOutput( "x23", host.RoundU( x23 ) ); 
-            outputParameters.AddOutput( "df3",  Convert.ToInt64( df3 ).ToString() ); 
-            outputParameters.AddOutput( "p3", host.pval( P3 ) ); 
-            outputParameters.AddOutput( "nt",  Convert.ToInt64( ntot ).ToString() ); 
-            return outputParameters; 
-        } 
-        
-        
-        private static ParameterBag tab_rr( ITemplateHost host, double cco, ref int zcats, ref double[,,] zt, ref Namevar[] zcat ) 
-        { 
-            double dsul = 0; double dsll = 0; 
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("ylab", ylab);
+            outputParameters.AddOutput("xlab", xlab);
+            outputParameters.AddOutput("zlab", zlab);
+            outputParameters.AddOutput("rscore", rscores);
+            outputParameters.AddOutput("cscore", cscores);
+            outputParameters.AddOutput("x21", host.RoundU(x21));
+            outputParameters.AddOutput("df1", Convert.ToInt64(df1).ToString());
+            outputParameters.AddOutput("p1", host.pval(P1));
+            outputParameters.AddOutput("x22", host.RoundU(x22));
+            outputParameters.AddOutput("df2", Convert.ToInt64(df2).ToString());
+            outputParameters.AddOutput("p2", host.pval(P2));
+            outputParameters.AddOutput("x23", host.RoundU(x23));
+            outputParameters.AddOutput("df3", Convert.ToInt64(df3).ToString());
+            outputParameters.AddOutput("p3", host.pval(P3));
+            outputParameters.AddOutput("nt", Convert.ToInt64(ntot).ToString());
+            return outputParameters;
+        }
+
+
+        private static ParameterBag tab_rr(ITemplateHost host, double cco, ref int zcats, ref double[, ,] zt, ref Namevar[] zcat)
+        {
+            double dsul = 0; double dsll = 0;
             double dsx2 = 0; double dsrr = 0; double qc = 0; double sk = 0; double x2rmh = 0; double ul = 0; double ll = 0; double rmh = 0; double cit;
             double isq; double llisq; double ulisq; double tausq = 0;
             int i;
             int realk; int ierr;
             int fault;
-            if ( cco > 0 )
+            if (cco > 0)
             {
-                double P = ( 1.0 - cco ) / 2.0;
-                cit = PDF.gauinv( 1.0 - P, out fault );
+                double P = (1.0 - cco) / 2.0;
+                cit = PDF.gauinv(1.0 - P, out fault);
             }
-            else 
-            { 
-                cco = 0.95; 
-                cit = PDF.gauinv( 0.975, out fault ); 
-            } 
-            
+            else
+            {
+                cco = 0.95;
+                cit = PDF.gauinv(0.975, out fault);
+            }
+
             int k = zcats;
-            string[] title = new string[k + 1 /* for VB to C# conversion */ ]; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                title[ i ] = zcat[ i ].Ti; 
-                if ( title[i].Length > 50)
+            string[] title = new string[k + 1 /* for VB to C# conversion */ ];
+            for (i = 1; i <= k; i++)
+            {
+                title[i] = zcat[i].Ti;
+                if (title[i].Length > 50)
                 {
-                    title[i] = title[i].Substring(0, 50); 
-                } 
+                    title[i] = title[i].Substring(0, 50);
+                }
             }
 
             double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
@@ -2572,154 +2584,149 @@ namespace StatsDirect.Builtins
             bool[] uerr = new bool[k + 1 /* for VB to C# conversion */];
             bool[] cced = new bool[k + 1 /* for VB to C# conversion */];
             double[] axll = new double[k + 1 /* for VB to C# conversion */];
-            double[] axul = new double[k + 1 /* for VB to C# conversion */]; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                o[ i, 1 ] = zt[ 1, 1, i ]; 
-                o[ i, 3 ] = zt[ 1, 2, i ]; 
-                o[ i, 2 ] = zt[ 2, 1, i ]; 
-                o[ i, 4 ] = zt[ 2, 2, i ]; 
-            } 
-            
-            Meta.relriskma( host, ref k, out realk, ref o, ref rmh, ref ll, ref ul, ref x2rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr ); 
-            if ( ierr == -1 ) 
-            { 
-                throw new InvalidDataException(); 
-            } 
-            
+            double[] axul = new double[k + 1 /* for VB to C# conversion */];
+            for (i = 1; i <= k; i++)
+            {
+                o[i, 1] = zt[1, 1, i];
+                o[i, 3] = zt[1, 2, i];
+                o[i, 2] = zt[2, 1, i];
+                o[i, 4] = zt[2, 2, i];
+            }
+
+            Meta.relriskma(host, ref k, out realk, ref o, ref rmh, ref ll, ref ul, ref x2rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
+            if (ierr == -1)
+            {
+                throw new InvalidDataException();
+            }
+
             //  RTF_LoadTemplate("rrmeta.rtf")
-            ParameterBag outputParameters = new ParameterBag(); 
-            
-            List<ParameterBag> inputsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*inputs", inputsList ); 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                ParameterBag inputsParameters = new ParameterBag(); 
-                inputsList.Add( inputsParameters ); 
-                inputsParameters.AddOutput( "st",  i.ToString() ); 
-                inputsParameters.AddOutput( "a", o[ i, 1 ].ToString() ); 
-                inputsParameters.AddOutput( "b", o[ i, 2 ].ToString() ); 
-                inputsParameters.AddOutput( "c", o[ i, 3 ].ToString() );
-                inputsParameters.AddOutput("d", o[i, 4].ToString()); 
-                inputsParameters.AddOutput( "lb", title[ i ] ); 
-            } 
-            outputParameters.AddOutput( "pc", Formatting.XRound( cco * 100, 2 ) );
+            ParameterBag outputParameters = new ParameterBag();
+
+            List<ParameterBag> inputsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*inputs", inputsList);
+            for (i = 1; i <= k; i++)
+            {
+                ParameterBag inputsParameters = new ParameterBag();
+                inputsList.Add(inputsParameters);
+                inputsParameters.AddOutput("st", i.ToString());
+                inputsParameters.AddOutput("a", o[i, 1].ToString());
+                inputsParameters.AddOutput("b", o[i, 2].ToString());
+                inputsParameters.AddOutput("c", o[i, 3].ToString());
+                inputsParameters.AddOutput("d", o[i, 4].ToString());
+                inputsParameters.AddOutput("lb", title[i]);
+            }
+            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "Koopman" : "approximate");
-            List<ParameterBag> risksList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*risks", risksList ); 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                ParameterBag risksParameters = new ParameterBag(); 
-                risksList.Add( risksParameters ); 
-                risksParameters.AddOutput( "st",  i.ToString() ); 
-                risksParameters.AddOutput( "rr", host.RoundU( rkr[ i ] ) ); 
-                risksParameters.AddOutput( "lci", host.RoundU( rkrl[ i ] ) ); 
-                risksParameters.AddOutput( "uci", host.RoundU( rkru[ i ] ) ); 
-                risksParameters.AddOutput( "wt", host.RoundU( 100 * rkw[ i ] / Formatting.dsum( rkw, 1 ) ) ); 
-                risksParameters.AddOutput( "dwt", host.RoundU( 100 * dsw[ i ] / Formatting.dsum( dsw, 1 ) ) ); 
-                risksParameters.AddOutput( "lb", Meta.get_meta_label( host, o, i, true, cced, title ) ); 
-            } 
-            outputParameters.AddOutput( "rr", host.RoundU( rmh ) ); 
-            outputParameters.AddOutput( "pc", Formatting.XRound( cco * 100, 2 ) ); 
-            outputParameters.AddOutput( "from", host.RoundU( ll ) ); 
-            outputParameters.AddOutput( "to", host.RoundU( ul ) ); 
-            
-            outputParameters.AddOutput( "x2", host.RoundU( x2rmh ) ); 
-            outputParameters.AddOutput( "df",  1.ToString() ); 
-            outputParameters.AddOutput( "xp", host.pval( PDF.chivalp( x2rmh, 1.0 ) ) ); 
-            
-            outputParameters.AddOutput( "qc", host.RoundU( qc ) ); 
-            outputParameters.AddOutput( "df",  (realk - 1).ToString() ); 
-            outputParameters.AddOutput( "xp", host.pval( PDF.chivalp( qc, Convert.ToDouble( realk - 1 ) ) ) ); 
-            outputParameters.AddOutput( "tausq", host.RoundU( tausq ) ); 
-            Meta.isquare_ncc( host, qc, realk, cco, cit, out isq, out llisq, out ulisq ); 
-            outputParameters.AddOutput( "isq", Formatting.XRound( isq, 1 ) ); 
-            outputParameters.AddOutput( "pc1", Formatting.XRound( cco * 100, 1 ) ); 
-            outputParameters.AddOutput( "llisq", Formatting.XRound( llisq, 1 ) ); 
-            outputParameters.AddOutput( "ulisq", Formatting.XRound( ulisq, 1 ) ); 
-            
-            outputParameters.AddOutput( "dsrr", host.RoundU( dsrr ) ); 
-            outputParameters.AddOutput( "dsll", host.RoundU( dsll ) ); 
-            outputParameters.AddOutput( "dsul", host.RoundU( dsul ) ); 
-            outputParameters.AddOutput( "dsx2", host.RoundU( dsx2 ) ); 
-            outputParameters.AddOutput( "df_ds",  1.ToString() ); 
-            outputParameters.AddOutput( "xp_ds", host.pval( PDF.chivalp( dsx2, 1.0 ) ) ); 
-            
-            Meta.get_aproxrr_ci( host, o, k, cit, axll, axul ); 
-            
-            IList<ParameterBag> eggerList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*egger", eggerList ); 
-            ParameterBag eggerParameters = new ParameterBag(); 
-            eggerList.Add( eggerParameters ); 
-            Meta.x_metabias( host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log ); 
-            
-            IList<ParameterBag> horboldList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*horbold", horboldList ); 
-            ParameterBag horboldParameters = new ParameterBag(); 
-            horboldList.Add( horboldParameters ); 
-            Meta.x_mod_metabias( host, horboldParameters, o, k, cco, 2 ); 
-            
-            IList<ParameterBag> chartList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*chart", chartList ); 
-            ParameterBag chartParameters; 
-            
-            ChartRenderer ch; 
-            System.IO.Stream metaStream; 
-            if ( k > 3 ) 
-            { 
-                ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                metaStream = new System.IO.MemoryStream(); 
-                ch.Plot_Bias_MA( metaStream, host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false ); 
-                metaStream.Position = 0; 
-                chartParameters = new ParameterBag(); 
-                chartList.Add( chartParameters ); 
-                chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            } 
-            
-            ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            metaStream = new System.IO.MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            ch.PlotLAbbe( k, o, rmh ); 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            chartParameters = new ParameterBag(); 
-            chartList.Add( chartParameters ); 
-            chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            
-            if ( sk != 0 ) 
-            { 
-                ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                metaStream = new System.IO.MemoryStream();
+            List<ParameterBag> risksList = new List<ParameterBag>();
+            outputParameters.AddOutput("*risks", risksList);
+            for (i = 1; i <= k; i++)
+            {
+                ParameterBag risksParameters = new ParameterBag();
+                risksList.Add(risksParameters);
+                risksParameters.AddOutput("st", i.ToString());
+                risksParameters.AddOutput("rr", host.RoundU(rkr[i]));
+                risksParameters.AddOutput("lci", host.RoundU(rkrl[i]));
+                risksParameters.AddOutput("uci", host.RoundU(rkru[i]));
+                risksParameters.AddOutput("wt", host.RoundU(100 * rkw[i] / Formatting.dsum(rkw, 1)));
+                risksParameters.AddOutput("dwt", host.RoundU(100 * dsw[i] / Formatting.dsum(dsw, 1)));
+                risksParameters.AddOutput("lb", Meta.get_meta_label(host, o, i, true, cced, title));
+            }
+            outputParameters.AddOutput("rr", host.RoundU(rmh));
+            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
+            outputParameters.AddOutput("from", host.RoundU(ll));
+            outputParameters.AddOutput("to", host.RoundU(ul));
+
+            outputParameters.AddOutput("x2", host.RoundU(x2rmh));
+            outputParameters.AddOutput("df", 1.ToString());
+            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(x2rmh, 1.0)));
+
+            outputParameters.AddOutput("qc", host.RoundU(qc));
+            outputParameters.AddOutput("df", (realk - 1).ToString());
+            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
+            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            Meta.isquare_ncc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
+            outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
+            outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
+            outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
+            outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
+
+            outputParameters.AddOutput("dsrr", host.RoundU(dsrr));
+            outputParameters.AddOutput("dsll", host.RoundU(dsll));
+            outputParameters.AddOutput("dsul", host.RoundU(dsul));
+            outputParameters.AddOutput("dsx2", host.RoundU(dsx2));
+            outputParameters.AddOutput("df_ds", 1.ToString());
+            outputParameters.AddOutput("xp_ds", host.pval(PDF.chivalp(dsx2, 1.0)));
+
+            Meta.get_aproxrr_ci(host, o, k, cit, axll, axul);
+
+            IList<ParameterBag> eggerList = new List<ParameterBag>();
+            outputParameters.AddOutput("*egger", eggerList);
+            ParameterBag eggerParameters = new ParameterBag();
+            eggerList.Add(eggerParameters);
+            Meta.x_metabias(host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
+
+            IList<ParameterBag> horboldList = new List<ParameterBag>();
+            outputParameters.AddOutput("*horbold", horboldList);
+            ParameterBag horboldParameters = new ParameterBag();
+            horboldList.Add(horboldParameters);
+            Meta.x_mod_metabias(host, horboldParameters, o, k, cco, 2);
+
+            IList<ParameterBag> chartList = new List<ParameterBag>();
+            outputParameters.AddOutput("*chart", chartList);
+            ParameterBag chartParameters;
+
+            ChartRenderer ch;
+            MemoryStream metaStream;
+            if (k > 3)
+            {
+                ch = new ChartRenderer(ChartDefinition.Empty());
+                using (metaStream = new MemoryStream())
+                {
+                    ch.Plot_Bias_MA(metaStream, host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false);
+                    chartParameters = new ParameterBag();
+                    chartList.Add(chartParameters);
+                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
+            }
+
+            ch = new ChartRenderer(ChartDefinition.Empty());
+            using (metaStream = new MemoryStream())
+            {
+                ch.StartMetafile(metaStream);
+                ch.PlotLAbbe(k, o, rmh);
+                ch.EndMetafile();
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+            }
+
+            if (sk != 0)
+            {
                 bool scrap;
-                ch.Plot_MH( metaStream, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap, null ); 
-                metaStream.Position = 0; 
-                chartParameters = new ParameterBag(); 
-                chartList.Add( chartParameters ); 
-                chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-                
-                ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                metaStream = new System.IO.MemoryStream(); 
-                ch.Plot_MH( metaStream, k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out scrap, null ); 
-                metaStream.Position = 0; 
-                chartParameters = new ParameterBag(); 
-                chartList.Add( chartParameters ); 
-                chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            } 
-            return outputParameters; 
+                ch = new ChartRenderer(ChartDefinition.Empty());
+                using (metaStream = new MemoryStream())
+                {
+                    ch.Plot_MH(metaStream, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap, null);
+                    chartParameters = new ParameterBag();
+                    chartList.Add(chartParameters);
+                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
+
+                ch = new ChartRenderer(ChartDefinition.Empty());
+                using (metaStream = new MemoryStream())
+                {
+                    ch.Plot_MH(metaStream, k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out scrap, null);
+                    chartParameters = new ParameterBag();
+                    chartList.Add(chartParameters);
+                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
+            }
+            return outputParameters;
         }
 
-        static bool called_before;
-        static bool last_pc;
-        static bool last_xp;
-        static bool last_cs;
-        static bool last_xs;
-        static bool last_do_exact;
-        static bool last_specify_scores; 
-            
-        public static StepResult s_chi( ITemplateHost host, ref double cco, double[,] o, int rows, int cols, out bool abort, bool ask ) 
+        public static StepResult s_chi(ITemplateHost host, ref double cco, double[,] o, int rows, int cols, bool doExact, bool pc, bool xp, bool cs, bool xs, bool specifyScores)
         {
             int ierr;
-            bool specifyScores; bool doExact; bool pc; bool cs; bool xp; bool xs; 
             double ul; double ll; double P; double C1;
             double P2 = 0; double P1 = 0;
             double vt = 0;
@@ -2732,716 +2739,674 @@ namespace StatsDirect.Builtins
             double[] rtot = new double[rows + 1 /* for VB to C# conversion */ ];
             double[] ctot = new double[cols + 1 /* for VB to C# conversion */ ];
             double[] row_score = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] col_score = new double[cols + 1 /* for VB to C# conversion */ ]; 
-            
-            if ( cco >= 1.0 | cco <= 0.0 )
-            { 
-                cco = 0.95; 
-            } 
-            double cit = PDF.gauinv( 1.0 - ( 1.0 - cco ) / 2.0, out fault ); 
-            
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                row_score[ r ] = r; 
-            } 
-            for ( int C=1; C <= cols; C++ ) 
-            { 
-                col_score[ C ] = C; 
-            } 
-            bool sparse = false; 
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    if ( o[ r, C ] < 10.0 )
-                    { 
-                        sparse = true; 
-                    } 
-                } 
-            } 
-            if ( ask ) 
-            { 
-                if ( !( called_before ) ) 
-                { 
-                    last_pc = true; 
-                    last_xp = false; 
-                    last_cs = false; 
-                    last_xs = false; 
-                    called_before = true; 
-                }
+            double[] col_score = new double[cols + 1 /* for VB to C# conversion */ ];
 
-                OptionDescriptor d = new OptionDescriptor {Title = "Select options for contingency table analysis"};
-                d.CheckBoxes.Add( new CheckBoxDescriptor( "exact", "Try exact test", sparse, false ) ); 
-                d.CheckBoxes.Add( new CheckBoxDescriptor( "exact", "Show percentages", last_pc, false ) ); 
-                d.CheckBoxes.Add( new CheckBoxDescriptor( "exact", "Show expected counts", last_xp, false ) ); 
-                d.CheckBoxes.Add( new CheckBoxDescriptor( "exact", "Show cell chi-square", last_cs, false ) ); 
-                d.CheckBoxes.Add( new CheckBoxDescriptor( "exact", "Show trend scores", last_xs, false ) ); 
-                d.CheckBoxes.Add( new CheckBoxDescriptor( "exact", "Specify trend scores", last_specify_scores, false ) ); 
-                if ( host.DisplayOptions( d ) ) 
-                { 
-                    doExact = d.CheckBoxes[ 0 ].Checked; 
-                    pc = d.CheckBoxes[ 1 ].Checked; 
-                    xp = d.CheckBoxes[ 2 ].Checked; 
-                    cs = d.CheckBoxes[ 3 ].Checked; 
-                    xs = d.CheckBoxes[ 4 ].Checked; 
-                    specifyScores = d.CheckBoxes[ 5 ].Checked; 
-                    last_do_exact = doExact; 
-                    last_pc = pc; 
-                    last_xp = xp; 
-                    last_cs = cs; 
-                    last_xs = xs; 
-                    last_specify_scores = specifyScores; 
-                    abort = false; 
-                } 
-                else 
-                { 
-                    abort = true; 
-                    return null; 
-                } 
-            } 
-            else 
-            { 
-                abort = false; 
-                doExact = sparse && last_do_exact; 
-                pc = last_pc; 
-                xp = last_xp; 
-                cs = last_cs; 
-                xs = last_xs; 
-                specifyScores = last_specify_scores; 
-            } 
-            if ( specifyScores ) 
-            { 
+            if (cco >= 1.0 | cco <= 0.0)
+            {
+                cco = 0.95;
+            }
+            double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0, out fault);
+
+            for (int r = 1; r <= rows; r++)
+            {
+                row_score[r] = r;
+            }
+            for (int C = 1; C <= cols; C++)
+            {
+                col_score[C] = C;
+            }
+            /*
+            bool sparse = false;
+            for (int r = 1; r <= rows; r++)
+            {
+                for (int C = 1; C <= cols; C++)
+                {
+                    if (o[r, C] < 10.0)
+                    {
+                        sparse = true;
+                    }
+                }
+            }
+             */
+            if (specifyScores)
+            {
                 xs = true;
-                ScoresOptions sOptions = new ScoresOptions {Title1 = "Column Scores", Title2 = "Row Scores"};
-                for ( int r=1; r <= rows; r++ ) 
-                { 
-                    sOptions.Values1.Add( r ); 
-                } 
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    sOptions.Values2.Add( C ); 
-                } 
-                bool userOk = host.Amend( sOptions, null ); 
-                if ( userOk ) 
-                { 
-                    for ( int r=1; r <= rows; r++ ) 
-                    { 
-                        row_score[ r ] = sOptions.Values1[ r - 1 ]; 
-                    } 
-                    for ( int C=1; C <= cols; C++ ) 
-                    { 
-                        col_score[ C ] = sOptions.Values2[ C - 1 ]; 
-                    } 
-                } 
-                else 
-                { 
-                    specifyScores = false; 
-                    last_specify_scores = false; 
-                } 
-            } 
-            
-            double sumWeighted = 0; 
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    rtot[ r ] = rtot[ r ] + o[ r, C ]; 
-                    ctot[ C ] = ctot[ C ] + o[ r, C ]; 
-                    gtot = gtot + o[ r, C ]; 
-                    double transTemp4 = o[ r, C ]; 
-                    if ( o[ r, C ] != Math.Floor(transTemp4) )
-                    { 
-                        doExact = false; 
-                    } 
-                    sumWeighted = sumWeighted + o[ r, C ] * row_score[ r ] * col_score[ C ]; 
-                } 
-            } 
-            if ( gtot > 100000 )
-            { 
-                doExact = false; 
-            } 
-            
-            double sum_wt_col = 0.0; 
-            double sum_wt_sq_col = 0.0; 
-            int nz_cols = 0; 
-            for ( int C=1; C <= cols; C++ ) 
-            { 
-                sum_wt_col = sum_wt_col + ctot[ C ] * col_score[ C ]; 
-                sum_wt_sq_col = sum_wt_sq_col + ctot[ C ] * col_score[ C ] * col_score[ C ]; 
-                if ( ctot[ C ] > 0.0 )
-                { 
-                    nz_cols = nz_cols + 1; 
-                } 
-            } 
-            
-            double sum_wt_row = 0.0; 
-            double sum_wt_sq_row = 0.0; 
-            int nz_rows = 0; 
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                sum_wt_row = sum_wt_row + rtot[ r ] * row_score[ r ]; 
-                sum_wt_sq_row = sum_wt_sq_row + rtot[ r ] * row_score[ r ] * row_score[ r ]; 
-                if ( rtot[ r ] > 0.0 )
-                { 
-                    nz_rows = nz_rows + 1; 
-                } 
-            } 
-            
-            double dsrs = 0.0; 
-            for ( int C=1; C <= cols; C++ ) 
-            { 
-                double xi = 0.0; 
-                for ( int r=1; r <= rows; r++ ) 
-                { 
-                    xi = xi + row_score[ r ] * o[ r, C ]; 
-                } 
-                if ( ctot[ C ] != 0.0 )
-                { 
-                    dsrs = dsrs + ( xi * xi ) / ctot[ C ]; 
-                } 
-            } 
-            
-            double sxx = sum_wt_sq_row - ( ( sum_wt_row * sum_wt_row ) / gtot ); 
+                ScoresOptions sOptions = new ScoresOptions { Title1 = "Column Scores", Title2 = "Row Scores" };
+                for (int r = 1; r <= rows; r++)
+                {
+                    sOptions.Values1.Add(r);
+                }
+                for (int C = 1; C <= cols; C++)
+                {
+                    sOptions.Values2.Add(C);
+                }
+                bool userOk = host.Amend(sOptions, null);
+                if (userOk)
+                {
+                    for (int r = 1; r <= rows; r++)
+                    {
+                        row_score[r] = sOptions.Values1[r - 1];
+                    }
+                    for (int C = 1; C <= cols; C++)
+                    {
+                        col_score[C] = sOptions.Values2[C - 1];
+                    }
+                }
+                else
+                {
+                    specifyScores = false;
+                }
+            }
+
+            double sumWeighted = 0;
+            for (int r = 1; r <= rows; r++)
+            {
+                for (int C = 1; C <= cols; C++)
+                {
+                    rtot[r] = rtot[r] + o[r, C];
+                    ctot[C] = ctot[C] + o[r, C];
+                    gtot = gtot + o[r, C];
+                    double transTemp4 = o[r, C];
+                    if (o[r, C] != Math.Floor(transTemp4))
+                    {
+                        doExact = false;
+                    }
+                    sumWeighted = sumWeighted + o[r, C] * row_score[r] * col_score[C];
+                }
+            }
+            if (gtot > 100000)
+            {
+                doExact = false;
+            }
+
+            double sum_wt_col = 0.0;
+            double sum_wt_sq_col = 0.0;
+            int nz_cols = 0;
+            for (int C = 1; C <= cols; C++)
+            {
+                sum_wt_col = sum_wt_col + ctot[C] * col_score[C];
+                sum_wt_sq_col = sum_wt_sq_col + ctot[C] * col_score[C] * col_score[C];
+                if (ctot[C] > 0.0)
+                {
+                    nz_cols = nz_cols + 1;
+                }
+            }
+
+            double sum_wt_row = 0.0;
+            double sum_wt_sq_row = 0.0;
+            int nz_rows = 0;
+            for (int r = 1; r <= rows; r++)
+            {
+                sum_wt_row = sum_wt_row + rtot[r] * row_score[r];
+                sum_wt_sq_row = sum_wt_sq_row + rtot[r] * row_score[r] * row_score[r];
+                if (rtot[r] > 0.0)
+                {
+                    nz_rows = nz_rows + 1;
+                }
+            }
+
+            double dsrs = 0.0;
+            for (int C = 1; C <= cols; C++)
+            {
+                double xi = 0.0;
+                for (int r = 1; r <= rows; r++)
+                {
+                    xi = xi + row_score[r] * o[r, C];
+                }
+                if (ctot[C] != 0.0)
+                {
+                    dsrs = dsrs + (xi * xi) / ctot[C];
+                }
+            }
+
+            double sxx = sum_wt_sq_row - ((sum_wt_row * sum_wt_row) / gtot);
             //  ANOVA style equality of variance test
-            double x2eq = ( ( gtot - 1.0 ) / sxx ) * ( dsrs - ( ( sum_wt_row * sum_wt_row ) / gtot ) ); 
-            double syy = sum_wt_sq_col - ( ( sum_wt_col * sum_wt_col ) / gtot ); 
-            double sxy = sumWeighted - sum_wt_col * sum_wt_row / gtot; 
+            double x2eq = ((gtot - 1.0) / sxx) * (dsrs - ((sum_wt_row * sum_wt_row) / gtot));
+            double syy = sum_wt_sq_col - ((sum_wt_col * sum_wt_col) / gtot);
+            double sxy = sumWeighted - sum_wt_col * sum_wt_row / gtot;
             //  Chi-square for linear trend
-            double x2trend = ( gtot - 1.0 ) * ( sxy * sxy ) / ( sxx * syy ); 
-            
+            double x2trend = (gtot - 1.0) * (sxy * sxy) / (sxx * syy);
+
             //  sample correlation
-            double corr = sumWeighted - ( sum_wt_row * sum_wt_col ) / gtot; 
-            corr = corr / Math.Sqrt( ( sum_wt_sq_row - ( Math.Pow( sum_wt_row, 2.0 ) / gtot ) ) * ( sum_wt_sq_col - ( Math.Pow( sum_wt_col, 2.0 ) / gtot ) ) ); 
+            double corr = sumWeighted - (sum_wt_row * sum_wt_col) / gtot;
+            corr = corr / Math.Sqrt((sum_wt_sq_row - (Math.Pow(sum_wt_row, 2.0) / gtot)) * (sum_wt_sq_col - (Math.Pow(sum_wt_col, 2.0) / gtot)));
             //  m2 from Agresti = x2trend from Armitage
             //  m2 = (gtot - 1) * corr * corr
-            
-            double x2 = 0.0; 
-            double g2 = 0.0; 
-            double n2 = Convert.ToDouble( nz_rows - 1 ) * Convert.ToDouble( nz_cols - 1 ); 
-            double N = Convert.ToDouble( nz_rows ) * Convert.ToDouble( nz_cols ); 
-            int true_n = rows * cols; 
-            int n1 = 0; 
-            int n5 = 0; 
-            
+
+            double x2 = 0.0;
+            double g2 = 0.0;
+            double n2 = Convert.ToDouble(nz_rows - 1) * Convert.ToDouble(nz_cols - 1);
+            double N = Convert.ToDouble(nz_rows) * Convert.ToDouble(nz_cols);
+            int true_n = rows * cols;
+            int n1 = 0;
+            int n5 = 0;
+
             // gamma - see Spiegel p293 & p58 Agresti
-            double cc = 0.0; 
-            double dc = 0.0; 
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                for ( int C=1; C <= cols; C++ ) 
-                { 
+            double cc = 0.0;
+            double dc = 0.0;
+            for (int r = 1; r <= rows; r++)
+            {
+                for (int C = 1; C <= cols; C++)
+                {
                     // concord
                     double conc = 0.0;
                     int i;
                     int j;
-                    for ( i=r + 1; i <= rows; i++ ) 
-                    { 
-                        for ( j=C + 1; j <= cols; j++ ) 
-                        { 
-                            conc = conc + o[ i, j ]; 
-                        } 
-                    } 
-                    for ( i=r - 1; i >= 1; i-- ) 
-                    { 
-                        for ( j=C - 1; j >= 1; j-- ) 
-                        { 
-                            conc = conc + o[ i, j ]; 
-                        } 
-                    } 
-                    cc = cc + o[ r, C ] * conc; 
-                    cx[ r, C ] = conc; 
+                    for (i = r + 1; i <= rows; i++)
+                    {
+                        for (j = C + 1; j <= cols; j++)
+                        {
+                            conc = conc + o[i, j];
+                        }
+                    }
+                    for (i = r - 1; i >= 1; i--)
+                    {
+                        for (j = C - 1; j >= 1; j--)
+                        {
+                            conc = conc + o[i, j];
+                        }
+                    }
+                    cc = cc + o[r, C] * conc;
+                    cx[r, C] = conc;
                     // discord
-                    double disc = 0.0; 
-                    for ( i=r + 1; i <= rows; i++ ) 
-                    { 
-                        for ( j=C - 1; j >= 1; j-- ) 
-                        { 
-                            disc = disc + o[ i, j ]; 
-                        } 
-                    } 
-                    for ( i=r - 1; i >= 1; i-- ) 
-                    { 
-                        for ( j=C + 1; j <= cols; j++ ) 
-                        { 
-                            disc = disc + o[ i, j ]; 
-                        } 
-                    } 
-                    dc = dc + o[ r, C ] * disc; 
-                    dx[ r, C ] = disc; 
-                } 
-            } 
-            double GAMMA = ( cc - dc ) / ( cc + dc ); 
-            
-            //  variance of gamma
-            double vg = 0.0; 
-            double vgi = 0.0; 
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    vg = vg + o[ r, C ] * Math.Pow( ( dc * cx[ r, C ] - cc * dx[ r, C ] ), 2.0 ); 
-                    vgi = vgi + o[ r, C ] * Math.Pow( ( cx[ r, C ] - dx[ r, C ] ), 2.0 ); 
-                } 
-            } 
-            vgi = vgi - ( 1.0 / gtot ) * Math.Pow( ( cc - dc ), 2.0 ); 
-            double seg = ( 4.0 / ( Math.Pow( ( cc + dc ), 2.0 ) ) ) * Math.Sqrt( vg ); 
-            double segi = ( 2.0 / ( cc + dc ) ) * Math.Sqrt( vgi ); 
-            
-            // tau-b
-            double drx = 0.0; 
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                drx = drx + rtot[ r ] * rtot[ r ]; 
-            } 
-            drx = gtot * gtot - drx; 
-            double dcx = 0.0; 
-            for ( int r=1; r <= cols; r++ ) 
-            { 
-                dcx = dcx + ctot[ r ] * ctot[ r ]; 
-            } 
-            dcx = gtot * gtot - dcx; 
-            double taub = ( cc - dc ) / Math.Sqrt( drx * dcx ); 
-            
-            // variance of tau-b
-            double tsdd = 2.0 * Math.Sqrt( drx * dcx ); 
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                for ( int C=1; C <= cols; C++ )
-                {
-                    double vij = rtot[ r ] * dcx + ctot[ C ] * drx;
-                    vt = vt + o[ r, C ] * Math.Pow( ( tsdd * ( cx[ r, C ] - dx[ r, C ] ) + taub * vij ), 2.0 );
+                    double disc = 0.0;
+                    for (i = r + 1; i <= rows; i++)
+                    {
+                        for (j = C - 1; j >= 1; j--)
+                        {
+                            disc = disc + o[i, j];
+                        }
+                    }
+                    for (i = r - 1; i >= 1; i--)
+                    {
+                        for (j = C + 1; j <= cols; j++)
+                        {
+                            disc = disc + o[i, j];
+                        }
+                    }
+                    dc = dc + o[r, C] * disc;
+                    dx[r, C] = disc;
                 }
-            } 
-            vt = vt - Math.Pow( gtot, 3.0 ) * Math.Pow( taub, 2.0 ) * Math.Pow( ( drx + dcx ), 2.0 ); 
-            double setaub = 1.0 / ( drx * dcx ) * Math.Sqrt( vt ); 
-            double setaubi = 2.0 * Math.Sqrt( vgi / ( drx * dcx ) ); 
-            
+            }
+            double GAMMA = (cc - dc) / (cc + dc);
+
+            //  variance of gamma
+            double vg = 0.0;
+            double vgi = 0.0;
+            for (int r = 1; r <= rows; r++)
+            {
+                for (int C = 1; C <= cols; C++)
+                {
+                    vg = vg + o[r, C] * Math.Pow((dc * cx[r, C] - cc * dx[r, C]), 2.0);
+                    vgi = vgi + o[r, C] * Math.Pow((cx[r, C] - dx[r, C]), 2.0);
+                }
+            }
+            vgi = vgi - (1.0 / gtot) * Math.Pow((cc - dc), 2.0);
+            double seg = (4.0 / (Math.Pow((cc + dc), 2.0))) * Math.Sqrt(vg);
+            double segi = (2.0 / (cc + dc)) * Math.Sqrt(vgi);
+
+            // tau-b
+            double drx = 0.0;
+            for (int r = 1; r <= rows; r++)
+            {
+                drx = drx + rtot[r] * rtot[r];
+            }
+            drx = gtot * gtot - drx;
+            double dcx = 0.0;
+            for (int r = 1; r <= cols; r++)
+            {
+                dcx = dcx + ctot[r] * ctot[r];
+            }
+            dcx = gtot * gtot - dcx;
+            double taub = (cc - dc) / Math.Sqrt(drx * dcx);
+
+            // variance of tau-b
+            double tsdd = 2.0 * Math.Sqrt(drx * dcx);
+            for (int r = 1; r <= rows; r++)
+            {
+                for (int C = 1; C <= cols; C++)
+                {
+                    double vij = rtot[r] * dcx + ctot[C] * drx;
+                    vt = vt + o[r, C] * Math.Pow((tsdd * (cx[r, C] - dx[r, C]) + taub * vij), 2.0);
+                }
+            }
+            vt = vt - Math.Pow(gtot, 3.0) * Math.Pow(taub, 2.0) * Math.Pow((drx + dcx), 2.0);
+            double setaub = 1.0 / (drx * dcx) * Math.Sqrt(vt);
+            double setaubi = 2.0 * Math.Sqrt(vgi / (drx * dcx));
+
             //  RTF_LoadTemplate("chirxc.rtf")
-            ParameterBag outputParameters = new ParameterBag(); 
-            List<ParameterBag> rowsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*rows", rowsList ); 
-            for ( int r=1; r <= rows; r++ ) 
-            { 
-                ParameterBag rowsParameters = new ParameterBag(); 
-                rowsList.Add( rowsParameters ); 
-                
-                List<ParameterBag> obsList = new List<ParameterBag>(); 
-                rowsParameters.AddOutput( "*obs", obsList ); 
+            ParameterBag outputParameters = new ParameterBag();
+            List<ParameterBag> rowsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*rows", rowsList);
+            for (int r = 1; r <= rows; r++)
+            {
+                ParameterBag rowsParameters = new ParameterBag();
+                rowsList.Add(rowsParameters);
+
+                List<ParameterBag> obsList = new List<ParameterBag>();
+                rowsParameters.AddOutput("*obs", obsList);
                 // observed counts
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    ParameterBag obsParameters = new ParameterBag(); 
-                    obsList.Add( obsParameters ); 
-                    obsParameters.AddOutput( "obs", host.RoundU( o[ r, C ] ) ); 
-                } 
-                
+                for (int C = 1; C <= cols; C++)
+                {
+                    ParameterBag obsParameters = new ParameterBag();
+                    obsList.Add(obsParameters);
+                    obsParameters.AddOutput("obs", host.RoundU(o[r, C]));
+                }
+
                 // Use the last field for the totals
-                List<ParameterBag> rtotList = new List<ParameterBag>(); 
-                rowsParameters.AddOutput( "*rtot", rtotList ); 
-                ParameterBag rtotParameters = new ParameterBag(); 
-                rtotList.Add( rtotParameters ); 
-                rtotParameters.AddOutput( "rtot", host.RoundU( rtot[ r ] ) ); 
-                
+                List<ParameterBag> rtotList = new List<ParameterBag>();
+                rowsParameters.AddOutput("*rtot", rtotList);
+                ParameterBag rtotParameters = new ParameterBag();
+                rtotList.Add(rtotParameters);
+                rtotParameters.AddOutput("rtot", host.RoundU(rtot[r]));
+
                 // trend score for row
-                if ( xs ) 
-                { 
-                    List<ParameterBag> scoreList = new List<ParameterBag>(); 
-                    rowsParameters.AddOutput( "*score", scoreList ); 
-                    ParameterBag scoreParameters = new ParameterBag(); 
-                    scoreList.Add( scoreParameters ); 
-                    scoreParameters.AddOutput( "score", host.RoundU( row_score[ r ] ) ); 
-                } 
-                else 
-                { 
-                    rowsParameters.AddOutput( "*score", null ); 
-                } 
-                
+                if (xs)
+                {
+                    List<ParameterBag> scoreList = new List<ParameterBag>();
+                    rowsParameters.AddOutput("*score", scoreList);
+                    ParameterBag scoreParameters = new ParameterBag();
+                    scoreList.Add(scoreParameters);
+                    scoreParameters.AddOutput("score", host.RoundU(row_score[r]));
+                }
+                else
+                {
+                    rowsParameters.AddOutput("*score", null);
+                }
+
                 // expectation calculations
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    double ef = rtot[ r ] * ctot[ C ] / gtot; 
-                    ex[ r, C ] = ef; 
-                    if ( ef < 1.0 )
-                    { 
-                        n1 = n1 + 1; 
-                    } 
-                    if ( ef < 5.0 )
-                    { 
-                        n5 = n5 + 1; 
-                    } 
-                } 
-                
+                for (int C = 1; C <= cols; C++)
+                {
+                    double ef = rtot[r] * ctot[C] / gtot;
+                    ex[r, C] = ef;
+                    if (ef < 1.0)
+                    {
+                        n1 = n1 + 1;
+                    }
+                    if (ef < 5.0)
+                    {
+                        n5 = n5 + 1;
+                    }
+                }
+
                 // expected value for cell
-                if ( xp ) 
-                { 
-                    List<ParameterBag> expsList = new List<ParameterBag>(); 
-                    rowsParameters.AddOutput( "*exps", expsList ); 
-                    ParameterBag expsParameters = new ParameterBag(); 
-                    expsList.Add( expsParameters ); 
-                    List<ParameterBag> expList = new List<ParameterBag>(); 
-                    expsParameters.AddOutput( "*exp", expList ); 
-                    for ( int C=1; C <= cols; C++ ) 
-                    { 
-                        ParameterBag expParameters = new ParameterBag(); 
-                        expList.Add( expParameters ); 
-                        expParameters.AddOutput( "exp", host.RoundU( ex[ r, C ] ) ); 
-                    } 
-                } 
-                else 
-                { 
-                    rowsParameters.AddOutput( "*exps", null ); 
-                } 
-                
+                if (xp)
+                {
+                    List<ParameterBag> expsList = new List<ParameterBag>();
+                    rowsParameters.AddOutput("*exps", expsList);
+                    ParameterBag expsParameters = new ParameterBag();
+                    expsList.Add(expsParameters);
+                    List<ParameterBag> expList = new List<ParameterBag>();
+                    expsParameters.AddOutput("*exp", expList);
+                    for (int C = 1; C <= cols; C++)
+                    {
+                        ParameterBag expParameters = new ParameterBag();
+                        expList.Add(expParameters);
+                        expParameters.AddOutput("exp", host.RoundU(ex[r, C]));
+                    }
+                }
+                else
+                {
+                    rowsParameters.AddOutput("*exps", null);
+                }
+
                 // chi-square calculations
                 double dchi2;
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    if ( ex[ r, C ] != 0.0 ) 
-                    { 
-                        dchi2 = Math.Pow( ( o[ r, C ] - ex[ r, C ] ), 2.0 ) / ex[ r, C ]; 
-                        x2 = x2 + dchi2; 
-                    } 
-                    if ( o[ r, C ] != 0.0 )
-                    { 
-                        g2 = g2 + o[ r, C ] * Math.Log( o[ r, C ] / ex[ r, C ] ); 
-                    } 
-                } 
-                
+                for (int C = 1; C <= cols; C++)
+                {
+                    if (ex[r, C] != 0.0)
+                    {
+                        dchi2 = Math.Pow((o[r, C] - ex[r, C]), 2.0) / ex[r, C];
+                        x2 = x2 + dchi2;
+                    }
+                    if (o[r, C] != 0.0)
+                    {
+                        g2 = g2 + o[r, C] * Math.Log(o[r, C] / ex[r, C]);
+                    }
+                }
+
                 // cell chi-square
-                if ( cs ) 
-                { 
-                    List<ParameterBag> chisList = new List<ParameterBag>(); 
-                    rowsParameters.AddOutput( "*chis", chisList ); 
-                    ParameterBag chisParameters = new ParameterBag(); 
-                    chisList.Add( chisParameters ); 
-                    List<ParameterBag> chiList = new List<ParameterBag>(); 
-                    chisParameters.AddOutput( "*chi", chiList ); 
-                    for ( int C=1; C <= cols; C++ ) 
-                    { 
-                        if ( ex[ r, C ] != 0.0 )
-                        { 
-                            dchi2 = Math.Pow( ( o[ r, C ] - ex[ r, C ] ), 2.0 ) / ex[ r, C ]; 
-                        } else { dchi2 = Constant.MISSING; } 
-                        ParameterBag chiParameters = new ParameterBag(); 
-                        chiList.Add( chiParameters ); 
-                        chiParameters.AddOutput( "chi", host.RoundU( dchi2 ) ); 
-                    } 
-                } 
-                else 
-                { 
-                    rowsParameters.AddOutput( "*chis", null ); 
-                } 
-                
+                if (cs)
+                {
+                    List<ParameterBag> chisList = new List<ParameterBag>();
+                    rowsParameters.AddOutput("*chis", chisList);
+                    ParameterBag chisParameters = new ParameterBag();
+                    chisList.Add(chisParameters);
+                    List<ParameterBag> chiList = new List<ParameterBag>();
+                    chisParameters.AddOutput("*chi", chiList);
+                    for (int C = 1; C <= cols; C++)
+                    {
+                        if (ex[r, C] != 0.0)
+                        {
+                            dchi2 = Math.Pow((o[r, C] - ex[r, C]), 2.0) / ex[r, C];
+                        }
+                        else { dchi2 = Constant.MISSING; }
+                        ParameterBag chiParameters = new ParameterBag();
+                        chiList.Add(chiParameters);
+                        chiParameters.AddOutput("chi", host.RoundU(dchi2));
+                    }
+                }
+                else
+                {
+                    rowsParameters.AddOutput("*chis", null);
+                }
+
                 // cell, row and column percentages
-                if ( pc ) 
-                { 
-                    List<ParameterBag> pcrsList = new List<ParameterBag>(); 
-                    rowsParameters.AddOutput( "*pcrs", pcrsList ); 
-                    ParameterBag pcrsParameters = new ParameterBag(); 
-                    pcrsList.Add( pcrsParameters ); 
-                    
-                    List<ParameterBag> pcrList = new List<ParameterBag>(); 
-                    pcrsParameters.AddOutput( "*pcr", pcrList );
+                if (pc)
+                {
+                    List<ParameterBag> pcrsList = new List<ParameterBag>();
+                    rowsParameters.AddOutput("*pcrs", pcrsList);
+                    ParameterBag pcrsParameters = new ParameterBag();
+                    pcrsList.Add(pcrsParameters);
+
+                    List<ParameterBag> pcrList = new List<ParameterBag>();
+                    pcrsParameters.AddOutput("*pcr", pcrList);
                     double xtmp;
-                    for ( int C=1; C <= cols; C++ ) 
-                    { 
-                        ParameterBag pcrParameters = new ParameterBag(); 
-                        pcrList.Add( pcrParameters ); 
-                        if ( rtot[ r ] != 0.0 )
-                        { 
-                            xtmp = 100.0 * o[ r, C ] / rtot[ r ]; 
-                        } else { xtmp = Constant.MISSING; } 
-                        pcrParameters.AddOutput( "pcr", Formatting.XRound( xtmp, 2 ) + "%" ); 
-                    } 
-                    
-                    List<ParameterBag> pccList = new List<ParameterBag>(); 
-                    pcrsParameters.AddOutput( "*pcc", pccList ); 
-                    ParameterBag pccParameters; 
-                    for ( int C=1; C <= cols; C++ ) 
-                    { 
-                        pccParameters = new ParameterBag(); 
-                        pccList.Add( pccParameters ); 
-                        if ( ctot[ C ] != 0.0 )
-                        { 
-                            xtmp = 100.0 * o[ r, C ] / ctot[ C ]; 
-                        } else { xtmp = Constant.MISSING; } 
-                        pccParameters.AddOutput( "pcc", Formatting.XRound( xtmp, 2 ) + "%" ); 
-                    } 
-                    pccParameters = new ParameterBag(); 
-                    pccList.Add( pccParameters ); 
-                    pccParameters.AddOutput( "pcc", Formatting.XRound( 100.0 * rtot[ r ] / gtot, 2 ) + "%" ); 
-                } 
-                else 
-                { 
-                    rowsParameters.AddOutput( "*pcrs", null ); 
-                } 
-            } 
-            
-            g2 = 2.0 * g2; 
-            
-            
-            List<ParameterBag> totList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*tot", totList ); 
-            ParameterBag totParameters; 
-            for ( int C=1; C <= cols; C++ ) 
-            { 
-                totParameters = new ParameterBag(); 
-                totList.Add( totParameters ); 
-                totParameters.AddOutput( "tot", host.RoundU( ctot[ C ] ) ); 
-            } 
-            
+                    for (int C = 1; C <= cols; C++)
+                    {
+                        ParameterBag pcrParameters = new ParameterBag();
+                        pcrList.Add(pcrParameters);
+                        if (rtot[r] != 0.0)
+                        {
+                            xtmp = 100.0 * o[r, C] / rtot[r];
+                        }
+                        else { xtmp = Constant.MISSING; }
+                        pcrParameters.AddOutput("pcr", Formatting.XRound(xtmp, 2) + "%");
+                    }
+
+                    List<ParameterBag> pccList = new List<ParameterBag>();
+                    pcrsParameters.AddOutput("*pcc", pccList);
+                    ParameterBag pccParameters;
+                    for (int C = 1; C <= cols; C++)
+                    {
+                        pccParameters = new ParameterBag();
+                        pccList.Add(pccParameters);
+                        if (ctot[C] != 0.0)
+                        {
+                            xtmp = 100.0 * o[r, C] / ctot[C];
+                        }
+                        else { xtmp = Constant.MISSING; }
+                        pccParameters.AddOutput("pcc", Formatting.XRound(xtmp, 2) + "%");
+                    }
+                    pccParameters = new ParameterBag();
+                    pccList.Add(pccParameters);
+                    pccParameters.AddOutput("pcc", Formatting.XRound(100.0 * rtot[r] / gtot, 2) + "%");
+                }
+                else
+                {
+                    rowsParameters.AddOutput("*pcrs", null);
+                }
+            }
+
+            g2 = 2.0 * g2;
+
+
+            List<ParameterBag> totList = new List<ParameterBag>();
+            outputParameters.AddOutput("*tot", totList);
+            ParameterBag totParameters;
+            for (int C = 1; C <= cols; C++)
+            {
+                totParameters = new ParameterBag();
+                totList.Add(totParameters);
+                totParameters.AddOutput("tot", host.RoundU(ctot[C]));
+            }
+
             // Use the last col for the totals
-            totParameters = new ParameterBag(); 
-            totList.Add( totParameters ); 
-            totParameters.AddOutput( "tot", host.RoundU( gtot ) ); 
-            
-            if ( pc ) 
-            { 
-                List<ParameterBag> pcgsList = new List<ParameterBag>(); 
-                outputParameters.AddOutput( "*pcgs", pcgsList ); 
-                ParameterBag pcgsParameters = new ParameterBag(); 
-                pcgsList.Add( pcgsParameters ); 
-                List<ParameterBag> pcgList = new List<ParameterBag>(); 
-                pcgsParameters.AddOutput( "*pcg", pcgList ); 
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    ParameterBag pcgParameters = new ParameterBag(); 
-                    pcgList.Add( pcgParameters ); 
-                    pcgParameters.AddOutput( "pcg", Formatting.XRound( 100.0 * ( ctot[ C ] / gtot ), 2 ) + "%" ); 
-                } 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "*pcgs", null ); 
-            } 
-            
+            totParameters = new ParameterBag();
+            totList.Add(totParameters);
+            totParameters.AddOutput("tot", host.RoundU(gtot));
+
+            if (pc)
+            {
+                List<ParameterBag> pcgsList = new List<ParameterBag>();
+                outputParameters.AddOutput("*pcgs", pcgsList);
+                ParameterBag pcgsParameters = new ParameterBag();
+                pcgsList.Add(pcgsParameters);
+                List<ParameterBag> pcgList = new List<ParameterBag>();
+                pcgsParameters.AddOutput("*pcg", pcgList);
+                for (int C = 1; C <= cols; C++)
+                {
+                    ParameterBag pcgParameters = new ParameterBag();
+                    pcgList.Add(pcgParameters);
+                    pcgParameters.AddOutput("pcg", Formatting.XRound(100.0 * (ctot[C] / gtot), 2) + "%");
+                }
+            }
+            else
+            {
+                outputParameters.AddOutput("*pcgs", null);
+            }
+
             // trend scores for cols
-            if ( xs ) 
-            { 
-                List<ParameterBag> scoresList = new List<ParameterBag>(); 
-                outputParameters.AddOutput( "*scores", scoresList ); 
-                ParameterBag scoresParameters = new ParameterBag(); 
-                scoresList.Add( scoresParameters ); 
-                List<ParameterBag> scoreList = new List<ParameterBag>(); 
-                scoresParameters.AddOutput( "*score", scoreList ); 
-                for ( int C=1; C <= cols; C++ ) 
-                { 
-                    ParameterBag scoreParameters = new ParameterBag(); 
-                    scoreList.Add( scoreParameters ); 
-                    scoreParameters.AddOutput( "score", host.RoundU( col_score[ C ] ) ); 
-                } 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "*scores", null ); 
-            } 
-            
-            outputParameters.AddOutput( "tot",  N.ToString() ); 
-            
-            List<ParameterBag> warnList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*warn", warnList ); 
-            if ( n1 > 0 ) 
-            { 
-                ParameterBag warnParameters = new ParameterBag(); 
-                warnList.Add( warnParameters ); 
-                warnParameters.AddOutput( "warn", Formatting.WRNCOLON +  n1.ToString() + " out of " +  true_n.ToString() + " cells have EXPECTATION < 1" ); 
-            } 
-            
-            if ( n5 > 0 ) 
-            { 
-                ParameterBag warnParameters = new ParameterBag(); 
-                warnList.Add( warnParameters ); 
-                warnParameters.AddOutput( "warn", Formatting.WRNCOLON +  n5.ToString() + " out of " +  true_n.ToString() + " cells have EXPECTATION < 5" ); 
-            } 
-            
+            if (xs)
+            {
+                List<ParameterBag> scoresList = new List<ParameterBag>();
+                outputParameters.AddOutput("*scores", scoresList);
+                ParameterBag scoresParameters = new ParameterBag();
+                scoresList.Add(scoresParameters);
+                List<ParameterBag> scoreList = new List<ParameterBag>();
+                scoresParameters.AddOutput("*score", scoreList);
+                for (int C = 1; C <= cols; C++)
+                {
+                    ParameterBag scoreParameters = new ParameterBag();
+                    scoreList.Add(scoreParameters);
+                    scoreParameters.AddOutput("score", host.RoundU(col_score[C]));
+                }
+            }
+            else
+            {
+                outputParameters.AddOutput("*scores", null);
+            }
+
+            outputParameters.AddOutput("tot", N.ToString());
+
+            List<ParameterBag> warnList = new List<ParameterBag>();
+            outputParameters.AddOutput("*warn", warnList);
+            if (n1 > 0)
+            {
+                ParameterBag warnParameters = new ParameterBag();
+                warnList.Add(warnParameters);
+                warnParameters.AddOutput("warn", Formatting.WRNCOLON + n1.ToString() + " out of " + true_n.ToString() + " cells have EXPECTATION < 1");
+            }
+
+            if (n5 > 0)
+            {
+                ParameterBag warnParameters = new ParameterBag();
+                warnList.Add(warnParameters);
+                warnParameters.AddOutput("warn", Formatting.WRNCOLON + n5.ToString() + " out of " + true_n.ToString() + " cells have EXPECTATION < 5");
+            }
+
             // overall
-            outputParameters.AddOutput( "chio", host.RoundU( x2 ) ); 
-            outputParameters.AddOutput( "dfo",  n2.ToString() ); 
-            outputParameters.AddOutput( "po", host.pval( PDF.chivalp( x2, n2 ) ) ); 
-            outputParameters.AddOutput( "g2", host.RoundU( g2 ) ); 
-            outputParameters.AddOutput( "pog2", host.pval( PDF.chivalp( g2, n2 ) ) ); 
-            
+            outputParameters.AddOutput("chio", host.RoundU(x2));
+            outputParameters.AddOutput("dfo", n2.ToString());
+            outputParameters.AddOutput("po", host.pval(PDF.chivalp(x2, n2)));
+            outputParameters.AddOutput("g2", host.RoundU(g2));
+            outputParameters.AddOutput("pog2", host.pval(PDF.chivalp(g2, n2)));
+
             // Fisher's - by network algorithm
             // crashes if non integer observations or too large
-            string lb = ""; 
-            if ( doExact && rows > 1 && cols > 1 ) 
-            { 
-                double emin = 1.0; 
-                double percnt = 80.0; 
-                rcexact( rows, cols, o, 0.0, percnt, emin, ref P1, ref P2, out ierr ); 
-                if ( ierr != 0 ) 
-                { 
+            string lb = "";
+            if (doExact && rows > 1 && cols > 1)
+            {
+                double emin = 1.0;
+                double percnt = 80.0;
+                rcexact(rows, cols, o, 0.0, percnt, emin, ref P1, ref P2, out ierr);
+                if (ierr != 0)
+                {
                     //  try hybrid approximation
-                    lb = "(hybrid approximation)"; 
+                    lb = "(hybrid approximation)";
                     emin = 1.0; //  In case reset by first call
                     percnt = 80.0; //  In case reset by first call
-                    rcexact( rows, cols, o, 5.0, percnt, emin, ref P1, ref P2, out ierr ); 
-                } 
-            } 
-            else 
-            { 
-                ierr = -1; 
-            } 
-            if ( ierr != 0 ) 
-            { 
-                lb = ""; 
-                outputParameters.AddOutput( "p2", "not calculated" ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "p2", host.pval( P2 ) ); 
-            } 
-            outputParameters.AddOutput( "lb", lb ); 
-            
+                    rcexact(rows, cols, o, 5.0, percnt, emin, ref P1, ref P2, out ierr);
+                }
+            }
+            else
+            {
+                ierr = -1;
+            }
+            if (ierr != 0)
+            {
+                lb = "";
+                outputParameters.AddOutput("p2", "not calculated");
+            }
+            else
+            {
+                outputParameters.AddOutput("p2", host.pval(P2));
+            }
+            outputParameters.AddOutput("lb", lb);
+
             // equality ANOVA (see Armitage)
-            outputParameters.AddOutput( "chie", host.RoundU( x2eq ) ); 
-            outputParameters.AddOutput( "dfe",  (nz_cols - 1).ToString() ); 
-            outputParameters.AddOutput( "pe", host.pval( PDF.chivalp( x2eq, nz_cols - 1 ) ) ); 
-            
+            outputParameters.AddOutput("chie", host.RoundU(x2eq));
+            outputParameters.AddOutput("dfe", (nz_cols - 1).ToString());
+            outputParameters.AddOutput("pe", host.pval(PDF.chivalp(x2eq, nz_cols - 1)));
+
             // linear trend MH type (see Armitage)
-            outputParameters.AddOutput( "r", host.RoundU( corr ) ); 
-            outputParameters.AddOutput( "chit", host.RoundU( x2trend ) ); 
-            outputParameters.AddOutput( "pt", host.pval( PDF.chivalp( x2trend, 1 ) ) ); 
-            
+            outputParameters.AddOutput("r", host.RoundU(corr));
+            outputParameters.AddOutput("chit", host.RoundU(x2trend));
+            outputParameters.AddOutput("pt", host.pval(PDF.chivalp(x2trend, 1)));
+
             // coefficients
-            double phi = Math.Sqrt( x2 / gtot ); 
-            outputParameters.AddOutput( "phi", host.RoundU( phi ) ); 
-            P1 = Math.Sqrt( x2 / ( x2 + gtot ) ); 
-            outputParameters.AddOutput( "pearson", host.RoundU( P1 ) ); 
-            if ( rows == 2 & cols == 2 ) 
-            { 
-                C1 = ( o[ 1, 1 ] * o[ 2, 2 ] - o[ 1, 2 ] * o[ 2, 1 ] ) / Math.Sqrt( rtot[ 1 ] * rtot[ 2 ] * ctot[ 1 ] * ctot[ 2 ] ); 
-                outputParameters.AddOutput( "cramer", host.RoundU( C1 ) + "  (signed)" ); 
-            } 
-            else 
-            { 
-                C1 = Math.Sqrt( ( x2 / ( gtot ) / Math.Min( Convert.ToDouble( rows - 1 ), Convert.ToDouble( cols - 1 ) ) ) ); 
-                outputParameters.AddOutput( "cramer", host.RoundU( C1 ) ); 
-            } 
-            
+            double phi = Math.Sqrt(x2 / gtot);
+            outputParameters.AddOutput("phi", host.RoundU(phi));
+            P1 = Math.Sqrt(x2 / (x2 + gtot));
+            outputParameters.AddOutput("pearson", host.RoundU(P1));
+            if (rows == 2 & cols == 2)
+            {
+                C1 = (o[1, 1] * o[2, 2] - o[1, 2] * o[2, 1]) / Math.Sqrt(rtot[1] * rtot[2] * ctot[1] * ctot[2]);
+                outputParameters.AddOutput("cramer", host.RoundU(C1) + "  (signed)");
+            }
+            else
+            {
+                C1 = Math.Sqrt((x2 / (gtot) / Math.Min(Convert.ToDouble(rows - 1), Convert.ToDouble(cols - 1))));
+                outputParameters.AddOutput("cramer", host.RoundU(C1));
+            }
+
             // ordinal
-            outputParameters.AddOutput( "gamma", host.RoundU( GAMMA ) ); 
-            if ( seg != 0.0 ) 
-            { 
-                P = 1.0 - PDF.alnorm( GAMMA / seg ); 
-                if ( P > 1.0 - P )
-                { 
-                    P = 2.0 * ( 1.0 - P ); 
-                } else { P = 2.0 * P; } 
-                ll = GAMMA - cit * seg; 
-                ul = GAMMA + cit * seg; 
-            } 
-            else 
-            { 
-                P = Constant.MISSING; 
-                ll = Constant.MISSING; 
-                ul = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "seg", host.RoundU( seg ) ); 
-            outputParameters.AddOutput( "pg", host.pval( P ) ); 
-            outputParameters.AddOutput( "pc", Formatting.XRound( cco * 100.0, 2 ) ); 
-            outputParameters.AddOutput( "llg", host.RoundU( ll ) ); 
-            outputParameters.AddOutput( "ulg", host.RoundU( ul ) ); 
-            
-            if ( segi != 0.0 ) 
-            { 
-                P = 1.0 - PDF.alnorm( GAMMA / segi ); 
-                if ( P > 1.0 - P )
-                { 
-                    P = 2.0 * ( 1.0 - P ); 
-                } else { P = 2.0 * P; } 
-                ll = GAMMA - cit * segi; 
-                ul = GAMMA + cit * segi; 
-            } 
-            else 
-            { 
-                P = Constant.MISSING; 
-                ll = Constant.MISSING; 
-                ul = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "segi", host.RoundU( segi ) ); 
-            outputParameters.AddOutput( "pgi", host.pval( P ) ); 
-            outputParameters.AddOutput( "llgi", host.RoundU( ll ) ); 
-            outputParameters.AddOutput( "ulgi", host.RoundU( ul ) ); 
-            
-            outputParameters.AddOutput( "taub", host.RoundU( taub ) ); 
-            if ( setaub != 0.0 ) 
-            { 
-                P = 1.0 - PDF.alnorm( taub / setaub ); 
-                if ( P > 1.0 - P )
-                { 
-                    P = 2.0 * ( 1.0 - P ); 
-                } else { P = 2.0 * P; } 
-                ll = taub - cit * setaub; 
-                ul = taub + cit * setaub; 
-            } 
-            else 
-            { 
-                P = Constant.MISSING; 
-                ll = Constant.MISSING; 
-                ul = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "setaub", host.RoundU( setaub ) ); 
-            outputParameters.AddOutput( "ptaub", host.pval( P ) ); 
-            outputParameters.AddOutput( "lltaub", host.RoundU( ll ) ); 
-            outputParameters.AddOutput( "ultaub", host.RoundU( ul ) ); 
-            
+            outputParameters.AddOutput("gamma", host.RoundU(GAMMA));
+            if (seg != 0.0)
+            {
+                P = 1.0 - PDF.alnorm(GAMMA / seg);
+                if (P > 1.0 - P)
+                {
+                    P = 2.0 * (1.0 - P);
+                }
+                else { P = 2.0 * P; }
+                ll = GAMMA - cit * seg;
+                ul = GAMMA + cit * seg;
+            }
+            else
+            {
+                P = Constant.MISSING;
+                ll = Constant.MISSING;
+                ul = Constant.MISSING;
+            }
+            outputParameters.AddOutput("seg", host.RoundU(seg));
+            outputParameters.AddOutput("pg", host.pval(P));
+            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100.0, 2));
+            outputParameters.AddOutput("llg", host.RoundU(ll));
+            outputParameters.AddOutput("ulg", host.RoundU(ul));
+
+            if (segi != 0.0)
+            {
+                P = 1.0 - PDF.alnorm(GAMMA / segi);
+                if (P > 1.0 - P)
+                {
+                    P = 2.0 * (1.0 - P);
+                }
+                else { P = 2.0 * P; }
+                ll = GAMMA - cit * segi;
+                ul = GAMMA + cit * segi;
+            }
+            else
+            {
+                P = Constant.MISSING;
+                ll = Constant.MISSING;
+                ul = Constant.MISSING;
+            }
+            outputParameters.AddOutput("segi", host.RoundU(segi));
+            outputParameters.AddOutput("pgi", host.pval(P));
+            outputParameters.AddOutput("llgi", host.RoundU(ll));
+            outputParameters.AddOutput("ulgi", host.RoundU(ul));
+
+            outputParameters.AddOutput("taub", host.RoundU(taub));
+            if (setaub != 0.0)
+            {
+                P = 1.0 - PDF.alnorm(taub / setaub);
+                if (P > 1.0 - P)
+                {
+                    P = 2.0 * (1.0 - P);
+                }
+                else { P = 2.0 * P; }
+                ll = taub - cit * setaub;
+                ul = taub + cit * setaub;
+            }
+            else
+            {
+                P = Constant.MISSING;
+                ll = Constant.MISSING;
+                ul = Constant.MISSING;
+            }
+            outputParameters.AddOutput("setaub", host.RoundU(setaub));
+            outputParameters.AddOutput("ptaub", host.pval(P));
+            outputParameters.AddOutput("lltaub", host.RoundU(ll));
+            outputParameters.AddOutput("ultaub", host.RoundU(ul));
+
             //  outputParameters.AddOutput("taub", Host.RoundU(taub))
-            if ( setaubi != 0.0 ) 
-            { 
-                P = 1.0 - PDF.alnorm( taub / setaubi ); 
-                if ( P > 1.0 - P )
-                { 
-                    P = 2.0 * ( 1.0 - P ); 
-                } else { P = 2.0 * P; } 
-                ll = taub - cit * setaubi; 
-                ul = taub + cit * setaubi; 
-            } 
-            else 
-            { 
-                P = Constant.MISSING; 
-                ll = Constant.MISSING; 
-                ul = Constant.MISSING; 
-            } 
-            outputParameters.AddOutput( "setaubi", host.RoundU( setaubi ) ); 
-            outputParameters.AddOutput( "ptaubi", host.pval( P ) ); 
-            outputParameters.AddOutput( "lltaubi", host.RoundU( ll ) ); 
-            outputParameters.AddOutput( "ultaubi", host.RoundU( ul ) ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        private static ParameterBag TabMh( ITemplateHost host, double cco, ref int zcats, ref double[,,] zt, ref Namevar[] zcat ) 
-        { 
-            double p2m = 0; double p1m = 0; 
-            double p2f = 0; double p1f = 0; double llm; double ulm; double llf; double ulf; double eor = 0; double tausq = 0; 
+            if (setaubi != 0.0)
+            {
+                P = 1.0 - PDF.alnorm(taub / setaubi);
+                if (P > 1.0 - P)
+                {
+                    P = 2.0 * (1.0 - P);
+                }
+                else { P = 2.0 * P; }
+                ll = taub - cit * setaubi;
+                ul = taub + cit * setaubi;
+            }
+            else
+            {
+                P = Constant.MISSING;
+                ll = Constant.MISSING;
+                ul = Constant.MISSING;
+            }
+            outputParameters.AddOutput("setaubi", host.RoundU(setaubi));
+            outputParameters.AddOutput("ptaubi", host.pval(P));
+            outputParameters.AddOutput("lltaubi", host.RoundU(ll));
+            outputParameters.AddOutput("ultaubi", host.RoundU(ul));
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        private static ParameterBag TabMh(ITemplateHost host, double cco, ref int zcats, ref double[, ,] zt, ref Namevar[] zcat)
+        {
+            double p2m = 0; double p1m = 0;
+            double p2f = 0; double p1f = 0; double llm; double ulm; double llf; double ulf; double eor = 0; double tausq = 0;
             double dsul = 0; double dsll = 0; double dsx2 = 0; double dsor = 0; double bd = 0; double qc = 0; double sk;
             double x2; double ul; double ll; double rmh; double cit;
-            double isq; double llisq; double ulisq; 
+            double isq; double llisq; double ulisq;
             int i;
             int realk; int ierr;
 
-            if ( cco > 0 ) 
-            { 
-                double p = ( 1.0 - cco ) / 2.0;
+            if (cco > 0)
+            {
+                double p = (1.0 - cco) / 2.0;
                 int ifault;
-                cit = PDF.gauinv( 1.0 - p, out ifault ); 
-            } 
-            else 
-            { 
+                cit = PDF.gauinv(1.0 - p, out ifault);
+            }
+            else
+            {
                 cco = 0.95;
                 int ifault;
-                cit = PDF.gauinv(0.975, out ifault); 
-            } 
+                cit = PDF.gauinv(0.975, out ifault);
+            }
             int k = zcats;
-            string[] title = new string[k + 1 /* for VB to C# conversion */ ]; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                title[ i ] = zcat[ i ].Ti; 
-                if ( title[ i ].Length > 50 )
-                { 
-                    title[ i ] = title[ i ].Substring( 0, 50); 
-                } 
+            string[] title = new string[k + 1 /* for VB to C# conversion */ ];
+            for (i = 1; i <= k; i++)
+            {
+                title[i] = zcat[i].Ti;
+                if (title[i].Length > 50)
+                {
+                    title[i] = title[i].Substring(0, 50);
+                }
             }
 
             double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
@@ -3455,317 +3420,319 @@ namespace StatsDirect.Builtins
             bool[] uerr = new bool[k + 1 /* for VB to C# conversion */];
             bool[] cced = new bool[k + 1 /* for VB to C# conversion */];
             double[] axll = new double[k + 1 /* for VB to C# conversion */];
-            double[] axul = new double[k + 1 /* for VB to C# conversion */]; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                o[ i, 1 ] = zt[ 1, 1, i ]; 
-                o[ i, 3 ] = zt[ 1, 2, i ]; 
-                o[ i, 2 ] = zt[ 2, 1, i ]; 
-                o[ i, 4 ] = zt[ 2, 2, i ]; 
-            } 
-            
-            Meta.Mantel( host, true, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, ref dsor, ref dsx2, ref dsll, ref dsul, ref cced, ref tausq, out ierr ); 
-            if ( ierr != 0 ) 
-            { 
-                if ( ierr != 99 ) 
-                { 
-                    throw new InvalidDataException(); 
-                } 
-                return null; 
-            } 
-            
+            double[] axul = new double[k + 1 /* for VB to C# conversion */];
+            for (i = 1; i <= k; i++)
+            {
+                o[i, 1] = zt[1, 1, i];
+                o[i, 3] = zt[1, 2, i];
+                o[i, 2] = zt[2, 1, i];
+                o[i, 4] = zt[2, 2, i];
+            }
+
+            Meta.Mantel(host, true, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, ref dsor, ref dsx2, ref dsll, ref dsul, ref cced, ref tausq, out ierr);
+            if (ierr != 0)
+            {
+                if (ierr != 99)
+                {
+                    throw new InvalidDataException();
+                }
+                return null;
+            }
+
             // Try exact Mantel
-            ExactBB.Rec2x2[] tbl = new ExactBB.Rec2x2[k + 1 /* for VB to C# conversion */]; 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                tbl[ i ].freq = 1; 
-                tbl[ i ].a = o[ i, 1 ]; 
-                tbl[ i ].m1 = o[ i, 1 ] + o[ i, 2 ]; 
-                tbl[ i ].n1 = o[ i, 1 ] + o[ i, 3 ]; 
-                tbl[ i ].n0 = o[ i, 2 ] + o[ i, 4 ]; 
-                tbl[ i ].informative = ( o[ i, 1 ] * o[ i, 4 ] != 0.0 ) || ( o[ i, 2 ] * o[ i, 3 ] != 0.0 ); 
+            ExactBB.Rec2x2[] tbl = new ExactBB.Rec2x2[k + 1 /* for VB to C# conversion */];
+            for (i = 1; i <= k; i++)
+            {
+                tbl[i].freq = 1;
+                tbl[i].a = o[i, 1];
+                tbl[i].m1 = o[i, 1] + o[i, 2];
+                tbl[i].n1 = o[i, 1] + o[i, 3];
+                tbl[i].n0 = o[i, 2] + o[i, 4];
+                tbl[i].informative = (o[i, 1] * o[i, 4] != 0.0) || (o[i, 2] * o[i, 3] != 0.0);
             }
             bool useLogScale = false;
-            ExactBB.Exact22k( host, k, 1, tbl, cco, ref eor, out ulf, out llf, out ulm, out llm, ref p1f, ref p2f, ref p1m, ref p2m, ref useLogScale, out ierr ); 
-            if ( ierr != 0 ) 
-            { 
-                eor = Constant.MISSING; 
-                ulf = Constant.MISSING; 
-                llf = Constant.MISSING; 
-                ulm = Constant.MISSING; 
-                llm = Constant.MISSING; 
-                p1f = Constant.MISSING; 
-                p2f = Constant.MISSING; 
-                p1m = Constant.MISSING; 
-                p2m = Constant.MISSING; 
-            } 
-            
+            ExactBB.Exact22k(host, k, 1, tbl, cco, ref eor, out ulf, out llf, out ulm, out llm, ref p1f, ref p2f, ref p1m, ref p2m, ref useLogScale, out ierr);
+            if (ierr != 0)
+            {
+                eor = Constant.MISSING;
+                ulf = Constant.MISSING;
+                llf = Constant.MISSING;
+                ulm = Constant.MISSING;
+                llm = Constant.MISSING;
+                p1f = Constant.MISSING;
+                p2f = Constant.MISSING;
+                p1m = Constant.MISSING;
+                p2m = Constant.MISSING;
+            }
+
             // RTF_LoadTemplate("mantel.rtf")
-            ParameterBag outputParameters = new ParameterBag(); 
-            List<ParameterBag> inputsList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*inputs", inputsList ); 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                ParameterBag inputsParameters = new ParameterBag(); 
-                inputsList.Add( inputsParameters ); 
-                inputsParameters.AddOutput( "st",  i.ToString() ); 
-                inputsParameters.AddOutput( "a", o[ i, 1 ].ToString() ); 
-                inputsParameters.AddOutput( "b", o[ i, 2 ].ToString() ); 
-                inputsParameters.AddOutput( "c", o[ i, 3 ].ToString() ); 
-                inputsParameters.AddOutput( "d", o[ i, 4 ].ToString() ); 
-                inputsParameters.AddOutput( "lb", "" ); 
-            } 
-            outputParameters.AddOutput( "pc", Formatting.XRound( cco * 100, 2 ) );
+            ParameterBag outputParameters = new ParameterBag();
+            List<ParameterBag> inputsList = new List<ParameterBag>();
+            outputParameters.AddOutput("*inputs", inputsList);
+            for (i = 1; i <= k; i++)
+            {
+                ParameterBag inputsParameters = new ParameterBag();
+                inputsList.Add(inputsParameters);
+                inputsParameters.AddOutput("st", i.ToString());
+                inputsParameters.AddOutput("a", o[i, 1].ToString());
+                inputsParameters.AddOutput("b", o[i, 2].ToString());
+                inputsParameters.AddOutput("c", o[i, 3].ToString());
+                inputsParameters.AddOutput("d", o[i, 4].ToString());
+                inputsParameters.AddOutput("lb", "");
+            }
+            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
 
-            List<ParameterBag> orList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*or", orList ); 
-            for ( i=1; i <= k; i++ ) 
-            { 
-                ParameterBag orParameters = new ParameterBag(); 
-                orList.Add( orParameters ); 
-                orParameters.AddOutput( "st",  i.ToString() ); 
-                orParameters.AddOutput( "or", host.RoundU( odr[ i ] ) ); 
-                orParameters.AddOutput( "lci", host.RoundU( odrl[ i ] ) ); 
-                orParameters.AddOutput( "uci", host.RoundU( odru[ i ] ) ); 
-                orParameters.AddOutput( "wt", Formatting.XRound( 100 * odw[ i ] / Formatting.dsum( odw, 1 ), 2 ) ); 
-                orParameters.AddOutput( "dwt", Formatting.XRound( 100 * dswt[ i ] / Formatting.dsum( dswt, 1 ), 2 ) ); 
-                orParameters.AddOutput( "lb", Meta.get_meta_label( host, o, i, true, cced, title ) ); 
-                if ( host.Preferences.MetaExact & ( ( i ) == Constant.MISSING | odru[ i ] == Constant.MISSING ) ) 
-                { 
-                    Meta.orci_corn( host, ref cco, ref o[ i, 1 ], ref o[ i, 2 ], ref o[ i, 3 ], ref o[ i, 4 ], out odr[ i ], out odrl[ i ], out odru[ i ] ); 
-                    orParameters = new ParameterBag(); 
-                    orList.Add( orParameters ); 
-                    orParameters.AddOutput( "st", "* " +  i.ToString() ); 
-                    orParameters.AddOutput( "or", "" ); 
-                    orParameters.AddOutput( "lci", host.RoundU( odrl[ i ] ) ); 
-                    orParameters.AddOutput( "uci", host.RoundU( odru[ i ] ) ); 
-                    orParameters.AddOutput( "wt", "" ); 
-                    orParameters.AddOutput( "dwt", "" ); 
-                    orParameters.AddOutput( "lb", " * [Cornfield limits]" ); 
-                } 
-            } 
-            
-            if ( sk == 0 ) 
-            { 
-                outputParameters.AddOutput( "meth", "Sato" ); 
-                outputParameters.AddOutput( "odds", "undefined" ); 
-                outputParameters.AddOutput( "from", host.RoundU( ll ) ); 
-                outputParameters.AddOutput( "to", Formatting.INFRES ); 
-            } 
-            else 
-            { 
-                outputParameters.AddOutput( "meth", "Robins-Breslow-Greenland" ); 
-                outputParameters.AddOutput( "odds", host.RoundU( rmh ) ); 
-                outputParameters.AddOutput( "from", host.RoundU( ll ) ); 
-                outputParameters.AddOutput( "to", host.RoundU( ul ) ); 
-            } 
-            outputParameters.AddOutput( "chi_mantel", host.RoundU( x2 ) ); 
-            outputParameters.AddOutput( "chi_p", host.pval( PDF.chivalp( x2, 1.0 ) ) ); 
-            
-            List<ParameterBag> cmlList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*cml", cmlList ); 
-            if ( ierr != -9 ) 
-            { 
-                ParameterBag cmlParameters = new ParameterBag(); 
-                cmlList.Add( cmlParameters ); 
-                cmlParameters.AddOutput( "eor", host.RoundU( eor ) ); 
-                cmlParameters.AddOutput( "pc", Formatting.XRound( cco * 100, 2 ) ); 
-                cmlParameters.AddOutput( "llf", host.RoundU( llf ) ); 
-                cmlParameters.AddOutput( "ulf", host.RoundU( ulf ) ); 
-                cmlParameters.AddOutput( "p1f", host.pval( p1f ) ); 
-                cmlParameters.AddOutput( "p2f", host.pval( p2f ) ); 
-                cmlParameters.AddOutput( "llm", host.RoundU( llm ) ); 
-                cmlParameters.AddOutput( "ulm", host.RoundU( ulm ) ); 
-                cmlParameters.AddOutput( "p1m", host.pval( p1m ) ); 
-                cmlParameters.AddOutput( "p2m", host.pval( p2m ) ); 
-            } 
-            
-            outputParameters.AddOutput( "bd", host.RoundU( bd ) ); 
-            outputParameters.AddOutput( "df",  (realk - 1).ToString() ); 
-            outputParameters.AddOutput( "xp", host.pval( PDF.chivalp( bd, Convert.ToDouble( realk - 1 ) ) ) ); 
-            
-            outputParameters.AddOutput( "qc", host.RoundU( qc ) ); 
-            outputParameters.AddOutput( "df_cochran",  (realk - 1).ToString() ); 
-            outputParameters.AddOutput( "xp_cochran", host.pval( PDF.chivalp( qc, Convert.ToDouble( realk - 1 ) ) ) ); 
-            outputParameters.AddOutput( "tausq", host.RoundU( tausq ) ); 
-            Meta.isquare_ncc( host, qc, realk, cco, cit, out isq, out llisq, out ulisq ); 
-            outputParameters.AddOutput( "isq", Formatting.XRound( isq, 1 ) ); 
-            outputParameters.AddOutput( "pc1", Formatting.XRound( cco * 100, 1 ) ); 
-            outputParameters.AddOutput( "llisq", Formatting.XRound( llisq, 1 ) ); 
-            outputParameters.AddOutput( "ulisq", Formatting.XRound( ulisq, 1 ) ); 
-            
-            outputParameters.AddOutput( "dsor", host.RoundU( dsor ) ); 
-            outputParameters.AddOutput( "dsll", host.RoundU( dsll ) ); 
-            outputParameters.AddOutput( "dsul", host.RoundU( dsul ) ); 
-            outputParameters.AddOutput( "dsx2", host.RoundU( dsx2 ) ); 
-            outputParameters.AddOutput( "df_ds",  1.ToString() ); 
-            outputParameters.AddOutput( "xp_ds", host.pval( PDF.chivalp( dsx2, 1.0 ) ) ); 
-            
-            Meta.get_logit_ci( host, o, k, cit, axll, axul ); 
-            
-            IList<ParameterBag> eggerList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*egger", eggerList ); 
-            ParameterBag eggerParameters = new ParameterBag(); 
-            eggerList.Add( eggerParameters ); 
-            Meta.x_metabias( host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log ); 
-            
-            IList<ParameterBag> horboldList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*horbold", horboldList ); 
-            ParameterBag horboldParameters = new ParameterBag(); 
-            horboldList.Add( horboldParameters ); 
-            Meta.x_mod_metabias( host, horboldParameters, o, k, cco, 1 ); 
-            
-            IList<ParameterBag> chartList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*chart", chartList ); 
-            ParameterBag chartParameters; 
-            
-            ChartRenderer ch; 
-            System.IO.Stream metaStream; 
-            if ( k > 3 ) 
-            { 
-                ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                metaStream = new System.IO.MemoryStream(); 
-                ch.Plot_Bias_MA( metaStream, host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false ); 
-                metaStream.Position = 0; 
-                chartParameters = new ParameterBag(); 
-                chartList.Add( chartParameters ); 
-                chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            } 
-            
-            ch = new ChartRenderer( ChartDefinition.Empty() ); 
-            metaStream = new System.IO.MemoryStream(); 
-            ch.StartMetafile( metaStream ); 
-            ch.PlotLAbbe( k, o, rmh ); 
-            ch.EndMetafile(); 
-            metaStream.Position = 0; 
-            chartParameters = new ParameterBag(); 
-            chartList.Add( chartParameters ); 
-            chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-            
-            if ( sk != 0 ) 
-            { 
-                ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                metaStream = new System.IO.MemoryStream();
+            List<ParameterBag> orList = new List<ParameterBag>();
+            outputParameters.AddOutput("*or", orList);
+            for (i = 1; i <= k; i++)
+            {
+                ParameterBag orParameters = new ParameterBag();
+                orList.Add(orParameters);
+                orParameters.AddOutput("st", i.ToString());
+                orParameters.AddOutput("or", host.RoundU(odr[i]));
+                orParameters.AddOutput("lci", host.RoundU(odrl[i]));
+                orParameters.AddOutput("uci", host.RoundU(odru[i]));
+                orParameters.AddOutput("wt", Formatting.XRound(100 * odw[i] / Formatting.dsum(odw, 1), 2));
+                orParameters.AddOutput("dwt", Formatting.XRound(100 * dswt[i] / Formatting.dsum(dswt, 1), 2));
+                orParameters.AddOutput("lb", Meta.get_meta_label(host, o, i, true, cced, title));
+                if (host.Preferences.MetaExact & ((i) == Constant.MISSING | odru[i] == Constant.MISSING))
+                {
+                    Meta.orci_corn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
+                    orParameters = new ParameterBag();
+                    orList.Add(orParameters);
+                    orParameters.AddOutput("st", "* " + i.ToString());
+                    orParameters.AddOutput("or", "");
+                    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
+                    orParameters.AddOutput("uci", host.RoundU(odru[i]));
+                    orParameters.AddOutput("wt", "");
+                    orParameters.AddOutput("dwt", "");
+                    orParameters.AddOutput("lb", " * [Cornfield limits]");
+                }
+            }
+
+            if (sk == 0)
+            {
+                outputParameters.AddOutput("meth", "Sato");
+                outputParameters.AddOutput("odds", "undefined");
+                outputParameters.AddOutput("from", host.RoundU(ll));
+                outputParameters.AddOutput("to", Formatting.INFRES);
+            }
+            else
+            {
+                outputParameters.AddOutput("meth", "Robins-Breslow-Greenland");
+                outputParameters.AddOutput("odds", host.RoundU(rmh));
+                outputParameters.AddOutput("from", host.RoundU(ll));
+                outputParameters.AddOutput("to", host.RoundU(ul));
+            }
+            outputParameters.AddOutput("chi_mantel", host.RoundU(x2));
+            outputParameters.AddOutput("chi_p", host.pval(PDF.chivalp(x2, 1.0)));
+
+            List<ParameterBag> cmlList = new List<ParameterBag>();
+            outputParameters.AddOutput("*cml", cmlList);
+            if (ierr != -9)
+            {
+                ParameterBag cmlParameters = new ParameterBag();
+                cmlList.Add(cmlParameters);
+                cmlParameters.AddOutput("eor", host.RoundU(eor));
+                cmlParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
+                cmlParameters.AddOutput("llf", host.RoundU(llf));
+                cmlParameters.AddOutput("ulf", host.RoundU(ulf));
+                cmlParameters.AddOutput("p1f", host.pval(p1f));
+                cmlParameters.AddOutput("p2f", host.pval(p2f));
+                cmlParameters.AddOutput("llm", host.RoundU(llm));
+                cmlParameters.AddOutput("ulm", host.RoundU(ulm));
+                cmlParameters.AddOutput("p1m", host.pval(p1m));
+                cmlParameters.AddOutput("p2m", host.pval(p2m));
+            }
+
+            outputParameters.AddOutput("bd", host.RoundU(bd));
+            outputParameters.AddOutput("df", (realk - 1).ToString());
+            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(bd, Convert.ToDouble(realk - 1))));
+
+            outputParameters.AddOutput("qc", host.RoundU(qc));
+            outputParameters.AddOutput("df_cochran", (realk - 1).ToString());
+            outputParameters.AddOutput("xp_cochran", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
+            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            Meta.isquare_ncc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
+            outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
+            outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
+            outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
+            outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
+
+            outputParameters.AddOutput("dsor", host.RoundU(dsor));
+            outputParameters.AddOutput("dsll", host.RoundU(dsll));
+            outputParameters.AddOutput("dsul", host.RoundU(dsul));
+            outputParameters.AddOutput("dsx2", host.RoundU(dsx2));
+            outputParameters.AddOutput("df_ds", 1.ToString());
+            outputParameters.AddOutput("xp_ds", host.pval(PDF.chivalp(dsx2, 1.0)));
+
+            Meta.get_logit_ci(host, o, k, cit, axll, axul);
+
+            IList<ParameterBag> eggerList = new List<ParameterBag>();
+            outputParameters.AddOutput("*egger", eggerList);
+            ParameterBag eggerParameters = new ParameterBag();
+            eggerList.Add(eggerParameters);
+            Meta.x_metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
+
+            IList<ParameterBag> horboldList = new List<ParameterBag>();
+            outputParameters.AddOutput("*horbold", horboldList);
+            ParameterBag horboldParameters = new ParameterBag();
+            horboldList.Add(horboldParameters);
+            Meta.x_mod_metabias(host, horboldParameters, o, k, cco, 1);
+
+            IList<ParameterBag> chartList = new List<ParameterBag>();
+            outputParameters.AddOutput("*chart", chartList);
+            ParameterBag chartParameters;
+
+            ChartRenderer ch;
+            if (k > 3)
+            {
+                ch = new ChartRenderer(ChartDefinition.Empty());
+                using (MemoryStream metaStream = new MemoryStream())
+                {
+                    ch.Plot_Bias_MA(metaStream, host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false);
+                    chartParameters = new ParameterBag();
+                    chartList.Add(chartParameters);
+                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
+            }
+
+            ch = new ChartRenderer(ChartDefinition.Empty());
+            using (MemoryStream metaStream = new MemoryStream())
+            {
+                ch.StartMetafile(metaStream);
+                ch.PlotLAbbe(k, o, rmh);
+                ch.EndMetafile();
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+            }
+
+            if (sk != 0)
+            {
                 bool scrap;
-                ch.Plot_MH( metaStream, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap, null ); 
-                metaStream.Position = 0; 
-                chartParameters = new ParameterBag(); 
-                chartList.Add( chartParameters ); 
-                chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-                
-                ch = new ChartRenderer( ChartDefinition.Empty() ); 
-                metaStream = new System.IO.MemoryStream(); 
-                ch.Plot_MH( metaStream, k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap, null ); 
-                metaStream.Position = 0; 
-                chartParameters = new ParameterBag(); 
-                chartList.Add( chartParameters ); 
-                chartParameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
-                
-            } 
-            
-            return outputParameters; 
-        } 
-        
-        
-        private static bool x_symmetrical( int xcats, Namevar[] xcat, int ycats, Namevar[] ycat, bool strict ) 
+                ch = new ChartRenderer(ChartDefinition.Empty());
+                using (MemoryStream metaStream = new MemoryStream())
+                {
+                    ch.Plot_MH(metaStream, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap, null);
+                    chartParameters = new ParameterBag();
+                    chartList.Add(chartParameters);
+                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
+
+                ch = new ChartRenderer(ChartDefinition.Empty());
+                using (MemoryStream metaStream = new MemoryStream())
+                {
+                    ch.Plot_MH(metaStream, k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap, null);
+                    chartParameters = new ParameterBag();
+                    chartList.Add(chartParameters);
+                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
+            }
+
+            return outputParameters;
+        }
+
+
+        private static bool x_symmetrical(int xcats, Namevar[] xcat, int ycats, Namevar[] ycat, bool strict)
         {
-            if ( strict ) 
-            { 
-                if ( xcats != ycats ) 
-                { 
-                    return false; 
-                } 
+            if (strict)
+            {
+                if (xcats != ycats)
+                {
+                    return false;
+                }
             }
             bool x_symmetricalReturn = true;
-            for (int i = 1; i <= Math.Min(xcats, ycats); i++) 
-            { 
-                if ( xcat[ i ].Ti != ycat[ i ].Ti ) 
-                { 
-                    x_symmetricalReturn = false; 
+            for (int i = 1; i <= Math.Min(xcats, ycats); i++)
+            {
+                if (xcat[i].Ti != ycat[i].Ti)
+                {
+                    x_symmetricalReturn = false;
                     break;
-                } 
-            } 
+                }
+            }
             return x_symmetricalReturn;
-        } 
-        
-        
+        }
+
+
         ///  <summary>
         ///  Generalised Cochran Mantel Haenszel test
         ///  </summary>
-        public static void gencmh( int istrata, int irows, int icols, double[] table, double[] rowscr, double[] colscr, int itype, out double x2, out double df, out double p, out int ierr ) 
+        public static void gencmh(int istrata, int irows, int icols, double[] table, double[] rowscr, double[] colscr, int itype, out double x2, out double df, out double p, out int ierr)
         {
             double[,] stat = new double[istrata + 1 + 1 /* for VB to C# conversion */, 3 + 1 /* for VB to C# conversion */];
-            int[] nclval = new int[3 + 1 /* for VB to C# conversion */ ]; 
-            const int indcol = 1; 
-            nclval[ indcol ] = icols; 
-            const int indrow = 3; 
-            nclval[ indrow ] = irows; 
-            nclval[ 2 ] = istrata; 
-            cmhexec( 3, nclval, table, indrow, indcol, itype, 0, 0, rowscr, colscr, stat, istrata + 1, out ierr ); 
-            x2 = stat[ istrata + 1, 1 ]; 
-            df = stat[ istrata + 1, 2 ]; 
-            p = stat[ istrata + 1, 3 ]; 
-        } 
-        
-        
-        public static void cmhexec( int nclvar, int[] nclval, double[] table, int indrow, int indcol, int itype, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] res, int ldres, out int ierr ) 
-        { 
-            
+            int[] nclval = new int[3 + 1 /* for VB to C# conversion */ ];
+            const int indcol = 1;
+            nclval[indcol] = icols;
+            const int indrow = 3;
+            nclval[indrow] = irows;
+            nclval[2] = istrata;
+            cmhexec(3, nclval, table, indrow, indcol, itype, 0, 0, rowscr, colscr, stat, istrata + 1, out ierr);
+            x2 = stat[istrata + 1, 1];
+            df = stat[istrata + 1, 2];
+            p = stat[istrata + 1, 3];
+        }
+
+
+        public static void cmhexec(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int itype, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] res, int ldres, out int ierr)
+        {
+
             int i;
 
-            ierr = 0; 
-            if ( nclvar <= 1 ) 
-            { 
-                ierr = 1; 
-                return; 
-            } 
-            if ( indrow <= 0 | indrow > nclvar ) 
-            { 
-                ierr = 2; 
-                return; 
-            } 
-            if ( indcol <= 0 | indcol > nclvar ) 
-            { 
-                ierr = 3; 
-                return; 
-            } 
-            if ( itype < 1 | itype > 3 ) 
-            { 
-                ierr = 4; 
-                return; 
-            } 
-            int iq = 1; 
-            for ( i=1; i <= nclvar; i++ ) 
-            { 
-                if ( nclval[ i ] <= 0 ) 
-                { 
-                    ierr = 5; 
-                    return; 
-                } 
-                iq = iq * nclval[ i ]; 
-            } 
-            int ir = nclval[ indrow ]; 
-            if ( ir <= 1 ) 
-            { 
-                ierr = 6; 
-                return; 
-            } 
-            int ic = nclval[ indcol ]; 
-            if ( ic <= 1 ) 
-            { 
-                ierr = 7; 
-                return; 
-            } 
-            if ( ir > 1 & ic > 1 ) 
-            { 
-                iq = ( ( int )(  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor((double) iq / ( ir * ic )) ) ); 
-                if ( ldres <= iq ) 
-                { 
-                    ierr = 8; 
-                    return; 
-                } 
-            } 
+            ierr = 0;
+            if (nclvar <= 1)
+            {
+                ierr = 1;
+                return;
+            }
+            if (indrow <= 0 | indrow > nclvar)
+            {
+                ierr = 2;
+                return;
+            }
+            if (indcol <= 0 | indcol > nclvar)
+            {
+                ierr = 3;
+                return;
+            }
+            if (itype < 1 | itype > 3)
+            {
+                ierr = 4;
+                return;
+            }
+            int iq = 1;
+            for (i = 1; i <= nclvar; i++)
+            {
+                if (nclval[i] <= 0)
+                {
+                    ierr = 5;
+                    return;
+                }
+                iq = iq * nclval[i];
+            }
+            int ir = nclval[indrow];
+            if (ir <= 1)
+            {
+                ierr = 6;
+                return;
+            }
+            int ic = nclval[indcol];
+            if (ic <= 1)
+            {
+                ierr = 7;
+                return;
+            }
+            if (ir > 1 & ic > 1)
+            {
+                iq = ((int)(  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor((double)iq / (ir * ic))));
+                if (ldres <= iq)
+                {
+                    ierr = 8;
+                    return;
+                }
+            }
             // redim(workspace)
             ir = nclval[indrow];
             ic = nclval[indcol];
@@ -3778,832 +3745,832 @@ namespace StatsDirect.Builtins
             double[] cov = new double[2 + 1 /* for VB to C# conversion */];
             double[] covsum = new double[2 + 1 /* for VB to C# conversion */];
             double[] awk = new double[2 + 1 /* for VB to C# conversion */];
-            double[] bwk = new double[2 + 1 /* for VB to C# conversion */]; 
-            if ( itype == 1 )
+            double[] bwk = new double[2 + 1 /* for VB to C# conversion */];
+            if (itype == 1)
             {
-                int itmp = ( ir - 1 ) * ( ic - 1 );
-                try 
+                int itmp = (ir - 1) * (ic - 1);
+                try
                 {
                     difvec = new double[2 * itmp + 1 /* for VB to C# conversion */];
                     difsum = new double[2 * itmp + 1 /* for VB to C# conversion */];
                     cov = new double[2 * itmp * itmp + 1 /* for VB to C# conversion */];
                     covsum = new double[2 * itmp * itmp + 1 /* for VB to C# conversion */];
                     awk = new double[2 * (ir - 1) * (ir - 1) + 1 /* for VB to C# conversion */];
-                    bwk = new double[2 * (ic - 1) * (ic - 1) + 1 /* for VB to C# conversion */]; 
-                } 
-                catch ( Exception ) 
-                { 
-                    ierr = 9; 
-                    return; 
+                    bwk = new double[2 * (ic - 1) * (ic - 1) + 1 /* for VB to C# conversion */];
+                }
+                catch (Exception)
+                {
+                    ierr = 9;
+                    return;
                 }
             }
-            else if ( itype == 2 ) 
-            { 
-                try 
+            else if (itype == 2)
+            {
+                try
                 {
                     difvec = new double[2 * ir + 1 /* for VB to C# conversion */];
                     difsum = new double[2 * ir + 1 /* for VB to C# conversion */];
                     cov = new double[2 * ir * ir + 1 /* for VB to C# conversion */];
                     covsum = new double[2 * ir * ir + 1 /* for VB to C# conversion */];
-                    awk = new double[2 * ir + 1 /* for VB to C# conversion */]; 
-                } 
-                catch ( Exception ) 
-                { 
-                    ierr = 10; 
-                    return; 
-                } 
-            } 
+                    awk = new double[2 * ir + 1 /* for VB to C# conversion */];
+                }
+                catch (Exception)
+                {
+                    ierr = 10;
+                    return;
+                }
+            }
             // call(kernel)
-            Cmhgo( nclvar, nclval, table, indrow, indcol, itype, irowsc, icolsc, rowscr, colscr, res, ldres, ix, f, colsum, rowsum, difvec, difsum, cov, covsum, awk, bwk, ref ierr ); 
-        } 
-        
-        
-        public static void Cmhgo( int nclvar, int[] nclval, double[] table, int indrow, int indcol, int itype, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] stat, int ldstat, int[] ix, double[] f, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] awk, double[] bwk, ref int ierr ) 
+            Cmhgo(nclvar, nclval, table, indrow, indcol, itype, irowsc, icolsc, rowscr, colscr, res, ldres, ix, f, colsum, rowsum, difvec, difsum, cov, covsum, awk, bwk, ref ierr);
+        }
+
+
+        public static void Cmhgo(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int itype, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] stat, int ldstat, int[] ix, double[] f, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] awk, double[] bwk, ref int ierr)
         {
             int i, iq = 0;
 
-            if ( nclvar <= 1 ) 
-            { 
-                ierr = 1; 
-                return; 
+            if (nclvar <= 1)
+            {
+                ierr = 1;
+                return;
             }
-            if ( indrow <= 0 || indrow > nclvar ) 
-            { 
-                ierr = 2; 
-                return; 
-            } 
-            if ( indcol <= 0 || indcol > nclvar ) 
-            { 
-                ierr = 3; 
-                return; 
+            if (indrow <= 0 || indrow > nclvar)
+            {
+                ierr = 2;
+                return;
             }
-            if ( itype < 1 || itype > 3 ) 
-            { 
-                ierr = 4; 
-                return; 
-            } 
-            int lentbl = 1; 
-            for ( i=1; i <= nclvar; i++ ) 
-            { 
-                if ( nclval[ i ] <= 0 ) 
-                { 
-                    ierr = 5; 
-                    return; 
-                } 
-                lentbl = lentbl * nclval[ i ]; 
-            } 
-            int ir = nclval[ indrow ]; 
-            if ( ir <= 1 ) 
-            { 
-                ierr = 6; 
-                return; 
-            } 
-            int ic = nclval[ indcol ]; 
-            if ( ic <= 1 ) 
-            { 
-                ierr = 7; 
-                return; 
-            } 
-            if ( ir > 1 & ic > 1 ) 
-            { 
-                iq = ( ( int )( Math.Floor((double) lentbl / ( ir * ic )) ) ); 
-                if ( ldstat <= iq ) 
-                { 
-                    ierr = 8; 
-                    return; 
-                } 
-            } 
-            bool aleqal; 
-            if ( irowsc < 0 || irowsc > 5 ) 
-            { 
-                ierr = 9; 
-                return; 
+            if (indcol <= 0 || indcol > nclvar)
+            {
+                ierr = 3;
+                return;
             }
-            if ( irowsc == 0 & ( itype == 2 | itype == 3 ) & ic >= 2 ) 
-            { 
-                i = 2; 
+            if (itype < 1 || itype > 3)
+            {
+                ierr = 4;
+                return;
+            }
+            int lentbl = 1;
+            for (i = 1; i <= nclvar; i++)
+            {
+                if (nclval[i] <= 0)
+                {
+                    ierr = 5;
+                    return;
+                }
+                lentbl = lentbl * nclval[i];
+            }
+            int ir = nclval[indrow];
+            if (ir <= 1)
+            {
+                ierr = 6;
+                return;
+            }
+            int ic = nclval[indcol];
+            if (ic <= 1)
+            {
+                ierr = 7;
+                return;
+            }
+            if (ir > 1 & ic > 1)
+            {
+                iq = ((int)(Math.Floor((double)lentbl / (ir * ic))));
+                if (ldstat <= iq)
+                {
+                    ierr = 8;
+                    return;
+                }
+            }
+            bool aleqal;
+            if (irowsc < 0 || irowsc > 5)
+            {
+                ierr = 9;
+                return;
+            }
+            if (irowsc == 0 & (itype == 2 | itype == 3) & ic >= 2)
+            {
+                i = 2;
                 do
                 {
-                    if ( rowscr[ 1 ] != rowscr[ i ] ) 
-                    { 
-                        aleqal = false; 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
+                    if (rowscr[1] != rowscr[i])
+                    {
+                        aleqal = false;
+                        break; /* TRANSWARNING: check that break is in correct scope */
                     }
-                    if ( i < ic ) 
-                    { 
-                        i = i + 1; 
+                    if (i < ic)
+                    {
+                        i = i + 1;
                     }
-                } while ( true ); 
-                if ( aleqal ) 
-                { 
-                    ierr = 10; 
-                    return; 
-                } 
+                } while (true);
+                if (aleqal)
+                {
+                    ierr = 10;
+                    return;
+                }
             }
-            if ( icolsc < 0 || icolsc > 5 ) 
-            { 
-                ierr = 11; 
-                return; 
+            if (icolsc < 0 || icolsc > 5)
+            {
+                ierr = 11;
+                return;
             }
-            if ( icolsc == 0 & itype == 3 & ir >= 2 ) 
-            { 
-                i = 2; 
-                do 
-                { 
-                    if ( colscr[ 1 ] != colscr[ i ] ) 
-                    { 
-                        aleqal = false; 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                    if ( i < ir ) 
-                    { 
-                        i = i + 1; 
-                    } 
-                } 
-                while ( true ); 
-                if ( aleqal ) 
-                { 
-                    ierr = 12; 
-                    return; 
-                } 
+            if (icolsc == 0 & itype == 3 & ir >= 2)
+            {
+                i = 2;
+                do
+                {
+                    if (colscr[1] != colscr[i])
+                    {
+                        aleqal = false;
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                    if (i < ir)
+                    {
+                        i = i + 1;
+                    }
+                }
+                while (true);
+                if (aleqal)
+                {
+                    ierr = 12;
+                    return;
+                }
             }
-            for ( i=1; i <= lentbl; i++ ) 
-            { 
-                if ( table[ i ] < 0.0 ) 
-                { 
-                    ierr = 13; 
-                    return; 
-                } 
-            } 
-            i = nclvar; 
+            for (i = 1; i <= lentbl; i++)
+            {
+                if (table[i] < 0.0)
+                {
+                    ierr = 13;
+                    return;
+                }
+            }
+            i = nclvar;
             int incrow = 1;
-            int inccol = 1; 
-            do 
-            { 
-                if ( i > indrow && i > 1 ) 
-                { 
-                    incrow = incrow * nclval[ i ]; 
-                    i = i - 1; 
-                } 
-                else 
-                { 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                } 
-            } 
-            while ( true ); 
-            i = nclvar; 
-            do 
-            { 
-                if ( i > indcol & i > 1 ) 
-                { 
-                    inccol = inccol * nclval[ i ]; 
-                    i = i - 1; 
-                } 
-                else 
-                { 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                } 
-            } 
-            while ( true ); 
-            if ( itype == 1 ) 
-            { 
+            int inccol = 1;
+            do
+            {
+                if (i > indrow && i > 1)
+                {
+                    incrow = incrow * nclval[i];
+                    i = i - 1;
+                }
+                else
+                {
+                    break; /* TRANSWARNING: check that break is in correct scope */
+                }
+            }
+            while (true);
+            i = nclvar;
+            do
+            {
+                if (i > indcol & i > 1)
+                {
+                    inccol = inccol * nclval[i];
+                    i = i - 1;
+                }
+                else
+                {
+                    break; /* TRANSWARNING: check that break is in correct scope */
+                }
+            }
+            while (true);
+            if (itype == 1)
+            {
                 // method based on each whole table
-                cmhall( nclvar, nclval, table, indrow, indcol, stat, ldstat, incrow, inccol, f, ix, colsum, rowsum, difvec, difsum, cov, covsum, awk, bwk, ref ierr ); 
-            } 
-            else 
+                cmhall(nclvar, nclval, table, indrow, indcol, stat, ldstat, incrow, inccol, f, ix, colsum, rowsum, difvec, difsum, cov, covsum, awk, bwk, ref ierr);
+            }
+            else
             {
                 int m;
                 int j;
-                if ( irowsc == 1 ) 
-                { 
-                    for ( j=1; j <= ic; j++ ) 
-                    { 
-                        rowscr[ j ] = j; 
-                    } 
-                } 
-                else if ( irowsc == 2 ) 
-                { 
-                    for ( j=1; j <= ic; j++ ) 
-                    { 
-                        colsum[ j ] = 0.0; 
-                    } 
-                    for ( j=1; j <= nclvar; j++ ) 
-                    { 
-                        ix[ j ] = 1; 
-                    } 
-                    for ( m=1; m <= iq; m++ ) 
-                    { 
-                        if ( m > 1 )
-                        { 
-                            cmhidx( nclvar, nclval, indrow, indcol, ix ); 
-                        } 
-                        cmhgetct( table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix ); 
-                        for ( j=1; j <= ic; j++ ) 
-                        { 
-                            for ( i=ir * ( j - 1 ) + 1; i <= ir * ( j - 1 ) + ir; i++ ) 
-                            { 
-                                colsum[ j ] = colsum[ j ] + f[ i ]; 
-                            } 
-                        } 
-                    } 
-                    cmhrcs( irowsc, ic, lentbl, colsum, table, rowscr ); 
-                    for ( j=1; j <= nclvar; j++ ) 
-                    { 
-                        ix[ j ] = 1; 
-                    } 
-                } 
-                if ( itype == 2 ) 
-                { 
+                if (irowsc == 1)
+                {
+                    for (j = 1; j <= ic; j++)
+                    {
+                        rowscr[j] = j;
+                    }
+                }
+                else if (irowsc == 2)
+                {
+                    for (j = 1; j <= ic; j++)
+                    {
+                        colsum[j] = 0.0;
+                    }
+                    for (j = 1; j <= nclvar; j++)
+                    {
+                        ix[j] = 1;
+                    }
+                    for (m = 1; m <= iq; m++)
+                    {
+                        if (m > 1)
+                        {
+                            cmhidx(nclvar, nclval, indrow, indcol, ix);
+                        }
+                        cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
+                        for (j = 1; j <= ic; j++)
+                        {
+                            for (i = ir * (j - 1) + 1; i <= ir * (j - 1) + ir; i++)
+                            {
+                                colsum[j] = colsum[j] + f[i];
+                            }
+                        }
+                    }
+                    cmhrcs(irowsc, ic, lentbl, colsum, table, rowscr);
+                    for (j = 1; j <= nclvar; j++)
+                    {
+                        ix[j] = 1;
+                    }
+                }
+                if (itype == 2)
+                {
                     //        method based on table mean scores
-                    cmhmean( nclvar, nclval, table, indrow, indcol, irowsc, rowscr, stat, ldstat, incrow, inccol, f, ix, colsum, rowsum, difvec, difsum, cov, covsum, awk, ref ierr ); 
-                } 
-                else 
-                { 
-                    if ( icolsc == 1 ) 
-                    { 
-                        for ( i=1; i <= ir; i++ ) 
-                        { 
-                            colscr[ i ] = i; 
-                        } 
-                    } 
-                    else if ( icolsc == 2 ) 
-                    { 
-                        for ( j=1; j <= ir; j++ ) 
-                        { 
-                            rowsum[ j ] = 0.0; 
-                        } 
-                        for ( j=1; j <= nclvar; j++ ) 
-                        { 
-                            ix[ j ] = 1; 
-                        } 
-                        for ( m=1; m <= iq; m++ ) 
-                        { 
-                            if ( m > 1 )
-                            { 
-                                cmhidx( nclvar, nclval, indrow, indcol, ix ); 
-                            } 
-                            cmhgetct( table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix ); 
-                            for ( i=1; i <= ir; i++ ) 
-                            { 
-                                for ( j=i; j <= i - 1 + ic * ir; j+=ir ) 
-                                { 
-                                    rowsum[ i ] = rowsum[ i ] + f[ j ]; 
-                                } 
+                    cmhmean(nclvar, nclval, table, indrow, indcol, irowsc, rowscr, stat, ldstat, incrow, inccol, f, ix, colsum, rowsum, difvec, difsum, cov, covsum, awk, ref ierr);
+                }
+                else
+                {
+                    if (icolsc == 1)
+                    {
+                        for (i = 1; i <= ir; i++)
+                        {
+                            colscr[i] = i;
+                        }
+                    }
+                    else if (icolsc == 2)
+                    {
+                        for (j = 1; j <= ir; j++)
+                        {
+                            rowsum[j] = 0.0;
+                        }
+                        for (j = 1; j <= nclvar; j++)
+                        {
+                            ix[j] = 1;
+                        }
+                        for (m = 1; m <= iq; m++)
+                        {
+                            if (m > 1)
+                            {
+                                cmhidx(nclvar, nclval, indrow, indcol, ix);
+                            }
+                            cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
+                            for (i = 1; i <= ir; i++)
+                            {
+                                for (j = i; j <= i - 1 + ic * ir; j += ir)
+                                {
+                                    rowsum[i] = rowsum[i] + f[j];
+                                }
                                 // rowsum(i) = rowsum(i) + dsum(ic, f(i), ir)
-                            } 
-                        } 
-                        cmhrcs( icolsc, ir, lentbl, rowsum, table, colscr ); 
-                        for ( j=1; j <= nclvar; j++ ) 
-                        { 
-                            ix[ j ] = 1; 
-                        } 
-                    } 
+                            }
+                        }
+                        cmhrcs(icolsc, ir, lentbl, rowsum, table, colscr);
+                        for (j = 1; j <= nclvar; j++)
+                        {
+                            ix[j] = 1;
+                        }
+                    }
                     //        method based on each table's correlation
-                    cmhcorr( nclvar, nclval, table, indrow, indcol, irowsc, icolsc, rowscr, colscr, stat, ldstat, incrow, inccol, f, ix, colsum, rowsum, out difsum[ 1 ], out covsum[ 1 ], ref ierr ); 
-                } 
-            } 
-            
-        } 
-        
-        
-        public static void cmhall( int nclvar, int[] nclval, double[] table, int indrow, int indcol, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] awk, double[] bwk, ref int ierr ) 
-        {
-            int i , j , m;
+                    cmhcorr(nclvar, nclval, table, indrow, indcol, irowsc, icolsc, rowscr, colscr, stat, ldstat, incrow, inccol, f, ix, colsum, rowsum, out difsum[1], out covsum[1], ref ierr);
+                }
+            }
 
-            double tol = Math.Sqrt( Constant.EPSILON ); 
-            int ir = nclval[ indrow ]; 
-            int ic = nclval[ indcol ]; 
-            int lentbl = 1; 
-            for ( i=1; i <= nclvar; i++ ) 
-            { 
-                lentbl = lentbl * nclval[ i ]; 
-            } 
-            int iq = ( ( int )( Math.Floor((double) lentbl / ( ir * ic )) ) ); 
-            int nzt = iq; 
-            int lm1 = ( ir - 1 ) * ( ic - 1 ); 
-            int lm2 = lm1 * lm1; 
-            for ( i=1; i <= lm2; i++ ) 
-            { 
-                covsum[ i ] = 0.0; 
-            } 
-            for ( i=1; i <= lm1; i++ ) 
-            { 
-                difsum[ i ] = 0.0; 
-            } 
-            for ( i=1; i <= nclvar; i++ ) 
-            { 
-                ix[ i ] = 1; 
-            } 
+        }
+
+
+        public static void cmhall(int nclvar, int[] nclval, double[] table, int indrow, int indcol, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] awk, double[] bwk, ref int ierr)
+        {
+            int i, j, m;
+
+            double tol = Math.Sqrt(Constant.EPSILON);
+            int ir = nclval[indrow];
+            int ic = nclval[indcol];
+            int lentbl = 1;
+            for (i = 1; i <= nclvar; i++)
+            {
+                lentbl = lentbl * nclval[i];
+            }
+            int iq = ((int)(Math.Floor((double)lentbl / (ir * ic))));
+            int nzt = iq;
+            int lm1 = (ir - 1) * (ic - 1);
+            int lm2 = lm1 * lm1;
+            for (i = 1; i <= lm2; i++)
+            {
+                covsum[i] = 0.0;
+            }
+            for (i = 1; i <= lm1; i++)
+            {
+                difsum[i] = 0.0;
+            }
+            for (i = 1; i <= nclvar; i++)
+            {
+                ix[i] = 1;
+            }
             //      loop through each table
-            for ( m=1; m <= iq; m++ ) 
-            { 
+            for (m = 1; m <= iq; m++)
+            {
                 // extract(table)
-                if ( m > 1 )
-                { 
-                    cmhidx( nclvar, nclval, indrow, indcol, ix ); 
-                } 
-                cmhgetct( table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix ); 
+                if (m > 1)
+                {
+                    cmhidx(nclvar, nclval, indrow, indcol, ix);
+                }
+                cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
                 // totals()
-                double rnh = 0.0; 
-                int nzc = ic; 
+                double rnh = 0.0;
+                int nzc = ic;
                 int j1 = 1;
                 double tmp;
-                for ( j=1; j <= ic; j++ ) 
-                { 
-                    tmp = 0.0; 
-                    for ( i=j1; i <= j1 - 1 + ir; i++ ) 
-                    { 
-                        tmp = tmp + f[ i ]; 
-                    } 
-                    rnh = rnh + tmp; 
-                    colsum[ j ] = tmp; 
-                    if ( colsum[ j ] < tol ) 
-                    { 
-                        nzc = nzc - 1; 
-                        colsum[ j ] = 0.0; 
-                    } 
-                    j1 = j1 + ir; 
-                } 
-                if ( rnh < tol ) 
-                { 
-                    res[ m, 1 ] = Constant.MISSING; 
-                    res[ m, 2 ] = Constant.MISSING; 
-                    res[ m, 3 ] = Constant.MISSING; 
-                    nzt = nzt - 1; 
-                    
-                } 
-                else 
-                { 
-                    int nzr = ir; 
-                    for ( i=1; i <= ir; i++ ) 
-                    { 
-                        rowsum[ i ] = 0.0;
-                        int k ;
-                        for ( k=i; k <= i - 1 + ic * ir; k+=ir ) 
-                        { 
-                            rowsum[ i ] = rowsum[ i ] + f[ k ]; 
-                        } 
-                        if ( rowsum[ i ] < tol ) 
-                        { 
-                            nzr = nzr - 1; 
-                            rowsum[ i ] = 0.0; 
-                        } 
-                    } 
+                for (j = 1; j <= ic; j++)
+                {
+                    tmp = 0.0;
+                    for (i = j1; i <= j1 - 1 + ir; i++)
+                    {
+                        tmp = tmp + f[i];
+                    }
+                    rnh = rnh + tmp;
+                    colsum[j] = tmp;
+                    if (colsum[j] < tol)
+                    {
+                        nzc = nzc - 1;
+                        colsum[j] = 0.0;
+                    }
+                    j1 = j1 + ir;
+                }
+                if (rnh < tol)
+                {
+                    res[m, 1] = Constant.MISSING;
+                    res[m, 2] = Constant.MISSING;
+                    res[m, 3] = Constant.MISSING;
+                    nzt = nzt - 1;
+
+                }
+                else
+                {
+                    int nzr = ir;
+                    for (i = 1; i <= ir; i++)
+                    {
+                        rowsum[i] = 0.0;
+                        int k;
+                        for (k = i; k <= i - 1 + ic * ir; k += ir)
+                        {
+                            rowsum[i] = rowsum[i] + f[k];
+                        }
+                        if (rowsum[i] < tol)
+                        {
+                            nzr = nzr - 1;
+                            rowsum[i] = 0.0;
+                        }
+                    }
                     // main(stats)
-                    tmp = 0.0; 
-                    int ij = 1; 
-                    for ( j=1; j <= ic; j++ ) 
-                    { 
-                        for ( i=1; i <= ir; i++ ) 
-                        { 
-                            if ( colsum[ j ] > tol & rowsum[ i ] > tol ) 
-                            { 
-                                tmp = tmp + Math.Pow( ( f[ ij ] - colsum[ j ] * rowsum[ i ] / rnh ), 2.0 ) / ( colsum[ j ] * rowsum[ i ] / rnh ); 
-                            } 
-                            ij = ij + 1; 
-                        } 
-                    } 
-                    res[ m, 1 ] = ( rnh - 1 ) / rnh * tmp; 
-                    res[ m, 2 ] = ( nzr - 1 ) * ( nzc - 1 ); 
-                    if ( res[ m, 2 ] < tol ) 
-                    { 
-                        res[ m, 3 ] = Constant.MISSING; 
-                    } 
-                    else 
-                    { 
-                        res[ m, 3 ] = PDF.chivalp( res[ m, 1 ], res[ m, 2 ] ); 
-                    } 
+                    tmp = 0.0;
+                    int ij = 1;
+                    for (j = 1; j <= ic; j++)
+                    {
+                        for (i = 1; i <= ir; i++)
+                        {
+                            if (colsum[j] > tol & rowsum[i] > tol)
+                            {
+                                tmp = tmp + Math.Pow((f[ij] - colsum[j] * rowsum[i] / rnh), 2.0) / (colsum[j] * rowsum[i] / rnh);
+                            }
+                            ij = ij + 1;
+                        }
+                    }
+                    res[m, 1] = (rnh - 1) / rnh * tmp;
+                    res[m, 2] = (nzr - 1) * (nzc - 1);
+                    if (res[m, 2] < tol)
+                    {
+                        res[m, 3] = Constant.MISSING;
+                    }
+                    else
+                    {
+                        res[m, 3] = PDF.chivalp(res[m, 1], res[m, 2]);
+                    }
                     // covariance()
-                    if ( rnh != 1.0 ) 
-                    { 
-                        cmhcov( ir, ic, lm1, rowsum, colsum, rnh, f, difvec, cov, awk, bwk ); 
-                        for ( j=1; j <= lm1; j++ ) 
-                        { 
-                            difsum[ j ] = difsum[ j ] + difvec[ j ]; 
-                        } 
-                        tmp = rnh * rnh / ( rnh - 1.0 ); 
-                        j1 = 1; 
-                        for ( j=1; j <= lm1; j++ ) 
-                        { 
-                            for ( i=j1; i <= j1 - 1 + lm1; i++ ) 
-                            { 
-                                covsum[ i ] = covsum[ i ] + tmp * cov[ i ]; 
-                            } 
-                            j1 = j1 + lm1; 
-                        } 
-                    } 
-                } 
-            } 
-            if ( nzt > 0 ) 
-            { 
-                tol = 100 * Constant.EPSILON; 
-                Matrix.mxfac( lm1, covsum, lm1, tol, ref m, cov, lm1, ref ierr ); 
-                Matrix.transrxb( lm1, cov, lm1, difsum, lm1, ref m, difvec, lm1, cov, lm1, ref ierr ); 
-                res[ iq + 1, 2 ] = m; 
-                res[ iq + 1, 1 ] = 0.0; 
-                for ( j=1; j <= lm1; j++ ) 
-                { 
-                    res[ iq + 1, 1 ] = res[ iq + 1, 1 ] + difvec[ j ] * difvec[ j ]; 
-                } 
-                if ( res[ iq + 1, 2 ] > 0.0 ) 
-                { 
-                    res[ iq + 1, 3 ] = PDF.chivalp( res[ iq + 1, 1 ], res[ iq + 1, 2 ] ); 
-                } 
-                else 
-                { 
-                    res[ iq + 1, 3 ] = Constant.MISSING; 
-                } 
-            } 
-            else 
-            { 
-                res[ iq + 1, 1 ] = Constant.MISSING; 
-                res[ iq + 1, 2 ] = Constant.MISSING; 
-                res[ iq + 1, 3 ] = Constant.MISSING; 
-            } 
-            
-        } 
-        
-        
-        private static void cmhmean( int nclvar, int[] nclval, double[] table, int indrow, int indcol, int irowsc, double[] rowscr, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] fh, ref int ierr ) 
-        { 
-            
+                    if (rnh != 1.0)
+                    {
+                        cmhcov(ir, ic, lm1, rowsum, colsum, rnh, f, difvec, cov, awk, bwk);
+                        for (j = 1; j <= lm1; j++)
+                        {
+                            difsum[j] = difsum[j] + difvec[j];
+                        }
+                        tmp = rnh * rnh / (rnh - 1.0);
+                        j1 = 1;
+                        for (j = 1; j <= lm1; j++)
+                        {
+                            for (i = j1; i <= j1 - 1 + lm1; i++)
+                            {
+                                covsum[i] = covsum[i] + tmp * cov[i];
+                            }
+                            j1 = j1 + lm1;
+                        }
+                    }
+                }
+            }
+            if (nzt > 0)
+            {
+                tol = 100 * Constant.EPSILON;
+                Matrix.mxfac(lm1, covsum, lm1, tol, ref m, cov, lm1, ref ierr);
+                Matrix.transrxb(lm1, cov, lm1, difsum, lm1, ref m, difvec, lm1, cov, lm1, ref ierr);
+                res[iq + 1, 2] = m;
+                res[iq + 1, 1] = 0.0;
+                for (j = 1; j <= lm1; j++)
+                {
+                    res[iq + 1, 1] = res[iq + 1, 1] + difvec[j] * difvec[j];
+                }
+                if (res[iq + 1, 2] > 0.0)
+                {
+                    res[iq + 1, 3] = PDF.chivalp(res[iq + 1, 1], res[iq + 1, 2]);
+                }
+                else
+                {
+                    res[iq + 1, 3] = Constant.MISSING;
+                }
+            }
+            else
+            {
+                res[iq + 1, 1] = Constant.MISSING;
+                res[iq + 1, 2] = Constant.MISSING;
+                res[iq + 1, 3] = Constant.MISSING;
+            }
+
+        }
+
+
+        private static void cmhmean(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int irowsc, double[] rowscr, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] fh, ref int ierr)
+        {
+
             int i, j, m, ij;
 
-            double tol = Math.Sqrt( Constant.EPSILON ); 
-            int ir = nclval[ indrow ]; 
-            int ic = nclval[ indcol ]; 
-            int lentbl = 1; 
-            for ( i=1; i <= nclvar; i++ ) 
-            { 
-                lentbl = lentbl * nclval[ i ]; 
-            } 
-            int iq = ( ( int )(Math.Floor((double) lentbl / ( ir * ic )) ) ); 
-            int nzt = iq; 
-            for ( i=1; i <= ir * ir; i++ ) 
-            { 
-                covsum[ i ] = 0.0; 
-            } 
-            for ( i=1; i <= ir; i++ ) 
-            { 
-                difsum[ i ] = 0.0; 
-            } 
-            for ( i=1; i <= nclvar; i++ ) 
-            { 
-                ix[ i ] = 1; 
+            double tol = Math.Sqrt(Constant.EPSILON);
+            int ir = nclval[indrow];
+            int ic = nclval[indcol];
+            int lentbl = 1;
+            for (i = 1; i <= nclvar; i++)
+            {
+                lentbl = lentbl * nclval[i];
+            }
+            int iq = ((int)(Math.Floor((double)lentbl / (ir * ic))));
+            int nzt = iq;
+            for (i = 1; i <= ir * ir; i++)
+            {
+                covsum[i] = 0.0;
+            }
+            for (i = 1; i <= ir; i++)
+            {
+                difsum[i] = 0.0;
+            }
+            for (i = 1; i <= nclvar; i++)
+            {
+                ix[i] = 1;
             }
             //      loop thro table stats
-            for ( m=1; m <= iq; m++ ) 
-            { 
+            for (m = 1; m <= iq; m++)
+            {
                 //       find first element of table and pack it into matrix
-                if ( m > 1 )
-                { 
-                    cmhidx( nclvar, nclval, indrow, indcol, ix ); 
-                } 
-                cmhgetct( table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix ); 
+                if (m > 1)
+                {
+                    cmhidx(nclvar, nclval, indrow, indcol, ix);
+                }
+                cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
                 // totals()
-                double rnh = 0.0; 
-                int j1 = 1; 
-                for ( j=1; j <= ic; j++ ) 
-                { 
-                    colsum[ j ] = 0.0; 
-                    for ( i=j1; i <= j1 - 1 + ir; i++ ) 
-                    { 
-                        colsum[ j ] = colsum[ j ] + f[ i ]; 
-                    } 
-                    rnh = rnh + colsum[ j ]; 
-                    j1 = j1 + ir; 
-                } 
-                if ( rnh < tol ) 
-                { 
+                double rnh = 0.0;
+                int j1 = 1;
+                for (j = 1; j <= ic; j++)
+                {
+                    colsum[j] = 0.0;
+                    for (i = j1; i <= j1 - 1 + ir; i++)
+                    {
+                        colsum[j] = colsum[j] + f[i];
+                    }
+                    rnh = rnh + colsum[j];
+                    j1 = j1 + ir;
+                }
+                if (rnh < tol)
+                {
                     //        all counts 0 so exclude table
-                    res[ m, 1 ] = Constant.MISSING; 
-                    res[ m, 2 ] = Constant.MISSING; 
-                    res[ m, 3 ] = Constant.MISSING; 
-                    nzt = nzt - 1; 
-                    
-                } 
-                else 
-                { 
-                    int nzr = ir; 
-                    for ( i=1; i <= ir; i++ ) 
-                    { 
-                        rowsum[ i ] = 0.0; 
-                        for ( j=i; j <= i - 1 + ic * ir; j+=ir ) 
-                        { 
-                            rowsum[ i ] = rowsum[ i ] + f[ j ]; 
-                        } 
-                        if ( rowsum[ i ] < tol ) 
-                        { 
-                            nzr = nzr - 1; 
-                            rowsum[ i ] = 0.0; 
-                        } 
-                    } 
+                    res[m, 1] = Constant.MISSING;
+                    res[m, 2] = Constant.MISSING;
+                    res[m, 3] = Constant.MISSING;
+                    nzt = nzt - 1;
+
+                }
+                else
+                {
+                    int nzr = ir;
+                    for (i = 1; i <= ir; i++)
+                    {
+                        rowsum[i] = 0.0;
+                        for (j = i; j <= i - 1 + ic * ir; j += ir)
+                        {
+                            rowsum[i] = rowsum[i] + f[j];
+                        }
+                        if (rowsum[i] < tol)
+                        {
+                            nzr = nzr - 1;
+                            rowsum[i] = 0.0;
+                        }
+                    }
                     //       scores and their means
-                    if ( irowsc > 2 ) 
-                    { 
-                        lentbl = ir * ic; 
-                        cmhrcs( irowsc, ic, lentbl, colsum, f, rowscr ); 
+                    if (irowsc > 2)
+                    {
+                        lentbl = ir * ic;
+                        cmhrcs(irowsc, ic, lentbl, colsum, f, rowscr);
                     }
                     double tmp;
-                    for ( i=1; i <= ir; i++ ) 
-                    { 
-                        ij = i; 
-                        if ( rowsum[ i ] < tol ) 
-                        { 
-                            fh[ i ] = 0.0; 
-                        } 
-                        else 
-                        { 
-                            tmp = 0.0; 
-                            for ( j=1; j <= ic; j++ ) 
-                            { 
-                                tmp = tmp + rowscr[ j ] * f[ ij ]; 
-                                ij = ij + ir; 
-                            } 
-                            fh[ i ] = tmp / rowsum[ i ]; 
-                        } 
-                    } 
-                    double abar = 0.0; 
-                    for ( j=1; j <= ic; j++ ) 
-                    { 
-                        abar = abar + rowscr[ j ] * colsum[ j ] / rnh; 
-                    } 
+                    for (i = 1; i <= ir; i++)
+                    {
+                        ij = i;
+                        if (rowsum[i] < tol)
+                        {
+                            fh[i] = 0.0;
+                        }
+                        else
+                        {
+                            tmp = 0.0;
+                            for (j = 1; j <= ic; j++)
+                            {
+                                tmp = tmp + rowscr[j] * f[ij];
+                                ij = ij + ir;
+                            }
+                            fh[i] = tmp / rowsum[i];
+                        }
+                    }
+                    double abar = 0.0;
+                    for (j = 1; j <= ic; j++)
+                    {
+                        abar = abar + rowscr[j] * colsum[j] / rnh;
+                    }
                     // total(variance)
-                    double dela = 0.0; 
-                    for ( j=1; j <= ic; j++ ) 
-                    { 
-                        dela = dela + Math.Pow( ( rowscr[ j ] - abar ), 2.0 ) * colsum[ j ] / rnh; 
-                    } 
+                    double dela = 0.0;
+                    for (j = 1; j <= ic; j++)
+                    {
+                        dela = dela + Math.Pow((rowscr[j] - abar), 2.0) * colsum[j] / rnh;
+                    }
                     //       between populations variance
-                    double delf = 0.0; 
-                    for ( i=1; i <= ir; i++ ) 
-                    { 
-                        delf = delf + Math.Pow( ( fh[ i ] - abar ), 2.0 ) * rowsum[ i ] / rnh; 
-                    } 
-                    if ( dela > tol ) 
-                    { 
-                        res[ m, 1 ] = ( rnh - 1.0 ) * delf / dela; 
-                        res[ m, 2 ] = nzr - 1; 
-                        if ( res[ m, 2 ] > tol ) 
-                        { 
-                            res[ m, 3 ] = PDF.chivalp( res[ m, 1 ], res[ m, 2 ] ); 
-                        } 
-                        else 
-                        { 
-                            res[ m, 3 ] = Constant.MISSING; 
-                        } 
-                    } 
-                    else 
-                    { 
+                    double delf = 0.0;
+                    for (i = 1; i <= ir; i++)
+                    {
+                        delf = delf + Math.Pow((fh[i] - abar), 2.0) * rowsum[i] / rnh;
+                    }
+                    if (dela > tol)
+                    {
+                        res[m, 1] = (rnh - 1.0) * delf / dela;
+                        res[m, 2] = nzr - 1;
+                        if (res[m, 2] > tol)
+                        {
+                            res[m, 3] = PDF.chivalp(res[m, 1], res[m, 2]);
+                        }
+                        else
+                        {
+                            res[m, 3] = Constant.MISSING;
+                        }
+                    }
+                    else
+                    {
                         // zero(variance)
-                        res[ m, 1 ] = 0.0; 
-                        res[ m, 2 ] = 0.0; 
-                        res[ m, 3 ] = Constant.MISSING; 
-                    } 
+                        res[m, 1] = 0.0;
+                        res[m, 2] = 0.0;
+                        res[m, 3] = Constant.MISSING;
+                    }
                     //       row col score covariance
-                    if ( rnh != 1.0 ) 
-                    { 
-                        tmp = dela * rnh * rnh / ( rnh - 1.0 ); 
-                        for ( i=1; i <= ir; i++ ) 
-                        { 
-                            ij = i; 
-                            for ( j=1; j <= ir; j++ ) 
-                            { 
-                                if ( i == j ) 
-                                { 
-                                    cov[ ij ] = rowsum[ i ] / rnh; 
-                                } 
-                                else 
-                                { 
-                                    cov[ ij ] = 0.0; 
-                                } 
-                                cov[ ij ] = tmp * ( cov[ ij ] - rowsum[ i ] * rowsum[ j ] / ( rnh * rnh ) ); 
-                                covsum[ ij ] = covsum[ ij ] + cov[ ij ]; 
-                                ij = ij + ir; 
-                            } 
+                    if (rnh != 1.0)
+                    {
+                        tmp = dela * rnh * rnh / (rnh - 1.0);
+                        for (i = 1; i <= ir; i++)
+                        {
+                            ij = i;
+                            for (j = 1; j <= ir; j++)
+                            {
+                                if (i == j)
+                                {
+                                    cov[ij] = rowsum[i] / rnh;
+                                }
+                                else
+                                {
+                                    cov[ij] = 0.0;
+                                }
+                                cov[ij] = tmp * (cov[ij] - rowsum[i] * rowsum[j] / (rnh * rnh));
+                                covsum[ij] = covsum[ij] + cov[ij];
+                                ij = ij + ir;
+                            }
                             // obs(-exp)
-                            difvec[ i ] = rowsum[ i ] * ( fh[ i ] - abar ); 
-                            difsum[ i ] = difsum[ i ] + difvec[ i ]; 
-                        } 
-                    } 
-                } 
-            } 
+                            difvec[i] = rowsum[i] * (fh[i] - abar);
+                            difsum[i] = difsum[i] + difvec[i];
+                        }
+                    }
+                }
+            }
             //      covariance matrix of different estimates
-            ij = 1; 
-            int irir = ir * ir; 
-            int irj = ir; 
-            int iir = ( ir - 1 ) * ir; 
-            for ( j=1; j <= ir - 1; j++ ) 
-            { 
-                difvec[ j ] = difsum[ j ] - difsum[ ir ]; 
-                for ( i=1; i <= ir - 1; i++ ) 
-                { 
-                    cov[ ij ] = covsum[ ij ] - covsum[ irj ] - covsum[ iir + i ] + covsum[ irir ]; 
-                    ij = ij + 1; 
-                } 
-                ij = ij + 1; 
-                irj = irj + ir; 
-            } 
-            if ( nzt > 0 ) 
-            { 
-                tol = 100 * Constant.EPSILON; 
-                Matrix.mxfac( ir - 1, cov, ir, tol, ref m, cov, ir, ref ierr ); 
-                Matrix.transrxb( ir - 1, cov, ir, difvec, ir, ref m, difvec, ir, cov, ir, ref ierr ); 
-                res[ iq + 1, 2 ] = m; 
-                res[ iq + 1, 1 ] = 0.0; 
-                for ( i=1; i <= ir - 1; i++ ) 
-                { 
-                    res[ iq + 1, 1 ] = res[ iq + 1, 1 ] + difvec[ i ] * difvec[ i ]; 
-                } 
-                if ( res[ iq + 1, 2 ] > 0.0 ) 
-                { 
-                    res[ iq + 1, 3 ] = PDF.chivalp( res[ iq + 1, 1 ], res[ iq + 1, 2 ] ); 
-                } 
-                else 
-                { 
-                    res[ iq + 1, 3 ] = Constant.MISSING; 
-                } 
-            } 
-            else 
-            { 
-                res[ iq + 1, 1 ] = Constant.MISSING; 
-                res[ iq + 1, 2 ] = Constant.MISSING; 
-                res[ iq + 1, 3 ] = Constant.MISSING; 
-            } 
-            
-        } 
-        
-        
-        private static void cmhcorr( int nclvar, int[] nclval, double[] table, int indrow, int indcol, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, out double difsum, out double covsum, ref int ierr ) 
+            ij = 1;
+            int irir = ir * ir;
+            int irj = ir;
+            int iir = (ir - 1) * ir;
+            for (j = 1; j <= ir - 1; j++)
+            {
+                difvec[j] = difsum[j] - difsum[ir];
+                for (i = 1; i <= ir - 1; i++)
+                {
+                    cov[ij] = covsum[ij] - covsum[irj] - covsum[iir + i] + covsum[irir];
+                    ij = ij + 1;
+                }
+                ij = ij + 1;
+                irj = irj + ir;
+            }
+            if (nzt > 0)
+            {
+                tol = 100 * Constant.EPSILON;
+                Matrix.mxfac(ir - 1, cov, ir, tol, ref m, cov, ir, ref ierr);
+                Matrix.transrxb(ir - 1, cov, ir, difvec, ir, ref m, difvec, ir, cov, ir, ref ierr);
+                res[iq + 1, 2] = m;
+                res[iq + 1, 1] = 0.0;
+                for (i = 1; i <= ir - 1; i++)
+                {
+                    res[iq + 1, 1] = res[iq + 1, 1] + difvec[i] * difvec[i];
+                }
+                if (res[iq + 1, 2] > 0.0)
+                {
+                    res[iq + 1, 3] = PDF.chivalp(res[iq + 1, 1], res[iq + 1, 2]);
+                }
+                else
+                {
+                    res[iq + 1, 3] = Constant.MISSING;
+                }
+            }
+            else
+            {
+                res[iq + 1, 1] = Constant.MISSING;
+                res[iq + 1, 2] = Constant.MISSING;
+                res[iq + 1, 3] = Constant.MISSING;
+            }
+
+        }
+
+
+        private static void cmhcorr(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, out double difsum, out double covsum, ref int ierr)
         {
             int i;
             int m;
 
-            double tol = Math.Sqrt( Constant.EPSILON ); 
-            int ir = nclval[ indrow ]; 
-            int ic = nclval[ indcol ]; 
-            int lentbl = 1; 
-            for ( i=1; i <= nclvar; i++ ) 
-            { 
-                lentbl = lentbl * nclval[ i ]; 
-            } 
-            int iq = ( ( int )( Math.Floor((double) lentbl / ( ir * ic )) ) ); 
-            difsum = 0.0; 
-            covsum = 0.0; 
-            for ( i=1; i <= nclvar; i++ ) 
-            { 
-                ix[ i ] = 1; 
+            double tol = Math.Sqrt(Constant.EPSILON);
+            int ir = nclval[indrow];
+            int ic = nclval[indcol];
+            int lentbl = 1;
+            for (i = 1; i <= nclvar; i++)
+            {
+                lentbl = lentbl * nclval[i];
+            }
+            int iq = ((int)(Math.Floor((double)lentbl / (ir * ic))));
+            difsum = 0.0;
+            covsum = 0.0;
+            for (i = 1; i <= nclvar; i++)
+            {
+                ix[i] = 1;
             }
             //      loop through stratum stats
-            for ( m=1; m <= iq; m++ ) 
-            { 
+            for (m = 1; m <= iq; m++)
+            {
                 //       find first element of table and pack table into a matrix
-                if ( m > 1 )
-                { 
-                    cmhidx( nclvar, nclval, indrow, indcol, ix ); 
-                } 
-                cmhgetct( table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix ); 
+                if (m > 1)
+                {
+                    cmhidx(nclvar, nclval, indrow, indcol, ix);
+                }
+                cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
                 // totals()
-                double rnh = 0.0; 
+                double rnh = 0.0;
                 int j1 = 1;
                 int j;
-                for ( j=1; j <= ic; j++ ) 
-                { 
-                    colsum[ j ] = 0.0; 
-                    for ( i=j1; i <= j1 - 1 + ir; i++ ) 
-                    { 
-                        colsum[ j ] = colsum[ j ] + f[ i ]; 
-                    } 
-                    rnh = rnh + colsum[ j ]; 
-                    j1 = j1 + ir; 
-                } 
-                if ( rnh < tol ) 
-                { 
-                    //        all frequencies zero - exclude stratum
-                    res[ m, 1 ] = Constant.MISSING; 
-                    res[ m, 2 ] = Constant.MISSING; 
-                    res[ m, 3 ] = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    
-                    for ( i=1; i <= ir; i++ ) 
-                    { 
-                        rowsum[ i ] = 0.0; 
-                        for ( j=i; j <= i - 1 + ic * ir; j+=ir ) 
-                        { 
-                            rowsum[ i ] = rowsum[ i ] + f[ j ]; 
-                        } 
-                    } 
-                    //       row and col scores and their means
-                    if ( icolsc > 2 ) 
-                    { 
-                        lentbl = ir * ic; 
-                        cmhrcs( icolsc, ir, lentbl, rowsum, f, colscr ); 
-                    } 
-                    if ( irowsc > 2 ) 
-                    { 
-                        lentbl = ir * ic; 
-                        cmhrcs( irowsc, ic, lentbl, colsum, f, rowscr ); 
-                    } 
-                    double abar = 0.0; 
-                    for ( j=1; j <= ic; j++ ) 
-                    { 
-                        abar = abar + rowscr[ j ] * colsum[ j ] / rnh; 
-                    } 
-                    double bbar = 0.0; 
-                    for ( i=1; i <= ir; i++ ) 
-                    { 
-                        bbar = bbar + colscr[ i ] * rowsum[ i ] / rnh; 
-                    } 
-                    //       row score variance
-                    double dela = 0.0; 
-                    for ( j=1; j <= ic; j++ ) 
-                    { 
-                        dela = dela + Math.Pow( ( rowscr[ j ] - abar ), 2.0 ) * colsum[ j ] / rnh; 
-                    } 
-                    //       col score variance
-                    double delb = 0.0; 
-                    for ( i=1; i <= ir; i++ ) 
-                    { 
-                        delb = delb + Math.Pow( ( colscr[ i ] - bbar ), 2.0 ) * rowsum[ i ] / rnh; 
-                    } 
-                    //       row and col score covariance
-                    double delab = 0.0; 
-                    for ( i=1; i <= ir; i++ )
+                for (j = 1; j <= ic; j++)
+                {
+                    colsum[j] = 0.0;
+                    for (i = j1; i <= j1 - 1 + ir; i++)
                     {
-                        int ij = i;
-                        for ( j=1; j <= ic; j++ ) 
-                        { 
-                            delab = delab + ( rowscr[ j ] - abar ) * ( colscr[ i ] - bbar ) * f[ ij ] / rnh; 
-                            ij = ij + ir; 
+                        colsum[j] = colsum[j] + f[i];
+                    }
+                    rnh = rnh + colsum[j];
+                    j1 = j1 + ir;
+                }
+                if (rnh < tol)
+                {
+                    //        all frequencies zero - exclude stratum
+                    res[m, 1] = Constant.MISSING;
+                    res[m, 2] = Constant.MISSING;
+                    res[m, 3] = Constant.MISSING;
+                }
+                else
+                {
+
+                    for (i = 1; i <= ir; i++)
+                    {
+                        rowsum[i] = 0.0;
+                        for (j = i; j <= i - 1 + ic * ir; j += ir)
+                        {
+                            rowsum[i] = rowsum[i] + f[j];
                         }
                     }
-                    if ( dela > tol & delb > tol ) 
-                    { 
-                        res[ m, 1 ] = ( rnh - 1.0 ) * delab * delab / ( dela * delb ); 
-                        res[ m, 2 ] = 1.0; 
-                        res[ m, 3 ] = PDF.chivalp( res[ m, 1 ], res[ m, 2 ] ); 
-                    } 
-                    else 
-                    { 
+                    //       row and col scores and their means
+                    if (icolsc > 2)
+                    {
+                        lentbl = ir * ic;
+                        cmhrcs(icolsc, ir, lentbl, rowsum, f, colscr);
+                    }
+                    if (irowsc > 2)
+                    {
+                        lentbl = ir * ic;
+                        cmhrcs(irowsc, ic, lentbl, colsum, f, rowscr);
+                    }
+                    double abar = 0.0;
+                    for (j = 1; j <= ic; j++)
+                    {
+                        abar = abar + rowscr[j] * colsum[j] / rnh;
+                    }
+                    double bbar = 0.0;
+                    for (i = 1; i <= ir; i++)
+                    {
+                        bbar = bbar + colscr[i] * rowsum[i] / rnh;
+                    }
+                    //       row score variance
+                    double dela = 0.0;
+                    for (j = 1; j <= ic; j++)
+                    {
+                        dela = dela + Math.Pow((rowscr[j] - abar), 2.0) * colsum[j] / rnh;
+                    }
+                    //       col score variance
+                    double delb = 0.0;
+                    for (i = 1; i <= ir; i++)
+                    {
+                        delb = delb + Math.Pow((colscr[i] - bbar), 2.0) * rowsum[i] / rnh;
+                    }
+                    //       row and col score covariance
+                    double delab = 0.0;
+                    for (i = 1; i <= ir; i++)
+                    {
+                        int ij = i;
+                        for (j = 1; j <= ic; j++)
+                        {
+                            delab = delab + (rowscr[j] - abar) * (colscr[i] - bbar) * f[ij] / rnh;
+                            ij = ij + ir;
+                        }
+                    }
+                    if (dela > tol & delb > tol)
+                    {
+                        res[m, 1] = (rnh - 1.0) * delab * delab / (dela * delb);
+                        res[m, 2] = 1.0;
+                        res[m, 3] = PDF.chivalp(res[m, 1], res[m, 2]);
+                    }
+                    else
+                    {
                         // zero(variance)
-                        res[ m, 1 ] = 0.0; 
-                        res[ m, 2 ] = 0.0; 
-                        res[ m, 3 ] = Constant.MISSING; 
-                    } 
-                    if ( rnh != 1.0 ) 
-                    { 
-                        difsum = difsum + rnh * delab; 
-                        covsum = covsum + rnh * rnh * dela * delb / ( rnh - 1.0 ); 
-                    } 
-                } 
-            } 
-            if ( covsum > tol ) 
-            { 
-                res[ iq + 1, 1 ] = difsum * difsum / covsum; 
-                res[ iq + 1, 2 ] = 1.0; 
-                res[ iq + 1, 3 ] = PDF.chivalp( res[ iq + 1, 1 ], res[ iq + 1, 2 ] ); 
-            } 
-            else 
-            { 
-                res[ iq + 1, 1 ] = Constant.MISSING; 
-                res[ iq + 1, 2 ] = Constant.MISSING; 
-                res[ iq + 1, 3 ] = Constant.MISSING; 
-            } 
-            
-        } 
-        
-        
+                        res[m, 1] = 0.0;
+                        res[m, 2] = 0.0;
+                        res[m, 3] = Constant.MISSING;
+                    }
+                    if (rnh != 1.0)
+                    {
+                        difsum = difsum + rnh * delab;
+                        covsum = covsum + rnh * rnh * dela * delb / (rnh - 1.0);
+                    }
+                }
+            }
+            if (covsum > tol)
+            {
+                res[iq + 1, 1] = difsum * difsum / covsum;
+                res[iq + 1, 2] = 1.0;
+                res[iq + 1, 3] = PDF.chivalp(res[iq + 1, 1], res[iq + 1, 2]);
+            }
+            else
+            {
+                res[iq + 1, 1] = Constant.MISSING;
+                res[iq + 1, 2] = Constant.MISSING;
+                res[iq + 1, 3] = Constant.MISSING;
+            }
+
+        }
+
+
         ///  <summary>
         ///  unpack stratified contingency table into y
         ///  </summary>
-        public static void cmhgetct( double[] table, int ir, int ic, int incrow, int inccol, int indrow, int indcol, int nclvar, int[] nclval, double[] y, int[] ix ) 
-        { 
-            int i1 = ix[ nclvar ]; 
+        public static void cmhgetct(double[] table, int ir, int ic, int incrow, int inccol, int indrow, int indcol, int nclvar, int[] nclval, double[] y, int[] ix)
+        {
+            int i1 = ix[nclvar];
             int iprod = 1;
- 
-            for (int j=nclvar - 1; j >= 1; j--) 
-            { 
-                iprod = iprod * ( nclval[ j + 1 ] ); 
-                i1 = i1 + ( ix[ j ] - 1 ) * iprod; 
-            } 
-            int ii = 1; 
-            for (int i=1; i <= ic; i++ ) 
-            { 
-                y[ ii ] = table[ i1 ]; 
-                for (int j=2; j <= ir; j++ ) 
-                { 
-                    ii = ii + 1; 
-                    y[ ii ] = table[ i1 + ( j - 1 ) * incrow ]; 
-                } 
-                i1 = i1 + inccol; 
-                ii = ii + 1; 
-            } 
-            
-        } 
-        
-        
+
+            for (int j = nclvar - 1; j >= 1; j--)
+            {
+                iprod = iprod * (nclval[j + 1]);
+                i1 = i1 + (ix[j] - 1) * iprod;
+            }
+            int ii = 1;
+            for (int i = 1; i <= ic; i++)
+            {
+                y[ii] = table[i1];
+                for (int j = 2; j <= ir; j++)
+                {
+                    ii = ii + 1;
+                    y[ii] = table[i1 + (j - 1) * incrow];
+                }
+                i1 = i1 + inccol;
+                ii = ii + 1;
+            }
+
+        }
+
+
         ///  <summary>
         ///  o-e covariance
         ///  </summary>
@@ -4619,122 +4586,122 @@ namespace StatsDirect.Builtins
         ///  <param name="a"></param>
         ///  <param name="b"></param>
         ///  <remarks></remarks>
-        public static void cmhcov( int ir, int ic, int lm1, double[] rowsum, double[] colsum, double rnh, double[] f, double[] difvec, double[] cov, double[] a, double[] b ) 
+        public static void cmhcov(int ir, int ic, int lm1, double[] rowsum, double[] colsum, double rnh, double[] f, double[] difvec, double[] cov, double[] a, double[] b)
         {
             int i, j;
             int ii;
-            double tmp; 
-            
-            int irx = ir - 1; 
-            int icx = ic - 1; 
-            for ( i=1; i <= irx; i++ ) 
-            { 
-                for ( j=1; j <= irx; j++ ) 
-                { 
-                    a[ j + ( i - 1 ) * ir ] = 0.0; 
-                } 
-            } 
-            for ( j=1; j <= icx; j++ ) 
-            { 
-                for ( i=1; i <= icx; i++ ) 
-                { 
-                    b[ i + ( j - 1 ) * ic ] = 0.0; 
-                } 
-            } 
-            for ( i=1; i <= irx; i++ ) 
-            { 
-                tmp = rowsum[ i ] / ( rnh * rnh ); 
-                a[ i + ( i - 1 ) * ir ] = rnh * tmp; 
-                for ( j=1; j <= ir - 1; j++ ) 
-                { 
-                    ii = i + ( j - 1 ) * ir; 
-                    a[ ii ] = a[ ii ] - tmp * rowsum[ j ]; 
-                } 
-            } 
-            for ( i=1; i <= icx; i++ ) 
-            { 
-                tmp = colsum[ i ] / ( rnh * rnh ); 
-                b[ i + ( i - 1 ) * ic ] = rnh * tmp; 
-                for ( j=1; j <= icx; j++ ) 
-                { 
-                    ii = i + ( j - 1 ) * ic; 
-                    b[ ii ] = b[ ii ] - tmp * colsum[ j ]; 
-                } 
-            } 
-            int icount = 0; 
-            int jcount = 0; 
-            for ( i=1; i <= irx; i++ ) 
-            { 
-                for ( j=1; j <= icx; j++ ) 
-                { 
-                    icount = icount + 1; 
-                    difvec[ icount ] = f[ i + ( j - 1 ) * ir ] - rowsum[ i ] * colsum[ j ] / rnh;
+            double tmp;
+
+            int irx = ir - 1;
+            int icx = ic - 1;
+            for (i = 1; i <= irx; i++)
+            {
+                for (j = 1; j <= irx; j++)
+                {
+                    a[j + (i - 1) * ir] = 0.0;
+                }
+            }
+            for (j = 1; j <= icx; j++)
+            {
+                for (i = 1; i <= icx; i++)
+                {
+                    b[i + (j - 1) * ic] = 0.0;
+                }
+            }
+            for (i = 1; i <= irx; i++)
+            {
+                tmp = rowsum[i] / (rnh * rnh);
+                a[i + (i - 1) * ir] = rnh * tmp;
+                for (j = 1; j <= ir - 1; j++)
+                {
+                    ii = i + (j - 1) * ir;
+                    a[ii] = a[ii] - tmp * rowsum[j];
+                }
+            }
+            for (i = 1; i <= icx; i++)
+            {
+                tmp = colsum[i] / (rnh * rnh);
+                b[i + (i - 1) * ic] = rnh * tmp;
+                for (j = 1; j <= icx; j++)
+                {
+                    ii = i + (j - 1) * ic;
+                    b[ii] = b[ii] - tmp * colsum[j];
+                }
+            }
+            int icount = 0;
+            int jcount = 0;
+            for (i = 1; i <= irx; i++)
+            {
+                for (j = 1; j <= icx; j++)
+                {
+                    icount = icount + 1;
+                    difvec[icount] = f[i + (j - 1) * ir] - rowsum[i] * colsum[j] / rnh;
                     int k;
-                    for ( k=1; k <= irx; k++ ) 
-                    { 
-                        ii = i + ( k - 1 ) * ir;
+                    for (k = 1; k <= irx; k++)
+                    {
+                        ii = i + (k - 1) * ir;
                         int l;
-                        for ( l=1; l <= icx; l++ ) 
-                        { 
-                            jcount = jcount + 1; 
-                            cov[ jcount ] = a[ ii ] * b[ j + ( l - 1 ) * ic ]; 
-                        } 
-                    } 
-                } 
-            } 
-            
-        } 
-        
-        
+                        for (l = 1; l <= icx; l++)
+                        {
+                            jcount = jcount + 1;
+                            cov[jcount] = a[ii] * b[j + (l - 1) * ic];
+                        }
+                    }
+                }
+            }
+
+        }
+
+
         ///  <summary>
         ///  row and column scores
         ///  </summary>
-        public static void cmhrcs( int iscore, int len, int lentbl, double[] sum, double[] table, double[] ab ) 
-        { 
-            int i; 
-            double tblsum = 0; 
-            
-            double cumsum = 0.0; 
-            if ( iscore != 3 ) 
-            { 
-                tblsum = 0.0; 
-                for ( i=1; i <= lentbl; i++ ) 
-                { 
-                    tblsum = tblsum + table[ i ]; 
-                } 
-            } 
-            if ( iscore == 5 ) 
-            { 
-                ab[ 1 ] = 1.0 - sum[ 1 ] / tblsum; 
-                for ( i=2; i <= len; i++ ) 
-                { 
-                    tblsum = tblsum - sum[ i - 1 ]; 
-                    if ( tblsum != 0.0 ) 
-                    { 
-                        ab[ i ] = ab[ i - 1 ] - sum[ i ] / tblsum; 
-                    } 
-                    else 
-                    { 
-                        ab[ i ] = Constant.MISSING; // nan
-                    } 
-                } 
-            } 
-            else 
-            { 
-                for ( i=1; i <= len; i++ ) 
-                { 
-                    ab[ i ] = ( sum[ i ] + 1.0 ) / 2.0 + cumsum; 
-                    if ( iscore != 3 )
-                    { 
-                        ab[ i ] = ab[ i ] / tblsum; 
-                    } 
-                    cumsum = cumsum + sum[ i ]; 
-                } 
-            } 
-            
-        } 
-        
-        
+        public static void cmhrcs(int iscore, int len, int lentbl, double[] sum, double[] table, double[] ab)
+        {
+            int i;
+            double tblsum = 0;
+
+            double cumsum = 0.0;
+            if (iscore != 3)
+            {
+                tblsum = 0.0;
+                for (i = 1; i <= lentbl; i++)
+                {
+                    tblsum = tblsum + table[i];
+                }
+            }
+            if (iscore == 5)
+            {
+                ab[1] = 1.0 - sum[1] / tblsum;
+                for (i = 2; i <= len; i++)
+                {
+                    tblsum = tblsum - sum[i - 1];
+                    if (tblsum != 0.0)
+                    {
+                        ab[i] = ab[i - 1] - sum[i] / tblsum;
+                    }
+                    else
+                    {
+                        ab[i] = Constant.MISSING; // nan
+                    }
+                }
+            }
+            else
+            {
+                for (i = 1; i <= len; i++)
+                {
+                    ab[i] = (sum[i] + 1.0) / 2.0 + cumsum;
+                    if (iscore != 3)
+                    {
+                        ab[i] = ab[i] / tblsum;
+                    }
+                    cumsum = cumsum + sum[i];
+                }
+            }
+
+        }
+
+
         ///  <summary>
         ///  finds the index entry of a contingency table in the vector ix
         ///  </summary>
@@ -4744,45 +4711,45 @@ namespace StatsDirect.Builtins
         ///  <param name="indcol"></param>
         ///  <param name="ix"></param>
         ///  <remarks></remarks>
-        public static void cmhidx( int nclvar, int[] nclval, int indrow, int indcol, int[] ix ) 
+        public static void cmhidx(int nclvar, int[] nclval, int indrow, int indcol, int[] ix)
         {
-            int im = nclvar; 
-            do 
-            { 
-                bool skip = false; 
-                if ( im == indrow || im == indcol ) 
-                { 
-                    im = im - 1; 
-                    if ( im > 0 )
-                    { 
-                        skip = true; 
-                    } 
-                } 
-                if ( skip == false ) 
-                { 
-                    if ( ix[ im ] < nclval[ im ] ) 
-                    { 
-                        if ( im != nclvar )
+            int im = nclvar;
+            do
+            {
+                bool skip = false;
+                if (im == indrow || im == indcol)
+                {
+                    im = im - 1;
+                    if (im > 0)
+                    {
+                        skip = true;
+                    }
+                }
+                if (skip == false)
+                {
+                    if (ix[im] < nclval[im])
+                    {
+                        if (im != nclvar)
                         {
-                            for (int i=im + 1; i <= nclvar; i++ ) 
-                            { 
-                                ix[ i ] = 1; 
+                            for (int i = im + 1; i <= nclvar; i++)
+                            {
+                                ix[i] = 1;
                             }
                         }
-                        ix[ im ] = ix[ im ] + 1; 
+                        ix[im] = ix[im] + 1;
                         break;
                     }
-                    im = im - 1; 
-                    if ( im <= 0 )
-                    { 
+                    im = im - 1;
+                    if (im <= 0)
+                    {
                         break;
                     }
-                } 
-            } 
-            while ( true ); 
-            
-        } 
-        
+                }
+            }
+            while (true);
+
+        }
+
         ///  <summary>
         ///   fisher exact test and hybrid approximation (if expect is not 0)
         ///   using mehta and patel network algorithm with clarkson and fan modifications for the cumulative probability of a table at least as extreme
@@ -4799,40 +4766,40 @@ namespace StatsDirect.Builtins
         ///  <param name="pre"></param>
         ///  <param name="ierr"></param>
         ///  <remarks></remarks>
-        private static void rcexact( int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, ref double pre, out int ierr )
+        private static void rcexact(int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, ref double pre, out int ierr)
         {
             ierr = 0;
-            try 
+            try
             {
                 int i;
                 int ldkey, ldstp;
                 int[] ifrq; int[] ipoin;
                 int[] key; int[] key2;
                 double[] dlp; double[] dsp;
-                double[] stp; double[] tm; 
-                int ntot = 0; 
-                for ( i=1; i <= nrow; i++ )
+                double[] stp; double[] tm;
+                int ntot = 0;
+                for (i = 1; i <= nrow; i++)
                 {
                     int j;
-                    for ( j=1; j <= ncol; j++ ) 
-                    { 
-                        if ( table[ i, j ] < 0.0 ) 
-                        { 
-                            ierr = 1; 
-                            return ; 
-                        } 
-                        ntot = ntot + ( ( int )( Math.Floor(table[ i, j ]) ) ); 
+                    for (j = 1; j <= ncol; j++)
+                    {
+                        if (table[i, j] < 0.0)
+                        {
+                            ierr = 1;
+                            return;
+                        }
+                        ntot = ntot + ((int)(Math.Floor(table[i, j])));
                     }
                 }
-                if ( ntot == 0 ) 
-                { 
-                    ierr = 2; 
-                    prt = Constant.MISSING; 
-                    pre = Constant.MISSING; 
-                    return ; 
-                } 
-                int nco = Math.Max( nrow, ncol ); 
-                int nro = Math.Min( nrow, ncol );
+                if (ntot == 0)
+                {
+                    ierr = 2;
+                    prt = Constant.MISSING;
+                    pre = Constant.MISSING;
+                    return;
+                }
+                int nco = Math.Max(nrow, ncol);
+                int nro = Math.Min(nrow, ncol);
                 // int k = nrow + ncol + 1; 
                 // int kk = k * Math.Max( nrow, ncol );
                 double[] fact = new double[2 * (ntot + 1) + 1 /* for VB to C# conversion */ ];
@@ -4840,21 +4807,21 @@ namespace StatsDirect.Builtins
                 int[] iro = new int[nco + 1 /* for VB to C# conversion */ ];
                 int[] kyy = new int[nco + 1 /* for VB to C# conversion */ ];
                 int[] idif = new int[nro + 1 /* for VB to C# conversion */ ];
-                int[] irn = new int[nro + 1 /* for VB to C# conversion */ ]; 
-                int i4 = 2000000; 
-                int i5 = 2000000; 
-                if ( i4 != i5 ) 
-                { 
-                    ldkey = ( i4 - 17 ) / 318; 
-                } 
-                else 
-                { 
-                    ldkey = ( i4 - 17 ) / 254; 
-                } 
-                do 
-                { 
-                    ldstp = 30 * ldkey; 
-                    try 
+                int[] irn = new int[nro + 1 /* for VB to C# conversion */ ];
+                int i4 = 2000000;
+                int i5 = 2000000;
+                if (i4 != i5)
+                {
+                    ldkey = (i4 - 17) / 318;
+                }
+                else
+                {
+                    ldkey = (i4 - 17) / 254;
+                }
+                do
+                {
+                    ldstp = 30 * ldkey;
+                    try
                     {
                         key = new int[2 * ldkey + 1 /* for VB to C# conversion */ ];
                         ipoin = new int[2 * ldkey + 1 /* for VB to C# conversion */ ];
@@ -4863,27 +4830,27 @@ namespace StatsDirect.Builtins
                         dlp = new double[4 * ldkey + 1 /* for VB to C# conversion */ ];
                         dsp = new double[4 * ldkey + 1 /* for VB to C# conversion */ ];
                         tm = new double[4 * ldkey + 1 /* for VB to C# conversion */ ];
-                        key2 = new int[2 * ldkey + 1 /* for VB to C# conversion */ ]; 
+                        key2 = new int[2 * ldkey + 1 /* for VB to C# conversion */ ];
                         break;
-                    } 
-                    catch ( Exception ) 
-                    { 
-                        ldkey = ldkey / 2; 
-                    } 
-                } 
-                while ( true ); 
-                
-                RcExactGo( nrow, ncol, table, expect, percnt, emin, ref prt, out pre, ref fact, ref ico, ref iro, ref kyy, ref idif, ref irn, ref key, ref ldkey, ref ipoin, ref stp, ref ldstp, ref ifrq, ref dlp, ref dsp, ref tm, ref key2, ref ierr ); 
-            } 
-            catch ( OverflowException ) 
-            { 
-                ierr = int.MaxValue; 
-                prt = Constant.MISSING; 
-                pre = Constant.MISSING; 
-            } 
-        } 
-        
-        
+                    }
+                    catch (Exception)
+                    {
+                        ldkey = ldkey / 2;
+                    }
+                }
+                while (true);
+
+                RcExactGo(nrow, ncol, table, expect, percnt, emin, ref prt, out pre, ref fact, ref ico, ref iro, ref kyy, ref idif, ref irn, ref key, ref ldkey, ref ipoin, ref stp, ref ldstp, ref ifrq, ref dlp, ref dsp, ref tm, ref key2, ref ierr);
+            }
+            catch (OverflowException)
+            {
+                ierr = int.MaxValue;
+                prt = Constant.MISSING;
+                pre = Constant.MISSING;
+            }
+        }
+
+
         ///  <summary>
         ///   fisher exact test and hybrid approximation (if expect is not 0)
         ///   using mehta and patel network algorithm with clarkson and fan modifications for the cumulative probability of a table at least as extreme
@@ -4916,7 +4883,7 @@ namespace StatsDirect.Builtins
         ///  <param name="key2"></param>
         ///  <param name="ierr"></param>
         ///  <remarks></remarks>
-        private static void RcExactGo( int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, out double pre, ref double[] fact, ref int[] ico, ref int[] iro, ref int[] kyy, ref int[] idif, ref int[] irn, ref int[] key, ref int ldkey, ref int[] ipoin, ref double[] stp, ref int ldstp, ref int[] ifrq, ref double[] dlp, ref double[] dsp, ref double[] tm, ref int[] key2, ref int ierr ) 
+        private static void RcExactGo(int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, out double pre, ref double[] fact, ref int[] ico, ref int[] iro, ref int[] kyy, ref int[] idif, ref int[] irn, ref int[] key, ref int ldkey, ref int[] ipoin, ref double[] stp, ref int ldstp, ref int[] ifrq, ref double[] dlp, ref double[] dsp, ref double[] tm, ref int[] key2, ref int ierr)
         {
             bool chisq = false;
             double tmp = 0;
@@ -4926,2494 +4893,2491 @@ namespace StatsDirect.Builtins
                 j, kmax, kval = 0, nco;
             int nro;
 
-            int ircmax = Math.Max( nrow, ncol ); 
-            int ircmin = Math.Min( nrow, ncol ); 
-            int ircp1 = nrow + ncol + 1; 
-            int k = Math.Max( ircp1, ircmax ); 
-                // internal
-                int[] icx = new int[ircmax + 1 /* for VB to C# conversion */ ];
-                int[] irx = new int[ircmin + 1 /* for VB to C# conversion */ ]; 
-                // longpath
-                int[,] iiwk1 = new int[ncol + 1 /* for VB to C# conversion */, ircmax + 1 /* for VB to C# conversion */];
-                int[,] iiwk2 = new int[nrow + 1 /* for VB to C# conversion */, ircp1 + 1 /* for VB to C# conversion */]; 
-                // shortpath
-                int[] iwk1 = new int[k + 1 /* for VB to C# conversion */ ];
-                int[] iwk2 = new int[k + 1 /* for VB to C# conversion */];
-                int[] iwk3 = new int[k + 1 /* for VB to C# conversion */];
-                int[] iwk4 = new int[k + 1 /* for VB to C# conversion */];
-                int[] iwk5 = new int[k + 1 /* for VB to C# conversion */];
-                int[] iwk6 = new int[ircmax + 1 /* for VB to C# conversion */];
-                int[] iwk7 = new int[ircmax + 1 /* for VB to C# conversion */];
-                int[] iwk8 = new int[400 + 1 /* for VB to C# conversion */];
-                int[] iwk9 = new int[400 + 1 /* for VB to C# conversion */];
-                double[] rwk1 = new double[400 + 1 /* for VB to C# conversion */];
-                double[] rwk2 = new double[k + 1 /* for VB to C# conversion */]; 
-            
-            double tol = Math.Sqrt( Constant.EPSILON ); 
+            int ircmax = Math.Max(nrow, ncol);
+            int ircmin = Math.Min(nrow, ncol);
+            int ircp1 = nrow + ncol + 1;
+            int k = Math.Max(ircp1, ircmax);
+            // internal
+            int[] icx = new int[ircmax + 1 /* for VB to C# conversion */ ];
+            int[] irx = new int[ircmin + 1 /* for VB to C# conversion */ ];
+            // longpath
+            int[,] iiwk1 = new int[ncol + 1 /* for VB to C# conversion */, ircmax + 1 /* for VB to C# conversion */];
+            int[,] iiwk2 = new int[nrow + 1 /* for VB to C# conversion */, ircp1 + 1 /* for VB to C# conversion */];
+            // shortpath
+            int[] iwk1 = new int[k + 1 /* for VB to C# conversion */ ];
+            int[] iwk2 = new int[k + 1 /* for VB to C# conversion */];
+            int[] iwk3 = new int[k + 1 /* for VB to C# conversion */];
+            int[] iwk4 = new int[k + 1 /* for VB to C# conversion */];
+            int[] iwk5 = new int[k + 1 /* for VB to C# conversion */];
+            int[] iwk6 = new int[ircmax + 1 /* for VB to C# conversion */];
+            int[] iwk7 = new int[ircmax + 1 /* for VB to C# conversion */];
+            int[] iwk8 = new int[400 + 1 /* for VB to C# conversion */];
+            int[] iwk9 = new int[400 + 1 /* for VB to C# conversion */];
+            double[] rwk1 = new double[400 + 1 /* for VB to C# conversion */];
+            double[] rwk2 = new double[k + 1 /* for VB to C# conversion */];
+
+            double tol = Math.Sqrt(Constant.EPSILON);
             //                                   initialize key array
-            for ( i=1; i <= 2 * ldkey; i++ ) 
-            { 
-                key[ i ] = -9999; 
-                key2[ i ] = -9999; 
-            } 
+            for (i = 1; i <= 2 * ldkey; i++)
+            {
+                key[i] = -9999;
+                key2[i] = -9999;
+            }
             //                                   initialize parameters
-            pre = 0.0; 
-            int itop = 0; 
-            double emn = expect > 0.0 ? emin : int.MaxValue; 
-            
+            pre = 0.0;
+            int itop = 0;
+            double emn = expect > 0.0 ? emin : int.MaxValue;
+
             //                                   compute row marginals and total
-            int ntot = 0; 
-            for ( i=1; i <= nrow; i++ ) 
-            { 
-                iro[ i ] = 0; 
-                for ( j=1; j <= ncol; j++ ) 
-                { 
-                    if ( table[ i, j ] < 0.0 ) 
-                    { 
-                        ierr = 1; 
-                        return; 
-                    } 
-                    double transTemp9 = table[ i, j ]; 
-                    iro[ i ] = iro[ i ] + ( ( int )( Math.Floor(transTemp9) ) ); 
-                    ntot = ntot + ( ( int )( Math.Floor(transTemp9) ) ); 
-                } 
-            } 
-            
-            if ( ntot == 0 ) 
-            { 
-                prt = Constant.MISSING; 
-                pre = Constant.MISSING; 
-                ierr = 2; 
-                return; 
-            } 
+            int ntot = 0;
+            for (i = 1; i <= nrow; i++)
+            {
+                iro[i] = 0;
+                for (j = 1; j <= ncol; j++)
+                {
+                    if (table[i, j] < 0.0)
+                    {
+                        ierr = 1;
+                        return;
+                    }
+                    double transTemp9 = table[i, j];
+                    iro[i] = iro[i] + ((int)(Math.Floor(transTemp9)));
+                    ntot = ntot + ((int)(Math.Floor(transTemp9)));
+                }
+            }
+
+            if (ntot == 0)
+            {
+                prt = Constant.MISSING;
+                pre = Constant.MISSING;
+                ierr = 2;
+                return;
+            }
             //                                   column marginals
-            for ( i=1; i <= ncol; i++ ) 
-            { 
-                ico[ i ] = 0; 
-                for ( j=1; j <= nrow; j++ ) 
-                { 
-                    double transTemp11 = table[ j, i ]; 
-                    ico[ i ] = ico[ i ] + ( ( int )( Math.Floor(transTemp11) ) ); 
-                } 
-            } 
+            for (i = 1; i <= ncol; i++)
+            {
+                ico[i] = 0;
+                for (j = 1; j <= nrow; j++)
+                {
+                    double transTemp11 = table[j, i];
+                    ico[i] = ico[i] + ((int)(Math.Floor(transTemp11)));
+                }
+            }
             // (sort)
-            Array.Sort( iro, 1, nrow ); 
-            Array.Sort( ico, 1, ncol ); 
-            
+            Array.Sort(iro, 1, nrow);
+            Array.Sort(ico, 1, ncol);
+
             //                                   determine row and column marginals
-            
-            if ( nrow > ncol ) 
-            { 
-                nro = ncol; 
-                nco = nrow; 
-                for ( i=1; i <= nrow; i++ ) 
-                { 
-                    kyy[ i ] = iro[ i ]; 
-                } 
-                for ( i=1; i <= ncol; i++ ) 
-                { 
-                    iro[ i ] = ico[ i ]; 
-                } 
-                for ( i=1; i <= nrow; i++ ) 
-                { 
-                    ico[ i ] = kyy[ i ]; 
-                } 
-            } 
-            else 
-            { 
-                nro = nrow; 
-                nco = ncol; 
-            } 
-            
+
+            if (nrow > ncol)
+            {
+                nro = ncol;
+                nco = nrow;
+                for (i = 1; i <= nrow; i++)
+                {
+                    kyy[i] = iro[i];
+                }
+                for (i = 1; i <= ncol; i++)
+                {
+                    iro[i] = ico[i];
+                }
+                for (i = 1; i <= nrow; i++)
+                {
+                    ico[i] = kyy[i];
+                }
+            }
+            else
+            {
+                nro = nrow;
+                nco = ncol;
+            }
+
             //                                   get multiplers for stack
-            kyy[ 1 ] = 1; 
-            
+            kyy[1] = 1;
+
             j = int.MaxValue; // largest integer magnitude
-            for ( i=2; i <= nro; i++ ) 
-            { 
+            for (i = 2; i <= nro; i++)
+            {
                 //                                   hash table multipliers
-                if ( iro[ i - 1 ] + 1 <= j / kyy[ i - 1 ] ) 
-                { 
-                    kyy[ i ] = kyy[ i - 1 ] * ( iro[ i - 1 ] + 1 ); 
-                    j = j / kyy[ i - 1 ]; 
-                } 
-                else 
-                { 
-                    ierr = 5; 
-                    return; 
-                } 
-            } 
+                if (iro[i - 1] + 1 <= j / kyy[i - 1])
+                {
+                    kyy[i] = kyy[i - 1] * (iro[i - 1] + 1);
+                    j = j / kyy[i - 1];
+                }
+                else
+                {
+                    ierr = 5;
+                    return;
+                }
+            }
             //                                   maximum product
-            if ( iro[ nro - 1 ] + 1 <= j / kyy[ nro - 1 ] ) 
-            { 
-                kmax = ( iro[ nro ] + 1 ) * kyy[ nro - 1 ]; 
-            } 
-            else 
-            { 
-                ierr = 6; 
-                return; 
-            } 
+            if (iro[nro - 1] + 1 <= j / kyy[nro - 1])
+            {
+                kmax = (iro[nro] + 1) * kyy[nro - 1];
+            }
+            else
+            {
+                ierr = 6;
+                return;
+            }
             //                                   compute log factorials
-            fact[ 0 ] = 0.0; 
-            fact[ 1 ] = 0.0; 
-            if ( ntot >= 2 )
-            { 
-                fact[ 2 ] = Math.Log( 2.0 ); 
-            } 
-            for ( i=3; i <= ntot; i+=2 ) 
-            { 
-                fact[ i ] = fact[ i - 1 ] + Math.Log( Convert.ToDouble( i ) ); 
-                j = i + 1; 
-                if ( j <= ntot )
-                { 
-                    fact[ j ] = fact[ i ] + fact[ 2 ] + fact[ j / 2 ] - fact[ j / 2 - 1 ]; 
-                } 
-            } 
+            fact[0] = 0.0;
+            fact[1] = 0.0;
+            if (ntot >= 2)
+            {
+                fact[2] = Math.Log(2.0);
+            }
+            for (i = 3; i <= ntot; i += 2)
+            {
+                fact[i] = fact[i - 1] + Math.Log(Convert.ToDouble(i));
+                j = i + 1;
+                if (j <= ntot)
+                {
+                    fact[j] = fact[i] + fact[2] + fact[j / 2] - fact[j / 2 - 1];
+                }
+            }
             //                                   compute observed path length: obs
-            double obs = tol; 
-            ntot = 0; 
-            for ( j=1; j <= nco; j++ ) 
-            { 
-                double dd = 0.0; 
-                for ( i=1; i <= nro; i++ ) 
-                { 
-                    if ( nrow <= ncol ) 
-                    { 
-                        double transTemp12 = table[ i, j ]; 
-                        dd = dd + fact[ ( ( int )(Math.Floor(transTemp12) ) ) ]; 
-                    } 
-                    else 
-                    { 
-                        double transTemp13 = table[ j, i ]; 
-                        dd = dd + fact[ ( ( int )( Math.Floor(transTemp13) ) ) ]; 
-                    } 
-                } 
-                obs = obs + fact[ ico[ j ] ] - dd; 
-                ntot = ntot + ico[ j ]; 
-            } 
+            double obs = tol;
+            ntot = 0;
+            for (j = 1; j <= nco; j++)
+            {
+                double dd = 0.0;
+                for (i = 1; i <= nro; i++)
+                {
+                    if (nrow <= ncol)
+                    {
+                        double transTemp12 = table[i, j];
+                        dd = dd + fact[((int)(Math.Floor(transTemp12)))];
+                    }
+                    else
+                    {
+                        double transTemp13 = table[j, i];
+                        dd = dd + fact[((int)(Math.Floor(transTemp13)))];
+                    }
+                }
+                obs = obs + fact[ico[j]] - dd;
+                ntot = ntot + ico[j];
+            }
             //      denominator of observed table, dro, as multinomial coefficient from log factorials
-            double dro = fact[ ntot ]; 
-            for ( i=1; i <= nro; i++ ) 
-            { 
-                dro = dro - fact[ iro[ i ] ]; 
-            } 
-            
-            prt = Math.Exp( obs - dro ); 
+            double dro = fact[ntot];
+            for (i = 1; i <= nro; i++)
+            {
+                dro = dro - fact[iro[i]];
+            }
+
+            prt = Math.Exp(obs - dro);
             //                                   initialize pointers
-            k = nco; 
-            int last = ldkey + 1; 
-            int jkey = ldkey + 1; 
-            int jstp = ldstp + 1; 
-            int jstp2 = 3 * ldstp + 1; 
-            int jstp3 = 4 * ldstp + 1; 
-            int jstp4 = 5 * ldstp + 1; 
-            int ikkey = 0; 
-            int ikstp = 0; 
-            int ikstp2 = 2 * ldstp; 
-            int ipo = 1; 
-            ipoin[ 1 ] = 1; 
-            stp[ 1 ] = 0.0; 
-            ifrq[ 1 ] = 1; 
-            ifrq[ ikstp2 + 1 ] = -1; 
-            
-            do 
-            { 
-                int kb = nco - k + 1; 
-                int ks = 0; 
-                int n = ico[ kb ]; 
-                int kd = nro + 1; 
-                kmax = nro; 
+            k = nco;
+            int last = ldkey + 1;
+            int jkey = ldkey + 1;
+            int jstp = ldstp + 1;
+            int jstp2 = 3 * ldstp + 1;
+            int jstp3 = 4 * ldstp + 1;
+            int jstp4 = 5 * ldstp + 1;
+            int ikkey = 0;
+            int ikstp = 0;
+            int ikstp2 = 2 * ldstp;
+            int ipo = 1;
+            ipoin[1] = 1;
+            stp[1] = 0.0;
+            ifrq[1] = 1;
+            ifrq[ikstp2 + 1] = -1;
+
+            do
+            {
+                int kb = nco - k + 1;
+                int ks = 0;
+                int n = ico[kb];
+                int kd = nro + 1;
+                kmax = nro;
                 //                                   idif is the difference in going to the daughter
-                for ( i=1; i <= nro; i++ ) 
-                { 
-                    idif[ i ] = 0; 
-                } 
+                for (i = 1; i <= nro; i++)
+                {
+                    idif[i] = 0;
+                }
                 //                                   generate the first daughter
-                do 
-                { 
-                    kd = kd - 1; 
-                    ntot = Math.Min( n, iro[ kd ] ); 
-                    idif[ kd ] = ntot; 
-                    if ( idif[ kmax ] == 0 )
-                    { 
-                        kmax = kmax - 1; 
-                    } 
-                    n = n - ntot; 
-                    if ( n <= 0 | kd == 1 )
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                while ( true );
+                do
+                {
+                    kd = kd - 1;
+                    ntot = Math.Min(n, iro[kd]);
+                    idif[kd] = ntot;
+                    if (idif[kmax] == 0)
+                    {
+                        kmax = kmax - 1;
+                    }
+                    n = n - ntot;
+                    if (n <= 0 | kd == 1)
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                while (true);
                 int iflag;
-                if ( n == 0 ) 
-                { 
-                    
-                    int k1 = k - 1; 
-                    n = ico[ kb ]; 
-                    ntot = 0; 
-                    for ( i=kb + 1; i <= nco; i++ ) 
-                    { 
-                        ntot = ntot + ico[ i ]; 
-                    } 
-                    
+                if (n == 0)
+                {
+
+                    int k1 = k - 1;
+                    n = ico[kb];
+                    ntot = 0;
+                    for (i = kb + 1; i <= nco; i++)
+                    {
+                        ntot = ntot + ico[i];
+                    }
+
                     // outer
-                    do 
-                    { 
+                    do
+                    {
                         //                                   arc to daughter length = ico(kb)
-                        for ( i=1; i <= nro; i++ ) 
-                        { 
-                            irn[ i ] = iro[ i ] - idif[ i ]; 
-                        } 
+                        for (i = 1; i <= nro; i++)
+                        {
+                            irn[i] = iro[i] - idif[i];
+                        }
                         //                                   sort irn
                         int nro2;
                         int nrb;
                         int ii;
-                        if ( k1 <= 1 ) 
-                        { 
-                            nrb = 1; 
-                            nro2 = nro; 
-                        } 
-                        else 
-                        { 
-                            if ( nro == 2 ) 
-                            { 
-                                if ( irn[ 1 ] > irn[ 2 ] ) 
-                                { 
-                                    ii = irn[ 1 ]; 
-                                    irn[ 1 ] = irn[ 2 ]; 
-                                    irn[ 2 ] = ii; 
-                                } 
-                            } 
-                            else if ( nro == 3 ) 
-                            { 
-                                ii = irn[ 1 ]; 
-                                if ( ii > irn[ 3 ] ) 
-                                { 
-                                    if ( ii <= irn[ 2 ] ) 
-                                    { 
-                                        irn[ 1 ] = irn[ 3 ]; 
-                                        irn[ 3 ] = irn[ 2 ]; 
-                                        irn[ 2 ] = ii; 
-                                    } 
-                                    else if ( irn[ 2 ] > irn[ 3 ] ) 
-                                    { 
-                                        irn[ 1 ] = irn[ 3 ]; 
-                                        irn[ 3 ] = ii; 
-                                    } 
-                                    else 
-                                    { 
-                                        irn[ 1 ] = irn[ 2 ]; 
-                                        irn[ 2 ] = irn[ 3 ]; 
-                                        irn[ 3 ] = ii; 
-                                    } 
-                                } 
-                                else if ( ii > irn[ 2 ] ) 
-                                { 
-                                    irn[ 1 ] = irn[ 2 ]; 
-                                    irn[ 2 ] = ii; 
-                                } 
-                                else if ( irn[ 2 ] > irn[ 3 ] ) 
-                                { 
-                                    ii = irn[ 2 ]; 
-                                    irn[ 2 ] = irn[ 3 ]; 
-                                    irn[ 3 ] = ii; 
-                                } 
-                            } 
-                            else 
-                            { 
-                                for ( j=2; j <= nro; j++ ) 
-                                { 
-                                    i = j - 1; 
-                                    ii = irn[ j ]; 
-                                    do 
-                                    { 
-                                        if ( ii >= irn[ i ] )
-                                        { 
-                                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                                        } 
-                                        irn[ i + 1 ] = irn[ i ]; 
-                                        i = i - 1; 
-                                        if ( i <= 0 )
-                                        { 
-                                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                                        } 
-                                    } 
-                                    while ( true ); 
-                                    irn[ i + 1 ] = ii; 
-                                } 
-                            } 
+                        if (k1 <= 1)
+                        {
+                            nrb = 1;
+                            nro2 = nro;
+                        }
+                        else
+                        {
+                            if (nro == 2)
+                            {
+                                if (irn[1] > irn[2])
+                                {
+                                    ii = irn[1];
+                                    irn[1] = irn[2];
+                                    irn[2] = ii;
+                                }
+                            }
+                            else if (nro == 3)
+                            {
+                                ii = irn[1];
+                                if (ii > irn[3])
+                                {
+                                    if (ii <= irn[2])
+                                    {
+                                        irn[1] = irn[3];
+                                        irn[3] = irn[2];
+                                        irn[2] = ii;
+                                    }
+                                    else if (irn[2] > irn[3])
+                                    {
+                                        irn[1] = irn[3];
+                                        irn[3] = ii;
+                                    }
+                                    else
+                                    {
+                                        irn[1] = irn[2];
+                                        irn[2] = irn[3];
+                                        irn[3] = ii;
+                                    }
+                                }
+                                else if (ii > irn[2])
+                                {
+                                    irn[1] = irn[2];
+                                    irn[2] = ii;
+                                }
+                                else if (irn[2] > irn[3])
+                                {
+                                    ii = irn[2];
+                                    irn[2] = irn[3];
+                                    irn[3] = ii;
+                                }
+                            }
+                            else
+                            {
+                                for (j = 2; j <= nro; j++)
+                                {
+                                    i = j - 1;
+                                    ii = irn[j];
+                                    do
+                                    {
+                                        if (ii >= irn[i])
+                                        {
+                                            break; /* TRANSWARNING: check that break is in correct scope */
+                                        }
+                                        irn[i + 1] = irn[i];
+                                        i = i - 1;
+                                        if (i <= 0)
+                                        {
+                                            break; /* TRANSWARNING: check that break is in correct scope */
+                                        }
+                                    }
+                                    while (true);
+                                    irn[i + 1] = ii;
+                                }
+                            }
                             //                                   adjust start for zero
-                            for ( i=1; i <= nro; i++ ) 
-                            { 
-                                if ( irn[ i ] != 0 )
-                                { 
-                                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                                } 
-                            } 
-                            nrb = i; 
-                            nro2 = nro - i + 1; 
-                        } 
+                            for (i = 1; i <= nro; i++)
+                            {
+                                if (irn[i] != 0)
+                                {
+                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                }
+                            }
+                            nrb = i;
+                            nro2 = nro - i + 1;
+                        }
                         //                                   some table values
-                        double ddf = fact[ n ]; 
-                        for ( i=1; i <= nro; i++ ) 
-                        { 
-                            ddf = ddf - fact[ idif[ i ] ]; 
-                        } 
-                        
-                        double drn = fact[ ntot ]; 
-                        for ( i=nrb; i <= nrb + nro2 - 1; i++ ) 
-                        { 
-                            drn = drn - fact[ irn[ i ] ]; 
-                        } 
-                        drn = drn - dro + ddf; 
+                        double ddf = fact[n];
+                        for (i = 1; i <= nro; i++)
+                        {
+                            ddf = ddf - fact[idif[i]];
+                        }
+
+                        double drn = fact[ntot];
+                        for (i = nrb; i <= nrb + nro2 - 1; i++)
+                        {
+                            drn = drn - fact[irn[i]];
+                        }
+                        drn = drn - dro + ddf;
                         //                                   get hash value
-                        if ( k1 > 1 ) 
-                        { 
-                            kval = irn[ 1 ] + irn[ 2 ] * kyy[ 2 ]; 
-                            for ( i=3; i <= nro; i++ ) 
-                            { 
-                                kval = kval + irn[ i ] * kyy[ i ]; 
-                            } 
+                        if (k1 > 1)
+                        {
+                            kval = irn[1] + irn[2] * kyy[2];
+                            for (i = 3; i <= nro; i++)
+                            {
+                                kval = kval + irn[i] * kyy[i];
+                            }
                             //                                   get hash table entry
-                            i = ( kval % 2 * ldkey ) + 1; 
+                            i = (kval % 2 * ldkey) + 1;
                             //                                   search for unused location
-                            bool found = false; 
-                            for ( itp=i; itp <= 2 * ldkey; itp++ ) 
-                            { 
-                                ii = key2[ itp ]; 
-                                if ( ii == kval ) 
-                                { 
-                                    found = true; 
+                            bool found = false;
+                            for (itp = i; itp <= 2 * ldkey; itp++)
+                            {
+                                ii = key2[itp];
+                                if (ii == kval)
+                                {
+                                    found = true;
                                     break;
                                 }
-                                if ( ii < 0 ) 
-                                { 
-                                    key2[ itp ] = kval; 
-                                    dlp[ itp ] = 1.0; 
-                                    dsp[ itp ] = 1.0; 
-                                    found = true; 
+                                if (ii < 0)
+                                {
+                                    key2[itp] = kval;
+                                    dlp[itp] = 1.0;
+                                    dsp[itp] = 1.0;
+                                    found = true;
                                     break;
                                 }
-                            } 
-                            
-                            if ( !found ) 
-                            { 
-                                for ( itp=1; itp <= i - 1; itp++ ) 
-                                { 
-                                    ii = key2[ itp ]; 
-                                    if ( ii == kval ) 
-                                    { 
-                                        found = true; 
+                            }
+
+                            if (!found)
+                            {
+                                for (itp = 1; itp <= i - 1; itp++)
+                                {
+                                    ii = key2[itp];
+                                    if (ii == kval)
+                                    {
+                                        found = true;
                                         break;
                                     }
-                                    if ( ii < 0 ) 
-                                    { 
-                                        key2[ itp ] = kval; 
-                                        dlp[ itp ] = 1.0; 
-                                        found = true; 
+                                    if (ii < 0)
+                                    {
+                                        key2[itp] = kval;
+                                        dlp[itp] = 1.0;
+                                        found = true;
                                         break;
                                     }
-                                } 
-                            } 
-                            
-                            if ( found == false ) 
-                            { 
-                                ierr = 7; 
-                                return; 
-                            } 
-                        } 
-                        
-                        bool ipsh = true; 
+                                }
+                            }
+
+                            if (found == false)
+                            {
+                                ierr = 7;
+                                return;
+                            }
+                        }
+
+                        bool ipsh = true;
                         //                                   recover pastp
-                        int ipn = ipoin[ ipo + ikkey ]; 
-                        double pastp = stp[ ipn + ikstp ]; 
-                        int ifreq = ifrq[ ipn + ikstp ]; 
+                        int ipn = ipoin[ipo + ikkey];
+                        double pastp = stp[ipn + ikstp];
+                        int ifreq = ifrq[ipn + ikstp];
                         //                                   compute shortest and longest path
                         double df;
                         double obs2;
                         double obs3;
-                        if ( k1 <= 1 ) 
-                        { 
-                            obs2 = obs - drn - dro; 
-                            obs3 = obs2; 
-                        } 
-                        else 
-                        { 
-                            obs2 = obs - fact[ ico[ kb + 1 ] ] - fact[ ico[ kb + 2 ] ] - ddf; 
-                            for ( i=3; i <= k1; i++ ) 
-                            { 
-                                obs2 = obs2 - fact[ ico[ kb + i ] ]; 
-                            } 
-                            
-                            if ( dlp[ itp ] > 0.0 ) 
-                            { 
-                                double dspt = obs - obs2 - ddf; 
+                        if (k1 <= 1)
+                        {
+                            obs2 = obs - drn - dro;
+                            obs3 = obs2;
+                        }
+                        else
+                        {
+                            obs2 = obs - fact[ico[kb + 1]] - fact[ico[kb + 2]] - ddf;
+                            for (i = 3; i <= k1; i++)
+                            {
+                                obs2 = obs2 - fact[ico[kb + i]];
+                            }
+
+                            if (dlp[itp] > 0.0)
+                            {
+                                double dspt = obs - obs2 - ddf;
                                 //                                   compute shortest path
-                                dlp[ itp ] = 0.0; 
-                                for ( i=1; i <= irn.Length - nrb; i++ ) 
-                                { 
-                                    irx[ i ] = irn[ nrb - 1 + i ]; 
-                                } 
-                                for ( i=1; i <= ico.Length - ( kb + 1 ); i++ ) 
-                                { 
-                                    icx[ i ] = ico[ kb + i ]; 
-                                } 
-                                shortpath( nro2, irx, k1, icx, ref dlp[ itp ], ntot, fact, tol, ref ierr, iwk1, iwk2, iwk3, iwk4, iwk5, iwk6, iwk7, iwk8, iwk9, rwk2, rwk1 ); 
-                                if ( ierr != 0 )
-                                { 
-                                    return; 
-                                } 
-                                dlp[ itp ] = Math.Min( 0.0, dlp[ itp ] ); 
+                                dlp[itp] = 0.0;
+                                for (i = 1; i <= irn.Length - nrb; i++)
+                                {
+                                    irx[i] = irn[nrb - 1 + i];
+                                }
+                                for (i = 1; i <= ico.Length - (kb + 1); i++)
+                                {
+                                    icx[i] = ico[kb + i];
+                                }
+                                shortpath(nro2, irx, k1, icx, ref dlp[itp], ntot, fact, tol, ref ierr, iwk1, iwk2, iwk3, iwk4, iwk5, iwk6, iwk7, iwk8, iwk9, rwk2, rwk1);
+                                if (ierr != 0)
+                                {
+                                    return;
+                                }
+                                dlp[itp] = Math.Min(0.0, dlp[itp]);
                                 //                                   compute longest path
-                                dsp[ itp ] = dspt; 
-                                longpath( ircmax, nro2, irx, k1, icx, ref dsp[ itp ], fact, tol, iiwk1, iwk1, iwk2, iwk3, iwk4, iwk5, iiwk2, rwk2 ); 
-                                dsp[ itp ] = Math.Min( 0.0, dsp[ itp ] - dspt ); 
+                                dsp[itp] = dspt;
+                                longpath(ircmax, nro2, irx, k1, icx, ref dsp[itp], fact, tol, iiwk1, iwk1, iwk2, iwk3, iwk4, iwk5, iiwk2, rwk2);
+                                dsp[itp] = Math.Min(0.0, dsp[itp] - dspt);
                                 //                                   use chi-squared approximation?
-                                if ( Convert.ToDouble( irn[ nrb ] * ico[ kb + 1 ] ) / Convert.ToDouble( ntot ) <= emn ) 
-                                { 
-                                    tm[ itp ] = Constant.MISSING; 
-                                } 
-                                else 
-                                { 
-                                    int ncell = 0; 
-                                    for ( i=1; i <= nro2; i++ ) 
-                                    { 
-                                        for ( j=1; j <= k1; j++ ) 
-                                        { 
-                                            if ( irn[ nrb + i - 1 ] * ico[ kb + j ] >= ntot * expect )
-                                            { 
-                                                ncell = ncell + 1; 
-                                            } 
-                                        } 
-                                    } 
-                                    if ( ncell * 100 < k1 * nro2 * percnt ) 
-                                    { 
-                                        tm[ itp ] = Constant.MISSING; 
-                                    } 
-                                    else 
-                                    { 
-                                        tmp = 0.0; 
-                                        for ( i=1; i <= nro2; i++ ) 
-                                        { 
-                                            tmp = tmp + fact[ irn[ nrb + i - 1 ] ] - fact[ irn[ nrb + i - 1 ] - 1 ]; 
-                                        } 
-                                        tmp = tmp * ( k1 - 1 ); 
-                                        for ( j=1; j <= k1; j++ ) 
-                                        { 
-                                            tmp = tmp + ( nro2 - 1 ) * ( fact[ ico[ kb + j ] ] - fact[ ico[ kb + j ] - 1 ] ); 
-                                        } 
-                                        df = ( nro2 - 1 ) * ( k1 - 1 ); 
+                                if (Convert.ToDouble(irn[nrb] * ico[kb + 1]) / Convert.ToDouble(ntot) <= emn)
+                                {
+                                    tm[itp] = Constant.MISSING;
+                                }
+                                else
+                                {
+                                    int ncell = 0;
+                                    for (i = 1; i <= nro2; i++)
+                                    {
+                                        for (j = 1; j <= k1; j++)
+                                        {
+                                            if (irn[nrb + i - 1] * ico[kb + j] >= ntot * expect)
+                                            {
+                                                ncell = ncell + 1;
+                                            }
+                                        }
+                                    }
+                                    if (ncell * 100 < k1 * nro2 * percnt)
+                                    {
+                                        tm[itp] = Constant.MISSING;
+                                    }
+                                    else
+                                    {
+                                        tmp = 0.0;
+                                        for (i = 1; i <= nro2; i++)
+                                        {
+                                            tmp = tmp + fact[irn[nrb + i - 1]] - fact[irn[nrb + i - 1] - 1];
+                                        }
+                                        tmp = tmp * (k1 - 1);
+                                        for (j = 1; j <= k1; j++)
+                                        {
+                                            tmp = tmp + (nro2 - 1) * (fact[ico[kb + j]] - fact[ico[kb + j] - 1]);
+                                        }
+                                        df = (nro2 - 1) * (k1 - 1);
                                         tmp = tmp + df * 1.8378770664093456; // 1.83787706640934548356065947281
-                                        tmp = tmp - ( nro2 * k1 - 1 ) * ( fact[ ntot ] - fact[ ntot - 1 ] ); 
-                                        tm[ itp ] = -2.0 * ( obs - dro ) - tmp; 
-                                    } 
-                                } 
-                            } 
-                            obs3 = obs2 - dlp[ itp ]; 
-                            obs2 = obs2 - dsp[ itp ]; 
-                            if ( tm[ itp ] == Constant.MISSING ) 
-                            { 
-                                chisq = false; 
-                            } 
-                            else 
-                            { 
-                                chisq = true; 
-                                tmp = tm[ itp ]; 
-                            } 
-                        } 
+                                        tmp = tmp - (nro2 * k1 - 1) * (fact[ntot] - fact[ntot - 1]);
+                                        tm[itp] = -2.0 * (obs - dro) - tmp;
+                                    }
+                                }
+                            }
+                            obs3 = obs2 - dlp[itp];
+                            obs2 = obs2 - dsp[itp];
+                            if (tm[itp] == Constant.MISSING)
+                            {
+                                chisq = false;
+                            }
+                            else
+                            {
+                                chisq = true;
+                                tmp = tm[itp];
+                            }
+                        }
                         // inner
-                        do 
-                        { 
+                        do
+                        {
                             //                                   process node with new pastp
-                            if ( pastp <= obs3 ) 
-                            { 
+                            if (pastp <= obs3)
+                            {
                                 //                                   update pre
-                                pre = pre + Convert.ToDouble( ifreq ) * Math.Exp( pastp + drn ); 
-                                
-                            } 
-                            else if ( pastp < obs2 ) 
-                            { 
-                                if ( chisq ) 
-                                { 
-                                    df = ( nro2 - 1 ) * ( k1 - 1 ); 
-                                    double pv = PDF.chivalp( Math.Max( 0.0, tmp + 2.0 * ( pastp + drn ) ), df ); 
-                                    pre = pre + Convert.ToDouble( ifreq ) * Math.Exp( pastp + drn ) * pv; 
-                                } 
-                                else 
-                                { 
+                                pre = pre + Convert.ToDouble(ifreq) * Math.Exp(pastp + drn);
+
+                            }
+                            else if (pastp < obs2)
+                            {
+                                if (chisq)
+                                {
+                                    df = (nro2 - 1) * (k1 - 1);
+                                    double pv = PDF.chivalp(Math.Max(0.0, tmp + 2.0 * (pastp + drn)), df);
+                                    pre = pre + Convert.ToDouble(ifreq) * Math.Exp(pastp + drn) * pv;
+                                }
+                                else
+                                {
                                     //                                   put daughter on queue
-                                    pushnode( pastp + ddf, tol, kval, key, jkey, ldkey, ipoin, stp, jstp, ldstp, ifrq, jstp2, jstp3, jstp4, ifreq, ref itop, ipsh, ref itpx, ref ierr ); 
-                                    ipsh = false; 
-                                    if ( ierr != 0 )
-                                    { 
-                                        return; 
-                                    } 
-                                } 
-                            } 
-                            
+                                    pushnode(pastp + ddf, tol, kval, key, jkey, ldkey, ipoin, stp, jstp, ldstp, ifrq, jstp2, jstp3, jstp4, ifreq, ref itop, ipsh, ref itpx, ref ierr);
+                                    ipsh = false;
+                                    if (ierr != 0)
+                                    {
+                                        return;
+                                    }
+                                }
+                            }
+
                             //                                   get next pastp on chain
-                            ipn = ifrq[ ipn + ikstp2 ]; 
-                            if ( ipn > 0 ) 
-                            { 
-                                pastp = stp[ ipn + ikstp ]; 
-                                ifreq = ifrq[ ipn + ikstp ]; 
-                            } 
-                            else 
-                            { 
+                            ipn = ifrq[ipn + ikstp2];
+                            if (ipn > 0)
+                            {
+                                pastp = stp[ipn + ikstp];
+                                ifreq = ifrq[ipn + ikstp];
+                            }
+                            else
+                            {
                                 //                     make a new sibling node
-                                sibling( ref kmax, ref iro, ref idif, ref kd, ref ks, out iflag ); 
+                                sibling(ref kmax, ref iro, ref idif, ref kd, ref ks, out iflag);
                                 break; /* TRANSWARNING: check that break is in correct scope */ // exit the inner loop and then exit the outer loop if ifag is set to 1
-                            } 
-                        } 
-                        while ( true ); 
-                        if ( iflag == 1 )
-                        { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                        
-                    } 
-                    while ( true ); 
-                    
-                } 
-                do 
-                { 
-                    
+                            }
+                        }
+                        while (true);
+                        if (iflag == 1)
+                        {
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+
+                    }
+                    while (true);
+
+                }
+                do
+                {
+
                     //            fetch a new parent from stage k
-                    iflag = 1; 
-                    popnode( nro, iro, ref iflag, kyy, key, ldkey, ref last, ref ipo, ikkey + 1 ); 
-                    
+                    iflag = 1;
+                    popnode(nro, iro, ref iflag, kyy, key, ldkey, ref last, ref ipo, ikkey + 1);
+
                     //                                   update pointers
-                    if ( iflag != 3 )
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                    k = k - 1; 
-                    itop = 0; 
-                    ikkey = jkey - 1; 
-                    ikstp = jstp - 1; 
-                    ikstp2 = jstp2 - 1; 
-                    jkey = ldkey - jkey + 2; 
-                    jstp = ldstp - jstp + 2; 
-                    jstp2 = 2 * ldstp + jstp; 
-                    for ( i=1; i <= 2 * ldkey; i++ ) 
-                    { 
-                        key2[ i ] = -9999; 
-                    } 
-                    if ( k < 2 )
-                    { 
-                        return; 
-                    } 
-                } 
-                while ( true ); 
-                
-            } 
-            while ( true ); 
-            
-        } 
-        
-        
-        
+                    if (iflag != 3)
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                    k = k - 1;
+                    itop = 0;
+                    ikkey = jkey - 1;
+                    ikstp = jstp - 1;
+                    ikstp2 = jstp2 - 1;
+                    jkey = ldkey - jkey + 2;
+                    jstp = ldstp - jstp + 2;
+                    jstp2 = 2 * ldstp + jstp;
+                    for (i = 1; i <= 2 * ldkey; i++)
+                    {
+                        key2[i] = -9999;
+                    }
+                    if (k < 2)
+                    {
+                        return;
+                    }
+                }
+                while (true);
+
+            }
+            while (true);
+
+        }
+
+
+
         /// <summary>
         /// longest path for a given table (network algorithm)
         /// </summary>
-        private static void longpath( int kd, int nrow, int[] irow, int ncol, int[] icol, ref double dsp, double[] fact, double tol, int[,] icstk, int[] ncstk, int[] lstk, int[] mstk, int[] nstk, int[] nrstk, int[,] irstk, double[] ystk ) 
+        private static void longpath(int kd, int nrow, int[] irow, int ncol, int[] icol, ref double dsp, double[] fact, double tol, int[,] icstk, int[] ncstk, int[] lstk, int[] mstk, int[] nstk, int[] nrstk, int[,] irstk, double[] ystk)
         {
             int i, j;
             int m, n;
-            if ( nrow == 1 ) 
-            { 
-                for ( i=1; i <= ncol; i++ ) 
-                { 
-                    dsp = dsp - fact[ icol[ i ] ]; 
-                } 
-                return; 
-            } 
-            if ( ncol == 1 ) 
-            { 
-                for ( i=1; i <= nrow; i++ ) 
-                { 
-                    dsp = dsp - fact[ irow[ i ] ]; 
-                } 
-                return; 
-            } 
-            if ( nrow * ncol == 4 ) 
-            { 
-                if ( irow[ 2 ] <= icol[ 2 ] ) 
-                { 
-                    dsp = dsp - fact[ irow[ 2 ] ] - fact[ icol[ 1 ] ] - fact[ icol[ 2 ] - irow[ 2 ] ]; 
-                } 
-                else 
-                { 
-                    dsp = dsp - fact[ icol[ 2 ] ] - fact[ irow[ 1 ] ] - fact[ irow[ 2 ] - icol[ 2 ] ]; 
-                } 
-                return; 
-            } 
-            for ( i=1; i <= nrow; i++ ) 
-            { 
-                irstk[ i, 1 ] = irow[ nrow - i + 1 ]; 
-            } 
-            for ( j=1; j <= ncol; j++ ) 
-            { 
-                icstk[ j, 1 ] = icol[ ncol - j + 1 ]; 
-            } 
-            int nro = nrow; 
-            int nco = ncol; 
-            nrstk[ 1 ] = nro; 
-            ncstk[ 1 ] = nco; 
-            ystk[ 1 ] = 0.0; 
-            double y = 0.0; 
-            int istk = 1; 
-            int l = 1; 
-            double amx = 0.0; 
-            int ir1 = irstk[ 1, istk ]; 
-            int ic1 = icstk[ 1, istk ]; 
-            if ( ir1 > ic1 ) 
-            { 
-                if ( nro >= nco ) 
-                { 
-                    m = nco - 1; 
-                    n = 2; 
-                } 
-                else 
-                { 
-                    m = nro; 
-                    n = 1; 
-                } 
-            } 
-            else if ( ir1 < ic1 ) 
-            { 
-                if ( nro <= nco ) 
-                { 
-                    m = nro - 1; 
-                    n = 1; 
-                } 
-                else 
-                { 
-                    m = nco; 
-                    n = 2; 
-                } 
-            } 
-            else 
-            { 
-                if ( nro <= nco ) 
-                { 
-                    m = nro - 1; 
-                    n = 1; 
-                } 
-                else 
-                { 
-                    m = nco - 1; 
-                    n = 2; 
-                } 
-            } 
-            do 
-            { 
-                if ( n == 1 ) 
-                { 
-                    i = l; 
-                    j = 1; 
-                } 
-                else 
-                { 
-                    i = 1; 
-                    j = l; 
-                } 
-                int irt = irstk[ i, istk ]; 
-                int ict = icstk[ j, istk ]; 
-                int mn = irt; 
-                if ( mn > ict )
-                { 
-                    mn = ict; 
-                } 
-                y = y + fact[ mn ];
+            if (nrow == 1)
+            {
+                for (i = 1; i <= ncol; i++)
+                {
+                    dsp = dsp - fact[icol[i]];
+                }
+                return;
+            }
+            if (ncol == 1)
+            {
+                for (i = 1; i <= nrow; i++)
+                {
+                    dsp = dsp - fact[irow[i]];
+                }
+                return;
+            }
+            if (nrow * ncol == 4)
+            {
+                if (irow[2] <= icol[2])
+                {
+                    dsp = dsp - fact[irow[2]] - fact[icol[1]] - fact[icol[2] - irow[2]];
+                }
+                else
+                {
+                    dsp = dsp - fact[icol[2]] - fact[irow[1]] - fact[irow[2] - icol[2]];
+                }
+                return;
+            }
+            for (i = 1; i <= nrow; i++)
+            {
+                irstk[i, 1] = irow[nrow - i + 1];
+            }
+            for (j = 1; j <= ncol; j++)
+            {
+                icstk[j, 1] = icol[ncol - j + 1];
+            }
+            int nro = nrow;
+            int nco = ncol;
+            nrstk[1] = nro;
+            ncstk[1] = nco;
+            ystk[1] = 0.0;
+            double y = 0.0;
+            int istk = 1;
+            int l = 1;
+            double amx = 0.0;
+            int ir1 = irstk[1, istk];
+            int ic1 = icstk[1, istk];
+            if (ir1 > ic1)
+            {
+                if (nro >= nco)
+                {
+                    m = nco - 1;
+                    n = 2;
+                }
+                else
+                {
+                    m = nro;
+                    n = 1;
+                }
+            }
+            else if (ir1 < ic1)
+            {
+                if (nro <= nco)
+                {
+                    m = nro - 1;
+                    n = 1;
+                }
+                else
+                {
+                    m = nco;
+                    n = 2;
+                }
+            }
+            else
+            {
+                if (nro <= nco)
+                {
+                    m = nro - 1;
+                    n = 1;
+                }
+                else
+                {
+                    m = nco - 1;
+                    n = 2;
+                }
+            }
+            do
+            {
+                if (n == 1)
+                {
+                    i = l;
+                    j = 1;
+                }
+                else
+                {
+                    i = 1;
+                    j = l;
+                }
+                int irt = irstk[i, istk];
+                int ict = icstk[j, istk];
+                int mn = irt;
+                if (mn > ict)
+                {
+                    mn = ict;
+                }
+                y = y + fact[mn];
                 int k;
-                if ( irt == ict ) 
-                { 
-                    nro = nro - 1; 
-                    nco = nco - 1; 
-                    for ( k=1; k <= i - 1; k++ ) 
-                    { 
-                        irstk[ k, istk + 1 ] = irstk[ k, istk ]; 
-                    } 
-                    for ( k=i; k <= nro; k++ ) 
-                    { 
-                        irstk[ k, istk + 1 ] = irstk[ k + 1, istk ]; 
-                    } 
-                    for ( k=1; k <= j - 1; k++ ) 
-                    { 
-                        icstk[ k, istk + 1 ] = icstk[ k, istk ]; 
-                    } 
-                    for ( k=j; k <= nco; k++ ) 
-                    { 
-                        icstk[ k, istk + 1 ] = icstk[ k + 1, istk ]; 
-                    } 
-                } 
+                if (irt == ict)
+                {
+                    nro = nro - 1;
+                    nco = nco - 1;
+                    for (k = 1; k <= i - 1; k++)
+                    {
+                        irstk[k, istk + 1] = irstk[k, istk];
+                    }
+                    for (k = i; k <= nro; k++)
+                    {
+                        irstk[k, istk + 1] = irstk[k + 1, istk];
+                    }
+                    for (k = 1; k <= j - 1; k++)
+                    {
+                        icstk[k, istk + 1] = icstk[k, istk];
+                    }
+                    for (k = j; k <= nco; k++)
+                    {
+                        icstk[k, istk + 1] = icstk[k + 1, istk];
+                    }
+                }
                 else
                 {
                     bool skip;
-                    if ( irt > ict ) 
-                    { 
-                        nco = nco - 1; 
-                        for ( k=1; k <= j - 1; k++ ) 
-                        { 
-                            icstk[ k, istk + 1 ] = icstk[ k, istk ]; 
-                        } 
-                        for ( k=j; k <= nco; k++ ) 
-                        { 
-                            icstk[ k, istk + 1 ] = icstk[ k + 1, istk ]; 
-                        } 
-                        for ( k=1; k <= i - 1; k++ ) 
-                        { 
-                            irstk[ k, istk + 1 ] = irstk[ k, istk ]; 
-                        } 
-                        skip = false; 
-                        for ( k=i; k <= nro - 1; k++ ) 
-                        { 
-                            if ( irt - ict >= irstk[ k + 1, istk ] ) 
-                            { 
-                                skip = true; 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
-                            } 
-                            irstk[ k, istk + 1 ] = irstk[ k + 1, istk ]; 
-                        } 
-                        if ( skip == false )
-                        { 
-                            k = nro; 
-                        } 
-                        irstk[ k, istk + 1 ] = irt - ict; 
-                        do 
-                        { 
-                            k = k + 1; 
-                            if ( k > nro )
-                            { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
-                            } 
-                            irstk[ k, istk + 1 ] = irstk[ k, istk ]; 
-                        } 
-                        while ( true ); 
-                    } 
-                    else 
-                    { 
-                        nro = nro - 1; 
-                        for ( k=1; k <= i - 1; k++ ) 
-                        { 
-                            irstk[ k, istk + 1 ] = irstk[ k, istk ]; 
-                        } 
-                        for ( k=i; k <= nro; k++ ) 
-                        { 
-                            irstk[ k, istk + 1 ] = irstk[ k + 1, istk ]; 
-                        } 
-                        for ( k=1; k <= j - 1; k++ ) 
-                        { 
-                            icstk[ k, istk + 1 ] = icstk[ k, istk ]; 
-                        } 
-                        skip = false; 
-                        for ( k=j; k <= nco - 1; k++ ) 
-                        { 
-                            if ( ict - irt >= icstk[ k + 1, istk ] ) 
-                            { 
-                                skip = true; 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
-                            } 
-                            icstk[ k, istk + 1 ] = icstk[ k + 1, istk ]; 
-                        } 
-                        if ( skip == false )
-                        { 
-                            k = nco; 
-                        } 
-                        icstk[ k, istk + 1 ] = ict - irt; 
-                        do 
-                        { 
-                            k = k + 1; 
-                            if ( k > nco )
-                            { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
-                            } 
-                            icstk[ k, istk + 1 ] = icstk[ k, istk ]; 
-                        } 
-                        while ( true ); 
+                    if (irt > ict)
+                    {
+                        nco = nco - 1;
+                        for (k = 1; k <= j - 1; k++)
+                        {
+                            icstk[k, istk + 1] = icstk[k, istk];
+                        }
+                        for (k = j; k <= nco; k++)
+                        {
+                            icstk[k, istk + 1] = icstk[k + 1, istk];
+                        }
+                        for (k = 1; k <= i - 1; k++)
+                        {
+                            irstk[k, istk + 1] = irstk[k, istk];
+                        }
+                        skip = false;
+                        for (k = i; k <= nro - 1; k++)
+                        {
+                            if (irt - ict >= irstk[k + 1, istk])
+                            {
+                                skip = true;
+                                break; /* TRANSWARNING: check that break is in correct scope */
+                            }
+                            irstk[k, istk + 1] = irstk[k + 1, istk];
+                        }
+                        if (skip == false)
+                        {
+                            k = nro;
+                        }
+                        irstk[k, istk + 1] = irt - ict;
+                        do
+                        {
+                            k = k + 1;
+                            if (k > nro)
+                            {
+                                break; /* TRANSWARNING: check that break is in correct scope */
+                            }
+                            irstk[k, istk + 1] = irstk[k, istk];
+                        }
+                        while (true);
+                    }
+                    else
+                    {
+                        nro = nro - 1;
+                        for (k = 1; k <= i - 1; k++)
+                        {
+                            irstk[k, istk + 1] = irstk[k, istk];
+                        }
+                        for (k = i; k <= nro; k++)
+                        {
+                            irstk[k, istk + 1] = irstk[k + 1, istk];
+                        }
+                        for (k = 1; k <= j - 1; k++)
+                        {
+                            icstk[k, istk + 1] = icstk[k, istk];
+                        }
+                        skip = false;
+                        for (k = j; k <= nco - 1; k++)
+                        {
+                            if (ict - irt >= icstk[k + 1, istk])
+                            {
+                                skip = true;
+                                break; /* TRANSWARNING: check that break is in correct scope */
+                            }
+                            icstk[k, istk + 1] = icstk[k + 1, istk];
+                        }
+                        if (skip == false)
+                        {
+                            k = nco;
+                        }
+                        icstk[k, istk + 1] = ict - irt;
+                        do
+                        {
+                            k = k + 1;
+                            if (k > nco)
+                            {
+                                break; /* TRANSWARNING: check that break is in correct scope */
+                            }
+                            icstk[k, istk + 1] = icstk[k, istk];
+                        }
+                        while (true);
                     }
                 }
                 bool skip3;
-                if ( nro == 1 ) 
-                { 
-                    for ( k=1; k <= nco; k++ ) 
-                    { 
-                        y = y + fact[ icstk[ k, istk + 1 ] ]; 
-                    } 
-                    skip3 = false; 
-                } 
-                else if ( nco == 1 ) 
-                { 
-                    for ( k=1; k <= nro; k++ ) 
-                    { 
-                        y = y + fact[ irstk[ k, istk + 1 ] ]; 
-                    } 
-                    skip3 = false; 
-                } 
-                else 
-                { 
-                    lstk[ istk ] = l; 
-                    mstk[ istk ] = m; 
-                    nstk[ istk ] = n; 
-                    istk = istk + 1; 
-                    nrstk[ istk ] = nro; 
-                    ncstk[ istk ] = nco; 
-                    ystk[ istk ] = y; 
-                    l = 1; 
-                    if ( ir1 > ic1 ) 
-                    { 
-                        if ( nro >= nco ) 
-                        { 
-                            m = nco - 1; 
-                            n = 2; 
-                        } 
-                        else 
-                        { 
-                            m = nro; 
-                            n = 1; 
-                        } 
-                    } 
-                    else if ( ir1 < ic1 ) 
-                    { 
-                        if ( nro <= nco ) 
-                        { 
-                            m = nro - 1; 
-                            n = 1; 
-                        } 
-                        else 
-                        { 
-                            m = nco; 
-                            n = 2; 
-                        } 
-                    } 
-                    else 
-                    { 
-                        if ( nro <= nco ) 
-                        { 
-                            m = nro - 1; 
-                            n = 1; 
-                        } 
-                        else 
-                        { 
-                            m = nco - 1; 
-                            n = 2; 
-                        } 
-                    } 
-                    skip3 = true; 
-                } 
-                
-                if ( skip3 == false ) 
-                { 
-                    if ( y > amx ) 
-                    { 
-                        amx = y; 
-                        if ( dsp - amx <= tol ) 
-                        { 
-                            dsp = 0.0; 
-                            return; 
-                        } 
-                    } 
-                    bool skip2 = false; 
-                    do 
-                    { 
-                        if ( skip2 == false ) 
-                        { 
-                            do 
-                            { 
-                                istk = istk - 1; 
-                                if ( istk == 0 ) 
-                                { 
-                                    dsp = dsp - amx; 
-                                    if ( dsp - amx <= tol )
-                                    { 
-                                        dsp = 0.0; 
-                                    } 
-                                    return; 
-                                } 
-                                l = lstk[ istk ] + 1; 
-                                if ( l <= mstk[ istk ] )
-                                { 
-                                    break; /* TRANSWARNING: check that break is in correct scope */ 
-                                } 
-                            } 
-                            while ( true ); 
-                        } 
-                        
-                        n = nstk[ istk ]; 
-                        nro = nrstk[ istk ]; 
-                        nco = ncstk[ istk ]; 
-                        y = ystk[ istk ]; 
-                        if ( n == 1 ) 
-                        { 
-                            if ( irstk[ l, istk ] < irstk[ l - 1, istk ] )
-                            { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
-                            } 
-                        } 
-                        else if ( n == 2 ) 
-                        { 
-                            if ( icstk[ l, istk ] < icstk[ l - 1, istk ] )
-                            { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
-                            } 
-                        } 
-                        l = l + 1; 
-                        skip2 = l <= mstk[ istk ]; 
-                        
-                    } 
-                    while ( true ); 
-                    
-                } 
-                
-            } 
-            while ( true ); 
-            
-        } 
-        
-        
+                if (nro == 1)
+                {
+                    for (k = 1; k <= nco; k++)
+                    {
+                        y = y + fact[icstk[k, istk + 1]];
+                    }
+                    skip3 = false;
+                }
+                else if (nco == 1)
+                {
+                    for (k = 1; k <= nro; k++)
+                    {
+                        y = y + fact[irstk[k, istk + 1]];
+                    }
+                    skip3 = false;
+                }
+                else
+                {
+                    lstk[istk] = l;
+                    mstk[istk] = m;
+                    nstk[istk] = n;
+                    istk = istk + 1;
+                    nrstk[istk] = nro;
+                    ncstk[istk] = nco;
+                    ystk[istk] = y;
+                    l = 1;
+                    if (ir1 > ic1)
+                    {
+                        if (nro >= nco)
+                        {
+                            m = nco - 1;
+                            n = 2;
+                        }
+                        else
+                        {
+                            m = nro;
+                            n = 1;
+                        }
+                    }
+                    else if (ir1 < ic1)
+                    {
+                        if (nro <= nco)
+                        {
+                            m = nro - 1;
+                            n = 1;
+                        }
+                        else
+                        {
+                            m = nco;
+                            n = 2;
+                        }
+                    }
+                    else
+                    {
+                        if (nro <= nco)
+                        {
+                            m = nro - 1;
+                            n = 1;
+                        }
+                        else
+                        {
+                            m = nco - 1;
+                            n = 2;
+                        }
+                    }
+                    skip3 = true;
+                }
+
+                if (skip3 == false)
+                {
+                    if (y > amx)
+                    {
+                        amx = y;
+                        if (dsp - amx <= tol)
+                        {
+                            dsp = 0.0;
+                            return;
+                        }
+                    }
+                    bool skip2 = false;
+                    do
+                    {
+                        if (skip2 == false)
+                        {
+                            do
+                            {
+                                istk = istk - 1;
+                                if (istk == 0)
+                                {
+                                    dsp = dsp - amx;
+                                    if (dsp - amx <= tol)
+                                    {
+                                        dsp = 0.0;
+                                    }
+                                    return;
+                                }
+                                l = lstk[istk] + 1;
+                                if (l <= mstk[istk])
+                                {
+                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                }
+                            }
+                            while (true);
+                        }
+
+                        n = nstk[istk];
+                        nro = nrstk[istk];
+                        nco = ncstk[istk];
+                        y = ystk[istk];
+                        if (n == 1)
+                        {
+                            if (irstk[l, istk] < irstk[l - 1, istk])
+                            {
+                                break; /* TRANSWARNING: check that break is in correct scope */
+                            }
+                        }
+                        else if (n == 2)
+                        {
+                            if (icstk[l, istk] < icstk[l - 1, istk])
+                            {
+                                break; /* TRANSWARNING: check that break is in correct scope */
+                            }
+                        }
+                        l = l + 1;
+                        skip2 = l <= mstk[istk];
+
+                    }
+                    while (true);
+
+                }
+
+            }
+            while (true);
+
+        }
+
+
         /// <summary>
         /// shortest path length
         /// </summary>
-        private static void shortpath( int nrow, int[] irow, int ncol, int[] icol, ref double dlp, int mm, double[] fact, double tol, ref int ierr, int[] ico, int[] iro, int[] it, int[] lb, int[] nr, int[] nt, int[] nu, int[] itc, int[] ist, double[] alen, double[] stv ) 
+        private static void shortpath(int nrow, int[] irow, int ncol, int[] icol, ref double dlp, int mm, double[] fact, double tol, ref int ierr, int[] ico, int[] iro, int[] it, int[] lb, int[] nr, int[] nt, int[] nu, int[] itc, int[] ist, double[] alen, double[] stv)
         {
-            int i ;
-            int n11 , n12 ;
+            int i;
+            int n11, n12;
             const int ldst = 200; int nst = 0; int nitc = 0;
 
-            int nco; 
-            int nro; 
-            
-            for ( i=0; i <= ncol; i++ ) 
-            { 
-                alen[ i ] = 0.0; 
-            } 
-            for ( i=1; i <= 400; i++ ) 
-            { 
-                ist[ i ] = -1; 
-            } 
+            int nco;
+            int nro;
+
+            for (i = 0; i <= ncol; i++)
+            {
+                alen[i] = 0.0;
+            }
+            for (i = 1; i <= 400; i++)
+            {
+                ist[i] = -1;
+            }
             // (nrow Is 1)
-            if ( nrow <= 1 ) 
-            { 
-                if ( nrow > 0 ) 
-                { 
-                    dlp = dlp - fact[ icol[ 1 ] ]; 
-                    for ( i=2; i <= ncol; i++ ) 
-                    { 
-                        dlp = dlp - fact[ icol[ i ] ]; 
-                    } 
-                } 
-                return; 
-            } 
-            // c(ncol Is 1)
-            if ( ncol <= 1 ) 
-            { 
-                if ( ncol > 0 ) 
-                { 
-                    dlp = dlp - fact[ irow[ 1 ] ] - fact[ irow[ 2 ] ]; 
-                    for ( i=3; i <= nrow; i++ ) 
-                    { 
-                        dlp = dlp - fact[ irow[ i ] ]; 
-                    } 
-                } 
-                return; 
-            } 
-            //                                   2 by 2 table
-            if ( nrow * ncol == 4 ) 
-            { 
-                n11 = ( irow[ 1 ] + 1 ) * ( icol[ 1 ] + 1 ) / ( mm + 2 ); 
-                n12 = irow[ 1 ] - n11; 
-                dlp = dlp - fact[ n11 ] - fact[ n12 ] - fact[ icol[ 1 ] - n11 ] - fact[ icol[ 2 ] - n12 ]; 
-                return; 
-            } 
-            //                                   test for optimal table
-            double val = 0.0; 
-            bool xmin = false; 
-            if ( irow[ nrow ] <= irow[ 1 ] + ncol )
-            { 
-                shortie( nrow, irow, 1, ncol, icol, 1, ref val, ref xmin, fact, lb, nu, nr ); 
-            } 
-            if ( xmin == false ) 
-            { 
-                if ( icol[ ncol ] <= icol[ 1 ] + nrow )
-                { 
-                    shortie( ncol, icol, 1, nrow, irow, 1, ref val, ref xmin, fact, lb, nu, nr ); 
-                } 
-            } 
-            
-            if ( xmin ) 
-            { 
-                dlp = dlp - val; 
-                return; 
-            } 
-            //                                   setup for dynamic programming
-            int nn = mm; 
-            //                                   minimize ncol
-            if ( nrow >= ncol ) 
-            { 
-                nro = nrow; 
-                nco = ncol; 
-                
-                for ( i=1; i <= nrow; i++ ) 
-                { 
-                    iro[ i ] = irow[ i ]; 
-                } 
-                
-                ico[ 1 ] = icol[ 1 ]; 
-                nt[ 1 ] = nn - ico[ 1 ]; 
-                for ( i=2; i <= ncol; i++ ) 
-                { 
-                    ico[ i ] = icol[ i ]; 
-                    nt[ i ] = nt[ i - 1 ] - ico[ i ]; 
-                } 
-            } 
-            else 
-            { 
-                nro = ncol; 
-                nco = nrow; 
-                
-                ico[ 1 ] = irow[ 1 ]; 
-                nt[ 1 ] = nn - ico[ 1 ]; 
-                for ( i=2; i <= nrow; i++ ) 
-                { 
-                    ico[ i ] = irow[ i ]; 
-                    nt[ i ] = nt[ i - 1 ] - ico[ i ]; 
-                } 
-                
-                for ( i=1; i <= ncol; i++ ) 
-                { 
-                    iro[ i ] = icol[ i ]; 
-                } 
-            } 
-            //                                   initialize pointers
-            double vmn = 10000000000.0; 
-            int nc1s = nco - 1; 
-            int irl = 1; 
-            int ks = 0; 
-            int k = ldst; 
-            int kyy = ico[ nco ] + 1; 
-            
-            // outer
-            do 
-            { 
-                bool cycleouter = false; 
-                //                                   setup to generate new node
-                int lev = 1; 
-                int nr1 = nro - 1; 
-                int nrt = iro[ irl ]; 
-                int nct = ico[ 1 ]; 
-                lb[ 1 ] = Convert.ToInt32( Math.Floor(Convert.ToDouble( ( nrt + 1 ) * ( nct + 1 ) ) / Convert.ToDouble( nn + nr1 * nc1s + 1 ) - tol) - 1 ); 
-                nu[ 1 ] = Convert.ToInt32( Math.Floor(Convert.ToDouble( ( nrt + nc1s ) * ( nct + nr1 ) ) / Convert.ToDouble( nn + nr1 + nc1s )) - lb[ 1 ] + 1 ); 
-                nr[ 1 ] = nrt - lb[ 1 ]; 
-                // inner
-                do 
+            if (nrow <= 1)
+            {
+                if (nrow > 0)
                 {
-                    int itp ;
-                    int key ;
-                    do 
-                    { 
-                        //                                   generate a node
-                        nu[ lev ] = nu[ lev ] - 1; 
-                        if ( nu[ lev ] != 0 ) 
-                        { 
-                            lb[ lev ] = lb[ lev ] + 1; 
-                            nr[ lev ] = nr[ lev ] - 1; 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        }
-                        if ( lev != 1 ) 
-                        { 
-                            lev = lev - 1; 
-                        } 
-                        else 
-                        { 
-                            do 
-                            { 
-                                //                                   pop item from stack
-                                if ( nitc > 0 ) 
-                                { 
-                                    //                                   stack index
-                                    itp = itc[ nitc + k ] + k; 
-                                    nitc = nitc - 1; 
-                                    val = stv[ itp ]; 
-                                    key = ist[ itp ]; 
-                                    ist[ itp ] = -1; 
-                                    //                                   compute marginals
-                                    for ( i=nco; i >= 2; i-- ) 
-                                    { 
-                                        ico[ i ] = key % kyy; 
-                                        key = key / kyy; 
-                                    } 
-                                    ico[ 1 ] = key; 
-                                    //                                   set up nt array
-                                    nt[ 1 ] = nn - ico[ 1 ]; 
-                                    for ( i=2; i <= nco; i++ ) 
-                                    { 
-                                        nt[ i ] = nt[ i - 1 ] - ico[ i ]; 
-                                    } 
-                                    //                                   test for optimality
-                                    xmin = false; 
-                                    if ( iro[ nro ] <= iro[ irl ] + nco )
-                                    { 
-                                        shortie( nro, iro, irl, nco, ico, 1, ref val, ref xmin, fact, lb, nu, nr ); 
-                                    } 
-                                    if ( xmin == false ) 
-                                    { 
-                                        if ( ico[ nco ] <= ico[ 1 ] + nro )
-                                        { 
-                                            shortie( nco, ico, 1, nro, iro, irl, ref val, ref xmin, fact, lb, nu, nr ); 
-                                        } 
-                                    } 
-                                    
-                                    if ( xmin == false ) 
-                                    { 
-                                        cycleouter = true; 
-                                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                                    } 
-                                    
-                                    if ( val < vmn )
-                                    { 
-                                        vmn = val; 
-                                    } 
-                                    
-                                } 
-                                else if ( nro > 2 & nst > 0 ) 
-                                { 
-                                    //                                   go to next level
-                                    nitc = nst; 
-                                    nst = 0; 
-                                    k = ks; 
-                                    ks = ldst - ks; 
-                                    nn = nn - iro[ irl ]; 
-                                    irl = irl + 1; 
-                                    nro = nro - 1; 
-                                } 
-                                else 
-                                { 
-                                    
-                                    dlp = dlp - vmn; 
-                                    return; 
-                                } 
-                                
-                            } 
-                            while ( true ); 
-                            
-                            if ( cycleouter )
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
-                        }
-                    } 
-                    while ( true ); 
-                    
-                    if ( cycleouter == false ) 
+                    dlp = dlp - fact[icol[1]];
+                    for (i = 2; i <= ncol; i++)
                     {
-                        int nn1 ;
-                        do 
-                        { 
-                            alen[ lev ] = alen[ lev - 1 ] + fact[ lb[ lev ] ]; 
-                            if ( lev >= nc1s )
-                            { 
+                        dlp = dlp - fact[icol[i]];
+                    }
+                }
+                return;
+            }
+            // c(ncol Is 1)
+            if (ncol <= 1)
+            {
+                if (ncol > 0)
+                {
+                    dlp = dlp - fact[irow[1]] - fact[irow[2]];
+                    for (i = 3; i <= nrow; i++)
+                    {
+                        dlp = dlp - fact[irow[i]];
+                    }
+                }
+                return;
+            }
+            //                                   2 by 2 table
+            if (nrow * ncol == 4)
+            {
+                n11 = (irow[1] + 1) * (icol[1] + 1) / (mm + 2);
+                n12 = irow[1] - n11;
+                dlp = dlp - fact[n11] - fact[n12] - fact[icol[1] - n11] - fact[icol[2] - n12];
+                return;
+            }
+            //                                   test for optimal table
+            double val = 0.0;
+            bool xmin = false;
+            if (irow[nrow] <= irow[1] + ncol)
+            {
+                shortie(nrow, irow, 1, ncol, icol, 1, ref val, ref xmin, fact, lb, nu, nr);
+            }
+            if (xmin == false)
+            {
+                if (icol[ncol] <= icol[1] + nrow)
+                {
+                    shortie(ncol, icol, 1, nrow, irow, 1, ref val, ref xmin, fact, lb, nu, nr);
+                }
+            }
+
+            if (xmin)
+            {
+                dlp = dlp - val;
+                return;
+            }
+            //                                   setup for dynamic programming
+            int nn = mm;
+            //                                   minimize ncol
+            if (nrow >= ncol)
+            {
+                nro = nrow;
+                nco = ncol;
+
+                for (i = 1; i <= nrow; i++)
+                {
+                    iro[i] = irow[i];
+                }
+
+                ico[1] = icol[1];
+                nt[1] = nn - ico[1];
+                for (i = 2; i <= ncol; i++)
+                {
+                    ico[i] = icol[i];
+                    nt[i] = nt[i - 1] - ico[i];
+                }
+            }
+            else
+            {
+                nro = ncol;
+                nco = nrow;
+
+                ico[1] = irow[1];
+                nt[1] = nn - ico[1];
+                for (i = 2; i <= nrow; i++)
+                {
+                    ico[i] = irow[i];
+                    nt[i] = nt[i - 1] - ico[i];
+                }
+
+                for (i = 1; i <= ncol; i++)
+                {
+                    iro[i] = icol[i];
+                }
+            }
+            //                                   initialize pointers
+            double vmn = 10000000000.0;
+            int nc1s = nco - 1;
+            int irl = 1;
+            int ks = 0;
+            int k = ldst;
+            int kyy = ico[nco] + 1;
+
+            // outer
+            do
+            {
+                bool cycleouter = false;
+                //                                   setup to generate new node
+                int lev = 1;
+                int nr1 = nro - 1;
+                int nrt = iro[irl];
+                int nct = ico[1];
+                lb[1] = Convert.ToInt32(Math.Floor(Convert.ToDouble((nrt + 1) * (nct + 1)) / Convert.ToDouble(nn + nr1 * nc1s + 1) - tol) - 1);
+                nu[1] = Convert.ToInt32(Math.Floor(Convert.ToDouble((nrt + nc1s) * (nct + nr1)) / Convert.ToDouble(nn + nr1 + nc1s)) - lb[1] + 1);
+                nr[1] = nrt - lb[1];
+                // inner
+                do
+                {
+                    int itp;
+                    int key;
+                    do
+                    {
+                        //                                   generate a node
+                        nu[lev] = nu[lev] - 1;
+                        if (nu[lev] != 0)
+                        {
+                            lb[lev] = lb[lev] + 1;
+                            nr[lev] = nr[lev] - 1;
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                        if (lev != 1)
+                        {
+                            lev = lev - 1;
+                        }
+                        else
+                        {
+                            do
+                            {
+                                //                                   pop item from stack
+                                if (nitc > 0)
+                                {
+                                    //                                   stack index
+                                    itp = itc[nitc + k] + k;
+                                    nitc = nitc - 1;
+                                    val = stv[itp];
+                                    key = ist[itp];
+                                    ist[itp] = -1;
+                                    //                                   compute marginals
+                                    for (i = nco; i >= 2; i--)
+                                    {
+                                        ico[i] = key % kyy;
+                                        key = key / kyy;
+                                    }
+                                    ico[1] = key;
+                                    //                                   set up nt array
+                                    nt[1] = nn - ico[1];
+                                    for (i = 2; i <= nco; i++)
+                                    {
+                                        nt[i] = nt[i - 1] - ico[i];
+                                    }
+                                    //                                   test for optimality
+                                    xmin = false;
+                                    if (iro[nro] <= iro[irl] + nco)
+                                    {
+                                        shortie(nro, iro, irl, nco, ico, 1, ref val, ref xmin, fact, lb, nu, nr);
+                                    }
+                                    if (xmin == false)
+                                    {
+                                        if (ico[nco] <= ico[1] + nro)
+                                        {
+                                            shortie(nco, ico, 1, nro, iro, irl, ref val, ref xmin, fact, lb, nu, nr);
+                                        }
+                                    }
+
+                                    if (xmin == false)
+                                    {
+                                        cycleouter = true;
+                                        break; /* TRANSWARNING: check that break is in correct scope */
+                                    }
+
+                                    if (val < vmn)
+                                    {
+                                        vmn = val;
+                                    }
+
+                                }
+                                else if (nro > 2 & nst > 0)
+                                {
+                                    //                                   go to next level
+                                    nitc = nst;
+                                    nst = 0;
+                                    k = ks;
+                                    ks = ldst - ks;
+                                    nn = nn - iro[irl];
+                                    irl = irl + 1;
+                                    nro = nro - 1;
+                                }
+                                else
+                                {
+
+                                    dlp = dlp - vmn;
+                                    return;
+                                }
+
+                            }
+                            while (true);
+
+                            if (cycleouter)
+                                break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                    while (true);
+
+                    if (cycleouter == false)
+                    {
+                        int nn1;
+                        do
+                        {
+                            alen[lev] = alen[lev - 1] + fact[lb[lev]];
+                            if (lev >= nc1s)
+                            {
                                 break;
-                            } 
-                            nn1 = nt[ lev ]; 
-                            nrt = nr[ lev ]; 
-                            lev = lev + 1; 
-                            int nc1 = nco - lev; 
-                            nct = ico[ lev ]; 
-                            lb[ lev ] = ( ( int )( Math.Floor(Convert.ToDouble( ( nrt + 1 ) * ( nct + 1 ) ) / Convert.ToDouble( nn1 + nr1 * nc1 + 1 ) - tol) ) ); 
-                            nu[ lev ] = Convert.ToInt32(  Math.Floor(Convert.ToDouble( ( nrt + nc1 ) * ( nct + nr1 ) ) / Convert.ToDouble( nn1 + nr1 + nc1 )) - lb[ lev ] + 1 ); 
-                            nr[ lev ] = nrt - lb[ lev ]; 
-                        } 
-                        while ( true ); 
-                        
-                        alen[ nco ] = alen[ lev ] + fact[ nr[ lev ] ]; 
-                        lb[ nco ] = nr[ lev ]; 
-                        
-                        double v = val + alen[ nco ]; 
-                        if ( nro == 2 ) 
-                        { 
+                            }
+                            nn1 = nt[lev];
+                            nrt = nr[lev];
+                            lev = lev + 1;
+                            int nc1 = nco - lev;
+                            nct = ico[lev];
+                            lb[lev] = ((int)(Math.Floor(Convert.ToDouble((nrt + 1) * (nct + 1)) / Convert.ToDouble(nn1 + nr1 * nc1 + 1) - tol)));
+                            nu[lev] = Convert.ToInt32(Math.Floor(Convert.ToDouble((nrt + nc1) * (nct + nr1)) / Convert.ToDouble(nn1 + nr1 + nc1)) - lb[lev] + 1);
+                            nr[lev] = nrt - lb[lev];
+                        }
+                        while (true);
+
+                        alen[nco] = alen[lev] + fact[nr[lev]];
+                        lb[nco] = nr[lev];
+
+                        double v = val + alen[nco];
+                        if (nro == 2)
+                        {
                             //                                only 1 row left
-                            v = v + fact[ ico[ 1 ] - lb[ 1 ] ] + fact[ ico[ 2 ] - lb[ 2 ] ]; 
-                            for ( i=3; i <= nco; i++ ) 
-                            { 
-                                v = v + fact[ ico[ i ] - lb[ i ] ]; 
-                            } 
-                            if ( v < vmn )
-                            { 
-                                vmn = v; 
-                            } 
-                        } 
-                        else if ( nro == 3 & nco == 2 ) 
-                        { 
+                            v = v + fact[ico[1] - lb[1]] + fact[ico[2] - lb[2]];
+                            for (i = 3; i <= nco; i++)
+                            {
+                                v = v + fact[ico[i] - lb[i]];
+                            }
+                            if (v < vmn)
+                            {
+                                vmn = v;
+                            }
+                        }
+                        else if (nro == 3 & nco == 2)
+                        {
                             //                                3 rows and 2 columns
-                            nn1 = nn - iro[ irl ] + 2; 
-                            int ic1 = ico[ 1 ] - lb[ 1 ]; 
-                            int ic2 = ico[ 2 ] - lb[ 2 ]; 
-                            n11 = ( iro[ irl + 1 ] + 1 ) * ( ic1 + 1 ) / nn1; 
-                            n12 = iro[ irl + 1 ] - n11; 
-                            v = v + fact[ n11 ] + fact[ n12 ] + fact[ ic1 - n11 ] + fact[ ic2 - n12 ]; 
-                            if ( v < vmn )
-                            { 
-                                vmn = v; 
-                            } 
-                        } 
-                        else 
-                        { 
+                            nn1 = nn - iro[irl] + 2;
+                            int ic1 = ico[1] - lb[1];
+                            int ic2 = ico[2] - lb[2];
+                            n11 = (iro[irl + 1] + 1) * (ic1 + 1) / nn1;
+                            n12 = iro[irl + 1] - n11;
+                            v = v + fact[n11] + fact[n12] + fact[ic1 - n11] + fact[ic2 - n12];
+                            if (v < vmn)
+                            {
+                                vmn = v;
+                            }
+                        }
+                        else
+                        {
                             //                                column marginals are new node
-                            for ( i=1; i <= nco; i++ ) 
-                            { 
-                                it[ i ] = ico[ i ] - lb[ i ]; 
-                            } 
+                            for (i = 1; i <= nco; i++)
+                            {
+                                it[i] = ico[i] - lb[i];
+                            }
                             //                                sort column marginals
-                            int ii ;
-                            if ( nco == 2 ) 
-                            { 
-                                if ( it[ 1 ] > it[ 2 ] ) 
-                                { 
-                                    ii = it[ 1 ]; 
-                                    it[ 1 ] = it[ 2 ]; 
-                                    it[ 2 ] = ii; 
-                                } 
-                            } 
-                            else if ( nco == 3 ) 
-                            { 
-                                ii = it[ 1 ]; 
-                                if ( ii > it[ 3 ] ) 
-                                { 
-                                    if ( ii <= it[ 2 ] ) 
-                                    { 
-                                        it[ 1 ] = it[ 3 ]; 
-                                        it[ 3 ] = it[ 2 ]; 
-                                        it[ 2 ] = ii; 
-                                    } 
-                                    else if ( it[ 2 ] > it[ 3 ] ) 
-                                    { 
-                                        it[ 1 ] = it[ 3 ]; 
-                                        it[ 3 ] = ii; 
-                                    } 
-                                    else 
-                                    { 
-                                        it[ 1 ] = it[ 2 ]; 
-                                        it[ 2 ] = it[ 3 ]; 
-                                        it[ 3 ] = ii; 
-                                    } 
-                                } 
-                                else if ( ii > it[ 2 ] ) 
-                                { 
-                                    it[ 1 ] = it[ 2 ]; 
-                                    it[ 2 ] = ii; 
-                                } 
-                                else if ( it[ 2 ] > it[ 3 ] ) 
-                                { 
-                                    ii = it[ 2 ]; 
-                                    it[ 2 ] = it[ 3 ]; 
-                                    it[ 3 ] = ii; 
-                                } 
-                            } 
-                            else 
-                            { 
+                            int ii;
+                            if (nco == 2)
+                            {
+                                if (it[1] > it[2])
+                                {
+                                    ii = it[1];
+                                    it[1] = it[2];
+                                    it[2] = ii;
+                                }
+                            }
+                            else if (nco == 3)
+                            {
+                                ii = it[1];
+                                if (ii > it[3])
+                                {
+                                    if (ii <= it[2])
+                                    {
+                                        it[1] = it[3];
+                                        it[3] = it[2];
+                                        it[2] = ii;
+                                    }
+                                    else if (it[2] > it[3])
+                                    {
+                                        it[1] = it[3];
+                                        it[3] = ii;
+                                    }
+                                    else
+                                    {
+                                        it[1] = it[2];
+                                        it[2] = it[3];
+                                        it[3] = ii;
+                                    }
+                                }
+                                else if (ii > it[2])
+                                {
+                                    it[1] = it[2];
+                                    it[2] = ii;
+                                }
+                                else if (it[2] > it[3])
+                                {
+                                    ii = it[2];
+                                    it[2] = it[3];
+                                    it[3] = ii;
+                                }
+                            }
+                            else
+                            {
                                 // Call iqsort(nco, it, it)
-                                Array.Sort( it, 1, nco ); 
-                            } 
+                                Array.Sort(it, 1, nco);
+                            }
                             //                                compute hash value
-                            key = it[ 1 ] * kyy + it[ 2 ]; 
-                            for ( i=3; i <= nco; i++ ) 
-                            { 
-                                key = it[ i ] + key * kyy; 
-                            } 
+                            key = it[1] * kyy + it[2];
+                            for (i = 3; i <= nco; i++)
+                            {
+                                key = it[i] + key * kyy;
+                            }
                             //                                table index
-                            int ipn = ( key % ldst ) + 1; 
+                            int ipn = (key % ldst) + 1;
                             //                                find empty position
-                            itp = ipn - 1; 
+                            itp = ipn - 1;
                             bool cycleinner = false;
-                            int idum ;
-                            for ( idum=1; idum <= ldst; idum++ ) 
-                            { 
-                                itp = itp + 1; 
-                                if ( itp > ldst )
-                                { 
-                                    itp = 1; 
-                                } 
-                                ii = ks + itp; 
-                                if ( ist[ ii ] < 0 ) 
-                                { 
+                            int idum;
+                            for (idum = 1; idum <= ldst; idum++)
+                            {
+                                itp = itp + 1;
+                                if (itp > ldst)
+                                {
+                                    itp = 1;
+                                }
+                                ii = ks + itp;
+                                if (ist[ii] < 0)
+                                {
                                     //                                push onto stack
-                                    ist[ ii ] = key; 
-                                    stv[ ii ] = v; 
-                                    nst = nst + 1; 
-                                    ii = nst + ks; 
-                                    itc[ ii ] = itp; 
-                                    cycleinner = true; 
-                                    break; /* TRANSWARNING: check that break is in correct scope */ 
+                                    ist[ii] = key;
+                                    stv[ii] = v;
+                                    nst = nst + 1;
+                                    ii = nst + ks;
+                                    itc[ii] = itp;
+                                    cycleinner = true;
+                                    break; /* TRANSWARNING: check that break is in correct scope */
                                 }
-                                if ( ist[ ii ] == key ) 
-                                { 
+                                if (ist[ii] == key)
+                                {
                                     //                                marginals already on stack
-                                    stv[ ii ] = Math.Min( v, stv[ ii ] ); 
-                                    cycleinner = true; 
-                                    break; /* TRANSWARNING: check that break is in correct scope */ 
+                                    stv[ii] = Math.Min(v, stv[ii]);
+                                    cycleinner = true;
+                                    break; /* TRANSWARNING: check that break is in correct scope */
                                 }
-                            } 
-                            
-                            if ( cycleinner == false ) 
-                            { 
-                                ierr = 4; 
-                                return; 
-                            } 
-                        } 
-                    } 
-                    else 
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                while ( true ); // inner
-            } 
-            while ( true ); // outer
-            
-        } 
-        
-        
+                            }
+
+                            if (cycleinner == false)
+                            {
+                                ierr = 4;
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                while (true); // inner
+            }
+            while (true); // outer
+
+        }
+
+
         /// <summary>
         /// shortest path length (network algorithm)
         /// </summary>
-        private static void shortie( int nrow, int[] irow, int irx, int ncol, int[] icol, int icx, ref double val, ref bool xmin, double[] fact, int[] nd, int[] ne, int[] m ) 
-        { 
-            int ix1 = irx - 1; 
-            int ix2 = icx - 1; 
-            
-            for (int i=1; i <= nrow - 1; i++ ) 
-            { 
-                nd[ i ] = 0; 
-            } 
-            int iz = icol[ ix2 + 1 ] / nrow; 
-            ne[ 1 ] = iz; 
-            int ix = icol[ ix2 + 1 ] - nrow * iz; 
-            m[ 1 ] = ix; 
-            if ( ix != 0 )
-            { 
-                nd[ ix ] = nd[ ix ] + 1; 
-            } 
-            for (int i=2; i <= ncol; i++ ) 
-            { 
-                ix = icol[ ix2 + i ] / nrow; 
-                ne[ i ] = ix; 
-                iz = iz + ix; 
-                ix = icol[ ix2 + i ] - nrow * ix; 
-                m[ i ] = ix; 
-                if ( ix != 0 )
-                { 
-                    nd[ ix ] = nd[ ix ] + 1; 
-                } 
-            } 
-            for (int i=nrow - 2; i >= 1; i-- ) 
-            { 
-                nd[ i ] = nd[ i ] + nd[ i + 1 ]; 
-            } 
-            ix = 0; 
-            int nrw1 = nrow + 1; 
-            for (int i=nrow; i >= 2; i-- ) 
-            { 
-                ix = ix + iz + nd[ nrw1 - i ] - irow[ ix1 + i ]; 
-                if ( ix < 0 )
-                { 
-                    return; 
-                } 
-            } 
-            for (int i=1; i <= ncol; i++ ) 
-            { 
-                ix = ne[ i ]; 
-                iz = m[ i ]; 
-                val = val + iz * fact[ ix + 1 ] + ( nrow - iz ) * fact[ ix ]; 
-            } 
-            xmin = true; 
-            
-        } 
-        
-        
-        
+        private static void shortie(int nrow, int[] irow, int irx, int ncol, int[] icol, int icx, ref double val, ref bool xmin, double[] fact, int[] nd, int[] ne, int[] m)
+        {
+            int ix1 = irx - 1;
+            int ix2 = icx - 1;
+
+            for (int i = 1; i <= nrow - 1; i++)
+            {
+                nd[i] = 0;
+            }
+            int iz = icol[ix2 + 1] / nrow;
+            ne[1] = iz;
+            int ix = icol[ix2 + 1] - nrow * iz;
+            m[1] = ix;
+            if (ix != 0)
+            {
+                nd[ix] = nd[ix] + 1;
+            }
+            for (int i = 2; i <= ncol; i++)
+            {
+                ix = icol[ix2 + i] / nrow;
+                ne[i] = ix;
+                iz = iz + ix;
+                ix = icol[ix2 + i] - nrow * ix;
+                m[i] = ix;
+                if (ix != 0)
+                {
+                    nd[ix] = nd[ix] + 1;
+                }
+            }
+            for (int i = nrow - 2; i >= 1; i--)
+            {
+                nd[i] = nd[i] + nd[i + 1];
+            }
+            ix = 0;
+            int nrw1 = nrow + 1;
+            for (int i = nrow; i >= 2; i--)
+            {
+                ix = ix + iz + nd[nrw1 - i] - irow[ix1 + i];
+                if (ix < 0)
+                {
+                    return;
+                }
+            }
+            for (int i = 1; i <= ncol; i++)
+            {
+                ix = ne[i];
+                iz = m[i];
+                val = val + iz * fact[ix + 1] + (nrow - iz) * fact[ix];
+            }
+            xmin = true;
+
+        }
+
+
+
         //      generate new nodes based on marginal totals (fisher network algorithm)
-        private static void sibling( ref int nrow, ref int[] imax, ref int[] idif, ref int k, ref int ks, out int iflag ) 
+        private static void sibling(ref int nrow, ref int[] imax, ref int[] idif, ref int k, ref int ks, out int iflag)
         {
             int m;
 
             // 
-            iflag = 0; 
+            iflag = 0;
             //      find the node, ks, that can be incremented
-            if ( ks == 0 ) 
-            { 
-                do 
-                { 
-                    ks = ks + 1; 
-                    if ( idif[ ks ] != imax[ ks ] )
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                while ( true ); 
-            } 
-            
+            if (ks == 0)
+            {
+                do
+                {
+                    ks = ks + 1;
+                    if (idif[ks] != imax[ks])
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                while (true);
+            }
+
             //      find a node, > ks, that can be decremented
-            if ( idif[ k ] > 0 & k > ks ) 
-            { 
-                idif[ k ] = idif[ k ] - 1; 
-                do 
-                { 
-                    k = k - 1; 
-                    if ( imax[ k ] != 0 )
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                while ( true ); 
-                m = k; 
+            if (idif[k] > 0 & k > ks)
+            {
+                idif[k] = idif[k] - 1;
+                do
+                {
+                    k = k - 1;
+                    if (imax[k] != 0)
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                while (true);
+                m = k;
                 //       find a node, >= ks, than can be incremented
-                do 
-                { 
-                    if ( idif[ m ] >= imax[ m ] ) 
-                    { 
-                        m = m - 1; 
-                    } 
-                    else 
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                while ( true ); 
-                idif[ m ] = idif[ m ] + 1; 
+                do
+                {
+                    if (idif[m] >= imax[m])
+                    {
+                        m = m - 1;
+                    }
+                    else
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                while (true);
+                idif[m] = idif[m] + 1;
                 // new(ks)
-                if ( m == ks ) 
-                { 
-                    if ( idif[ m ] == imax[ m ] )
-                    { 
-                        ks = k; 
-                    } 
-                } 
-            } 
-            else 
-            { 
+                if (m == ks)
+                {
+                    if (idif[m] == imax[m])
+                    {
+                        ks = k;
+                    }
+                }
+            }
+            else
+            {
                 //       done?
-                int k1 ;
-                do 
-                { 
-                    bool skip = false; 
-                    for ( k1=k + 1; k1 <= nrow; k1++ ) 
-                    { 
-                        if ( idif[ k1 ] > 0 ) 
-                        { 
-                            skip = true; 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                    if ( skip == false ) 
-                    { 
-                        iflag = 1; 
-                        return; 
-                    } 
+                int k1;
+                do
+                {
+                    bool skip = false;
+                    for (k1 = k + 1; k1 <= nrow; k1++)
+                    {
+                        if (idif[k1] > 0)
+                        {
+                            skip = true;
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                    if (skip == false)
+                    {
+                        iflag = 1;
+                        return;
+                    }
                     // reallocate(counts)
                     int mm = 1;
-                    int i ;
-                    for ( i=1; i <= k; i++ ) 
-                    { 
-                        mm = mm + idif[ i ]; 
-                        idif[ i ] = 0; 
-                    } 
-                    k = k1; 
-                    do 
-                    { 
-                        k = k - 1; 
-                        m = Math.Min( mm, imax[ k ] ); 
-                        idif[ k ] = m; 
-                        mm = mm - m; 
-                        if ( mm <= 0 | k == 1 )
-                        { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                    while ( true ); 
+                    int i;
+                    for (i = 1; i <= k; i++)
+                    {
+                        mm = mm + idif[i];
+                        idif[i] = 0;
+                    }
+                    k = k1;
+                    do
+                    {
+                        k = k - 1;
+                        m = Math.Min(mm, imax[k]);
+                        idif[k] = m;
+                        mm = mm - m;
+                        if (mm <= 0 | k == 1)
+                        {
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
+                    while (true);
                     //        done?
-                    if ( mm > 0 ) 
-                    { 
-                        if ( k1 != nrow ) 
-                        { 
-                            k = k1; 
+                    if (mm > 0)
+                    {
+                        if (k1 != nrow)
+                        {
+                            k = k1;
                             //          loop back to reallocate if all counts not reallocated
-                        } 
-                        else 
-                        { 
-                            iflag = 1; 
-                            return; 
-                        } 
-                    } 
-                    else 
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                    
-                } 
-                while ( true ); 
-                
+                        }
+                        else
+                        {
+                            iflag = 1;
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+
+                }
+                while (true);
+
                 // fetch(ks)
-                idif[ k1 ] = idif[ k1 ] - 1; 
-                ks = 0; 
-                do 
-                { 
-                    ks = ks + 1; 
-                    if ( ks > k )
-                    { 
-                        return; 
-                    } 
-                    if ( idif[ ks ] < imax[ ks ] )
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                while ( true ); 
-            } 
-            
-            
-        } 
-        
-        
-        
+                idif[k1] = idif[k1] - 1;
+                ks = 0;
+                do
+                {
+                    ks = ks + 1;
+                    if (ks > k)
+                    {
+                        return;
+                    }
+                    if (idif[ks] < imax[ks])
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                while (true);
+            }
+
+
+        }
+
+
+
         /// <summary>
         /// pop a node off the stack
         /// </summary>
-        private static void popnode( int nrow, int[] irow, ref int iflag, int[] kyy, int[] key, int ldkey, ref int last, ref int ipn, int istart ) 
+        private static void popnode(int nrow, int[] irow, ref int iflag, int[] kyy, int[] key, int ldkey, ref int last, ref int ipn, int istart)
         {
-            do 
-            { 
-                last = last + 1; 
-                if ( last <= ldkey ) 
-                { 
-                    if ( key[ istart + last - 1 ] >= 0 ) 
-                    { 
-                        int kval = key[ istart + last - 1 ]; 
-                        key[ istart + last - 1 ] = -9999; 
-                        for ( int j=nrow; j >= 2; j-- ) 
-                        { 
-                            irow[ j ] = kval / kyy[ j ]; 
-                            kval = kval - irow[ j ] * kyy[ j ]; 
-                        } 
-                        irow[ 1 ] = kval; 
-                        ipn = last; 
-                        break; 
-                    } 
-                } 
-                else 
-                { 
-                    last = 0; 
-                    iflag = 3; 
-                    break; 
-                } 
-            } 
-            while ( true ); 
-        } 
-        
-        
+            do
+            {
+                last = last + 1;
+                if (last <= ldkey)
+                {
+                    if (key[istart + last - 1] >= 0)
+                    {
+                        int kval = key[istart + last - 1];
+                        key[istart + last - 1] = -9999;
+                        for (int j = nrow; j >= 2; j--)
+                        {
+                            irow[j] = kval / kyy[j];
+                            kval = kval - irow[j] * kyy[j];
+                        }
+                        irow[1] = kval;
+                        ipn = last;
+                        break;
+                    }
+                }
+                else
+                {
+                    last = 0;
+                    iflag = 3;
+                    break;
+                }
+            }
+            while (true);
+        }
+
+
         /// <summary>
         /// push a node onto the stack (network algorithm)
         /// </summary>
-        private static void pushnode( double pastp, double tol, int kval, int[] key, int jkey, int ldkey, int[] ipoin, double[] stp, int jstp, int ldstp, int[] ifrq, int jstp2, int jstp3, int jstp4, int ifreq, ref int itop, bool ipsh, ref int itp, ref int ifault ) 
+        private static void pushnode(double pastp, double tol, int kval, int[] key, int jkey, int ldkey, int[] ipoin, double[] stp, int jstp, int ldstp, int[] ifrq, int jstp2, int jstp3, int jstp4, int ifreq, ref int itop, bool ipsh, ref int itp, ref int ifault)
         {
             // offset into stp() and ifrq
-            int ix1 = jstp - 1; 
-            int ix2 = jstp2 - 1; 
-            int ix3 = jstp3 - 1; 
-            int ix4 = jstp4 - 1; 
-            
-            if ( ipsh ) 
-            { 
-                int ird = ( kval % ldkey ) + 1; 
-                int jq = 0; 
-                for ( itp=jkey - 1 + ird; itp <= jkey - 1 + ldkey; itp++ ) 
-                { 
-                    if ( key[ itp ] == kval ) 
-                    { 
-                        jq = 2; 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                    if ( key[ itp ] < 0 ) 
-                    { 
-                        jq = 1; 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                if ( jq == 0 ) 
-                { 
-                    for ( itp=jkey; itp <= jkey - 2 + ird; itp++ ) 
-                    { 
-                        if ( key[ itp ] == kval ) 
-                        { 
-                            jq = 2; 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                        if ( key[ itp ] < 0 ) 
-                        { 
-                            jq = 1; 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
-                        } 
-                    } 
-                } 
-                
-                if ( jq == 0 ) 
-                { 
-                    ifault = 1; 
-                    return; 
+            int ix1 = jstp - 1;
+            int ix2 = jstp2 - 1;
+            int ix3 = jstp3 - 1;
+            int ix4 = jstp4 - 1;
+
+            if (ipsh)
+            {
+                int ird = (kval % ldkey) + 1;
+                int jq = 0;
+                for (itp = jkey - 1 + ird; itp <= jkey - 1 + ldkey; itp++)
+                {
+                    if (key[itp] == kval)
+                    {
+                        jq = 2;
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                    if (key[itp] < 0)
+                    {
+                        jq = 1;
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
                 }
-                if ( jq == 1 ) 
-                { 
-                    key[ itp ] = kval; 
-                    itop = itop + 1; 
-                    ipoin[ itp ] = itop; 
-                    if ( itop > ldstp ) 
-                    { 
-                        ifault = 1; 
-                        return; 
-                    } 
-                    ifrq[ ix2 + itop ] = -1; 
-                    ifrq[ ix3 + itop ] = -1; 
-                    ifrq[ ix4 + itop ] = -1; 
-                    stp[ ix1 + itop ] = pastp; 
-                    ifrq[ ix1 + itop ] = ifreq; 
-                    return; 
+                if (jq == 0)
+                {
+                    for (itp = jkey; itp <= jkey - 2 + ird; itp++)
+                    {
+                        if (key[itp] == kval)
+                        {
+                            jq = 2;
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                        if (key[itp] < 0)
+                        {
+                            jq = 1;
+                            break; /* TRANSWARNING: check that break is in correct scope */
+                        }
+                    }
                 }
-            } 
-            int ipn = ipoin[ itp ]; 
-            double test1 = pastp - tol; 
-            double test2 = pastp + tol; 
-            do 
-            { 
-                if ( stp[ ix1 + ipn ] < test1 ) 
-                { 
-                    ipn = ifrq[ ix4 + ipn ]; 
-                    if ( ipn <= 0 )
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                else if ( stp[ ix1 + ipn ] > test2 ) 
-                { 
-                    ipn = ifrq[ ix3 + ipn ]; 
-                    if ( ipn <= 0 )
-                    { 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                else 
-                { 
-                    ifrq[ ix1 + ipn ] = ifrq[ ix1 + ipn ] + ifreq; 
-                    return; 
-                } 
-            } 
-            while ( true ); 
-            itop = itop + 1; 
-            if ( itop > ldstp ) 
-            { 
-                ifault = 1; 
-                return; 
-            } 
-            ipn = ipoin[ itp ]; 
-            int itmp; 
-            do 
-            { 
-                if ( stp[ ix1 + ipn ] < test1 ) 
-                { 
-                    itmp = ipn; 
-                    ipn = ifrq[ ix4 + ipn ]; 
-                    if ( ipn <= 0 ) 
-                    { 
-                        ifrq[ ix4 + itmp ] = itop; 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-                else if ( stp[ ix1 + ipn ] > test2 ) 
-                { 
-                    itmp = ipn; 
-                    ipn = ifrq[ ix3 + ipn ]; 
-                    if ( ipn <= 0 ) 
-                    { 
-                        ifrq[ ix3 + itmp ] = itop; 
-                        break; /* TRANSWARNING: check that break is in correct scope */ 
-                    } 
-                } 
-            } 
-            while ( true ); 
-            ifrq[ ix2 + itop ] = ifrq[ ix2 + itmp ]; 
-            ifrq[ ix2 + itmp ] = itop; 
-            stp[ ix1 + itop ] = pastp; 
-            ifrq[ ix1 + itop ] = ifreq; 
-            ifrq[ ix4 + itop ] = -1; 
-            ifrq[ ix3 + itop ] = -1; 
-            
-        } 
-        
-        
-        public static void fisherp( ref int aa, ref int bb, ref int cc, ref int dd, ref double P1, ref double P2, out int ifault ) 
+
+                if (jq == 0)
+                {
+                    ifault = 1;
+                    return;
+                }
+                if (jq == 1)
+                {
+                    key[itp] = kval;
+                    itop = itop + 1;
+                    ipoin[itp] = itop;
+                    if (itop > ldstp)
+                    {
+                        ifault = 1;
+                        return;
+                    }
+                    ifrq[ix2 + itop] = -1;
+                    ifrq[ix3 + itop] = -1;
+                    ifrq[ix4 + itop] = -1;
+                    stp[ix1 + itop] = pastp;
+                    ifrq[ix1 + itop] = ifreq;
+                    return;
+                }
+            }
+            int ipn = ipoin[itp];
+            double test1 = pastp - tol;
+            double test2 = pastp + tol;
+            do
+            {
+                if (stp[ix1 + ipn] < test1)
+                {
+                    ipn = ifrq[ix4 + ipn];
+                    if (ipn <= 0)
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                else if (stp[ix1 + ipn] > test2)
+                {
+                    ipn = ifrq[ix3 + ipn];
+                    if (ipn <= 0)
+                    {
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                else
+                {
+                    ifrq[ix1 + ipn] = ifrq[ix1 + ipn] + ifreq;
+                    return;
+                }
+            }
+            while (true);
+            itop = itop + 1;
+            if (itop > ldstp)
+            {
+                ifault = 1;
+                return;
+            }
+            ipn = ipoin[itp];
+            int itmp;
+            do
+            {
+                if (stp[ix1 + ipn] < test1)
+                {
+                    itmp = ipn;
+                    ipn = ifrq[ix4 + ipn];
+                    if (ipn <= 0)
+                    {
+                        ifrq[ix4 + itmp] = itop;
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+                else if (stp[ix1 + ipn] > test2)
+                {
+                    itmp = ipn;
+                    ipn = ifrq[ix3 + ipn];
+                    if (ipn <= 0)
+                    {
+                        ifrq[ix3 + itmp] = itop;
+                        break; /* TRANSWARNING: check that break is in correct scope */
+                    }
+                }
+            }
+            while (true);
+            ifrq[ix2 + itop] = ifrq[ix2 + itmp];
+            ifrq[ix2 + itmp] = itop;
+            stp[ix1 + itop] = pastp;
+            ifrq[ix1 + itop] = ifreq;
+            ifrq[ix4 + itop] = -1;
+            ifrq[ix3 + itop] = -1;
+
+        }
+
+
+        public static void fisherp(ref int aa, ref int bb, ref int cc, ref int dd, ref double P1, ref double P2, out int ifault)
         {
-            double zp = 0; 
-            
-            int[,] Table = new int[ 3, 3 ];
-            double[,] expect = new double[ 4, 4 ];
-            Table[ 1, 1 ] = aa; 
-            Table[ 2, 1 ] = cc; 
-            Table[ 1, 2 ] = bb; 
-            Table[ 2, 2 ] = dd; 
-            expect[ 1, 3 ] = Table[ 1, 1 ] + Table[ 1, 2 ]; 
-            expect[ 2, 3 ] = Table[ 2, 1 ] + Table[ 2, 2 ]; 
-            expect[ 3, 1 ] = Table[ 1, 1 ] + Table[ 2, 1 ]; 
-            expect[ 3, 2 ] = Table[ 1, 2 ] + Table[ 2, 2 ]; 
-            expect[ 3, 3 ] = expect[ 1, 3 ] + expect[ 2, 3 ]; 
-            double rn = expect[ 3, 3 ]; 
-            int i = expect[ 1, 3 ] < expect[ 2, 3 ] ? 1 : 2; 
-            int j = expect[ 3, 1 ] < expect[ 3, 2 ] ? 1 : 2; 
-            double xmin = expect[ i, 3 ] < expect[ 3, j ] ? expect[ i, 3 ] : expect[ 3, j ]; 
-            if ( xmin <= 0.001 ) 
-            { 
-                ifault = 10; 
-                return; 
-            } 
-            i = 3 - i; 
-            j = 1; 
-            if ( Table[ i, 2 ] / expect[ i, 3 ] >= Table[ 3 - i, 2 ] / expect[ 3 - i, 3 ] )
-            { 
-                j = 2; 
-            } 
-            int it = Convert.ToInt32( Table[ i, j ] + 0.1 ); 
-            int k = it; 
-            int ind = Convert.ToInt32( expect[ 3, j ] + 0.1 ); 
-            int il = Convert.ToInt32( rn + 0.1 ); 
-            int inn = Convert.ToInt32( expect[ i, 3 ] + 0.1 ); 
-            if ( it >= 1 )
-            { 
-                it = it - 1; 
-            } 
-            P1 = hypergeo( ref it, ref inn, ref ind, ref il, ref zp, out ifault ); 
-            if ( zp != -99 )
-            { 
-                P1 = zp; 
-            } else { P1 = 1.0 - P1; } 
-            it = ( ( int )( Math.Floor(( 2.0 * expect[ i, 3 ] * expect[ 3, j ] - rn * Table[ i, j ] ) / rn + 0.00001) ) ); 
-            if ( k == it ) 
-            { 
-                P2 = 1.0; 
-            } 
-            else 
-            { 
-                if ( it < 0 )
-                { 
-                    it = 0; 
-                } 
-                P2 = P1 + hypergeo( ref it, ref inn, ref ind, ref il, ref zp, out ifault ); 
-            } 
-        } 
-        
-        
-        private static double hypergeo( ref int k, ref int N, ref int M, ref int L, ref double zp, out int ifault ) 
+            double zp = 0;
+
+            int[,] Table = new int[3, 3];
+            double[,] expect = new double[4, 4];
+            Table[1, 1] = aa;
+            Table[2, 1] = cc;
+            Table[1, 2] = bb;
+            Table[2, 2] = dd;
+            expect[1, 3] = Table[1, 1] + Table[1, 2];
+            expect[2, 3] = Table[2, 1] + Table[2, 2];
+            expect[3, 1] = Table[1, 1] + Table[2, 1];
+            expect[3, 2] = Table[1, 2] + Table[2, 2];
+            expect[3, 3] = expect[1, 3] + expect[2, 3];
+            double rn = expect[3, 3];
+            int i = expect[1, 3] < expect[2, 3] ? 1 : 2;
+            int j = expect[3, 1] < expect[3, 2] ? 1 : 2;
+            double xmin = expect[i, 3] < expect[3, j] ? expect[i, 3] : expect[3, j];
+            if (xmin <= 0.001)
+            {
+                ifault = 10;
+                return;
+            }
+            i = 3 - i;
+            j = 1;
+            if (Table[i, 2] / expect[i, 3] >= Table[3 - i, 2] / expect[3 - i, 3])
+            {
+                j = 2;
+            }
+            int it = Convert.ToInt32(Table[i, j] + 0.1);
+            int k = it;
+            int ind = Convert.ToInt32(expect[3, j] + 0.1);
+            int il = Convert.ToInt32(rn + 0.1);
+            int inn = Convert.ToInt32(expect[i, 3] + 0.1);
+            if (it >= 1)
+            {
+                it = it - 1;
+            }
+            P1 = hypergeo(ref it, ref inn, ref ind, ref il, ref zp, out ifault);
+            if (zp != -99)
+            {
+                P1 = zp;
+            }
+            else { P1 = 1.0 - P1; }
+            it = ((int)(Math.Floor((2.0 * expect[i, 3] * expect[3, j] - rn * Table[i, j]) / rn + 0.00001)));
+            if (k == it)
+            {
+                P2 = 1.0;
+            }
+            else
+            {
+                if (it < 0)
+                {
+                    it = 0;
+                }
+                P2 = P1 + hypergeo(ref it, ref inn, ref ind, ref il, ref zp, out ifault);
+            }
+        }
+
+
+        private static double hypergeo(ref int k, ref int N, ref int M, ref int L, ref double zp, out int ifault)
         {
-            int iflag ; int j ;
-            int MM ; int mm1 ;
+            int iflag; int j;
+            int MM; int mm1;
             // int ner = 0;
-            double a ; double A1 ; double aa ;
-            double B1 ; double bb ;
-            double u ;
+            double a; double A1; double aa;
+            double B1; double bb;
+            double u;
 
             // ner = 1; 
-            ifault = 0; 
-            if ( N < 1 ) 
-            { 
-                ifault = 1; 
-                return -99; 
-            } 
-            if ( M < 0 ) 
-            { 
-                ifault = 2; 
-                return -99; 
-            } 
-            if ( L < N ) 
-            { 
-                ifault = 3; 
-                return -99; 
-            } 
-            if ( L < M ) 
-            { 
-                ifault = 4; 
-                return -99; 
-            } 
-            if ( k < 0 ) 
-            { 
-                return 0.0; 
-            } 
-            if ( k > N ) 
-            { 
-                return 1.0; 
-            } 
-            if ( k >= M ) 
-            { 
-                return 1.0; 
-            } 
-            if ( N - k > L - M ) 
-            { 
-                return 0.0; 
-            } 
-            if ( M == L & k == N ) 
-            { 
-                return 1.0; 
-            } 
-            double P = 1.0; 
-            double al = L; 
-            int nmmin = N < M ? N : M; 
-            double anmmin = nmmin; 
-            int nmmax = N > M ? N : M; 
-            double anmmax = nmmax; 
-            double xval1 = k * ( L + 2 ); 
-            double xval2 = ( M + 1 ) * ( N + 1 ); 
-            if ( xval1 <= xval2 ) 
-            { 
-                iflag = 0; 
-                aa = anmmax - anmmin; 
-                bb = al - anmmax - anmmin; 
-                int k0 = N + ( M - L ); 
-                if ( k0 < 0 )
-                { 
-                    k0 = 0; 
-                } 
-                double aj = k0; 
-                A1 = anmmin - aj; 
-                B1 = aj + 1.0; 
-                mm1 = k - k0; 
-                a = al - anmmax + aj; 
-                MM = nmmin - k0; 
-            } 
-            else 
-            { 
-                iflag = 1; 
-                aa = al - anmmax - anmmin; 
-                bb = anmmax - anmmin; 
-                A1 = anmmin; 
-                B1 = 1.0; 
-                mm1 = nmmin - k; 
-                MM = L - nmmax; 
-                a = al - anmmin; 
-                if ( nmmin < MM ) 
-                { 
-                    MM = nmmin; 
-                    a = anmmax; 
-                } 
-            } 
-            int icnt = 0; 
-            const double sml = Constant.SPREAL * 10.0; 
-            if ( MM != 0 ) 
-            { 
-                for ( j=1; j <= MM; j++ ) 
-                { 
-                    u = a / al; 
-                    if ( u * P < sml ) 
-                    { 
-                        P = P / sml; 
-                        icnt = icnt + 1; 
-                    } 
-                    P = P * u; 
-                    a = a - 1.0; 
-                    al = al - 1.0; 
-                } 
-            } 
-            double sp = 0.0; 
-            if ( mm1 != 0 ) 
-            { 
-                for ( j=1; j <= mm1; j++ ) 
-                { 
-                    if ( icnt == 0 )
-                    { 
-                        sp = sp + P; 
-                    } 
-                    u = A1 * ( A1 + aa ) / ( B1 * ( B1 + bb ) ); 
-                    P = u * P; 
-                    if ( P >= 1.0 ) 
-                    { 
-                        P = P * sml; 
-                        icnt = icnt - 1; 
-                    } 
-                    A1 = A1 - 1.0; 
-                    B1 = B1 + 1.0; 
-                } 
-            } 
-            if ( icnt != 0 )
-            { 
-                P = 0.0; 
-            } 
-            if ( iflag == 0 ) 
-            { 
-                zp = -99; 
-                sp = sp + P; 
-            } 
-            else 
-            { 
-                zp = sp; 
-                sp = 1.0 - sp; 
-            } 
-            return sp; 
-        } 
-        
-        
-        private static void WoolfStratum( ITemplateHost host, ParameterBag outputParameters, ref bool showIntermediates, ref double A1, ref double B1, ref double C1, ref double D1, ref double vs, ref double cit, out double y, out double w ) 
+            ifault = 0;
+            if (N < 1)
+            {
+                ifault = 1;
+                return -99;
+            }
+            if (M < 0)
+            {
+                ifault = 2;
+                return -99;
+            }
+            if (L < N)
+            {
+                ifault = 3;
+                return -99;
+            }
+            if (L < M)
+            {
+                ifault = 4;
+                return -99;
+            }
+            if (k < 0)
+            {
+                return 0.0;
+            }
+            if (k > N)
+            {
+                return 1.0;
+            }
+            if (k >= M)
+            {
+                return 1.0;
+            }
+            if (N - k > L - M)
+            {
+                return 0.0;
+            }
+            if (M == L & k == N)
+            {
+                return 1.0;
+            }
+            double P = 1.0;
+            double al = L;
+            int nmmin = N < M ? N : M;
+            double anmmin = nmmin;
+            int nmmax = N > M ? N : M;
+            double anmmax = nmmax;
+            double xval1 = k * (L + 2);
+            double xval2 = (M + 1) * (N + 1);
+            if (xval1 <= xval2)
+            {
+                iflag = 0;
+                aa = anmmax - anmmin;
+                bb = al - anmmax - anmmin;
+                int k0 = N + (M - L);
+                if (k0 < 0)
+                {
+                    k0 = 0;
+                }
+                double aj = k0;
+                A1 = anmmin - aj;
+                B1 = aj + 1.0;
+                mm1 = k - k0;
+                a = al - anmmax + aj;
+                MM = nmmin - k0;
+            }
+            else
+            {
+                iflag = 1;
+                aa = al - anmmax - anmmin;
+                bb = anmmax - anmmin;
+                A1 = anmmin;
+                B1 = 1.0;
+                mm1 = nmmin - k;
+                MM = L - nmmax;
+                a = al - anmmin;
+                if (nmmin < MM)
+                {
+                    MM = nmmin;
+                    a = anmmax;
+                }
+            }
+            int icnt = 0;
+            const double sml = Constant.SPREAL * 10.0;
+            if (MM != 0)
+            {
+                for (j = 1; j <= MM; j++)
+                {
+                    u = a / al;
+                    if (u * P < sml)
+                    {
+                        P = P / sml;
+                        icnt = icnt + 1;
+                    }
+                    P = P * u;
+                    a = a - 1.0;
+                    al = al - 1.0;
+                }
+            }
+            double sp = 0.0;
+            if (mm1 != 0)
+            {
+                for (j = 1; j <= mm1; j++)
+                {
+                    if (icnt == 0)
+                    {
+                        sp = sp + P;
+                    }
+                    u = A1 * (A1 + aa) / (B1 * (B1 + bb));
+                    P = u * P;
+                    if (P >= 1.0)
+                    {
+                        P = P * sml;
+                        icnt = icnt - 1;
+                    }
+                    A1 = A1 - 1.0;
+                    B1 = B1 + 1.0;
+                }
+            }
+            if (icnt != 0)
+            {
+                P = 0.0;
+            }
+            if (iflag == 0)
+            {
+                zp = -99;
+                sp = sp + P;
+            }
+            else
+            {
+                zp = sp;
+                sp = 1.0 - sp;
+            }
+            return sp;
+        }
+
+
+        private static void WoolfStratum(ITemplateHost host, ParameterBag outputParameters, ref bool showIntermediates, ref double A1, ref double B1, ref double C1, ref double D1, ref double vs, ref double cit, out double y, out double w)
         {
-            double cco = 0; 
-            
-            double x = A1 * D1 / ( B1 * C1 ); 
-            y = Math.Log( x ); 
-            if ( showIntermediates ) 
-            { 
-                outputParameters.AddOutput( "odds", host.RoundU( x ) ); 
-                outputParameters.AddOutput( "log", host.RoundU( y ) ); 
-            } 
-            double e = Math.Sqrt( vs ); 
-            w = 1.0 / vs; 
-            if ( showIntermediates ) 
-            { 
-                outputParameters.AddOutput( "var", host.RoundU( vs ) ); 
-                outputParameters.AddOutput( "se", host.RoundU( e ) ); 
-                outputParameters.AddOutput( "weight", host.RoundU( w ) ); 
-            } 
-            double x1 = y * Math.Sqrt( w ); 
-            double x2 = x1 * x1; 
-            double n2 = 1.0; 
-            if ( showIntermediates ) 
-            { 
-                outputParameters.AddOutput( "chi_2", host.RoundU( x2 ) ); 
-                outputParameters.AddOutput( "chi", host.RoundU( x1 ) ); 
-                outputParameters.AddOutput( "chi_p", host.pval( PDF.chivalp( x2, n2 ) ) ); 
-            } 
-            double y1 = y - cit * e; 
-            double y2 = y + cit * e; 
-            if ( y1 > y2 ) 
-            { 
-                double yt = y1; 
-                y1 = y2; 
-                y2 = yt; 
-            } 
-            if ( showIntermediates ) 
-            { 
-                outputParameters.AddOutput( "pc", Formatting.XRound( cco * 100, 1 ) ); 
-                outputParameters.AddOutput( "ci_from", host.RoundU( y1 ) ); 
-                outputParameters.AddOutput( "ci_to", host.RoundU( y2 ) ); 
-            } 
-            if ( showIntermediates ) 
-            { 
-                outputParameters.AddOutput( "odds_from", host.RoundU( Math.Exp( y1 ) ) ); 
-                outputParameters.AddOutput( "odds_to", host.RoundU( Math.Exp( y2 ) ) ); 
-            } 
-        } 
-        
-        
-        public static StepResult Woolf( ITemplateHost host, ref double[,] o, ref int k, ref bool showIntermediates, ref double cit, ref double cco, out bool ierr ) 
+            double cco = 0;
+
+            double x = A1 * D1 / (B1 * C1);
+            y = Math.Log(x);
+            if (showIntermediates)
+            {
+                outputParameters.AddOutput("odds", host.RoundU(x));
+                outputParameters.AddOutput("log", host.RoundU(y));
+            }
+            double e = Math.Sqrt(vs);
+            w = 1.0 / vs;
+            if (showIntermediates)
+            {
+                outputParameters.AddOutput("var", host.RoundU(vs));
+                outputParameters.AddOutput("se", host.RoundU(e));
+                outputParameters.AddOutput("weight", host.RoundU(w));
+            }
+            double x1 = y * Math.Sqrt(w);
+            double x2 = x1 * x1;
+            double n2 = 1.0;
+            if (showIntermediates)
+            {
+                outputParameters.AddOutput("chi_2", host.RoundU(x2));
+                outputParameters.AddOutput("chi", host.RoundU(x1));
+                outputParameters.AddOutput("chi_p", host.pval(PDF.chivalp(x2, n2)));
+            }
+            double y1 = y - cit * e;
+            double y2 = y + cit * e;
+            if (y1 > y2)
+            {
+                double yt = y1;
+                y1 = y2;
+                y2 = yt;
+            }
+            if (showIntermediates)
+            {
+                outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 1));
+                outputParameters.AddOutput("ci_from", host.RoundU(y1));
+                outputParameters.AddOutput("ci_to", host.RoundU(y2));
+            }
+            if (showIntermediates)
+            {
+                outputParameters.AddOutput("odds_from", host.RoundU(Math.Exp(y1)));
+                outputParameters.AddOutput("odds_to", host.RoundU(Math.Exp(y2)));
+            }
+        }
+
+
+        public static StepResult Woolf(ITemplateHost host, ref double[,] o, ref int k, ref bool showIntermediates, ref double cit, ref double cco, out bool ierr)
         {
             double s1x = 0; double S1 = 0; double t1 = 0; double t1x = 0; double w1 = 0; double w1x = 0; double n1 = 0; double n1x = 0;
-            double x2 ; 
+            double x2;
             double n2;
-            double E1 ;
-            int idx; 
-            
-            ierr = true; 
+            double E1;
+            int idx;
+
+            ierr = true;
             //  RTF_LoadTemplate("woolf.rtf") Then
-            ParameterBag outputParameters = new ParameterBag(); 
-            List<ParameterBag> tableList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*table", tableList ); 
-            for ( idx=1; idx <= k; idx++ ) 
-            { 
-                double a = o[ idx, 1 ]; 
-                double b = o[ idx, 2 ]; 
-                double C = o[ idx, 3 ]; 
-                double D = o[ idx, 4 ]; 
-                double P = a + b; 
-                double Q = C + D; 
-                double r = a + C; 
-                double s = b + D; 
-                double N = P + Q; 
-                if ( P <= 0.0 | N <= 0.0 | Q <= 0.0 ) 
-                { 
-                    throw new InvalidDataException(); 
-                } 
-                ParameterBag tableParameters = new ParameterBag(); 
-                if ( showIntermediates ) 
-                { 
-                    tableList.Add( tableParameters ); 
-                    tableParameters.AddOutput( "table",  idx.ToString() ); 
-                    tableParameters.AddOutput( "pc_a", host.RoundU( 100.0 * a / P ) ); 
-                    tableParameters.AddOutput( "pc_c", host.RoundU( 100.0 * C / Q ) ); 
-                    tableParameters.AddOutput( "pc_t", host.RoundU( 100.0 * r / N ) ); 
-                } 
-                E1 = P * r / N; 
-                double e2 = P * s / N; 
-                double e3 = Q * r / N; 
-                double e4 = Q * s / N; 
-                if ( E1 < 5 | e2 < 5 | e3 < 5 | e4 < 5 ) 
-                { 
-                    if ( showIntermediates ) 
-                    { 
-                        List<ParameterBag> warnSmallList = new List<ParameterBag>(); 
-                        tableParameters.AddOutput( "*warn_small", warnSmallList ); 
-                        warnSmallList.Add( new ParameterBag() ); 
-                    } 
-                } 
-                else 
-                { 
-                    if ( showIntermediates ) 
-                    { 
-                        List<ParameterBag> warnSmallList = new List<ParameterBag>(); 
-                        tableParameters.AddOutput( "*warn_small", warnSmallList ); 
-                    } 
-                } 
-                double f = a * D - b * C; 
-                double i = Math.Sign( f ); 
-                x2 = f * f * N / ( P * Q * r * s ); 
-                double x1 = i * Math.Sqrt( x2 ); 
-                if ( showIntermediates ) 
-                { 
-                    tableParameters.AddOutput( "table_chi_2", host.RoundU( x2 ) ); 
-                    tableParameters.AddOutput( "table_chi", host.RoundU( x1 ) ); 
-                } 
-                f = Math.Abs( f ) - N / 2.0; 
-                if ( f < 0.0 )
-                { 
-                    f = 0.0; 
-                } 
-                x2 = f * f * N / ( P * Q * r * s ); 
-                x1 = i * Math.Sqrt( x2 ); 
-                n2 = 1; 
-                if ( showIntermediates ) 
-                { 
-                    tableParameters.AddOutput( "yates_chi_2", host.RoundU( x2 ) ); 
-                    tableParameters.AddOutput( "yates_chi", host.RoundU( x1 ) ); 
-                    tableParameters.AddOutput( "yates_chi_p", host.pval( PDF.chivalp( x2, n2 ) ) ); 
+            ParameterBag outputParameters = new ParameterBag();
+            List<ParameterBag> tableList = new List<ParameterBag>();
+            outputParameters.AddOutput("*table", tableList);
+            for (idx = 1; idx <= k; idx++)
+            {
+                double a = o[idx, 1];
+                double b = o[idx, 2];
+                double C = o[idx, 3];
+                double D = o[idx, 4];
+                double P = a + b;
+                double Q = C + D;
+                double r = a + C;
+                double s = b + D;
+                double N = P + Q;
+                if (P <= 0.0 | N <= 0.0 | Q <= 0.0)
+                {
+                    throw new InvalidDataException();
                 }
-                double w ;
-                double y ;
-                double vs ;
-                double D1 ;
-                double C1 ;
-                double B1 ;
-                double A1 ;
-                if ( a > 0 & b > 0 & C > 0 & D > 0 ) 
-                { 
-                    ParameterBag noHaldaneParameters = new ParameterBag(); 
-                    if ( showIntermediates ) 
-                    { 
-                        List<ParameterBag> noHaldaneList = new List<ParameterBag>(); 
-                        tableParameters.AddOutput( "*no_haldane", noHaldaneList ); 
-                        noHaldaneList.Add( noHaldaneParameters ); 
-                        List<ParameterBag> warnNoHaldaneList = new List<ParameterBag>(); 
-                        tableParameters.AddOutput( "*warn_no_haldane", warnNoHaldaneList ); 
-                    } 
-                    A1 = a; 
-                    B1 = b; 
-                    C1 = C; 
-                    D1 = D; 
-                    vs = 1.0 / a + 1.0 / b + 1.0 / C + 1.0 / D; 
-                    WoolfStratum( host, noHaldaneParameters, ref showIntermediates, ref A1, ref B1, ref C1, ref D1, ref vs, ref cit, out y, out w ); 
-                    n1x = n1 + 1.0; 
-                    w1x = w1 + w; 
-                    t1x = t1 + w * y; 
-                    s1x = S1 + w * y * y; 
-                } 
-                else 
-                { 
-                    if ( showIntermediates ) 
-                    { 
-                        List<ParameterBag> noHaldaneList = new List<ParameterBag>(); 
-                        tableParameters.AddOutput( "*no_haldane", noHaldaneList ); 
-                        List<ParameterBag> warnNoHaldaneList = new List<ParameterBag>(); 
-                        tableParameters.AddOutput( "*warn_no_haldane", warnNoHaldaneList ); 
-                        warnNoHaldaneList.Add( new ParameterBag() ); 
-                    } 
-                } 
-                A1 = a + 0.5; 
-                B1 = b + 0.5; 
-                C1 = C + 0.5; 
-                D1 = D + 0.5; 
-                vs = 1.0 / ( a + 1.0 ) + 1.0 / ( b + 1.0 ) + 1.0 / ( C + 1.0 ) + 1.0 / ( D + 1.0 ); 
-                ParameterBag haldaneParameters = new ParameterBag(); 
-                List<ParameterBag> haldaneList = new List<ParameterBag>(); 
-                tableParameters.AddOutput( "*haldane", haldaneList ); 
-                haldaneList.Add( haldaneParameters ); 
-                WoolfStratum( host, haldaneParameters, ref showIntermediates, ref A1, ref B1, ref C1, ref D1, ref vs, ref cit, out y, out w ); 
-                n1 = n1 + 1.0; 
-                w1 = w1 + w; 
-                t1 = t1 + w * y; 
-                S1 = S1 + w * y * y; 
-            } 
-            
-            List<ParameterBag> combinedNoHaldaneList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*combined_no_haldane", combinedNoHaldaneList ); 
-            if ( n1 > 1 && n1x == n1 ) 
-            { 
-                ParameterBag combinedNoHaldaneParameters = new ParameterBag(); 
-                combinedNoHaldaneList.Add( combinedNoHaldaneParameters ); 
-                combinedNoHaldaneParameters.AddOutput( "tables",  n1.ToString() ); 
-                double m1x = t1x / w1x; 
-                combinedNoHaldaneParameters.AddOutput( "mean", host.RoundU( m1x ) ); 
-                combinedNoHaldaneParameters.AddOutput( "odds", host.RoundU( Math.Exp( m1x ) ) ); 
-                double v1x = 1.0 / w1x; 
-                double e1x = Math.Sqrt( v1x ); 
-                combinedNoHaldaneParameters.AddOutput( "var", host.RoundU( v1x ) ); 
-                combinedNoHaldaneParameters.AddOutput( "se", host.RoundU( e1x ) ); 
-                double y1x = m1x - cit * e1x; 
-                double y2x = m1x + cit * e1x; 
-                if ( y1x > y2x ) 
-                { 
-                    double ytx = y1x; 
-                    y1x = y2x; 
-                    y2x = ytx; 
-                } 
-                combinedNoHaldaneParameters.AddOutput( "pc", Formatting.XRound( cco * 100, 1 ) ); 
-                combinedNoHaldaneParameters.AddOutput( "ci_from", host.RoundU( y1x ) ); 
-                combinedNoHaldaneParameters.AddOutput( "ci_to", host.RoundU( y2x ) ); 
-                combinedNoHaldaneParameters.AddOutput( "odds_from", host.RoundU( Math.Exp( y1x ) ) ); 
-                combinedNoHaldaneParameters.AddOutput( "odds_to", host.RoundU( Math.Exp( y2x ) ) ); 
-                double u1x = m1x / e1x; 
-                double x2x = u1x * u1x; 
-                double n2x = 1.0; 
-                combinedNoHaldaneParameters.AddOutput( "chi_2", host.RoundU( x2x ) ); 
-                combinedNoHaldaneParameters.AddOutput( "chi", host.RoundU( u1x ) ); 
-                combinedNoHaldaneParameters.AddOutput( "chi_p", host.pval( PDF.chivalp( x2x, n2x ) ) ); 
-                n2x = n1x - 1.0; 
-                x2x = s1x - t1x * t1x / w1x; 
-                combinedNoHaldaneParameters.AddOutput( "het_chi_2", host.RoundU( x2x ) ); 
-                combinedNoHaldaneParameters.AddOutput( "df",  n2x.ToString() ); 
-                combinedNoHaldaneParameters.AddOutput( "het_chi_p", host.pval( PDF.chivalp( x2x, n2x ) ) ); 
-            } 
-            
-            List<ParameterBag> combinedWithHaldaneList = new List<ParameterBag>(); 
-            outputParameters.AddOutput( "*combined_with_haldane", combinedWithHaldaneList ); 
-            if ( n1 > 1 ) 
-            { 
-                ParameterBag combinedWithHaldaneParameters = new ParameterBag(); 
-                combinedWithHaldaneList.Add( combinedWithHaldaneParameters ); 
-                combinedWithHaldaneParameters.AddOutput( "tablesx",  n1.ToString() ); 
-                double m1 = t1 / w1; 
-                combinedWithHaldaneParameters.AddOutput( "meanx", host.RoundU( m1 ) ); 
-                combinedWithHaldaneParameters.AddOutput( "oddsx", host.RoundU( Math.Exp( m1 ) ) ); 
-                double v1 = 1.0 / w1; 
-                E1 = Math.Sqrt( v1 ); 
-                combinedWithHaldaneParameters.AddOutput( "varx", host.RoundU( v1 ) ); 
-                combinedWithHaldaneParameters.AddOutput( "sex", host.RoundU( E1 ) ); 
-                double y1 = m1 - cit * E1; 
-                double Y2 = m1 + cit * E1; 
-                if ( y1 > Y2 ) 
-                { 
-                    double yt = y1; 
-                    y1 = Y2; 
-                    Y2 = yt; 
-                } 
-                combinedWithHaldaneParameters.AddOutput( "pc", Formatting.XRound( cco * 100, 1 ) ); 
-                combinedWithHaldaneParameters.AddOutput( "ci_fromx", host.RoundU( y1 ) ); 
-                combinedWithHaldaneParameters.AddOutput( "ci_tox", host.RoundU( Y2 ) ); 
-                combinedWithHaldaneParameters.AddOutput( "odds_fromx", host.RoundU( Math.Exp( y1 ) ) ); 
-                combinedWithHaldaneParameters.AddOutput( "odds_tox", host.RoundU( Math.Exp( Y2 ) ) ); 
-                double u1 = m1 / E1; 
-                x2 = u1 * u1; 
-                n2 = 1; 
-                combinedWithHaldaneParameters.AddOutput( "chi_2x", host.RoundU( x2 ) ); 
-                combinedWithHaldaneParameters.AddOutput( "chix", host.RoundU( u1 ) ); 
-                combinedWithHaldaneParameters.AddOutput( "chi_px", host.pval( PDF.chivalp( x2, n2 ) ) ); 
-                n2 = n1 - 1.0; 
-                x2 = S1 - t1 * t1 / w1; 
-                combinedWithHaldaneParameters.AddOutput( "het_chi_2x", host.RoundU( x2 ) ); 
-                combinedWithHaldaneParameters.AddOutput( "dfx",  n2.ToString() ); 
-                combinedWithHaldaneParameters.AddOutput( "het_chi_px", host.pval( PDF.chivalp( x2, n2 ) ) ); 
-            } 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult RptChiWoolfWorksheet( ITemplateHost host, ParameterBag parameters ) 
-        { 
+                ParameterBag tableParameters = new ParameterBag();
+                if (showIntermediates)
+                {
+                    tableList.Add(tableParameters);
+                    tableParameters.AddOutput("table", idx.ToString());
+                    tableParameters.AddOutput("pc_a", host.RoundU(100.0 * a / P));
+                    tableParameters.AddOutput("pc_c", host.RoundU(100.0 * C / Q));
+                    tableParameters.AddOutput("pc_t", host.RoundU(100.0 * r / N));
+                }
+                E1 = P * r / N;
+                double e2 = P * s / N;
+                double e3 = Q * r / N;
+                double e4 = Q * s / N;
+                if (E1 < 5 | e2 < 5 | e3 < 5 | e4 < 5)
+                {
+                    if (showIntermediates)
+                    {
+                        List<ParameterBag> warnSmallList = new List<ParameterBag>();
+                        tableParameters.AddOutput("*warn_small", warnSmallList);
+                        warnSmallList.Add(new ParameterBag());
+                    }
+                }
+                else
+                {
+                    if (showIntermediates)
+                    {
+                        List<ParameterBag> warnSmallList = new List<ParameterBag>();
+                        tableParameters.AddOutput("*warn_small", warnSmallList);
+                    }
+                }
+                double f = a * D - b * C;
+                double i = Math.Sign(f);
+                x2 = f * f * N / (P * Q * r * s);
+                double x1 = i * Math.Sqrt(x2);
+                if (showIntermediates)
+                {
+                    tableParameters.AddOutput("table_chi_2", host.RoundU(x2));
+                    tableParameters.AddOutput("table_chi", host.RoundU(x1));
+                }
+                f = Math.Abs(f) - N / 2.0;
+                if (f < 0.0)
+                {
+                    f = 0.0;
+                }
+                x2 = f * f * N / (P * Q * r * s);
+                x1 = i * Math.Sqrt(x2);
+                n2 = 1;
+                if (showIntermediates)
+                {
+                    tableParameters.AddOutput("yates_chi_2", host.RoundU(x2));
+                    tableParameters.AddOutput("yates_chi", host.RoundU(x1));
+                    tableParameters.AddOutput("yates_chi_p", host.pval(PDF.chivalp(x2, n2)));
+                }
+                double w;
+                double y;
+                double vs;
+                double D1;
+                double C1;
+                double B1;
+                double A1;
+                if (a > 0 & b > 0 & C > 0 & D > 0)
+                {
+                    ParameterBag noHaldaneParameters = new ParameterBag();
+                    if (showIntermediates)
+                    {
+                        List<ParameterBag> noHaldaneList = new List<ParameterBag>();
+                        tableParameters.AddOutput("*no_haldane", noHaldaneList);
+                        noHaldaneList.Add(noHaldaneParameters);
+                        List<ParameterBag> warnNoHaldaneList = new List<ParameterBag>();
+                        tableParameters.AddOutput("*warn_no_haldane", warnNoHaldaneList);
+                    }
+                    A1 = a;
+                    B1 = b;
+                    C1 = C;
+                    D1 = D;
+                    vs = 1.0 / a + 1.0 / b + 1.0 / C + 1.0 / D;
+                    WoolfStratum(host, noHaldaneParameters, ref showIntermediates, ref A1, ref B1, ref C1, ref D1, ref vs, ref cit, out y, out w);
+                    n1x = n1 + 1.0;
+                    w1x = w1 + w;
+                    t1x = t1 + w * y;
+                    s1x = S1 + w * y * y;
+                }
+                else
+                {
+                    if (showIntermediates)
+                    {
+                        List<ParameterBag> noHaldaneList = new List<ParameterBag>();
+                        tableParameters.AddOutput("*no_haldane", noHaldaneList);
+                        List<ParameterBag> warnNoHaldaneList = new List<ParameterBag>();
+                        tableParameters.AddOutput("*warn_no_haldane", warnNoHaldaneList);
+                        warnNoHaldaneList.Add(new ParameterBag());
+                    }
+                }
+                A1 = a + 0.5;
+                B1 = b + 0.5;
+                C1 = C + 0.5;
+                D1 = D + 0.5;
+                vs = 1.0 / (a + 1.0) + 1.0 / (b + 1.0) + 1.0 / (C + 1.0) + 1.0 / (D + 1.0);
+                ParameterBag haldaneParameters = new ParameterBag();
+                List<ParameterBag> haldaneList = new List<ParameterBag>();
+                tableParameters.AddOutput("*haldane", haldaneList);
+                haldaneList.Add(haldaneParameters);
+                WoolfStratum(host, haldaneParameters, ref showIntermediates, ref A1, ref B1, ref C1, ref D1, ref vs, ref cit, out y, out w);
+                n1 = n1 + 1.0;
+                w1 = w1 + w;
+                t1 = t1 + w * y;
+                S1 = S1 + w * y * y;
+            }
+
+            List<ParameterBag> combinedNoHaldaneList = new List<ParameterBag>();
+            outputParameters.AddOutput("*combined_no_haldane", combinedNoHaldaneList);
+            if (n1 > 1 && n1x == n1)
+            {
+                ParameterBag combinedNoHaldaneParameters = new ParameterBag();
+                combinedNoHaldaneList.Add(combinedNoHaldaneParameters);
+                combinedNoHaldaneParameters.AddOutput("tables", n1.ToString());
+                double m1x = t1x / w1x;
+                combinedNoHaldaneParameters.AddOutput("mean", host.RoundU(m1x));
+                combinedNoHaldaneParameters.AddOutput("odds", host.RoundU(Math.Exp(m1x)));
+                double v1x = 1.0 / w1x;
+                double e1x = Math.Sqrt(v1x);
+                combinedNoHaldaneParameters.AddOutput("var", host.RoundU(v1x));
+                combinedNoHaldaneParameters.AddOutput("se", host.RoundU(e1x));
+                double y1x = m1x - cit * e1x;
+                double y2x = m1x + cit * e1x;
+                if (y1x > y2x)
+                {
+                    double ytx = y1x;
+                    y1x = y2x;
+                    y2x = ytx;
+                }
+                combinedNoHaldaneParameters.AddOutput("pc", Formatting.XRound(cco * 100, 1));
+                combinedNoHaldaneParameters.AddOutput("ci_from", host.RoundU(y1x));
+                combinedNoHaldaneParameters.AddOutput("ci_to", host.RoundU(y2x));
+                combinedNoHaldaneParameters.AddOutput("odds_from", host.RoundU(Math.Exp(y1x)));
+                combinedNoHaldaneParameters.AddOutput("odds_to", host.RoundU(Math.Exp(y2x)));
+                double u1x = m1x / e1x;
+                double x2x = u1x * u1x;
+                double n2x = 1.0;
+                combinedNoHaldaneParameters.AddOutput("chi_2", host.RoundU(x2x));
+                combinedNoHaldaneParameters.AddOutput("chi", host.RoundU(u1x));
+                combinedNoHaldaneParameters.AddOutput("chi_p", host.pval(PDF.chivalp(x2x, n2x)));
+                n2x = n1x - 1.0;
+                x2x = s1x - t1x * t1x / w1x;
+                combinedNoHaldaneParameters.AddOutput("het_chi_2", host.RoundU(x2x));
+                combinedNoHaldaneParameters.AddOutput("df", n2x.ToString());
+                combinedNoHaldaneParameters.AddOutput("het_chi_p", host.pval(PDF.chivalp(x2x, n2x)));
+            }
+
+            List<ParameterBag> combinedWithHaldaneList = new List<ParameterBag>();
+            outputParameters.AddOutput("*combined_with_haldane", combinedWithHaldaneList);
+            if (n1 > 1)
+            {
+                ParameterBag combinedWithHaldaneParameters = new ParameterBag();
+                combinedWithHaldaneList.Add(combinedWithHaldaneParameters);
+                combinedWithHaldaneParameters.AddOutput("tablesx", n1.ToString());
+                double m1 = t1 / w1;
+                combinedWithHaldaneParameters.AddOutput("meanx", host.RoundU(m1));
+                combinedWithHaldaneParameters.AddOutput("oddsx", host.RoundU(Math.Exp(m1)));
+                double v1 = 1.0 / w1;
+                E1 = Math.Sqrt(v1);
+                combinedWithHaldaneParameters.AddOutput("varx", host.RoundU(v1));
+                combinedWithHaldaneParameters.AddOutput("sex", host.RoundU(E1));
+                double y1 = m1 - cit * E1;
+                double Y2 = m1 + cit * E1;
+                if (y1 > Y2)
+                {
+                    double yt = y1;
+                    y1 = Y2;
+                    Y2 = yt;
+                }
+                combinedWithHaldaneParameters.AddOutput("pc", Formatting.XRound(cco * 100, 1));
+                combinedWithHaldaneParameters.AddOutput("ci_fromx", host.RoundU(y1));
+                combinedWithHaldaneParameters.AddOutput("ci_tox", host.RoundU(Y2));
+                combinedWithHaldaneParameters.AddOutput("odds_fromx", host.RoundU(Math.Exp(y1)));
+                combinedWithHaldaneParameters.AddOutput("odds_tox", host.RoundU(Math.Exp(Y2)));
+                double u1 = m1 / E1;
+                x2 = u1 * u1;
+                n2 = 1;
+                combinedWithHaldaneParameters.AddOutput("chi_2x", host.RoundU(x2));
+                combinedWithHaldaneParameters.AddOutput("chix", host.RoundU(u1));
+                combinedWithHaldaneParameters.AddOutput("chi_px", host.pval(PDF.chivalp(x2, n2)));
+                n2 = n1 - 1.0;
+                x2 = S1 - t1 * t1 / w1;
+                combinedWithHaldaneParameters.AddOutput("het_chi_2x", host.RoundU(x2));
+                combinedWithHaldaneParameters.AddOutput("dfx", n2.ToString());
+                combinedWithHaldaneParameters.AddOutput("het_chi_px", host.pval(PDF.chivalp(x2, n2)));
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult RptChiWoolfWorksheet(ITemplateHost host, ParameterBag parameters)
+        {
             double cit;
 
-            double cco = parameters[ "cco" ].AsDouble; 
-            if ( cco > 0 ) 
-            { 
-                double P = ( 1.0 - cco ) / 2.0;
+            double cco = parameters["cco"].AsDouble;
+            if (cco > 0)
+            {
+                double P = (1.0 - cco) / 2.0;
                 int ifault;
-                cit = PDF.gauinv(1.0 - P, out ifault); 
-            } 
-            else 
-            { 
+                cit = PDF.gauinv(1.0 - P, out ifault);
+            }
+            else
+            {
                 cco = 0.95;
                 int ifault;
-                cit = PDF.gauinv(0.975, out ifault); 
-            } 
-            DataFrame snFrame = parameters[ "sn" ].AsDataFrame; 
-            DoubleVariable snVariable = snFrame.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame srFrame = parameters[ "sr" ].AsDataFrame; 
-            DoubleVariable srVariable = srFrame.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame xnFrame = parameters[ "xn" ].AsDataFrame; 
-            DoubleVariable xnVariable = xnFrame.Variables[ 0 ].AsDoubleVariable; 
-            DataFrame xrFrame = parameters[ "xr" ].AsDataFrame; 
-            DoubleVariable xrVariable = xrFrame.Variables[ 0 ].AsDoubleVariable; 
+                cit = PDF.gauinv(0.975, out ifault);
+            }
+            DataFrame snFrame = parameters["sn"].AsDataFrame;
+            DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
+            DataFrame srFrame = parameters["sr"].AsDataFrame;
+            DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
+            DataFrame xnFrame = parameters["xn"].AsDataFrame;
+            DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
+            DataFrame xrFrame = parameters["xr"].AsDataFrame;
+            DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
             int k = snVariable.Length;
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 5]; 
-            for ( int i=1; i <= k; i++ ) 
-            { 
-                double sn = snVariable.Data[i - 1]; 
-                double sr = srVariable.Data[i - 1]; 
-                double xn = xnVariable.Data[i - 1]; 
-                double xr = xrVariable.Data[i - 1]; 
-                o[ i, 1 ] = sr; 
-                o[ i, 2 ] = sn - sr; 
-                if ( sr < 0 || sn < 0 || sn < sr ) 
-                { 
-                    throw new InvalidDataException(); 
-                } 
-                o[ i, 3 ] = xr; 
-                o[ i, 4 ] = xn - xr; 
-                if ( xr < 0 | xn < 0 | xn < xr ) 
-                { 
-                    throw new InvalidDataException(); 
-                } 
-            } 
+            double[,] o = new double[k + 1 /* for VB to C# conversion */, 5];
+            for (int i = 1; i <= k; i++)
+            {
+                double sn = snVariable.Data[i - 1];
+                double sr = srVariable.Data[i - 1];
+                double xn = xnVariable.Data[i - 1];
+                double xr = xrVariable.Data[i - 1];
+                o[i, 1] = sr;
+                o[i, 2] = sn - sr;
+                if (sr < 0 || sn < 0 || sn < sr)
+                {
+                    throw new InvalidDataException();
+                }
+                o[i, 3] = xr;
+                o[i, 4] = xn - xr;
+                if (xr < 0 | xn < 0 | xn < xr)
+                {
+                    throw new InvalidDataException();
+                }
+            }
             //  RTF_LoadTemplate("woolf.rtf")
-            bool showIntermediates = parameters[ "show_intermediates" ].AsBoolean; 
-            bool ierr; 
-            return Woolf( host, ref o, ref k, ref showIntermediates, ref cit, ref cco, out ierr ); 
-        } 
-        
-        
-        public static StepResult ShtDetabulate( ITemplateHost host, ParameterBag parameters ) 
+            bool showIntermediates = parameters["show_intermediates"].AsBoolean;
+            bool ierr;
+            return Woolf(host, ref o, ref k, ref showIntermediates, ref cit, ref cco, out ierr);
+        }
+
+
+        public static StepResult ShtDetabulate(ITemplateHost host, ParameterBag parameters)
         {
             int i; int j;
 
-            DataFrame data = parameters[ "data" ].AsDataFrame; 
-            
-            double gtot = 0.0; 
-            int maxrows = 0; 
-            for ( i=0; i <= data.VariableCount - 1; i++ ) 
-            { 
-                gtot += data.Variables[ i ].AsDoubleVariable.Sum; 
-                if ( data.Variables[ i ].Length > maxrows )
-                { 
-                    maxrows = data.Variables[ i ].Length; 
-                } 
-            } 
-            if ( gtot > 64000 ) 
-            { 
-                host.Error( "Number of observations exceeds row limit of worksheet.", "Detabulate" ); 
-                return null; 
+            DataFrame data = parameters["data"].AsDataFrame;
+
+            double gtot = 0.0;
+            int maxrows = 0;
+            for (i = 0; i <= data.VariableCount - 1; i++)
+            {
+                gtot += data.Variables[i].AsDoubleVariable.Sum;
+                if (data.Variables[i].Length > maxrows)
+                {
+                    maxrows = data.Variables[i].Length;
+                }
             }
-            int[,] xt = new int[maxrows + 1 /* for VB to C# conversion */, data.VariableCount + 1 /* for VB to C# conversion */]; 
-            for ( i=0; i <= data.VariableCount - 1; i++ ) 
-            { 
-                for ( j=1; j <= maxrows; j++ ) 
-                { 
-                    xt[ j, i ] = 0; 
-                } 
-            } 
-            for ( i=0; i <= data.VariableCount - 1; i++ ) 
-            { 
-                DoubleVariable v = data.Variables[ i ].AsDoubleVariable; 
-                for ( j=1; j <= v.Length; j++ ) 
-                { 
-                    xt[ j, i ] = Convert.ToInt32( v.Data[j - 1] ); 
-                } 
+            if (gtot > 64000)
+            {
+                host.Error("Number of observations exceeds row limit of worksheet.", "Detabulate");
+                return null;
+            }
+            int[,] xt = new int[maxrows + 1 /* for VB to C# conversion */, data.VariableCount + 1 /* for VB to C# conversion */];
+            for (i = 0; i <= data.VariableCount - 1; i++)
+            {
+                for (j = 1; j <= maxrows; j++)
+                {
+                    xt[j, i] = 0;
+                }
+            }
+            for (i = 0; i <= data.VariableCount - 1; i++)
+            {
+                DoubleVariable v = data.Variables[i].AsDoubleVariable;
+                for (j = 1; j <= v.Length; j++)
+                {
+                    xt[j, i] = Convert.ToInt32(v.Data[j - 1]);
+                }
             }
             DataFrame outputFrame = new DataFrame();
-            DoubleVariable rowVariable = new DoubleVariable {Title = "Row Category"};
-                //  TODO: Some attempt to size to avoid repeated redims
+            DoubleVariable rowVariable = new DoubleVariable { Title = "Row Category" };
+            //  TODO: Some attempt to size to avoid repeated redims
 
-            outputFrame.Variables.Add( rowVariable );
-            DoubleVariable columnVariable = new DoubleVariable {Title = "Column Category"};
+            outputFrame.Variables.Add(rowVariable);
+            DoubleVariable columnVariable = new DoubleVariable { Title = "Column Category" };
 
-            outputFrame.Variables.Add( columnVariable ); 
-            int ctr = 0; 
-            for ( j=1; j <= maxrows; j++ ) 
-            { 
-                for ( i=0; i <= data.VariableCount - 1; i++ ) 
-                { 
-                    if ( xt[ j, i ] > 0 )
+            outputFrame.Variables.Add(columnVariable);
+            int ctr = 0;
+            for (j = 1; j <= maxrows; j++)
+            {
+                for (i = 0; i <= data.VariableCount - 1; i++)
+                {
+                    if (xt[j, i] > 0)
                     {
                         int k;
-                        for ( k=1; k <= xt[ j, i ]; k++ ) 
-                        { 
-                            rowVariable.set_Data( ctr, j ); 
-                            columnVariable.set_Data( ctr, i + 1 ); 
-                            ctr += 1; 
+                        for (k = 1; k <= xt[j, i]; k++)
+                        {
+                            rowVariable.set_Data(ctr, j);
+                            columnVariable.set_Data(ctr, i + 1);
+                            ctr += 1;
                         }
                     }
-                } 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "output", outputFrame ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-        
-        public static StepResult ShtTabulate( ITemplateHost host, ParameterBag parameters ) 
+                }
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("output", outputFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+
+        public static StepResult ShtTabulate(ITemplateHost host, ParameterBag parameters)
         {
             int i;
             int c;
 
-            DataFrame rowsFrame = parameters[ "rows" ].AsDataFrame; 
-            ClassifierVariable rowsVariable = rowsFrame.Variables[ 0 ].AsClassifierVariable; 
-            int N = rowsVariable.Length; 
+            DataFrame rowsFrame = parameters["rows"].AsDataFrame;
+            ClassifierVariable rowsVariable = rowsFrame.Variables[0].AsClassifierVariable;
+            int N = rowsVariable.Length;
             int ycats = rowsVariable.GroupCount;
-            double[] y = new double[N + 1 /* for VB to C# conversion */ ]; 
-            Namevar[] ycat = new Namevar[ ycats + 1 /* for VB to C# conversion */ ]; 
-            string ylab = rowsVariable.Title; 
-            for ( i=1; i <= ycats; i++ ) 
-            { 
-                ycat[ i ].Ti = rowsVariable.get_Group( i - 1 ).Label; 
-                ycat[ i ].x = Convert.ToDouble( i - 1 ); 
-            } 
-            for ( i=1; i <= N; i++ ) 
-            { 
-                y[ i ] = rowsVariable.Data[i - 1]; 
-            } 
-            
-            DataFrame columnsFrame = parameters[ "columns" ].AsDataFrame; 
-            bool sorted = parameters[ "sorted" ].AsBoolean; 
-            DataFrame outputFrame = new DataFrame(); 
-            StringVariable v = new StringVariable(); 
-            outputFrame.Variables.Add( v ); 
-            int pos = 0; 
-            for ( c=0; c <= columnsFrame.VariableCount - 1; c++ ) 
-            { 
-                ClassifierVariable cv = columnsFrame.Variables[ c ].AsClassifierVariable; 
+            double[] y = new double[N + 1 /* for VB to C# conversion */ ];
+            Namevar[] ycat = new Namevar[ycats + 1 /* for VB to C# conversion */ ];
+            string ylab = rowsVariable.Title;
+            for (i = 1; i <= ycats; i++)
+            {
+                ycat[i].Ti = rowsVariable.get_Group(i - 1).Label;
+                ycat[i].x = Convert.ToDouble(i - 1);
+            }
+            for (i = 1; i <= N; i++)
+            {
+                y[i] = rowsVariable.Data[i - 1];
+            }
+
+            DataFrame columnsFrame = parameters["columns"].AsDataFrame;
+            bool sorted = parameters["sorted"].AsBoolean;
+            DataFrame outputFrame = new DataFrame();
+            StringVariable v = new StringVariable();
+            outputFrame.Variables.Add(v);
+            int pos = 0;
+            for (c = 0; c <= columnsFrame.VariableCount - 1; c++)
+            {
+                ClassifierVariable cv = columnsFrame.Variables[c].AsClassifierVariable;
                 int xcats = cv.GroupCount;
                 double[] x = new double[N + 1 /* for VB to C# conversion */ ];
-                Namevar[] xcat = new Namevar[xcats + 1 /* for VB to C# conversion */ ]; 
-                string xlab = cv.Title; 
-                for ( i=1; i <= xcats; i++ ) 
-                { 
-                    xcat[ i ].Ti = cv.Groups[ i - 1 ].Label; 
-                    xcat[ i ].x = Convert.ToDouble( i - 1 ); 
-                } 
-                for ( i=1; i <= N; i++ ) 
-                { 
-                    x[ i ] = cv.Data[i - 1]; 
-                } 
-                if ( sorted ) 
-                { 
-                    SortName( ycats, ycat, 1 ); 
-                    SortName( xcats, xcat, 1 ); 
+                Namevar[] xcat = new Namevar[xcats + 1 /* for VB to C# conversion */ ];
+                string xlab = cv.Title;
+                for (i = 1; i <= xcats; i++)
+                {
+                    xcat[i].Ti = cv.Groups[i - 1].Label;
+                    xcat[i].x = Convert.ToDouble(i - 1);
                 }
-                int[,] xt = new int[xcats + 1 /* for VB to C# conversion */, ycats + 1 /* for VB to C# conversion */]; 
+                for (i = 1; i <= N; i++)
+                {
+                    x[i] = cv.Data[i - 1];
+                }
+                if (sorted)
+                {
+                    SortName(ycats, ycat, 1);
+                    SortName(xcats, xcat, 1);
+                }
+                int[,] xt = new int[xcats + 1 /* for VB to C# conversion */, ycats + 1 /* for VB to C# conversion */];
                 int tot = 0;
                 int j;
-                for ( i=1; i <= xcats; i++ ) 
-                { 
-                    for ( j=1; j <= ycats; j++ ) 
+                for (i = 1; i <= xcats; i++)
+                {
+                    for (j = 1; j <= ycats; j++)
                     {
                         int k;
-                        for ( k=1; k <= N; k++ ) 
-                        { 
-                            if ( x[ k ] == xcat[ i ].x && y[ k ] == ycat[ j ].x )
-                            { 
-                                xt[ i, j ] += 1; 
-                            } 
-                        } 
-                        tot += xt[ i, j ]; 
-                    } 
-                } 
-                v.set_Data( pos, "(n = " +  tot.ToString() + ")" ); 
-                for ( j=1; j <= ycats; j++ ) 
-                { 
-                    v.set_Data( pos + j, ylab + ":" + ycat[ j ].Ti ); 
-                } 
-                for ( i=1; i <= xcats; i++ ) 
-                { 
-                    StringVariable vv; 
-                    if ( outputFrame.VariableCount > i ) 
-                    { 
-                        vv = outputFrame.Variables[ i ].AsStringVariable; 
-                    } 
-                    else 
-                    { 
-                        vv = new StringVariable(); 
-                        outputFrame.Variables.Add( vv ); 
-                    } 
-                    vv.set_Data( pos, xlab + ":" + xcat[ i ].Ti ); 
-                    for ( j=1; j <= ycats; j++ ) 
-                    { 
-                        vv.set_Data( pos + j, xt[ i, j ].ToString() ); 
-                    } 
-                } 
-                pos += ycats + 2; 
-            } 
-            ParameterBag outputParameters = new ParameterBag(); 
-            outputParameters.AddOutput( "output", outputFrame ); 
-            return new StepResult( StepSuccess.Success, outputParameters ); 
-        } 
-        
-    } 
-    
-    
+                        for (k = 1; k <= N; k++)
+                        {
+                            if (x[k] == xcat[i].x && y[k] == ycat[j].x)
+                            {
+                                xt[i, j] += 1;
+                            }
+                        }
+                        tot += xt[i, j];
+                    }
+                }
+                v.set_Data(pos, "(n = " + tot.ToString() + ")");
+                for (j = 1; j <= ycats; j++)
+                {
+                    v.set_Data(pos + j, ylab + ":" + ycat[j].Ti);
+                }
+                for (i = 1; i <= xcats; i++)
+                {
+                    StringVariable vv;
+                    if (outputFrame.VariableCount > i)
+                    {
+                        vv = outputFrame.Variables[i].AsStringVariable;
+                    }
+                    else
+                    {
+                        vv = new StringVariable();
+                        outputFrame.Variables.Add(vv);
+                    }
+                    vv.set_Data(pos, xlab + ":" + xcat[i].Ti);
+                    for (j = 1; j <= ycats; j++)
+                    {
+                        vv.set_Data(pos + j, xt[i, j].ToString());
+                    }
+                }
+                pos += ycats + 2;
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("output", outputFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+    }
+
+
     public class ChiSquareGoodnessOfFitOptions : IFillable
-        
-     
-    { 
-        public int df; 
+    {
+        public int df;
         public int categories; //  Label5
         public int n; //  Label3
-        public double total; 
-        public IList<string> x; 
-        public IList<double> xn; 
-        public IList<double> xe; 
-        
-        public ChiSquareGoodnessOfFitOptions() 
-        { 
-            x = new List<string>(); 
-            xn = new List<double>(); 
-            xe = new List<double>(); 
-        } 
-        
-        public string FillerToUse 
-        { 
-            get 
-            { 
-                return "ChiSquareGoodnessOfFit"; 
-            } 
+        public double total;
+        public IList<string> x;
+        public IList<double> xn;
+        public IList<double> xe;
+
+        public ChiSquareGoodnessOfFitOptions()
+        {
+            x = new List<string>();
+            xn = new List<double>();
+            xe = new List<double>();
+        }
+
+        public string FillerToUse
+        {
+            get
+            {
+                return "ChiSquareGoodnessOfFit";
+            }
         } // interface properties implemented by FillerToUse
         string IFillable.FillerToUse
-        { 
+        {
             get
             {
                 return FillerToUse;
             }
         }
-        
-    } 
-    
-    
+
+    }
+
+
     public class ScoresOptions : IFillable
-        
-     
-    { 
-        public string Title1; 
-        public string Title2; 
-        public IList<double> Values1; 
-        public IList<double> Values2; 
-        
-        public ScoresOptions() 
-        { 
-            Values1 = new List<double>(); 
-            Values2 = new List<double>(); 
-        } 
-        
-        public string FillerToUse 
-        { 
-            get 
-            { 
-                return "Scores"; 
-            } 
+    {
+        public string Title1;
+        public string Title2;
+        public IList<double> Values1;
+        public IList<double> Values2;
+
+        public ScoresOptions()
+        {
+            Values1 = new List<double>();
+            Values2 = new List<double>();
+        }
+
+        public string FillerToUse
+        {
+            get
+            {
+                return "Scores";
+            }
         } // interface properties implemented by FillerToUse
         string IFillable.FillerToUse
-        { 
+        {
             get
             {
                 return FillerToUse;
             }
         }
-        
-    } 
-    
-    
-} 
+
+    }
+
+
+}

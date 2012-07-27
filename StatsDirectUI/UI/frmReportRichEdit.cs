@@ -54,9 +54,11 @@ namespace StatsDirect.UI
                 richEditControl1.LoadDocument(Filename, DocumentFormat.Mht);
             else
             {
-                StreamReader txtReader = new StreamReader(Filename);
-                richEditControl1.Text = txtReader.ReadToEnd();
-                txtReader.Close();
+                using (StreamReader txtReader = new StreamReader(Filename))
+                {
+                    richEditControl1.Text = txtReader.ReadToEnd();
+                    txtReader.Close();
+                }
             }
             currentFile = Filename;
             Path = Filename;
@@ -547,8 +549,10 @@ namespace StatsDirect.UI
             Image img = GetSelectedImage(out bytes);
             if (null != bytes)
             {
-                frmExportGraphic f = new frmExportGraphic(img, bytes);
-                f.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                using (frmExportGraphic f = new frmExportGraphic(img, bytes))
+                {
+                    f.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                }
             }
             else
             {
@@ -580,84 +584,86 @@ namespace StatsDirect.UI
         {
             string[] parts = rtf.Split(new[] { '\\', '\r', '\n', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             ImageFormat imageFormat = null;
-            MemoryStream bytes = new MemoryStream();
-            foreach (string s in parts)
+            using (MemoryStream bytes = new MemoryStream())
             {
-                if (s.StartsWith("wmetafile"))
+                foreach (string s in parts)
                 {
-                    imageFormat = ImageFormat.Emf;
-                    int wmetafileVersion;
-                    int.TryParse(s.Substring(9), out wmetafileVersion);
-                }
-                else if (s.StartsWith("pngblip"))
-                    imageFormat = ImageFormat.Png;
-                else if (s.StartsWith("picwgoal"))
-                {
-                    int wGoal;
-                    int.TryParse(s.Substring(8), out wGoal);
-                }
-                else if (s.StartsWith("pichgoal"))
-                {
-                    int hGoal;
-                    int.TryParse(s.Substring(8), out hGoal);
-                }
-                else if (s.StartsWith("picw"))
-                {
-                    int w;
-                    int.TryParse(s.Substring(4), out w);
-                }
-                else if (s.StartsWith("pich"))
-                {
-                    int h;
-                    int.TryParse(s.Substring(4), out h);
-                }
-                else if (s.StartsWith("emfblip"))
-                {
-                    imageFormat = ImageFormat.Emf;
-                }
-                else if (s.StartsWith("picscale"))
-                {
-                    // Do nothing
-                }
-                else if (s.Length < 16)
-                {
-                    // Not a header value we know, and less than an 8-byte hex value - so a very small image!
-                    // Assume another header value that we don't yet know about
-                    throw new ArgumentException("Unexpected header '" + s + "' when importing image");
-                }
-                else
-                {
-                    // Assume bytes encoded as hex
-                    for (int i = 0; i < s.Length; i += 2)
+                    if (s.StartsWith("wmetafile"))
                     {
-                        int hiChar = s[i] - 48; // 48 is ASCII '0'
-                        if (hiChar > 9) hiChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
-                        if (hiChar > 15) hiChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
-                        if (hiChar > 15 || hiChar < 0)
-                            throw new ArgumentException("Unexpected non-hex char '" + s[i] + "' in hex string");
+                        imageFormat = ImageFormat.Emf;
+                        int wmetafileVersion;
+                        int.TryParse(s.Substring(9), out wmetafileVersion);
+                    }
+                    else if (s.StartsWith("pngblip"))
+                        imageFormat = ImageFormat.Png;
+                    else if (s.StartsWith("picwgoal"))
+                    {
+                        int wGoal;
+                        int.TryParse(s.Substring(8), out wGoal);
+                    }
+                    else if (s.StartsWith("pichgoal"))
+                    {
+                        int hGoal;
+                        int.TryParse(s.Substring(8), out hGoal);
+                    }
+                    else if (s.StartsWith("picw"))
+                    {
+                        int w;
+                        int.TryParse(s.Substring(4), out w);
+                    }
+                    else if (s.StartsWith("pich"))
+                    {
+                        int h;
+                        int.TryParse(s.Substring(4), out h);
+                    }
+                    else if (s.StartsWith("emfblip"))
+                    {
+                        imageFormat = ImageFormat.Emf;
+                    }
+                    else if (s.StartsWith("picscale"))
+                    {
+                        // Do nothing
+                    }
+                    else if (s.Length < 16)
+                    {
+                        // Not a header value we know, and less than an 8-byte hex value - so a very small image!
+                        // Assume another header value that we don't yet know about
+                        throw new ArgumentException("Unexpected header '" + s + "' when importing image");
+                    }
+                    else
+                    {
+                        // Assume bytes encoded as hex
+                        for (int i = 0; i < s.Length; i += 2)
+                        {
+                            int hiChar = s[i] - 48; // 48 is ASCII '0'
+                            if (hiChar > 9) hiChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
+                            if (hiChar > 15) hiChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
+                            if (hiChar > 15 || hiChar < 0)
+                                throw new ArgumentException("Unexpected non-hex char '" + s[i] + "' in hex string");
 
-                        int loChar = s[i + 1] - 48; // 48 is ASCII '0'
-                        if (loChar > 9) loChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
-                        if (loChar > 15) loChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
-                        if (loChar > 15 || loChar < 0)
-                            throw new ArgumentException("Unexpected non-hex char '" + s[i + 1] + "' in hex string");
-                        byte b = (byte)(hiChar * 16 + loChar);
-                        bytes.WriteByte(b);
+                            int loChar = s[i + 1] - 48; // 48 is ASCII '0'
+                            if (loChar > 9) loChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
+                            if (loChar > 15) loChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
+                            if (loChar > 15 || loChar < 0)
+                                throw new ArgumentException("Unexpected non-hex char '" + s[i + 1] + "' in hex string");
+                            byte b = (byte) (hiChar * 16 + loChar);
+                            bytes.WriteByte(b);
+                        }
                     }
                 }
+                rawBytes = bytes.ToArray();
+                bytes.Position = 0;
+                Image img = null;
+                if (imageFormat == ImageFormat.Emf)
+                {
+                    img = Image.FromStream(bytes);
+                }
+                else if (imageFormat == ImageFormat.Png)
+                {
+                    img = Image.FromStream(bytes);
+                }
+                return img;
             }
-            rawBytes = bytes.ToArray();
-            bytes.Position = 0;
-            Image img = null;
-            if (imageFormat == ImageFormat.Emf)
-            {
-                img = Image.FromStream(bytes);
-            }
-            else if (imageFormat == ImageFormat.Png)
-            {
-                img = Image.FromStream(bytes);
-            }
-            return img;
         }
 
         private void EditToolStripMenuItem_DropDownOpening(object sender, EventArgs e)

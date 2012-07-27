@@ -87,7 +87,7 @@
             this.cmdCalculate.Name = "cmdCalculate";
             this.cmdCalculate.Size = new System.Drawing.Size(75, 23);
             this.cmdCalculate.TabIndex = 4;
-            this.cmdCalculate.Text = "&Calculate";
+            this.cmdCalculate.Text = "&OK";
             this.cmdCalculate.UseVisualStyleBackColor = true;
             this.cmdCalculate.Click += new System.EventHandler(this.cmdCalculate_Click);
             // 

@@ -8,7 +8,7 @@ namespace StatsDirect.UI
     /// A theoretically abstract superclass of the concrete forms that may be displayed in StatsDirect.
     /// In reality, this is concrete solely because the VS2008 designer can't handle abstract classes in the hierarchy.
     /// </summary>
-    public /* abstract */ class StatsDirectForm: Form, IForm
+    public abstract class StatsDirectForm: Form, IForm
     {
         /// <summary>
         /// If true, changes have been made to the form since it was last saved.
@@ -35,15 +35,17 @@ namespace StatsDirect.UI
             id = "StatsDirectForm:" + (nextId++).ToString();
         }
 
-        internal virtual bool SaveContents()
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Request the form to save its contents, over existing storage if it has that or to new storage if not.
+        /// </summary>
+        /// <returns>true if the content was saved, false if not</returns>
+        internal abstract bool SaveContents();
 
-        internal virtual bool SaveAsContents()
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Request the form to save its contents to new storage.
+        /// </summary>
+        /// <returns>true if the content was saved, false if not</returns>
+        internal abstract bool SaveAsContents();
 
         internal bool Dirty
         {
@@ -103,10 +105,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public /* abstract */ virtual bool OpenFile(string Filename)
-        {
-            throw new NotImplementedException("Subclass should have overridden this");
-        }
+        public abstract bool OpenFile(string Filename);
 
         internal virtual void ShowHelp()
         {
@@ -129,14 +128,14 @@ namespace StatsDirect.UI
             get { return false; }
         }
 
-        public virtual /* abstract */ IList<Pane> AvailablePanes
+        public abstract IList<Pane> AvailablePanes
         {
-            get { throw new NotImplementedException(); }
+            get;
         }
 
-        public virtual /* abstract */ Pane SelectedPane
+        public abstract Pane SelectedPane
         {
-            get { throw new NotImplementedException(); }
+            get;
         }
 
         /// <summary>
@@ -158,13 +157,13 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        internal /* abstract */ virtual void EditCopy() {}
+        internal abstract void EditCopy();
 
-        internal /* abstract */ virtual void EditCut() {}
+        internal abstract void EditCut();
 
-        internal /* abstract */ virtual void EditPaste() {}
+        internal abstract void EditPaste();
 
-        internal /* abstract */ virtual void Print() {}
+        internal abstract void Print();
 
         internal WindowInformation WindowInformation
         {

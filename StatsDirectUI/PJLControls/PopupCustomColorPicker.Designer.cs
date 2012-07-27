@@ -1,4 +1,4 @@
-﻿namespace PJLControls
+﻿namespace StatsDirect.PJLControls
 {
     partial class PopupCustomColorPicker
     {
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PopupCustomColorPicker));
-            this.picker = new PJLControls.CustomColorPicker();
+            this.picker = new CustomColorPicker();
             this.cmdOK = new System.Windows.Forms.Button();
             this.cmdCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();

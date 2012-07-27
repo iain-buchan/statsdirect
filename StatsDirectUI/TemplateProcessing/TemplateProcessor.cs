@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -872,11 +874,11 @@ namespace StatsDirect.Templates
             }
             else
             {
-                System.IO.Stream metaStream = new System.IO.MemoryStream();
-                results = ch.Plot(metaStream, host);
-                metaStream.Position = 0;
-                Image metaImage = Image.FromStream(metaStream);
-                results.Add(step.ChartName, new FilledParameter(false, host.ImageToRtf(metaImage)));
+                using (MemoryStream metaStream = new MemoryStream())
+                {
+                    results = ch.Plot(metaStream, host);
+                    results.Add(step.ChartName, new FilledParameter(false, host.ImageStreamToRtf(metaStream)));
+                }
             }
             string parameterName = STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? "");
             results.Add(parameterName, new FilledParameter(true, options));
@@ -1034,7 +1036,11 @@ namespace StatsDirect.Templates
                             }
                             foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
                             {
-                                filledParameters.Add(pair.Key, pair.Value);
+                                if (filledParameters.ContainsKey(pair.Key))
+                                {
+                                    // MessageBox.Show("Trying to add key '" + pair.Key + "' which is already in the parameters - will overwrite.");
+                                }
+                                filledParameters [pair.Key] = pair.Value;
                             }
                             outstandingParameters.Clear();
                         }

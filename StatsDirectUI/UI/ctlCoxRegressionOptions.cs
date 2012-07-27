@@ -26,7 +26,7 @@ namespace StatsDirect.UI
             parameterBag.AddOutput("splitting-ratio", cboStrata.Text);
         }
 
-        Control IFillParameterBag.Fill(ParameterBag outputParameters)
+        Control IFillParameterBag.Fill(ParameterBag outputParameters, bool doValidation)
         {
             FillParameterFromForm(outputParameters);
             return null;

@@ -14,7 +14,7 @@
           <min-columns>2</min-columns>
           <max-columns>200</max-columns>
           <ask-for-group-id>true</ask-for-group-id>
-          <clear-selection-first>true</clear-selection-first>
+          <clear-selection-first>false</clear-selection-first>
         </frame>
         <boolean>
           <name>specify_group_scores</name>

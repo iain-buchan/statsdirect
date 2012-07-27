@@ -57,7 +57,9 @@ namespace StatsDirect.Builtins
             {
                 N = 4;
             }
-            int b = parameters["b"].AsInt32;
+            int b = -1;
+            if (parameters.ContainsKey("b"))
+                b = parameters["b"].AsInt32;
             if (b <= 0)
             {
                 rb = true;

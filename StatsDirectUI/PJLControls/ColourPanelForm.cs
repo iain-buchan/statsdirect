@@ -26,7 +26,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace PJLControls
+namespace StatsDirect.PJLControls
 {
 	/// <summary>
 	/// ColorPanelForm is used to host an instance of ColorPanel.
@@ -39,11 +39,6 @@ namespace PJLControls
 	{
 		private ColorPanelWithCapture colorPanel;
 
-		/// <summary>
-		/// Required designer variable.
-		/// </summary>
-		private System.ComponentModel.Container components;
-
 		public ColorPanelForm()
 		{
 			//
@@ -53,21 +48,6 @@ namespace PJLControls
 
 		}
 
-		/// <summary>
-		/// Clean up any resources being used.
-		/// </summary>
-		protected override void Dispose( bool disposing )
-		{
-			if( disposing )
-			{
-				if(components != null)
-				{
-					components.Dispose();
-				}
-			}
-			base.Dispose( disposing );
-		}
-
 		#region Windows Form Designer generated code
 		/// <summary>
 		/// Required method for Designer support - do not modify
@@ -75,7 +55,7 @@ namespace PJLControls
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.colorPanel = new PJLControls.ColorPanelWithCapture();
+			this.colorPanel = new ColorPanelWithCapture();
 			this.SuspendLayout();
 			// 
 			// colorPanel
@@ -83,8 +63,8 @@ namespace PJLControls
 			this.colorPanel.BackColor = System.Drawing.SystemColors.Control;
 			this.colorPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this.colorPanel.Color = System.Drawing.Color.Red;
-			this.colorPanel.ColorSet = PJLControls.ColorSet.Web;
-			this.colorPanel.ColorSortOrder = PJLControls.ColorSortOrder.Brightness;
+			this.colorPanel.ColorSet = ColorSet.Web;
+			this.colorPanel.ColorSortOrder = ColorSortOrder.Brightness;
 			this.colorPanel.ColorWellSize = new System.Drawing.Size(16, 16);
 			this.colorPanel.Columns = 0;
 			this.colorPanel.CustomColors = new System.Drawing.Color[] {
@@ -92,8 +72,8 @@ namespace PJLControls
 			this.colorPanel.Name = "colorPanel";
 			this.colorPanel.Size = new System.Drawing.Size(292, 132);
 			this.colorPanel.TabIndex = 0;
-			this.colorPanel.ColorChanged += new PJLControls.ColorChangedEventHandler(this.colorPanel_ColorChanged);
-			this.colorPanel.PanelClosing += new PJLControls.ColorPanelClosingEventHandler(this.colorPanel_PanelClosing);
+			this.colorPanel.ColorChanged += new ColorChangedEventHandler(this.colorPanel_ColorChanged);
+			this.colorPanel.PanelClosing += new ColorPanelClosingEventHandler(this.colorPanel_PanelClosing);
 			this.colorPanel.Resize += new System.EventHandler(this.colorPanel_Resize);
 			// 
 			// ColorPanelForm

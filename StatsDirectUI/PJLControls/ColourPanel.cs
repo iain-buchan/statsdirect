@@ -30,7 +30,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Diagnostics;
 
-namespace PJLControls
+namespace StatsDirect.PJLControls
 {
 	/// <summary>
 	/// This represents the Z Axis of an RGB color cube.
@@ -559,13 +559,15 @@ namespace PJLControls
                         if (isCustomWell)
                         {
                             Color fontColor = Color.GetBrightness() < 0.3 ? Color.White : Color.Black;
-                            Font drawFont = new Font("Microsoft Sans Serif", 7.25F);
-                            SolidBrush drawBrush = new SolidBrush(fontColor);
-                            // Create point for upper-left corner of drawing.
-                            PointF drawPoint = new PointF(ColorPosition.Left + 1, ColorPosition.Top + 1);
-                            g.DrawString("Other", drawFont, drawBrush, drawPoint);
-                            drawFont.Dispose();
-                            drawBrush.Dispose();
+                            using (Font drawFont = new Font("Microsoft Sans Serif", 7.25F))
+                            {
+                                using (SolidBrush drawBrush = new SolidBrush(fontColor))
+                                {
+                                    // Create point for upper-left corner of drawing.
+                                    PointF drawPoint = new PointF(ColorPosition.Left + 1, ColorPosition.Top + 1);
+                                    g.DrawString("Other", drawFont, drawBrush, drawPoint);
+                                }
+                            }
                         }
                     }
                     finally

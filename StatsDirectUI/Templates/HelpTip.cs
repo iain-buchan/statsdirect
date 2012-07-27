@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
 {
+    [Serializable]
     public class HelpTip
     {
         [XmlAttribute(AttributeName = "lang")]

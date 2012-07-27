@@ -40,6 +40,7 @@
             <menu-item label="&amp;Text to Numbers" operation="TextCode" />
             <menu-item label="&amp;Date and Time Intervals" operation="Dates" />
             <menu-item label="&amp;Categorise" operation="GroupCategorise" />
+            <menu-item label="&amp;Extract Subset of Data" operation="GroupExtract" />
           </sub-items>
         </menu-item>
         <menu-item label="&amp;Transforming and Deriving">
@@ -73,7 +74,7 @@
             <menu-item label="&amp;Ranks" operation="Rank" />
           </sub-items>
         </menu-item>
-        <menu-item label="&amp;Organising">
+        <menu-item label="&amp;Organizing">
           <help chm-id="1114" />
           <sub-items>
             <menu-item label="&amp;Sort">
@@ -84,8 +85,8 @@
               </sub-items>
             </menu-item>
             <menu-item label="R&amp;otate Data Block" operation="Rotate" />
-            <menu-item label="&amp;Combine Variables" operation="Combine" />
-            <menu-item label="&amp;Split Combined Variables" operation="GroupSplit" />
+            <menu-item label="&amp;Combine Groups" operation="Combine" />
+            <menu-item label="&amp;Split Combined Groups" operation="GroupSplit" />
             <menu-item label="Dummy &amp;Variables" operation="DummyVariables" />
             <menu-item label="&amp;Extract Subset of Data" operation="GroupExtract" />
             <menu-item label="&amp;Tabulate" operation="Tabulate" />
@@ -188,7 +189,7 @@
             <menu-item label="&amp;Normal" operation="DistributionNormal" />
             <menu-item label="Student's &amp;t" operation="DistributionT" />
             <menu-item label="&amp;F (Variance Ratio)" operation="DistributionF" />
-            <menu-item label="&amp;Chi-Square" operation="DistributionChiSquare" />
+            <menu-item label="&amp;Chi-square" operation="DistributionChiSquare" />
             <menu-item label="Studentised Range (&amp;Q)" operation="DistributionQ" />
             <menu-item label="&amp;Binomal" operation="DistributionBinomial" />
             <menu-item label="&amp;Poisson" operation="DistributionPoisson" />
@@ -255,6 +256,7 @@
             <menu-item label="&amp;Single Sample t" operation="TSingle" />
             <menu-item label="&amp;Unpaired t" operation="TUnpaired" />
             <menu-item label="S&amp;ummary Data t">
+              <help chm-id="1242" />
               <sub-items>
                 <menu-item label="&amp;Single Sample" operation="TSingleSummary" />
                 <menu-item label="&amp;Unpaired" operation="TUnpairedSummary" />
@@ -345,7 +347,7 @@
           <sub-items>
             <menu-item label="&amp;Continuous (Intraclass)..." operation="Agreement" />
             <menu-item label="C&amp;ategorical (Kappa)..." operation="Kappa" />
-            <menu-item label="&amp;Reliability Analysis..." operation="PCRCovariance" />
+            <menu-item label="&amp;Reliability Analysis..." operation="PCRCovarianceNoFollowons" />
             <menu-item label="&amp;Universal R..." operation="UniversalAgreement" />
             <menu-item label="C&amp;ompare Two R Agreement Measures..." operation="UniversalRCompare" />
           </sub-items>
@@ -367,18 +369,13 @@
             <menu-item label="&amp;Odds Ratio" operation="Mantel" />
             <menu-item label="&amp;Peto Odds Ratio" operation="PetoMeta" />
             <menu-item label="&amp;Relative Risk" operation="RelativeRiskMeta" />
-            <menu-item label="R&amp;isk Difference" operation="RiskDifference" />
-            <menu-item label="&amp;Summary" operation="MetaSummary" />
+            <menu-item label="&amp;Incidence Rate Ratio" operation="MetaIncidenceRateRatio" />
+            <menu-item label="&amp;Incidence Rate Difference" operation="MetaIncidenceRateDifference" />
             <menu-item label="&amp;Effect Size" operation="Effect" />
+            <menu-item label="R&amp;isk Difference" operation="RiskDifference" />
             <menu-item label="Pr&amp;oportion" operation="ProportionMeta" />
-            <menu-item label="&amp;Incidence Rate">
-              <help chm-id="1163" />
-              <sub-items>
-                <menu-item label="&amp;Ratio" operation="MetaIncidenceRateRatio" />
-                <menu-item label="&amp;Difference" operation="MetaIncidenceRateDifference" />
-              </sub-items>
-            </menu-item>
             <menu-item label="&amp;Correlation" operation="MetaCorrelation" />
+            <menu-item label="&amp;Summary" operation="MetaSummary" />
             <menu-item label="-" />
             <menu-item label="Calculation O&amp;ptions..." operation="MetaCalculationOptions" />
             <menu-item label="P&amp;lot Options..." operation="MetaPlotOptions" />

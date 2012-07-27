@@ -38,7 +38,7 @@ You may define an additional missing number for clearing (leave the box blank if
         <string>
           <name>missing-text</name>
           <rubric>
-<![CDATA[The internal missing text codes are: spaces, asterisk (*), point (.) and the word "missing".
+<![CDATA[The internal missing text codes are: spaces, asterisk (*), point (.) and the words "missing", "#NULL!" and "#NUM!".
 You may define an additional missing text code for clearing (leave the box blank if none).]]>
           </rubric>
           <prompt>User-defined missing text:</prompt>

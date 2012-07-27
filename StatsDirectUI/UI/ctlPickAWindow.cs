@@ -155,7 +155,7 @@ namespace StatsDirect.UI
 
         #region IFillParameterBag Members
 
-        public Control Fill(ParameterBag outputParameters)
+        public Control Fill(ParameterBag outputParameters, bool doValidation)
         {
             PaneAndPosition selectedPaneAndPosition = SelectedPaneAndPosition();
             outputParameters.SetOutput(parameterName, selectedPaneAndPosition);

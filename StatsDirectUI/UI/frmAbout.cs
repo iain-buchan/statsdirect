@@ -125,9 +125,10 @@ namespace StatsDirect.UI
         void lblEmail_DoubleClick(object sender, EventArgs e)
         {
             Close();
-            frmLicense f = new frmLicense(SDApplication.SoleInstance.UserInfo);
-            f.ShowDialog();
-            f.Dispose();
+            using (frmLicense f = new frmLicense(SDApplication.SoleInstance.UserInfo))
+            {
+                f.ShowDialog();
+            }
         }
 
         public string Platform

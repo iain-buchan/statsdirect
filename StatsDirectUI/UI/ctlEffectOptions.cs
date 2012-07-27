@@ -30,7 +30,7 @@ namespace StatsDirect.UI
         }
 
 
-        Control IFillParameterBag.Fill(ParameterBag outputParameters)
+        Control IFillParameterBag.Fill(ParameterBag outputParameters, bool doValidation)
         {
             FillParameterFromForm(outputParameters);
             return null;

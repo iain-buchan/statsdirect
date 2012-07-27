@@ -153,11 +153,15 @@ namespace StatsDirect.UI
             if ("jpg".Equals(extension) || "jpeg".Equals(extension))
             {
                 int quality = trkCompression.Value;
-                EncoderParameter qualityParam = new EncoderParameter(Encoder.Quality, quality);
-                ImageCodecInfo jpegCodec = GetEncoderInfo("image/jpeg");
-                EncoderParameters encoderParams = new EncoderParameters(1);
-                encoderParams.Param[0] = qualityParam;
-                WithWhiteBackground(originalImage, width, height).Save(path, jpegCodec, encoderParams);
+                using (EncoderParameter qualityParam = new EncoderParameter(Encoder.Quality, quality))
+                {
+                    ImageCodecInfo jpegCodec = GetEncoderInfo("image/jpeg");
+                    using (EncoderParameters encoderParams = new EncoderParameters(1))
+                    {
+                        encoderParams.Param[0] = qualityParam;
+                        WithWhiteBackground(originalImage, width, height).Save(path, jpegCodec, encoderParams);
+                    }
+                }
             }
             else if ("png".Equals(extension))
             {
@@ -196,9 +200,11 @@ namespace StatsDirect.UI
 
         private void SaveMetafile(string path)
         {
-            FileStream fs = new FileStream(path, FileMode.Create);
-            fs.Write(originalBytes, 0, originalBytes.Length);
-            fs.Close();
+            using (FileStream fs = new FileStream(path, FileMode.Create))
+            {
+                fs.Write(originalBytes, 0, originalBytes.Length);
+                fs.Close();
+            }
         }
 
         /// <summary>
@@ -213,9 +219,11 @@ namespace StatsDirect.UI
         private Image WithWhiteBackground(Image original, int width, int height)
         {
             Bitmap b = new Bitmap(width, height);
-            Graphics g = Graphics.FromImage(b);
-            g.Clear(Color.White);
-            g.DrawImage(original, 0, 0, width, height);
+            using (Graphics g = Graphics.FromImage(b))
+            {
+                g.Clear(Color.White);
+                g.DrawImage(original, 0, 0, width, height);
+            }
             return b;
         }
     }

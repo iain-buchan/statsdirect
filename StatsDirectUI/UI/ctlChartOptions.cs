@@ -740,20 +740,21 @@ namespace StatsDirect.UI
             }
             else
             {
-                System.IO.MemoryStream metaStream = new System.IO.MemoryStream();
-                renderer.Plot(metaStream, SDApplication.SoleInstance);
-                metaStream.Position = 0;
-                Image metaImage = Image.FromStream(metaStream);
-                metaStream.Dispose();
-                frmImagePreview imagePreview = new frmImagePreview();
-                try
+                using (System.IO.MemoryStream metaStream = new System.IO.MemoryStream())
                 {
-                    imagePreview.Image = metaImage;
-                    imagePreview.ShowDialog(SDApplication.SoleInstance.MainWindow);
-                }
-                finally
-                {
-                    imagePreview.Dispose();
+                    renderer.Plot(metaStream, SDApplication.SoleInstance);
+                    metaStream.Position = 0;
+                    Image metaImage = Image.FromStream(metaStream);
+                    frmImagePreview imagePreview = new frmImagePreview();
+                    try
+                    {
+                        imagePreview.Image = metaImage;
+                        imagePreview.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                    }
+                    finally
+                    {
+                        imagePreview.Dispose();
+                    }
                 }
             }
         }

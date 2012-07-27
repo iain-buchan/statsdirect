@@ -338,7 +338,7 @@
         #endregion
 
         private System.Windows.Forms.GroupBox grpColour;
-        private PJLControls.ColorPanel colorPanel;
+        private StatsDirect.PJLControls.ColorPanel colorPanel;
         private System.Windows.Forms.Label lblMarkerSize;
         private System.Windows.Forms.ComboBox cboMarkerSize;
         private System.Windows.Forms.CheckBox chkFillMarker;

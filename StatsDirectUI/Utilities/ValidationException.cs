@@ -6,6 +6,7 @@ namespace StatsDirect.Utilities
     /// An exception indicating that a piece of validation failed.
     /// The message should be something that would be understandable if shown to the user who selected the data.
     /// </summary>
+    [Serializable]
     public class ValidationException: Exception
     {
         public ValidationException(string message)

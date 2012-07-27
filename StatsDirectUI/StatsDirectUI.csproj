@@ -1014,6 +1014,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="App.config" />
+    <None Include="Assets\Data\test.xlsx" />
     <None Include="Assets\Excel\StatsDirectExcelLink.xla" />
     <None Include="Assets\Excel\StatsDirectExcelLink.xls" />
     <None Include="Assets\Operations\Operation.xsd" />
@@ -1222,6 +1223,7 @@
     <Content Include="Assets\menu-shell.xml">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Assets\Operations\PCRCovarianceNoFollowOns.xml" />
     <Content Include="Assets\Operations\SortByExpression.xml" />
     <Content Include="Graphics\binoc.ico" />
     <Content Include="Graphics\bold.ico" />
@@ -1262,7 +1264,6 @@
     <Content Include="Graphics\lst2icon.ico" />
     <Content Include="Graphics\mail.ico" />
     <Content Include="Graphics\mail2.ico" />
-    <None Include="Assets\Data\test.xls" />
     <None Include="Graphics\Marker1.gif" />
     <None Include="Graphics\Marker2.gif" />
     <None Include="Graphics\Marker3.gif" />
@@ -1344,7 +1345,6 @@
     <Content Include="Assets\Operations\UniversalAgreement.xml" />
     <Content Include="Assets\Operations\KappaSimulateExactP.xml" />
     <Content Include="Assets\Operations\KruskalSimulateExactP.xml" />
-    <Content Include="Assets\Operations\OldChiSquareGoodnessOfFit.xml" />
     <Content Include="Assets\Operations\FriedmanSimulateExactP.xml" />
     <Content Include="Assets\Operations\CoxBaselineToWorksheet.xml" />
     <Content Include="Assets\Operations\LogisticRegressionFitToWorksheet.xml" />
@@ -1416,7 +1416,9 @@
     <Content Include="Assets\Operations\Normal.xml" />
     <Content Include="Assets\Operations\GroupSplit.xml" />
     <Content Include="Assets\Operations\Dates.xml" />
-    <Content Include="Assets\Operations\Standardize.xml" />
+    <Content Include="Assets\Operations\Standardize.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\LadderPowers.xml" />
     <Content Include="Assets\Operations\DummyVariables.xml" />
     <Content Include="Assets\Operations\SizeCorrelation.xml" />

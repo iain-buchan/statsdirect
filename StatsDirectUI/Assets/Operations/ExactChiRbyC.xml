@@ -13,11 +13,47 @@
           <same-length>true</same-length>
           <min-columns>2</min-columns>
           <max-columns>200</max-columns>
-          <ask-for-group-id>true</ask-for-group-id>
+          <ask-for-group-id>false</ask-for-group-id>
         </frame>
         <confidence-interval>
           <name>cco</name>
         </confidence-interval>
+        <boolean>
+          <name>doExact</name>
+          <prompt>Try exact test</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
+        <boolean>
+          <name>show_pc</name>
+          <prompt>Show percentages</prompt>
+          <must-request>true</must-request>
+          <default-value>true</default-value>
+        </boolean>
+        <boolean>
+          <name>xp</name>
+          <prompt>Show expected counts</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
+        <boolean>
+          <name>cs</name>
+          <prompt>Show cell chi-square</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
+        <boolean>
+          <name>xs</name>
+          <prompt>Show trend scores</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
+        <boolean>
+          <name>specify_scores</name>
+          <prompt>Specify trend scores</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
       </parameters>
     </settings>
   	<builtin function-name="rptChiRbyC" />

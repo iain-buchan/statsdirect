@@ -9,13 +9,49 @@
         <frame>
           <name>data</name>
           <prompt/>
+          <must-request>true</must-request>
           <min-columns>2</min-columns>
           <max-columns>200</max-columns>
           <same-length>true</same-length>
           <mode>NumericReplaceMissing</mode>
-          <must-request>true</must-request>
           <can-select>false</can-select>
         </frame>
+        <boolean>
+          <name>doExact</name>
+          <prompt>Try exact test</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
+        <boolean>
+          <name>show_pc</name>
+          <prompt>Show percentages</prompt>
+          <must-request>true</must-request>
+          <default-value>true</default-value>
+        </boolean>
+        <boolean>
+          <name>xp</name>
+          <prompt>Show expected counts</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
+        <boolean>
+          <name>cs</name>
+          <prompt>Show cell chi-square</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
+        <boolean>
+          <name>xs</name>
+          <prompt>Show trend scores</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
+        <boolean>
+          <name>specify_scores</name>
+          <prompt>Specify trend scores</prompt>
+          <must-request>true</must-request>
+          <default-value>false</default-value>
+        </boolean>
         <confidence-interval>
           <name>cco</name>
         </confidence-interval>

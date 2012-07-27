@@ -51,7 +51,7 @@ namespace StatsDirect.Numerics
             const double fb = 2.0;
             double r1 = GenGamma(a1f, fb);
             double r2 = GenGamma(a2f, fb);
-            return r1 == double.NaN || r2 == double.NaN ? double.NaN : (dfd * r1) / (dfn * r2);
+            return double.IsNaN(r1) || double.IsNaN(r2) ? double.NaN : (dfd * r1) / (dfn * r2);
         }
 
 
@@ -253,7 +253,7 @@ namespace StatsDirect.Numerics
             {
                 double r1 = RNGNORM.GenNorm(0.0D, 1.0D);
                 double r2 = GenGamma(a, tb);
-                if (r2 != double.NaN)
+                if (!double.IsNaN(r2))
                 {
                     genTReturn = r1 * System.Math.Sqrt(df / r2);
                 }

@@ -99,7 +99,7 @@ namespace StatsDirect.UI
                     textsToNumbers.Add(tmp, nextValue++);
         }
 
-        public Control Fill(ParameterBag outputParameters)
+        public Control Fill(ParameterBag outputParameters, bool doValidation)
         {
             FillOptionsFromForm();
             ProduceOutput(outputParameters);

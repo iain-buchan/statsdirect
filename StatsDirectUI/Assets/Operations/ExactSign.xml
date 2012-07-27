@@ -9,14 +9,14 @@
         <double>
           <name>n</name>
           <prompt>Total observations in your sample</prompt>
-          <minimum-value>1</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>1</minimum-value>
         </double>
         <double>
           <name>r</name>
           <prompt>Subjects with study characteristic</prompt>
-          <minimum-value>0</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <confidence-interval>
           <must-request>true</must-request>

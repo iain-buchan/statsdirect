@@ -9,27 +9,10 @@
         <confidence-interval>
           <name>gamma</name>
         </confidence-interval>
-        <!--
-        <frame>
-          <name>y</name>
-          <prompt>Select data for OUTCOME (Y axis)</prompt>
-          <mode>NumericReplaceMissing</mode>
-          <min-columns>1</min-columns>
-          <max-columns>1</max-columns>
-          <clear-selection-first>true</clear-selection-first>
-        </frame>
-        <frame>
-          <name>x</name>
-          <prompt>Select data for PREDICTOR (X axis)</prompt>
-          <mode>NumericReplaceMissing</mode>
-          <same-length-as>y</same-length-as>
-          <min-columns>1</min-columns>
-          <max-columns>1</max-columns>
-          <clear-selection-first>true</clear-selection-first>
-        </frame> -->
         <double>
           <name>newy</name>
           <prompt>New Y value</prompt>
+          <must-request>true</must-request>
         </double>
       </parameters>
     </settings>

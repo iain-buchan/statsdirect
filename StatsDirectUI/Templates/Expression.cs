@@ -1,3 +1,4 @@
+using System;
 using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
@@ -8,6 +9,7 @@ namespace StatsDirect.Templates
     /// Expressions that are floating-point are returned as Double.
     /// Anything else is returned as String.
     /// </summary>
+    [Serializable]
     public sealed class Expression
     {
         public Expression()

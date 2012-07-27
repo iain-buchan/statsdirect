@@ -3,7 +3,6 @@ using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
 {
-    [Serializable]
     public sealed class StringParameter: RangeParameter
     {
         private Expression defaultValue;

@@ -6,7 +6,7 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class DoubleParameter: RangeParameter
     {
-        private double defaultValue = double.NaN;
+        private Expression defaultValue;
         private double minimumValue = double.MinValue;
         private double maximumValue = double.MaxValue;
 
@@ -16,8 +16,15 @@ namespace StatsDirect.Templates
             Lifetime = ParameterLifetime.SessionForThisOperation;
         }
 
+        public double? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
+        {
+            if (null == defaultValue || null == defaultValue.Body)
+                return null;
+            return (double?)processor.Evaluate(defaultValue, parameters);
+        }
+
         [XmlElement(ElementName = "default-value")]
-        public double DefaultValue
+        public Expression DefaultValueExpression
         {
             get { return defaultValue; }
             set { defaultValue = value; }

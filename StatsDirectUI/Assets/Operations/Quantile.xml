@@ -2,7 +2,7 @@
 <operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
 	<name>Quantile</name>
   <friendly-name lang="en-GB">Calculation of quantiles (centiles)</friendly-name>
-  <help chm-id="1231" />
+  <help chm-id="1230" />
   <steps>
     <settings>
       <parameters>

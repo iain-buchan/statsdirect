@@ -103,14 +103,17 @@ namespace StatsDirect.UI
         public override bool OpenFile(string Filename)
         {
             string strExt = System.IO.Path.GetExtension(Filename);
-            strExt = strExt.ToLower();
+            if (null != strExt)
+                strExt = strExt.ToLower();
             if (".rtf".Equals(strExt))
                 rtbDoc.LoadFile(Filename, RichTextBoxStreamType.RichText);
             else
             {
-                StreamReader txtReader = new StreamReader(Filename);
-                rtbDoc.Text = txtReader.ReadToEnd();
-                txtReader.Close();
+                using (StreamReader txtReader = new StreamReader(Filename))
+                {
+                    rtbDoc.Text = txtReader.ReadToEnd();
+                    txtReader.Close();
+                }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;
             }
@@ -133,15 +136,18 @@ namespace StatsDirect.UI
                 return;
             }
             string strExt = System.IO.Path.GetExtension(currentFile);
-            strExt = strExt.ToUpper();
+            if (null != strExt)
+                strExt = strExt.ToUpper();
             if (".RTF".Equals(strExt))
                 rtbDoc.SaveFile(currentFile);
             else
             {
                 // to save as plain text
-                StreamWriter txtWriter = new StreamWriter(currentFile);
-                txtWriter.Write(rtbDoc.Text);
-                txtWriter.Close();
+                using (StreamWriter txtWriter = new StreamWriter(currentFile))
+                {
+                    txtWriter.Write(rtbDoc.Text);
+                    txtWriter.Close();
+                }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;
                 rtbDoc.Modified = false;
@@ -159,16 +165,19 @@ namespace StatsDirect.UI
             if (SaveFileDialog1.FileName.Length == 0)
                 return;
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName);
-            strExt = strExt.ToUpper();
+            if (null != strExt)
+                strExt = strExt.ToUpper();
             if (".RTF".Equals(strExt))
             {
                 rtbDoc.SaveFile(SaveFileDialog1.FileName, RichTextBoxStreamType.RichText);
             }
             else
             {
-                StreamWriter txtWriter = new StreamWriter(SaveFileDialog1.FileName);
-                txtWriter.Write(rtbDoc.Text);
-                txtWriter.Close();
+                using (StreamWriter txtWriter = new StreamWriter(SaveFileDialog1.FileName))
+                {
+                    txtWriter.Write(rtbDoc.Text);
+                    txtWriter.Close();
+                }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;
             }
@@ -476,6 +485,18 @@ namespace StatsDirect.UI
             {
                 return true;
             }
+        }
+
+        internal override bool SaveContents()
+        {
+            // Nothing to save
+            return true;
+        }
+
+        internal override bool SaveAsContents()
+        {
+            // Nothing to save
+            return true;
         }
     }
 }

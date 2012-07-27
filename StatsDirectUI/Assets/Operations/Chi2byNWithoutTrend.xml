@@ -16,4 +16,7 @@
   	<builtin function-name="rptChi2byNWithoutTrend" />
 	  <report filename="chi2xc.rtf" />
 	</steps>
+  <suggested-operations>
+    <suggested-operation>Chi2byNWithoutTrend</suggested-operation>
+  </suggested-operations>
 </operation>

@@ -269,7 +269,7 @@ namespace StatsDirect.UI
             CellSelection revisedCellSelection = new CellSelection();
             revisedCellSelection.ColumnSelections.Add(cellColumnSelection);
             revisedCellSelection.LongestRowCount = cellColumnSelection.RowCount;
-            DataFrame refilledFrame = ProcessCellArray(revisedCellSelection, worksheetOrigin.Mode);
+            DataFrame refilledFrame = ProcessCellArray(revisedCellSelection, worksheetOrigin.Mode, 0, true, worksheetOrigin.HasTitle);
             Variable refilledVariable = refilledFrame.Variables[0];
             variable.StealDataFrom(refilledVariable);
         }
@@ -620,7 +620,8 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    frame = GetCellArray(gridParameter.DataAcquisitionMode,
+                    frame = GetCellArray(0,
+                        gridParameter.DataAcquisitionMode,
                         gridParameter.MinimumColumns(processor, parameters),
                         gridParameter.MaximumColumns(processor, parameters),
                         gridParameter.Prompt(processor, parameters),
@@ -836,6 +837,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// Returns a DataFrame containing the selected data, or null if there was an error or selection was cancelled.
         /// </summary>
+        /// <param name="rowLengthHint"> </param>
         /// <param name="mode">The way in which the acquired data will be placed into the data structure</param>
         /// <param name="minimumColumns">The minimum acceptable number of columns</param>
         /// <param name="maximumColumns">The maximum acceptable number of columns</param>
@@ -845,7 +847,7 @@ namespace StatsDirect.UI
         /// <param name="mightBeBatching">If true, we might be selecting data in a batch.  If batching, GetCellEqual should remember where its data came from and should re-select if such memory is present.  If not batching, GetCellEqual should clear memory and not pre-select.</param>
         /// <param name="userCancelled">If true, the user cancelled the selection</param>
         /// <returns></returns>
-        private DataFrame GetCellArray(DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled)
+        private DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled)
         {
             while (true)
             {
@@ -857,7 +859,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    frame = GetCellArray(mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
+                    frame = GetCellArray(rowLengthHint, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
                 }
                 if (wasPivoted)
                     continue;
@@ -868,6 +870,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// Returns a DataFrame containing the selected data, or null if there was an error or selection was cancelled.
         /// </summary>
+        /// <param name="rowLengthHint"> </param>
         /// <param name="mode">The way in which the acquired data will be placed into the data structure</param>
         /// <param name="minimumColumns">The minimum acceptable number of columns</param>
         /// <param name="maximumColumns">The maximum acceptable number of columns</param>
@@ -878,7 +881,7 @@ namespace StatsDirect.UI
         /// <param name="userCancelled">If true, the user cancelled the selection</param>
         /// <param name="wasPivoted">If true, the user changed from selecting groups by column to by identifier, or vice versa</param>
         /// <returns></returns>
-        private DataFrame GetCellArray(DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
+        private DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
         {
             bool shouldDefaultSelection = null != mostRecentCellSelectionDuringBatch && mightBeBatching;
             if (shouldDefaultSelection)
@@ -901,10 +904,10 @@ namespace StatsDirect.UI
                 return null;
             }
 
-            return ProcessCellArray(cellSelection, mode);
+            return ProcessCellArray(cellSelection, mode, rowLengthHint, false, false);
         }
 
-        private DataFrame ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode)
+        private DataFrame ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData)
         {
             // If we get here, the user selected some data.
             try
@@ -921,7 +924,8 @@ namespace StatsDirect.UI
                             int dataRows;
                             int gridColumn;
                             int gridFirstDataRow;
-                            string title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn);
+                            bool titleIsInData;
+                            string title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn, out titleIsInData);
                             double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
 
                             // If there's no data in the row (for example if it's hidden), ignore the row
@@ -951,7 +955,7 @@ namespace StatsDirect.UI
                                 SDApplication.SoleInstance.msgbox_x("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                                 return null;
                             }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
                             variable.TruncateDataToLength(size);
                         }
                         break;
@@ -962,7 +966,8 @@ namespace StatsDirect.UI
                             int dataRows;
                             int gridColumn;
                             int gridFirstDataRow;
-                            string title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn);
+                            bool titleIsInData;
+                            string title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn, out titleIsInData);
                             double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
 
                             // If there's no data in the row (for example if it's hidden), ignore the row
@@ -989,7 +994,7 @@ namespace StatsDirect.UI
                                 if (v != Constant.MISSING)
                                     variable.Sum += v;
                             }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
                         }
                         break;
 
@@ -1000,11 +1005,19 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode.Text:
                         // code text categories as numbers
 
-                        // is the top row unique (i.e. not duplicated in the column data) and long?
+                        // is the top row unique (i.e. not duplicated in the column data) and long?  Works out min and max lengths as a side-effect
                         bool isUnique = true;
                         bool isShort = false;
+                        int minRowCount = int.MaxValue;
+                        int maxRowCount = int.MinValue;
                         for (int c = 0; c < cellSelection.TotalColumns; c++)
                         {
+                            int rc = cellSelection.ColumnSelections[c].RowCount;
+                            if (rc < minRowCount)
+                                minRowCount = rc;
+                            if (rc > maxRowCount)
+                                maxRowCount = rc;
+
                             int gridColumn = cellSelection.ColumnSelections[c].ColumnIndex;
                             string qtitle = GetCellText(cellSelection.ColumnSelections[c].RowIndex, gridColumn).Trim();
                             if (qtitle.Length < 3)
@@ -1029,7 +1042,13 @@ namespace StatsDirect.UI
 
                         // Work out the top row of data, depending on whether we think titles are present or not
                         int topRow;
-                        if (isShort && isUnique)
+                        if (isRefill)
+                            topRow = titleWasInData ? 1 : 0;
+                        else if (minRowCount == maxRowCount && minRowCount == rowLengthHint)
+                            topRow = 0;
+                        else if (minRowCount == maxRowCount && minRowCount == rowLengthHint + 1)
+                            topRow = 1;
+                        else if (isShort && isUnique)
                         {
                             PointNormal();
                             switch (SDApplication.SoleInstance.msgbox_x("Does the top row of your selection contain titles?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, "Worksheet Categorical Data Selection", true))
@@ -1135,7 +1154,8 @@ namespace StatsDirect.UI
                                         cellSelection.ColumnSelections[c].WorksheetName,
                                         cellSelection.ColumnSelections[c].ColumnIndex,
                                         cellSelection.ColumnSelections[c].RowIndex,
-                                        cellSelection.ColumnSelections[c].RowCount, mode);
+                                        cellSelection.ColumnSelections[c].RowCount, mode,
+                                        topRow > 0);
                                 }
                             }
                         }
@@ -1224,7 +1244,7 @@ namespace StatsDirect.UI
                             }
                             variable.Title = titleBuilder.ToString();
                             // TODO: This origin is incorrect; it should include all the columns that were combined, and it doesn't.
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[0].WorkbookPath, cellSelection.ColumnSelections[0].WorksheetName, cellSelection.ColumnSelections[0].ColumnIndex, cellSelection.ColumnSelections[0].RowIndex, cellSelection.ColumnSelections[0].RowCount, mode);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[0].WorkbookPath, cellSelection.ColumnSelections[0].WorksheetName, cellSelection.ColumnSelections[0].ColumnIndex, cellSelection.ColumnSelections[0].RowIndex, cellSelection.ColumnSelections[0].RowCount, mode, topRow > 0);
                         }
                         else
                         {
@@ -1286,7 +1306,7 @@ namespace StatsDirect.UI
 
                                 // Fill in column title
                                 variable.Title = 0 == topRow ? GetGridColumnTitle(cellSelection.ColumnSelections[c].ColumnIndex) : GetCellText(cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].ColumnIndex).Trim();
-                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode);
+                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, topRow > 0);
                             }
                         }
                         break;
@@ -1300,7 +1320,8 @@ namespace StatsDirect.UI
                             int dataRows;
                             int gridColumn;
                             int gridFirstDataRow;
-                            variable.Title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn);
+                            bool titleIsInData;
+                            variable.Title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn, out titleIsInData);
                             // mrow isn't required, as GetColumnTitle adjusts rowindexes and totrows to skip the title.
                             DateTime[] values = GetCellDateValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
 
@@ -1316,14 +1337,14 @@ namespace StatsDirect.UI
                             {
                                 variable.Data[r++] = values[row];
                             }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
                         }
                         break;
                     case DataAcquisitionMode.TextWithFormulae:
                         for (int c = 0; c < cellSelection.TotalColumns; c++)
                         {
                             StringVariable variable = new StringVariable(GetCellFormulae(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null);
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false);
                             frame.Variables.Add(variable);
                         }
                         break;
@@ -1331,7 +1352,7 @@ namespace StatsDirect.UI
                         for (int c = 0; c < cellSelection.TotalColumns; c++)
                         {
                             StringVariable variable = new StringVariable(GetCellTexts(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null);
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false);
                             frame.Variables.Add(variable);
                         }
                         break;
@@ -1401,7 +1422,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    frame = GetCellArray(mode, MinimumColumns, MaximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
+                    frame = GetCellArray(requiredRows, mode, MinimumColumns, MaximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
                 }
                 if (wasPivoted)
                     return null;
@@ -1480,7 +1501,7 @@ namespace StatsDirect.UI
          
                 // call for group ID
                 ClearSelection();
-                DataFrame groupIdFrame = GetCellArray(DataAcquisitionMode.CategoryCombineAllColumns, 1, 20, labg, null, true, false, out userCancelled, out wasPivoted);
+                DataFrame groupIdFrame = GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 20, labg, null, true, false, out userCancelled, out wasPivoted);
                 if (userCancelled || wasPivoted)
                     return null;
 
@@ -1589,7 +1610,7 @@ namespace StatsDirect.UI
 
                 // call for group ID
                 ClearSelection();
-                DataFrame groupFrame = GetCellArray(DataAcquisitionMode.CategoryCombineAllColumns, 1, 10, labg, null, true, false, out userCancelled);
+                DataFrame groupFrame = GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 10, labg, null, true, false, out userCancelled);
                 if (userCancelled || null == groupFrame)
                 {
                     // User cancelled
@@ -1760,10 +1781,12 @@ namespace StatsDirect.UI
         /// <param name="ccs"></param>
         /// <param name="gridFirstDataRow">Filled in with the grid row index of the first non-title, non-missing data row.</param>
         /// <param name="gridColumn">Filled in with the grid column index of the column.</param>
+        /// <param name="titleIsInData">true iff the title has been found within the data; false if the title is auto-generated.</param>
         /// <returns></returns>
-        private string GetColumnTitle(int c, out int dataRows, IList<CellColumnSelection> ccs, out int gridFirstDataRow, out int gridColumn)
+        private string GetColumnTitle(int c, out int dataRows, IList<CellColumnSelection> ccs, out int gridFirstDataRow, out int gridColumn, out bool titleIsInData)
         {
             string candidateTitle = string.Empty;
+            titleIsInData = false;
             gridColumn = ccs[c].ColumnIndex;
             dataRows = ccs[c].RowCount;
             int firstGridRow = ccs[c].RowIndex;
@@ -1788,6 +1811,7 @@ namespace StatsDirect.UI
                             if (candidateTitle.Length > 0)
                             {
                                 gridFirstDataRow = firstGridRow;
+                                titleIsInData = true;
                                 return candidateTitle;
                             }
                         }
@@ -1805,6 +1829,7 @@ namespace StatsDirect.UI
                         if (candidateTitle.Length > 0)
                         {
                             gridFirstDataRow = firstGridRow;
+                            titleIsInData = true;
                             return candidateTitle;
                         }
                     }
@@ -1813,9 +1838,12 @@ namespace StatsDirect.UI
 
             // If the data block is half way down the column, or otherwise has no title, then grab row 0 entry i.e. a,b,c etc.
             if (candidateTitle.Length == 0)
+            {
+                titleIsInData = false;
                 candidateTitle = GetGridColumnTitle(gridColumn).Trim();
+            }
 
-            // Find the first row - anything other than MISSING is fair game
+            // Find the first data row - anything other than MISSING is fair game
             int skippedRows = 0;
             for (gridFirstDataRow = firstGridRow; gridFirstDataRow < firstGridRow + dataRows; gridFirstDataRow++)
             {
@@ -1844,16 +1872,14 @@ namespace StatsDirect.UI
             if (val is string)
             {
                 string buf = (string)val;
-                try
-                {
-                    return Double.Parse(buf);
-                }
-                catch(FormatException)
-                {
-                    // Do nothing
-                }
-                if (buf == "*" || buf.ToUpper() == "MISSING" || buf == ".")
+                double dval;
+                if (Double.TryParse(buf, out dval))
+                    return dval;
+                string ubuf = buf.ToUpper();
+                if (ubuf == "*" || ubuf == "MISSING" || ubuf == ".")
                     return Constant.MISSING * 10D;
+                // if (ubuf == "#NULL!" || ubuf == "#NUM!")
+                //    return Constant.MISSING;
                 return Constant.MISSING; // If we can't parse it as a number, and we want numbers, it's MISSING.
             }
             string typeName = val.GetType().FullName;
@@ -2070,7 +2096,7 @@ namespace StatsDirect.UI
                 // call for group ID
                 ((IGrid)this).ClearSelection();
                 bool cancelled;
-                DataFrame groupIdentifiers = GetCellArray(DataAcquisitionMode.CategoryCombineAllColumns, 1, 10, "Select GROUP/SERIES IDENTIFIERS", null, true, false, out cancelled, out wasPivoted);
+                DataFrame groupIdentifiers = GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 10, "Select GROUP/SERIES IDENTIFIERS", null, true, false, out cancelled, out wasPivoted);
                 if (cancelled)
                     break;
                 if (wasPivoted)
@@ -2307,7 +2333,7 @@ namespace StatsDirect.UI
                         MaxY = Double.MinValue
                     };
                     bool cancelled;
-                    DataFrame predictorsFrame = GetCellArray(DataAcquisitionMode.NumericSkipMissing, 2, 200, "Select data for PREDICTOR (x axis) SERIES", null, true, false, out cancelled, out wasPivoted);
+                    DataFrame predictorsFrame = GetCellArray(0, DataAcquisitionMode.NumericSkipMissing, 2, 200, "Select data for PREDICTOR (x axis) SERIES", null, true, false, out cancelled, out wasPivoted);
                     if (cancelled)
                         break;
                     if (wasPivoted)
@@ -2376,7 +2402,7 @@ namespace StatsDirect.UI
                         {
                             // Get Y replicates
                             ((IGrid)this).ClearSelection();
-                            DataFrame replicatesFrame = GetCellArray(DataAcquisitionMode.NumericSkipMissing, nx, nx, "Select Data for OUTCOME (Y axis) REPLICATES for x SERIES " + g.ToString() + " LEVELS", null, false, false, out cancelled, out wasPivoted);
+                            DataFrame replicatesFrame = GetCellArray(0, DataAcquisitionMode.NumericSkipMissing, nx, nx, "Select Data for OUTCOME (Y axis) REPLICATES for x SERIES " + g.ToString() + " LEVELS", null, false, false, out cancelled, out wasPivoted);
                             if (cancelled || wasPivoted)
                                 break; // This data selection cancelled, try again!
 
@@ -2396,7 +2422,7 @@ namespace StatsDirect.UI
                                 ny[g, j] = v.Length;
                                 for (int j2 = 1; j2 <= ny[g, j]; j2++)
                                 {
-                                    y[g, j, j2] = v.Data[j2];
+                                    y[g, j, j2] = v.Data[j2 - 1];
                                     if (y[g, j, j2] != Constant.MISSING)
                                     {
                                         if (y[g, j, j2] > minMax.MaxY)
@@ -2475,7 +2501,7 @@ namespace StatsDirect.UI
             ((IGrid)this).ClearSelection();
 
             bool userCancelled;
-            DataFrame groupFrame = GetCellArray(DataAcquisitionMode.MODE3, 1, 1, labg, null, true, false, out userCancelled, out wasPivoted);
+            DataFrame groupFrame = GetCellArray(0, DataAcquisitionMode.MODE3, 1, 1, labg, null, true, false, out userCancelled, out wasPivoted);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
             if (wasPivoted)
@@ -2692,7 +2718,7 @@ namespace StatsDirect.UI
                             {
                                 ((IGrid)this).ClearSelection();
                                 bool wasPivoted;
-                                DataFrame subFrame = GetCellArray(DataAcquisitionMode.NumericReplaceMissing, 1, 90, "Select subgroups for group " + (g + 1).ToString(), parameter.CancelSkipsParameter, true, false, out userCancelled, out wasPivoted);
+                                DataFrame subFrame = GetCellArray(0, DataAcquisitionMode.NumericReplaceMissing, 1, 90, "Select subgroups for group " + (g + 1).ToString(), parameter.CancelSkipsParameter, true, false, out userCancelled, out wasPivoted);
                                 if (userCancelled)
                                     throw new TemplateOperationCancelledException();
                                 if (wasPivoted)
@@ -2902,11 +2928,12 @@ namespace StatsDirect.UI
 
         private void pasteSpecialToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            frmPasteSpecial frm = new frmPasteSpecial();
-            frm.ShowDialog(this);
-            if (!frm.UserCancelled)
-                workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
-            frm.Dispose();
+            using (frmPasteSpecial frm = new frmPasteSpecial())
+            {
+                frm.ShowDialog(this);
+                if (!frm.UserCancelled)
+                    workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
+            }
         }
 
         private void printToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3004,36 +3031,49 @@ namespace StatsDirect.UI
 
         private void InsertCells()
         {
-            frmInsertCells frm = new frmInsertCells();
-            frm.ShowDialog(this);
-            if (!frm.UserCancelled)
+            using (frmInsertCells frm = new frmInsertCells())
             {
-                workbookView.GetLock();
-                try
+                frm.ShowDialog(this);
+                if (!frm.UserCancelled)
                 {
-                    if (frm.IsEntire)
+                    workbookView.GetLock();
+                    try
                     {
-                        if (InsertShiftDirection.Right == frm.InsertShiftDirection)
+                        if (frm.IsEntire)
                         {
-                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert column", () => { workbookView.RangeSelection.EntireColumn.Insert(); return true; }));
+                            if (InsertShiftDirection.Right == frm.InsertShiftDirection)
+                            {
+                                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert column", () =>
+                                                                                                                                                         {
+                                                                                                                                                             workbookView.RangeSelection.EntireColumn.Insert();
+                                                                                                                                                             return true;
+                                                                                                                                                         }));
+                            }
+                            else
+                            {
+                                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Insert row", () =>
+                                                                                                                                                   {
+                                                                                                                                                       workbookView.RangeSelection.EntireRow.Insert();
+                                                                                                                                                       return true;
+                                                                                                                                                   }));
+                            }
                         }
                         else
                         {
-                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Insert row", () => { workbookView.RangeSelection.EntireRow.Insert(); return true; }));
+                            InsertShiftDirection isd = frm.InsertShiftDirection; // Cached as frm is disposed before any undo might be called.
+                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Insert area", () =>
+                                                                                                                                      {
+                                                                                                                                          workbookView.RangeSelection.Insert(isd);
+                                                                                                                                          return true;
+                                                                                                                                      }));
                         }
                     }
-                    else
+                    finally
                     {
-                        InsertShiftDirection isd = frm.InsertShiftDirection; // Cached as frm is disposed before any undo might be called.
-                        workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Insert area", () => { workbookView.RangeSelection.Insert(isd); return true; }));
+                        workbookView.ReleaseLock();
                     }
                 }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
             }
-            frm.Dispose();
         }
 
         private void sheetSettingsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3107,36 +3147,49 @@ namespace StatsDirect.UI
 
         private void DeleteSpecial()
         {
-            frmDeleteSpecial frm = new frmDeleteSpecial();
-            frm.ShowDialog(this);
-            if (!frm.UserCancelled)
+            using (frmDeleteSpecial frm = new frmDeleteSpecial())
             {
-                workbookView.GetLock();
-                try
+                frm.ShowDialog(this);
+                if (!frm.UserCancelled)
                 {
-                    if (frm.IsEntire)
+                    workbookView.GetLock();
+                    try
                     {
-                        if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
+                        if (frm.IsEntire)
                         {
-                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Delete column", () => { workbookView.RangeSelection.EntireColumn.Delete(); return true; }));
+                            if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
+                            {
+                                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Delete column", () =>
+                                                                                                                                                         {
+                                                                                                                                                             workbookView.RangeSelection.EntireColumn.Delete();
+                                                                                                                                                             return true;
+                                                                                                                                                         }));
+                            }
+                            else
+                            {
+                                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Delete row", () =>
+                                                                                                                                                   {
+                                                                                                                                                       workbookView.RangeSelection.EntireRow.Delete();
+                                                                                                                                                       return true;
+                                                                                                                                                   }));
+                            }
                         }
                         else
                         {
-                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Delete row", () => { workbookView.RangeSelection.EntireRow.Delete(); return true; }));
+                            DeleteShiftDirection dsd = frm.DeleteShiftDirection; // Cached as frm may be disposed before this is used
+                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Delete area", () =>
+                                                                                                                                      {
+                                                                                                                                          workbookView.RangeSelection.Delete(dsd);
+                                                                                                                                          return true;
+                                                                                                                                      }));
                         }
                     }
-                    else
+                    finally
                     {
-                        DeleteShiftDirection dsd = frm.DeleteShiftDirection; // Cached as frm may be disposed before this is used
-                        workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Delete area", () => { workbookView.RangeSelection.Delete(dsd); return true; }));
+                        workbookView.ReleaseLock();
                     }
                 }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
             }
-            frm.Dispose();
 
         }
 
@@ -3439,11 +3492,12 @@ namespace StatsDirect.UI
 
         private void pasteSpecialContextMenuItem_Click(object sender, EventArgs e)
         {
-            frmPasteSpecial frm = new frmPasteSpecial();
-            frm.ShowDialog(this);
-            if (!frm.UserCancelled)
-                workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
-            frm.Dispose();
+            using (frmPasteSpecial frm = new frmPasteSpecial())
+            {
+                frm.ShowDialog(this);
+                if (!frm.UserCancelled)
+                    workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
+            }
         }
 
         private void insertContextMenuItem_Click(object sender, EventArgs e)

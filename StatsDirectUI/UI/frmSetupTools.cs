@@ -56,7 +56,10 @@ namespace StatsDirect.UI
         private StringCollection ParseXmlToStringCollection(string rawXml)
         {
             XmlDocument doc = new XmlDocument();
-            doc.Load(new StringReader(rawXml));
+            using (StringReader sr = new StringReader(rawXml))
+            {
+                doc.Load(sr);
+            }
             XmlNodeList elements = doc.GetElementsByTagName("string");
             StringCollection coll = new StringCollection();
             foreach (XmlNode element in elements)

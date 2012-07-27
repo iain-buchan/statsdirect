@@ -24,11 +24,9 @@
 // file.
 
 using System.ComponentModel;
-
 using System.Windows.Forms;
 
-
-namespace PJLControls
+namespace StatsDirect.PJLControls
 {
 	internal delegate void ColorPanelClosingEventHandler( object sender, System.EventArgs e );
 
@@ -39,7 +37,6 @@ namespace PJLControls
 	/// </summary>
 	internal class ColorPanelWithCapture : ColorPanel
 	{
-		private IContainer components;
 		private int parentWidth = 300;
 
 		public ColorPanelWithCapture()
@@ -48,21 +45,6 @@ namespace PJLControls
 			InitializeComponent();
 
 			// TODO: Add any initialization after the InitializeComponent call
-		}
-
-		/// <summary>
-		/// Clean up any resources being used.
-		/// </summary>
-		protected override void Dispose( bool disposing )
-		{
-			if( disposing )
-			{
-				if (components != null) 
-				{
-					components.Dispose();
-				}
-			}
-			base.Dispose( disposing );
 		}
 
 		#region Designer generated code

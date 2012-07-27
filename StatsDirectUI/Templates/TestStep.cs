@@ -4,8 +4,7 @@ using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
 {
-    [Serializable,
-       XmlType(Namespace="http://www.statsdirect.com/schemas/Operation.xsd", TypeName="test")]
+    [XmlType(Namespace="http://www.statsdirect.com/schemas/Operation.xsd", TypeName="test")]
     public class TestStep: Step
     {
         private readonly IList<Step> trueSteps;

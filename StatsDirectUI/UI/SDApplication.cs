@@ -87,10 +87,12 @@ namespace StatsDirect.UI
                 try
                 {
                     BinaryFormatter fmt = new BinaryFormatter();
-                    Stream ws = new FileStream(loadPath, FileMode.Open, FileAccess.Read);
-                    sessionParametersAcrossOperations = (ParameterBag)fmt.Deserialize(ws);
-                    sessionParametersPerOperation = (Dictionary<string, ParameterBag>)fmt.Deserialize(ws);
-                    ws.Close();
+                    using (Stream ws = new FileStream(loadPath, FileMode.Open, FileAccess.Read))
+                    {
+                        sessionParametersAcrossOperations = (ParameterBag) fmt.Deserialize(ws);
+                        sessionParametersPerOperation = (Dictionary<string, ParameterBag>) fmt.Deserialize(ws);
+                        ws.Close();
+                    }
                 }
                 catch (Exception)
                 {
@@ -117,28 +119,24 @@ namespace StatsDirect.UI
 
         private void SavePersistentValues()
         {
-            Stream ws = null;
             try
             {
                 string savePath = Path.Combine(SDConfiguration.MyStatsDirectFolder, SDConfiguration.PERSISTENT_VALUE_FILE_NAME);
                 BinaryFormatter fmt = new BinaryFormatter();
-                ws = new FileStream(savePath, FileMode.Create, FileAccess.Write);
-                if (null == sessionParametersAcrossOperations)
-                    sessionParametersAcrossOperations = new ParameterBag();
-                fmt.Serialize(ws, sessionParametersAcrossOperations);
-                if (null == sessionParametersPerOperation)
-                    sessionParametersPerOperation = new Dictionary<string, ParameterBag>();
-                fmt.Serialize(ws, sessionParametersPerOperation);
-                ws.Close();
+                using (Stream ws = new FileStream(savePath, FileMode.Create, FileAccess.Write))
+                {
+                    if (null == sessionParametersAcrossOperations)
+                        sessionParametersAcrossOperations = new ParameterBag();
+                    fmt.Serialize(ws, sessionParametersAcrossOperations);
+                    if (null == sessionParametersPerOperation)
+                        sessionParametersPerOperation = new Dictionary<string, ParameterBag>();
+                    fmt.Serialize(ws, sessionParametersPerOperation);
+                    ws.Close();
+                }
             }
             catch (IOException)
             {
                 // If multiple SDs close at once (for example via a "Close All" gesture), they can all try to write at the same time.  Fail silently! 
-            }
-            finally
-            {
-                if (null != ws)
-                    ws.Dispose();
             }
         }
 
@@ -575,9 +573,41 @@ namespace StatsDirect.UI
             return selectedGrid;
         }
 
-        string ITemplateHost.ImageToRtf(Image Image)
+        string ITemplateHost.ImageToRtf(Image image)
         {
-            return Formatting.ImageToRtf(Image);
+            return Formatting.ImageToRtf(image);
+        }
+
+        string ITemplateHost.ImageStreamToRtf(MemoryStream stream)
+        {
+            /*
+            FileStream inStream = File.OpenRead(@"C:\Users\peter\AppData\Local\Temp\meta-634783979138531694.emf");
+            using (Image image = Image.FromStream(inStream))
+            {
+                return Formatting.ImageToRtf(image);
+            }
+            */
+            try
+            {
+                /*
+                stream.Position = 0;
+                byte[] bytes = stream.ToArray();
+                FileStream fs = File.Create(@"C:\Users\peter\AppData\Local\Temp\meta-" + DateTime.Now.Ticks.ToString() + ".emf");
+                fs.Write(bytes, 0, bytes.Length);
+                fs.Close();
+                */
+                stream.Position = 0;
+                Application.DoEvents();
+                using (Image image = Image.FromStream(stream))
+                {
+                    return Formatting.ImageToRtf(image);
+                }
+            }
+            catch (OutOfMemoryException ex)
+            {
+                FriendlyError("Couldn't convert a chart to RTF", ex, false);
+                return string.Empty;
+            }
         }
 
         /// <summary>
@@ -937,8 +967,9 @@ namespace StatsDirect.UI
             while (true)
             {
                 string defaultValueString = "";
-                if (!double.IsNaN(Parameter.DefaultValue))
-                    defaultValueString = Parameter.DefaultValue.ToString();
+                double? defaultValue = Parameter.DefaultValue(processor, context);
+                if (defaultValue.HasValue && !double.IsNaN(defaultValue.Value))
+                    defaultValueString = defaultValue.ToString();
                 string response = Prompt(Parameter.Prompt(processor, context) + suffix, "StatsDirect", defaultValueString);
                 if (string.IsNullOrEmpty(response))
                 {
@@ -1034,16 +1065,23 @@ namespace StatsDirect.UI
         private ParameterBag FillEffectOptions(MultipleOptionsParameter parameter)
         {
             frmEffectOptions frm = new frmEffectOptions();
-            frm.ShowDialog();
-            if (frm.UserCancelled)
+            try
             {
-                if (null != parameter.CancelSkipsParameter)
+                frm.ShowDialog();
+                if (frm.UserCancelled)
                 {
-                    return new ParameterBag();
+                    if (null != parameter.CancelSkipsParameter)
+                    {
+                        return new ParameterBag();
+                    }
+                    throw new TemplateOperationCancelledException();
                 }
-                throw new TemplateOperationCancelledException();
+                return frm.ParameterBag;
             }
-            return frm.ParameterBag;
+            finally
+            {
+                frm.Dispose();
+            }
         }
 
         ParameterBag FillParameter(ITemplateProcessor processor, OptionsParameter parameter, ParameterBag context)
@@ -1190,7 +1228,7 @@ namespace StatsDirect.UI
                                             {
                                                 Name = KEY,
                                                 PromptExpression = new Expression(Prompt),
-                                                DefaultValue = defaultValue,
+                                                DefaultValueExpression = new Expression(defaultValue.ToString()),
                                                 CancelSkipsParameter = "Skip"
                                             };
             ParameterBag results = FillSingleParameter(parameter);
@@ -1305,14 +1343,15 @@ namespace StatsDirect.UI
 
         private bool Amend(Builtins.CategoriseOptions categoriseOptions)
         {
-            frmCategorise options = new frmCategorise(categoriseOptions);
-            using (new DefaultCursor())
+            using (frmCategorise options = new frmCategorise(categoriseOptions))
             {
-                options.ShowDialog(mainWindow);
+                using (new DefaultCursor())
+                {
+                    options.ShowDialog(mainWindow);
+                }
+                bool userCancelled = options.UserCancelled;
+                return !userCancelled;
             }
-            bool userCancelled = options.UserCancelled;
-            options.Dispose();
-            return !userCancelled;
         }
 
         private bool Amend(Builtins.ChartExplorerOptions options)
@@ -1346,48 +1385,52 @@ namespace StatsDirect.UI
 
         private bool Amend(Builtins.GraphicsOptions options)
         {
-            frmGraphicsOptions f = new frmGraphicsOptions();
-            using (new DefaultCursor())
+            using (frmGraphicsOptions f = new frmGraphicsOptions())
             {
-                f.ShowDialog(mainWindow);
+                using (new DefaultCursor())
+                {
+                    f.ShowDialog(mainWindow);
+                }
+                return true;
             }
-            f.Dispose();
-            return true;
         }
 
         private bool Amend(Charting.ROCCutoff options)
         {
-            frmROCCutoff f = new frmROCCutoff(options.SeriesRecord, options.Weight, options.Title);
-            using (new DefaultCursor())
+            using (frmROCCutoff f = new frmROCCutoff(options.SeriesRecord, options.Weight, options.Title))
             {
-                f.ShowDialog(mainWindow);
+                using (new DefaultCursor())
+                {
+                    f.ShowDialog(mainWindow);
+                }
+                options.SeriesRecord = f.CurrentRecord;
+                return true;
             }
-            options.SeriesRecord = f.CurrentRecord;
-            f.Dispose();
-            return true;
         }
 
         private bool Amend(Builtins.ScoresOptions scores)
         {
-            frmScores options = new frmScores(scores);
-            using (new DefaultCursor())
+            using (frmScores options = new frmScores(scores))
             {
-                options.ShowDialog(mainWindow);
+                using (new DefaultCursor())
+                {
+                    options.ShowDialog(mainWindow);
+                }
+                bool userCancelled = options.UserCancelled;
+                return !userCancelled;
             }
-            bool userCancelled = options.UserCancelled;
-            options.Dispose();
-            return !userCancelled;
         }
 
         private bool Amend(Builtins.SummaryStatisticsOptions summaryStatisticsOptions)
         {
-            frmSummaryStatistics options = new frmSummaryStatistics(summaryStatisticsOptions);
-            using (new DefaultCursor())
+            using (frmSummaryStatistics options = new frmSummaryStatistics(summaryStatisticsOptions))
             {
-                options.ShowDialog(mainWindow);
+                using (new DefaultCursor())
+                {
+                    options.ShowDialog(mainWindow);
+                }
+                return true;
             }
-            options.Dispose();
-            return true;
         }
 
         public void NoteEndOfSelection(bool ok)
@@ -1591,10 +1634,17 @@ namespace StatsDirect.UI
         internal string Prompt(string Prompt, string Caption, string DefaultValue)
         {
             frmInputBox ib = new frmInputBox(Prompt, Caption, DefaultValue);
-            ib.ShowDialog(mainWindow);
-            if (ib.UserCancelled)
-                return null;
-            return ib.Value;
+            try
+            {
+                ib.ShowDialog(mainWindow);
+                if (ib.UserCancelled)
+                    return null;
+                return ib.Value;
+            }
+            finally
+            {
+                ib.Dispose();
+            }
         }
 
         bool ITemplateHost.CanPresentPanel
@@ -1675,8 +1725,15 @@ namespace StatsDirect.UI
         public bool CheckScale(ScaleParameters scaleParameters)
         {
             frmScale f = new frmScale(scaleParameters);
-            f.ShowDialog(mainWindow);
-            return !f.Cancelled;
+            try
+            {
+                f.ShowDialog(mainWindow);
+                return !f.Cancelled;
+            }
+            finally
+            {
+                f.Dispose();
+            }
         }
 
         public void ReplayWithCurrentData(string operationName, string freezeDriedData)
@@ -1759,9 +1816,10 @@ namespace StatsDirect.UI
 
         public void CheckForUpdates()
         {
-            Form f = new frmUpdateCheck();
-            f.ShowDialog(mainWindow);
-            f.Dispose();
+            using (Form f = new frmUpdateCheck())
+            {
+                f.ShowDialog(mainWindow);
+            }
         }
 
         internal void CloseAndUpdate()

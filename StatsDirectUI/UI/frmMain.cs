@@ -170,24 +170,38 @@ namespace StatsDirect.UI
             }
         }
 
-        private void SetMenuVisibility(ToolStripItem item, bool isGridVisible)
+        private bool SetMenuVisibility(ToolStripItem item, bool isGridVisible)
         {
-            object tagObject = ToTagObject(item);
-            if (null != tagObject)
-            {
-                if (tagObject is Operation)
-                {
-                    Operation operation = (Operation)tagObject;
-                    item.Enabled = isGridVisible || !operation.RequiresGrid;
-                }
-            }
+            // Do the sub-items first; this gives us a chance to detect the case of all sub-items being disabled.
+            bool atLeastOneSub = false;
+            bool atLeastOneSubVisible = false;
             if (item.GetType() == typeof(ToolStripMenuItem))
             {
                 foreach (ToolStripItem subItem in ((ToolStripMenuItem)item).DropDownItems)
                 {
-                    SetMenuVisibility(subItem, isGridVisible);
+                    atLeastOneSub = true;
+                    atLeastOneSubVisible |= SetMenuVisibility(subItem, isGridVisible);
                 }
             }
+
+            bool enabledViaGrid = true;
+            object tagObject = ToTagObject(item);
+            if (null != tagObject)
+            {
+                if (tagObject is Dictionary<string, string>)
+                {
+                    Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
+                    string operationName;
+                    if (tagDictionary.TryGetValue("operation", out operationName))
+                    {
+                        Operation operation = TemplateFactory.Operations[operationName]; // TODO: User operations
+                        enabledViaGrid = isGridVisible || !operation.RequiresGrid;
+                    }
+                }
+            }
+
+            item.Enabled = enabledViaGrid && (atLeastOneSubVisible || !atLeastOneSub);
+            return item.Enabled;
         }
 
         private static object ToTagObject(ToolStripItem item)
@@ -756,14 +770,15 @@ namespace StatsDirect.UI
             bool cancel = false;
             foreach (Form child in MdiChildren)
             {
-                if (!((StatsDirectForm)child).SafeToClose)
+                if (child is StatsDirectForm && !((StatsDirectForm)child).SafeToClose)
                     cancel = true;
             }
             if (cancel)
             {
                 e.Cancel = true;
                 foreach (Form child in MdiChildren)
-                    ((StatsDirectForm)child).NoteNonClosure();
+                    if (child is StatsDirectForm)
+                        ((StatsDirectForm)child).NoteNonClosure();
             }
             else
                 SaveApplicationState();
@@ -1005,6 +1020,10 @@ namespace StatsDirect.UI
         /// <returns></returns>
         private bool ShouldCloseOperationOnCancel(IEnumerable<Parameter> parametersBeingCollected)
         {
+            // #573: Always close operations on cancel.
+            return true;
+
+            /*
             // If the operation is unknown, back out of it as soon as possible.  This case should never occur in theory.
             if (null == mostRecentOperation)
                 return true;
@@ -1048,6 +1067,7 @@ namespace StatsDirect.UI
 
             // Otherwise, operations that are not follow-ons should always close completely
             return true;
+             */
         }
 
         /// <summary>
@@ -1056,6 +1076,7 @@ namespace StatsDirect.UI
         /// <returns></returns>
         private bool ShouldShowClose()
         {
+            // #
             // If the operation is unknown, back out of it as soon as possible.  This case should never occur in theory.
             if (null == mostRecentOperation)
                 return true;
@@ -1214,37 +1235,7 @@ namespace StatsDirect.UI
                     break;
                 case PanelType.Operations:
                     pnlOperations.BringToFront();
-                    int tableHeight = 0;
-                    if (pnlUser.Controls.ContainsKey("table"))
-                    {
-                        TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
-                        tableHeight = tlp.PreferredSize.Height + tlp.Margin.Top;
-                        tlp.Width = pnlUser.Width;
-                    }
-                    // The operations panel is always at least the same height as the standard panel (58 pixels), but must also fit both left-hand and right-hand content
-                    int leftHandHeight = tlpSelectOperation.Height;
-                    int contentHeight = Math.Max(tableHeight, leftHandHeight);
-                    contentHeight = Math.Max(contentHeight, 58);
-
-                    // Set a constraint on the maximum height of the table so that it's never off the bottom of the window
-                    int constrainedHeight = contentHeight; // Math.Min(contentHeight, this.Height - HEIGHT_BREATHING_SPACE);
-                    if (enforceHeightOnOperations)
-                    {
-                        pnlTop.Height = constrainedHeight;
-                        pnlOperations.Height = constrainedHeight;
-                        tlpOperations.Height = contentHeight;
-                        pnlUser.Height = contentHeight;
-                    }
-
-                    // bool shouldScrollVertically = (constrainedHeight < contentHeight);
-                    // bool shouldScrollHorizontally = false;
-                    // tlpOperations.AutoScroll = shouldScrollVertically | shouldScrollHorizontally;
-                    // The following is a workaround for the TableLayoutPanel apparently not following its own wishes for height, even when the preferred height is reported correctly.  No idea why!
-                    if (pnlUser.Controls.ContainsKey("table"))
-                    {
-                        TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
-                        tlp.Height = contentHeight;
-                    }
+                    ResizeContainer(enforceHeightOnOperations);
                     break;
                 case PanelType.Progress:
                     pnlProgress.BringToFront();
@@ -1259,6 +1250,41 @@ namespace StatsDirect.UI
             }
             pnlTop.ResumeLayout();
             currentPanelType = panelType;
+        }
+
+        private void ResizeContainer(bool enforceHeightOnOperations)
+        {
+            int tableHeight = 0;
+            if (pnlUser.Controls.ContainsKey("table"))
+            {
+                TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+                tableHeight = tlp.PreferredSize.Height + tlp.Margin.Top;
+                tlp.Width = pnlUser.Width;
+            }
+            // The operations panel is always at least the same height as the standard panel (58 pixels), but must also fit both left-hand and right-hand content
+            int leftHandHeight = tlpSelectOperation.Height;
+            int contentHeight = Math.Max(tableHeight, leftHandHeight);
+            contentHeight = Math.Max(contentHeight, 58);
+
+            // Set a constraint on the maximum height of the table so that it's never off the bottom of the window
+            int constrainedHeight = contentHeight; // Math.Min(contentHeight, this.Height - HEIGHT_BREATHING_SPACE);
+            if (enforceHeightOnOperations)
+            {
+                pnlTop.Height = constrainedHeight;
+                pnlOperations.Height = constrainedHeight;
+                tlpOperations.Height = contentHeight;
+                pnlUser.Height = contentHeight;
+            }
+
+            // bool shouldScrollVertically = (constrainedHeight < contentHeight);
+            // bool shouldScrollHorizontally = false;
+            // tlpOperations.AutoScroll = shouldScrollVertically | shouldScrollHorizontally;
+            // The following is a workaround for the TableLayoutPanel apparently not following its own wishes for height, even when the preferred height is reported correctly.  No idea why!
+            if (pnlUser.Controls.ContainsKey("table"))
+            {
+                TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+                tlp.Height = contentHeight;
+            }
         }
 
         private void PushPanel(PanelType panelType, bool enforceHeightOnOperations)
@@ -1391,12 +1417,21 @@ namespace StatsDirect.UI
                 }
                 catch (SelectedOperationChangedException ex)
                 {
-                    CancelCurrentOperation();
-                    SDListItem selectedItem = (SDListItem)cboOperation.SelectedItem;
-                    operation = TemplateFactory.Operations[selectedItem.Operation];
-                    // Keep existing input parameters.  TODO: Is this correct, or should we be going back to the originals?
-                    inputParameters = ex.InputParameters;
-                    // Go round again, processing this operation
+                    if (isRedo)
+                    {
+                        // We don't want to risk going round again; there's a good chance of an infinite loop.  Close instead.
+                        CloseCurrentOperation();
+                        return null;
+                    }
+                    else
+                    {
+                        CancelCurrentOperation();
+                        SDListItem selectedItem = (SDListItem) cboOperation.SelectedItem;
+                        operation = TemplateFactory.Operations[selectedItem.Operation];
+                        // Keep existing input parameters.  TODO: Is this correct, or should we be going back to the originals?
+                        inputParameters = ex.InputParameters;
+                        // Go round again, processing this operation
+                    }
                 }
                 catch (CloseCurrentOperationException)
                 {
@@ -1558,7 +1593,7 @@ namespace StatsDirect.UI
             }
             IList<SuggestedOperation> availableSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SDApplication.SoleInstance), inputParameters);
             bool suggestsOthers = availableSuggestedOperations.Count > 1
-                || (availableSuggestedOperations.Count == 1 && suggestingOperation != TemplateFactory.Operations[availableSuggestedOperations[0].Name]);
+                || (availableSuggestedOperations.Count == 1 && TemplateFactory.Operations.ContainsKey(availableSuggestedOperations[0].Name) && suggestingOperation != TemplateFactory.Operations[availableSuggestedOperations[0].Name]);
             bool onlySuggestsFollowOns = (!operation.SuggestsSelf) && suggestingOperation == operation;
 
             if (SuggestionTime.BeforeOperation == suggestionTime)
@@ -2158,7 +2193,7 @@ namespace StatsDirect.UI
             cboConfidenceInterval.Tag = null;
             if (pnlUser.Controls.ContainsKey("table"))
                 pnlUser.Controls.RemoveByKey("table");
-            cmdCalculate.Text = "&Calculate";
+            cmdCalculate.Text = "&OK";
             cmdClose.Text = "C&lose";
         }
 
@@ -2172,7 +2207,8 @@ namespace StatsDirect.UI
                                            ColumnCount = 2,
                                            GrowStyle = TableLayoutPanelGrowStyle.AddRows,
                                            Width = pnlUser.Width,
-                                           Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+                                           Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                                           Tag = "TopLevelUserTable"
                                        };
             tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -2192,7 +2228,7 @@ namespace StatsDirect.UI
                                   AutoSize = true,
                                   Tag = booleanParameter
                               };
-            cb.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(cb);
             if (context.ContainsKey(booleanParameter.Name) && null != context[booleanParameter.Name] && context[booleanParameter.Name].IsInputParameter && context[booleanParameter.Name].IsBoolean)
             {
                 cb.Checked = context[booleanParameter.Name].AsBoolean;
@@ -2327,7 +2363,7 @@ namespace StatsDirect.UI
             {
                 TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
                 cbo = new ComboBox {Size = new Size(55, 18), FormattingEnabled = true};
-                cbo.KeyPress += EnterMovesDown;
+                AddAppropriateEventHandlersTo(cbo);
                 tlp.Controls.Add(cbo);
                 MaybeAddHelpTip(cbo, confidenceIntervalParameter);
 
@@ -2391,7 +2427,7 @@ namespace StatsDirect.UI
                     txt.Text = dateParameter.DefaultValue(processor, context).ToString("d");
                 }
             }
-            txt.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txt);
             MaybeAddHelpTip(txt, dateParameter);
             tlp.Controls.Add(txt);
 
@@ -2413,16 +2449,19 @@ namespace StatsDirect.UI
             TextBox txt = new TextBox {Size = new Size(70, 18), Tag = doubleParameter};
             if ((!doubleParameter.ForceDefault) && context.ContainsKey(doubleParameter.Name) && null != context[doubleParameter.Name] && context[doubleParameter.Name].IsInputParameter && context[doubleParameter.Name].IsDouble)
             {
-                txt.Text = context[doubleParameter.Name].AsDouble.ToString();
+                double defaultValue = context[doubleParameter.Name].AsDouble;
+                if ((!double.IsNaN(defaultValue)) && defaultValue != Constant.MISSING)
+                    txt.Text = context[doubleParameter.Name].AsDouble.ToString();
             }
             else
             {
+                double? defaultValue = doubleParameter.DefaultValue(processor, context);
                 string defaultValueString = "";
-                if (!double.IsNaN(doubleParameter.DefaultValue))
-                    defaultValueString = doubleParameter.DefaultValue.ToString();
+                if (defaultValue.HasValue && (!double.IsNaN(defaultValue.Value)) && defaultValue.Value != Constant.MISSING)
+                    defaultValueString = defaultValue.Value.ToString();
                 txt.Text = defaultValueString;
             }
-            txt.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txt);
 
             string suffix = "";
             if (doubleParameter.ShowLimits)
@@ -2506,13 +2545,13 @@ namespace StatsDirect.UI
             TextBox txtTL = new TextBox {Name = "txtTL", Size = new Size(100, 18)};
             if (context.ContainsKey(double2By2Parameter.TopLeftName) && null != context[double2By2Parameter.TopLeftName] && context[double2By2Parameter.TopLeftName].IsInputParameter && context[double2By2Parameter.TopLeftName].IsDouble)
                 txtTL.Text = context[double2By2Parameter.TopLeftName].AsDouble.ToString();
-            txtTL.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txtTL);
             panel2By2.Controls.Add(txtTL, 0, 2);
 
             TextBox txtTR = new TextBox {Name = "txtTR", Size = new Size(100, 18)};
             if (context.ContainsKey(double2By2Parameter.TopRightName) && null != context[double2By2Parameter.TopRightName] && context[double2By2Parameter.TopRightName].IsInputParameter && context[double2By2Parameter.TopRightName].IsDouble)
                 txtTR.Text = context[double2By2Parameter.TopRightName].AsDouble.ToString();
-            txtTR.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txtTR);
             panel2By2.Controls.Add(txtTR, 1, 2);
 
             Label lblTopRowPrompt = new Label
@@ -2526,13 +2565,13 @@ namespace StatsDirect.UI
             TextBox txtBL = new TextBox {Name = "txtBL", Size = new Size(100, 18)};
             if (context.ContainsKey(double2By2Parameter.BottomLeftName) && null != context[double2By2Parameter.BottomLeftName] && context[double2By2Parameter.BottomLeftName].IsInputParameter && context[double2By2Parameter.BottomLeftName].IsDouble)
                 txtBL.Text = context[double2By2Parameter.BottomLeftName].AsDouble.ToString();
-            txtBL.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txtBL);
             panel2By2.Controls.Add(txtBL, 0, 3);
 
             TextBox txtBR = new TextBox {Name = "txtBR", Size = new Size(100, 18)};
             if (context.ContainsKey(double2By2Parameter.BottomRightName) && null != context[double2By2Parameter.BottomRightName] && context[double2By2Parameter.BottomRightName].IsInputParameter && context[double2By2Parameter.BottomRightName].IsDouble)
                 txtBR.Text = context[double2By2Parameter.BottomRightName].AsDouble.ToString();
-            txtBR.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txtBR);
             panel2By2.Controls.Add(txtBR, 1, 3);
 
             Label lblBottomRowPrompt = new Label
@@ -2582,22 +2621,22 @@ namespace StatsDirect.UI
             panel2By2ByK.Controls.Add(lblRowsPrompt, 2, 1);
 
             TextBox txtTL = new TextBox {Name = "txtTL", Size = new Size(100, 18)};
-            txtTL.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txtTL);
             panel2By2ByK.Controls.Add(txtTL, 0, 2);
 
             TextBox txtTR = new TextBox {Name = "txtTR", Size = new Size(100, 18)};
-            txtTR.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txtTR);
             panel2By2ByK.Controls.Add(txtTR, 1, 2);
 
             Label lblTopRowPrompt = new Label {Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Present"};
             panel2By2ByK.Controls.Add(lblTopRowPrompt, 2, 2);
 
             TextBox txtBL = new TextBox {Name = "txtBL", Size = new Size(100, 18)};
-            txtBL.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txtBL);
             panel2By2ByK.Controls.Add(txtBL, 0, 3);
 
             TextBox txtBR = new TextBox {Name = "txtBR", Size = new Size(100, 18)};
-            txtBR.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txtBR);
             panel2By2ByK.Controls.Add(txtBR, 1, 3);
 
             FlowLayoutPanel pnlNavigation = new FlowLayoutPanel
@@ -3019,7 +3058,7 @@ namespace StatsDirect.UI
                     txt.Text = integerParameter.DefaultValue(processor, context).ToString();
                 }
             }
-            txt.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txt);
 
             string suffix = "";
             if (integerParameter.ShowLimits)
@@ -3192,7 +3231,7 @@ namespace StatsDirect.UI
                                                       Tag = optionOption.Value,
                                                       UseVisualStyleBackColor = true
                                                   };
-                            rad.CheckedChanged += OptionParameter_CheckedChanged;
+                            AddAppropriateEventHandlersTo(rad);
                             panelOptions.Controls.Add(rad);
                             rad.Checked = optionOption.Value.Equals(defaultValue);
                         }
@@ -3294,11 +3333,16 @@ namespace StatsDirect.UI
 
             foreach (OptionsOption optionsOption in optionsParameter.Options)
             {
+                bool isChecked = optionsOption.Selected;
+                if (context.ContainsKey(optionsOption.Name) && null != context[optionsOption.Name] && context[optionsOption.Name].IsInputParameter)
+                {
+                    isChecked = context[optionsOption.Name].AsBoolean;
+                }
                 CheckBox chk = new CheckBox
                                    {
                                        AutoSize = true,
                                        Text = optionsOption.Label,
-                                       Checked = optionsOption.Selected,
+                                       Checked = isChecked,
                                        Tag = optionsOption,
                                        UseVisualStyleBackColor = true
                                    };
@@ -3311,39 +3355,69 @@ namespace StatsDirect.UI
             return null;
         }
 
+        /// <summary>
+        /// Assuming control is used for data entry in the SD3 dialog area, add appropriate handlers to enable global behaviours for such controls.
+        /// </summary>
+        void AddAppropriateEventHandlersTo(Control control)
+        {
+            if (control is RadioButton)
+            {
+                ((RadioButton)control).CheckedChanged += OptionParameter_CheckedChanged;
+            }
+            if (control is ComboBox || control is TextBox)
+            {
+                control.KeyPress += EnterMovesDown;
+            }
+            if (control is ctlPickAWindow)
+            {
+                ((ctlPickAWindow)control).InsideKeyPress += EnterMovesDown;
+            }
+            control.LostFocus += RunChecksAfterLostFocus;
+        }
+
+        void RunChecksAfterLostFocus(object sender, EventArgs e)
+        {
+            CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
+        }
+
         void OptionParameter_CheckedChanged(object sender, EventArgs e)
         {
-            RadioButton rad = (RadioButton)sender;
-            TableLayoutPanel panelOptions = (TableLayoutPanel)rad.Parent;
-            Control maybeGroup = panelOptions.Parent;
-            if (maybeGroup is GroupBox)
-                maybeGroup = maybeGroup.Parent;
-            // MaybeGroup should no longer be a group box
-            TableLayoutPanel tlp = (TableLayoutPanel)maybeGroup;
-            if (null != tlp)
+            CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
+        }
+
+        private void CheckCombinedParameterVisibilityAndMaybeResize(Control sender)
+        {
+            while (null != sender)
             {
-                if (rad.Checked)
+                if ("TopLevelUserTable".Equals(sender.Tag))
+                    break;
+                sender = sender.Parent;
+            }
+            if (null != sender)
+            {
+                TableLayoutPanel tlp = (TableLayoutPanel)sender;
+                ParameterBag ambientParameters = new ParameterBag();
+                ParameterBag context = fillCombinedParametersContext;
+                ExtractCurrentValues(ambientParameters, context, false);
+                if (null != context)
                 {
-                    ParameterBag ambientParameters = new ParameterBag();
-                    ParameterBag context = fillCombinedParametersContext;
-                    ExtractCurrentValues(ambientParameters, context);
-                    if (null != context)
+                    foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
                     {
-                        foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
-                        {
-                            if (!ambientParameters.ContainsKey(pair.Key))
-                                ambientParameters.Add(pair.Key, pair.Value);
-                        }
+                        if (!ambientParameters.ContainsKey(pair.Key))
+                            ambientParameters.Add(pair.Key, pair.Value);
                     }
-                    CheckCombinedParameterVisibility(tlp, ambientParameters);
                 }
+                if (CheckCombinedParameterVisibility(tlp, ambientParameters))
+                    ResizeContainer(true);
             }
         }
 
-        private void CheckCombinedParameterVisibility(TableLayoutPanel tlp, ParameterBag ambientParameters)
+        /// <returns>true if at least one control's visibility was changed (and hence the container might need to resize)</returns>
+        private bool CheckCombinedParameterVisibility(TableLayoutPanel tlp, ParameterBag ambientParameters)
         {
             TemplateProcessor processor = null;
             bool layoutSuspended = false;
+            bool atLeastOneVisibilityChange = false;
 
             foreach (Control control in tlp.Controls)
             {
@@ -3355,15 +3429,14 @@ namespace StatsDirect.UI
                         if (null == processor)
                             processor = new TemplateProcessor(SDApplication.SoleInstance);
                         bool shouldAcquire = parameter.AcquireIfTrue(processor, ambientParameters);
-                        //if (control.Visible != shouldAcquire)
-                        //{
-                            if (!layoutSuspended)
-                            {
-                                tlp.SuspendLayout();
-                                layoutSuspended = true;
-                            }
-                            control.Visible = shouldAcquire;
-                        //}
+                        if (control.Visible != shouldAcquire)
+                            atLeastOneVisibilityChange = true;
+                        if (!layoutSuspended)
+                        {
+                            tlp.SuspendLayout();
+                            layoutSuspended = true;
+                        }
+                        control.Visible = shouldAcquire;
                     }
                 }
             }
@@ -3371,6 +3444,7 @@ namespace StatsDirect.UI
             {
                 tlp.ResumeLayout(true);
             }
+            return atLeastOneVisibilityChange;
         }
 
         internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, PickVariablesParameter pickVariablesParameter, ParameterBag context)
@@ -3562,7 +3636,7 @@ namespace StatsDirect.UI
                 {
                     VerticalLabel rowsLabel = new VerticalLabel
                                                   {
-                                                      Text = "Layer",
+                                                      Text = "Level",
                                                       AutoSize = true
                                                   };
                     ssgContainer.Controls.Add(rowsLabel, 0, 1);
@@ -3661,7 +3735,7 @@ namespace StatsDirect.UI
                                                  Name = specialParameter.Name,
                                                  PromptExpression = specialParameter.PromptExpression,
                                                  MinimumValue = minimumC,
-                                                 DefaultValue = suggestedC,
+                                                 DefaultValueExpression = new Expression(suggestedC.ToString()),
                                                  CancelSkipsParameter = "Skip"
                                              };
                     return PrepareCombinedParameter(processor, dp, context);
@@ -3671,7 +3745,7 @@ namespace StatsDirect.UI
             if ("frame".Equals(specialParameter.SpecialType))
             {
                 ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Frame, specialParameter) {Tag = specialParameter};
-                ctl.InsideKeyPress += EnterMovesDown;
+                AddAppropriateEventHandlersTo(ctl);
                 tlp.Controls.Add(ctl);
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
@@ -3679,7 +3753,7 @@ namespace StatsDirect.UI
             if ("report".Equals(specialParameter.SpecialType))
             {
                 ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Report, specialParameter) {Tag = specialParameter};
-                ctl.InsideKeyPress += EnterMovesDown;
+                AddAppropriateEventHandlersTo(ctl);
                 tlp.Controls.Add(ctl);
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
@@ -3743,7 +3817,7 @@ namespace StatsDirect.UI
                     txt.Text = stringParameter.DefaultValue(processor, context);
                 }
             }
-            txt.KeyPress += EnterMovesDown;
+            AddAppropriateEventHandlersTo(txt);
 
             Label lbl = new Label
                             {
@@ -3827,7 +3901,7 @@ namespace StatsDirect.UI
 
             if (!shouldShow)
             {
-                bool allValid = ExtractCurrentValues(outputParameters, context);
+                bool allValid = ExtractCurrentValues(outputParameters, context, true);
                 if (!allValid)
                 {
                     // TODO: How on earth do we get people to set valid parameters when the defaults are invalid and we're not supposed to show them anything?
@@ -3850,7 +3924,8 @@ namespace StatsDirect.UI
                     else
                     {
                         // We use cancel if we're in a follow-on operation that requires input (i.e. if pressing the button would lead to the option of closing the whole thing rather than an auto-close)
-                        cmdClose.Text = ShouldShowClose() ? "&Close" : "&Cancel";
+                        // #573: Always show Cancel
+                        cmdClose.Text = ShouldShowClose() ? "C&ancel" : "C&ancel";
                     }
                     while (true)
                     {
@@ -3866,19 +3941,20 @@ namespace StatsDirect.UI
                             outputParameters = allSkippable ? new ParameterBag() : null;
                             return;
                         }
-                        bool allValid = ExtractCurrentValues(outputParameters, context);
+                        bool allValid = ExtractCurrentValues(outputParameters, context, true);
                         if (allValid)
                             break;
 
                         // Otherwise, at least one parameter's invalid and focus should already have been set to it.  Go round again.
+                        MessageBox.Show("Invalid data. Please correct it and try the operation again.", "StatsDirect", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
             }
             finally
             {
                 fillCombinedParametersContext = null;
-                cmdCalculate.Text = "Calculate";
-                cmdClose.Text = "Close";
+                cmdCalculate.Text = "&OK";
+                cmdClose.Text = "&Close";
                 PopPanel(true);
             }
 
@@ -3901,21 +3977,24 @@ namespace StatsDirect.UI
             }
         }
 
-        /// <returns>true if everything's valid, false if there are any validation errors</returns>
-        bool ExtractCurrentValues(ParameterBag outputParameters, ParameterBag context)
+        /// <returns>true if doValidation is false, true if everything's valid, false if there are any validation errors</returns>
+        bool ExtractCurrentValues(ParameterBag outputParameters, ParameterBag context, bool doValidation)
         {
             bool allValid = true;
             Control firstInvalidControl = null;
             TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
-            foreach (Control control in tlp.Controls)
+            if (null != tlp)
             {
-                Control invalidControlOrNull = ExtractCurrentValue(control, outputParameters, context);
-                if (null != invalidControlOrNull && null == firstInvalidControl)
-                    firstInvalidControl = invalidControlOrNull;
-                allValid &= (null == invalidControlOrNull);
+                foreach (Control control in tlp.Controls)
+                {
+                    Control invalidControlOrNull = ExtractCurrentValue(control, outputParameters, context, doValidation);
+                    if (null != invalidControlOrNull && null == firstInvalidControl)
+                        firstInvalidControl = invalidControlOrNull;
+                    allValid &= (null == invalidControlOrNull);
+                }
             }
             // The CI combo may also be in use
-            Control iC = ExtractCurrentValue(cboConfidenceInterval, outputParameters, context);
+            Control iC = ExtractCurrentValue(cboConfidenceInterval, outputParameters, context, doValidation);
             allValid &= null == iC;
             if (null != iC && null == firstInvalidControl)
                 firstInvalidControl = iC;
@@ -3957,8 +4036,8 @@ namespace StatsDirect.UI
             return true;
         }
 
-        /// <returns>null if the parameter is valid (or has no validation), the control to be selected if the parameter fails validation.</returns>
-        Control ExtractCurrentValue(Control control, ParameterBag outputParameters, ParameterBag context)
+        /// <returns>null if the parameter is valid (or has no validation or validation is disabled), the control to be selected if the parameter fails validation.</returns>
+        Control ExtractCurrentValue(Control control, ParameterBag outputParameters, ParameterBag context, bool doValidation)
         {
             // We're interested in non-label controls that have been tagged with Parameters.
             // Labels are uninteresting as they'll never contain a useful user-entered value.
@@ -3983,9 +4062,12 @@ namespace StatsDirect.UI
                         {
                             ComboBox cbo = (ComboBox)control;
                             string raw = cbo.Text.Trim();
-                            // Missing or zero-length?
-                            if (raw.Length == 0)
-                                return null == parameter.CancelSkipsParameter ? cbo : null;
+                            if (doValidation)
+                            {
+                                // Missing or zero-length?
+                                if (raw.Length == 0)
+                                    return null == parameter.CancelSkipsParameter ? cbo : null;
+                            }
                             double value = Parsing.Cdbl_Txt(raw);
                             // Turn from percentage to fraction
                             if (value != Constant.MISSING)
@@ -4013,9 +4095,12 @@ namespace StatsDirect.UI
                         {
                             TextBox txt = (TextBox)control;
                             string raw = txt.Text.Trim();
-                            // Missing or zero-length?
-                            if (raw.Length == 0)
-                                return null == parameter.CancelSkipsParameter ? txt : null;
+                            if (doValidation)
+                            {
+                                // Missing or zero-length?
+                                if (raw.Length == 0)
+                                    return null == parameter.CancelSkipsParameter ? txt : null;
+                            }
                             DateTime value = Parsing.Cdate_Txt(raw);
                             outputParameters[parameter.Name] = new FilledParameter(true, value);
                             return null;
@@ -4024,14 +4109,20 @@ namespace StatsDirect.UI
                         {
                             TextBox txt = (TextBox)control;
                             string raw = txt.Text.Trim();
-                            // Missing or zero-length?
-                            if (raw.Length == 0)
-                                return (null == parameter.CancelSkipsParameter) ? txt : null;
+                            if (doValidation)
+                            {
+                                // Missing or zero-length?
+                                if (raw.Length == 0)
+                                    return (null == parameter.CancelSkipsParameter) ? txt : null;
+                            }
                             double value = Parsing.Cdbl_Txt(raw);
-                            // In range?
-                            DoubleParameter dp = (DoubleParameter)parameter;
-                            if (value < dp.MinimumValue || value > dp.MaximumValue)
-                                return txt;
+                            if (doValidation)
+                            {
+                                // In range?
+                                DoubleParameter dp = (DoubleParameter) parameter;
+                                if (value < dp.MinimumValue || value > dp.MaximumValue)
+                                    return txt;
+                            }
                             // If we get here, it's OK.
                             outputParameters[parameter.Name] = new FilledParameter(true, value);
                             return null;
@@ -4050,36 +4141,43 @@ namespace StatsDirect.UI
                             double bl = Parsing.Cdbl_Txt(txtBL.Text);
                             double br = Parsing.Cdbl_Txt(txtBR.Text);
 
-                            // Validate
-                            if (tl == Constant.MISSING)
+                            if (doValidation)
                             {
-                                txtTL.SelectAll();
-                                txtTL.Focus();
-                                return txtTL;
-                            }
-                            if (tr == Constant.MISSING)
-                            {
-                                txtTR.SelectAll();
-                                txtTR.Focus();
-                                return txtTR;
-                            }
-                            if (bl == Constant.MISSING)
-                            {
-                                txtBL.SelectAll();
-                                txtBL.Focus();
-                                return txtBL;
-                            }
-                            if (br == Constant.MISSING)
-                            {
-                                txtBR.SelectAll();
-                                txtBR.Focus();
-                                return txtBR;
+                                // Validate
+                                if (tl == Constant.MISSING)
+                                {
+                                    txtTL.SelectAll();
+                                    txtTL.Focus();
+                                    return txtTL;
+                                }
+                                if (tr == Constant.MISSING)
+                                {
+                                    txtTR.SelectAll();
+                                    txtTR.Focus();
+                                    return txtTR;
+                                }
+                                if (bl == Constant.MISSING)
+                                {
+                                    txtBL.SelectAll();
+                                    txtBL.Focus();
+                                    return txtBL;
+                                }
+                                if (br == Constant.MISSING)
+                                {
+                                    txtBR.SelectAll();
+                                    txtBR.Focus();
+                                    return txtBR;
+                                }
                             }
 
-                            outputParameters[parm.TopLeftName] = new FilledParameter(true, tl);
-                            outputParameters[parm.TopRightName] = new FilledParameter(true, tr);
-                            outputParameters[parm.BottomLeftName] = new FilledParameter(true, bl);
-                            outputParameters[parm.BottomRightName] = new FilledParameter(true, br);
+                            if (tl != Constant.MISSING)
+                                outputParameters[parm.TopLeftName] = new FilledParameter(true, tl);
+                            if (tr != Constant.MISSING)
+                                outputParameters[parm.TopRightName] = new FilledParameter(true, tr);
+                            if (bl != Constant.MISSING)
+                                outputParameters[parm.BottomLeftName] = new FilledParameter(true, bl);
+                            if (br != Constant.MISSING)
+                                outputParameters[parm.BottomRightName] = new FilledParameter(true, br);
                             return null;
                         }
                     case ParameterType.Double2By2ByK:
@@ -4105,30 +4203,33 @@ namespace StatsDirect.UI
                             double bl = Parsing.Cdbl_Txt(txtBL.Text);
                             double br = Parsing.Cdbl_Txt(txtBR.Text);
 
-                            // Validate
-                            if (tl == Constant.MISSING)
+                            if (doValidation)
                             {
-                                txtTL.SelectAll();
-                                txtTL.Focus();
-                                return txtTL;
-                            }
-                            if (tr == Constant.MISSING)
-                            {
-                                txtTR.SelectAll();
-                                txtTR.Focus();
-                                return txtTR;
-                            }
-                            if (bl == Constant.MISSING)
-                            {
-                                txtBL.SelectAll();
-                                txtBL.Focus();
-                                return txtBL;
-                            }
-                            if (br == Constant.MISSING)
-                            {
-                                txtBR.SelectAll();
-                                txtBR.Focus();
-                                return txtBR;
+                                // Validate
+                                if (tl == Constant.MISSING)
+                                {
+                                    txtTL.SelectAll();
+                                    txtTL.Focus();
+                                    return txtTL;
+                                }
+                                if (tr == Constant.MISSING)
+                                {
+                                    txtTR.SelectAll();
+                                    txtTR.Focus();
+                                    return txtTR;
+                                }
+                                if (bl == Constant.MISSING)
+                                {
+                                    txtBL.SelectAll();
+                                    txtBL.Focus();
+                                    return txtBL;
+                                }
+                                if (br == Constant.MISSING)
+                                {
+                                    txtBR.SelectAll();
+                                    txtBR.Focus();
+                                    return txtBR;
+                                }
                             }
                             while (var1Data.Count < stratum * 2)
                             {
@@ -4189,7 +4290,10 @@ namespace StatsDirect.UI
                             }
                             grid.ActiveWorkbookSet.ReleaseLock();
 
-                            // TODO: Validate
+                            if (doValidation)
+                            {
+                                // TODO: Validate
+                            }
 
                             // If we get here, it's valid.
                             outputParameters[parameter.Name] = new FilledParameter(true, frame);
@@ -4199,14 +4303,20 @@ namespace StatsDirect.UI
                         {
                             TextBox txt = (TextBox)control;
                             string raw = txt.Text.Trim();
-                            // Missing or zero-length?
-                            if (raw.Length == 0)
-                                return null == parameter.CancelSkipsParameter ? txt : null;
+                            if (doValidation)
+                            {
+                                // Missing or zero-length?
+                                if (raw.Length == 0)
+                                    return null == parameter.CancelSkipsParameter ? txt : null;
+                            }
                             int value = Parsing.Cint_Txt(raw);
-                            // In range?
-                            IntegerParameter ip = (IntegerParameter)parameter;
-                            if (value < ip.MinimumValue || value > ip.MaximumValue)
-                                return txt;
+                            if (doValidation)
+                            {
+                                // In range?
+                                IntegerParameter ip = (IntegerParameter) parameter;
+                                if (value < ip.MinimumValue || value > ip.MaximumValue)
+                                    return txt;
+                            }
                             // If we get here, it's OK.
                             outputParameters[parameter.Name] = new FilledParameter(true, value);
                             return null;
@@ -4214,7 +4324,7 @@ namespace StatsDirect.UI
                     case ParameterType.MultipleOptions:
                         {
                             IFillParameterBag fpb = (IFillParameterBag)control;
-                            return fpb.Fill(outputParameters);
+                            return fpb.Fill(outputParameters, doValidation);
                         }
                     case ParameterType.Option:
                         {
@@ -4245,7 +4355,7 @@ namespace StatsDirect.UI
                                                 break;
                                             }
                                         }
-                                        return ((null != optionParameter.CancelSkipsParameter) || atLeastOneChecked) ? null : optionPanel.Controls[0];
+                                        return ((null != optionParameter.CancelSkipsParameter) || atLeastOneChecked || !doValidation) ? null : optionPanel.Controls[0];
                                     }
                                 default:
                                     throw new Exception("optionParameter.OptionFormatType: Only Dropdown and Radio are known");
@@ -4379,7 +4489,7 @@ namespace StatsDirect.UI
                                 try
                                 {
                                     value = worksheet.UsedRange.Value;
-                                    if (!value.GetType().IsArray)
+                                    if (null != value && !value.GetType().IsArray)
                                         value = new[,] { { value } };
                                 }
                                 finally
@@ -4389,14 +4499,17 @@ namespace StatsDirect.UI
                                 object[,] ary = (object[,]) value;
 
                                 DataFrame frame = new DataFrame();
-                                for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
+                                if (null != ary)
                                 {
-                                    DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
-                                    for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
+                                    for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
                                     {
-                                        dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
+                                        for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
+                                        {
+                                            dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                                        }
+                                        frame.Variables.Add(dv);
                                     }
-                                    frame.Variables.Add(dv);
                                 }
                                 outputParameters[parameter.Name] = new FilledParameter(true, frame);
                                 return null;
@@ -4407,7 +4520,7 @@ namespace StatsDirect.UI
                                 || "textToNumbers".Equals(specialParameter.SpecialType))
                             {
                                 IFillParameterBag ifpb = (IFillParameterBag)control;
-                                return ifpb.Fill(outputParameters);
+                                return ifpb.Fill(outputParameters, doValidation);
                             }
                             throw new Exception("specialParameter.SpecialType: Unknown value");
                         }
@@ -4452,8 +4565,10 @@ namespace StatsDirect.UI
             // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
             if (MdiChildren.Length == 0)
             {
-                frmOpening opening = new frmOpening();
-                opening.ShowDialog(this);
+                using (frmOpening opening = new frmOpening())
+                {
+                    opening.ShowDialog(this);
+                }
             }
         }
 
@@ -4633,17 +4748,19 @@ namespace StatsDirect.UI
 
         private void setupToolsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            frmSetupTools frm = new frmSetupTools();
-            frm.ShowDialog(this);
-            frm.Dispose();
+            using (frmSetupTools frm = new frmSetupTools())
+            {
+                frm.ShowDialog(this);
+            }
             UpdateToolsMenu();
         }
 
         private void aboutsStatsDirectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            frmAbout frm = new frmAbout();
-            frm.ShowDialog(this);
-            frm.Dispose();
+            using (frmAbout frm = new frmAbout())
+            {
+                frm.ShowDialog(this);
+            }
         }
 
         private void openToolStripButton_Click(object sender, EventArgs e)
@@ -4778,7 +4895,7 @@ namespace StatsDirect.UI
 
         [SuppressUnmanagedCodeSecurity]
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int msg,
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg,
                                     IntPtr wParam, IntPtr lParam);
 
         public const int WM_MDINEXT = 0x224;
@@ -4955,11 +5072,12 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            frmPasteSpecial frm = new frmPasteSpecial();
-            frm.ShowDialog(this);
-            if (!frm.UserCancelled)
-                workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
-            frm.Dispose();
+            using (frmPasteSpecial frm = new frmPasteSpecial())
+            {
+                frm.ShowDialog(this);
+                if (!frm.UserCancelled)
+                    workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
+            }
         }
 
         private void insertContextMenuItem_Click(object sender, EventArgs e)
@@ -4972,35 +5090,36 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            frmInsertCells frm = new frmInsertCells();
-            frm.ShowDialog(this);
-            if (!frm.UserCancelled)
+            using (frmInsertCells frm = new frmInsertCells())
             {
-                workbookView.GetLock();
-                try
+                frm.ShowDialog(this);
+                if (!frm.UserCancelled)
                 {
-                    if (frm.IsEntire)
+                    workbookView.GetLock();
+                    try
                     {
-                        if (InsertShiftDirection.Right == frm.InsertShiftDirection)
+                        if (frm.IsEntire)
                         {
-                            workbookView.RangeSelection.EntireColumn.Insert();
+                            if (InsertShiftDirection.Right == frm.InsertShiftDirection)
+                            {
+                                workbookView.RangeSelection.EntireColumn.Insert();
+                            }
+                            else
+                            {
+                                workbookView.RangeSelection.EntireRow.Insert();
+                            }
                         }
                         else
                         {
-                            workbookView.RangeSelection.EntireRow.Insert();
+                            workbookView.RangeSelection.Insert(frm.InsertShiftDirection);
                         }
                     }
-                    else
+                    finally
                     {
-                        workbookView.RangeSelection.Insert(frm.InsertShiftDirection);
+                        workbookView.ReleaseLock();
                     }
                 }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
             }
-            frm.Dispose();
         }
 
         private void deleteContextMenuItem_Click(object sender, EventArgs e)
@@ -5013,35 +5132,36 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            frmDeleteSpecial frm = new frmDeleteSpecial();
-            frm.ShowDialog(this);
-            if (!frm.UserCancelled)
+            using (frmDeleteSpecial frm = new frmDeleteSpecial())
             {
-                workbookView.GetLock();
-                try
+                frm.ShowDialog(this);
+                if (!frm.UserCancelled)
                 {
-                    if (frm.IsEntire)
+                    workbookView.GetLock();
+                    try
                     {
-                        if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
+                        if (frm.IsEntire)
                         {
-                            workbookView.RangeSelection.EntireColumn.Delete();
+                            if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
+                            {
+                                workbookView.RangeSelection.EntireColumn.Delete();
+                            }
+                            else
+                            {
+                                workbookView.RangeSelection.EntireRow.Delete();
+                            }
                         }
                         else
                         {
-                            workbookView.RangeSelection.EntireRow.Delete();
+                            workbookView.RangeSelection.Delete(frm.DeleteShiftDirection);
                         }
                     }
-                    else
+                    finally
                     {
-                        workbookView.RangeSelection.Delete(frm.DeleteShiftDirection);
+                        workbookView.ReleaseLock();
                     }
                 }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
             }
-            frm.Dispose();
 
         }
 

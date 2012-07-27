@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
+using System.IO;
 using StatsDirect.Data; 
 using StatsDirect.Templates; 
 using StatsDirect.Numerics; 
@@ -2820,13 +2820,14 @@ namespace StatsDirect.Builtins
                 }
                 
                 ParameterBag cox1Parameters = new ParameterBag(); 
-                chartList.Add( cox1Parameters ); 
-                System.IO.Stream metaStream = new System.IO.MemoryStream(); 
-                ch.StartMetafile( metaStream ); 
-                ch.PlotCox1Internal( host, vt, z, iobs, stratified, grouped, istrata, igroups, CDAT1, groupid, use_marker, use_tic, ARR3, j3, vx, vy, ref gn ); 
-                ch.EndMetafile(); 
-                metaStream.Position = 0; 
-                cox1Parameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
+                chartList.Add( cox1Parameters );
+                using (MemoryStream metaStream = new System.IO.MemoryStream())
+                {
+                    ch.StartMetafile(metaStream);
+                    ch.PlotCox1Internal(host, vt, z, iobs, stratified, grouped, istrata, igroups, CDAT1, groupid, use_marker, use_tic, ARR3, j3, vx, vy, ref gn);
+                    ch.EndMetafile();
+                    cox1Parameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
             } 
             
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
@@ -2846,13 +2847,14 @@ namespace StatsDirect.Builtins
                 cd.AddYSeries( yp, null ); 
                 Charting.ChartRenderer ch = new Charting.ChartRenderer( cd ); 
                 ParameterBag cox2Parameters = new ParameterBag(); 
-                chartList.Add( cox2Parameters ); 
-                System.IO.Stream metaStream = new System.IO.MemoryStream(); 
-                ch.StartMetafile( metaStream ); 
-                ch.PlotCox2Internal( gn, igroups, xp, yp, CDAT1, groupid ); 
-                ch.EndMetafile(); 
-                metaStream.Position = 0; 
-                cox2Parameters.AddOutput( "chart", host.ImageToRtf( System.Drawing.Image.FromStream( metaStream ) ) ); 
+                chartList.Add( cox2Parameters );
+                using (MemoryStream metaStream = new System.IO.MemoryStream())
+                {
+                    ch.StartMetafile(metaStream);
+                    ch.PlotCox2Internal(gn, igroups, xp, yp, CDAT1, groupid);
+                    ch.EndMetafile();
+                    cox2Parameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                }
             } 
         } 
         
@@ -2998,14 +3000,14 @@ namespace StatsDirect.Builtins
             
             ParameterBag chartParameters = new ParameterBag(); 
             chartList.Add( chartParameters ); 
-            Charting.ChartRenderer ch = new Charting.ChartRenderer( Charting.ChartDefinition.Empty() ); 
-            chartParameters.AddOutput( "chart", host.ImageToRtf( ch.PlotXYAndReturnImage( host, xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, 0, false ) ) ); 
-            
+            Charting.ChartRenderer ch = new Charting.ChartRenderer( Charting.ChartDefinition.Empty() );
+            chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, 0, false));
+
             chartParameters = new ParameterBag(); 
             chartList.Add( chartParameters ); 
-            ch = new Charting.ChartRenderer( Charting.ChartDefinition.Empty() ); 
-            chartParameters.AddOutput( "chart", host.ImageToRtf( ch.PlotXYAndReturnImage( host, XR, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, 0, false ) ) ); 
-            
+            ch = new Charting.ChartRenderer( Charting.ChartDefinition.Empty() );
+            chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, XR, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, 0, false));
+
             // save to worksheet if requested
             if ( save ) 
             { 

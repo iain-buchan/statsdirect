@@ -12,7 +12,7 @@ namespace StatsDirect.UI
     {
         // private const string sd_ini = "StatsDirect.ini";
         private const string sd_xls = "StatsDirect.xls";
-        private const string test_xls = "test.xls";
+        private const string test_xlsx = "test.xlsx";
         private const string STATSDIRECT_FOLDER_NAME = "StatsDirect";
 
         /// <summary>
@@ -44,31 +44,33 @@ namespace StatsDirect.UI
 
         private static void StartStatsDirect(string[] args)
         {
+            frmMain mainWindow = null;
             // As soon as possible, put up a loader
-            frmLoading loader = new frmLoading();
-            loader.Show();
-            Application.DoEvents(); // Force display of the show form
+            using (frmLoading loader = new frmLoading())
+            {
+                loader.Show();
+                Application.DoEvents(); // Force display of the show form
 
-            CheckExcelAddIn();
-            SetupInitialFiles();
+                CheckExcelAddIn();
+                SetupInitialFiles();
 
-            // Preload a report, to ensure all the report libraries are ready to go.
-            PreloadReport();
+                // Preload a report, to ensure all the report libraries are ready to go.
+                PreloadReport();
 
-            // Preload and parse XML for operations
-            IDictionary<string, Templates.Operation> scrap = Templates.TemplateFactory.Operations;
-            IList<Templates.Operation> userScrap = Templates.TemplateFactory.UserOperations;
+                // Preload and parse XML for operations
+                IDictionary<string, Templates.Operation> scrap = Templates.TemplateFactory.Operations;
+                IList<Templates.Operation> userScrap = Templates.TemplateFactory.UserOperations;
 
-            // Perform any UI hooks we need to...
-            SetupUserInterface();
+                // Perform any UI hooks we need to...
+                SetupUserInterface();
 
-            // Get ready to show the main window...
-            frmMain mainWindow = new frmMain();
-            SDApplication.SoleInstance.MainWindow = mainWindow;
+                // Get ready to show the main window...
+                mainWindow = new frmMain();
+                SDApplication.SoleInstance.MainWindow = mainWindow;
 
-            // ... and go!
-            loader.Hide();
-            loader.Dispose();
+                // ... and go!
+                loader.Hide();
+            }
 
             if (args.Length >= 2)
                 if ("FileOpen".Equals(args[0]) && null != args[1])
@@ -78,21 +80,22 @@ namespace StatsDirect.UI
 
         private static void PreloadReport()
         {
-            frmReportRichEditDummy f = new frmReportRichEditDummy();
-            int largestVisibleX = int.MinValue;
-            int smallestVisibleY = int.MaxValue;
-            foreach (Screen screen in Screen.AllScreens)
+            using (frmReportRichEditDummy f = new frmReportRichEditDummy())
             {
-                if (screen.Bounds.Right > largestVisibleX)
-                    largestVisibleX = screen.Bounds.Right;
-                if (screen.Bounds.Top < smallestVisibleY)
-                    smallestVisibleY = screen.Bounds.Top;
+                int largestVisibleX = int.MinValue;
+                int smallestVisibleY = int.MaxValue;
+                foreach (Screen screen in Screen.AllScreens)
+                {
+                    if (screen.Bounds.Right > largestVisibleX)
+                        largestVisibleX = screen.Bounds.Right;
+                    if (screen.Bounds.Top < smallestVisibleY)
+                        smallestVisibleY = screen.Bounds.Top;
+                }
+                f.Left = largestVisibleX + 10;
+                f.Top = smallestVisibleY;
+                f.ShowDialog();
+                // f will auto-close itself once it's shown itself
             }
-            f.Left = largestVisibleX + 10;
-            f.Top = smallestVisibleY;
-            f.ShowDialog();
-            // f will auto-close itself once it's shown itself
-            f.Dispose();
         }
 
         private static void SetupUserInterface()
@@ -149,9 +152,10 @@ namespace StatsDirect.UI
         private static DialogResult CopeWithUnhandledException(Exception ex, bool canTryToContinue)
         {
             string message = ex.Message + Environment.NewLine + ex.StackTrace;
-            frmErrorMessage e = new frmErrorMessage(message);
-            e.ShowDialog();
-            e.Dispose();
+            using (frmErrorMessage e = new frmErrorMessage(message))
+            {
+                e.ShowDialog();
+            }
             return DialogResult.Abort;
         }
 
@@ -172,7 +176,7 @@ namespace StatsDirect.UI
             {
                 mySDFolder = appPath;
             }
-            // first ini override of userdir - copy over test.xls and statsdirect.xls
+            // first ini override of userdir - copy over test.xlsx and statsdirect.xls
             if (!mySDFolder.Equals(appPath))
             {
                 if (!File.Exists(Path.Combine(mySDFolder, sd_xls)))
@@ -180,10 +184,10 @@ namespace StatsDirect.UI
                     if (File.Exists(Path.Combine(appPath, sd_xls)))
                         File.Copy(Path.Combine(appPath, sd_xls), Path.Combine(mySDFolder, sd_xls), false);
                 }
-                if (!File.Exists(Path.Combine(mySDFolder, test_xls)))
+                if (!File.Exists(Path.Combine(mySDFolder, test_xlsx)))
                 {
-                    if (File.Exists(Path.Combine(Path.Combine(appPath, "Data"), test_xls)))
-                        File.Copy(Path.Combine(Path.Combine(appPath, "Data"), test_xls), Path.Combine(mySDFolder, test_xls), false);
+                    if (File.Exists(Path.Combine(Path.Combine(appPath, "Data"), test_xlsx)))
+                        File.Copy(Path.Combine(Path.Combine(appPath, "Data"), test_xlsx), Path.Combine(mySDFolder, test_xlsx), false);
                 }
             }
         }
@@ -231,12 +235,12 @@ namespace StatsDirect.UI
                 DateTime scrapDate;
                 if (string.IsNullOrEmpty(ui.Name) || ui.Name.Length < 2 || !DateTime.TryParse(ui.Expires, out scrapDate))
                 {
-                    frmLicense f = new frmLicense(ui);
-                    f.ShowDialog();
-                    if (f.UserCancelled)
-                        Environment.Exit(1);
-                    else
-                        f.Dispose();
+                    using (frmLicense f = new frmLicense(ui))
+                    {
+                        f.ShowDialog();
+                        if (f.UserCancelled)
+                            Environment.Exit(1);
+                    }
                 }
                 else
                 {
@@ -247,12 +251,12 @@ namespace StatsDirect.UI
                         ui.Expires = lk;
                         lk = License.XorString(lk, License.REG_KEY_KEY);
                         SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_EXPIRES, License.StrToNum(lk));
-                        frmLicense f = new frmLicense(ui, ui.Name, ui.Company);
-                        f.ShowDialog();
-                        if (f.UserCancelled)
-                            Environment.Exit(1);
-                        else
-                            f.Dispose();
+                        using (frmLicense f = new frmLicense(ui, ui.Name, ui.Company))
+                        {
+                            f.ShowDialog();
+                            if (f.UserCancelled)
+                                Environment.Exit(1);
+                        }
                     }
                     else
                     {
