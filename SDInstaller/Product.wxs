@@ -268,8 +268,8 @@
 
           <!-- Sample data files -->
           <Directory Id="data" Name="data">
-            <Component Id="test.xls">
-              <File Id="test.xls" KeyPath="yes" Name="test.xls" Checksum="yes" />
+            <Component Id="test.xlsx">
+              <File Id="test.xlsx" KeyPath="yes" Name="test.xlsx" Checksum="yes" />
             </Component>
           </Directory>
 
@@ -316,6 +316,9 @@
             </Component>
             <Component Id="ChiSquareGoodnessOfFit.xml">
               <File Id="ChiSquareGoodnessOfFit.xml" Name="ChiSquareGoodnessOfFit.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ChiGFSimulateExactP.xml">
+              <File Id="ChiGFSimulateExactP.xml" Name="ChiGFSimulateExactP.xml" KeyPath="yes" />
             </Component>
             <Component Id="ChiWoolfScreen.xml">
               <File Id="ChiWoolfScreen.xml" Name="ChiWoolfScreen.xml" KeyPath="yes" />
@@ -542,6 +545,9 @@
             <Component Id="Kruskal.xml">
               <File Id="Kruskal.xml" Name="Kruskal.xml" KeyPath="yes" />
             </Component>
+            <Component Id="KruskalSimulateExactP.xml">
+              <File Id="KruskalSimulateExactP.xml" Name="KruskalSimulateExactP.xml" KeyPath="yes" />
+            </Component>
             <Component Id="KruskalWallisMulti.xml">
               <File Id="KruskalWallisMulti.xml" Name="KruskalWallisMulti.xml" KeyPath="yes" />
             </Component>
@@ -701,6 +707,9 @@
             <Component Id="PCRCovariance.xml">
               <File Id="PCRCovariance.xml" Name="PCRCovariance.xml" KeyPath="yes" />
             </Component>
+            <Component Id="PCRCovarianceNoFollowOns.xml">
+              <File Id="PCRCovarianceNoFollowOns.xml" Name="PCRCovarianceNoFollowOns.xml" KeyPath="yes" />
+            </Component>
             <Component Id="PCRMatrix.xml">
               <File Id="PCRMatrix.xml" Name="PCRMatrix.xml" KeyPath="yes" />
             </Component>
@@ -754,6 +763,9 @@
             </Component>
             <Component Id="PolynomialRegressionBackInterpolation.xml">
               <File Id="PolynomialRegressionBackInterpolation.xml" Name="PolynomialRegressionBackInterpolation.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="PolynomialRegressionChangeDegree.xml">
+              <File Id="PolynomialRegressionChangeDegree.xml" Name="PolynomialRegressionChangeDegree.xml" KeyPath="yes" />
             </Component>
             <Component Id="PolynomialRegressionConfidence.xml">
               <File Id="PolynomialRegressionConfidence.xml" Name="PolynomialRegressionConfidence.xml" KeyPath="yes" />
@@ -1617,7 +1629,7 @@
       <ComponentRef Id="StatsDirect.exe.config" />
 
       <!-- Sample files -->
-      <ComponentRef Id="test.xls" />
+      <ComponentRef Id="test.xlsx" />
 
       <!-- Operations -->
       <ComponentRef Id="AbridgedLifetable.xml" />
@@ -1633,6 +1645,7 @@
       <ComponentRef Id="Chi2byNWithoutTrend.xml" />
       <ComponentRef Id="Chi2byNWithTrend.xml" />
       <ComponentRef Id="Chi2byNWithTrendSimulateExactP.xml" />
+      <ComponentRef Id="ChiGFSimulateExactP.xml" />
       <ComponentRef Id="ChiSquareGoodnessOfFit.xml" />
       <ComponentRef Id="ChiWoolfScreen.xml" />
       <ComponentRef Id="ChiWoolfWorksheet.xml" />
@@ -1709,6 +1722,7 @@
       <ComponentRef Id="KappaSimulateExactP.xml" />
       <ComponentRef Id="Kendall.xml" />
       <ComponentRef Id="Kruskal.xml" />
+      <ComponentRef Id="KruskalSimulateExactP.xml" />
       <ComponentRef Id="KruskalWallisMulti.xml" />
       <ComponentRef Id="LadderPlot.xml" />
       <ComponentRef Id="LadderPowers.xml" />
@@ -1762,6 +1776,7 @@
       <ComponentRef Id="PCRCoefficients.xml" />
       <ComponentRef Id="PCRCorrelation.xml" />
       <ComponentRef Id="PCRCovariance.xml" />
+      <ComponentRef Id="PCRCovarianceNoFollowOns.xml" />
       <ComponentRef Id="PCRMatrix.xml" />
       <ComponentRef Id="PCRScores.xml" />
       <ComponentRef Id="PetoMeta.xml" />
@@ -1780,6 +1795,7 @@
       <ComponentRef Id="PolynomialAreaUnderCurve.xml" />
       <ComponentRef Id="PolynomialRegression.xml" />
       <ComponentRef Id="PolynomialRegressionBackInterpolation.xml" />
+      <ComponentRef Id="PolynomialRegressionChangeDegree.xml" />
       <ComponentRef Id="PolynomialRegressionConfidence.xml" />
       <ComponentRef Id="PolynomialRegressionInterpolation.xml" />
       <ComponentRef Id="PolynomialRegressionPlot.xml" />
