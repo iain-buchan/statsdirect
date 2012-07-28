@@ -597,7 +597,6 @@ namespace StatsDirect.UI
                 fs.Close();
                 */
                 stream.Position = 0;
-                Application.DoEvents();
                 using (Image image = Image.FromStream(stream))
                 {
                     return Formatting.ImageToRtf(image);

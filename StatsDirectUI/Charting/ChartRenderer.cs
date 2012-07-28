@@ -143,7 +143,6 @@ namespace StatsDirect.Charting
 
         private static MarkerType[] _MarkerTypes;
 
-        // TRANSMISSINGCOMMENT: Property DefaultRequestScaleLimits
         public static bool DefaultRequestScaleLimits
         {
             get
@@ -152,7 +151,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DefaultBoxAxes
         public static bool DefaultBoxAxes
         {
             get
@@ -169,7 +167,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DefaultAxisLabelFont
         public static Font DefaultAxisLabelFont
         {
             get
@@ -186,7 +183,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DefaultSeriesLabelFont
         public static Font DefaultSeriesLabelFont
         {
             get
@@ -195,7 +191,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DefaultAxisTitleFont
         public static Font DefaultAxisTitleFont
         {
             get
@@ -212,7 +207,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DefaultLabelFont
         public static Font DefaultLabelFont
         {
             get
@@ -229,7 +223,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DefaultLegendFont
         public static Font DefaultLegendFont
         {
             get
@@ -246,7 +239,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DefaultTitleFont
         public static Font DefaultTitleFont
         {
             get
@@ -263,7 +255,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property MarkerTypes
         public static MarkerType[] MarkerTypes
         {
             get
@@ -276,7 +267,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Method InitSharedValues
         private static void InitSharedValues()
         {
             AreSharedValuesInitialised = true; //  Set early to prevent recursively trying to initialise properties when saving them
@@ -285,8 +275,6 @@ namespace StatsDirect.Charting
             InitFlags();
         }
 
-
-        // TRANSMISSINGCOMMENT: Property DataMinX
         public double DataMinX
         {
             get
@@ -299,7 +287,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DataMaxX
         public double DataMaxX
         {
             get
@@ -312,7 +299,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DataMinY
         public double DataMinY
         {
             get
@@ -325,7 +311,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property DataMaxY
         public double DataMaxY
         {
             get
@@ -350,7 +335,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Method GetScaleParameters
         public ScaleParameters GetScaleParameters()
         {
             switch (definition.ChartType)
@@ -396,7 +380,6 @@ namespace StatsDirect.Charting
             }
 
         }
-
 
         ///  <summary>
         ///  Plot a chart.
@@ -451,16 +434,12 @@ namespace StatsDirect.Charting
 
         }
 
-
-        // TRANSMISSINGCOMMENT: Method InitFlags
         private static void InitFlags()
         {
             defaultBoxAxes = Settings1.Default.BoxAxes;
             defaultAllBlack = Settings1.Default.BlackAndWhite;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method InitFonts
         private static void InitFonts()
         {
             //  Title
@@ -481,8 +460,6 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method FontFromSaveString
         public static Font FontFromSaveString(string Descriptor)
         {
             string[] fontStrings = Descriptor.Split(';');
@@ -492,15 +469,11 @@ namespace StatsDirect.Charting
             return new Font(fontString, sz, style);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SaveStringFromFont
         public static string SaveStringFromFont(Font f)
         {
             return f.FontFamily.Name + ";" + (Convert.ToInt32(f.Style)).ToString() + ";" + f.Size.ToString();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method InitFirstFonts
         private static void InitFirstFonts()
         {
             //  Default fonts, in case there are no preferences
@@ -511,7 +484,6 @@ namespace StatsDirect.Charting
             DefaultTitleFont = new Font("Calibri", Convert.ToSingle(16 * SCALE_FACTOR), FontStyle.Bold);
             SaveFonts();
         }
-
 
         ///  <summary>
         ///  Initialise the marker types from persistent storage or (if none) from defaults
@@ -580,8 +552,6 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SaveFlags
         public static void SaveFlags()
         {
             Settings1.Default.BlackAndWhite = defaultAllBlack;
@@ -590,8 +560,6 @@ namespace StatsDirect.Charting
             SaveSettings(Settings1.Default);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SaveFonts
         public static void SaveFonts()
         {
             Settings1.Default.LabelFont = SaveStringFromFont(DefaultLabelFont);
@@ -600,8 +568,6 @@ namespace StatsDirect.Charting
             SaveSettings(Settings1.Default);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SaveMarkerTypes
         public static void SaveMarkerTypes()
         {
             System.Text.StringBuilder savedSettings = new System.Text.StringBuilder();
@@ -641,8 +607,6 @@ namespace StatsDirect.Charting
             SaveSettings(Settings1.Default);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method InitFirstMarkerTypes
         private static void InitFirstMarkerTypes()
         {
             _MarkerTypes[0].Shape = MarkerShape.Circle;
@@ -698,8 +662,6 @@ namespace StatsDirect.Charting
             SaveMarkerTypes();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SaveSettings
         private static void SaveSettings(Settings1 s)
         {
             IsolatedStorageFilePermission p = new IsolatedStorageFilePermission(PermissionState.Unrestricted);
@@ -713,7 +675,6 @@ namespace StatsDirect.Charting
                 CodeAccessPermission.RevertAssert();
             }
         }
-
 
         ///  <summary>
         ///  Set up some appropriate default axes.
@@ -730,7 +691,6 @@ namespace StatsDirect.Charting
             XExtCanvas = MetaW / 1.25 * ScaleXAxis;
             YExtCanvas = MetaH - Math.Min(MetaH / 4, 2 * DEFAULT_Y_GAP * ScaleYAxis);
         }
-
 
         ///  <summary>
         ///  Prepare to plot a metafile chart to the specified stream.
@@ -763,15 +723,11 @@ namespace StatsDirect.Charting
             SetupGraphics();
         }
 
-        // TRANSWARNING: Automatically generated because of optional parameter(s) 
-        // TRANSMISSINGCOMMENT: Method StartMetafile
         public void StartMetafile(Stream OutputStream)
         {
             StartMetafile(OutputStream, true);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SetupGraphics
         private void SetupGraphics()
         {
             if (cachedOutputStream != null)
@@ -780,22 +736,22 @@ namespace StatsDirect.Charting
                 //  Dim newGraphics As Graphics = Graphics.FromImage(New Bitmap(CInt(MetaW), CInt(MetaH), Imaging.PixelFormat.Format32bppArgb))
                 using (Bitmap b = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
                 {
-                    Graphics newGraphics = Graphics.FromImage(b);
-                    IntPtr hdc = newGraphics.GetHdc();
-                    //  Create metafile object to record.
-                    cachedOutputStream.Position = 0; //  Just in case we're resetting an earlier metafile output
-                    metaFile = new System.Drawing.Imaging.Metafile(cachedOutputStream, hdc, new RectangleF(0, 0, Convert.ToSingle(MetaW), Convert.ToSingle(MetaH)), System.Drawing.Imaging.MetafileFrameUnit.Pixel, System.Drawing.Imaging.EmfType.EmfPlusDual);
-                    //  Create graphics object to record metaFile.
-                    Canvas = Graphics.FromImage(metaFile);
-                    Canvas.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                    //  Release handle to scratch device context.
-                    newGraphics.ReleaseHdc(hdc);
-                    //  Dispose of scratch graphics object.
-                    newGraphics.Dispose();
+                    using (Graphics newGraphics = Graphics.FromImage(b))
+                    {
+                        IntPtr hdc = newGraphics.GetHdc();
+                        //  Create metafile object to record.
+                        cachedOutputStream.Position = 0; //  Just in case we're resetting an earlier metafile output
+                        metaFile = new System.Drawing.Imaging.Metafile(cachedOutputStream, hdc, new RectangleF(0, 0, Convert.ToSingle(MetaW), Convert.ToSingle(MetaH)), System.Drawing.Imaging.MetafileFrameUnit.Pixel, System.Drawing.Imaging.EmfType.EmfPlusDual);
+                        //  Create graphics object to record metaFile.
+                        Canvas = Graphics.FromImage(metaFile);
+                        Canvas.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                        //  Release handle to scratch device context.
+                        newGraphics.ReleaseHdc(hdc);
+                        //  Dispose of scratch graphics object.
+                    }
                 }
             }
         }
-
 
         ///  <summary>
         ///  Stop plotting a metafile chart and release resources.
@@ -878,25 +834,19 @@ namespace StatsDirect.Charting
             cachedOutputStream = null;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawTitle
-        private void DrawTitle(string Title)
+        private void DrawTitle(string title)
         {
-            StringFormat TxtFormat = new StringFormat { Alignment = StringAlignment.Center };
-
-            DrawString(Title, TitleFont, Brushes.Black, (XExtCanvas / 2) + XAxisCanvas, YAxisCanvas + YExtCanvas + 60 - TitleFont.Height * 0.5F, TxtFormat);
-            TxtFormat.Dispose();
+            using (StringFormat txtFormat = new StringFormat { Alignment = StringAlignment.Center })
+            {
+                DrawString(title, TitleFont, Brushes.Black, (XExtCanvas / 2) + XAxisCanvas, YAxisCanvas + YExtCanvas + 60 - TitleFont.Height * 0.5F, txtFormat);
+            }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawString
-        private void DrawString(string s, Font font, Brush brush, double x, double y, StringFormat TxtFormat)
+        private void DrawString(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat)
         {
-            Canvas.DrawString(s, font, brush, Convert.ToSingle(x), Convert.ToSingle(MetaH - y), TxtFormat);
+            Canvas.DrawString(s, font, brush, Convert.ToSingle(x), Convert.ToSingle(MetaH - y), txtFormat);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DirectionToAngle
         private float DirectionToAngle(LabelDirection Direction)
         {
             switch (Direction)
@@ -916,7 +866,6 @@ namespace StatsDirect.Charting
             return 0;
         }
 
-
         ///  <summary>
         ///  Cases:
         ///  Left-justify: (x,y) is centre of left-hand edge of text.
@@ -927,56 +876,54 @@ namespace StatsDirect.Charting
         ///  <param name="brush"></param>
         ///  <param name="x">The </param>
         ///  <param name="y"></param>
-        ///  <param name="TxtFormat"></param>
-        ///  <param name="Direction"></param>
+        ///  <param name="txtFormat"></param>
+        ///  <param name="direction"></param>
         ///  <remarks></remarks>
-        private SizeF DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat TxtFormat, LabelDirection Direction)
+        private SizeF DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {
             //  Work out how to fiddle the text alignment
-            if (TxtFormat.LineAlignment == StringAlignment.Center && TxtFormat.Alignment == StringAlignment.Far)
+            if (txtFormat.LineAlignment == StringAlignment.Center && txtFormat.Alignment == StringAlignment.Far)
             {
                 //  Middle-right: Vertical text needs fiddling, otherwise we're OK.
-                if (Direction == LabelDirection.Up)
+                if (direction == LabelDirection.Up)
                 {
-                    TxtFormat = ((StringFormat)(TxtFormat.Clone()));
-                    TxtFormat.LineAlignment = StringAlignment.Far;
-                    TxtFormat.Alignment = StringAlignment.Center;
+                    txtFormat = ((StringFormat)(txtFormat.Clone()));
+                    txtFormat.LineAlignment = StringAlignment.Far;
+                    txtFormat.Alignment = StringAlignment.Center;
                 }
-                else if (Direction == LabelDirection.Down)
+                else if (direction == LabelDirection.Down)
                 {
-                    TxtFormat = ((StringFormat)(TxtFormat.Clone()));
-                    TxtFormat.LineAlignment = StringAlignment.Near;
-                    TxtFormat.Alignment = StringAlignment.Center;
+                    txtFormat = ((StringFormat)(txtFormat.Clone()));
+                    txtFormat.LineAlignment = StringAlignment.Near;
+                    txtFormat.Alignment = StringAlignment.Center;
                 }
             }
-            else if (TxtFormat.LineAlignment == StringAlignment.Near && TxtFormat.Alignment == StringAlignment.Center)
+            else if (txtFormat.LineAlignment == StringAlignment.Near && txtFormat.Alignment == StringAlignment.Center)
             {
                 //  Top-centre: Anything other than across needs fiddling.
-                if (Direction == LabelDirection.Down || Direction == LabelDirection.SlopeDown)
+                if (direction == LabelDirection.Down || direction == LabelDirection.SlopeDown)
                 {
-                    TxtFormat = ((StringFormat)(TxtFormat.Clone()));
-                    TxtFormat.LineAlignment = StringAlignment.Center;
-                    TxtFormat.Alignment = StringAlignment.Near;
+                    txtFormat = ((StringFormat)(txtFormat.Clone()));
+                    txtFormat.LineAlignment = StringAlignment.Center;
+                    txtFormat.Alignment = StringAlignment.Near;
                 }
-                else if (Direction == LabelDirection.SlopeUp || Direction == LabelDirection.Up)
+                else if (direction == LabelDirection.SlopeUp || direction == LabelDirection.Up)
                 {
-                    TxtFormat = ((StringFormat)(TxtFormat.Clone()));
-                    TxtFormat.LineAlignment = StringAlignment.Center;
-                    TxtFormat.Alignment = StringAlignment.Far;
+                    txtFormat = ((StringFormat)(txtFormat.Clone()));
+                    txtFormat.LineAlignment = StringAlignment.Center;
+                    txtFormat.Alignment = StringAlignment.Far;
                 }
             }
-            float angle = DirectionToAngle(Direction);
+            float angle = DirectionToAngle(direction);
             Canvas.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(MetaH - y));
             Canvas.RotateTransform(angle);
-            Canvas.DrawString(s, font, brush, 0, 0, TxtFormat);
+            Canvas.DrawString(s, font, brush, 0, 0, txtFormat);
             Canvas.ResetTransform();
             SizeF uprightSize = Canvas.MeasureString(s, font);
-            SizeF boundingSize = ToBoundingSize(uprightSize, Direction);
+            SizeF boundingSize = ToBoundingSize(uprightSize, direction);
             return boundingSize;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method ToBoundingSize
         public SizeF ToBoundingSize(SizeF uprightSize, LabelDirection Direction)
         {
             switch (Direction)
@@ -995,67 +942,58 @@ namespace StatsDirect.Charting
             return new SizeF();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawXAxisTitle
-        public void DrawXAxisTitle(string Title)
+        public void DrawXAxisTitle(string title)
         {
-            if (!(string.IsNullOrEmpty(Title)))
-                DrawXAxisTitle(Title, AxisLabelFont.Height);
+            if (!(string.IsNullOrEmpty(title)))
+                DrawXAxisTitle(title, AxisLabelFont.Height);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawXAxisTitle
-        public void DrawXAxisTitle(string Title, double GapForAxisLabels)
+        public void DrawXAxisTitle(string title, double gapForAxisLabels)
         {
-            if (!(string.IsNullOrEmpty(Title)))
+            if (!(string.IsNullOrEmpty(title)))
             {
-                StringFormat TxtFormat = new StringFormat { Alignment = StringAlignment.Center };
-
-                DrawString(Title, AxisTitleFont, Brushes.Black, (XExtCanvas / 2) + XAxisCanvas, YAxisCanvas - AxisBigTick - GapForAxisLabels - AxisTitleFont.Height * 0.5 - LABEL_TO_AXIS_LABEL_GAP, TxtFormat);
-                TxtFormat.Dispose();
+                using (StringFormat txtFormat = new StringFormat { Alignment = StringAlignment.Center })
+                {
+                    DrawString(title, AxisTitleFont, Brushes.Black, (XExtCanvas / 2) + XAxisCanvas, YAxisCanvas - AxisBigTick - gapForAxisLabels - AxisTitleFont.Height * 0.5 - LABEL_TO_AXIS_LABEL_GAP, txtFormat);
+                }
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawVerticalAxisLabel
-        private void DrawVerticalAxisLabel(string Text, StringAlignment Alignment, double X, double Y)
+        private void DrawVerticalAxisLabel(string text, StringAlignment alignment, double x, double y)
         {
-            StringFormat TxtFormat = new StringFormat { Alignment = Alignment };
-
-            TxtFormat.Alignment = StringAlignment.Near;
-            Canvas.TranslateTransform(Convert.ToSingle(X), Convert.ToSingle(MetaH - Y));
-            Canvas.RotateTransform(-90.0F);
-            Canvas.DrawString(Text, AxisLabelFont, Brushes.Black, 0, 0, TxtFormat);
-            Canvas.ResetTransform();
-            TxtFormat.Dispose();
-        }
-
-
-        // TRANSMISSINGCOMMENT: Method DrawYAxisTitle
-        public void DrawYAxisTitle(string Title, double yShift)
-        {
-            if (!(string.IsNullOrEmpty(Title)))
+            using (StringFormat txtFormat = new StringFormat { Alignment = alignment })
             {
-                StringFormat TxtFormat = new StringFormat { Alignment = StringAlignment.Center };
-
-                Canvas.TranslateTransform(Convert.ToSingle(XAxisCanvas - AxisLabelFont.Height - AxisBigTick - yShift - LABEL_TO_AXIS_LABEL_GAP), Convert.ToSingle(MetaH - (YExtCanvas / 2 + YAxisCanvas)));
+                txtFormat.Alignment = StringAlignment.Near;
+                Canvas.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(MetaH - y));
                 Canvas.RotateTransform(-90.0F);
-                Canvas.DrawString(Title, AxisTitleFont, Brushes.Black, 0, 0, TxtFormat);
+                Canvas.DrawString(text, AxisLabelFont, Brushes.Black, 0, 0, txtFormat);
                 Canvas.ResetTransform();
-                TxtFormat.Dispose();
             }
         }
 
+        public void DrawYAxisTitle(string title, double yShift)
+        {
+            if (!(string.IsNullOrEmpty(title)))
+            {
+                using (StringFormat txtFormat = new StringFormat { Alignment = StringAlignment.Center })
+                {
+                    Canvas.TranslateTransform(Convert.ToSingle(XAxisCanvas - AxisLabelFont.Height - AxisBigTick - yShift - LABEL_TO_AXIS_LABEL_GAP), Convert.ToSingle(MetaH - (YExtCanvas / 2 + YAxisCanvas)));
+                    Canvas.RotateTransform(-90.0F);
+                    Canvas.DrawString(title, AxisTitleFont, Brushes.Black, 0, 0, txtFormat);
+                    Canvas.ResetTransform();
+                }
+            }
+        }
 
         ///  <summary>
         ///  Draw the axes and chart title.
         ///  </summary>
-        ///  <param name="Title">The title of the chart</param>
-        ///  <param name="X">The axis definition for the X-axis</param>
-        ///  <param name="Y">The axis definition for the Y-axis</param>
-        /// <param name="ShouldBoxAxes"></param>
-        /// <param name="ShouldDefaultAxes">If true, DefaultAxes() is called before the axes are drawn.</param>
-        /// <param name="UseCalculatedScalesEvenWithDefinition"></param>
+        ///  <param name="title">The title of the chart</param>
+        ///  <param name="x">The axis definition for the X-axis</param>
+        ///  <param name="y">The axis definition for the Y-axis</param>
+        /// <param name="shouldBoxAxes"></param>
+        /// <param name="shouldDefaultAxes">If true, DefaultAxes() is called before the axes are drawn.</param>
+        /// <param name="useCalculatedScalesEvenWithDefinition"></param>
         /// <remarks>Axis modes used to be:
         ///  1: x=scale, y=series, no box
         ///  2: y=scale, x=series, no box
@@ -1067,27 +1005,26 @@ namespace StatsDirect.Charting
         ///  8: x=scale, y=series, boxed
         ///  9: y=scale, x=series, boxed
         ///  23: x=scale, y=reverse-scale</remarks>
-        private void DrawAxes(string Title, Axis X, Axis Y, bool ShouldBoxAxes, bool ShouldDefaultAxes, bool UseCalculatedScalesEvenWithDefinition)
+        private void DrawAxes(string title, Axis x, Axis y, bool shouldBoxAxes, bool shouldDefaultAxes, bool useCalculatedScalesEvenWithDefinition)
         {
             const int ALREADY_ALLOWED_HEIGHT = 30;
 
             if (!(IsAscii))
             {
-                if (ShouldDefaultAxes)
+                if (shouldDefaultAxes)
                 {
                     DefaultAxes();
                 }
-                XAxisCanvas += Y.ExtraSpace;
-                XExtCanvas -= Y.ExtraSpace;
-                YAxisCanvas += X.ExtraSpace;
-                YExtCanvas -= X.ExtraSpace;
+                XAxisCanvas += y.ExtraSpace;
+                XExtCanvas -= y.ExtraSpace;
+                YAxisCanvas += x.ExtraSpace;
+                YExtCanvas -= x.ExtraSpace;
 
                 // Draw the title.  Don't draw the axis titles until we know how much we might have to move them.
-                DrawTitle(Title);
+                DrawTitle(title);
 
-                PushContainer();
                 // Draw the axes
-                switch (X.Mode)
+                switch (x.Mode)
                 {
                     case AxisMode.LineOnly:
                     case AxisMode.Scale:
@@ -1097,7 +1034,7 @@ namespace StatsDirect.Charting
                         break;
                 }
 
-                switch (Y.Mode)
+                switch (y.Mode)
                 {
                     case AxisMode.LineOnly:
                     case AxisMode.Scale:
@@ -1107,7 +1044,7 @@ namespace StatsDirect.Charting
                         break;
                 }
 
-                if (ShouldBoxAxes)
+                if (shouldBoxAxes)
                 {
                     // Boxed in, assume both drawn
                     AxisDrawline(XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas, XAxisCanvas, YAxisCanvas + YExtCanvas);
@@ -1118,13 +1055,13 @@ namespace StatsDirect.Charting
             { //  Is Ascii
 
                 // Draw the Title
-                int s = 40 - (Title.Length / 2);
-                WriteAsciiYX(SH_TX.GetUpperBound(0), s, Title);
+                int s = 40 - (title.Length / 2);
+                WriteAsciiYX(SH_TX.GetUpperBound(0), s, title);
             }
 
             double xHeight = 0;
-            double yShift = Y.AxisTitleOffset;
-            switch (X.Mode)
+            double yShift = y.AxisTitleOffset;
+            switch (x.Mode)
             {
                 case AxisMode.LineOnly:
                     //  Do nothing
@@ -1135,17 +1072,17 @@ namespace StatsDirect.Charting
                 case AxisMode.ReverseScale:
                     throw new ArgumentException("A reversed X scale is not currently supported");
                 case AxisMode.Scale:
-                    xHeight = DrawXScale(true, X.ScaleType, UseCalculatedScalesEvenWithDefinition);
+                    xHeight = DrawXScale(true, x.ScaleType, useCalculatedScalesEvenWithDefinition);
                     break;
                 case AxisMode.ScaleWithoutLabels:
-                    xHeight = DrawXScale(false, X.ScaleType, UseCalculatedScalesEvenWithDefinition);
+                    xHeight = DrawXScale(false, x.ScaleType, useCalculatedScalesEvenWithDefinition);
                     break;
                 case AxisMode.Series:
                     xHeight = DrawXSeries();
                     break;
             }
 
-            switch (Y.Mode)
+            switch (y.Mode)
             {
                 case AxisMode.LineOnly:
                     //  Do nothing
@@ -1154,10 +1091,10 @@ namespace StatsDirect.Charting
                     //  Do nothing
                     break;
                 case AxisMode.ReverseScale:
-                    yShift = DrawYScale(true, Y.ScaleType, UseCalculatedScalesEvenWithDefinition);
+                    yShift = DrawYScale(true, y.ScaleType, useCalculatedScalesEvenWithDefinition);
                     break;
                 case AxisMode.Scale:
-                    yShift = DrawYScale(false, Y.ScaleType, UseCalculatedScalesEvenWithDefinition);
+                    yShift = DrawYScale(false, y.ScaleType, useCalculatedScalesEvenWithDefinition);
                     break;
                 case AxisMode.ScaleWithoutLabels:
                     throw new ArgumentException("A Y scale without labels is not currently supported");
@@ -1171,31 +1108,28 @@ namespace StatsDirect.Charting
             if (!(IsAscii))
             {
                 double xShiftFromAxis = Math.Max(xHeight - ALREADY_ALLOWED_HEIGHT, 0);
-                DrawXAxisTitle(X.Title, Math.Max(xShiftFromAxis, X.AxisTitleOffset));
-                DrawYAxisTitle(Y.Title, yShift);
-                PopContainer();
+                DrawXAxisTitle(x.Title, Math.Max(xShiftFromAxis, x.AxisTitleOffset));
+                DrawYAxisTitle(y.Title, yShift);
             }
 
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawXScale
-        private double DrawXScale(bool DrawLabels, ScaleType ScaleType, bool UseCalculatedScalesEvenWithDefinition)
+        private double DrawXScale(bool drawLabels, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
             double aint = 0, amin = 0;
             string msk = "";
             double labelHeight = 0;
 
-            if (IsAscii || DrawLabels)
+            if (IsAscii || drawLabels)
             {
                 // find a neat axis division
-                Q_AxisOrFromDefinition(ref dataMinX, ref dataMaxX, out XDiv, ref amin, ref aint, out MinorTicsPerMajorTic, false, ScaleType, UseCalculatedScalesEvenWithDefinition);
+                Q_AxisOrFromDefinition(ref dataMinX, ref dataMaxX, out XDiv, ref amin, ref aint, out MinorTicsPerMajorTic, false, scaleType, useCalculatedScalesEvenWithDefinition);
                 // set the X axis min and max values to fit the scale
                 XInt = aint;
                 axisXMin = amin;
                 axisXMax = amin + (aint * XDiv);
                 // set a string mask that will fit OK
-                msk = AxisMaskOrFromDefinition(aint, amin, XDiv, MinorTicsPerMajorTic, false, ScaleType, UseCalculatedScalesEvenWithDefinition);
+                msk = AxisMaskOrFromDefinition(aint, amin, XDiv, MinorTicsPerMajorTic, false, scaleType, useCalculatedScalesEvenWithDefinition);
             }
             else
             {
@@ -1222,7 +1156,6 @@ namespace StatsDirect.Charting
                 if (hasGridLines)
                 {
                     gridLinePen = new Pen(AxisPen.Color, 1) { DashStyle = gridLineDashStyle };
-
                 }
                 for (int x = 0; x <= XDiv; x++)
                 {
@@ -1231,7 +1164,7 @@ namespace StatsDirect.Charting
                     {
                         //  Minor tic
                         AxisDrawline(x1, YAxisCanvas - AxisLittleTick, x1, YAxisCanvas);
-                        if (hasGridLines && !(DrawLabels))
+                        if (hasGridLines && !(drawLabels))
                         {
                             DrawLine(gridLinePen, x1, YAxisCanvas, x1, YAxisCanvas + YExtCanvas);
                         }
@@ -1239,11 +1172,11 @@ namespace StatsDirect.Charting
                     else
                     {
                         //  Major tic - may or may not be labelled
-                        if (DrawLabels)
+                        if (drawLabels)
                         {
                             double value = axisXMin + x * aint;
                             //  Un-transform value for non-linear scales
-                            switch (ScaleType)
+                            switch (scaleType)
                             {
                                 case ScaleType.Log10:
                                     value = Math.Pow(10, value);
@@ -1300,14 +1233,12 @@ namespace StatsDirect.Charting
             return labelHeight;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method Q_AxisOrFromDefinition
-        private void Q_AxisOrFromDefinition(ref double qmin, ref double qmax, out int div, ref double zmin, ref double zint, out int MinorTicsPerMajorTic, bool IsY, ScaleType ScaleType, bool UseCalculatedScalesEvenWithDefinition)
+        private void Q_AxisOrFromDefinition(ref double qmin, ref double qmax, out int div, ref double zmin, ref double zint, out int minorTicsPerMajorTic, bool isY, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
-            if ((definition != null) && definition.HasScaleParameters && !(UseCalculatedScalesEvenWithDefinition))
+            if ((definition != null) && definition.HasScaleParameters && !(useCalculatedScalesEvenWithDefinition))
             {
                 //  Use the values in our scale parameters
-                AxisScaleParameters asp = IsY ? definition.ScaleParameters.Y : definition.ScaleParameters.X;
+                AxisScaleParameters asp = isY ? definition.ScaleParameters.Y : definition.ScaleParameters.X;
                 if ((asp != null) && asp.HasAxisScale)
                 {
                     qmin = asp.QMin;
@@ -1315,16 +1246,14 @@ namespace StatsDirect.Charting
                     div = asp.Div;
                     zmin = asp.ZMin;
                     zint = asp.ZInt;
-                    MinorTicsPerMajorTic = asp.MinorTicsPerMajorTic;
+                    minorTicsPerMajorTic = asp.MinorTicsPerMajorTic;
                     return;
                 }
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
-            AxisScaler.Q_Axis(ref qmin, ref qmax, out div, ref zmin, ref zint, out MinorTicsPerMajorTic, ScaleType);
+            AxisScaler.Q_Axis(ref qmin, ref qmax, out div, ref zmin, ref zint, out minorTicsPerMajorTic, scaleType);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method AxisMaskOrFromDefinition
         private string AxisMaskOrFromDefinition(double stepp, double znmin, int nstep, int sp, bool IsY, ScaleType ScaleType, bool UseCalculatedScalesEvenWithDefinition)
         {
             if ((definition != null) && definition.HasScaleParameters && !(UseCalculatedScalesEvenWithDefinition))
@@ -1340,8 +1269,6 @@ namespace StatsDirect.Charting
             return AxisScaler.AxisMask(stepp, znmin, nstep, sp, ScaleType);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawYScale
         private double DrawYScale(bool reverse, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
             const double AXIS_LABEL_OFFSET_FROM_BIG_TICK = 8;
@@ -1453,48 +1380,49 @@ namespace StatsDirect.Charting
             if (!(IsAscii))
             {
                 //  Vector
-                StringFormat TxtFormat = new StringFormat { Alignment = StringAlignment.Far };
-
-                LabelDirection direction = LabelDirection.Across;
-                bool hasGridLines = false;
-                System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-                Pen gridLinePen = null;
-                if (HasScaleParameters && definition.ScaleParameters.Y != null)
+                using (StringFormat txtFormat = new StringFormat { Alignment = StringAlignment.Far })
                 {
-                    direction = definition.ScaleParameters.Y.LabelDirection;
-                    hasGridLines = definition.ScaleParameters.Y.HasGridLines;
-                    gridLineDashStyle = definition.ScaleParameters.Y.GridLineDashStyle;
-                }
-                if (hasGridLines)
-                {
-                    gridLinePen = new Pen(AxisPen.Color, 1) { DashStyle = gridLineDashStyle };
-
-                }
-                double yoff = AxisLabelFont.Height / 2.0;
-                double count = Convert.ToDouble(definition.YSeries.Count);
-                for (int y = 0; y <= definition.YSeries.Count - 1; y++)
-                {
-                    double yctr = YAxisCanvas + YExtCanvas - ((y + 0.5) / count * YExtCanvas);
-                    double ytic = YAxisCanvas + YExtCanvas - (y / count * YExtCanvas);
-                    //  TODO: There's an error here where MetaH is not default.  The string is not offset by MetaH, leading to the strings being drawn in an unexpected order.
-                    //  However, as all the charts in here accommodate that order, this hasn't been fixed!  PJC 2009/12/22
-                    float angle = DirectionToAngle(direction);
-                    Canvas.TranslateTransform(Convert.ToSingle(XAxisCanvas - (AxisBigTick + 3)), Convert.ToSingle(yctr - yoff));
-                    Canvas.RotateTransform(angle);
-                    Canvas.DrawString(definition.YSeries[y].Title, AxisLabelFont, AxisBrush, 0, 0, TxtFormat);
-                    Canvas.ResetTransform();
-                    SizeF uprightSize = Canvas.MeasureString(definition.YSeries[y].Title, AxisLabelFont);
-                    SizeF boundingSize = ToBoundingSize(uprightSize, direction);
-                    maxWidth = Math.Max(Convert.ToSingle(maxWidth), boundingSize.Width);
-                    AxisDrawline(XAxisCanvas - AxisBigTick, ytic, XAxisCanvas, ytic);
+                    LabelDirection direction = LabelDirection.Across;
+                    bool hasGridLines = false;
+                    System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+                    Pen gridLinePen = null;
+                    if (HasScaleParameters && definition.ScaleParameters.Y != null)
+                    {
+                        direction = definition.ScaleParameters.Y.LabelDirection;
+                        hasGridLines = definition.ScaleParameters.Y.HasGridLines;
+                        gridLineDashStyle = definition.ScaleParameters.Y.GridLineDashStyle;
+                    }
                     if (hasGridLines)
                     {
-                        DrawLine(gridLinePen, XAxisCanvas, ytic, XAxisCanvas + XExtCanvas, ytic);
+                        gridLinePen = new Pen(AxisPen.Color, 1) {DashStyle = gridLineDashStyle};
+
                     }
-                }
-                if (gridLinePen != null)
-                {
-                    gridLinePen.Dispose();
+                    double yoff = AxisLabelFont.Height / 2.0;
+                    double count = Convert.ToDouble(definition.YSeries.Count);
+                    for (int y = 0; y <= definition.YSeries.Count - 1; y++)
+                    {
+                        double yctr = YAxisCanvas + YExtCanvas - ((y + 0.5) / count * YExtCanvas);
+                        double ytic = YAxisCanvas + YExtCanvas - (y / count * YExtCanvas);
+                        //  TODO: There's an error here where MetaH is not default.  The string is not offset by MetaH, leading to the strings being drawn in an unexpected order.
+                        //  However, as all the charts in here accommodate that order, this hasn't been fixed!  PJC 2009/12/22
+                        float angle = DirectionToAngle(direction);
+                        Canvas.TranslateTransform(Convert.ToSingle(XAxisCanvas - (AxisBigTick + 3)), Convert.ToSingle(yctr - yoff));
+                        Canvas.RotateTransform(angle);
+                        Canvas.DrawString(definition.YSeries[y].Title, AxisLabelFont, AxisBrush, 0, 0, txtFormat);
+                        Canvas.ResetTransform();
+                        SizeF uprightSize = Canvas.MeasureString(definition.YSeries[y].Title, AxisLabelFont);
+                        SizeF boundingSize = ToBoundingSize(uprightSize, direction);
+                        maxWidth = Math.Max(Convert.ToSingle(maxWidth), boundingSize.Width);
+                        AxisDrawline(XAxisCanvas - AxisBigTick, ytic, XAxisCanvas, ytic);
+                        if (hasGridLines)
+                        {
+                            DrawLine(gridLinePen, XAxisCanvas, ytic, XAxisCanvas + XExtCanvas, ytic);
+                        }
+                    }
+                    if (gridLinePen != null)
+                    {
+                        gridLinePen.Dispose();
+                    }
                 }
             }
             else
@@ -1517,50 +1445,48 @@ namespace StatsDirect.Charting
             return maxWidth;
         }
 
-
         ///  <summary>
         ///  Draw the Y axis as a series
         ///  </summary>
         ///  <remarks>Labels are drawn centred between tics</remarks>
-        private double DrawYSeries(IList<string> Labels)
+        private double DrawYSeries(IList<string> labels)
         {
             double maxWidth = 0;
-            StringFormat txtFormat = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
-
-
-            LabelDirection direction = LabelDirection.Across;
-            bool hasGridLines = false;
-            System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-            Pen gridLinePen = null;
-            if (HasScaleParameters && definition.ScaleParameters.Y != null)
+            using (StringFormat txtFormat = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center })
             {
-                direction = definition.ScaleParameters.Y.LabelDirection;
-                hasGridLines = definition.ScaleParameters.Y.HasGridLines;
-                gridLineDashStyle = definition.ScaleParameters.Y.GridLineDashStyle;
-            }
-            if (hasGridLines)
-            {
-                gridLinePen = new Pen(AxisPen.Color, 1) { DashStyle = gridLineDashStyle };
-            }
-            double count = Labels.Count;
-            for (int y = 0; y <= Labels.Count - 1; y++)
-            {
-                double yctr = YAxisCanvas + YExtCanvas - ((y + 0.5) / count * YExtCanvas);
-                double ytic = YAxisCanvas + YExtCanvas - (y / count * YExtCanvas);
-                maxWidth = Math.Max(Convert.ToSingle(maxWidth), DrawStringAtAngle(Labels[y], AxisLabelFont, AxisBrush, XAxisCanvas - (AxisBigTick + 3), yctr, txtFormat, direction).Width);
-                AxisDrawline(XAxisCanvas - AxisBigTick, ytic, XAxisCanvas, ytic);
+                LabelDirection direction = LabelDirection.Across;
+                bool hasGridLines = false;
+                System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+                Pen gridLinePen = null;
+                if (HasScaleParameters && definition.ScaleParameters.Y != null)
+                {
+                    direction = definition.ScaleParameters.Y.LabelDirection;
+                    hasGridLines = definition.ScaleParameters.Y.HasGridLines;
+                    gridLineDashStyle = definition.ScaleParameters.Y.GridLineDashStyle;
+                }
                 if (hasGridLines)
                 {
-                    DrawLine(gridLinePen, XAxisCanvas, ytic, XAxisCanvas + XExtCanvas, ytic);
+                    gridLinePen = new Pen(AxisPen.Color, 1) {DashStyle = gridLineDashStyle};
                 }
+                double count = labels.Count;
+                for (int y = 0; y <= labels.Count - 1; y++)
+                {
+                    double yctr = YAxisCanvas + YExtCanvas - ((y + 0.5) / count * YExtCanvas);
+                    double ytic = YAxisCanvas + YExtCanvas - (y / count * YExtCanvas);
+                    maxWidth = Math.Max(Convert.ToSingle(maxWidth), DrawStringAtAngle(labels[y], AxisLabelFont, AxisBrush, XAxisCanvas - (AxisBigTick + 3), yctr, txtFormat, direction).Width);
+                    AxisDrawline(XAxisCanvas - AxisBigTick, ytic, XAxisCanvas, ytic);
+                    if (hasGridLines)
+                    {
+                        DrawLine(gridLinePen, XAxisCanvas, ytic, XAxisCanvas + XExtCanvas, ytic);
+                    }
+                }
+                if (gridLinePen != null)
+                {
+                    gridLinePen.Dispose();
+                }
+                return maxWidth;
             }
-            if (gridLinePen != null)
-            {
-                gridLinePen.Dispose();
-            }
-            return maxWidth;
         }
-
 
         ///  <summary>
         ///  Draw the X axis as a series
@@ -1570,107 +1496,99 @@ namespace StatsDirect.Charting
             double maxHeight = 0;
             if (!(IsAscii))
             {
-                StringFormat txtFormat = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Near };
-
-
-                LabelDirection direction = LabelDirection.Across;
-                bool hasGridLines = false;
-                System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-                Pen gridLinePen = null;
-                if (HasScaleParameters && definition.ScaleParameters.X != null)
+                using (StringFormat txtFormat = new StringFormat {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Near})
                 {
-                    direction = definition.ScaleParameters.X.LabelDirection;
-                    hasGridLines = definition.ScaleParameters.X.HasGridLines;
-                    gridLineDashStyle = definition.ScaleParameters.X.GridLineDashStyle;
-                }
-                if (hasGridLines)
-                {
-                    gridLinePen = new Pen(AxisPen.Color, 1) { DashStyle = gridLineDashStyle };
-
-                }
-                double count = definition.XSeries.Count;
-                for (int x = 0; x <= definition.XSeries.Count - 1; x++)
-                {
-                    double xctr = XAxisCanvas + (x + 0.5) / count * XExtCanvas;
-                    double xtic = XAxisCanvas + Convert.ToDouble(x + 1) / count * XExtCanvas;
-                    maxHeight = Math.Max(Convert.ToSingle(maxHeight), DrawStringAtAngle(definition.XSeries[x].Title, AxisLabelFont, AxisBrush, xctr, YAxisCanvas - AxisBigTick, txtFormat, direction).Height);
-                    AxisDrawline(xtic, YAxisCanvas - AxisBigTick, xtic, YAxisCanvas);
+                    LabelDirection direction = LabelDirection.Across;
+                    bool hasGridLines = false;
+                    System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+                    Pen gridLinePen = null;
+                    if (HasScaleParameters && definition.ScaleParameters.X != null)
+                    {
+                        direction = definition.ScaleParameters.X.LabelDirection;
+                        hasGridLines = definition.ScaleParameters.X.HasGridLines;
+                        gridLineDashStyle = definition.ScaleParameters.X.GridLineDashStyle;
+                    }
                     if (hasGridLines)
                     {
-                        DrawLine(gridLinePen, xtic, YAxisCanvas, xtic, YAxisCanvas + YExtCanvas);
+                        gridLinePen = new Pen(AxisPen.Color, 1) {DashStyle = gridLineDashStyle};
+
                     }
-                }
-                if (gridLinePen != null)
-                {
-                    gridLinePen.Dispose();
+                    double count = definition.XSeries.Count;
+                    for (int x = 0; x <= definition.XSeries.Count - 1; x++)
+                    {
+                        double xctr = XAxisCanvas + (x + 0.5) / count * XExtCanvas;
+                        double xtic = XAxisCanvas + Convert.ToDouble(x + 1) / count * XExtCanvas;
+                        maxHeight = Math.Max(Convert.ToSingle(maxHeight), DrawStringAtAngle(definition.XSeries[x].Title, AxisLabelFont, AxisBrush, xctr, YAxisCanvas - AxisBigTick, txtFormat, direction).Height);
+                        AxisDrawline(xtic, YAxisCanvas - AxisBigTick, xtic, YAxisCanvas);
+                        if (hasGridLines)
+                        {
+                            DrawLine(gridLinePen, xtic, YAxisCanvas, xtic, YAxisCanvas + YExtCanvas);
+                        }
+                    }
+                    if (gridLinePen != null)
+                    {
+                        gridLinePen.Dispose();
+                    }
                 }
             }
             return maxHeight;
         }
-
 
         ///  <summary>
         ///  Draw the X axis as a series
         ///  </summary>
-        private double DrawXSeries(IList<string> Labels)
+        private double DrawXSeries(IList<string> labels)
         {
             double maxHeight = 0;
             if (!(IsAscii))
             {
-                StringFormat txtFormat = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Near };
-
-
-                LabelDirection direction = LabelDirection.Across;
-                bool hasGridLines = false;
-                System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-                Pen gridLinePen = null;
-                if (HasScaleParameters && definition.ScaleParameters.X != null)
+                using (StringFormat txtFormat = new StringFormat {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Near})
                 {
-                    direction = definition.ScaleParameters.X.LabelDirection;
-                    hasGridLines = definition.ScaleParameters.X.HasGridLines;
-                    gridLineDashStyle = definition.ScaleParameters.X.GridLineDashStyle;
-                }
-                if (hasGridLines)
-                {
-                    gridLinePen = new Pen(AxisPen.Color, 1) { DashStyle = gridLineDashStyle };
-
-                }
-                double count = Labels.Count;
-                for (int x = 0; x <= Labels.Count - 1; x++)
-                {
-                    double xctr = XAxisCanvas + (x + 0.5) / count * XExtCanvas;
-                    double xtic = XAxisCanvas + Convert.ToDouble(x + 1) / count * XExtCanvas;
-                    maxHeight = Math.Max(Convert.ToSingle(maxHeight), DrawStringAtAngle(Labels[x], AxisLabelFont, AxisBrush, xctr, YAxisCanvas - AxisBigTick, txtFormat, direction).Height);
-                    AxisDrawline(xtic, YAxisCanvas - AxisBigTick, xtic, YAxisCanvas);
+                    LabelDirection direction = LabelDirection.Across;
+                    bool hasGridLines = false;
+                    System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+                    Pen gridLinePen = null;
+                    if (HasScaleParameters && definition.ScaleParameters.X != null)
+                    {
+                        direction = definition.ScaleParameters.X.LabelDirection;
+                        hasGridLines = definition.ScaleParameters.X.HasGridLines;
+                        gridLineDashStyle = definition.ScaleParameters.X.GridLineDashStyle;
+                    }
                     if (hasGridLines)
                     {
-                        DrawLine(gridLinePen, xtic, YAxisCanvas, xtic, YAxisCanvas + YExtCanvas);
+                        gridLinePen = new Pen(AxisPen.Color, 1) {DashStyle = gridLineDashStyle};
+
                     }
-                }
-                if (gridLinePen != null)
-                {
-                    gridLinePen.Dispose();
+                    double count = labels.Count;
+                    for (int x = 0; x <= labels.Count - 1; x++)
+                    {
+                        double xctr = XAxisCanvas + (x + 0.5) / count * XExtCanvas;
+                        double xtic = XAxisCanvas + Convert.ToDouble(x + 1) / count * XExtCanvas;
+                        maxHeight = Math.Max(Convert.ToSingle(maxHeight), DrawStringAtAngle(labels[x], AxisLabelFont, AxisBrush, xctr, YAxisCanvas - AxisBigTick, txtFormat, direction).Height);
+                        AxisDrawline(xtic, YAxisCanvas - AxisBigTick, xtic, YAxisCanvas);
+                        if (hasGridLines)
+                        {
+                            DrawLine(gridLinePen, xtic, YAxisCanvas, xtic, YAxisCanvas + YExtCanvas);
+                        }
+                    }
+                    if (gridLinePen != null)
+                    {
+                        gridLinePen.Dispose();
+                    }
                 }
             }
             return maxHeight;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method AxisDrawline
-        private void AxisDrawline(double X1, double Y1, double X2, double Y2)
+        private void AxisDrawline(double x1, double y1, double x2, double y2)
         {
-            DrawLine(AxisPen, X1, Y1, X2, Y2);
+            DrawLine(AxisPen, x1, y1, x2, y2);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawLine
-        private void DrawLine(Pen P, double X1, double Y1, double X2, double Y2)
+        private void DrawLine(Pen p, double x1, double y1, double x2, double y2)
         {
-            Canvas.DrawLine(P, Convert.ToSingle(Math.Round(X1, 0)), Convert.ToSingle(Math.Round(MetaH - Y1, 0)), Convert.ToSingle(Math.Round(X2, 0)), Convert.ToSingle(Math.Round(MetaH - Y2, 0)));
+            Canvas.DrawLine(p, Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(MetaH - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(MetaH - y2, 0)));
         }
-
-
-        // TRANSNOTUSED: Private Method AxisDrawStringR
 
         //		private void AxisDrawStringR( string Txt, double X1, double Y1 ) 
         //		{ 
@@ -1681,48 +1599,50 @@ namespace StatsDirect.Charting
         //		} 
         //
 
-        // TRANSMISSINGCOMMENT: Method AxisDrawStringAtAngleRM
-        private SizeF AxisDrawStringAtAngleRM(string Txt, double X1, double Y1, LabelDirection Direction)
+        /// <summary>
+        /// Draw axis text aligned to the right
+        /// </summary>
+        /// <param name="txt"></param>
+        /// <param name="x1"></param>
+        /// <param name="y1"></param>
+        /// <param name="direction"></param>
+        /// <returns></returns>
+        private SizeF AxisDrawStringAtAngleRM(string txt, double x1, double y1, LabelDirection direction)
         {
-            // Draw axis text aligned to the right
-            StringFormat AlignTxt = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
-
-
-            return DrawStringAtAngle(Txt, AxisLabelFont, AxisBrush, X1, Y1, AlignTxt, Direction);
+            using (StringFormat alignTxt = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center })
+            {
+                return DrawStringAtAngle(txt, AxisLabelFont, AxisBrush, x1, y1, alignTxt, direction);
+            }
         }
-
 
         ///  <summary>
         ///  Draw axis text aligned to the centre
         ///  </summary>
-        ///  <param name="Txt"></param>
-        ///  <param name="X1"></param>
-        ///  <param name="Y1"></param>
-        /// <param name="Direction"></param>
-        private SizeF AxisDrawStringAtAngleCT(string Txt, double X1, double Y1, LabelDirection Direction)
+        ///  <param name="txt"></param>
+        ///  <param name="x1"></param>
+        ///  <param name="y1"></param>
+        /// <param name="direction"></param>
+        private SizeF AxisDrawStringAtAngleCT(string txt, double x1, double y1, LabelDirection direction)
         {
-            StringFormat AlignTxt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Near };
-
-
-            return DrawStringAtAngle(Txt, AxisLabelFont, AxisBrush, X1, Y1, AlignTxt, Direction);
+            using (StringFormat alignTxt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Near })
+            {
+                return DrawStringAtAngle(txt, AxisLabelFont, AxisBrush, x1, y1, alignTxt, direction);
+            }
         }
-
 
         ///  <summary>
         ///  Draw axis text aligned to the centre
         ///  </summary>
-        ///  <param name="Txt"></param>
-        ///  <param name="X1"></param>
-        ///  <param name="Y1"></param>
-        private void AxisDrawStringC(string Txt, double X1, double Y1)
+        ///  <param name="txt"></param>
+        ///  <param name="x1"></param>
+        ///  <param name="y1"></param>
+        private void AxisDrawStringC(string txt, double x1, double y1)
         {
-            StringFormat AlignTxt = new StringFormat { Alignment = StringAlignment.Center };
-
-            DrawString(Txt, AxisLabelFont, AxisBrush, X1, Y1, AlignTxt);
+            using (StringFormat AlignTxt = new StringFormat { Alignment = StringAlignment.Center })
+            {
+                DrawString(txt, AxisLabelFont, AxisBrush, x1, y1, AlignTxt);
+            }
         }
-
-
-        // TRANSNOTUSED: Private Method AxisDrawStringL
 
         //		private void AxisDrawStringL( string Txt, double X1, double Y1 ) 
         //		{ 
@@ -1737,18 +1657,15 @@ namespace StatsDirect.Charting
         ///  Draw legend text aligned to the left
         ///  </summary>
         ///  <remarks></remarks>
-        private void DrawStringLegendL(string Txt, double X, double Y)
+        private void DrawStringLegendL(string txt, double x, double y)
         {
-            DrawStringLegend(Txt, X, Y, StringAlignment.Near);
+            DrawStringLegend(txt, x, y, StringAlignment.Near);
         }
-
 
         ///  <summary>
         ///  Draw legend text aligned to the left
         ///  </summary>
         ///  <remarks></remarks>
-        // TRANSNOTUSED: Private Method DrawStringSeriesLabelL
-
         //		private void DrawStringSeriesLabelL( string Txt, double X, double Y ) 
         //		{ 
         //			DrawStringSeriesLabel( Txt, X, Y, StringAlignment.Near ); 
@@ -1759,11 +1676,12 @@ namespace StatsDirect.Charting
         ///  Draw legend text
         ///  </summary>
         ///  <remarks></remarks>
-        private void DrawStringLegend(string Txt, double X, double Y, StringAlignment Alignment)
+        private void DrawStringLegend(string txt, double x, double y, StringAlignment alignment)
         {
-            StringFormat AlignTxt = new StringFormat { Alignment = Alignment };
-
-            DrawString(Txt, LegendFont, AxisBrush, X, Y, AlignTxt);
+            using (StringFormat alignTxt = new StringFormat { Alignment = alignment })
+            {
+                DrawString(txt, LegendFont, AxisBrush, x, y, alignTxt);
+            }
         }
 
 
@@ -1771,8 +1689,6 @@ namespace StatsDirect.Charting
         ///  Draw legend text
         ///  </summary>
         ///  <remarks></remarks>
-        // TRANSNOTUSED: Private Method DrawStringSeriesLabel
-
         //		private void DrawStringSeriesLabel( string Txt, double X, double Y, StringAlignment Alignment ) 
         //		{ 
         //			StringFormat AlignTxt = new StringFormat(); 
@@ -1785,91 +1701,82 @@ namespace StatsDirect.Charting
         ///  Draw label text
         ///  </summary>
         ///  <remarks></remarks>
-        private void DrawStringLabel(string Txt, double X, double Y, StringAlignment Alignment)
+        private void DrawStringLabel(string txt, double x, double y, StringAlignment alignment)
         {
-            StringFormat AlignTxt = new StringFormat { Alignment = Alignment };
-
-            DrawString(Txt, LabelFont, AxisBrush, X, Y, AlignTxt);
+            using (StringFormat alignTxt = new StringFormat { Alignment = alignment })
+            {
+                DrawString(txt, LabelFont, AxisBrush, x, y, alignTxt);
+            }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawStringLabel
-        private void DrawStringLabel(string Txt, double X, double Y, StringAlignment Alignment, StringAlignment LineAlignment)
+        private void DrawStringLabel(string txt, double x, double y, StringAlignment alignment, StringAlignment lineAlignment)
         {
-            StringFormat AlignTxt = new StringFormat { Alignment = Alignment, LineAlignment = LineAlignment };
-
-
-            DrawString(Txt, LabelFont, AxisBrush, X, Y, AlignTxt);
+            using (StringFormat alignTxt = new StringFormat { Alignment = alignment, LineAlignment = lineAlignment })
+            {
+                DrawString(txt, LabelFont, AxisBrush, x, y, alignTxt);
+            }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method FillEllipse
         private void FillEllipse(Brush b, double x, double y, double width, double height)
         {
             Canvas.FillEllipse(b, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(MetaH - y)), Convert.ToInt32(Convert.ToSingle(width)), Convert.ToInt32(Convert.ToSingle(height)));
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawEllipse
         private void DrawEllipse(Pen p, double x, double y, double width, double height)
         {
             Canvas.DrawEllipse(p, Convert.ToSingle(x), Convert.ToSingle(MetaH - y), Convert.ToSingle(width), Convert.ToSingle(height));
         }
 
-
-        // TRANSMISSINGCOMMENT: Method FillRectangle
         private void FillRectangle(Brush b, double x, double y, double width, double height)
         {
             Canvas.FillRectangle(b, Convert.ToSingle(x), Convert.ToSingle(MetaH - y), Convert.ToSingle(width), Convert.ToSingle(height));
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawRectangle
         private void DrawRectangle(Pen p, double x, double y, double width, double height)
         {
             Canvas.DrawRectangle(p, Convert.ToSingle(x), Convert.ToSingle(MetaH - y), Convert.ToSingle(width), Convert.ToSingle(height));
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawMarker
-        private void DrawMarker(double X, double Y, double Size, MarkerShape Shape, bool IsFilled, Pen p)
+        private void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, Pen p)
         {
-            double size2 = Size * 2;
+            double size2 = size * 2;
 
-            switch (Shape)
+            switch (shape)
             {
                 case MarkerShape.Circle:
                     {
-                        if (IsFilled)
+                        if (isFilled)
                         {
                             using (Brush b = new SolidBrush(p.Color))
                             {
-                                FillEllipse(b, X - Size, Y + Size, size2, size2);
+                                FillEllipse(b, x - size, y + size, size2, size2);
                             }
                         }
                         else
                         {
-                            DrawEllipse(p, X - Size, Y + Size, size2, size2);
+                            DrawEllipse(p, x - size, y + size, size2, size2);
                         }
-                    } break;
+                    }
+                    break;
                 case MarkerShape.Square:
                     {
-                        if (IsFilled)
+                        if (isFilled)
                         {
                             using (Brush b = new SolidBrush(p.Color))
                             {
-                                FillRectangle(b, X - Size, Y + Size, size2, size2);
+                                FillRectangle(b, x - size, y + size, size2, size2);
                             }
                         }
                         else
                         {
-                            DrawRectangle(p, X - Size, Y + Size, size2, size2);
+                            DrawRectangle(p, x - size, y + size, size2, size2);
                         }
-                    } break;
+                    }
+                    break;
                 case MarkerShape.Triangle:
                     {
-                        PointF[] points = { new PointF(Convert.ToSingle(X - Size), Convert.ToSingle(MetaH - (Y - Size))), new PointF(Convert.ToSingle(X), Convert.ToSingle(MetaH - (Y + Size))), new PointF(Convert.ToSingle(X + Size), Convert.ToSingle(MetaH - (Y - Size))) };
-                        if (IsFilled)
+                        PointF[] points = { new PointF(Convert.ToSingle(x - size), Convert.ToSingle(MetaH - (y - size))), new PointF(Convert.ToSingle(x), Convert.ToSingle(MetaH - (y + size))), new PointF(Convert.ToSingle(x + size), Convert.ToSingle(MetaH - (y - size))) };
+                        if (isFilled)
                         {
                             using (Brush b = new SolidBrush(p.Color))
                             {
@@ -1879,97 +1786,90 @@ namespace StatsDirect.Charting
                         else
                         {
                             Canvas.DrawPolygon(p, points);
-                            // Canvas.DrawLine(p, X - Size, MetaH - (Y - Size), X, MetaH - (Y + Size))
-                            // Canvas.DrawLine(p, X, MetaH - (Y + Size), X + Size, MetaH - (Y - Size))
-                            // Canvas.DrawLine(p, X + Size, MetaH - (Y - Size), X - Size, MetaH - (Y - Size))
                         }
-                    } break;
+                    }
+                    break;
                 case MarkerShape.Plus:
                     //  Same filled or unfilled
-                    DrawLine(p, X - Size, Y, X + Size, Y);
-                    DrawLine(p, X, Y - Size, X, Y + Size);
+                    DrawLine(p, x - size, y, x + size, y);
+                    DrawLine(p, x, y - size, x, y + size);
                     break;
                 case MarkerShape.Cross:
                     //  Same filled or unfilled
-                    DrawLine(p, X - Size, Y - Size, X + Size, Y + Size);
-                    DrawLine(p, X - Size, Y + Size, X + Size, Y - Size);
+                    DrawLine(p, x - size, y - size, x + size, y + size);
+                    DrawLine(p, x - size, y + size, x + size, y - size);
                     break;
                 case MarkerShape.CircleLine:
                     {
-                        if (IsFilled)
+                        if (isFilled)
                         {
                             using (Brush b = new SolidBrush(p.Color))
                             {
-                                FillEllipse(b, X - Size, Y + Size, size2, size2);
+                                FillEllipse(b, x - size, y + size, size2, size2);
                             }
-                            DrawLine(Pens.White, X, Y - Size, X, Y + Size);
+                            DrawLine(Pens.White, x, y - size, x, y + size);
                         }
                         else
                         {
-                            DrawEllipse(p, X - Size, Y + Size, size2, size2);
-                            DrawLine(p, X, Y - Size, X, Y + Size);
+                            DrawEllipse(p, x - size, y + size, size2, size2);
+                            DrawLine(p, x, y - size, x, y + size);
                         }
-                    } break;
+                    }
+                    break;
                 case MarkerShape.SquareLine:
-                    if (IsFilled)
+                    if (isFilled)
                     {
                         using (Brush b = new SolidBrush(p.Color))
                         {
-                            FillRectangle(b, X - Size, Y + Size, size2, size2);
+                            FillRectangle(b, x - size, y + size, size2, size2);
                         }
-                        DrawLine(Pens.White, X - Size, Y + Size, X + Size, Y - Size);
+                        DrawLine(Pens.White, x - size, y + size, x + size, y - size);
                     }
                     else
                     {
-                        DrawRectangle(p, X - Size, Y + Size, size2, size2);
-                        DrawLine(p, X - Size, Y + Size, X + Size, Y - Size);
+                        DrawRectangle(p, x - size, y + size, size2, size2);
+                        DrawLine(p, x - size, y + size, x + size, y - size);
                     }
                     break;
                 case MarkerShape.SquareCross:
-                    if (IsFilled)
+                    if (isFilled)
                     {
                         using (Brush b = new SolidBrush(p.Color))
                         {
-                            FillRectangle(b, X - Size, Y + Size, size2, size2);
+                            FillRectangle(b, x - size, y + size, size2, size2);
                         }
-                        DrawLine(Pens.White, X - Size, Y - Size, X + Size, Y + Size);
-                        DrawLine(Pens.White, X - Size, Y + Size, X + Size, Y - Size);
+                        DrawLine(Pens.White, x - size, y - size, x + size, y + size);
+                        DrawLine(Pens.White, x - size, y + size, x + size, y - size);
                     }
                     else
                     {
-                        DrawRectangle(p, X - Size, Y + Size, size2, size2);
-                        DrawLine(p, X - Size, Y - Size, X + Size, Y + Size);
-                        DrawLine(p, X - Size, Y + Size, X + Size, Y - Size);
+                        DrawRectangle(p, x - size, y + size, size2, size2);
+                        DrawLine(p, x - size, y - size, x + size, y + size);
+                        DrawLine(p, x - size, y + size, x + size, y - size);
                     }
                     break;
                 case MarkerShape.Diamond:
-                    DrawDiamond(p, X, Y, size2, IsFilled);
+                    DrawDiamond(p, x, y, size2, isFilled);
                     break;
                 default:
-                    throw new ArgumentException("Don't know how to draw style's shape", "Shape");
+                    throw new ArgumentException("Don't know how to draw style's shape", "shape");
             }
 
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawMarker
-        private void DrawMarker(double X, double Y, double Size, DoubleSeries Series)
+        private void DrawMarker(double x, double y, double size, DoubleSeries series)
         {
-            DrawMarker(X, Y, Size, Series.Shape, Series.IsFilled, Series.UnstyledPen);
+            DrawMarker(x, y, size, series.Shape, series.IsFilled, series.UnstyledPen);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DrawMarker
-        private void DrawMarker(double X, double Y, double Size, MarkerType mType)
+        private void DrawMarker(double x, double y, double size, MarkerType mType)
         {
             using (Pen p = GetPen(mType, true))
             {
-                DrawMarker(X, Y, Size, mType.Shape, mType.IsFilled, p);
+                DrawMarker(x, y, size, mType.Shape, mType.IsFilled, p);
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SetStandardScaling
         private void SetStandardScaling()
         {
             divx = axisXMax - axisXMin;
@@ -1978,8 +1878,6 @@ namespace StatsDirect.Charting
             offy = -(axisYMin / divy * YExtCanvas) + YAxisCanvas;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SetStandardAsciiScaling
         private void SetStandardAsciiScaling()
         {
             divx = axisXMax - axisXMin;
@@ -1988,8 +1886,6 @@ namespace StatsDirect.Charting
             offy = Convert.ToInt32(-(axisYMin / divy * YDiv) + ASCII_Ytxt);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method GetScatterScaleParameters
         private ScaleParameters GetScatterScaleParameters()
         {
             return new ScaleParameters
@@ -2013,8 +1909,6 @@ namespace StatsDirect.Charting
                                      };
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotScatter
         private ParameterBag PlotScatter(Stream outputStream, bool joinMarkersWithLines)
         {
             const int LEGEND_MARKER_X = 12;
@@ -2134,8 +2028,6 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method GetLinearRegressionScaleParameters
         private ScaleParameters GetLinearRegressionScaleParameters()
         {
             return new ScaleParameters
@@ -2157,9 +2049,7 @@ namespace StatsDirect.Charting
                                      };
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotLinearRegression
-        private ParameterBag PlotLinearRegression(Stream OutputStream)
+        private ParameterBag PlotLinearRegression(Stream outputStream)
         {
             const int MINIMUM_X_WHITESPACE = 70;
             const int MARKER_SIZE = 6;
@@ -2170,7 +2060,7 @@ namespace StatsDirect.Charting
             bool fullWidth = lrOptions.FullWidth;
 
             // Plot a metafile version
-            StartMetafile(OutputStream, true);
+            StartMetafile(outputStream, true);
             AssignMarkersToSeries();
             // Draw the scale
             DefaultAxes();
@@ -2253,9 +2143,7 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotLinearRegressionInternal
-        public void PlotLinearRegressionInternal(ITemplateHost host, string title, double slope, double intercept, bool fullWidth, string XAxisTitle, string YAxisTitle)
+        public void PlotLinearRegressionInternal(ITemplateHost host, string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle)
         {
             const int MINIMUM_X_WHITESPACE = 70;
             const int MARKER_SIZE = 6;
@@ -2277,7 +2165,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            DrawAxes(title, new Axis(XAxisTitle, AxisMode.Scale, 0, ScaleType.Linear), new Axis(YAxisTitle, AxisMode.Scale, xtra, ScaleType.Linear), BoxAxes, true, false);
+            DrawAxes(title, new Axis(xAxisTitle, AxisMode.Scale, 0, ScaleType.Linear), new Axis(yAxisTitle, AxisMode.Scale, xtra, ScaleType.Linear), BoxAxes, true, false);
 
             //  Get the offsets and scale multipliers for the markers
             SetStandardScaling();
@@ -2343,8 +2231,6 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotCox2Internal
         public void PlotCox2Internal(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
         {
             const int MINIMUM_X_WHITESPACE = 70;
@@ -2406,13 +2292,9 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotCox1Internal
         public void PlotCox1Internal(ITemplateHost host, string title, coxp[] z, int iobs, bool stratified, bool grouped, int istrata, int igroups, ColumnData[] cdat1, int groupid, bool use_marker, bool use_tic, double[, ,] ARR3, int j3, string XAxisTitle, string YAxisTitle, ref int[] gn)
         {
             const int MINIMUM_X_WHITESPACE = 70;
-
-            Pen p;
 
             AssignMarkersToSeries();
             // allow more room for legend labels if required
@@ -2460,10 +2342,11 @@ namespace StatsDirect.Charting
                     string vq =  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp17.Substring(0, transTemp18) + "=" + cdat1[groupid].Groups[k - 1].Label;
                     if (!(use_marker))
                     {
-                        p = GetPen(_MarkerTypes[(k - 1) % 9], true);
-                        DrawLine(p, 10, YAxisCanvas + YExtCanvas - 18 - (size2 * k), 20, YAxisCanvas + YExtCanvas - 18 - (size2 * k));
-                        DrawLine(p, 20, YAxisCanvas + YExtCanvas - 18 - (size2 * k), 20, YAxisCanvas + YExtCanvas - 28 - (size2 * k));
-                        p.Dispose();
+                        using (Pen pp = GetPen(_MarkerTypes[(k - 1) % 9], true))
+                        {
+                            DrawLine(pp, 10, YAxisCanvas + YExtCanvas - 18 - (size2 * k), 20, YAxisCanvas + YExtCanvas - 18 - (size2 * k));
+                            DrawLine(pp, 20, YAxisCanvas + YExtCanvas - 18 - (size2 * k), 20, YAxisCanvas + YExtCanvas - 28 - (size2 * k));
+                        }
                     }
                     else
                     {
@@ -2480,10 +2363,11 @@ namespace StatsDirect.Charting
                     string vq = "Stratum " + k.ToString();
                     if (!(use_marker))
                     {
-                        p = GetPen(_MarkerTypes[(k - 1) % 9], true);
-                        DrawLine(p, 10, YAxisCanvas + YExtCanvas - 18 - (size2 * k), 20, YAxisCanvas + YExtCanvas - 18 - (size2 * k));
-                        DrawLine(p, 20, YAxisCanvas + YExtCanvas - 18 - (size2 * k), 20, YAxisCanvas + YExtCanvas - 28 - (size2 * k));
-                        p.Dispose();
+                        using (Pen pp = GetPen(_MarkerTypes[(k - 1) % 9], true))
+                        {
+                            DrawLine(pp, 10, YAxisCanvas + YExtCanvas - 18 - (size2 * k), 20, YAxisCanvas + YExtCanvas - 18 - (size2 * k));
+                            DrawLine(pp, 20, YAxisCanvas + YExtCanvas - 18 - (size2 * k), 20, YAxisCanvas + YExtCanvas - 28 - (size2 * k));
+                        }
                     }
                     else
                     {
@@ -2513,7 +2397,7 @@ namespace StatsDirect.Charting
             int igp = 0;
 
             MarkerType mt = _MarkerTypes[igp % 9];
-            p = GetPen(mt, true);
+            Pen p = GetPen(mt, true);
             MarkerShape shape = mt.Shape;
             bool isFilled = mt.IsFilled;
 
@@ -2612,8 +2496,6 @@ namespace StatsDirect.Charting
             p.Dispose();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotLinearizedEstimationInternal
         public void PlotLinearizedEstimationInternal(ITemplateHost host, string title, int model, double a, double b, string XAxisTitle, string YAxisTitle)
         {
             const int MINIMUM_X_WHITESPACE = 70;
@@ -2702,9 +2584,7 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotPolynomialRegressionInternal
-        public void PlotPolynomialRegressionInternal(ITemplateHost host, string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P, double GAMMA, string XAxisTitle, string YAxisTitle)
+        public void PlotPolynomialRegressionInternal(ITemplateHost host, string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P, double gamma, string xAxisTitle, string yAxisTitle)
         {
             const int MINIMUM_X_WHITESPACE = 70;
             const int MARKER_SIZE = 6;
@@ -2726,7 +2606,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            DrawAxes(title, new Axis(XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(YAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), BoxAxes, true, false);
+            DrawAxes(title, new Axis(xAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(yAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), BoxAxes, true, false);
 
             //  Get the offsets and scale multipliers for the markers
             SetStandardScaling();
@@ -2754,7 +2634,7 @@ namespace StatsDirect.Charting
 
             double P0;
             double cit;
-            MathDbl.civ(nx - P, out cit, GAMMA, out P0);
+            MathDbl.civ(nx - P, out cit, gamma, out P0);
             double rdf = Convert.ToDouble((nx - 1) - (P - 1));
             double rms = rss / rdf;
             double[] px = new double[P];
@@ -2884,7 +2764,6 @@ namespace StatsDirect.Charting
                 }
             }
         }
-
 
         ///  <remarks>Jul 09: updated to put log models on a log x axis scale</remarks>
         public void PlotLogitInternal(ITemplateHost host, string title, int Model, double t, double sw, double S1, double a, double b, string XAxisTitle, string YAxisTitle)
@@ -3356,9 +3235,6 @@ namespace StatsDirect.Charting
                 double boxRX = ToCanvasX(boxR);
 
                 // Draw marker, centre line and box
-                PushContainer();
-
-                PushContainer();
                 DrawRectangle(blackPen, boxLX, yt, boxRX - boxLX, yt - yb); //  Box
                 if (bwOptions.MarkMeanAndMedian)
                 {
@@ -3381,7 +3257,6 @@ namespace StatsDirect.Charting
                     DrawMarker(otherMarkX, yc, 21 * otherMarkScaleFactor, otherMarkShape, false, blackPen);
                 }
                 DrawLine(blackPen, centreX, yt, centreX, yb); //  Centre line
-                PopContainer();
 
                 //  Draw whiskers, fences etc.
                 double halfWhiskerHeight = halfBoxHeight * BOXWHISKER_WHISKER_FRACTION_OF_BOX;
@@ -3474,14 +3349,12 @@ namespace StatsDirect.Charting
                 bool shouldDrawOuterBracketL = shouldDrawOuterFenceL && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterL || gatedInnerL));
                 if (shouldDrawOuterFenceL)
                 {
-                    PushContainer();
                     DrawLine(blackPen, minWhiskerLX, yt, minWhiskerLX, yb);
                     if (shouldDrawOuterBracketL)
                     {
                         DrawLine(blackPen, minWhiskerLX + BOXWHISKER_WHISKER_END_LENGTH, yt, minWhiskerLX, yt);
                         DrawLine(blackPen, minWhiskerLX, yb, minWhiskerLX + BOXWHISKER_WHISKER_END_LENGTH, yb);
                     }
-                    PopContainer();
                 }
 
                 //  Min outliers - below outer fence
@@ -3597,14 +3470,12 @@ namespace StatsDirect.Charting
                 bool shouldDrawOuterBracketR = shouldDrawOuterFenceR && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterR || gatedInnerR));
                 if (shouldDrawOuterFenceR)
                 {
-                    PushContainer();
                     DrawLine(blackPen, maxWhiskerRX, yt, maxWhiskerRX, yb);
                     if (shouldDrawOuterBracketR)
                     {
                         DrawLine(blackPen, maxWhiskerRX - BOXWHISKER_WHISKER_END_LENGTH, yt, maxWhiskerRX, yt);
                         DrawLine(blackPen, maxWhiskerRX, yb, maxWhiskerRX - BOXWHISKER_WHISKER_END_LENGTH, yb);
                     }
-                    PopContainer();
                 }
 
                 //  Max outliers
@@ -3630,7 +3501,6 @@ namespace StatsDirect.Charting
                         }
                     }
                 }
-                PopContainer();
             }
 
             blackPen.Dispose();
@@ -3770,10 +3640,6 @@ namespace StatsDirect.Charting
                 double boxTY = ToCanvasY(boxT);
 
                 // Draw marker, centre line and box
-                PushContainer();
-
-                PushContainer();
-
                 DrawRectangle(blackPen, xl, boxTY, xr - xl, boxTY - boxBY); //  Box
                 if (bwOptions.MarkMeanAndMedian)
                 {
@@ -3784,7 +3650,6 @@ namespace StatsDirect.Charting
                     DrawMarker(xc, otherMarky, 21 * otherMarkScaleFactor, otherMarkShape, false, blackPen);
                 }
                 DrawLine(blackPen, xr, centreY, xl, centreY); //  Centre line
-                PopContainer();
 
                 //  Draw whiskers, fences etc.
                 double halfWhiskerWidth = halfBoxWidth * BOXWHISKER_WHISKER_FRACTION_OF_BOX;
@@ -3877,14 +3742,12 @@ namespace StatsDirect.Charting
                 // ReSharper restore RedundantLogicalConditionalExpressionOperand
                 if (shouldDrawOuterFenceB)
                 {
-                    PushContainer();
                     DrawLine(blackPen, xr, minWhiskerBY, xl, minWhiskerBY);
                     if (shouldDrawOuterBracketB)
                     {
                         DrawLine(blackPen, xr, minWhiskerBY + BOXWHISKER_WHISKER_END_LENGTH, xr, minWhiskerBY);
                         DrawLine(blackPen, xl, minWhiskerBY, xl, minWhiskerBY + BOXWHISKER_WHISKER_END_LENGTH);
                     }
-                    PopContainer();
                 }
 
                 //  Min outliers - below outer fence
@@ -3996,14 +3859,12 @@ namespace StatsDirect.Charting
                 // ReSharper restore RedundantLogicalConditionalExpressionOperand
                 if (shouldDrawOuterFenceT)
                 {
-                    PushContainer();
                     DrawLine(blackPen, xr, maxWhiskerTY, xl, maxWhiskerTY);
                     if (shouldDrawOuterBracketT)
                     {
                         DrawLine(blackPen, xr, maxWhiskerTY - BOXWHISKER_WHISKER_END_LENGTH, xr, maxWhiskerTY);
                         DrawLine(blackPen, xl, maxWhiskerTY, xl, maxWhiskerTY - BOXWHISKER_WHISKER_END_LENGTH);
                     }
-                    PopContainer();
                 }
 
                 //  Max outliers
@@ -4029,7 +3890,6 @@ namespace StatsDirect.Charting
                         }
                     }
                 }
-                PopContainer();
             }
 
             blackPen.Dispose();
@@ -7167,79 +7027,85 @@ namespace StatsDirect.Charting
             XAxisCanvas = XAxisCanvas + xtra;
             XExtCanvas = XExtCanvas - xtra;
 
-            StringFormat CenterFormat = new StringFormat { Alignment = StringAlignment.Center };
-
-            DrawString(pOptions.Title, TitleFont, Brushes.Black, (XExtCanvas / 2) + XAxisCanvas, YExtCanvas + 180, CenterFormat);
-
-            StringFormat RightFormat = new StringFormat { Alignment = StringAlignment.Far };
-
-            double ystep = YExtCanvas / nmale;
-            if (title[0].Length > 0)
+            using (StringFormat centerFormat = new StringFormat { Alignment = StringAlignment.Center })
             {
-                double txh = AxisLabelHeight(title[0]);
-                for (int i = 0; i <= nmale - 1; i++)
-                {
-                    double yc = YAxisCanvas + (nmale - i) * ystep - ystep / 2;
-                    DrawString(title[i], AxisLabelFont, Brushes.Black, XAxisCanvas - 15, yc + txh / 2, RightFormat);
-                }
+                DrawString(pOptions.Title, TitleFont, Brushes.Black, (XExtCanvas / 2) + XAxisCanvas, YExtCanvas + 180, centerFormat);
             }
 
-            double xstep = XExtCanvas / 2;
-            double xc = XAxisCanvas + xstep;
-            Pen blackPen = GetPen(_MarkerTypes[10], true);
-            for (int i = 0; i <= nmale - 1; i++)
+            using (StringFormat rightFormat = new StringFormat { Alignment = StringAlignment.Far })
             {
-                double yt = YAxisCanvas + (nmale - i) * ystep;
-                double yb = YAxisCanvas + (nmale - i - 1) * ystep;
-                double xl = XAxisCanvas + xstep - (male[i] / ScaleMax) * xstep;
-                double xr = XAxisCanvas + xstep + (female[i] / ScaleMax) * xstep;
-                if (mode == 1)
+                double ystep = YExtCanvas / nmale;
+                if (title[0].Length > 0)
                 {
-                    //  Male/female
+                    double txh = AxisLabelHeight(title[0]);
+                    for (int i = 0; i <= nmale - 1; i++)
+                    {
+                        double yc = YAxisCanvas + (nmale - i) * ystep - ystep / 2;
+                        DrawString(title[i], AxisLabelFont, Brushes.Black, XAxisCanvas - 15, yc + txh / 2, rightFormat);
+                    }
+                }
+
+                double xstep = XExtCanvas / 2;
+                double xc = XAxisCanvas + xstep;
+                using (Pen blackPen = GetPen(_MarkerTypes[10], true))
+                {
+                    for (int i = 0; i <= nmale - 1; i++)
+                    {
+                        double yt = YAxisCanvas + (nmale - i) * ystep;
+                        double yb = YAxisCanvas + (nmale - i - 1) * ystep;
+                        double xl = XAxisCanvas + xstep - (male[i] / ScaleMax) * xstep;
+                        double xr = XAxisCanvas + xstep + (female[i] / ScaleMax) * xstep;
+                        if (mode == 1)
+                        {
+                            //  Male/female
+                            if (maleBrush != null)
+                            {
+                                FillRectangle(maleBrush, xl, yt, xc - xl, yt - yb);
+                            }
+                            if (femaleBrush != null)
+                            {
+                                FillRectangle(femaleBrush, xc, yt, xr - xc, yt - yb);
+                            }
+                        }
+                        else
+                        {
+                            //  Just the one
+                            if (maleBrush != null)
+                            {
+                                FillRectangle(maleBrush, xl, yt, xr - xl, yt - yb);
+                            }
+                        }
+                        DrawRectangle(blackPen, xl, yt, xr - xl, yt - yb);
+                    }
                     if (maleBrush != null)
                     {
-                        FillRectangle(maleBrush, xl, yt, xc - xl, yt - yb);
+                        maleBrush.Dispose();
                     }
                     if (femaleBrush != null)
                     {
-                        FillRectangle(femaleBrush, xc, yt, xr - xc, yt - yb);
+                        femaleBrush.Dispose();
                     }
-                }
-                else
-                {
-                    //  Just the one
-                    if (maleBrush != null)
+
+                    using (StringFormat LeftFormat = new StringFormat { Alignment = StringAlignment.Near })
                     {
-                        FillRectangle(maleBrush, xl, yt, xr - xl, yt - yb);
+
+
+                        if (mode == 1)
+                        {
+                            DrawLine(blackPen, xc, YAxisCanvas, XAxisCanvas + xstep, YAxisCanvas + nmale * ystep);
+                            DrawString("male", AxisLabelFont, Brushes.Black, (XExtCanvas / 4) + XAxisCanvas, YAxisCanvas - 12, LeftFormat);
+                            DrawString("female", AxisLabelFont, Brushes.Black, (XExtCanvas / 4) + (XExtCanvas / 2) + XAxisCanvas, YAxisCanvas - 12, LeftFormat);
+                        }
+
+                        DrawString("Scale maximum = " + ScaleMax.ToString(), AxisLabelFont, Brushes.Black, 40, YAxisCanvas - 40, LeftFormat);
+
+                        EndMetafile();
+                        ScaleYAxis = 1;
+                        MetaH = DEFAULT_METAH;
+                        return new ParameterBag();
                     }
                 }
-                DrawRectangle(blackPen, xl, yt, xr - xl, yt - yb);
             }
-            if (maleBrush != null)
-            {
-                maleBrush.Dispose();
-            }
-            if (femaleBrush != null)
-            {
-                femaleBrush.Dispose();
-            }
-
-            StringFormat LeftFormat = new StringFormat { Alignment = StringAlignment.Near };
-
-
-            if (mode == 1)
-            {
-                DrawLine(blackPen, xc, YAxisCanvas, XAxisCanvas + xstep, YAxisCanvas + nmale * ystep);
-                DrawString("male", AxisLabelFont, Brushes.Black, (XExtCanvas / 4) + XAxisCanvas, YAxisCanvas - 12, LeftFormat);
-                DrawString("female", AxisLabelFont, Brushes.Black, (XExtCanvas / 4) + (XExtCanvas / 2) + XAxisCanvas, YAxisCanvas - 12, LeftFormat);
-            }
-
-            DrawString("Scale maximum = " + ScaleMax.ToString(), AxisLabelFont, Brushes.Black, 40, YAxisCanvas - 40, LeftFormat);
-
-            EndMetafile();
-            ScaleYAxis = 1;
-            MetaH = DEFAULT_METAH;
-            return new ParameterBag();
         }
 
 
@@ -10941,7 +10807,6 @@ namespace StatsDirect.Charting
                 ScaleYAxis = 1;
                 MetaH = 800;
             }
-            SetupGraphics();
 
             int kok = 0;
             double ormax = double.NegativeInfinity;
@@ -11070,7 +10935,6 @@ namespace StatsDirect.Charting
                     break;
             }
 
-
             double absmin = Constant.MISSING;
             for (int i = 1; i <= k; i++)
             {
@@ -11197,182 +11061,182 @@ namespace StatsDirect.Charting
             divy = kok;
             offy = YAxisCanvas;
 
-            Pen tenPenTrue = GetPen(_MarkerTypes[10], true);
-            Pen tenPenFalse = GetPen(_MarkerTypes[10], false);
-            if (xform == Transformation.Log)
+            using (Pen tenPenTrue = GetPen(_MarkerTypes[10], true))
             {
-                if (null == tic)
-                    throw new Exception("Expected tics to be populated for log scale");
-                for (int i = 1; i <= tics; i++)
+                using (Pen tenPenFalse = GetPen(_MarkerTypes[10], false))
                 {
-                    if (tic[i] >= realamin && tic[i] <= realamax)
+                    if (xform == Transformation.Log)
                     {
-                        double XM = ToCanvasX(Math.Log(tic[i]));
-                        string lab;
-                        if (tic[i] > 1000 | tic[i] < 0.001)
+                        if (null == tic)
+                            throw new Exception("Expected tics to be populated for log scale");
+                        for (int i = 1; i <= tics; i++)
                         {
-                            lab = tic[i].ToString("E");
+                            if (tic[i] >= realamin && tic[i] <= realamax)
+                            {
+                                double XM = ToCanvasX(Math.Log(tic[i]));
+                                string lab;
+                                if (tic[i] > 1000 | tic[i] < 0.001)
+                                {
+                                    lab = tic[i].ToString("E");
+                                }
+                                else
+                                {
+                                    lab = tic[i].ToString();
+                                }
+                                DrawStringLabel(lab, XM, YAxisCanvas - 12, StringAlignment.Center);
+                                DrawLine(tenPenTrue, XM, YAxisCanvas - 12, XM, YAxisCanvas);
+                            }
                         }
-                        else
-                        {
-                            lab = tic[i].ToString();
-                        }
-                        DrawStringLabel(lab, XM, YAxisCanvas - 12, StringAlignment.Center);
-                        DrawLine(tenPenTrue, XM, YAxisCanvas - 12, XM, YAxisCanvas);
                     }
-                }
-            }
 
-            double rmh = -99;
-            int r = 0;
-            double txh = Canvas.MeasureString(title[1], LabelFont).Height;
-            double botlim = xform == Transformation.Log ? realamin : double.NegativeInfinity;
-            double yt = 0;
-            for (int i = k; i >= 1; i--)
-            {
-                if (odr[i] != Constant.MISSING)
-                {
-                    r = r + 1;
-                    double yctr = (r - 0.5) / divy * YExtCanvas;
-                    double ytop = r / divy * YExtCanvas;
-                    double XM = 0;
-                    if (odr[i] < botlim)
+                    double rmh = -99;
+                    int r = 0;
+                    double txh = Canvas.MeasureString(title[1], LabelFont).Height;
+                    double botlim = xform == Transformation.Log ? realamin : double.NegativeInfinity;
+                    double yt = 0;
+                    for (int i = k; i >= 1; i--)
                     {
-                        XM = XAxisCanvas;
+                        if (odr[i] != Constant.MISSING)
+                        {
+                            r = r + 1;
+                            double yctr = (r - 0.5) / divy * YExtCanvas;
+                            double ytop = r / divy * YExtCanvas;
+                            double XM = 0;
+                            if (odr[i] < botlim)
+                            {
+                                XM = XAxisCanvas;
+                            }
+                            else
+                            {
+                                switch (xform)
+                                {
+                                    case Transformation.Log:
+                                        XM = ToCanvasX(Math.Log(odr[i]));
+                                        break;
+                                    case Transformation.Z:
+                                        XM = ToCanvasX(MathDbl.rtoz(odr[i]));
+                                        break;
+                                    case Transformation.None:
+                                        XM = ToCanvasX(odr[i]);
+                                        break;
+                                }
+
+                            }
+                            double XL = 0;
+                            if (odrl[i] < botlim)
+                            {
+                                XL = XAxisCanvas;
+                            }
+                            else
+                            {
+                                switch (xform)
+                                {
+                                    case Transformation.Log:
+                                        XL = ToCanvasX(Math.Log(odrl[i]));
+                                        break;
+                                    case Transformation.Z:
+                                        XL = ToCanvasX(MathDbl.rtoz(odrl[i]));
+                                        break;
+                                    case Transformation.None:
+                                        XL = ToCanvasX(Math.Max(odrl[i], -1));
+                                        break;
+                                }
+
+                            }
+                            double XR = 0;
+                            switch (xform)
+                            {
+                                case Transformation.Log:
+                                    XR = ToCanvasX(Math.Log(odru[i]));
+                                    break;
+                                case Transformation.Z:
+                                    XR = ToCanvasX(MathDbl.rtoz(odru[i]));
+                                    break;
+                                case Transformation.None:
+                                    XR = ToCanvasX(Math.Min(odru[i], 1));
+                                    break;
+                            }
+
+                            double Y2 = (ytop - yctr) / 1.5;
+                            double yc = offy + yctr;
+                            yt = offy + yctr + Y2;
+                            double yb = offy + yctr - Y2;
+                            //if ( gn[ i ] == Constant.MISSING ) 
+                            //{ 
+                            //    ytop = yctr + ( ytop - yctr ) * 0.1 + ( ytop - yctr ) * 0.7; 
+                            //} 
+                            //else 
+                            //{ 
+                            //    ytop = yctr + ( ytop - yctr ) * 0.1 + ( ytop - yctr ) * 0.9 * ( gn[ i ] / max_gn ); 
+                            //} 
+                            //ytop = yctr + ( ytop - yctr ) * 0.8; 
+                            if (pg[i] == 0)
+                            {
+                                // CI line
+                                DrawLine(tenPenTrue, XL, yc, XR, yc);
+                                // Weight blob
+                                DrawSquare(tenPenTrue, XM, yc, (5 + Math.Abs(yt - yb) * (gn[i] / max_gn)) * 0.7, true);
+                                // Arrow ends if not plottable
+                                if ((odrl[i] <= 0 & xform == Transformation.Log) | odrl[i] == Constant.MISSING)
+                                {
+                                    DrawLine(tenPenTrue, XL + Y2, yc + Y2, XL, yc);
+                                    DrawLine(tenPenTrue, XL, yc, XL + Y2, yc - Y2);
+                                }
+                                if (odru[i] == Constant.MISSING)
+                                {
+                                    DrawLine(tenPenTrue, XR - Y2, yc + Y2, XR, yc);
+                                    DrawLine(tenPenTrue, XR, yc, XR - Y2, yb - Y2);
+                                }
+
+                            }
+                            else
+                            {
+                                DrawDiamond(tenPenTrue, XM, yc, Y2 * 2, false);
+                                DrawLine(tenPenTrue, XR, yc, XL, yc);
+                                if (pg[i] < 0)
+                                {
+                                    // double ll = odrl[ i ]; 
+                                    // double ul = odru[ i ]; 
+                                    rmh = odr[i];
+                                    // pooled effect marker
+                                    DrawLine(tenPenFalse, XM, yt, XM, ToCanvasY(k - 0.5));
+                                    // re-set pen so get solid line back in case next is not pooled
+                                }
+
+                            }
+                            DrawStringLabel(title[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
+                            DrawStringLabel(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
+                        }
                     }
-                    else
+
+                    if (DataMinX <= 0 && xform != Transformation.Z)
                     {
+                        // no effect marker
+                        double XM = 0;
                         switch (xform)
                         {
                             case Transformation.Log:
-                                XM = ToCanvasX(Math.Log(odr[i]));
+                                XM = ToCanvasX(Math.Log(1));
                                 break;
                             case Transformation.Z:
-                                XM = ToCanvasX(MathDbl.rtoz(odr[i]));
-                                break;
+                                throw new Exception("Shoudn't be plotting no effect marker with a correlation plot");
                             case Transformation.None:
-                                XM = ToCanvasX(odr[i]);
+                                XM = ToCanvasX(0);
                                 break;
                         }
 
-                    }
-                    double XL = 0;
-                    if (odrl[i] < botlim)
-                    {
-                        XL = XAxisCanvas;
-                    }
-                    else
-                    {
-                        switch (xform)
-                        {
-                            case Transformation.Log:
-                                XL = ToCanvasX(Math.Log(odrl[i]));
-                                break;
-                            case Transformation.Z:
-                                XL = ToCanvasX(MathDbl.rtoz(odrl[i]));
-                                break;
-                            case Transformation.None:
-                                XL = ToCanvasX(Math.Max(odrl[i], -1));
-                                break;
-                        }
-
-                    }
-                    double XR = 0;
-                    switch (xform)
-                    {
-                        case Transformation.Log:
-                            XR = ToCanvasX(Math.Log(odru[i]));
-                            break;
-                        case Transformation.Z:
-                            XR = ToCanvasX(MathDbl.rtoz(odru[i]));
-                            break;
-                        case Transformation.None:
-                            XR = ToCanvasX(Math.Min(odru[i], 1));
-                            break;
+                        DrawLine(tenPenTrue, XM, yt, XM, YAxisCanvas);
                     }
 
-                    double Y2 = (ytop - yctr) / 1.5;
-                    double yc = offy + yctr;
-                    yt = offy + yctr + Y2;
-                    double yb = offy + yctr - Y2;
-                    //if ( gn[ i ] == Constant.MISSING ) 
-                    //{ 
-                    //    ytop = yctr + ( ytop - yctr ) * 0.1 + ( ytop - yctr ) * 0.7; 
-                    //} 
-                    //else 
-                    //{ 
-                    //    ytop = yctr + ( ytop - yctr ) * 0.1 + ( ytop - yctr ) * 0.9 * ( gn[ i ] / max_gn ); 
-                    //} 
-                    //ytop = yctr + ( ytop - yctr ) * 0.8; 
-                    if (pg[i] == 0)
+                    if (rmh != -99)
                     {
-                        // CI line
-                        DrawLine(tenPenTrue, XL, yc, XR, yc);
-                        // Weight blob
-                        DrawSquare(tenPenTrue, XM, yc, (5 + Math.Abs(yt - yb) * (gn[i] / max_gn)) * 0.7, true);
-                        // Arrow ends if not plottable
-                        if ((odrl[i] <= 0 & xform == Transformation.Log) | odrl[i] == Constant.MISSING)
-                        {
-                            DrawLine(tenPenTrue, XL + Y2, yc + Y2, XL, yc);
-                            DrawLine(tenPenTrue, XL, yc, XL + Y2, yc - Y2);
-                        }
-                        if (odru[i] == Constant.MISSING)
-                        {
-                            DrawLine(tenPenTrue, XR - Y2, yc + Y2, XR, yc);
-                            DrawLine(tenPenTrue, XR, yc, XR - Y2, yb - Y2);
-                        }
-
+                        string buf = qid;
+                        DrawStringLabel(buf, XAxisCanvas + XExtCanvas / 2, 50, StringAlignment.Center);
                     }
-                    else
-                    {
-                        DrawDiamond(tenPenTrue, XM, yc, Y2 * 2, false);
-                        DrawLine(tenPenTrue, XR, yc, XL, yc);
-                        if (pg[i] < 0)
-                        {
-                            // double ll = odrl[ i ]; 
-                            // double ul = odru[ i ]; 
-                            rmh = odr[i];
-                            // pooled effect marker
-                            DrawLine(tenPenFalse, XM, yt, XM, ToCanvasY(k - 0.5));
-                            // re-set pen so get solid line back in case next is not pooled
-                        }
-
-                    }
-                    DrawStringLabel(title[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
-                    DrawStringLabel(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
                 }
             }
-
-            if (DataMinX <= 0 && xform != Transformation.Z)
-            {
-                // no effect marker
-                double XM = 0;
-                switch (xform)
-                {
-                    case Transformation.Log:
-                        XM = ToCanvasX(Math.Log(1));
-                        break;
-                    case Transformation.Z:
-                        throw new Exception("Shoudn't be plotting no effect marker with a correlation plot");
-                    case Transformation.None:
-                        XM = ToCanvasX(0);
-                        break;
-                }
-
-                DrawLine(tenPenTrue, XM, yt, XM, YAxisCanvas);
-            }
-
-            if (rmh != -99)
-            {
-                string buf = qid;
-                DrawStringLabel(buf, XAxisCanvas + XExtCanvas / 2, 50, StringAlignment.Center);
-            }
-            tenPenTrue.Dispose();
-            tenPenFalse.Dispose();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method plot_pert
         public void plot_pert(double PERT, double Slope, double YIntercept, int nx, double MS, double SUMX, double SSX, bool plotBothLines)
         {
             double xstep = (axisXMax - axisXMin) / 20.0;
@@ -11535,7 +11399,6 @@ namespace StatsDirect.Charting
             BoxAxes = true;
         }
 
-
         // TRANSMISSINGCOMMENT: Method SetFontsAndThicknessesFromOptions
         private void SetFontsAndThicknessesFromOptions(GenericOptions o)
         {
@@ -11569,30 +11432,8 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        private Stack<System.Drawing.Drawing2D.GraphicsContainer> ContainerStack;
-
-        private void PushContainer()
-        {
-            if (ContainerStack == null)
-            {
-                ContainerStack = new Stack<System.Drawing.Drawing2D.GraphicsContainer>();
-            }
-            ContainerStack.Push(Canvas.BeginContainer());
-        }
-
-        private void PopContainer()
-        {
-            if (ContainerStack != null)
-            {
-                Canvas.EndContainer(ContainerStack.Pop());
-            }
-        }
-
         public Pen GetPen(MarkerType mt, bool IgnoreStyle)
         {
-            // HACK: Does this ease any of the GDI OOMs?
-            Application.DoEvents();
             Pen p;
             if (HasChartOptions && definition.ChartOptions.UseColour)
             {
@@ -11608,7 +11449,6 @@ namespace StatsDirect.Charting
             }
             return p;
         }
-
 
         private bool HasScaleParameters
         {
