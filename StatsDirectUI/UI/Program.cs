@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
 using StatsDirect.Calculator;
-using StatsDirect.Expressions;
 using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
