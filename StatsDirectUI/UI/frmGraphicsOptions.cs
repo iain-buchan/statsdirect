@@ -53,7 +53,7 @@ namespace StatsDirect.UI
             rdoSeries[7] = rdoSeries8;
             rdoSeries[8] = rdoSeries9;
             rdoSeries[9] = rdoSeries10;
-            
+
             foreach (SelectablePictureBox pb in picMarkerTypes)
             {
                 pb.SelectedChanged += MarkerType_SelectedChanged;
@@ -226,35 +226,35 @@ namespace StatsDirect.UI
 
         private void cmdChangeTitleFont_Click(object sender, EventArgs e)
         {
-            FontDialog dlg = new FontDialog
-                                 {
-                                     Font = lblTitleFont.Font,
-                                     ShowColor = false,
-                                     ShowApply = false,
-                                     ShowEffects = false,
-                                     ShowHelp = false
-                                 };
-            DialogResult result = dlg.ShowDialog(this);
-            if (DialogResult.OK == result)
+            using (FontDialog dlg = new FontDialog())
             {
-                lblTitleFont.Font = dlg.Font;
+                dlg.Font = lblTitleFont.Font;
+                dlg.ShowColor = false;
+                dlg.ShowApply = false;
+                dlg.ShowEffects = false;
+                dlg.ShowHelp = false;
+                DialogResult result = dlg.ShowDialog(this);
+                if (DialogResult.OK == result)
+                {
+                    lblTitleFont.Font = dlg.Font;
+                }
             }
         }
 
         private void cmdChangeAxisLabelFont_Click(object sender, EventArgs e)
         {
-            FontDialog dlg = new FontDialog
-                                 {
-                                     Font = lblAxisLabelFont.Font,
-                                     ShowColor = false,
-                                     ShowApply = false,
-                                     ShowEffects = false,
-                                     ShowHelp = false
-                                 };
-            DialogResult result = dlg.ShowDialog(this);
-            if (DialogResult.OK == result)
+            using (FontDialog dlg = new FontDialog())
             {
-                lblAxisLabelFont.Font = dlg.Font;
+                dlg.Font = lblAxisLabelFont.Font;
+                dlg.ShowColor = false;
+                dlg.ShowApply = false;
+                dlg.ShowEffects = false;
+                dlg.ShowHelp = false;
+                DialogResult result = dlg.ShowDialog(this);
+                if (DialogResult.OK == result)
+                {
+                    lblAxisLabelFont.Font = dlg.Font;
+                }
             }
         }
     }

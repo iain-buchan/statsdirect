@@ -49,8 +49,11 @@ namespace StatsDirect.Utilities
 
         private static string decimalSeparator;
 
-        [DllImport("gdi32")]
-        private static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, byte[] lpbBuffer);
+        private static class NativeMethods
+        {
+            [DllImport("gdi32")]
+            public static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, byte[] lpbBuffer);
+        }
 
         public static string DecimalSeparator
         {
@@ -144,29 +147,29 @@ namespace StatsDirect.Utilities
             return x.ToString("F" + decpm.ToString());
         }
 
-        public static string pval(double P, int DecimalPlaces)
+        public static string pval(double P, int decimalPlaces)
         {
             if (Math.Abs(P) > 10)
                 return "P = *";
-            if (P < Math.Pow(10D, -DecimalPlaces))
-                return "P < 0" + DecimalSeparator + new String('0', DecimalPlaces - 1) + "1";
-            if (P > 1D - Math.Pow(10D, -DecimalPlaces))
-                return "P > 0" + DecimalSeparator + new String('9', DecimalPlaces);
-            return P.ToString("P = 0." + new String('#', DecimalPlaces));
+            if (P < Math.Pow(10D, -decimalPlaces))
+                return "P < 0" + DecimalSeparator + new String('0', decimalPlaces - 1) + "1";
+            if (P > 1D - Math.Pow(10D, -decimalPlaces))
+                return "P > 0" + DecimalSeparator + new String('9', decimalPlaces);
+            return P.ToString("P = 0." + new String('#', decimalPlaces));
         }
 
-        public static string pval_half(double P, int DecimalPlaces)
+        public static string pval_half(double P, int decimalPlaces)
         {
             if (Math.Abs(P) > 10)
                 return "P = err";
-            if (P < Math.Pow(10D, -DecimalPlaces))
-                return "P < 0" + DecimalSeparator + new String('0', DecimalPlaces - 1) + "1";
-            if (P > 0.5D - Math.Pow(10D, -DecimalPlaces))
-                return "P > 0" + DecimalSeparator + "4" + new String('9', DecimalPlaces - 1);
-            return P.ToString("P = 0." + new String('#', DecimalPlaces));
+            if (P < Math.Pow(10D, -decimalPlaces))
+                return "P < 0" + DecimalSeparator + new String('0', decimalPlaces - 1) + "1";
+            if (P > 0.5D - Math.Pow(10D, -decimalPlaces))
+                return "P > 0" + DecimalSeparator + "4" + new String('9', decimalPlaces - 1);
+            return P.ToString("P = 0." + new String('#', decimalPlaces));
         }
 
-        public static string pwr(double pwr, double P0)
+        public static string pwr(double pwr, double p0)
         {
             string pwr_o;
             if (Constant.MISSING == pwr)
@@ -177,7 +180,7 @@ namespace StatsDirect.Utilities
                 pwr_o = "< 0.01%";
             else
                 pwr_o = "= " + XRound(pwr * 100.0, 2) + "%";
-            return "(for " + XRound(100 * (P0), 1) + "% significance) " + pwr_o;
+            return "(for " + XRound(100 * (p0), 1) + "% significance) " + pwr_o;
         }
 
         /// <summary>
@@ -221,13 +224,13 @@ namespace StatsDirect.Utilities
             return Constant.MISSING == x ? ASTERISK : x.ToString();
         }
 
-        public static string RoundOut(double Q, int flt)
+        public static string RoundOut(double q, int flt)
         {
-            if (Constant.MISSING == Q)
+            if (Constant.MISSING == q)
                 return ASTERISK;
             if (flt > 6)
-                return Q.ToString();
-            return XRound(Q, flt);
+                return q.ToString();
+            return XRound(q, flt);
         }
 
         public static string PadTo(string txt, int spaces)
@@ -296,32 +299,32 @@ namespace StatsDirect.Utilities
         /// however, when you don't wrap images in a WMF, WordPad and
         /// RichTextBoxes simply ignore them.  Both use the riched20.dll or msfted.dll.
         /// </summary>
-        /// <param name="_image"></param>
-        public static string ImageToRtf(Image _image)
+        /// <param name="image"></param>
+        public static string ImageToRtf(Image image)
         {
-            StringBuilder _rtf = new StringBuilder();
+            StringBuilder rtf = new StringBuilder();
 
             // Append the RTF header
-            _rtf.Append(RTF_HEADER);
+            rtf.Append(RTF_HEADER);
 
             // Create the font table using the RichTextBox's current font and append it to the RTF string
             // _rtf.Append(GetFontTable(this.Font));
             // _rtf.Append(GetFontTable(FontFamily.GenericSansSerif));
 
             // Create the image control string and append it to the RTF string
-            float pixelWidth = _image.Width;
+            float pixelWidth = image.Width;
             const float desiredInches = 6.0F;
             float desiredPixelsPerInch = (float)Math.Ceiling(pixelWidth / desiredInches);
-            _rtf.Append(GetImagePrefix(_image, desiredPixelsPerInch, desiredPixelsPerInch));
+            rtf.Append(GetImagePrefix(image, desiredPixelsPerInch, desiredPixelsPerInch));
 
             // Create the Windows Metafile and append its bytes in HEX format
-            _rtf.Append(GetRtfImage(_image));
+            rtf.Append(GetRtfImage(image));
 
             // Close the RTF image control string
-            _rtf.Append(RTF_IMAGE_POST);
-            _rtf.Append(RTF_FOOTER);
+            rtf.Append(RTF_IMAGE_POST);
+            rtf.Append(RTF_FOOTER);
 
-            return _rtf.ToString();
+            return rtf.ToString();
         }
 
         /// <summary>
@@ -377,46 +380,46 @@ namespace StatsDirect.Utilities
         /// 1 Inch = 25.4 mm
         /// 1 Inch = 2540 (0.01)mm
         /// </remarks>
-        /// <param name="_image"></param>
+        /// <param name="image"></param>
         ///<param name="xDpi"></param>
         ///<param name="yDpi"></param>
         ///<returns></returns>
-        private static string GetImagePrefix(Image _image, float xDpi, float yDpi)
+        private static string GetImagePrefix(Image image, float xDpi, float yDpi)
         {
 
-            StringBuilder _rtf = new StringBuilder();
+            StringBuilder rtf = new StringBuilder();
 
             // Calculate the current width of the image in (0.01)mm
             // TODO: HACK: DevExpress seems to undo+redo insertion with the image very large unless this 2.6 bodge factor is in place.
-            int picw = (int)Math.Round((_image.Width / xDpi) * HMM_PER_INCH * 2.6);
+            int picw = (int)Math.Round((image.Width / xDpi) * HMM_PER_INCH * 2.6);
 
             // Calculate the current height of the image in (0.01)mm
-            int pich = (int)Math.Round((_image.Height / yDpi) * HMM_PER_INCH * 2.6);
+            int pich = (int)Math.Round((image.Height / yDpi) * HMM_PER_INCH * 2.6);
 
             // Calculate the target width of the image in twips
-            int picwgoal = (int)Math.Round((_image.Width / xDpi) * TWIPS_PER_INCH);
+            int picwgoal = (int)Math.Round((image.Width / xDpi) * TWIPS_PER_INCH);
 
             // Calculate the target height of the image in twips
-            int pichgoal = (int)Math.Round((_image.Height / yDpi) * TWIPS_PER_INCH);
+            int pichgoal = (int)Math.Round((image.Height / yDpi) * TWIPS_PER_INCH);
 
             // Append values to RTF string
-            _rtf.Append(@"{\pict");
+            rtf.Append(@"{\pict");
 #if WANT_WMF
             _rtf.Append(@"\wmetafile8");
 #else
-            _rtf.Append(@"\emfblip");
+            rtf.Append(@"\emfblip");
 #endif
-            _rtf.Append(@"\picw");
-            _rtf.Append(picw);
-            _rtf.Append(@"\pich");
-            _rtf.Append(pich);
-            _rtf.Append(@"\picwgoal");
-            _rtf.Append(picwgoal);
-            _rtf.Append(@"\pichgoal");
-            _rtf.Append(pichgoal);
-            _rtf.Append(" ");
+            rtf.Append(@"\picw");
+            rtf.Append(picw);
+            rtf.Append(@"\pich");
+            rtf.Append(pich);
+            rtf.Append(@"\picwgoal");
+            rtf.Append(picwgoal);
+            rtf.Append(@"\pichgoal");
+            rtf.Append(pichgoal);
+            rtf.Append(" ");
 
-            return _rtf.ToString();
+            return rtf.ToString();
         }
         /// <summary>
         /// Wraps the image in an Enhanced Metafile by drawing the image onto the
@@ -424,42 +427,42 @@ namespace StatsDirect.Utilities
         /// Metafile, and finally appends the bits of the Windows Metafile in HEX
         /// to a string and returns the string.
         /// </summary>
-        /// <param name="_image"></param>
+        /// <param name="image"></param>
         /// <returns>
         /// A string containing the bits of a Windows Metafile in HEX
         /// </returns>
-        private static string GetRtfImage(Image _image)
+        private static string GetRtfImage(Image image)
         {
             // Handle to the device context used to create the metafile
 
-            StringBuilder _rtf = new StringBuilder();
-            using (MemoryStream _stream = new MemoryStream())
+            StringBuilder rtf = new StringBuilder();
+            using (MemoryStream stream = new MemoryStream())
             {
 
                 // Get a graphics context from the RichTextBox
-                using (Bitmap b = new Bitmap(_image.Width, _image.Height, PixelFormat.Format32bppArgb))
+                using (Bitmap b = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppArgb))
                 {
-                    using (Graphics _graphics = Graphics.FromImage(b))
+                    using (Graphics graphics = Graphics.FromImage(b))
                     {
 
                         // Get the device context from the graphics context
-                        IntPtr _hdc = _graphics.GetHdc();
+                        IntPtr hdc = graphics.GetHdc();
 
                         // Create a new Enhanced Metafile from the device context
-                        Metafile _metaFile = new Metafile(_stream, _hdc);
+                        Metafile metaFile = new Metafile(stream, hdc);
 
                         // Release the device context
-                        _graphics.ReleaseHdc(_hdc);
+                        graphics.ReleaseHdc(hdc);
 
                         // Get a graphics context from the Enhanced Metafile
-                        using (Graphics _graphics2 = Graphics.FromImage(_metaFile))
+                        using (Graphics graphics2 = Graphics.FromImage(metaFile))
                         {
                             // Draw the image on the Enhanced Metafile
-                            _graphics2.DrawImage(_image, new Rectangle(0, 0, _image.Width, _image.Height));
+                            graphics2.DrawImage(image, new Rectangle(0, 0, image.Width, image.Height));
                         }
 
                         // Get the handle of the Enhanced Metafile
-                        IntPtr _hEmf = _metaFile.GetHenhmetafile();
+                        IntPtr hEmf = metaFile.GetHenhmetafile();
 
 #if WANT_WMF
     // A call to EmfToWmfBits with a null buffer return the size of the
@@ -477,18 +480,18 @@ namespace StatsDirect.Utilities
 					EmfToWmfBitsFlags.EmfToWmfBitsFlagsDefault);
 #else
                         // EMF
-                        uint _bufferSize = GetEnhMetaFileBits(_hEmf, 0, null);
-                        byte[] _buffer = new byte[_bufferSize];
-                        GetEnhMetaFileBits(_hEmf, _bufferSize, _buffer);
+                        uint bufferSize = NativeMethods.GetEnhMetaFileBits(hEmf, 0, null);
+                        byte[] buffer = new byte[bufferSize];
+                        NativeMethods.GetEnhMetaFileBits(hEmf, bufferSize, buffer);
 #endif
 
                         // Append the bits to the RTF string
-                        foreach (byte t in _buffer)
+                        foreach (byte t in buffer)
                         {
-                            _rtf.Append(String.Format("{0:X2}", t));
+                            rtf.Append(String.Format("{0:X2}", t));
                         }
 
-                        return _rtf.ToString();
+                        return rtf.ToString();
                     }
                 }
             }

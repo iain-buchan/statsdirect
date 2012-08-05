@@ -314,19 +314,10 @@ namespace StatsDirect.UI
 
         public SDMenuItem LoadMenuItems(string pathName)
         {
-            TextReader r = null;
-            try
+            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof (SDMenuItem));
+            using (TextReader r = new StreamReader(pathName))
             {
-                System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(SDMenuItem));
-                r = new StreamReader(pathName);
-                SDMenuItem i = (SDMenuItem)s.Deserialize(r);
-                r.Close();
-                return i;
-            }
-            finally
-            {
-                if (null != r)
-                    r.Dispose();
+                return (SDMenuItem) s.Deserialize(r);
             }
         }
 
@@ -2192,7 +2183,11 @@ namespace StatsDirect.UI
                 pnlConfidenceInterval.Visible = false;
             cboConfidenceInterval.Tag = null;
             if (pnlUser.Controls.ContainsKey("table"))
+            {
+                Control table = pnlUser.Controls["table"];
                 pnlUser.Controls.RemoveByKey("table");
+                table.Dispose();
+            }
             cmdCalculate.Text = "&OK";
             cmdClose.Text = "C&lose";
         }
@@ -2259,53 +2254,60 @@ namespace StatsDirect.UI
 
         void EnterMovesDown(object sender, KeyPressEventArgs e)
         {
-            // Only interested in ENTER - ignore others
-            if ('\r' != e.KeyChar)
-                return;
-
-            Control c = (Control)sender;
-
-            // this.SelectNextControl(c, true, true, true, false);
-            // Control next = this.ActiveControl;
-            Control next = c;
-            do
+            try
             {
-                if (null == next)
-                    break;
-                // Find the next useful control.  A control is useful if a tab would stop on it, and it is not a label or panel (for some reason, the selection logic stops on those even though they are not TabStops), and it is not a combo box (business logic).
-                // To prevent infinite loops, we also check for coming back to the control we tabbed from, and stop if so.
-                next = GetNextControl(next, true);
-                if (next == c)
-                    break;
-            } while (!IsUsefulControl(next, false));
-
-            // If we've landed on the Calculate, we should calculate.
-            if (next == cmdCalculate)
-            {
-                // The Calculate button is sometimes visible in place of the OK button, notably when an operation is ready to be executed.  Deal with this by returning, which breaks out of the selection loop and runs the operation.
-                if (inputtingData)
-                {
-                    selectingData = false;
-                    inputtingData = false;
-                    okSelected = true;
-                    e.Handled = true;
+                // Only interested in ENTER - ignore others
+                if ('\r' != e.KeyChar)
                     return;
-                }
-                DoCalculate();
-            }
-            else
-            {
-                // next.Focus();
-                // Select the entered text so it is ready to overwrite
-                if (next is TextBox)
+
+                Control c = (Control)sender;
+
+                // this.SelectNextControl(c, true, true, true, false);
+                // Control next = this.ActiveControl;
+                Control next = c;
+                do
                 {
-                    next.Select();
-                    // TextBox nText = (TextBox)next;
-                    // nText.SelectionStart = 0;
-                    // nText.SelectionLength = nText.TextLength;
+                    if (null == next)
+                        break;
+                    // Find the next useful control.  A control is useful if a tab would stop on it, and it is not a label or panel (for some reason, the selection logic stops on those even though they are not TabStops), and it is not a combo box (business logic).
+                    // To prevent infinite loops, we also check for coming back to the control we tabbed from, and stop if so.
+                    next = GetNextControl(next, true);
+                    if (next == c)
+                        break;
+                } while (!IsUsefulControl(next, false));
+
+                // If we've landed on the Calculate, we should calculate.
+                if (next == cmdCalculate)
+                {
+                    // The Calculate button is sometimes visible in place of the OK button, notably when an operation is ready to be executed.  Deal with this by returning, which breaks out of the selection loop and runs the operation.
+                    if (inputtingData)
+                    {
+                        selectingData = false;
+                        inputtingData = false;
+                        okSelected = true;
+                        e.Handled = true;
+                        return;
+                    }
+                    DoCalculate();
                 }
+                else
+                {
+                    // next.Focus();
+                    // Select the entered text so it is ready to overwrite
+                    if (next is TextBox)
+                    {
+                        next.Select();
+                        // TextBox nText = (TextBox)next;
+                        // nText.SelectionStart = 0;
+                        // nText.SelectionLength = nText.TextLength;
+                    }
+                }
+                e.Handled = true;
             }
-            e.Handled = true;
+            catch (Exception ex)
+            {
+                PuntThroughEventLoop(ex);
+            }
         }
 
         private FilledParameter PrepareCombinedParameter(ChartOptionsParameter chartOptionsParameter)
@@ -2611,7 +2613,10 @@ namespace StatsDirect.UI
             panel2By2ByK.Controls.Add(lblColumnsPrompt, 0, 0);
             panel2By2ByK.SetColumnSpan(lblColumnsPrompt, 3);
 
-            Label lblLeftColumnPrompt = new Label {Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Present"};
+            Label lblLeftColumnPrompt = new Label();
+            lblLeftColumnPrompt.Padding = new Padding(3, 6, 3, 3);
+            lblLeftColumnPrompt.AutoSize = true;
+            lblLeftColumnPrompt.Text = "Present";
             panel2By2ByK.Controls.Add(lblLeftColumnPrompt, 0, 1);
 
             Label lblRightColumnPrompt = new Label {Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Absent"};
@@ -5224,9 +5229,6 @@ namespace StatsDirect.UI
 
     class DrawingControl
     {
-        [DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
-
         private const int WM_SETREDRAW = 11;
 
         private static int suspendCounter;
@@ -5234,7 +5236,11 @@ namespace StatsDirect.UI
         public static void SuspendDrawing(Control parent)
         {
             if (0 == suspendCounter)
-                SendMessage(parent.Handle, WM_SETREDRAW, false, 0);
+            {
+                Message msgSuspendUpdate = Message.Create(parent.Handle, WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
+                NativeWindow window = NativeWindow.FromHandle(parent.Handle);
+                window.DefWndProc(ref msgSuspendUpdate);
+            }
             suspendCounter++;
         }
 
@@ -5244,7 +5250,11 @@ namespace StatsDirect.UI
                 suspendCounter--;
             if (0 == suspendCounter)
             {
-                SendMessage(parent.Handle, WM_SETREDRAW, true, 0);
+                IntPtr wparam = new IntPtr(1);
+                Message msgResumeUpdate = Message.Create(parent.Handle, WM_SETREDRAW, wparam, IntPtr.Zero);
+                NativeWindow window = NativeWindow.FromHandle(parent.Handle);
+                window.DefWndProc(ref msgResumeUpdate);
+
                 parent.Refresh();
             }
         }

@@ -19,27 +19,24 @@ namespace StatsDirect.Builtins
             ///  <summary>
             ///  Y-axis intercept
             ///  </summary>
-            public double YInt;
-
-            public double Slope;
-
+            public double YInt { get; set; }
+            public double Slope { get; set; }
             ///  <remarks>1-based</remarks>
-            public double[] X;
-
+            public double[] X { get; set; }
             ///  <remarks>1-based</remarks>
-            public double[] Y;
-            public int DF;
-            public double CIT;
-            public double P0;
-            public double SUMX;
-            public double SSX;
-            public double SSY;
-            public double SSREG;
-            public double MS;
-            public double PERT;
-            public double A;
-            public double G;
-            public int N;
+            public double[] Y { get; set; }
+            public int DF { get; set; }
+            public double CIT { get; set; }
+            public double P0 { get; set; }
+            public double SUMX { get; set; }
+            public double SSX { get; set; }
+            public double SSY { get; set; }
+            public double SSREG { get; set; }
+            public double MS { get; set; }
+            public double PERT { get; set; }
+            public double A { get; set; }
+            public double G { get; set; }
+            public int N { get; set; }
         }
 
 
@@ -102,16 +99,16 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static SimpleLinearRegressionContext GetSimpleLinearRegressionContext(ParameterBag Parameters)
+        private static SimpleLinearRegressionContext GetSimpleLinearRegressionContext(ParameterBag parameters)
         {
-            if (Parameters.ContainsKey("context"))
+            if (parameters.ContainsKey("context"))
             {
-                return ((SimpleLinearRegressionContext)(Parameters["context"].Data));
+                return ((SimpleLinearRegressionContext)(parameters["context"].Data));
             }
 
-            DataFrame fy = Parameters["y"].AsDataFrame;
+            DataFrame fy = parameters["y"].AsDataFrame;
             DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
-            DataFrame fx = Parameters["x"].AsDataFrame;
+            DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
             SimpleLinearRegressionContext context = new SimpleLinearRegressionContext
                                                         {
@@ -125,44 +122,44 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext(ParameterBag Parameters)
+        private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext(ParameterBag parameters)
         {
-            if (Parameters.ContainsKey("context"))
+            if (parameters.ContainsKey("context"))
             {
-                return ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+                return ((MultipleLinearRegressionContext)(parameters["context"].Data));
             }
             throw new Exception("Expected to find a context parameter and didn't");
         }
 
 
-        public static StepResult rptInterpolateXY(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptInterpolateXY(ITemplateHost host, ParameterBag parameters)
         {
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
-            DataFrame fy = Parameters["y"].AsDataFrame;
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
             DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
-            DataFrame fx = Parameters["x"].AsDataFrame;
+            DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
-            double newx = Parameters["newx"].AsDouble;
+            double newx = parameters["newx"].AsDouble;
             double newy = newx * context.Slope + context.YInt;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("v1", vx.Title + " = " + newx.ToString());
-            outputParameters.AddOutput("v2", vy.Title + " = " + Host.RoundU(newy));
+            outputParameters.AddOutput("v2", vy.Title + " = " + host.RoundU(newy));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
 
-        public static StepResult rptInterpolateYX(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptInterpolateYX(ITemplateHost host, ParameterBag parameters)
         {
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
-            DataFrame fy = Parameters["y"].AsDataFrame;
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
             DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
-            DataFrame fx = Parameters["x"].AsDataFrame;
+            DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
-            double newy = Parameters["newy"].AsDouble;
+            double newy = parameters["newy"].AsDouble;
             double newx = (newy - context.YInt) / context.Slope;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("v1", vy.Title + " = " + newy.ToString());
-            outputParameters.AddOutput("v2", vx.Title + " = " + Host.RoundU(newx));
+            outputParameters.AddOutput("v2", vx.Title + " = " + host.RoundU(newx));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -297,12 +294,12 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult plotSimpleLinearRegression(ITemplateHost host, ParameterBag Parameters)
+        public static StepResult PlotSimpleLinearRegression(ITemplateHost host, ParameterBag parameters)
         {
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
-            DataFrame fy = Parameters["y"].AsDataFrame;
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
             DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
-            DataFrame fx = Parameters["x"].AsDataFrame;
+            DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
 
             ParameterBag outputParameters = new ParameterBag();
@@ -315,12 +312,12 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult plotResidualsSimple(ITemplateHost host, ParameterBag Parameters)
+        public static StepResult PlotResidualsSimple(ITemplateHost host, ParameterBag parameters)
         {
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
-            DataFrame fy = Parameters["y"].AsDataFrame;
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            DataFrame fy = parameters["y"].AsDataFrame;
             DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
-            DataFrame fx = Parameters["x"].AsDataFrame;
+            DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
 
             int nx = vx.Length;
@@ -332,8 +329,10 @@ namespace StatsDirect.Builtins
                 z[j] = vx.Data[j] * context.Slope + context.YInt;
                 r[j] = vy.Data[j] - z[j];
             }
-            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
-            outputParameters.AddOutput("residualsVsY", ch.PlotXYAndReturnRtf(host, z, r, "Fitted " + vy.Title, "Residuals (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                outputParameters.AddOutput("residualsVsY", ch.PlotXYAndReturnRtf(host, z, r, "Fitted " + vy.Title, "Residuals (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false));
+            }
 
             for (int j = 0; j <= nx - 1; j++)
             {
@@ -341,8 +340,10 @@ namespace StatsDirect.Builtins
                 r[j] = vy.Data[j] - z[j];
                 z[j] = vx.Data[j];
             }
-            ch = new ChartRenderer(ChartDefinition.Empty());
-            outputParameters.AddOutput("residualsVsPredictor", ch.PlotXYAndReturnRtf(host, z, r, "Predictor: " + vx.Title, "Residuals (Y - y fit)", "Residuals vs. Predictor [linear regression]", true, 0, false));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                outputParameters.AddOutput("residualsVsPredictor", ch.PlotXYAndReturnRtf(host, z, r, "Predictor: " + vx.Title, "Residuals (Y - y fit)", "Residuals vs. Predictor [linear regression]", true, 0, false));
+            }
 
             double xf;
             ExFortran.Rank(r, z, 0, nx, 0, out xf);
@@ -356,8 +357,10 @@ namespace StatsDirect.Builtins
                     z[j] = Constant.MISSING;
                 }
             }
-            ch = new ChartRenderer(ChartDefinition.Empty());
-            outputParameters.AddOutput("residualsNormalPlot", ch.PlotXYAndReturnRtf(host, r, z, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals [linear regression]", false, 0, false));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                outputParameters.AddOutput("residualsNormalPlot", ch.PlotXYAndReturnRtf(host, r, z, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals [linear regression]", false, 0, false));
+            }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -377,11 +380,10 @@ namespace StatsDirect.Builtins
             ChartDefinition cd = new ChartDefinition();
             cd.AddYSeries(vy.Data, vy.Title);
             cd.AddXSeries(vx.Data, vx.Title);
-            ChartRenderer ch = new ChartRenderer(cd);
             ParameterBag outputParameters = new ParameterBag();
-            using (MemoryStream metaStream = new MemoryStream())
+
+            using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                ch.StartMetafile(metaStream);
 
                 double maxpcon = double.MinValue;
                 double minpcon = double.MaxValue;
@@ -413,13 +415,8 @@ namespace StatsDirect.Builtins
                     ch.DataMinY = minpcon;
                 }
 
-                ch.PlotLinearRegressionInternal(host, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YInt, true, vx.Title, vy.Title);
-                if (context.PERT != 0)
-                {
-                    ch.plot_pert(context.PERT, context.Slope, context.YInt, nx, context.MS, context.SUMX, context.SSX, true);
-                }
-                ch.EndMetafile();
-                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                string rtf = ch.PlotLinearRegressionAndMaybePertAndReturnRtf(host, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YInt, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SUMX, context.SSX, true);
+                outputParameters.AddOutput("chart", rtf);
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -441,10 +438,8 @@ namespace StatsDirect.Builtins
             ChartDefinition cd = new ChartDefinition();
             cd.AddYSeries(vy.Data, vy.Title);
             cd.AddXSeries(vx.Data, vx.Title);
-            ChartRenderer ch = new ChartRenderer(cd);
-            using (MemoryStream metaStream = new MemoryStream())
+            using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                ch.StartMetafile(metaStream);
 
                 double maxpcon = double.MinValue;
                 double minpcon = double.MaxValue;
@@ -476,14 +471,9 @@ namespace StatsDirect.Builtins
                     ch.DataMinY = minpcon;
                 }
 
-                ch.PlotLinearRegressionInternal(host, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YInt, true, vx.Title, vy.Title);
+                string rtf = ch.PlotLinearRegressionAndMaybePertAndReturnRtf(host, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YInt, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SUMX, context.SSX, false);
 
-                if (context.PERT != 0)
-                {
-                    ch.plot_pert(context.PERT, context.Slope, context.YInt, nx, context.MS, context.SUMX, context.SSX, false);
-                }
-                ch.EndMetafile();
-                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                outputParameters.AddOutput("chart", rtf);
             }
 
             return new StepResult(StepSuccess.Success, outputParameters);
@@ -1555,9 +1545,11 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
-            context.R[0] = Constant.MISSING;
-            chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false))));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                context.R[0] = Constant.MISSING;
+                chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false))));
+            }
 
             for (i = 1; i <= context.P; i++)
             {
@@ -1570,8 +1562,10 @@ namespace StatsDirect.Builtins
                     {
                         r[j] = context.X[j, i];
                     }
-                    ch = new ChartRenderer(ChartDefinition.Empty());
-                    chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, 0, false))));
+                    using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                    {
+                        chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, 0, false))));
+                    }
                 }
             }
             r = new double[context.N + 1 /* for VB to C# conversion */ ];
@@ -1587,19 +1581,21 @@ namespace StatsDirect.Builtins
                     r[j] = Constant.MISSING;
                 }
             }
-            ch = new ChartRenderer(ChartDefinition.Empty());
-            chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, 0, false))));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, 0, false))));
+            }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
 
-        public static StepResult rptMultipleLinearRegressionParameterDetail(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptMultipleLinearRegressionParameterDetail(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(Parameters);
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             int i; int iq = 0;
             double cit; double P0;
 
-            double GAMMA = Parameters["ci"].AsDouble;
+            double GAMMA = parameters["ci"].AsDouble;
             int df = context.N - context.P;
             MathDbl.civ(df, out cit, GAMMA, out P0);
             if (context.DoC)
@@ -1621,10 +1617,10 @@ namespace StatsDirect.Builtins
                 ParameterBag vParameters = new ParameterBag();
                 vList.Add(vParameters);
                 vParameters.AddOutput("label", Q);
-                vParameters.AddOutput("coef", Host.RoundU(context.B[i]));
-                vParameters.AddOutput("err", Host.RoundU(context.SE[i]));
-                vParameters.AddOutput("from", Host.RoundU(context.B[i] - cit * context.SE[i]));
-                vParameters.AddOutput("to", Host.RoundU(context.B[i] + cit * context.SE[i]));
+                vParameters.AddOutput("coef", host.RoundU(context.B[i]));
+                vParameters.AddOutput("err", host.RoundU(context.SE[i]));
+                vParameters.AddOutput("from", host.RoundU(context.B[i] - cit * context.SE[i]));
+                vParameters.AddOutput("to", host.RoundU(context.B[i] + cit * context.SE[i]));
             }
             bool used_svd = true;
             for (i = 1; i <= context.P; i++)
@@ -1689,12 +1685,12 @@ namespace StatsDirect.Builtins
                         ParameterBag vifParameters = new ParameterBag();
                         vifList.Add(vifParameters);
                         vifParameters.AddOutput("label", ti[i]);
-                        vifParameters.AddOutput("vif", Host.RoundU(vif2[i]));
+                        vifParameters.AddOutput("vif", host.RoundU(vif2[i]));
                         vifParameters.AddOutput("x", vif2[i] > 20.0 ? Formatting.ASTERISK : "");
-                        vifParameters.AddOutput("rvif", Host.RoundU(1.0 / vif2[i]));
+                        vifParameters.AddOutput("rvif", host.RoundU(1.0 / vif2[i]));
                     }
                 }
-                outputParameters.AddOutput("meanv", Host.RoundU(meanv));
+                outputParameters.AddOutput("meanv", host.RoundU(meanv));
             }
             else
             {
@@ -2203,10 +2199,10 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptPrincipalComponentsRegressionCoefficients(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptPrincipalComponentsRegressionCoefficients(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(Parameters);
-            DataFrame frame = Parameters["data"].AsDataFrame;
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
+            DataFrame frame = parameters["data"].AsDataFrame;
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> pcList = new List<ParameterBag>();
             outputParameters.AddOutput("*pc", pcList);
@@ -2229,7 +2225,7 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag resParameters = new ParameterBag();
                     resList.Add(resParameters);
-                    resParameters.AddOutput("res", Host.RoundU(context.V[j, i]));
+                    resParameters.AddOutput("res", host.RoundU(context.V[j, i]));
                 }
             }
             return new StepResult(StepSuccess.Success, outputParameters);
@@ -2414,9 +2410,9 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptPrincipalComponentsRegressionScores(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptPrincipalComponentsRegressionScores(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(Parameters);
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             int N = context.P;
             int nx = context.N;
             double[,] x = context.X;
@@ -2468,17 +2464,17 @@ namespace StatsDirect.Builtins
                     }
                     ParameterBag resParameters = new ParameterBag();
                     resList.Add(resParameters);
-                    resParameters.AddOutput("res", Host.RoundU(ps));
+                    resParameters.AddOutput("res", host.RoundU(ps));
                 }
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
 
-        public static StepResult rptPrincipalComponentsRegressionMatrix(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptPrincipalComponentsRegressionMatrix(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(Parameters);
-            DataFrame frame = Parameters["data"].AsDataFrame;
+            MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
+            DataFrame frame = parameters["data"].AsDataFrame;
             int N = context.P;
             double[,] xc = context.H;
             double[,] XR = context.R2;
@@ -2505,7 +2501,7 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag resParameters = new ParameterBag();
                     resList.Add(resParameters);
-                    resParameters.AddOutput("res", Host.RoundU(context.ERR == 1 ? XR[j, i] : xc[j, i]));
+                    resParameters.AddOutput("res", host.RoundU(context.ERR == 1 ? XR[j, i] : xc[j, i]));
                 }
             }
             return new StepResult(StepSuccess.Success, outputParameters);
@@ -2531,7 +2527,7 @@ namespace StatsDirect.Builtins
             context.Y = new double[nx + 1 /* for VB to C# conversion */ ];
             ParameterBag outputParameters = new ParameterBag();
             double perf; double mnsqr; double r = 0; double seest = 0;
-            double sumx, ssx, sdx;
+            double sumx, ssx, sdx, ssy, ssreg;
             switch (model)
             {
                 case 0:
@@ -2540,8 +2536,10 @@ namespace StatsDirect.Builtins
                         context.X[N] = vX.Data[N - 1];
                         context.Y[N] = Math.Log(vY.Data[N - 1]);
                     }
-                    x_lsm(out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context);
+                    x_lsm(out perf, out sumx, out ssx, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest, context);
                     outputParameters.AddOutput("modelDescription", "(Exponential)  Y = a * exp(b * x)");
+                    context.SSY = ssy;
+                    context.SSREG = ssreg;
                     context.A = Math.Exp(context.YInt);
                     context.G = context.Slope;
                     break;
@@ -2551,8 +2549,10 @@ namespace StatsDirect.Builtins
                         context.X[N] = Math.Log(vX.Data[N - 1]);
                         context.Y[N] = Math.Log(vY.Data[N - 1]);
                     }
-                    x_lsm(out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context);
+                    x_lsm(out perf, out sumx, out ssx, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest, context);
                     outputParameters.AddOutput("modelDescription", "(Geometric / Power)  Y = a * x^b");
+                    context.SSY = ssy;
+                    context.SSREG = ssreg;
                     context.A = Math.Exp(context.YInt);
                     context.G = context.Slope;
                     break;
@@ -2562,8 +2562,10 @@ namespace StatsDirect.Builtins
                         context.X[N] = 1.0 / vX.Data[N - 1];
                         context.Y[N] = 1.0 / vY.Data[N - 1];
                     }
-                    x_lsm(out perf, out sumx, out ssx, out context.SSY, out sdx, out context.SSREG, out mnsqr, out r, out seest, context);
+                    x_lsm(out perf, out sumx, out ssx, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest, context);
                     outputParameters.AddOutput("modelDescription", "(Hyperbolic)  Y = x / (a + b * x)");
+                    context.SSY = ssy;
+                    context.SSREG = ssreg;
                     context.A = context.Slope;
                     context.G = context.YInt;
                     break;
@@ -2581,19 +2583,19 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptLinearizedEstimateInterpolation(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptLinearizedEstimateInterpolation(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame fY = Parameters["y"].AsDataFrame;
+            DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
-            DataFrame fX = Parameters["x"].AsDataFrame;
+            DataFrame fX = parameters["x"].AsDataFrame;
             DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             int model = 0;
-            if (Parameters.ContainsKey("model"))
+            if (parameters.ContainsKey("model"))
             {
-                model = int.Parse(Parameters["model"].AsString);
+                model = int.Parse(parameters["model"].AsString);
             }
-            double newx = Parameters["newx"].AsDouble;
+            double newx = parameters["newx"].AsDouble;
             double newy = 0;
             switch (model)
             {
@@ -2615,38 +2617,35 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("lab_x", vX.Title);
-            outputParameters.AddOutput("res_x", Host.RoundU(newx));
+            outputParameters.AddOutput("res_x", host.RoundU(newx));
             outputParameters.AddOutput("lab_y", vY.Title);
-            outputParameters.AddOutput("res_y", Host.RoundU(newy));
+            outputParameters.AddOutput("res_y", host.RoundU(newy));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
 
-        public static StepResult rptLinearizedEstimatePlot(ITemplateHost host, ParameterBag Parameters)
+        public static StepResult RptLinearizedEstimatePlot(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame fY = Parameters["y"].AsDataFrame;
+            DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
-            DataFrame fX = Parameters["x"].AsDataFrame;
+            DataFrame fX = parameters["x"].AsDataFrame;
             DoubleVariable vX = fX.Variables[0].AsDoubleVariable;
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(Parameters);
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             int model = 0;
-            if (Parameters.ContainsKey("model"))
+            if (parameters.ContainsKey("model"))
             {
-                model = int.Parse(Parameters["model"].AsString);
+                model = int.Parse(parameters["model"].AsString);
             }
             ChartDefinition cd = new ChartDefinition();
             cd.AddYSeries(vY.Data, vY.Title);
             cd.AddXSeries(vX.Data, vX.Title);
             AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) { mxd = vY.Data, av = vX.Data };
             cd.ChartOptions = aOptions;
-            ChartRenderer ch = new ChartRenderer(cd);
             ParameterBag outputParameters = new ParameterBag();
-            using (MemoryStream metaStream = new MemoryStream())
+            using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                ch.StartMetafile(metaStream);
-                ch.PlotLinearizedEstimationInternal(host, "", model, context.A, context.G, vX.Title, vY.Title);
-                ch.EndMetafile();
-                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                string rtf = ch.PlotLinearizedEstimationAndReturnRtf(host, "", model, context.A, context.G, vX.Title, vY.Title);
+                outputParameters.AddOutput("chart", rtf);
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -2723,9 +2722,9 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptPolynomialRegressionInterpolation(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptPolynomialRegressionInterpolation(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
             double[,] xtxi = context.H;
             double[] bd = context.B;
             double rss = context.SSY - context.SSREG;
@@ -2733,7 +2732,7 @@ namespace StatsDirect.Builtins
             int P = context.P;
             double[] newx = new double[P + 1 /* for VB to C# conversion */ ];
             newx[1] = 1.0;
-            double nwx = Parameters["newx"].AsDouble;
+            double nwx = parameters["newx"].AsDouble;
             if (P > 1)
             {
                 for (int N = 2; N <= P; N++)
@@ -2746,7 +2745,7 @@ namespace StatsDirect.Builtins
             {
                 newy = newy + (newx[N] * bd[N]);
             }
-            double GAMMA = Parameters["gamma"].AsDouble;
+            double GAMMA = parameters["gamma"].AsDouble;
             double P0; double cit;
             MathDbl.civ(nx - P, out cit, GAMMA, out P0);
             ParameterBag outputParameters = new ParameterBag();
@@ -2758,19 +2757,19 @@ namespace StatsDirect.Builtins
                 ParameterBag tableParameters = new ParameterBag();
                 tableList.Add(tableParameters);
                 tableParameters.AddOutput("lab", Q);
-                tableParameters.AddOutput("res", Host.RoundU(newx[N]));
+                tableParameters.AddOutput("res", host.RoundU(newx[N]));
             }
             outputParameters.AddOutput("y_lab", context.Titles[0]);
-            outputParameters.AddOutput("y_res", Host.RoundU(newy));
+            outputParameters.AddOutput("y_res", host.RoundU(newy));
             double rdf = Convert.ToDouble((nx - 1) - (P - 1));
             double rms = rss / rdf;
             double cl; double pl;
             Regress1.x_ciyp(newx, xtxi, P, rms, cit, out cl, out pl);
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 1));
-            outputParameters.AddOutput("from_conf", Host.RoundU(newy - cl));
-            outputParameters.AddOutput("to_conf", Host.RoundU(newy + cl));
-            outputParameters.AddOutput("from_pred", Host.RoundU(newy - pl));
-            outputParameters.AddOutput("to_pred", Host.RoundU(newy + pl));
+            outputParameters.AddOutput("from_conf", host.RoundU(newy - cl));
+            outputParameters.AddOutput("to_conf", host.RoundU(newy + cl));
+            outputParameters.AddOutput("from_pred", host.RoundU(newy - pl));
+            outputParameters.AddOutput("to_pred", host.RoundU(newy + pl));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -2815,18 +2814,13 @@ namespace StatsDirect.Builtins
                     break;
             }
 
-            ChartDefinition cd = new ChartDefinition();
+            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) { mxd = vY.Data, av = vX.Data };
+            ChartDefinition cd = new ChartDefinition {ChartOptions = aOptions};
             cd.AddYSeries(vY.Data, vY.Title);
             cd.AddXSeries(vX.Data, vX.Title);
-            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) { mxd = vY.Data, av = vX.Data };
-            cd.ChartOptions = aOptions;
-            ChartRenderer ch = new ChartRenderer(cd);
-            using (MemoryStream metaStream = new MemoryStream())
+            using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                ch.StartMetafile(metaStream);
-                ch.PlotPolynomialRegressionInternal(host, title, mode, xtxi, bd, rss, nx, P, GAMMA, vX.Title, vY.Title);
-                ch.EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ch.PlotPolynomialRegressionAndReturnRtf(host, title, mode, xtxi, bd, rss, nx, P, GAMMA, vX.Title, vY.Title);
             }
         }
 
@@ -3968,29 +3962,53 @@ namespace StatsDirect.Builtins
             hi[0] = Constant.MISSING;
 
             //  delta beta vs. proportion
-            string chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, xx, yy1, ep, db, db + " vs. " + ep, false, 0, false);
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string chart = ch.PlotXYAndReturnRtf(host, xx, yy1, ep, db, db + " vs. " + ep, false, 0, false);
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            }
             //  std delta beta vs. proportion
-            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, xx, yy2, ep, dbs, dbs + " vs. " + ep, false, 0, false);
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string chart = ch.PlotXYAndReturnRtf(host, xx, yy2, ep, dbs, dbs + " vs. " + ep, false, 0, false);
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            }
             //  delta deviance vs. proportion
-            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, xx, yy3, ep, dd, dd + " vs. " + ep, false, 0, false);
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string chart = ch.PlotXYAndReturnRtf(host, xx, yy3, ep, dd, dd + " vs. " + ep, false, 0, false);
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            }
             //  delta x2 vs. proportion
-            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYZAndReturnRtf(host, xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, 0);
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string chart = ch.PlotXYZAndReturnRtf(host, xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, 0);
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            }
             //  delta beta vs. hi
-            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, hi, yy1, lv, db, db + " vs. " + lv, false, 0, false);
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string chart = ch.PlotXYAndReturnRtf(host, hi, yy1, lv, db, db + " vs. " + lv, false, 0, false);
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            }
             //  delta beta std vs. hi
-            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, hi, yy2, lv, dbs, dbs + " vs. " + lv, false, 0, false);
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string chart = ch.PlotXYAndReturnRtf(host, hi, yy2, lv, dbs, dbs + " vs. " + lv, false, 0, false);
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            }
             //  delta deviance vs. hi
-            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, hi, yy3, lv, dd, dd + " vs. " + lv, false, 0, false);
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string chart = ch.PlotXYAndReturnRtf(host, hi, yy3, lv, dd, dd + " vs. " + lv, false, 0, false);
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            }
             //  delta x2 vs. hi
-            chart = new ChartRenderer(ChartDefinition.Empty()).PlotXYAndReturnRtf(host, hi, yy4, lv, dx, dx + " vs. " + lv, false, 0, false);
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string chart = ch.PlotXYAndReturnRtf(host, hi, yy4, lv, dx, dx + " vs. " + lv, false, 0, false);
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+            }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -4022,9 +4040,9 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptPoissonRegressionModel(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptPoissonRegressionModel(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
             double[] b = context.B;
             double[] se = context.SE;
             int P = context.P;
@@ -4066,14 +4084,14 @@ namespace StatsDirect.Builtins
             {
                 iq = 1;
             }
-            outputParameters.AddOutput("acc", Host.RoundU(tol));
-            outputParameters.AddOutput("ll", Host.RoundU(ll));
-            outputParameters.AddOutput("dev", Host.RoundU(dev));
+            outputParameters.AddOutput("acc", host.RoundU(tol));
+            outputParameters.AddOutput("ll", host.RoundU(ll));
+            outputParameters.AddOutput("dev", host.RoundU(dev));
             outputParameters.AddOutput("df", idf.ToString());
             outputParameters.AddOutput("rank", irank.ToString());
-            outputParameters.AddOutput("aka", Host.RoundU(dev + 2 * (1 + M)));
-            outputParameters.AddOutput("sch", Host.RoundU(dev + (2 + M) * Math.Log(N)));
-            outputParameters.AddOutput("devx", Host.RoundU(devx));
+            outputParameters.AddOutput("aka", host.RoundU(dev + 2 * (1 + M)));
+            outputParameters.AddOutput("sch", host.RoundU(dev + (2 + M) * Math.Log(N)));
+            outputParameters.AddOutput("devx", host.RoundU(devx));
             double x2dev = devx - dev;
             if (x2dev < 0.0)
             {
@@ -4106,11 +4124,11 @@ namespace StatsDirect.Builtins
                 s_x2 = Constant.MISSING;
                 s_dev = Constant.MISSING;
             }
-            outputParameters.AddOutput("x2dev", Host.RoundU(x2dev));
+            outputParameters.AddOutput("x2dev", host.RoundU(x2dev));
             outputParameters.AddOutput("x2df", (idfx - idf).ToString());
             if (idf > 0)
             {
-                outputParameters.AddOutput("x2p", Host.pval(PDF.chivalp(x2dev, Convert.ToDouble(idfx - idf))));
+                outputParameters.AddOutput("x2p", host.pval(PDF.chivalp(x2dev, Convert.ToDouble(idfx - idf))));
             }
             else
             {
@@ -4119,21 +4137,21 @@ namespace StatsDirect.Builtins
                 x2 = Constant.MISSING;
                 dev = Constant.MISSING;
             }
-            outputParameters.AddOutput("r2", Host.RoundU(r2));
-            outputParameters.AddOutput("r2i", Host.RoundU(r2i));
-            outputParameters.AddOutput("x2_pearson", Host.RoundU(x2));
+            outputParameters.AddOutput("r2", host.RoundU(r2));
+            outputParameters.AddOutput("r2i", host.RoundU(r2i));
+            outputParameters.AddOutput("x2_pearson", host.RoundU(x2));
             outputParameters.AddOutput("idf", idf.ToString());
-            outputParameters.AddOutput("p_pearson", Host.pval(PDF.chivalp(x2, Convert.ToDouble(idf))));
-            outputParameters.AddOutput("dev_gf", Host.RoundU(dev));
-            outputParameters.AddOutput("p_dev", Host.pval(PDF.chivalp(dev, Convert.ToDouble(idf))));
+            outputParameters.AddOutput("p_pearson", host.pval(PDF.chivalp(x2, Convert.ToDouble(idf))));
+            outputParameters.AddOutput("dev_gf", host.RoundU(dev));
+            outputParameters.AddOutput("p_dev", host.pval(PDF.chivalp(dev, Convert.ToDouble(idf))));
             // scaled for overdispersion
-            outputParameters.AddOutput("sp", Host.RoundU(sp));
-            outputParameters.AddOutput("x2dev_scaled", Host.RoundU(s_x2dev));
-            outputParameters.AddOutput("x2p_scaled", Host.pval(PDF.chivalp(s_x2dev, Convert.ToDouble(idfx - idf))));
-            outputParameters.AddOutput("x2_scaled", Host.RoundU(s_x2));
-            outputParameters.AddOutput("p_p_scaled", Host.pval(PDF.chivalp(s_x2, Convert.ToDouble(idf))));
-            outputParameters.AddOutput("dev_scaled", Host.RoundU(s_dev));
-            outputParameters.AddOutput("p_dev_scaled", Host.pval(PDF.chivalp(s_dev, Convert.ToDouble(idf))));
+            outputParameters.AddOutput("sp", host.RoundU(sp));
+            outputParameters.AddOutput("x2dev_scaled", host.RoundU(s_x2dev));
+            outputParameters.AddOutput("x2p_scaled", host.pval(PDF.chivalp(s_x2dev, Convert.ToDouble(idfx - idf))));
+            outputParameters.AddOutput("x2_scaled", host.RoundU(s_x2));
+            outputParameters.AddOutput("p_p_scaled", host.pval(PDF.chivalp(s_x2, Convert.ToDouble(idf))));
+            outputParameters.AddOutput("dev_scaled", host.RoundU(s_dev));
+            outputParameters.AddOutput("p_dev_scaled", host.pval(PDF.chivalp(s_dev, Convert.ToDouble(idf))));
 
             IList<ParameterBag> unscaledList = new List<ParameterBag>();
             outputParameters.AddOutput("*unscaled", unscaledList);
@@ -4147,8 +4165,8 @@ namespace StatsDirect.Builtins
                 }
                 else { Q = Label[i - iq]; }
                 unscaledParameters.AddOutput("par", Q);
-                unscaledParameters.AddOutput("coef", Host.RoundU(b[i]));
-                unscaledParameters.AddOutput("err", Host.RoundU(se[i]));
+                unscaledParameters.AddOutput("coef", host.RoundU(b[i]));
+                unscaledParameters.AddOutput("err", host.RoundU(se[i]));
             }
 
             IList<ParameterBag> scaledList = new List<ParameterBag>();
@@ -4174,17 +4192,17 @@ namespace StatsDirect.Builtins
                     prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[i]) / sse));
                 }
                 scaledParameters.AddOutput("par", Q);
-                scaledParameters.AddOutput("err", Host.RoundU(sse));
-                scaledParameters.AddOutput("z", Host.RoundU(z));
-                scaledParameters.AddOutput("p", Host.pval(prob));
+                scaledParameters.AddOutput("err", host.RoundU(sse));
+                scaledParameters.AddOutput("z", host.RoundU(z));
+                scaledParameters.AddOutput("p", host.pval(prob));
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
 
-        public static StepResult rptLogisticRegressionModel(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptLogisticRegressionModel(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
             double[] b = context.B;
             double[] se = context.SE;
             int P = context.P;
@@ -4276,14 +4294,14 @@ namespace StatsDirect.Builtins
                 iq = 1;
             }
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("acc", Host.RoundU(tol));
-            outputParameters.AddOutput("ll", Host.RoundU(ll));
-            outputParameters.AddOutput("dev", Host.RoundU(dev));
+            outputParameters.AddOutput("acc", host.RoundU(tol));
+            outputParameters.AddOutput("ll", host.RoundU(ll));
+            outputParameters.AddOutput("dev", host.RoundU(dev));
             outputParameters.AddOutput("idf", idf.ToString());
             outputParameters.AddOutput("rank", irank.ToString());
-            outputParameters.AddOutput("aka", Host.RoundU(dev + 2 * (1 + M)));
-            outputParameters.AddOutput("sch", Host.RoundU(dev + (2 + M) * Math.Log(N)));
-            outputParameters.AddOutput("devx", Host.RoundU(devx));
+            outputParameters.AddOutput("aka", host.RoundU(dev + 2 * (1 + M)));
+            outputParameters.AddOutput("sch", host.RoundU(dev + (2 + M) * Math.Log(N)));
+            outputParameters.AddOutput("devx", host.RoundU(devx));
             double x2dev = devx - dev;
             if (devx == Constant.MISSING)
             {
@@ -4302,15 +4320,15 @@ namespace StatsDirect.Builtins
             {
                 r2i = 1.0 - ll / llx;
             }
-            outputParameters.AddOutput("x2dev", Host.RoundU(x2dev));
+            outputParameters.AddOutput("x2dev", host.RoundU(x2dev));
             outputParameters.AddOutput("x2df", (idfx - idf).ToString());
             outputParameters.AddOutput("x2p",
                                        idfx > 0
-                                           ? Host.pval(PDF.chivalp(x2dev, Convert.ToDouble(idfx - idf)))
+                                           ? host.pval(PDF.chivalp(x2dev, Convert.ToDouble(idfx - idf)))
                                            : Formatting.ASTERISK);
-            outputParameters.AddOutput("r2", Host.RoundU(r2));
-            outputParameters.AddOutput("r2i", Host.RoundU(r2i));
-            outputParameters.AddOutput("x2", Host.RoundU(x2));
+            outputParameters.AddOutput("r2", host.RoundU(r2));
+            outputParameters.AddOutput("r2i", host.RoundU(r2i));
+            outputParameters.AddOutput("x2", host.RoundU(x2));
             if (idf <= 0)
             {
                 x2 = Constant.MISSING;
@@ -4320,15 +4338,15 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                outputParameters.AddOutput("p", Host.pval(PDF.chivalp(x2, Convert.ToDouble(idf))));
+                outputParameters.AddOutput("p", host.pval(PDF.chivalp(x2, Convert.ToDouble(idf))));
             }
-            outputParameters.AddOutput("dev_good", Host.RoundU(dev));
+            outputParameters.AddOutput("dev_good", host.RoundU(dev));
             outputParameters.AddOutput("df_good", idf.ToString());
-            outputParameters.AddOutput("p_good", Host.pval(PDF.chivalp(dev, Convert.ToDouble(idf))));
-            outputParameters.AddOutput("hl", Host.RoundU(chat));
+            outputParameters.AddOutput("p_good", host.pval(PDF.chivalp(dev, Convert.ToDouble(idf))));
+            outputParameters.AddOutput("hl", host.RoundU(chat));
             outputParameters.AddOutput("df_hl", hldf.ToString());
             double hlp = hldf < 1 ? Constant.MISSING : PDF.chivalp(chat, Convert.ToDouble(hldf));
-            outputParameters.AddOutput("p_hl", Host.pval(hlp));
+            outputParameters.AddOutput("p_hl", host.pval(hlp));
             List<ParameterBag> parametersList = new List<ParameterBag>();
             outputParameters.AddOutput("*parameters", parametersList);
             for (i = 1; i <= P; i++)
@@ -4337,8 +4355,8 @@ namespace StatsDirect.Builtins
                 parametersList.Add(parametersParameters);
                 string Q = i == 1 && DoC ? "Constant" : Label[i - iq];
                 parametersParameters.AddOutput("par", Q);
-                parametersParameters.AddOutput("coef", Host.RoundU(b[i]));
-                parametersParameters.AddOutput("err", Host.RoundU(se[i]));
+                parametersParameters.AddOutput("coef", host.RoundU(b[i]));
+                parametersParameters.AddOutput("err", host.RoundU(se[i]));
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -4476,9 +4494,9 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptLogisticRegressionOdds(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptLogisticRegressionOdds(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
             double[] b = context.B;
             double[] se = context.SE;
             int P = context.P;
@@ -4488,7 +4506,7 @@ namespace StatsDirect.Builtins
             double cit;
             double P0;
 
-            double GAMMA = Parameters["gamma"].AsDouble;
+            double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out cit, GAMMA, out P0);
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
@@ -4504,14 +4522,14 @@ namespace StatsDirect.Builtins
                 parametersList.Add(parametersParameters);
                 string Q = i == 1 && DoC ? "Constant" : Label[i - iq];
                 parametersParameters.AddOutput("par", Q);
-                parametersParameters.AddOutput("est", Host.RoundU(b[i]));
+                parametersParameters.AddOutput("est", host.RoundU(b[i]));
                 if (i > 1 || DoC == false)
                 {
                     double odr = Formatting.SafeExp(b[i]);
                     double lci = Formatting.SafeExp(b[i] - se[i] * cit);
                     double uci = Formatting.SafeExp(b[i] + se[i] * cit);
-                    parametersParameters.AddOutput("odds", Host.RoundU(odr));
-                    parametersParameters.AddOutput("ci", Host.RoundU(lci) + "  to  " + Host.RoundU(uci));
+                    parametersParameters.AddOutput("odds", host.RoundU(odr));
+                    parametersParameters.AddOutput("ci", host.RoundU(lci) + "  to  " + host.RoundU(uci));
                 }
                 else
                 {
@@ -4638,9 +4656,11 @@ namespace StatsDirect.Builtins
             double auc = MathDbl.trapezoid_xy_roc(rx, ry, 1, stps);
             outputParameters.AddOutput("cmax", Formatting.XRound(cmax, 3));
             outputParameters.AddOutput("area", host.RoundU(auc));
-            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
-            ch.SetBox0To1();
-            outputParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, rx, ry, "1-specificity", "sensitivity", "", false, -99, false));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                ch.SetBox0To1();
+                outputParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, rx, ry, "1-specificity", "sensitivity", "", false, -99, false));
+            }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -5875,10 +5895,12 @@ namespace StatsDirect.Builtins
             {
                 r[j] = Math.Abs(dr[j]);
             }
-            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
-            ParameterBag chartParameters = new ParameterBag();
-            chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, yfit, r, "Fitted Y", "Abs(Deviance residual)", "Absolute Residuals vs. Fitted Y [Poisson regression]", false, 0, false));
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                ParameterBag chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, yfit, r, "Fitted Y", "Abs(Deviance residual)", "Absolute Residuals vs. Fitted Y [Poisson regression]", false, 0, false));
+            }
             for (int i = 1; i <= P; i++)
             {
                 if (i > 1 | Intercept == false)
@@ -5899,10 +5921,12 @@ namespace StatsDirect.Builtins
                     }
                     if (OK)
                     {
-                        ch = new ChartRenderer(ChartDefinition.Empty());
-                        chartParameters = new ParameterBag();
-                        chartList.Add(chartParameters);
-                        chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, r, dr, "Predictor: " + Label[k], "Deviance residual", "Residuals vs. Predictor " + k.ToString() + " [Poisson regression]", true, 0, false));
+                        using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                        {
+                            ParameterBag chartParameters = new ParameterBag();
+                            chartList.Add(chartParameters);
+                            chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, r, dr, "Predictor: " + Label[k], "Deviance residual", "Residuals vs. Predictor " + k.ToString() + " [Poisson regression]", true, 0, false));
+                        }
                     }
                 }
             }
@@ -6760,13 +6784,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
 
-            ChartRenderer ch = new ChartRenderer(cd);
-            using (MemoryStream metaStream = new MemoryStream())
+            using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                ch.StartMetafile(metaStream);
-                ch.PlotLogitInternal(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle);
-                ch.EndMetafile();
-                outputParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                string rtf = ch.PlotLogitAndReturnRtf(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle);
+                outputParameters.AddOutput("chart", rtf);
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -6864,9 +6885,9 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptProbitMore(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptProbitMore(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(Parameters["context"].Data));
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
             int Model = context.ERR;
             double a = context.ARG[1];
             double b = context.ARG[2];
@@ -6895,19 +6916,19 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("itr", laps.ToString());
-            outputParameters.AddOutput("sxx", Host.RoundU(S1));
-            outputParameters.AddOutput("sxy", Host.RoundU(S2));
-            outputParameters.AddOutput("syy", Host.RoundU(S3));
-            outputParameters.AddOutput("var_b", Host.RoundU(varb));
+            outputParameters.AddOutput("sxx", host.RoundU(S1));
+            outputParameters.AddOutput("sxy", host.RoundU(S2));
+            outputParameters.AddOutput("syy", host.RoundU(S3));
+            outputParameters.AddOutput("var_b", host.RoundU(varb));
             if (hetp < 0.05)
             {
                 outputParameters.AddOutput("het", "with heterogeneity");
-                outputParameters.AddOutput("seb", Host.RoundU(seh));
+                outputParameters.AddOutput("seb", host.RoundU(seh));
             }
             else
             {
                 outputParameters.AddOutput("het", "without heterogeneity");
-                outputParameters.AddOutput("seb", Host.RoundU(se));
+                outputParameters.AddOutput("seb", host.RoundU(se));
             }
             if (C1 != 0)
             {
@@ -6915,16 +6936,16 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*natural", naturalList);
                 ParameterBag naturalParameters = new ParameterBag();
                 naturalList.Add(naturalParameters);
-                naturalParameters.AddOutput("c", Host.RoundU(C2));
+                naturalParameters.AddOutput("c", host.RoundU(C2));
                 if (hetp < 0.05)
                 {
                     naturalParameters.AddOutput("het_c", "with heterogeneity");
-                    naturalParameters.AddOutput("seb_c", Host.RoundU(cseh));
+                    naturalParameters.AddOutput("seb_c", host.RoundU(cseh));
                 }
                 else
                 {
                     naturalParameters.AddOutput("het_c", "without heterogeneity");
-                    naturalParameters.AddOutput("seb_c", Host.RoundU(cse));
+                    naturalParameters.AddOutput("seb_c", host.RoundU(cse));
                 }
             }
             else
@@ -6959,10 +6980,10 @@ namespace StatsDirect.Builtins
                 ParameterBag obsParameters = new ParameterBag();
                 obsList.Add(obsParameters);
                 obsParameters.AddOutput("obs", i.ToString());
-                obsParameters.AddOutput("sub", Host.RoundU(sv[i]));
-                obsParameters.AddOutput("res", Host.RoundU(rv[i]));
-                obsParameters.AddOutput("exp", Host.RoundU(ex));
-                obsParameters.AddOutput("dev", Host.RoundU(rv[i] - ex));
+                obsParameters.AddOutput("sub", host.RoundU(sv[i]));
+                obsParameters.AddOutput("res", host.RoundU(rv[i]));
+                obsParameters.AddOutput("exp", host.RoundU(ex));
+                obsParameters.AddOutput("dev", host.RoundU(rv[i] - ex));
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }

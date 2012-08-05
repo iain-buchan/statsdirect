@@ -102,15 +102,15 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptExactFisher(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptExactFisher(ITemplateHost host, ParameterBag parameters)
         {
             int fault = 0;
             //  RTF_LoadTemplate("fisher.rtf") Then
-            int a = Convert.ToInt32(Parameters["a"].AsDouble);
-            int b = Convert.ToInt32(Parameters["b"].AsDouble);
-            int c = Convert.ToInt32(Parameters["c"].AsDouble);
-            int d = Convert.ToInt32(Parameters["d"].AsDouble);
-            StepResult outputResult = Tables.s_fisher(Host, ref a, ref b, ref c, ref d, ref fault);
+            int a = Convert.ToInt32(parameters["a"].AsDouble);
+            int b = Convert.ToInt32(parameters["b"].AsDouble);
+            int c = Convert.ToInt32(parameters["c"].AsDouble);
+            int d = Convert.ToInt32(parameters["d"].AsDouble);
+            StepResult outputResult = Tables.s_fisher(host, ref a, ref b, ref c, ref d, ref fault);
             if (fault != 0)
             {
                 return new StepResult(StepSuccess.Failed, null);
@@ -119,7 +119,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptExactFisherX(ITemplateHost host, ParameterBag parameters)
+        public static StepResult RptExactFisherX(ITemplateHost host, ParameterBag parameters)
         {
             double ptwo = 0;
             double z_p1 = 0;
@@ -386,16 +386,16 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptExactMcNamar(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptExactMcNamar(ITemplateHost host, ParameterBag parameters)
         {
             double ul;
             double ll;
 
-            double ba = Parameters["a"].AsDouble;
-            double bb = Parameters["b"].AsDouble;
-            double bc = Parameters["c"].AsDouble;
-            double bd = Parameters["d"].AsDouble;
-            double GAMMA = Parameters["gamma"].AsDouble;
+            double ba = parameters["a"].AsDouble;
+            double bb = parameters["b"].AsDouble;
+            double bc = parameters["c"].AsDouble;
+            double bd = parameters["d"].AsDouble;
+            double GAMMA = parameters["gamma"].AsDouble;
             if (GAMMA <= 0.0 | GAMMA >= 1.0)
             {
                 GAMMA = 0.95;
@@ -413,16 +413,16 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException();
             }
             double x2 = ((Math.Abs(bb - bc)) * (Math.Abs(bb - bc))) / (bb + bc);
-            outputParameters.AddOutput("chi", Host.RoundU(x2));
-            outputParameters.AddOutput("chi_p", Host.pval(PDF.chivalp(x2, 1.0)));
+            outputParameters.AddOutput("chi", host.RoundU(x2));
+            outputParameters.AddOutput("chi_p", host.pval(PDF.chivalp(x2, 1.0)));
 
             x2 = Math.Abs(bb - bc) - 1.0;
             double N = bb + bc;
             x2 = x2 * x2 / N;
-            outputParameters.AddOutput("yates_chi", Host.RoundU(x2));
-            outputParameters.AddOutput("yates_chi_p", Host.pval(PDF.chivalp(x2, 1.0)));
+            outputParameters.AddOutput("yates_chi", host.RoundU(x2));
+            outputParameters.AddOutput("yates_chi_p", host.pval(PDF.chivalp(x2, 1.0)));
 
-            string rr = bc > 0.0 ? Host.RoundU(bb / bc) : Formatting.INFRES;
+            string rr = bc > 0.0 ? host.RoundU(bb / bc) : Formatting.INFRES;
             outputParameters.AddOutput("risk", rr);
 
             double r = bb;
@@ -475,9 +475,9 @@ namespace StatsDirect.Builtins
                 }
             }
             outputParameters.AddOutput("pc", (GAMMA * 100).ToString());
-            string llx = ll == Constant.MISSING ? Formatting.INFRESNEG : Host.RoundU(ll);
+            string llx = ll == Constant.MISSING ? Formatting.INFRESNEG : host.RoundU(ll);
             outputParameters.AddOutput("from", llx);
-            string ulx = ul == Constant.MISSING ? Formatting.INFRES : Host.RoundU(ul);
+            string ulx = ul == Constant.MISSING ? Formatting.INFRES : host.RoundU(ul);
             outputParameters.AddOutput("to", ulx);
 
             double f = r / (s + 1.0);
@@ -487,8 +487,8 @@ namespace StatsDirect.Builtins
                 P = 1.0;
             }
 
-            outputParameters.AddOutput("f", Host.RoundU(f));
-            outputParameters.AddOutput("tail_2", Host.pval(P));
+            outputParameters.AddOutput("f", host.RoundU(f));
+            outputParameters.AddOutput("tail_2", host.pval(P));
             List<ParameterBag> rPrimeList = new List<ParameterBag>();
             outputParameters.AddOutput("*r_prime", rPrimeList);
             if (P < 0.05)
@@ -500,7 +500,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptExactORCML(ITemplateHost host, ParameterBag parameters)
+        public static StepResult RptExactORCML(ITemplateHost host, ParameterBag parameters)
         {
             double obs_or;
             int ierr;
@@ -581,7 +581,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptRatePoissonCI(ITemplateHost host, ParameterBag parameters)
+        public static StepResult RptRatePoissonCI(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             double alpha = 1.0 - cco;

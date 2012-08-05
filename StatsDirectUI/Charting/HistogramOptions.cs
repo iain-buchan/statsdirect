@@ -78,9 +78,8 @@ namespace StatsDirect.Charting
         
         public List<HistogramSeriesOptions> HistoSeriesOptions; 
         
+        [field: NonSerialized]
         public event EventHandler ScaleChanged; 
-        
-        [ NonSerialized ]public List<Series> Series; 
         
         // TRANSMISSINGCOMMENT: Property UsesShowLegend
         public override bool UsesShowLegend 
@@ -109,7 +108,7 @@ namespace StatsDirect.Charting
         ///  <param name="binsFromUser">The user-entered number of bins</param>
         ///  <param name="seriesIndex">The index of the series on which calculations are to be made (if PoolVariablesForBins is false) and whose parameters are to be set (if setAllSeries is false).</param>
         ///  <param name="setAllSeries">If true, the calculation for this series is set for each series.</param>
-        public void Reset( bool full, int binsFromUser, bool setAllSeries, int seriesIndex ) 
+        public void Reset( bool full, int binsFromUser, bool setAllSeries, int seriesIndex, List<Series> series ) 
         { 
             //  TODO: Set up the global minimum and maximum values based on the series
             
@@ -124,7 +123,7 @@ namespace StatsDirect.Charting
                 //  Set up initial minimum and maximum values
                 min = double.MaxValue; 
                 max = double.MinValue; 
-                foreach ( DoubleSeries s in Series ) 
+                foreach ( DoubleSeries s in series ) 
                 { 
                     if ( s.Min < min )
                     { 
@@ -135,11 +134,11 @@ namespace StatsDirect.Charting
                         max = s.Max; 
                     } 
                 }
-                Calculate( Series, binsFromUser, full, ref min, ref max, ref zmin, ref zint, out bins ); 
+                Calculate( series, binsFromUser, full, ref min, ref max, ref zmin, ref zint, out bins ); 
             } 
             else 
             { 
-                DoubleSeries s = ( ( DoubleSeries )( Series[ seriesIndex ] ) ); 
+                DoubleSeries s = ( ( DoubleSeries )( series[ seriesIndex ] ) ); 
                 List<Series> justOneSeries = new List<Series> {s};
                 min = s.Min; 
                 max = s.Max; 
@@ -149,7 +148,7 @@ namespace StatsDirect.Charting
             //  Write the values
             if ( setAllSeries ) 
             { 
-                for ( int i=0; i <= Series.Count - 1; i++ ) 
+                for ( int i=0; i <= series.Count - 1; i++ ) 
                 { 
                     HistogramSeriesOptions transTemp12 = HistoSeriesOptions[ i ];
                     transTemp12.MinimumValue = min; 

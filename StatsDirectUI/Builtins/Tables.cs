@@ -2675,50 +2675,42 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
             ParameterBag chartParameters;
 
-            ChartRenderer ch;
-            MemoryStream metaStream;
             if (k > 3)
             {
-                ch = new ChartRenderer(ChartDefinition.Empty());
-                using (metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    ch.Plot_Bias_MA(metaStream, host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false);
+                    string rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
             }
 
-            ch = new ChartRenderer(ChartDefinition.Empty());
-            using (metaStream = new MemoryStream())
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                ch.StartMetafile(metaStream);
-                ch.PlotLAbbe(k, o, rmh);
-                ch.EndMetafile();
+                string rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                chartParameters.AddOutput("chart", rtf);
             }
 
             if (sk != 0)
             {
                 bool scrap;
-                ch = new ChartRenderer(ChartDefinition.Empty());
-                using (metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    ch.Plot_MH(metaStream, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap, null);
+                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap, null);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
 
-                ch = new ChartRenderer(ChartDefinition.Empty());
-                using (metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    ch.Plot_MH(metaStream, k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out scrap, null);
+                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out scrap, null);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
             }
             return outputParameters;
@@ -3585,49 +3577,43 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
             ParameterBag chartParameters;
 
-            ChartRenderer ch;
             if (k > 3)
             {
-                ch = new ChartRenderer(ChartDefinition.Empty());
-                using (MemoryStream metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    ch.Plot_Bias_MA(metaStream, host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false);
+                    string rtf = ch.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
             }
 
-            ch = new ChartRenderer(ChartDefinition.Empty());
-            using (MemoryStream metaStream = new MemoryStream())
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                ch.StartMetafile(metaStream);
-                ch.PlotLAbbe(k, o, rmh);
-                ch.EndMetafile();
+                string rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                chartParameters.AddOutput("chart", rtf);
             }
 
             if (sk != 0)
             {
-                bool scrap;
-                ch = new ChartRenderer(ChartDefinition.Empty());
-                using (MemoryStream metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    ch.Plot_MH(metaStream, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap, null);
+                    bool scrap;
+                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap, null);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
 
-                ch = new ChartRenderer(ChartDefinition.Empty());
-                using (MemoryStream metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    ch.Plot_MH(metaStream, k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap, null);
+                    bool scrap;
+                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap, null);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
             }
 

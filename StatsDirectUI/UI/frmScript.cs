@@ -112,7 +112,6 @@ namespace StatsDirect.UI
                 using (StreamReader txtReader = new StreamReader(Filename))
                 {
                     rtbDoc.Text = txtReader.ReadToEnd();
-                    txtReader.Close();
                 }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;
@@ -146,7 +145,6 @@ namespace StatsDirect.UI
                 using (StreamWriter txtWriter = new StreamWriter(currentFile))
                 {
                     txtWriter.Write(rtbDoc.Text);
-                    txtWriter.Close();
                 }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;
@@ -176,7 +174,6 @@ namespace StatsDirect.UI
                 using (StreamWriter txtWriter = new StreamWriter(SaveFileDialog1.FileName))
                 {
                     txtWriter.Write(rtbDoc.Text);
-                    txtWriter.Close();
                 }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;
@@ -260,14 +257,12 @@ namespace StatsDirect.UI
         {
             frmScriptFind f = new frmScriptFind(this);
             f.Show();
-            f.Dispose();
         }
 
         private void FindAndReplaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             frmScriptReplace f = new frmScriptReplace(this);
             f.Show();
-            f.Dispose();
         }
 
         private void PreviewToolStripMenuItem_Click(object sender, EventArgs e)

@@ -10,15 +10,15 @@ namespace StatsDirect.Charting
         { 
             get 
             { 
-                throw new Exception( "Attempt to cast a non-Double Series to a DoubleSeries" ); 
+                throw new InvalidOperationException( "Attempt to cast a non-Double Series to a DoubleSeries" ); 
             } 
         } 
         
         public virtual StringSeries AsStringSeries 
         { 
             get 
-            { 
-                throw new Exception( "Attempt to cast a non-String Series to a StringSeries" ); 
+            {
+                throw new InvalidOperationException("Attempt to cast a non-String Series to a StringSeries"); 
             } 
         } 
     } 

@@ -721,39 +721,41 @@ namespace StatsDirect.UI
 
         private void PreviewChart()
         {
-            ChartRenderer renderer = new ChartRenderer(definition);
-            if (PreviewAsAscii)
+            using (ChartRenderer renderer = new ChartRenderer(definition))
             {
-                renderer.IsAscii = true;
-                renderer.Plot(null, SDApplication.SoleInstance);
-                frmTextPreview textPreview = new frmTextPreview();
-                try
+                if (PreviewAsAscii)
                 {
-                    string rtf = "{\\rtf1\\ansi " + renderer.AsAsciiRTF + "}";
-                    textPreview.Rtf = rtf;
-                    textPreview.ShowDialog(SDApplication.SoleInstance.MainWindow);
-                }
-                finally
-                {
-                    textPreview.Dispose();
-                }
-            }
-            else
-            {
-                using (System.IO.MemoryStream metaStream = new System.IO.MemoryStream())
-                {
-                    renderer.Plot(metaStream, SDApplication.SoleInstance);
-                    metaStream.Position = 0;
-                    Image metaImage = Image.FromStream(metaStream);
-                    frmImagePreview imagePreview = new frmImagePreview();
+                    renderer.IsAscii = true;
+                    renderer.Plot(null, SDApplication.SoleInstance);
+                    frmTextPreview textPreview = new frmTextPreview();
                     try
                     {
-                        imagePreview.Image = metaImage;
-                        imagePreview.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                        string rtf = "{\\rtf1\\ansi " + renderer.AsAsciiRTF + "}";
+                        textPreview.Rtf = rtf;
+                        textPreview.ShowDialog(SDApplication.SoleInstance.MainWindow);
                     }
                     finally
                     {
-                        imagePreview.Dispose();
+                        textPreview.Dispose();
+                    }
+                }
+                else
+                {
+                    using (System.IO.MemoryStream metaStream = new System.IO.MemoryStream())
+                    {
+                        renderer.Plot(metaStream, SDApplication.SoleInstance);
+                        metaStream.Position = 0;
+                        Image metaImage = Image.FromStream(metaStream);
+                        frmImagePreview imagePreview = new frmImagePreview();
+                        try
+                        {
+                            imagePreview.Image = metaImage;
+                            imagePreview.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                        }
+                        finally
+                        {
+                            imagePreview.Dispose();
+                        }
                     }
                 }
             }

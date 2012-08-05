@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using StatsDirect.Charting;
 using System.Media;
+using System.ComponentModel;
 
 namespace StatsDirect.UI
 {
@@ -28,14 +30,15 @@ namespace StatsDirect.UI
                     options.ScaleChanged -= options_ScaleChanged;
                 options = (HistogramOptions)definition.ChartOptions;
                 options.ScaleChanged += options_ScaleChanged;
+                List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 if (options.PoolVariablesForBins)
                 {
-                    options.Reset(true, 0, options.PoolVariablesForBins, 0);
+                    options.Reset(true, 0, options.PoolVariablesForBins, 0, series);
                 }
                 else
                 {
-                    for (int i = 0; i < options.Series.Count; i++)
-                        options.Reset(true, 0, options.PoolVariablesForBins, i);
+                    for (int i = 0; i < series.Count; i++)
+                        options.Reset(true, 0, options.PoolVariablesForBins, i, series);
                 }
                 FillFormFromOptions();
             }
@@ -88,17 +91,18 @@ namespace StatsDirect.UI
         {
             try
             {
+                List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 fillingForm = true;
                 if (0 == cboVariable.Items.Count)
                 {
-                    foreach (Series s in options.Series)
+                    foreach (Series s in series)
                     {
                         cboVariable.Items.Add(s.Title);
                     }
                 }
-                chkPoolVariables.Enabled = options.Series.Count > 1;
+                chkPoolVariables.Enabled = series.Count > 1;
                 chkPoolVariables.Checked = options.PoolVariablesForBins;
-                cmdNextVariable.Enabled = currentSeriesIndex < options.Series.Count - 1;
+                cmdNextVariable.Enabled = currentSeriesIndex < series.Count - 1;
                 cmdPreviousVariable.Enabled = currentSeriesIndex > 0;
                 cboVariable.SelectedIndex = currentSeriesIndex;
 
@@ -154,8 +158,9 @@ namespace StatsDirect.UI
         {
             try
             {
+                List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 options.PoolVariablesForBins = chkPoolVariables.Checked;
-                options.Reset(true, 0, chkPoolVariables.Checked, currentSeriesIndex);
+                options.Reset(true, 0, chkPoolVariables.Checked, currentSeriesIndex, series);
                 FillFormFromOptions();
             }
             catch (Exception)
@@ -170,7 +175,8 @@ namespace StatsDirect.UI
             {
                 int bins = Int32.Parse(txtBins.Text);
                 options.PoolVariablesForBins = chkPoolVariables.Checked;
-                options.Reset(false, bins, chkPoolVariables.Checked, currentSeriesIndex);
+                List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+                options.Reset(false, bins, chkPoolVariables.Checked, currentSeriesIndex, series);
                 FillFormFromOptions();
             }
             catch (FormatException)
@@ -201,7 +207,8 @@ namespace StatsDirect.UI
 
         private void cmdNextVariable_Click(object sender, EventArgs e)
         {
-            if (currentSeriesIndex < options.Series.Count - 1)
+            List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+            if (currentSeriesIndex < series.Count - 1)
             {
                 if (!FillOptionsFromForm())
                     return;

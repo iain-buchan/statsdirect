@@ -445,19 +445,15 @@ namespace StatsDirect.Templates
                     }
                 case ChartType.Histogram:
                     {
+                        List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                         HistogramOptions hOptions = new HistogramOptions(host.Preferences.ShouldUseColour)
-                                                        {
-                                                            IsAscii = step.IsAscii,
-                                                            LineWidth = 2,
-                                                            Series =
-                                                                definition.XSeries.Count > 0
-                                                                    ? definition.XSeries
-                                                                    : definition.YSeries
-                                                        };
+                                                    {
+                                                        IsAscii = step.IsAscii,
+                                                        LineWidth = 2, HistoSeriesOptions = new List<HistogramSeriesOptions>(series.Count)
+                                                    };
 
                         // Series
-                        hOptions.HistoSeriesOptions = new List<HistogramSeriesOptions>(hOptions.Series.Count);
-                        foreach (Series t in hOptions.Series)
+                        foreach (Series t in series)
                         {
                             HistogramSeriesOptions hso = new HistogramSeriesOptions
                                                              {
@@ -865,23 +861,23 @@ namespace StatsDirect.Templates
             }
 
             // Plot to metafile if ascii, text otherwise
-            ChartRenderer ch = new ChartRenderer(definition) {IsAscii = step.IsAscii};
             ParameterBag results;
-            if (step.IsAscii)
+            using (ChartRenderer ch = new ChartRenderer(definition) { IsAscii = step.IsAscii })
             {
-                results = ch.Plot(null, host);
-                results.Add(step.ChartName, new FilledParameter(false, ch.AsAsciiRTF));
-            }
-            else
-            {
-                using (MemoryStream metaStream = new MemoryStream())
+                if (step.IsAscii)
                 {
-                    results = ch.Plot(metaStream, host);
-                    results.Add(step.ChartName, new FilledParameter(false, host.ImageStreamToRtf(metaStream)));
+                    results = ch.Plot(null, host);
+                    results.Add(step.ChartName, new FilledParameter(false, ch.AsAsciiRTF));
                 }
+                else
+                {
+                    string rtf;
+                    results = ch.PlotAndReturnRtf(host, out rtf);
+                    results.Add(step.ChartName, new FilledParameter(false, rtf));
+                }
+                string parameterName = STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? "");
+                results.Add(parameterName, new FilledParameter(true, options));
             }
-            string parameterName = STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? "");
-            results.Add(parameterName, new FilledParameter(true, options));
             return new StepResult(StepSuccess.Success, results);
         }
 

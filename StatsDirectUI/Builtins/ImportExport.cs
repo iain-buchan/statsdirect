@@ -12,15 +12,12 @@ namespace StatsDirect.Builtins
         public static StepResult FileImportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
             // import data to the active worksheet
-            using (OpenFileDialog C_FD = new OpenFileDialog
-                                      {
-                                          ShowHelp = true,
-                                          Title = "Import worksheet data",
-                                          Filter =
-                                              "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab|Text file (*.txt)|*.txt|All files (*.*)|*.*",
-                                          CheckFileExists = true
-                                      })
+            using (OpenFileDialog C_FD = new OpenFileDialog())
             {
+                C_FD.ShowHelp = true;
+                C_FD.Title = "Import worksheet data";
+                C_FD.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab|Text file (*.txt)|*.txt|All files (*.*)|*.*";
+                C_FD.CheckFileExists = true;
 
                 DialogResult result = C_FD.ShowDialog();
                 if (DialogResult.OK != result)
@@ -52,13 +49,11 @@ namespace StatsDirect.Builtins
         public static StepResult FileImportReport(ITemplateHost Host, ParameterBag Parameters)
         {
             // import text to the active report
-            using (OpenFileDialog C_FD = new OpenFileDialog
-                                      {
-                                          Title = "Import Text",
-                                          Filter = "ASCII Text (*.txt)|*.txt|All files (*.*)|*.*",
-                                          CheckFileExists = true
-                                      })
+            using (OpenFileDialog C_FD = new OpenFileDialog())
             {
+                C_FD.Title = "Import Text";
+                C_FD.Filter = "ASCII Text (*.txt)|*.txt|All files (*.*)|*.*";
+                C_FD.CheckFileExists = true;
 
                 DialogResult result = C_FD.ShowDialog();
                 if (DialogResult.OK != result)
@@ -68,7 +63,6 @@ namespace StatsDirect.Builtins
                 using (StreamReader sr = File.OpenText(C_FD.FileName))
                 {
                     string fileContents = sr.ReadToEnd();
-                    sr.Close();
                     ParameterBag outputParameters = new ParameterBag();
                     outputParameters.AddOutput("rtf", fileContents);
                     return new StepResult(StepSuccess.Success, outputParameters);
@@ -141,22 +135,13 @@ namespace StatsDirect.Builtins
 
         public static StepResult FileExportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
-            using (SaveFileDialog C_FD = new SaveFileDialog
-                                      {
-                                          Title = "Export Data",
-                                          Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab"
-                                      })
+            using (SaveFileDialog C_FD = new SaveFileDialog())
             {
+                C_FD.Title = "Export Data";
+                C_FD.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab";
                 DataFrame data = parameters["data"].AsDataFrame;
                 string source = data.Name;
-                if (source.Contains("."))
-                {
-                    C_FD.FileName = source.Substring(0, source.Length - 4) + ".csv";
-                }
-                else
-                {
-                    C_FD.FileName = source + ".csv";
-                }
+                C_FD.FileName = source.Contains(".") ? source.Substring(0, source.Length - 4) + ".csv" : source + ".csv";
                 C_FD.OverwritePrompt = true;
                 DialogResult result = C_FD.ShowDialog();
                 if (DialogResult.OK == result)
@@ -215,7 +200,6 @@ namespace StatsDirect.Builtins
                             }
                         }
                         host.FinishProgress();
-                        sw.Close();
                     }
                 }
             }

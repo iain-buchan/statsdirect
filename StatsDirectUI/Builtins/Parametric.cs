@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using StatsDirect.Utilities; 
 using StatsDirect.Templates; 
 using StatsDirect.Numerics; 
@@ -283,7 +282,7 @@ namespace StatsDirect.Builtins
             } 
             Array.Sort( r, 1, rx ); 
             double qc = ( 1.0 - qrr ) / 2.0; 
-            Nonparametric.x_qci( ref qc, ref rx, ref r, ref xq, ref GAMMA, out ll, out ul, ref cover, ref do_conservative, ref capUpper, ref capLower, out fault ); 
+            Nonparametric.XQci( ref qc, ref rx, ref r, ref xq, ref GAMMA, out ll, out ul, ref cover, ref do_conservative, ref capUpper, ref capLower, out fault ); 
             outputParameters.AddOutput( "qx_any", host.RoundU( qc ) ); 
             outputParameters.AddOutput( "qxv_any", host.RoundU( xq ) ); 
             string contype = do_conservative ? "(conservative)" : "(non-conservative)"; 
@@ -295,7 +294,7 @@ namespace StatsDirect.Builtins
             x = capLower | capUpper ? "  (* limit capped at min/max)" : "";
             outputParameters.AddOutput( "co_any", host.RoundU( cover ) + "%" + x ); 
             qc = 1.0 - ( ( 1.0 - qrr ) / 2.0 ); 
-            Nonparametric.x_qci( ref qc, ref rx, ref r, ref xq, ref GAMMA, out ll, out ul, ref cover, ref do_conservative, ref capUpper, ref capLower, out fault ); 
+            Nonparametric.XQci( ref qc, ref rx, ref r, ref xq, ref GAMMA, out ll, out ul, ref cover, ref do_conservative, ref capUpper, ref capLower, out fault ); 
             outputParameters.AddOutput( "qx", host.RoundU( qc ) ); 
             outputParameters.AddOutput( "qxv", host.RoundU( xq ) ); 
             x = capLower ? "* " : ""; 
@@ -729,15 +728,12 @@ namespace StatsDirect.Builtins
             Array.Copy( x, 1, qx0, 0, qx0.Length ); 
             cd.XSeries.Add( new DoubleSeries( qx0, v0.Title ) );
 
-            ChartRenderer ch = new ChartRenderer( cd );
-            using (MemoryStream metaStream = new MemoryStream())
+            using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                ch.StartMetafile(metaStream);
-                ch.Plot_Normal(host, qx0);
-                ch.EndMetafile();
+                string rtf = ch.PlotNormalAndReturnRtf(host, qx0);
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                chartParameters.AddOutput("chart", rtf);
             }
 
             return new StepResult( StepSuccess.Success, outputParameters ); 
@@ -1517,15 +1513,12 @@ namespace StatsDirect.Builtins
                     } 
                 }
 
-                ChartRenderer ch = new ChartRenderer( ChartDefinition.Empty() );
-                using (MemoryStream metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    ch.StartMetafile(metaStream);
-                    ch.PlotTies(host, x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean);
-                    ch.EndMetafile();
+                    string rtf = ch.PlotTiesAndReturnMetafile(host, x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean);
                     ParameterBag chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
             } 
             else 

@@ -246,7 +246,6 @@ namespace StatsDirect.Templates
                 using (TextReader tr = new StreamReader(path, Encoding.ASCII))
                 {
                     string rtf = tr.ReadToEnd();
-                    tr.Close();
                     return rtf;
                 }
             }

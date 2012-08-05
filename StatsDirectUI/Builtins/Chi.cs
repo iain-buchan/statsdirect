@@ -184,14 +184,14 @@ namespace StatsDirect.Builtins
                 if (E1 < 5 | e2 < 5 | e3 < 5 | e4 < 5 | N < 20)
                 {
                     //  RTF_LoadTemplate("fisher.rtf")
-                    fisherList.Add(Exact.rptExactFisher(host, parameters).ParameterBag);
+                    fisherList.Add(Exact.RptExactFisher(host, parameters).ParameterBag);
                 }
                 else
                 {
                     if (doFisher)
                     {
                         //  RTF_LoadTemplate("fisher.rtf")
-                        fisherList.Add(Exact.rptExactFisher(host, parameters).ParameterBag);
+                        fisherList.Add(Exact.RptExactFisher(host, parameters).ParameterBag);
                     }
                 }
             }
@@ -586,24 +586,22 @@ namespace StatsDirect.Builtins
 
             if (plotForest)
             {
-                ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
-                using (MemoryStream metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
                     bool scrap;
-                    ch.Plot_MH(metaStream, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap, null);
+                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap, null);
                     ParameterBag chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
 
-                ch = new ChartRenderer(ChartDefinition.Empty());
-                using (MemoryStream metaStream = new MemoryStream())
+                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
                     bool scrap;
-                    ch.Plot_MH(metaStream, k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap, null);
+                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap, null);
                     ParameterBag chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                    chartParameters.AddOutput("chart", rtf);
                 }
             }
             return new StepResult(StepSuccess.Success, outputParameters);

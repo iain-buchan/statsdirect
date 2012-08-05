@@ -1,3 +1,5 @@
+using System;
+
 namespace StatsDirect.UI
 {
     partial class ctlHistogramOptions
@@ -16,6 +18,13 @@ namespace StatsDirect.UI
             if (disposing && (components != null))
             {
                 components.Dispose();
+            }
+            if (disposing)
+            {
+                foreach (Delegate d in ScaleChanged.GetInvocationList())
+                {
+                    ScaleChanged -= (EventHandler)d;
+                }
             }
             base.Dispose(disposing);
         }

@@ -18,19 +18,13 @@ namespace StatsDirect.Builtins
             SetEquation(equation);
         }
 
-        //public static bool ExpressionOk( ref string x ) 
-        //{
-        //    if (string.IsNullOrEmpty(x))
-        //        return false;
-        //    return !x.Contains( THOUSANDS_SEPARATOR ); 
-        //}
-
-
         private void SetEquation(string equation)
         {
             const string typeName = "Temp1";
             const string methodName = "DoIt";
             string cSharpExpression = Expressions.Converter.ConvertToCSharp(equation);
+
+            // By now, cSharpExpression will either be safe (every character has been through the parser) or an exception will have been thrown.  Therefore, it's reasonable to throw the expression at the compiler.
             string cSharpFunction =
                 "using System; using StatsDirect.Expressions; public class " + typeName + " { public object " + methodName + "(double[] x) { return " + cSharpExpression + "; } }";
             CompilerParameters compilerParameters = new CompilerParameters();
@@ -57,7 +51,7 @@ namespace StatsDirect.Builtins
                         sb.AppendLine(error.ErrorText);
                     }
                     compilerResults.TempFiles.Delete();
-                    throw new Exception("Couldn't translate your expression to valid C# code:" + Environment.NewLine + sb.ToString());
+                    throw new Exception("Couldn't translate your expression to valid C# code:" + Environment.NewLine + sb);
                 }
                 // No compile errors - save and prepare to run it!
                 Assembly assembly = compilerResults.CompiledAssembly;

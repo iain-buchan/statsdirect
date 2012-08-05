@@ -203,7 +203,6 @@ namespace StatsDirect.UI
             using (FileStream fs = new FileStream(path, FileMode.Create))
             {
                 fs.Write(originalBytes, 0, originalBytes.Length);
-                fs.Close();
             }
         }
 

@@ -91,7 +91,6 @@ namespace StatsDirect.UI
                     {
                         sessionParametersAcrossOperations = (ParameterBag) fmt.Deserialize(ws);
                         sessionParametersPerOperation = (Dictionary<string, ParameterBag>) fmt.Deserialize(ws);
-                        ws.Close();
                     }
                 }
                 catch (Exception)
@@ -131,7 +130,6 @@ namespace StatsDirect.UI
                     if (null == sessionParametersPerOperation)
                         sessionParametersPerOperation = new Dictionary<string, ParameterBag>();
                     fmt.Serialize(ws, sessionParametersPerOperation);
-                    ws.Close();
                 }
             }
             catch (IOException)
@@ -1063,8 +1061,7 @@ namespace StatsDirect.UI
 
         private ParameterBag FillEffectOptions(MultipleOptionsParameter parameter)
         {
-            frmEffectOptions frm = new frmEffectOptions();
-            try
+            using (frmEffectOptions frm = new frmEffectOptions())
             {
                 frm.ShowDialog();
                 if (frm.UserCancelled)
@@ -1076,10 +1073,6 @@ namespace StatsDirect.UI
                     throw new TemplateOperationCancelledException();
                 }
                 return frm.ParameterBag;
-            }
-            finally
-            {
-                frm.Dispose();
             }
         }
 
@@ -1357,27 +1350,23 @@ namespace StatsDirect.UI
         {
             throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0");
             /*
-            frmChartExplorer f = new frmChartExplorer(options);
+            using (frmChartExplorer f = new frmChartExplorer(options))
+            {
             f.ShowDialog(mainWindow);
             bool userCancelled = f.UserCancelled;
-            f.Dispose();
+            }
             return !userCancelled;
              */
         }
 
         private bool Amend(Builtins.ExtractionOptions options)
         {
-            frmExtraction f = new frmExtraction(options);
-            try
+            using (frmExtraction f = new frmExtraction(options))
             {
                 using (new DefaultCursor())
                 {
                     f.ShowDialog(mainWindow);
                 }
-            }
-            finally
-            {
-                f.Dispose();
             }
             return true;
         }
@@ -1632,17 +1621,12 @@ namespace StatsDirect.UI
         /// <returns>null if the user cancelled, otherwise the entered value.</returns>
         internal string Prompt(string Prompt, string Caption, string DefaultValue)
         {
-            frmInputBox ib = new frmInputBox(Prompt, Caption, DefaultValue);
-            try
+            using (frmInputBox ib = new frmInputBox(Prompt, Caption, DefaultValue))
             {
                 ib.ShowDialog(mainWindow);
                 if (ib.UserCancelled)
                     return null;
                 return ib.Value;
-            }
-            finally
-            {
-                ib.Dispose();
             }
         }
 
@@ -1723,15 +1707,10 @@ namespace StatsDirect.UI
 
         public bool CheckScale(ScaleParameters scaleParameters)
         {
-            frmScale f = new frmScale(scaleParameters);
-            try
+            using (frmScale f = new frmScale(scaleParameters))
             {
                 f.ShowDialog(mainWindow);
                 return !f.Cancelled;
-            }
-            finally
-            {
-                f.Dispose();
             }
         }
 

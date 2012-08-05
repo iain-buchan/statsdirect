@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -505,8 +505,7 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
-        public static StepResult rptKaplanMeierPlots(ITemplateHost host, ParameterBag parameters)
+        public static StepResult RptKaplanMeierPlots(ITemplateHost host, ParameterBag parameters)
         {
             int[] cnx = ((int[])(parameters["cnx"].Data));
             int[,] dead = ((int[,])(parameters["dead"].Data));
@@ -517,16 +516,18 @@ namespace StatsDirect.Builtins
             double[,] stime = ((double[,])(parameters["stime"].Data));
             bool useMarkers = parameters["use-markers"].AsBoolean;
             bool useTics = parameters["use-tics"].AsBoolean;
-            Charting.ChartRenderer ch = new Charting.ChartRenderer(null);
-            IList<string> imageList = ch.x_plgraph(host, h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
-            foreach (string rtf in imageList)
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                ParameterBag chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
+                IList<string> imageList = ch.x_plgraph(host, h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
+                foreach (string rtf in imageList)
+                {
+                    ParameterBag chartParameters = new ParameterBag();
+                    chartList.Add(chartParameters);
+                    chartParameters.AddOutput("chart", rtf);
+                }
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }

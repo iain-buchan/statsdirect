@@ -816,15 +816,12 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty());
-            using (MemoryStream metaStream = new MemoryStream())
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                ch.StartMetafile(metaStream);
-                ch.Plot_CP(host, k + 2, title, rkr, rkrl, rkru, rkw, pg, "Stratified rate ratio plot (direct standardization)", "rate ratio (" + Formatting.XRound(cco * 100, 1) + "% confidence interval)", Transformation.Log);
-                ch.EndMetafile();
+                string rtf = ch.PlotCPAndReturnRtf(host, k + 2, title, rkr, rkrl, rkru, rkw, pg, "Stratified rate ratio plot (direct standardization)", "rate ratio (" + Formatting.XRound(cco * 100, 1) + "% confidence interval)", Transformation.Log);
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", host.ImageStreamToRtf(metaStream));
+                chartParameters.AddOutput("chart", rtf);
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }

@@ -274,18 +274,6 @@ namespace StatsDirect.Templates
 
         public string SerializeForRedo(bool shouldKeepData)
         {
-            /** This was the XML version
-            StringBuilder sb = new StringBuilder();
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = Encoding.UTF8;
-            settings.Indent = false;
-            XmlWriter denseXmlWriter = XmlWriter.Create(sb, settings);
-            System.Xml.Serialization.XmlSerializer xs = new System.Xml.Serialization.XmlSerializer(typeof(ParameterBag));
-            ParameterBag strippedParameters = CopyAndStripForRedo();
-            xs.Serialize(denseXmlWriter, strippedParameters);
-            string xml = sb.ToString();
-            return xml;
-             **/
             using (MemoryStream ms = new MemoryStream())
             {
                 System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();

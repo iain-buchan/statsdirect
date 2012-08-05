@@ -468,7 +468,7 @@ namespace StatsDirect.UI
                                         values.SetText(i + offsetForTitles, firstColumnOfData + v,
                                                        Constant.MISSING == data[i]
                                                            ? Formatting.ASTERISK
-                                                           : variable.Groups[(int) data[i]].Label);
+                                                           : variable.Groups[(int)data[i]].Label);
                                 }
                             }
                             break;
@@ -889,7 +889,7 @@ namespace StatsDirect.UI
                 // Set up the cell selection from its memory.
                 IGrid grid = this;
                 CellColumnSelection col = mostRecentCellSelectionDuringBatch.ColumnSelections[0];
-                grid.Selection = new Range(new[] { new Area(grid, col.RowIndex, col.ColumnIndex, col.RowIndex + col.RowCount - 1, col.ColumnIndex) } );
+                grid.Selection = new Range(new[] { new Area(grid, col.RowIndex, col.ColumnIndex, col.RowIndex + col.RowCount - 1, col.ColumnIndex) });
             }
 
             CellSelection cellSelection = GetSelection(minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, shouldDefaultSelection, out userCancelled, out wasPivoted);
@@ -1498,7 +1498,7 @@ namespace StatsDirect.UI
             while (true)
             {
                 bool proceed = true;
-         
+
                 // call for group ID
                 ClearSelection();
                 DataFrame groupIdFrame = GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 20, labg, null, true, false, out userCancelled, out wasPivoted);
@@ -1527,7 +1527,7 @@ namespace StatsDirect.UI
                     SelNumWarn(MinimumColumns, MaximumColumns, ng, msg_ti);
                     proceed = false;
                 }
-      
+
                 int mingn = int.MaxValue;
                 int maxgn = int.MinValue;
                 for (int i = 0; i < ng; i++)
@@ -1537,7 +1537,7 @@ namespace StatsDirect.UI
                 }
                 // NB groups need not be the same size - not sure where this came from!
                 // proceed = EqGpWarn(neq, gin, ng, msg_ti);
-      
+
                 if (proceed)
                 {
                     // call for data
@@ -1909,7 +1909,7 @@ namespace StatsDirect.UI
                 {
                     return DateTime.Parse(buf);
                 }
-                catch(FormatException)
+                catch (FormatException)
                 {
                     // Do nothing
                 }
@@ -1963,7 +1963,7 @@ namespace StatsDirect.UI
         object[,] GetCellObjects(int column, int firstRow, int lastRow)
         {
             if (lastRow < firstRow)
-                return new object[0,0];
+                return new object[0, 0];
             workbookView.GetLock();
             try
             {
@@ -2117,7 +2117,7 @@ namespace StatsDirect.UI
                 {
                     gcat[i] = groupIdentifierVariable.Groups[i - 1].Label;
                 }
-     
+
                 // find number of categories
                 ng = 1;
                 double[] g = new double[rows + 1];
@@ -2157,7 +2157,7 @@ namespace StatsDirect.UI
                         gin[ng] = 1;
                     }
                 }
-      
+
                 if (ng < min || ng > max)
                 {
                     SelNumWarn(min, max, ng, msg_ti);
@@ -2170,7 +2170,7 @@ namespace StatsDirect.UI
                     if (gin[i] > maxgn)
                         maxgn = gin[i];
                 }
-      
+
                 // Call for y data
                 minMax.MinY = double.MaxValue;
                 minMax.MaxY = double.MinValue;
@@ -2205,7 +2205,7 @@ namespace StatsDirect.UI
                         }
                     }
                 }
-        
+
                 // Call for x data
                 minMax.MinX = double.MaxValue;
                 minMax.MaxX = double.MinValue;
@@ -2220,7 +2220,7 @@ namespace StatsDirect.UI
                 for (int i = 1; i <= ng; i++)
                 {
                     int cnt = 0;
-                    cd[i] = new ColumnData {Sum = 0};
+                    cd[i] = new ColumnData { Sum = 0 };
                     for (int j = 1; j <= rows; j++)
                     {
                         if (gid[j] == g[i])
@@ -2275,7 +2275,7 @@ namespace StatsDirect.UI
                 if (SDApplication.SoleInstance.Preferences.GIDV)
                 {
                     bool ok = gidxyr(ref xt, ref y, ref k, ref maxr, ref maxreps, ref cx, ref xlab, ref minMax);
-                    if  (ok)
+                    if (ok)
                     {
                         double[] b = new double[k + 1];
                         double[] a = new double[k + 1];
@@ -2294,7 +2294,7 @@ namespace StatsDirect.UI
                             }
                         }
                         ITemplateHost host = SDApplication.SoleInstance;
-                        ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter {CanDefault = true, Name = "ci"};
+                        ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter { CanDefault = true, Name = "ci" };
                         ParameterBag filledCi = host.FillParameter(new TemplateProcessor(host), ciParam, new ParameterBag(), false);
                         GAMMA = filledCi["ci"].AsDouble;
                         yrep = maxreps > 1;
@@ -2347,7 +2347,7 @@ namespace StatsDirect.UI
                     for (int c = 1; c <= k; c++)
                     {
                         DoubleVariable v = predictorsFrame.Variables[c - 1].AsDoubleVariable;
-                        cx[c] = new ColumnData {Title = v.Title, Rows = v.Length, Sum = v.Sum};
+                        cx[c] = new ColumnData { Title = v.Title, Rows = v.Length, Sum = v.Sum };
                         xlab += v.Title + " ";
                         for (int r = 1; r <= cx[c].Rows; r++)
                         {
@@ -2363,18 +2363,18 @@ namespace StatsDirect.UI
                     }
                     if (xlab.Length > 70)
                         xlab = xlab.Substring(0, 70);
-                    OptionDescriptor descriptor = new OptionDescriptor {Title = "Grouped linear covariance"};
-                    CheckBoxDescriptor useYReplicatesDescriptor = new CheckBoxDescriptor {Text = "Use Y replicates"};
+                    OptionDescriptor descriptor = new OptionDescriptor { Title = "Grouped linear covariance" };
+                    CheckBoxDescriptor useYReplicatesDescriptor = new CheckBoxDescriptor { Text = "Use Y replicates" };
                     descriptor.CheckBoxes.Add(useYReplicatesDescriptor);
                     SelectionBoxDescriptor ciDescriptor = null;
                     if (!SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
                     {
-                        ciDescriptor = new SelectionBoxDescriptor {Title = "Confidence (%)"};
+                        ciDescriptor = new SelectionBoxDescriptor { Title = "Confidence (%)" };
                         ciDescriptor.SetAsConfidence();
                         descriptor.SelectionBoxes.Add(ciDescriptor);
                     }
                     if (!((IChartHost)SDApplication.SoleInstance).DisplayOptions(descriptor))
-                            break;
+                        break;
 
                     yrep = useYReplicatesDescriptor.Checked;
                     if (!SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
@@ -2948,13 +2948,14 @@ namespace StatsDirect.UI
 
         private void pageSetupToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            PageSetupDialog pageSetupDialog = new PageSetupDialog
-                                                  {
-                                                      PageSettings = pgSettings,
-                                                      AllowOrientation = true,
-                                                      AllowMargins = true
-                                                  };
-            pageSetupDialog.ShowDialog();
+            using (PageSetupDialog pageSetupDialog = new PageSetupDialog())
+            {
+                pageSetupDialog.PageSettings = pgSettings;
+                pageSetupDialog.AllowOrientation = true;
+                pageSetupDialog.AllowMargins = true;
+                pageSetupDialog.ShowDialog();
+                // TODO: Now what?
+            }
         }
 
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2993,7 +2994,7 @@ namespace StatsDirect.UI
                     SDApplication.SoleInstance.msgbox_x("You cannot insert an entire worksheet's height of blank rows.  Please select fewer rows.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert rows", false);
                     return;
                 }
-                
+
                 currentRange = currentRange.EntireRow;
                 currentRange.Insert();
             }
@@ -3082,7 +3083,7 @@ namespace StatsDirect.UI
             try
             {
                 IWorkbookSet workbookSet = workbookView.ActiveWorkbookSet;
-                WorkbookExplorer explorer = new WorkbookExplorer(workbookSet) {Text = "Sheet settings"};
+                WorkbookExplorer explorer = new WorkbookExplorer(workbookSet) { Text = "Sheet settings" };
                 explorer.Show(workbookView);
             }
             finally
@@ -3262,7 +3263,7 @@ namespace StatsDirect.UI
             workbookView.GetLock();
             try
             {
-                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Fill down", () => { workbookView.RangeSelection.FillDown(); return true; } ));
+                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Fill down", () => { workbookView.RangeSelection.FillDown(); return true; }));
             }
             finally
             {
@@ -3390,7 +3391,7 @@ namespace StatsDirect.UI
                                  {
                                      Font =
                                          new Font(workbookView.ActiveWorkbookSet.DefaultFontName,
-                                                  (float) workbookView.ActiveWorkbookSet.DefaultFontSize),
+                                                  (float)workbookView.ActiveWorkbookSet.DefaultFontSize),
                                      ShowApply = false,
                                      ShowEffects = false,
                                      ShowHelp = false
@@ -3653,47 +3654,47 @@ namespace StatsDirect.UI
             private readonly string displayText;
             private readonly WrappedExecute wrappedExecute;
 
-            public UndoWrapper(IRange range, string displayText, WrappedExecute wrappedExecute) 
-                : base(range) 
+            public UndoWrapper(IRange range, string displayText, WrappedExecute wrappedExecute)
+                : base(range)
             {
                 this.displayText = displayText;
                 this.wrappedExecute = wrappedExecute;
-            } 
-  
-            public override string DisplayText 
-            { 
-                get 
-                { 
-                    // Text displayed in Undo menu. 
-                    return displayText; 
-                } 
             }
 
-            protected override CommandRangeUndoFlags  UndoFlags
+            public override string DisplayText
             {
-	            get 
-	            {
-                    // Save everything!
-		             return
-                         CommandRangeUndoFlags.AutoFilters
-                         | CommandRangeUndoFlags.ColumnInfo
-                         | CommandRangeUndoFlags.Comments
-                         | CommandRangeUndoFlags.FormatBorders
-                         | CommandRangeUndoFlags.FormatConditions
-                         | CommandRangeUndoFlags.Formats
-                         | CommandRangeUndoFlags.FormulaFixups
-                         | CommandRangeUndoFlags.Hyperlinks
-                         | CommandRangeUndoFlags.MergeState
-                         | CommandRangeUndoFlags.RowInfo
-                         | CommandRangeUndoFlags.Validation
-                         | CommandRangeUndoFlags.Values;
-	            }
+                get
+                {
+                    // Text displayed in Undo menu. 
+                    return displayText;
+                }
             }
-  
-            protected override bool Execute() 
-            { 
-                return wrappedExecute(); 
-            } 
+
+            protected override CommandRangeUndoFlags UndoFlags
+            {
+                get
+                {
+                    // Save everything!
+                    return
+                        CommandRangeUndoFlags.AutoFilters
+                        | CommandRangeUndoFlags.ColumnInfo
+                        | CommandRangeUndoFlags.Comments
+                        | CommandRangeUndoFlags.FormatBorders
+                        | CommandRangeUndoFlags.FormatConditions
+                        | CommandRangeUndoFlags.Formats
+                        | CommandRangeUndoFlags.FormulaFixups
+                        | CommandRangeUndoFlags.Hyperlinks
+                        | CommandRangeUndoFlags.MergeState
+                        | CommandRangeUndoFlags.RowInfo
+                        | CommandRangeUndoFlags.Validation
+                        | CommandRangeUndoFlags.Values;
+                }
+            }
+
+            protected override bool Execute()
+            {
+                return wrappedExecute();
+            }
         }
 
         private void formatCellsContextMenuItem_Click(object sender, EventArgs e)

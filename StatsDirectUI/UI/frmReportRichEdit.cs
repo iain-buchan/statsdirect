@@ -1,5 +1,5 @@
 // Comment for production
-// #define WATCH_EXCEPTIONS
+#define WATCH_EXCEPTIONS
 
 using System.Drawing;
 using System;
@@ -57,7 +57,6 @@ namespace StatsDirect.UI
                 using (StreamReader txtReader = new StreamReader(Filename))
                 {
                     richEditControl1.Text = txtReader.ReadToEnd();
-                    txtReader.Close();
                 }
             }
             currentFile = Filename;

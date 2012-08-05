@@ -36,9 +36,10 @@ namespace StatsDirect.UI
 
         private static void StartCalculator()
         {
-            frmStatsDirectCalculator mainWindow = new frmStatsDirectCalculator();
-            Application.Run(mainWindow);
-            mainWindow.Dispose();
+            using (frmStatsDirectCalculator mainWindow = new frmStatsDirectCalculator())
+            {
+                Application.Run(mainWindow);
+            }
         }
 
         private static void StartStatsDirect(string[] args)
