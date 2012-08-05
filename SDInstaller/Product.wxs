@@ -37,21 +37,21 @@
     <!-- Tell the UI what property holds the install directory -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
     <!-- Download location for the .Net framework, plus the custom action to invoke it -->
-    <Property Id="WixShellExecTarget" Value="http://www.microsoft.com/downloads/details.aspx?FamilyId=333325FD-AE52-4E35-B531-508D977D32A6" />
+    <Property Id="WixShellExecTarget" Value="http://www.microsoft.com/en-us/download/details.aspx?id=17718" />
     <CustomAction Id="LaunchFrameworkDownload" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
-    <!-- Reference the property from netfx that tells us whether framework 3.5 is installed or not -->
-    <PropertyRef Id="NETFRAMEWORK35"/>
+    <!-- Reference the property from netfx that tells us whether framework 4.0 (full, not client) is installed or not -->
+    <PropertyRef Id="NETFRAMEWORK40FULL"/>
     <!-- Custom bitmaps -->
     <WixVariable Id="WixUIBannerBmp" Value="bannrbmp-sd.bmp"/>
     <WixVariable Id="WixUIDialogBmp" Value="dlgbmp-sd.bmp"/>
     <!-- Custom exit dialog text -->
-    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="StatsDirect will run faster if you leave five minutes for the optimisation process to finish." />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="StatsDirect will run faster if you leave 5-10 minutes for the optimisation process to finish." />
     <!-- Now specify the UI - a little more complex than normal, as we've spliced in our own dialog for .Net framework detection -->
     <UI>
       <!-- Dialog to prompt the user for .Net installation -->
       <Dialog Id="DotNetFxDlg" Title="[ProductName] Setup" Width="370" Height="270" NoMinimize="yes">
         <Control Id="Description" Type="Text" X="50" Y="90" Width="270" Height="80" Transparent="yes" NoPrefix="yes" Text="StatsDirect 3 requires Microsoft's .Net Framework 3.5 or later, and it is not yet installed on this computer. Please install the .Net Framework from Microsoft's site. If you click the button below, setup will launch your Web browser to download the latest version of the .Net Framework." />
-        <Control Id="LaunchFrameworkDownloadButton" Type="PushButton" Text="Download .Net Framework 3.5 from www.microsoft.com" Width="250" Height="20" X="60" Y="170">
+        <Control Id="LaunchFrameworkDownloadButton" Type="PushButton" Text="Download .Net Framework 4.0 Full from www.microsoft.com" Width="250" Height="20" X="60" Y="170">
           <Publish Event="DoAction" Value="LaunchFrameworkDownload">1</Publish>
         </Control>
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back" />
@@ -62,20 +62,20 @@
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>{\WixUI_Font_Title}Install .Net Framework 3.5</Text>
+          <Text>{\WixUI_Font_Title}Install .Net Framework 4.0 Full</Text>
         </Control>
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
       </Dialog>
 
       <!-- Modified dialog sequencing -->
-      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="DotNetFxDlg">NOT NETFRAMEWORK35</Publish>
-      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">NETFRAMEWORK35</Publish>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="DotNetFxDlg">NOT NETFRAMEWORK40FULL</Publish>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">NETFRAMEWORK40FULL</Publish>
 
       <Publish Dialog="DotNetFxDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
       <Publish Dialog="DotNetFxDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
 
-      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="DotNetFxDlg">NOT NETFRAMEWORK35</Publish>
-      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">NETFRAMEWORK35</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="DotNetFxDlg">NOT NETFRAMEWORK40FULL</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">NETFRAMEWORK40FULL</Publish>
 
       <!-- From WixUI_InstallDir.wxs in the source -->
       <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
@@ -270,6 +270,13 @@
           <Directory Id="data" Name="data">
             <Component Id="test.xlsx">
               <File Id="test.xlsx" KeyPath="yes" Name="test.xlsx" Checksum="yes" />
+            </Component>
+          </Directory>
+
+          <!-- Excel add-in -->
+          <Directory Id="Excel" Name="Excel">
+            <Component Id="StatsDirectExcelLink.xla">
+              <File Id="StatsDirectExcelLink.xla" KeyPath="yes" Name="StatsDirectExcelLink.xla" Checksum="yes" />
             </Component>
           </Directory>
 
@@ -1630,6 +1637,9 @@
 
       <!-- Sample files -->
       <ComponentRef Id="test.xlsx" />
+
+      <!-- Excel add-in -->
+      <ComponentRef Id="StatsDirectExcelLink.xla" />
 
       <!-- Operations -->
       <ComponentRef Id="AbridgedLifetable.xml" />
