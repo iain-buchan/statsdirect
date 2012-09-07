@@ -30,19 +30,19 @@ namespace StatsDirect.Charting
             SeriesOptions = new List<SeriesOptionsDescriptor>(); 
             if ( UsesAxisLabelFontDescriptor ) 
             { 
-                AxisLabelFontDescriptor = ChartRenderer.SaveStringFromFont( ChartRenderer.DefaultAxisLabelFont ); 
+                AxisLabelFontDescriptor = ChartRenderer.DefaultAxisLabelFont; 
             } 
             if ( UsesAxisTitleFontDescriptor ) 
             { 
-                AxisTitleFontDescriptor = ChartRenderer.SaveStringFromFont( ChartRenderer.DefaultAxisTitleFont ); 
+                AxisTitleFontDescriptor = ChartRenderer.DefaultAxisTitleFont; 
             } 
             if ( UsesLegendFontDescriptor ) 
             { 
-                LegendFontDescriptor = ChartRenderer.SaveStringFromFont( ChartRenderer.DefaultLegendFont ); 
+                LegendFontDescriptor = ChartRenderer.DefaultLegendFont; 
             } 
             if ( UsesTitleFontDescriptor ) 
             { 
-                TitleFontDescriptor = ChartRenderer.SaveStringFromFont( ChartRenderer.DefaultTitleFont ); 
+                TitleFontDescriptor = ChartRenderer.DefaultTitleFont; 
             } 
         } 
         

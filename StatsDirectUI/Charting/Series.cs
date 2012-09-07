@@ -3,9 +3,9 @@ using System;
 namespace StatsDirect.Charting
 {
     public class Series  
-    { 
-        public string Title; 
-        
+    {
+        public string Title { get; set; }
+
         public virtual DoubleSeries AsDoubleSeries 
         { 
             get 

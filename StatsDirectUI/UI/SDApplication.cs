@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Security;
 using Lambda.Collections.Generic;
-using System.Drawing;
 using StatsDirect.Templates;
 using System.Windows.Forms;
 using StatsDirect.Configuration;
@@ -569,42 +568,6 @@ namespace StatsDirect.UI
             }
             // MostRecentlySelectedGrid = new PaneAndBoolean(selectedGrid.SelectedPane, writeAtCurrentLocation);
             return selectedGrid;
-        }
-
-        string ITemplateHost.ImageToRtf(Image image)
-        {
-            return Formatting.ImageToRtf(image);
-        }
-
-        string ITemplateHost.ImageStreamToRtf(MemoryStream stream)
-        {
-            /*
-            FileStream inStream = File.OpenRead(@"C:\Users\peter\AppData\Local\Temp\meta-634783979138531694.emf");
-            using (Image image = Image.FromStream(inStream))
-            {
-                return Formatting.ImageToRtf(image);
-            }
-            */
-            try
-            {
-                /*
-                stream.Position = 0;
-                byte[] bytes = stream.ToArray();
-                FileStream fs = File.Create(@"C:\Users\peter\AppData\Local\Temp\meta-" + DateTime.Now.Ticks.ToString() + ".emf");
-                fs.Write(bytes, 0, bytes.Length);
-                fs.Close();
-                */
-                stream.Position = 0;
-                using (Image image = Image.FromStream(stream))
-                {
-                    return Formatting.ImageToRtf(image);
-                }
-            }
-            catch (OutOfMemoryException ex)
-            {
-                FriendlyError("Couldn't convert a chart to RTF", ex, false);
-                return string.Empty;
-            }
         }
 
         /// <summary>

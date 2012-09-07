@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using StatsDirect.Charting;
 
 namespace StatsDirect.UI
 {
@@ -9,7 +10,7 @@ namespace StatsDirect.UI
         private SelectablePictureBox[] picStyles;
         private SelectablePictureBox[] picWidths;
         private RadioButton[] rdoSeries;
-        private Charting.MarkerType[] workingMarkerTypes;
+        private MarkerType[] workingMarkerTypes;
 
         public frmGraphicsOptions()
         {
@@ -89,12 +90,12 @@ namespace StatsDirect.UI
                     if (pb.Selected && pb != sender)
                         pb.Selected = false;
 
-                Charting.MarkerType mt = GetSelectedMarkerType();
+                MarkerType mt = GetSelectedMarkerType();
                 if (null != mt)
                 {
                     for (int i = 0; i < picMarkerTypes.Length; i++)
                         if (sender == picMarkerTypes[i])
-                            mt.Shape = (Charting.MarkerShape)(i + 1);
+                            mt.Shape = (MarkerShape)(i + 1);
                 }
             }
         }
@@ -108,7 +109,7 @@ namespace StatsDirect.UI
                     if (pb.Selected && pb != sender)
                         pb.Selected = false;
 
-                Charting.MarkerType mt = GetSelectedMarkerType();
+                MarkerType mt = GetSelectedMarkerType();
                 if (null != mt)
                 {
                     for (int i = 0; i < picStyles.Length; i++)
@@ -127,7 +128,7 @@ namespace StatsDirect.UI
                     if (pb.Selected && pb != sender)
                         pb.Selected = false;
 
-                Charting.MarkerType mt = GetSelectedMarkerType();
+                MarkerType mt = GetSelectedMarkerType();
                 if (null != mt)
                 {
                     for (int i = 0; i < picWidths.Length; i++)
@@ -156,35 +157,35 @@ namespace StatsDirect.UI
         private void SaveOptions()
         {
             SDApplication.SoleInstance.Preferences.ShouldUseColour = !chkAllBlack.Checked;
-            Charting.ChartRenderer.DefaultBoxAxes = chkBoxAxes.Checked;
-            Charting.ChartRenderer.SaveFlags();
+            ChartRenderer.DefaultBoxAxes = chkBoxAxes.Checked;
+            ChartRenderer.SaveFlags();
 
             for (int i = 0; i < 10; i++)
             {
-                Charting.ChartRenderer.MarkerTypes[i] = workingMarkerTypes[i];
+                ChartRenderer.MarkerTypes[i] = workingMarkerTypes[i];
             }
-            Charting.ChartRenderer.SaveMarkerTypes();
+            ChartRenderer.SaveMarkerTypes();
 
-            Charting.ChartRenderer.DefaultAxisLabelFont = lblAxisLabelFont.Font;
-            Charting.ChartRenderer.DefaultAxisTitleFont = lblAxisLabelFont.Font;
-            Charting.ChartRenderer.DefaultLabelFont = lblAxisLabelFont.Font;
-            Charting.ChartRenderer.DefaultLegendFont = lblAxisLabelFont.Font;
-            Charting.ChartRenderer.DefaultTitleFont = lblTitleFont.Font;
-            Charting.ChartRenderer.SaveFonts();
+            ChartRenderer.DefaultAxisLabelFont = ChartRenderer.SaveStringFromFont(lblAxisLabelFont.Font);
+            ChartRenderer.DefaultAxisTitleFont = ChartRenderer.SaveStringFromFont(lblAxisLabelFont.Font);
+            ChartRenderer.DefaultLabelFont = ChartRenderer.SaveStringFromFont(lblAxisLabelFont.Font);
+            ChartRenderer.DefaultLegendFont = ChartRenderer.SaveStringFromFont(lblAxisLabelFont.Font);
+            ChartRenderer.DefaultTitleFont = ChartRenderer.SaveStringFromFont(lblTitleFont.Font);
+            ChartRenderer.SaveFonts();
         }
 
         private void LoadOptions()
         {
-            lblAxisLabelFont.Font = Charting.ChartRenderer.DefaultLabelFont;
-            lblTitleFont.Font = Charting.ChartRenderer.DefaultTitleFont;
+            lblAxisLabelFont.Font = ChartRenderer.FontFromSaveString(ChartRenderer.DefaultLabelFont);
+            lblTitleFont.Font = ChartRenderer.FontFromSaveString(ChartRenderer.DefaultTitleFont);
 
             chkAllBlack.Checked = !SDApplication.SoleInstance.Preferences.ShouldUseColour;
-            chkBoxAxes.Checked = Charting.ChartRenderer.DefaultBoxAxes;
+            chkBoxAxes.Checked = ChartRenderer.DefaultBoxAxes;
 
-            workingMarkerTypes = new Charting.MarkerType[10];
+            workingMarkerTypes = new MarkerType[10];
             for (int i = 0; i < 10; i++)
             {
-                workingMarkerTypes[i] = Charting.ChartRenderer.MarkerTypes[i].Clone();
+                workingMarkerTypes[i] = ChartRenderer.MarkerTypes[i].Clone();
             }
             rdoSeries1.Checked = true;
             LoadSeriesOptions();
@@ -192,7 +193,7 @@ namespace StatsDirect.UI
 
         private void LoadSeriesOptions()
         {
-            Charting.MarkerType mt = GetSelectedMarkerType();
+            MarkerType mt = GetSelectedMarkerType();
             if (null != mt)
             {
                 picMarkerTypes[(int)mt.Shape - 1].Selected = true;
@@ -204,12 +205,12 @@ namespace StatsDirect.UI
 
         private void colorPanel_ColorChanged(object sender, PJLControls.ColorChangedEventArgs e)
         {
-            Charting.MarkerType mt = GetSelectedMarkerType();
+            MarkerType mt = GetSelectedMarkerType();
             if (null != mt)
                 mt.Color = colorPanel.Color;
         }
 
-        private Charting.MarkerType GetSelectedMarkerType()
+        private MarkerType GetSelectedMarkerType()
         {
             if (null != workingMarkerTypes)
             {

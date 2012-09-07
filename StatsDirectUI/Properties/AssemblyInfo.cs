@@ -30,8 +30,8 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.0.63.0")]
-[assembly: AssemblyFileVersion("3.0.63.0")]
+[assembly: AssemblyVersion("3.0.66.0")]
+[assembly: AssemblyFileVersion("3.0.66.0")]
 
 [assembly: Dependency("DevExpress.Data.v11.2", LoadHint.Always)]
 [assembly: Dependency("DevExpress.Printing.v11.2.Core", LoadHint.Always)]

@@ -51,22 +51,6 @@ namespace StatsDirect.Templates
     public interface ITemplateHost : IChartHost
     {
         /// <summary>
-        /// Given an image that (typically) holds a metafile, render it to RTF suitable for displaying in a Rich Text Control.
-        /// TODO: Refactor this interface so that some alternative is passed across here - this feels like it's at the wrong level.
-        /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        string ImageToRtf(Image image);
-
-        /// <summary>
-        /// Given a stream that (typically) holds a metafile, render it to RTF suitable for displaying in a Rich Text Control.
-        /// TODO: Refactor this interface so that some alternative is passed across here - this feels like it's at the wrong level.
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
-        string ImageStreamToRtf(MemoryStream stream);
-
-        /// <summary>
         /// Cause the report to be output in some way, for example by asking the user where to render it, then rendering it.
         /// </summary>
         /// <param name="rtf"></param>

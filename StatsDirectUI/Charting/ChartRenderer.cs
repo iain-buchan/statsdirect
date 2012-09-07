@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
 using System.Drawing;
-using System.Windows.Forms;
+using System.Text;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using System.Windows.Forms;
 
 namespace StatsDirect.Charting
 {
@@ -17,6 +20,31 @@ namespace StatsDirect.Charting
     ///  </summary>
     public class ChartRenderer : IDisposable
     {
+        // The number of hundredths of millimeters (0.01 mm) in an inch
+        // For more information, see GetImagePrefix() method.
+        private const int HMM_PER_INCH = 2540;
+
+        // The number of twips in an inch
+        // For more information, see GetImagePrefix() method.
+        private const int TWIPS_PER_INCH = 1440;
+
+        /* RTF HEADER
+         * ----------
+         * 
+         * \rtf[N]		- For text to be considered to be RTF, it must be enclosed in this tag.
+         *				  rtf1 is used because the RichTextBox conforms to RTF Specification
+         *				  version 1.
+         * \ansi		- The character set.
+         * \ansicpg[N]	- Specifies that unicode characters might be embedded. ansicpg1252
+         *				  is the default used by Windows.
+         * \deff[N]		- The default font. \deff0 means the default font is the first font
+         *				  found.
+         * \deflang[N]	- The default language. \deflang1033 specifies US English.
+         * */
+        private const string RTF_HEADER = @"{\rtf1\ansi\ansicpg1252\deff0\deflang1033";
+        private const string RTF_FOOTER = @"}";
+        private const string RTF_IMAGE_POST = @"}";
+
         private readonly double LOG2 = Math.Log(2.0);
         private const int LEGEND_TOP_GAP = 70;
         private const int LEGEND_MARKER_SIZE = 6;
@@ -46,11 +74,11 @@ namespace StatsDirect.Charting
 
         //  PRIVATE VARIABLES - callers should be unable to touch anything below here
 
-        private static Font defaultAxisLabelFont;
-        private static Font defaultAxisTitleFont;
-        private static Font defaultTitleFont;
-        private static Font defaultLegendFont;
-        private static Font defaultLabelFont;
+        private static string defaultAxisLabelFont;
+        private static string defaultAxisTitleFont;
+        private static string defaultTitleFont;
+        private static string defaultLegendFont;
+        private static string defaultLabelFont;
 
         private static bool defaultBoxAxes;
 
@@ -72,7 +100,7 @@ namespace StatsDirect.Charting
         private Font labelFont;
 
         private Graphics canvas;
-        private System.Drawing.Imaging.Metafile metaFile;
+        private Metafile metaFile;
         private Stream cachedOutputStream;
 
         private double dataMinX = double.MaxValue;
@@ -118,8 +146,7 @@ namespace StatsDirect.Charting
         private const double DEFAULT_METAW = 1132;
         private const double DEFAULT_Y_GAP = 80;
         private double metaH = DEFAULT_METAH;
-        private double MetaW = DEFAULT_METAW;
-        private const double SCALE_FACTOR = 1.4;
+        private double metaW = DEFAULT_METAW;
         private const int LABEL_TO_AXIS_LABEL_GAP = 20;
 
         //  Box and Whisker constants
@@ -167,7 +194,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static Font DefaultAxisLabelFont
+        public static string DefaultAxisLabelFont
         {
             get
             {
@@ -183,7 +210,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static Font DefaultSeriesLabelFont
+        public static string DefaultSeriesLabelFont
         {
             get
             {
@@ -191,7 +218,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static Font DefaultAxisTitleFont
+        public static string DefaultAxisTitleFont
         {
             get
             {
@@ -207,7 +234,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static Font DefaultLabelFont
+        public static string DefaultLabelFont
         {
             get
             {
@@ -223,7 +250,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static Font DefaultLegendFont
+        public static string DefaultLegendFont
         {
             get
             {
@@ -239,7 +266,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static Font DefaultTitleFont
+        public static string DefaultTitleFont
         {
             get
             {
@@ -385,7 +412,7 @@ namespace StatsDirect.Charting
             using (MemoryStream metaStream = new MemoryStream())
             {
                 ParameterBag results = Plot(metaStream, host);
-                rtf = host.ImageStreamToRtf(metaStream);
+                rtf = ImageStreamToRtf(metaStream);
                 return results;
             }
         }
@@ -424,7 +451,7 @@ namespace StatsDirect.Charting
                 case ChartType.LinearRegression:
                     return PlotLinearRegression(outputStream);
                 case ChartType.Normal:
-                    return PlotNormal(outputStream, host);
+                    return PlotNormal(outputStream);
                 case ChartType.Pyramid:
                     return PlotPyramid(outputStream);
                 case ChartType.ROC:
@@ -432,7 +459,7 @@ namespace StatsDirect.Charting
                 case ChartType.ScatterXY:
                     return PlotScatter(outputStream, false);
                 case ChartType.Spread:
-                    return PlotSpread(outputStream, host);
+                    return PlotSpread(outputStream);
                 case ChartType.Survival:
                     return PlotSurvival(outputStream);
                 default:
@@ -452,24 +479,43 @@ namespace StatsDirect.Charting
             //  Title
             string savedTitleFont = Settings1.Default.TitleFont;
 
-            if (savedTitleFont == null || savedTitleFont.Length < 3)
+            if (savedTitleFont == null || !CanParseSaveString(savedTitleFont))
             {
                 InitFirstFonts();
             }
             else
             {
-                DefaultTitleFont = FontFromSaveString(savedTitleFont);
+                DefaultTitleFont = savedTitleFont;
                 string savedLabelFont = Settings1.Default.LabelFont;
-                DefaultAxisLabelFont = FontFromSaveString(savedLabelFont);
-                DefaultAxisTitleFont = FontFromSaveString(savedLabelFont);
-                DefaultLabelFont = FontFromSaveString(savedLabelFont);
-                DefaultLegendFont = FontFromSaveString(savedLabelFont);
+                DefaultAxisLabelFont = savedLabelFont;
+                DefaultAxisTitleFont = savedLabelFont;
+                DefaultLabelFont = savedLabelFont;
+                DefaultLegendFont = savedLabelFont;
             }
         }
 
-        public static Font FontFromSaveString(string Descriptor)
+        public static bool CanParseSaveString(string descriptor)
         {
-            string[] fontStrings = Descriptor.Split(';');
+            try
+            {
+                string[] fontStrings = descriptor.Split(';');
+                if (fontStrings.Length != 3)
+                    return false;
+                int scrapInt;
+                if (!int.TryParse(fontStrings[1], out scrapInt))
+                    return false;
+                float scrapFloat;
+                return float.TryParse(fontStrings[2], out scrapFloat);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static Font FontFromSaveString(string descriptor)
+        {
+            string[] fontStrings = descriptor.Split(';');
             string fontString = fontStrings[0];
             FontStyle style = ((FontStyle)(int.Parse(fontStrings[1])));
             float sz = float.Parse(fontStrings[2]);
@@ -483,12 +529,22 @@ namespace StatsDirect.Charting
 
         private static void InitFirstFonts()
         {
+            /*
+            public enum FontStyle
+            {
+                Regular = 0,
+                Bold = 1,
+                Italic = 2,
+                Underline = 4,
+                Strikeout = 8,
+            }
+             */
             //  Default fonts, in case there are no preferences
-            DefaultAxisLabelFont = new Font("Calibri", Convert.ToSingle(11 * SCALE_FACTOR), FontStyle.Regular);
-            DefaultAxisTitleFont = new Font("Calibri", Convert.ToSingle(11 * SCALE_FACTOR), FontStyle.Bold);
-            DefaultLabelFont = new Font("Calibri", Convert.ToSingle(11 * SCALE_FACTOR), FontStyle.Regular);
-            DefaultLegendFont = new Font("Calibri", Convert.ToSingle(11 * SCALE_FACTOR), FontStyle.Regular);
-            DefaultTitleFont = new Font("Calibri", Convert.ToSingle(16 * SCALE_FACTOR), FontStyle.Bold);
+            DefaultAxisLabelFont = "Calibri;0;15";
+            DefaultAxisTitleFont = "Calibri;1;15";
+            DefaultLabelFont = "Calibri;0;15";
+            DefaultLegendFont = "Calibri;0;15";
+            DefaultTitleFont = "Calibri;1;22";
             SaveFonts();
         }
 
@@ -569,15 +625,15 @@ namespace StatsDirect.Charting
 
         public static void SaveFonts()
         {
-            Settings1.Default.LabelFont = SaveStringFromFont(DefaultLabelFont);
-            Settings1.Default.TitleFont = SaveStringFromFont(DefaultTitleFont);
+            Settings1.Default.LabelFont = DefaultLabelFont;
+            Settings1.Default.TitleFont = DefaultTitleFont;
 
             SaveSettings(Settings1.Default);
         }
 
         public static void SaveMarkerTypes()
         {
-            System.Text.StringBuilder savedSettings = new System.Text.StringBuilder();
+            StringBuilder savedSettings = new StringBuilder();
             for (int i = 0; i <= 9; i++)
             {
                 if (i > 0)
@@ -693,9 +749,9 @@ namespace StatsDirect.Charting
         private void DefaultAxes()
         {
             //  xaxis also needs to be reset in routines with legends
-            xAxisCanvas = MetaW / 7.55;
+            xAxisCanvas = metaW / 7.55;
             yAxisCanvas = Math.Min(metaH / 8, DEFAULT_Y_GAP);
-            xExtCanvas = MetaW / 1.25 * scaleXAxis;
+            xExtCanvas = metaW / 1.25 * scaleXAxis;
             yExtCanvas = metaH - Math.Min(metaH / 4, 2 * DEFAULT_Y_GAP * scaleYAxis);
         }
 
@@ -703,7 +759,7 @@ namespace StatsDirect.Charting
         ///  Prepare to plot a metafile chart to the specified stream.
         ///  </summary>
         ///  <remarks></remarks>
-        private void StartMetafile(Stream OutputStream, bool ShouldDefaultAxes)
+        private void StartMetafile(Stream OutputStream, bool ShouldDefaultAxes = true)
         {
             // Initialise scaling and resources
             IsAscii = false;
@@ -717,22 +773,17 @@ namespace StatsDirect.Charting
             }
 
             //  Drawing objects
-            axisLabelFont = DefaultAxisLabelFont;
+            axisLabelFont = FontFromSaveString(DefaultAxisLabelFont);
             axisPen = new Pen(grAxis, 1);
-            axisTitleFont = DefaultAxisTitleFont;
+            axisTitleFont = FontFromSaveString(DefaultAxisTitleFont);
             axisBrush = new SolidBrush(Color.Black);
-            labelFont = DefaultLabelFont;
-            legendFont = DefaultLegendFont;
-            titleFont = DefaultTitleFont;
+            labelFont = FontFromSaveString(DefaultLabelFont);
+            legendFont = FontFromSaveString(DefaultLegendFont);
+            titleFont = FontFromSaveString(DefaultTitleFont);
             blackBrush = new SolidBrush(Color.Black);
 
             cachedOutputStream = OutputStream;
             SetupGraphics();
-        }
-
-        private void StartMetafile(Stream OutputStream)
-        {
-            StartMetafile(OutputStream, true);
         }
 
         private void SetupGraphics()
@@ -741,14 +792,14 @@ namespace StatsDirect.Charting
             {
                 //  Create temporary graphics object for metafile creation and get handle to its device context.
                 //  Dim newGraphics As Graphics = Graphics.FromImage(New Bitmap(CInt(MetaW), CInt(MetaH), Imaging.PixelFormat.Format32bppArgb))
-                using (Bitmap b = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+                using (Bitmap b = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
                 {
                     using (Graphics newGraphics = Graphics.FromImage(b))
                     {
                         IntPtr hdc = newGraphics.GetHdc();
                         //  Create metafile object to record.
                         cachedOutputStream.Position = 0; //  Just in case we're resetting an earlier metafile output
-                        metaFile = new System.Drawing.Imaging.Metafile(cachedOutputStream, hdc, new RectangleF(0, 0, Convert.ToSingle(MetaW), Convert.ToSingle(metaH)), System.Drawing.Imaging.MetafileFrameUnit.Pixel, System.Drawing.Imaging.EmfType.EmfPlusDual);
+                        metaFile = new Metafile(cachedOutputStream, hdc, new RectangleF(0, 0, Convert.ToSingle(metaW), Convert.ToSingle(metaH)), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
                         //  Create graphics object to record metaFile.
                         canvas = Graphics.FromImage(metaFile);
                         canvas.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -778,22 +829,6 @@ namespace StatsDirect.Charting
                 metaFile.Dispose();
                 metaFile = null;
             }
-            if ((axisLabelFont != null))
-            {
-                if (axisLabelFont != DefaultAxisLabelFont)
-                {
-                    axisLabelFont.Dispose();
-                }
-                axisLabelFont = null;
-            }
-            if ((axisTitleFont != null))
-            {
-                if (axisTitleFont != DefaultAxisTitleFont)
-                {
-                    axisTitleFont.Dispose();
-                }
-                axisTitleFont = null;
-            }
             if ((axisPen != null))
             {
                 axisPen.Dispose();
@@ -803,30 +838,6 @@ namespace StatsDirect.Charting
             {
                 axisBrush.Dispose();
                 axisBrush = null;
-            }
-            if ((titleFont != null))
-            {
-                if (titleFont != DefaultTitleFont)
-                {
-                    titleFont.Dispose();
-                }
-                titleFont = null;
-            }
-            if ((legendFont != null))
-            {
-                if (legendFont != DefaultLegendFont)
-                {
-                    legendFont.Dispose();
-                }
-                legendFont = null;
-            }
-            if ((labelFont != null))
-            {
-                if (labelFont != DefaultLabelFont)
-                {
-                    labelFont.Dispose();
-                }
-                labelFont = null;
             }
             if ((blackBrush != null))
             {
@@ -1914,7 +1925,7 @@ namespace StatsDirect.Charting
             if (!(IsAscii))
             {
                 // Plot a metafile version
-                StartMetafile(outputStream, true);
+                StartMetafile(outputStream);
                 SetFontsAndThicknessesFromOptions(sOptions);
                 AssignMarkersToSeries(sOptions);
                 // Draw the scale
@@ -2052,7 +2063,7 @@ namespace StatsDirect.Charting
             bool fullWidth = lrOptions.FullWidth;
 
             // Plot a metafile version
-            StartMetafile(outputStream, true);
+            StartMetafile(outputStream);
             AssignMarkersToSeries();
             // Draw the scale
             DefaultAxes();
@@ -2144,7 +2155,7 @@ namespace StatsDirect.Charting
                 if (PERT != 0)
                     PlotPert(PERT, slope, intercept, nx, MS, SUMX, SSX, plotBothLines);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -2243,7 +2254,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream);
                 PlotCox2Internal(gn, igroups, xp, yp, cdat1, groupid);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -2315,7 +2326,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream);
                 PlotCox1Internal(title, z, iobs, stratified, grouped, istrata, igroups, cdat1, groupid, use_marker, use_tic, ARR3, j3, xAxisTitle, yAxisTitle, ref gn);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -2530,7 +2541,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream);
                 PlotLinearizedEstimationInternal(title, model, a, b, XAxisTitle, YAxisTitle);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -2629,7 +2640,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream);
                 PlotPolynomialRegressionInternal(title, mode, xtxi, bd, rss, nx, P, gamma, xAxisTitle, yAxisTitle);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -2821,7 +2832,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream);
                 PlotLogitInternal(title, model, t, sw, s1, a, b, xAxisTitle, yAxisTitle);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -3009,12 +3020,10 @@ namespace StatsDirect.Charting
             }
         }
 
-
         ///  <summary>
         ///  Initialise everything required for an ASCII plot of the required number of lines, notably including the SH_TX array.
         ///  </summary>
         ///  <param name="lines">The number of lines of text in the ASCII plot</param>
-        ///  <remarks></remarks>
         private void ASCII_InitPlot(int lines)
         {
             shTx = new string[lines];
@@ -3024,8 +3033,6 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method ASCII_PlotPoint
         private void ASCII_PlotPoint(int x, int y)
         {
             // Check if a point has already been plotted
@@ -3052,8 +3059,6 @@ namespace StatsDirect.Charting
 
         }
 
-
-        // TRANSMISSINGCOMMENT: Method AssignMarkersToSeries
         private void AssignMarkersToSeries()
         {
             if (definition.XSeries.Count > 0)
@@ -3066,8 +3071,6 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method AssignMarkersToSeries
         private void AssignMarkersToSeries(GenericOptions opts)
         {
             if (definition.XSeries.Count > 0)
@@ -3080,7 +3083,6 @@ namespace StatsDirect.Charting
             }
         }
 
-
         private void AssignMarkersToSeries(List<Series> s)
         {
             for (int i = 0; i <= s.Count - 1; i++)
@@ -3091,28 +3093,18 @@ namespace StatsDirect.Charting
             }
         }
 
-
-
         private void SetSeriesFromMarkerTypeAndOptions(DoubleSeries ds, MarkerType mt, GenericOptions o)
         {
-            if ((o != null))
+            if (o != null)
             {
                 ds.IsFilled = o.ShouldForceIsFilled ? o.ForcedIsFilled : mt.IsFilled;
-                ds.FillStyle = o.ShouldForceFillStyle ? o.ForcedFillStyle : mt.FillStyle;
-            }
-            else
-            {
-                ds.Style = mt.Style;
-                ds.FillStyle = mt.FillStyle;
             }
             ds.UnstyledPen = GetPen(mt, true);
             //  Dash styles are only used in monochrome plots; if colour, ignore.
             ds.StyledPen = GetPen(mt, HasChartOptions && definition.ChartOptions.UseColour);
             ds.Shape = mt.Shape;
             ds.MarkerSize = mt.MarkerSize;
-            ds.Style = mt.Style;
         }
-
 
         private void AssignMarkersToSeries(List<Series> s, GenericOptions opts)
         {
@@ -3231,7 +3223,7 @@ namespace StatsDirect.Charting
             string axisTitle = bwOptions.XAxisTitle;
 
             // Plot a Metafile version
-            StartMetafile(OutputStream, true);
+            StartMetafile(OutputStream);
 
             //  Fonts
             if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
@@ -3589,12 +3581,12 @@ namespace StatsDirect.Charting
                 {
                     scaleXAxis = 5;
                 }
-                MetaW = scaleXAxis * DEFAULT_METAW;
+                metaW = scaleXAxis * DEFAULT_METAW;
             }
             else
             {
                 scaleXAxis = 1;
-                MetaW = DEFAULT_METAW;
+                metaW = DEFAULT_METAW;
             }
 
             // sort the array and get the min, max values
@@ -3609,7 +3601,7 @@ namespace StatsDirect.Charting
             string axisTitle = bwOptions.XAxisTitle;
 
             // Plot a Metafile version
-            StartMetafile(OutputStream, true);
+            StartMetafile(OutputStream);
 
             //  Fonts
             if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
@@ -4273,7 +4265,7 @@ namespace StatsDirect.Charting
             double legendFontHeight;
             using (MemoryStream scratchStream = new MemoryStream())
             {
-                StartMetafile(scratchStream, true);
+                StartMetafile(scratchStream);
                 SetFontsAndThicknessesFromOptions(bOptions);
                 DefaultAxes();
                 legendFontHeight = legendFont.GetHeight(canvas);
@@ -5154,7 +5146,7 @@ namespace StatsDirect.Charting
                     //  If there's more than one series, they're to be plotted separately.  Each plot is the same height as the original.
                     metaH = metaH * SeriesToUse.Count;
 
-                    StartMetafile(OutputStream, true);
+                    StartMetafile(OutputStream);
 
                     originalMarkerTypes = _markerTypes;
                     _markerTypes = new MarkerType[originalMarkerTypes.Length];
@@ -5503,10 +5495,10 @@ namespace StatsDirect.Charting
         {
             using (MemoryStream metaStream = new MemoryStream())
             {
-                StartMetafile(metaStream, true);
+                StartMetafile(metaStream);
                 PlotXY(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -5516,10 +5508,10 @@ namespace StatsDirect.Charting
         {
             using (MemoryStream metaStream = new MemoryStream())
             {
-                StartMetafile(metaStream, true);
+                StartMetafile(metaStream);
                 PlotXYZ(x, y, z, 1, x.Length - 1, xtxt, ytxt, title, zPlot, minMaxY, MarkerShape.Circle, false, Pens.Black, null);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -5766,7 +5758,7 @@ namespace StatsDirect.Charting
 
 
         // TRANSMISSINGCOMMENT: Method PlotSpread
-        private ParameterBag PlotSpread(Stream outputStream, ITemplateHost host)
+        private ParameterBag PlotSpread(Stream outputStream)
         {
             SpreadOptions sOptions = ((SpreadOptions)(definition.ChartOptions));
             if (sOptions.Orientation == ChartOrientation.Horizontal)
@@ -5815,7 +5807,7 @@ namespace StatsDirect.Charting
 
             DefaultAxes();
 
-            StartMetafile(OutputStream, true);
+            StartMetafile(OutputStream);
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
             foreach (Series s in SeriesToUse)
@@ -5927,12 +5919,12 @@ namespace StatsDirect.Charting
                 {
                     scaleXAxis = 5;
                 }
-                MetaW = scaleXAxis * DEFAULT_METAW;
+                metaW = scaleXAxis * DEFAULT_METAW;
             }
             else
             {
                 scaleXAxis = 1;
-                MetaW = DEFAULT_METAW;
+                metaW = DEFAULT_METAW;
             }
 
             GetMinMaxSort(seriesToUse, out dataMinY, out dataMaxY);
@@ -6109,7 +6101,7 @@ namespace StatsDirect.Charting
             double legendFontHeight;
             using (MemoryStream scratchStream = new MemoryStream())
             {
-                StartMetafile(scratchStream, true);
+                StartMetafile(scratchStream);
                 SetFontsAndThicknessesFromOptions(rOptions);
                 DefaultAxes();
                 double smallerExt = Math.Min(xExtCanvas, yExtCanvas);
@@ -6766,7 +6758,7 @@ namespace StatsDirect.Charting
         ///  </summary>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        private ParameterBag PlotNormal(Stream outputStream, ITemplateHost host)
+        private ParameterBag PlotNormal(Stream outputStream)
         {
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
@@ -6777,7 +6769,7 @@ namespace StatsDirect.Charting
                 y[j] = xs0.Data[j];
             }
 
-            StartMetafile(outputStream, true);
+            StartMetafile(outputStream);
             Plot_Normal(y);
             EndMetafile();
             return new ParameterBag();
@@ -6790,7 +6782,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream);
                 Plot_Normal(y);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -7087,7 +7079,7 @@ namespace StatsDirect.Charting
                 metaH = DEFAULT_METAH;
             }
 
-            StartMetafile(OutputStream, true);
+            StartMetafile(OutputStream);
 
             SetFontsAndThicknessesFromOptions(pOptions);
 
@@ -7237,7 +7229,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream, true);
                 PlotXYR(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -7512,7 +7504,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream);
                 PlotLAbbe(k, o, rmh);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -7566,7 +7558,7 @@ namespace StatsDirect.Charting
         {
             // Get the plot title
             LadderOptions lOptions = ((LadderOptions)(definition.ChartOptions));
-            StartMetafile(OutputStream, true);
+            StartMetafile(OutputStream);
             SetFontsAndThicknessesFromOptions(lOptions);
             AssignMarkersToSeries(definition.YSeries, lOptions);
 
@@ -7842,7 +7834,7 @@ namespace StatsDirect.Charting
 
             const int RHS_LABEL_GAP = 7;
 
-            StartMetafile(OutputStream, true);
+            StartMetafile(OutputStream);
 
             //  Fonts
             SetFontsAndThicknessesFromOptions(cOptions);
@@ -8215,7 +8207,7 @@ namespace StatsDirect.Charting
             double legendFontHeight;
             using (MemoryStream scratchStream = new MemoryStream())
             {
-                StartMetafile(scratchStream, true);
+                StartMetafile(scratchStream);
                 SetFontsAndThicknessesFromOptions(eOptions);
                 DefaultAxes();
                 legendFontHeight = legendFont.GetHeight(canvas);
@@ -8260,14 +8252,14 @@ namespace StatsDirect.Charting
                 DoubleVariable yvarl = eOptions.ydatl.Variables[C].AsDoubleVariable;
                 DoubleVariable yvaru = eOptions.ydatu.Variables[C].AsDoubleVariable;
 
-                double x1;
-                double y1;
                 double x2 = 0;
                 double y2 = 0;
 
                 //  Draw the error bars first so we don't interfere with connection lines
                 using (Pen p = GetPen(eOptions.MarkerTypes[C], true))
                 {
+                    double x1;
+                    double y1;
                     for (int r = 0; r <= xvar.Data.Length - 1; r++)
                     {
                         x1 = ToCanvasX(xvar.Data[r]);
@@ -8326,8 +8318,6 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method GetForestScaleParameters
         private ScaleParameters GetForestScaleParameters()
         {
             ForestOptions fOptions = ((ForestOptions)(definition.ChartOptions));
@@ -8422,8 +8412,6 @@ namespace StatsDirect.Charting
             return sp;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotForest
         private ParameterBag PlotForest(Stream outputStream)
         {
             double aint = 0; double amin = 0;
@@ -8460,7 +8448,7 @@ namespace StatsDirect.Charting
 
             bool isLogScale = (xlogscale == ScaleType.Log10);
 
-            StartMetafile(outputStream, true);
+            StartMetafile(outputStream);
 
             SetFontsAndThicknessesFromOptions(fOptions);
 
@@ -8869,7 +8857,7 @@ namespace StatsDirect.Charting
             double legendFontHeight;
             using (MemoryStream scratchStream = new MemoryStream())
             {
-                StartMetafile(scratchStream, true);
+                StartMetafile(scratchStream);
                 SetFontsAndThicknessesFromOptions(sOptions);
                 DefaultAxes();
                 double smallerExt = Math.Min(xExtCanvas, yExtCanvas);
@@ -9032,7 +9020,7 @@ namespace StatsDirect.Charting
             GiniOptions gOptions = ((GiniOptions)(definition.ChartOptions));
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
-            StartMetafile(outputStream, true);
+            StartMetafile(outputStream);
 
             DataMinX = 0.0;
             DataMaxX = 1.0;
@@ -9078,7 +9066,7 @@ namespace StatsDirect.Charting
             using (MemoryStream metaStream = new MemoryStream())
             {
                 Plot_Bias_MA(metaStream, host, x, yy, yw, rows, xtxt, cl, cu, cco, cit, rmh, xform, diagonal);
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -9188,7 +9176,7 @@ namespace StatsDirect.Charting
                     break;
             }
 
-            StartMetafile(outputStream, true);
+            StartMetafile(outputStream);
             if (reverse)
             {
                 DrawAxes(title, new Axis(xtxt, AxisMode.Scale, 0, ScaleType.Linear), new Axis(ytx, AxisMode.ReverseScale, 0, ScaleType.Linear), false, true, false);
@@ -9214,9 +9202,10 @@ namespace StatsDirect.Charting
                 }
             }
 
-            double xnow; double ynow;
             using (Pen blackPen = new Pen(grBlack, 1))
             {
+                double xnow;
+                double ynow;
                 if (!(diagonal))
                 {
                     // mark pooled value
@@ -9327,13 +9316,13 @@ namespace StatsDirect.Charting
             using (MemoryStream metaStream = new MemoryStream())
             {
                 StartMetafile(metaStream);
-                PlotTies(host, x, y, nx, lla, ula, GAMMA, v0Title, v1Title, mean);
+                PlotTies(x, y, nx, lla, ula, GAMMA, v0Title, v1Title, mean);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
-        private void PlotTies(IChartHost Host, double[] x, double[] y, int nx, double lla, double ula, double GAMMA, string v0Title, string v1Title, double mean)
+        private void PlotTies(double[] x, double[] y, int nx, double lla, double ula, double GAMMA, string v0Title, string v1Title, double mean)
         {
             DataMinX = x[1];
             DataMaxX = x[1];
@@ -9453,7 +9442,7 @@ namespace StatsDirect.Charting
         private ParameterBag PlotAgreementPair(Stream outputStream)
         {
             AgreementOptions aOptions = ((AgreementOptions)(definition.ChartOptions));
-            StartMetafile(outputStream, true);
+            StartMetafile(outputStream);
             GetMinMaxArray(aOptions.mxd, out axisYMin, out axisYMax);
             using (Pen p = GetPen(_markerTypes[0], true))
             {
@@ -9504,15 +9493,12 @@ namespace StatsDirect.Charting
                 DrawLine(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
                 if (aOptions.HasLimits)
                 {
-                    using (Pen blackPen = new Pen(grBlack, 1))
-                    {
-                        // Plot upper limit
-                        y1 = ToCanvasY(aOptions.ula);
-                        DrawLine(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
-                        // Plot lower limit
-                        y1 = ToCanvasY(aOptions.lla);
-                        DrawLine(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
-                    }
+                    // Plot upper limit
+                    y1 = ToCanvasY(aOptions.ula);
+                    DrawLine(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
+                    // Plot lower limit
+                    y1 = ToCanvasY(aOptions.lla);
+                    DrawLine(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
                 }
             }
             EndMetafile();
@@ -10041,7 +10027,7 @@ namespace StatsDirect.Charting
                 // Plot the results
                 using (MemoryStream metaStream = new MemoryStream())
                 {
-                    StartMetafile(metaStream, true);
+                    StartMetafile(metaStream);
                     DataMaxX = double.MinValue;
                     DataMaxY = double.MinValue;
                     DataMinX = double.MaxValue;
@@ -10144,7 +10130,7 @@ namespace StatsDirect.Charting
                         }
                     }
                     EndMetafile();
-                    outputImages.Add(host.ImageStreamToRtf(metaStream));
+                    outputImages.Add(ImageStreamToRtf(metaStream));
                 }
             }
             return outputImages;
@@ -10155,17 +10141,17 @@ namespace StatsDirect.Charting
             using (MemoryStream metaStream = new MemoryStream())
             {
                 StartMetafile(metaStream);
-                Plot_MH(metaStream, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault, xlabel);
+                Plot_MH(metaStream, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
-        private void Plot_MH(Stream outputStream, int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault, object xlabel)
+        private void Plot_MH(Stream outputStream, int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
         {
             double w;
-            double ytop; double xl; double xr; double Y2; double yc = 0; double yt = 0;
-            int i; double XM; double yctr;
+            double yc = 0; double yt = 0;
+            int i;
 
             if (k > 10)
             {
@@ -10297,7 +10283,7 @@ namespace StatsDirect.Charting
             DataMinX = Math.Log(realamin);
             DataMaxX = Math.Log(realamax);
 
-            StartMetafile(outputStream, true);
+            StartMetafile(outputStream);
             DefaultAxes();
             double rgap = 0;
             double xtra = 0;
@@ -10335,6 +10321,7 @@ namespace StatsDirect.Charting
             {
                 using (Pen tenPenFalse = GetPen(_markerTypes[10], false))
                 {
+                    double XM;
                     for (i = 1; i <= tics; i++)
                     {
                         if (tic[i] >= realamin & tic[i] <= realamax)
@@ -10356,6 +10343,11 @@ namespace StatsDirect.Charting
 
                     int r = 0;
                     double txh = canvas.MeasureString(title[1], labelFont).Height;
+                    double ytop;
+                    double xl;
+                    double xr;
+                    double Y2;
+                    double yctr;
                     for (i = k; i >= 1; i--)
                     {
                         r = r + 1;
@@ -10461,18 +10453,18 @@ namespace StatsDirect.Charting
             using (MemoryStream metaStream = new MemoryStream())
             {
                 StartMetafile(metaStream);
-                Plot_MHRD(host, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
+                Plot_MHRD(k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
-        private void Plot_MHRD(ITemplateHost host, int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
+        private void Plot_MHRD(int k, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
         {
             double aint = 0; double amin = 0;
             double w;
-            double ytop; double XL; double XR; double Y2; double yc = 0; double yt = 0;
-            int i; double XM; double yctr;
+            double yc = 0; double yt = 0;
+            int i;
 
             if (k > 10)
             {
@@ -10612,6 +10604,7 @@ namespace StatsDirect.Charting
                 using (Pen tenPenFalse = GetPen(_markerTypes[10], false))
                 {
                     string msk = GetAxisMask(aint, amin, xDiv, minorTicsPerMajorTic);
+                    double XM;
                     for (i = 0; i <= xDiv; i++)
                     {
                         XM = ToCanvasX(amin + aint * i);
@@ -10632,6 +10625,11 @@ namespace StatsDirect.Charting
 
                     int r = 0;
                     double txh = canvas.MeasureString(title[1], labelFont).Height;
+                    double ytop;
+                    double XL;
+                    double XR;
+                    double Y2;
+                    double yctr;
                     for (i = k; i >= 1; i--)
                     {
                         r = r + 1;
@@ -10723,7 +10721,7 @@ namespace StatsDirect.Charting
                 StartMetafile(metaStream);
                 PlotEffect(host, k, cn, En, title, rmh, ll, ul, cco, odr, odrl, odru, cap, pbias, qid);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
@@ -10731,9 +10729,8 @@ namespace StatsDirect.Charting
         {
             double aint = 0; double amin = 0;
             double xtra = 0;
-            int i; double xm; double yctr;
-            double ytop; double xl; double xr; double y2; double yc = 0; double yt = 0;
-            string lab;
+            int i;
+            double yc = 0; double yt = 0;
 
             if (k > 10)
             {
@@ -10838,6 +10835,8 @@ namespace StatsDirect.Charting
             using (Pen tenPenTrue = GetPen(_markerTypes[10], true))
             {
                 string msk = GetAxisMask(aint, amin, xDiv, minorTicsPerMajorTic);
+                double xm;
+                string lab;
                 for (i = 0; i <= xDiv; i++)
                 {
                     xm = ToCanvasX(amin + aint * i);
@@ -10858,6 +10857,11 @@ namespace StatsDirect.Charting
 
                 int r = 0;
                 double txh = canvas.MeasureString(title[1], labelFont).Height;
+                double yctr;
+                double ytop;
+                double xl;
+                double xr;
+                double y2;
                 for (i = k; i >= 1; i--)
                 {
                     if (odr[i] != Constant.MISSING)
@@ -10922,16 +10926,15 @@ namespace StatsDirect.Charting
             using (MemoryStream metaStream = new MemoryStream())
             {
                 StartMetafile(metaStream);
-                Plot_CP(host, k + 1, title, odr, odrl, odru, gn, pg, cap, qid, xform);
+                Plot_CP(k, title, odr, odrl, odru, gn, pg, cap, qid, xform);
                 EndMetafile();
-                return host.ImageStreamToRtf(metaStream);
+                return ImageStreamToRtf(metaStream);
             }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="host"></param>
         /// <param name="k"></param>
         /// <param name="title"></param>
         /// <param name="odr"></param>
@@ -10942,7 +10945,7 @@ namespace StatsDirect.Charting
         /// <param name="cap"></param>
         /// <param name="qid"></param>
         /// <param name="xform"></param>
-        private void Plot_CP(ITemplateHost host, int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform)
+        private void Plot_CP(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform)
         {
             if (k > 10)
             {
@@ -11509,7 +11512,7 @@ namespace StatsDirect.Charting
                 {
                     throw new InvalidOperationException("Trying to get ASCII string for a non-ASCII chart");
                 }
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 for (int i = shTx.GetUpperBound(0); i >= shTx.GetLowerBound(0); i--)
                 {
                     sb.Append(shTx[i]);
@@ -11539,8 +11542,6 @@ namespace StatsDirect.Charting
             return buffer.Substring(0, 0) + c + buffer.Substring(x + 1);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method SetBox0To1
         public void SetBox0To1()
         {
             axisXMax = 1.0;
@@ -11667,6 +11668,335 @@ namespace StatsDirect.Charting
                 mostRecentPen.Dispose();
                 mostRecentPen = null;
             }
+            if (null != axisLabelFont)
+            {
+                axisLabelFont.Dispose();
+                axisLabelFont = null;
+            }
+            if (null != axisTitleFont)
+            {
+                axisTitleFont.Dispose();
+                axisTitleFont = null;
+            }
+            if (null != labelFont)
+            {
+                labelFont.Dispose();
+                labelFont = null;
+            }
+            if (null != legendFont)
+            {
+                legendFont.Dispose();
+                legendFont = null;
+            }
+            if (null != titleFont)
+            {
+                titleFont.Dispose();
+                titleFont = null;
+            }
         }
+
+        private string ImageStreamToRtf(Stream stream)
+        {
+            /*
+            FileStream inStream = File.OpenRead(@"C:\Users\peter\AppData\Local\Temp\meta-634783979138531694.emf");
+            using (Image image = Image.FromStream(inStream))
+            {
+                return Formatting.ImageToRtf(image);
+            }
+            */
+            try
+            {
+                /*
+                stream.Position = 0;
+                byte[] bytes = stream.ToArray();
+                FileStream fs = File.Create(@"C:\Users\peter\AppData\Local\Temp\meta-" + DateTime.Now.Ticks.ToString() + ".emf");
+                fs.Write(bytes, 0, bytes.Length);
+                fs.Close();
+                */
+                stream.Position = 0;
+                return MetastreamToRtf(stream);
+                /*
+                using (Image image = Image.FromStream(stream))
+                {
+                    return ImageToRtf(image);
+                }
+                 */
+            }
+            catch (OutOfMemoryException ex)
+            {
+                throw new Exception("Couldn't convert a chart to RTF", ex);
+            }
+        }
+
+        /*
+        /// <summary>
+        /// Returns the RTF corresponding to an image.  The image is wrapped in a Windows
+        /// Format Metafile, because although Microsoft discourages the use of a WMF,
+        /// the RichTextBox (and even MS Word), wraps an image in a WMF before inserting
+        /// the image into a document.  The WMF is attached in HEX format (a string of
+        /// HEX numbers).
+        /// 
+        /// The RTF Specification v1.6 says that you should be able to insert bitmaps,
+        /// .jpegs, .gifs, .pngs, and Enhanced Metafiles (.emf) directly into an RTF
+        /// document without the WMF wrapper. This works fine with MS Word,
+        /// however, when you don't wrap images in a WMF, WordPad and
+        /// RichTextBoxes simply ignore them.  Both use the riched20.dll or msfted.dll.
+        /// </summary>
+        /// <param name="image"></param>
+        private static string ImageToRtf(Image image)
+        {
+            StringBuilder rtf = new StringBuilder();
+
+            // Append the RTF header
+            rtf.Append(RTF_HEADER);
+
+            // Create the font table using the RichTextBox's current font and append it to the RTF string
+            // _rtf.Append(GetFontTable(this.Font));
+            // _rtf.Append(GetFontTable(FontFamily.GenericSansSerif));
+
+            // Create the image control string and append it to the RTF string
+            float pixelWidth = image.Width;
+            const float desiredInches = 6.0F;
+            float desiredPixelsPerInch = (float)Math.Ceiling(pixelWidth / desiredInches);
+            rtf.Append(GetImagePrefix(image, desiredPixelsPerInch, desiredPixelsPerInch));
+
+            // Create the Windows Metafile and append its bytes in HEX format
+            rtf.Append(GetRtfImage(image));
+
+            // Close the RTF image control string
+            rtf.Append(RTF_IMAGE_POST);
+            rtf.Append(RTF_FOOTER);
+
+            return rtf.ToString();
+        }
+        */
+
+        private string MetastreamToRtf(Stream metaStream)
+        {
+            StringBuilder rtf = new StringBuilder();
+
+            // Append the RTF header
+            rtf.Append(RTF_HEADER);
+
+            // Create the font table using the RichTextBox's current font and append it to the RTF string
+            // _rtf.Append(GetFontTable(this.Font));
+            // _rtf.Append(GetFontTable(FontFamily.GenericSansSerif));
+
+            // Create the image control string and append it to the RTF string
+            const float desiredInches = 6.0F;
+            float desiredPixelsPerInch = (float)Math.Ceiling(metaW / desiredInches);
+
+            // Calculate the current width of the image in (0.01)mm
+            // TODO: HACK: DevExpress seems to undo+redo insertion with the image very large unless this 2.6 bodge factor is in place.
+            int picw = (int)Math.Round((metaW / desiredPixelsPerInch) * HMM_PER_INCH * 2.6);
+
+            // Calculate the current height of the image in (0.01)mm
+            int pich = (int)Math.Round((metaH / desiredPixelsPerInch) * HMM_PER_INCH * 2.6);
+
+            // Calculate the target width of the image in twips
+            int picwgoal = (int)Math.Round((metaW / desiredPixelsPerInch) * TWIPS_PER_INCH);
+
+            // Calculate the target height of the image in twips
+            int pichgoal = (int)Math.Round((metaH / desiredPixelsPerInch) * TWIPS_PER_INCH);
+
+            // Append values to RTF string
+            rtf.Append(@"{\pict");
+            rtf.Append(@"\emfblip");
+            rtf.Append(@"\picw");
+            rtf.Append(picw);
+            rtf.Append(@"\pich");
+            rtf.Append(pich);
+            rtf.Append(@"\picwgoal");
+            rtf.Append(picwgoal);
+            rtf.Append(@"\pichgoal");
+            rtf.Append(pichgoal);
+            rtf.Append(" ");
+
+            // Append its bytes in hex
+            while (true)
+            {
+                int i = metaStream.ReadByte();
+                if (-1 == i)
+                    break;
+                rtf.Append(String.Format("{0:X2}", i));
+            }
+
+            // Close the RTF image control string
+            rtf.Append(RTF_IMAGE_POST);
+            rtf.Append(RTF_FOOTER);
+
+            return rtf.ToString();
+        }
+
+        /*
+        /// <summary>
+        /// Creates the RTF control string that describes the image being inserted.
+        /// This description (in this case) specifies that the image is an
+        /// MM_ANISOTROPIC metafile, meaning that both X and Y axes can be scaled
+        /// independently.  The control string also gives the images current dimensions,
+        /// and its target dimensions, so if you want to control the size of the
+        /// image being inserted, this would be the place to do it. The prefix should
+        /// have the form ...
+        /// 
+        /// {\pict\wmetafile8\picw[A]\pich[B]\picwgoal[C]\pichgoal[D]
+        /// 
+        /// where ...
+        /// 
+        /// A	= current width of the metafile in hundredths of millimeters (0.01mm)
+        ///		= Image Width in Inches * Number of (0.01mm) per inch
+        ///		= (Image Width in Pixels / Graphics Context's Horizontal Resolution) * 2540
+        ///		= (Image Width in Pixels / Graphics.DpiX) * 2540
+        /// 
+        /// B	= current height of the metafile in hundredths of millimeters (0.01mm)
+        ///		= Image Height in Inches * Number of (0.01mm) per inch
+        ///		= (Image Height in Pixels / Graphics Context's Vertical Resolution) * 2540
+        ///		= (Image Height in Pixels / Graphics.DpiX) * 2540
+        /// 
+        /// C	= target width of the metafile in twips
+        ///		= Image Width in Inches * Number of twips per inch
+        ///		= (Image Width in Pixels / Graphics Context's Horizontal Resolution) * 1440
+        ///		= (Image Width in Pixels / Graphics.DpiX) * 1440
+        /// 
+        /// D	= target height of the metafile in twips
+        ///		= Image Height in Inches * Number of twips per inch
+        ///		= (Image Height in Pixels / Graphics Context's Horizontal Resolution) * 1440
+        ///		= (Image Height in Pixels / Graphics.DpiX) * 1440
+        ///	
+        /// </summary>
+        /// <remarks>
+        /// The Graphics Context's resolution is simply the current resolution at which
+        /// windows is being displayed.  Normally it's 96 dpi, but instead of assuming
+        /// I just added the code.
+        /// 
+        /// According to Ken Howe at pbdr.com, "Twips are screen-independent units
+        /// used to ensure that the placement and proportion of screen elements in
+        /// your screen application are the same on all display systems."
+        /// 
+        /// Units Used
+        /// ----------
+        /// 1 Twip = 1/20 Point
+        /// 1 Point = 1/72 Inch
+        /// 1 Twip = 1/1440 Inch
+        /// 
+        /// 1 Inch = 2.54 cm
+        /// 1 Inch = 25.4 mm
+        /// 1 Inch = 2540 (0.01)mm
+        /// </remarks>
+        /// <param name="image"></param>
+        ///<param name="xDpi"></param>
+        ///<param name="yDpi"></param>
+        ///<returns></returns>
+        private static string GetImagePrefix(Image image, float xDpi, float yDpi)
+        {
+
+            StringBuilder rtf = new StringBuilder();
+
+            // Calculate the current width of the image in (0.01)mm
+            // TODO: HACK: DevExpress seems to undo+redo insertion with the image very large unless this 2.6 bodge factor is in place.
+            int picw = (int)Math.Round((image.Width / xDpi) * HMM_PER_INCH * 2.6);
+
+            // Calculate the current height of the image in (0.01)mm
+            int pich = (int)Math.Round((image.Height / yDpi) * HMM_PER_INCH * 2.6);
+
+            // Calculate the target width of the image in twips
+            int picwgoal = (int)Math.Round((image.Width / xDpi) * TWIPS_PER_INCH);
+
+            // Calculate the target height of the image in twips
+            int pichgoal = (int)Math.Round((image.Height / yDpi) * TWIPS_PER_INCH);
+
+            // Append values to RTF string
+            rtf.Append(@"{\pict");
+            rtf.Append(@"\emfblip");
+            rtf.Append(@"\picw");
+            rtf.Append(picw);
+            rtf.Append(@"\pich");
+            rtf.Append(pich);
+            rtf.Append(@"\picwgoal");
+            rtf.Append(picwgoal);
+            rtf.Append(@"\pichgoal");
+            rtf.Append(pichgoal);
+            rtf.Append(" ");
+
+            return rtf.ToString();
+        }
+         */
+
+        /*
+        /// <summary>
+        /// Wraps the image in an Enhanced Metafile by drawing the image onto the
+        /// graphics context, then converts the Enhanced Metafile to a Windows
+        /// Metafile, and finally appends the bits of the Windows Metafile in HEX
+        /// to a string and returns the string.
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns>
+        /// A string containing the bits of a Windows Metafile in HEX
+        /// </returns>
+        private static string GetRtfImage(Image image)
+        {
+            // Handle to the device context used to create the metafile
+
+            StringBuilder rtf = new StringBuilder();
+            using (MemoryStream stream = new MemoryStream())
+            {
+                int imageWidth = image.Width;
+                int imageHeight = image.Height;
+                // Get a graphics context from the RichTextBox
+                using (Bitmap b = new Bitmap(imageWidth, imageHeight, PixelFormat.Format32bppArgb))
+                {
+                    using (Graphics graphics = Graphics.FromImage(b))
+                    {
+                        // Get the device context from the graphics context
+                        IntPtr hdc = graphics.GetHdc();
+
+                        // Create a new Enhanced Metafile from the device context
+                        using (Metafile metaFile = new Metafile(stream, hdc))
+                        {
+                            // Release the device context
+                            graphics.ReleaseHdc(hdc);
+
+                            // Get a graphics context from the Enhanced Metafile
+                            using (Graphics graphics2 = Graphics.FromImage(metaFile))
+                            {
+                                // Draw the image on the Enhanced Metafile
+                                Rectangle r = new Rectangle(0, 0, imageWidth, imageHeight);
+                                graphics2.DrawImage(image, r);
+                            }
+
+                            // Get the handle of the Enhanced Metafile
+                            IntPtr hEmf = metaFile.GetHenhmetafile();
+
+                            uint bufferSize = NativeMethods.GetEnhMetaFileBits(hEmf, 0, null);
+                            byte[] buffer = new byte[bufferSize];
+                            NativeMethods.GetEnhMetaFileBits(hEmf, bufferSize, buffer);
+                            NativeMethods.DeleteEnhMetaFile(hEmf);
+
+                            // Append the bits to the RTF string
+                            foreach (byte t in buffer)
+                                rtf.Append(String.Format("{0:X2}", t));
+
+                            return rtf.ToString();
+                        }
+                    }
+                }
+            }
+        }
+        */
+
+        /*
+        private static class NativeMethods
+        {
+            [DllImport("gdi32")]
+            public static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, byte[] lpbBuffer);
+
+            [DllImport("gdi32")]
+            public static extern bool DeleteEnhMetaFile(IntPtr hemfbitHandle);
+        }
+
+        private static void Pause(string where)
+        {
+            MessageBox.Show(where);
+        }
+         */
     }
 }

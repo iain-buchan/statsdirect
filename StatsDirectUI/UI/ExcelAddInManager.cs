@@ -78,7 +78,8 @@ namespace StatsDirect.UI
                     string oAddinName = (string)addIn.GetType().InvokeMember("Fullname", BindingFlags.GetProperty, null, addIn, null);
                     if (oAddinName.ToLower().Contains("statsdirectexcel"))
                     {
-                        isInstalled = true;
+                        bool oInstalled = (bool)addIn.GetType().InvokeMember("Installed", BindingFlags.GetProperty, null, addIn, null);
+                        isInstalled = oInstalled; 
                         break;
                     }
                 }
