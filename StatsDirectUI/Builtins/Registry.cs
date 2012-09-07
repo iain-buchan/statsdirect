@@ -325,7 +325,7 @@ namespace StatsDirect.Builtins
                                                                  InputDuringStep.Never),
                                                      new Builtin("rptRatePoissonCI", Exact.RptRatePoissonCI,
                                                                  InputDuringStep.Never),
-                                                     new Builtin("rptRateSMR", Analysis.rptRateSMR, InputDuringStep.Never),
+                                                     new Builtin("rptRateSMR", Rates.RptRateSmr, InputDuringStep.Never),
                                                      new Builtin("rptReferenceRange", Parametric.RptReferenceRange,
                                                                  InputDuringStep.Never),
                                                      new Builtin("rptRelativeRiskMeta", Meta.RptRelativeRiskMeta,

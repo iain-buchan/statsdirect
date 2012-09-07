@@ -140,8 +140,9 @@ namespace StatsDirect.Templates
         /// <param name="frame">The frame to be output</param>
         /// <param name="keepSelection">If true, the host should keep outputting to the current location; if false, the host should internally SelectOutputForFrame().</param>
         /// <param name="isFormulae">If true, the frame is assumed to contain strings to be set as formulae; if false, the frame is assumed to contain data values.</param>
+        /// <param name="missingIndicator">The text to place in the output if a value in the frame is missing.</param>
         /// <param name="preferredOutputLocation">If non-null, indicates a possible host-controlled place to put the output</param>
-        void OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, PaneAndPosition preferredOutputLocation);
+        void OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation);
 
         /// <summary>
         /// In systems that have a choice of output location for frames (such as multiple grids), ask the user where they want to output future frames.

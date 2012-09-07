@@ -1695,28 +1695,21 @@ namespace StatsDirect.Builtins
             }
 
             int r;
-            bool OK;
-            ResampleX2GF(host, xn, p, observed.Length, x2, out r, iterations, seed, out OK);
+            int actualIterations;
+            ResampleX2GF(host, xn, p, observed.Length, x2, out r, iterations, seed, out actualIterations);
 
             ParameterBag outputParameters = new ParameterBag();
-            if (OK)
-            {
-                double exactP = Convert.ToDouble(r) / Convert.ToDouble(iterations);
-                outputParameters.AddOutput("p", host.pval(exactP));
-                //  CI
-                double ll; double ul;
-                string warn;
-                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(iterations), out ll, out ul, ci, out warn);
-                outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
-                outputParameters.AddOutput("ll", host.RoundU(ll));
-                outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
-                outputParameters.AddOutput("k", iterations.ToString("N0"));
-                outputParameters.AddOutput("seed_fmt", seed.ToString());
-            }
-            else
-            {
-                outputParameters.AddOutput("p", "P = * (cancelled)");
-            }
+            double exactP = Convert.ToDouble(r) / Convert.ToDouble(actualIterations);
+            outputParameters.AddOutput("p", host.pval(exactP));
+            //  CI
+            double ll; double ul;
+            string warn;
+            MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out ll, out ul, ci, out warn);
+            outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
+            outputParameters.AddOutput("ll", host.RoundU(ll));
+            outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
+            outputParameters.AddOutput("k", actualIterations.ToString("N0"));
+            outputParameters.AddOutput("seed_fmt", seed.ToString());
 
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -1735,7 +1728,7 @@ namespace StatsDirect.Builtins
         ///  <param name="iseed">RNG seed</param>
         /// <param name="ok"></param>
         /// <remarks></remarks>
-        private static void ResampleX2GF(ITemplateHost host, int[] x, double[] p, int k, double x2, out int r, int iter, int iseed, out bool ok)
+        private static void ResampleX2GF(ITemplateHost host, int[] x, double[] p, int k, double x2, out int r, int iter, int iseed, out int actualIterations)
         {
             int ntot = 0;
             for (int i = 1; i <= k; i++)
@@ -1761,15 +1754,11 @@ namespace StatsDirect.Builtins
                     for (j = 1; j <= k; j++)
                     {
                         if (pr <= pp[j])
-                        {
-                            break; /* TRANSWARNING: check that break is in correct scope */
-                        }
+                            break;
                     }
                     if (j > k)
-                    {
                         j = k;
-                    }
-                    x[j] += 1;
+                    x[j]++;
                 }
                 if (x2gf(x, p, k) >= x2)
                 {
@@ -1777,11 +1766,11 @@ namespace StatsDirect.Builtins
                 }
                 if (host.UpdateProgress(Convert.ToDouble(l) / iter))
                 {
-                    ok = false;
+                    actualIterations = l;
                     return;
                 }
             }
-            ok = true;
+            actualIterations = iter;
             host.FinishProgress();
         }
 

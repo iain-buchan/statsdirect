@@ -22,6 +22,7 @@
         </double-2-by-2>
         <double>
           <name>pe</name>
+          <must-request>true</must-request>
           <prompt>Population proportion exposed (optional)</prompt>
           <acquire-if-true>=Parameters.ContainsKey("a") &amp;&amp; Parameters.ContainsKey("b") &amp;&amp; Parameters.ContainsKey("c") &amp;&amp; Parameters.ContainsKey("d") &amp;&amp; (((Parameters["a"].AsDouble) / (Parameters["a"].AsDouble + Parameters["c"].AsDouble)) / ((Parameters["b"].AsDouble) / (Parameters["b"].AsDouble + Parameters["d"].AsDouble))) &gt; 1.0</acquire-if-true>
           <cancel-skips-parameter>true</cancel-skips-parameter>

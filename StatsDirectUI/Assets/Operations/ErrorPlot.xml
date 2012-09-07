@@ -8,7 +8,7 @@
       <parameters>
         <integer>
           <name>group-count</name>
-          <prompt>How many XY series to plot on graph? (Max 10)</prompt>
+          <prompt>How many XY series to plot on graph?</prompt>
           <minimum-value>1</minimum-value>
           <default-value>1</default-value>
           <maximum-value>10</maximum-value>

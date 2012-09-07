@@ -64,12 +64,12 @@
             <option name="save" selected="false">Save details to worksheet</option>
           </options>
           <selects>
-            <combo name="iterations" prompt="Iterations in simulation" default-value="8000">
-              <option value="20000">20000</option>
+            <combo name="iterations" prompt="Iterations in simulation" default-value="20000">
               <option value="10000">10000</option>
-              <option value="8000">8000</option>
-              <option value="5000">5000</option>
-              <option value="3000">3000</option>
+              <option value="20000">20000</option>
+              <option value="50000">50000</option>
+              <option value="100000">100000</option>
+              <option value="300000">300000</option>
             </combo>
           </selects>
         </multiple-options>

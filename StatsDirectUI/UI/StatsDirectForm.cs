@@ -5,8 +5,7 @@ using System.Windows.Forms;
 namespace StatsDirect.UI
 {
     /// <summary>
-    /// A theoretically abstract superclass of the concrete forms that may be displayed in StatsDirect.
-    /// In reality, this is concrete solely because the VS2008 designer can't handle abstract classes in the hierarchy.
+    /// An abstract superclass of the concrete forms that may be displayed in StatsDirect.
     /// </summary>
     public abstract class StatsDirectForm: Form, IForm
     {
@@ -66,11 +65,9 @@ namespace StatsDirect.UI
             if (!dirty)
                 return true;
 
-            DialogResult result = MessageBox.Show(Text + " has changes that have not been saved. Do you want to save these changes?", "StatsDirect", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3);
+            DialogResult result = SDApplication.SoleInstance.msgbox_x(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
             if (DialogResult.Cancel == result)
-            {
                 return false;
-            }
             if (DialogResult.No == result)
             {
                 dirtyButSafeToClose = true;
@@ -105,7 +102,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public abstract bool OpenFile(string Filename);
+        public abstract bool OpenFile(string filename, bool isTempFile);
 
         internal virtual void ShowHelp()
         {

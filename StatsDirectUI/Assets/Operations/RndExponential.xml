@@ -10,14 +10,14 @@
           <name>cols</name>
           <prompt>How many columns to fill?</prompt>
           <minimum-value>1</minimum-value>
-          <maximum-value>50</maximum-value>
+          <maximum-value>100</maximum-value>
           <default-value>1</default-value>
         </integer>
         <integer>
           <name>rows</name>
           <prompt>How many rows to fill?</prompt>
           <minimum-value>1</minimum-value>
-          <maximum-value>65000</maximum-value>
+          <maximum-value>1000000</maximum-value>
           <default-value>100</default-value>
         </integer>
         <double>

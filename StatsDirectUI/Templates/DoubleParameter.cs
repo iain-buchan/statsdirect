@@ -20,7 +20,10 @@ namespace StatsDirect.Templates
         {
             if (null == defaultValue || null == defaultValue.Body)
                 return null;
-            return (double?)processor.Evaluate(defaultValue, parameters);
+            object o = processor.Evaluate(defaultValue, parameters);
+            if (o is int)
+                return (double?)(int)o;
+            return (double?)o;
         }
 
         [XmlElement(ElementName = "default-value")]

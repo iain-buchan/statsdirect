@@ -128,7 +128,7 @@ namespace StatsDirect.UI
             {
                 workbookView.ActiveWorkbook.SaveAs(path, format);
                 dirty = false;
-                SDApplication.SoleInstance.NoteRecentFile(path);
+                SDApplication.SoleInstance.NoteRecentFile(path, true);
                 return true;
             }
             finally
@@ -137,7 +137,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public override bool OpenFile(string Filename)
+        public override bool OpenFile(string filename, bool isTempFile)
         {
             if (null != workbookView.ActiveWorkbook)
             {
@@ -155,8 +155,10 @@ namespace StatsDirect.UI
             IWorkbook wb;
             try
             {
-                wb = workbookView.ActiveWorkbookSet.Workbooks.Open(Filename);
-                Path = Filename;
+                wb = workbookView.ActiveWorkbookSet.Workbooks.Open(filename);
+                if (!isTempFile)
+                    Path = filename;
+                dirty = isTempFile;
             }
             finally
             {
@@ -306,7 +308,7 @@ namespace StatsDirect.UI
             }
         }
 
-        void IGrid.WriteDataFrame(DataFrame frame, bool isFormulae, RelativePosition writePosition)
+        void IGrid.WriteDataFrame(DataFrame frame, bool isFormulae, string missingIndicator, RelativePosition writePosition)
         {
             // We can get blank frames passed in; handle this by doing nothing.
             if (frame.VariableCount <= 0)
@@ -380,7 +382,7 @@ namespace StatsDirect.UI
                 }
 
                 IRange range = worksheet.Range[0, firstColumnOfData, rawRange.Row + rawRange.RowCount + offsetForTitles - 1, firstColumnOfData + frame.VariableCount - 1];
-                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert data", () => { WriteDataFrameInternal(frame, isFormulae, range, shouldMove, offsetForTitles); return true; }));
+                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert data", () => { WriteDataFrameInternal(frame, isFormulae, missingIndicator, range, shouldMove, offsetForTitles); return true; }));
             }
             finally
             {
@@ -389,7 +391,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void WriteDataFrameInternal(DataFrame frame, bool isFormulae, IRange range, bool shouldMove, int offsetForTitles)
+        private void WriteDataFrameInternal(DataFrame frame, bool isFormulae, string missingIndicator, IRange range, bool shouldMove, int offsetForTitles)
         {
             bool isLocked = false;
             try
@@ -449,7 +451,7 @@ namespace StatsDirect.UI
                                     for (int i = 0; i < data.Length; i++)
                                         if (Constant.MISSING == data[i])
                                         {
-                                            values.SetText(i + offsetForTitles, firstColumnOfData + v, Formatting.ASTERISK);
+                                            values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
                                         }
                                         else
                                         {
@@ -467,7 +469,7 @@ namespace StatsDirect.UI
                                     for (int i = 0; i < data.Length; i++)
                                         values.SetText(i + offsetForTitles, firstColumnOfData + v,
                                                        Constant.MISSING == data[i]
-                                                           ? Formatting.ASTERISK
+                                                           ? missingIndicator
                                                            : variable.Groups[(int)data[i]].Label);
                                 }
                             }
@@ -1375,8 +1377,8 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="requiredRows">If 0, no further requirement.  If non-zero, all rows must be requiredRows in length.</param>
         /// <param name="mode">The way in which the acquired data will be placed into the data structure</param>
-        /// <param name="min">The smallest acceptable number of columns</param>
-        /// <param name="max">The largest acceptable number of columns</param>
+        /// <param name="minimumColumns">The smallest acceptable number of columns</param>
+        /// <param name="maximumColumns">The largest acceptable number of columns</param>
         /// <param name="selectionMessage">The prompt for the user</param>
         /// <param name="cancelButtonLabel">If non-null, the cancel button will take this label</param>
         /// <param name="askGid">If true, the user is asked about grouping by identifier</param>
@@ -1384,12 +1386,12 @@ namespace StatsDirect.UI
         /// <param name="userCancelled">Output. If true, the user explicitly cancelled the operation; if false, the data is valid or the user selected no data but did not explicitly cancel.</param>
         /// <returns></returns>
         /// <remarks>This version doesn't care about the user pivoting - it will always just go round again.</remarks>
-        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int min, int max, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled)
+        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled)
         {
             while (true)
             {
                 bool wasPivoted;
-                DataFrame frame = GetCellEqual(requiredRows, mode, min, max, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
+                DataFrame frame = GetCellEqual(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
                 if (wasPivoted)
                     continue;
                 return frame;
@@ -1402,8 +1404,8 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="requiredRows">If 0, no further requirement.  If non-zero, all rows must be requiredRows in length.</param>
         /// <param name="mode">The way in which the acquired data will be placed into the data structure</param>
-        /// <param name="MinimumColumns">The smallest acceptable number of columns</param>
-        /// <param name="MaximumColumns">The largest acceptable number of columns</param>
+        /// <param name="minimumColumns">The smallest acceptable number of columns</param>
+        /// <param name="maximumColumns">The largest acceptable number of columns</param>
         /// <param name="selectionMessage">The prompt for the user</param>
         /// <param name="cancelButtonLabel">If non-null, the cancel button will take this label</param>
         /// <param name="askGid">If true, the user is asked about grouping by identifier</param>
@@ -1411,18 +1413,18 @@ namespace StatsDirect.UI
         /// <param name="userCancelled">Output. If true, the user explicitly cancelled the operation; if false, the data is valid or the user selected no data but did not explicitly cancel.</param>
         /// <param name="wasPivoted">If true, the user switched from selecting groups by column to by identifier or vice versa.</param>
         /// <returns></returns>
-        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int MinimumColumns, int MaximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
+        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
         {
             while (true)
             {
                 DataFrame frame;
                 if (askGid && SDApplication.SoleInstance.Preferences.GIDV)
                 {
-                    frame = GIDX(mode, MinimumColumns, MaximumColumns, -1, null, out userCancelled, out wasPivoted);
+                    frame = GIDX(mode, minimumColumns, maximumColumns, -1, null, out userCancelled, out wasPivoted);
                 }
                 else
                 {
-                    frame = GetCellArray(requiredRows, mode, MinimumColumns, MaximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
+                    frame = GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
                 }
                 if (wasPivoted)
                     return null;
@@ -1486,7 +1488,6 @@ namespace StatsDirect.UI
         /// <returns></returns>
         private DataFrame GIDX(DataAcquisitionMode mode, int MinimumColumns, int MaximumColumns, int neq, string lab, out bool userCancelled, out bool wasPivoted)
         {
-            const string msg_ti = "StatsDirect Data Selection";
             string labd = "Select DATA";
             string labg = "Select GROUP IDENTIFIERS";
             if (!string.IsNullOrEmpty(lab))
@@ -1497,8 +1498,6 @@ namespace StatsDirect.UI
 
             while (true)
             {
-                bool proceed = true;
-
                 // call for group ID
                 ClearSelection();
                 DataFrame groupIdFrame = GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 20, labg, null, true, false, out userCancelled, out wasPivoted);
@@ -1507,87 +1506,64 @@ namespace StatsDirect.UI
 
                 ClassifierVariable groupIdVariable = groupIdFrame.Variables[0].AsClassifierVariable;
 
-                int rows = groupIdVariable.Length;
-                int cats = groupIdVariable.GroupCount;
-                string catlab = groupIdVariable.Title;
-                double[] gid = groupIdVariable.Data;
-                string[] gcat = new string[cats];
-                int[] gin = new int[cats];
-                double[] g = new double[cats];
-                for (int i = 0; i < cats; i++)
+                if (groupIdVariable.GroupCount < MinimumColumns || groupIdVariable.GroupCount > MaximumColumns)
                 {
-                    gcat[i] = groupIdVariable.Groups[i].Label;
-                    gin[i] = groupIdVariable.Groups[i].NBin;
-                    g[i] = i;
-                }
-                int ng = cats;
-
-                if (ng < MinimumColumns || ng > MaximumColumns)
-                {
-                    SelNumWarn(MinimumColumns, MaximumColumns, ng, msg_ti);
-                    proceed = false;
+                    SelNumWarn(MinimumColumns, MaximumColumns, groupIdVariable.GroupCount, "StatsDirect Data Selection");
+                    continue;
                 }
 
                 int mingn = int.MaxValue;
                 int maxgn = int.MinValue;
-                for (int i = 0; i < ng; i++)
+                for (int i = 0; i < groupIdVariable.GroupCount; i++)
                 {
-                    if (gin[i] > maxgn) maxgn = gin[i];
-                    if (gin[i] < mingn) mingn = gin[i];
+                    if (groupIdVariable.Groups[i].NBin > maxgn)
+                        maxgn = groupIdVariable.Groups[i].NBin;
+                    if (groupIdVariable.Groups[i].NBin < mingn)
+                        mingn = groupIdVariable.Groups[i].NBin;
                 }
-                // NB groups need not be the same size - not sure where this came from!
-                // proceed = EqGpWarn(neq, gin, ng, msg_ti);
 
-                if (proceed)
+                // call for data
+                ClearSelection();
+                DataFrame dataFrame = GetCellEqual(groupIdVariable.Length, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd, null, false, true, out userCancelled, out wasPivoted);
+                if (userCancelled || wasPivoted)
+                    return null;
+
+                DoubleVariable dataVariable = dataFrame.Variables[0].AsDoubleVariable;
+
+                DataFrame outputFrame = new DataFrame();
+                for (int i = 0; i < groupIdVariable.GroupCount; i++)
                 {
-                    // call for data
-                    ClearSelection();
-                    DataFrame dataFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd, null, true, true, out userCancelled, out wasPivoted);
-                    if (userCancelled || wasPivoted)
-                        return null;
+                    double thisGroupId = groupIdVariable.Groups[i].Id;
+                    DoubleVariable v = new DoubleVariable();
+                    outputFrame.Variables.Add(v);
+                    v.EnsureLength(maxgn, false);
 
-                    DoubleVariable dataVariable = dataFrame.Variables[0].AsDoubleVariable;
-
-                    string datlab = dataVariable.Title;
-                    double[] dt = dataVariable.Data;
-                    DataFrame outputFrame = new DataFrame();
-                    for (int i = 0; i < ng; i++)
+                    int cnt = 0;
+                    if (DataAcquisitionMode.NumericSkipMissing == mode)
                     {
-                        ClassifierVariable v = new ClassifierVariable();
-                        outputFrame.Variables.Add(v);
-                        v.EnsureLength(maxgn, false);
-
-                        int cnt = 0;
-                        if (DataAcquisitionMode.NumericSkipMissing == mode)
+                        // skip missing data
+                        for (int j = 0; j < groupIdVariable.Length; j++)
                         {
-                            // skip missing data
-                            for (int j = 0; j < rows; j++)
-                            {
-                                if (gid[j] == g[i] && dt[j] != Constant.MISSING)
-                                    v.Data[cnt++] = dt[j];
-                            }
-                        }
-                        else
-                        {
-                            // include missing data but do not sum them
-                            for (int j = 0; j < rows; j++)
-                            {
-                                if (gid[j] == g[i])
-                                    v.Data[cnt++] = dt[j];
-                            }
-                        }
-                        v.TruncateDataToLength(cnt);
-                        if (ng > 1)
-                        {
-                            v.Title = datlab + "_" + catlab + "_" + gcat[i];
-                        }
-                        else
-                        {
-                            v.Title = datlab;
+                            if (groupIdVariable.Data[j] == thisGroupId && dataVariable.Data[j] != Constant.MISSING)
+                                v.Data[cnt++] = dataVariable.Data[j];
                         }
                     }
-                    return outputFrame;
+                    else
+                    {
+                        // include missing data but do not sum them
+                        for (int j = 0; j < groupIdVariable.Length; j++)
+                        {
+                            if (groupIdVariable.Data[j] == thisGroupId)
+                                v.Data[cnt++] = dataVariable.Data[j];
+                        }
+                    }
+                    v.TruncateDataToLength(cnt);
+                    if (groupIdVariable.GroupCount > 1)
+                        v.Title = dataVariable.Title + "_" + groupIdVariable.Title + "_" + groupIdVariable.Groups[i].Label;
+                    else
+                        v.Title = dataVariable.Title;
                 }
+                return outputFrame;
             }
         }
 

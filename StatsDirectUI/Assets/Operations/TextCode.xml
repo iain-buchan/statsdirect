@@ -19,11 +19,11 @@
       <parameters>
         <special>
           <name>data</name>
-          <type>textToNumbers</type>
           <must-request>true</must-request>
+          <type>textToNumbers</type>
         </special>
       </parameters>
     </settings>
-    <output-frame frame-name="output" />
+    <output-frame frame-name="output" missing-indicator="" />
 	</steps>
 </operation>

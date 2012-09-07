@@ -17,6 +17,26 @@
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
+        <frame>
+          <name>scrap</name>
+          <prompt>Select PERSON-TIME for INDEX population or sample</prompt>
+          <mode>NumericSkipMissing</mode>
+          <same-length-as>rates</same-length-as>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+          <append-to-grid>data</append-to-grid>
+        </frame>
+        <frame>
+          <name>strata</name>
+          <prompt>Select standardization group LABELS [Default for default]</prompt>
+          <cancel-skips-parameter>Default</cancel-skips-parameter>
+          <same-length-as>events</same-length-as>
+          <mode>Text</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
         <option>
           <name>nunit</name>
           <prompt>Multiplier for reference population rates</prompt>
@@ -34,16 +54,6 @@
             <option value="100000000">per 100,000,000</option>
           </options>
         </option>
-        <frame>
-          <name>scrap</name>
-          <prompt>Select PERSON-TIME for INDEX population or sample</prompt>
-          <mode>NumericSkipMissing</mode>
-          <same-length-as>rates</same-length-as>
-          <min-columns>1</min-columns>
-          <max-columns>1</max-columns>
-          <clear-selection-first>true</clear-selection-first>
-          <append-to-grid>data</append-to-grid>
-        </frame>
         <double>
           <name>dead</name>
           <prompt>Enter total number of events observed in the index population or sample</prompt>

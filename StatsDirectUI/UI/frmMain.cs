@@ -1,5 +1,5 @@
-// #define RELEASE_EXCEPTIONS
-#define WATCH_EXCEPTIONS
+#define RELEASE_EXCEPTIONS
+// #define WATCH_EXCEPTIONS
 
 // If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
 // Current uses:
@@ -123,7 +123,11 @@ namespace StatsDirect.UI
             /// <summary>
             /// Progress bar, label and cancel button
             /// </summary>
-            Progress
+            Progress,
+            /// <summary>
+            /// Simulacrum of a Windows message box in the top dialog area
+            /// </summary>
+            ModalMessage
         };
 
         public frmMain()
@@ -491,10 +495,10 @@ namespace StatsDirect.UI
                     return wi.Window;
             }
             // If we get here, no existing grid has the file open - we'll have to reopen it.
-            return CreateGrid(filename);
+            return CreateGrid(filename, true);
         }
 
-        internal StatsDirectForm CreateGrid(string filename)
+        internal StatsDirectForm CreateGrid(string filename, bool isTempFile)
         {
             using (new WaitCursor())
             {
@@ -502,9 +506,9 @@ namespace StatsDirect.UI
                 bool opened = false;
                 try
                 {
-                    opened = newGrid.OpenFile(filename);
-                    if (opened)
-                        SDApplication.SoleInstance.NoteRecentFile(filename);
+                    opened = newGrid.OpenFile(filename, isTempFile);
+                    if (!isTempFile)
+                        SDApplication.SoleInstance.NoteRecentFile(filename, opened);
                 }
                 catch (IOException ex)
                 {
@@ -535,15 +539,15 @@ namespace StatsDirect.UI
             }
         }
 
-        internal StatsDirectForm CreateReport(string filename)
+        internal StatsDirectForm CreateReport(string filename, bool isTempFile)
         {
             StatsDirectForm newReport = CreateReport();
             bool opened = false;
             try
             {
-                opened = newReport.OpenFile(filename);
-                if (opened)
-                    SDApplication.SoleInstance.NoteRecentFile(filename);
+                opened = newReport.OpenFile(filename, isTempFile);
+                if (!isTempFile)
+                    SDApplication.SoleInstance.NoteRecentFile(filename, opened);
             }
             catch (IOException ex)
             {
@@ -573,15 +577,15 @@ namespace StatsDirect.UI
             }
         }
 
-        internal StatsDirectForm CreateScriptWindow(string filename)
+        internal StatsDirectForm CreateScriptWindow(string filename, bool isTempFile)
         {
             StatsDirectForm newScriptWindow = CreateScriptWindow();
             bool opened = false;
             try
             {
-                opened = newScriptWindow.OpenFile(filename);
-                if (opened)
-                    SDApplication.SoleInstance.NoteRecentFile(filename);
+                opened = newScriptWindow.OpenFile(filename, isTempFile);
+                if (!isTempFile)
+                    SDApplication.SoleInstance.NoteRecentFile(filename, opened);
             }
             catch (IOException ex)
             {
@@ -888,6 +892,7 @@ namespace StatsDirect.UI
         {
             set
             {
+                lblGroupsBy.Visible = value;
                 optGroupsByColumn.Visible = value;
                 optGroupsByIdentifier.Visible = value;
             }
@@ -1121,32 +1126,34 @@ namespace StatsDirect.UI
                 // User cancelled, failed open
                 return false;
             }
-            return OpenFile(openFileDialog.FileName);
+            return OpenFile(openFileDialog.FileName, false);
         }
 
-        internal bool OpenFile(string path)
+        internal bool OpenFile(string path, bool removeFromRecentFilesIfNotFound)
         {
             using (new WaitCursor())
             {
+                string fileName = Path.GetFileName(path);
+                bool isTempFile = fileName.StartsWith("~");
                 // User wants to open the file - but which file type?
                 string extension = Path.GetExtension(path);
                 if (null != extension)
                     extension = extension.ToLower();
                 if (".xls".Equals(extension) || ".xlsx".Equals(extension))
                 {
-                    CreateGrid(path);
+                    CreateGrid(path, isTempFile);
                     UpdateFileList();
                     return true;
                 }
                 if (".rtf".Equals(extension) || ".htm".Equals(extension) || ".html".Equals(extension) || ".mht".Equals(extension) || ".mhtml".Equals(extension) || ".txt".Equals(extension))
                 {
-                    CreateReport(path);
+                    CreateReport(path, isTempFile);
                     UpdateFileList();
                     return true;
                 }
                 if (".cs".Equals(extension) || ".vb".Equals(extension))
                 {
-                    CreateScriptWindow(path);
+                    CreateScriptWindow(path, isTempFile);
                     UpdateFileList();
                     return true;
                 }
@@ -1156,6 +1163,8 @@ namespace StatsDirect.UI
                     return false;
                 }
                 SDApplication.SoleInstance.msgbox_x("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                SDApplication.SoleInstance.NoteRecentFile(path, false);
+                UpdateFileList();
                 return false;
             }
         }
@@ -1218,11 +1227,16 @@ namespace StatsDirect.UI
             pnlSelection.Visible = PanelType.Selection == panelType;
             pnlDefault.Visible = PanelType.Default == panelType;
             pnlProgress.Visible = PanelType.Progress == panelType;
+            pnlModalMessage.Visible = PanelType.ModalMessage == panelType;
             switch (panelType)
             {
                 case PanelType.Default:
                     pnlDefault.BringToFront();
                     pnlTop.Height = pnlDefault.Height;
+                    break;
+                case PanelType.ModalMessage:
+                    pnlModalMessage.BringToFront();
+                    pnlTop.Height = pnlModalMessage.Height;
                     break;
                 case PanelType.Operations:
                     pnlOperations.BringToFront();
@@ -1914,6 +1928,15 @@ namespace StatsDirect.UI
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="processor"></param>
+        /// <param name="context"></param>
+        /// <param name="outstandingParameters"></param>
+        /// <returns></returns>
+        /// <remarks>The return value may contain key->null for optional blank parameters.  It is up to the caller to handle this.</remarks>
         internal ParameterBag FillCombinedParameters(ITemplateHost host, ITemplateProcessor processor, ParameterBag context, IList<Parameter> outstandingParameters)
         {
             try
@@ -2095,7 +2118,7 @@ namespace StatsDirect.UI
             IList<Operation> ops = BuildOperationHistory(context);
             foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
             {
-                if (pair.Value.IsInputParameter && pair.Value.IsDataFrame)
+                if (null != pair.Value && pair.Value.IsInputParameter && pair.Value.IsDataFrame)
                 {
                     // Find the parameter corresponding to the key
                     // Go back through the operation list - in the case of follow-ons, the variable is often from a precursor.  Use more recent operations in preference to older ones.
@@ -2473,9 +2496,13 @@ namespace StatsDirect.UI
                     suffix = " (";
                     if (doubleParameter.MinimumValue > double.MinValue)
                         suffix += doubleParameter.MinimumValue.ToString();
+                    else
+                        suffix += "-\u221E";
                     suffix += " to ";
                     if (doubleParameter.MaximumValue < double.MaxValue)
                         suffix += doubleParameter.MaximumValue.ToString();
+                    else
+                        suffix += "\u221E";
                     suffix += ")";
                 }
             }
@@ -3073,9 +3100,13 @@ namespace StatsDirect.UI
                     suffix = " (";
                     if (integerParameter.MinimumValue > Int32.MinValue)
                         suffix += integerParameter.MinimumValue.ToString();
+                    else
+                        suffix += "-\u221E";
                     suffix += " to ";
                     if (integerParameter.MaximumValue < Int32.MaxValue)
                         suffix += integerParameter.MaximumValue.ToString();
+                    else
+                        suffix += "\u221E";
                     suffix += ")";
                 }
             }
@@ -3382,7 +3413,16 @@ namespace StatsDirect.UI
 
         void RunChecksAfterLostFocus(object sender, EventArgs e)
         {
-            CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
+            // If we're no longer attached to a window, don't run any checks; they're not relevant and we'll be missing our data anyway.
+            Control probe = (Control)sender;
+            while (null != probe)
+            {
+                if (probe is Form)
+                    break; // It's still attached
+                probe = probe.Parent;
+            }
+            if (null != probe)
+                CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
         }
 
         void OptionParameter_CheckedChanged(object sender, EventArgs e)
@@ -3406,12 +3446,21 @@ namespace StatsDirect.UI
                 ExtractCurrentValues(ambientParameters, context, false);
                 if (null != context)
                 {
+                    // Add in ambient parameters; do not overwrite current parameters (which will include key->null for empty optional parameters)
                     foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
                     {
                         if (!ambientParameters.ContainsKey(pair.Key))
                             ambientParameters.Add(pair.Key, pair.Value);
                     }
                 }
+                // Remove empty optional parameters
+                List<string> keysToRemove = new List<string>();
+                foreach (KeyValuePair<string, FilledParameter> pair in ambientParameters.Pairs)
+                    if (null == pair.Value)
+                        keysToRemove.Add(pair.Key);
+                foreach (string keyToRemove in keysToRemove)
+                    ambientParameters.Remove(keyToRemove);
+
                 if (CheckCombinedParameterVisibility(tlp, ambientParameters))
                     ResizeContainer(true);
             }
@@ -3866,6 +3915,9 @@ namespace StatsDirect.UI
                 || c is GroupBox)
                 return false;
 
+            if (!c.Visible)
+                return false;
+
             if (outputControlsAreUseful)
             {
                 return true;
@@ -3897,6 +3949,15 @@ namespace StatsDirect.UI
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="context"></param>
+        /// <param name="shouldShow"></param>
+        /// <param name="cancelSkipsParameterString"></param>
+        /// <param name="outputParameters"></param>
+        /// <remarks>This may return key->null in outputParameters for optional empty parameters.  It is up to the caller to deal with this.</remarks>
         internal void FillCombinedParameters(ITemplateProcessor processor, ParameterBag context, bool shouldShow, string cancelSkipsParameterString, ref ParameterBag outputParameters)
         {
             TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
@@ -3948,10 +4009,12 @@ namespace StatsDirect.UI
                         }
                         bool allValid = ExtractCurrentValues(outputParameters, context, true);
                         if (allValid)
+                        {
                             break;
+                        }
 
                         // Otherwise, at least one parameter's invalid and focus should already have been set to it.  Go round again.
-                        MessageBox.Show("Invalid data. Please correct it and try the operation again.", "StatsDirect", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        SDApplication.SoleInstance.msgbox_x("Invalid data. Please correct it and try the operation again.", MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
                     }
                 }
             }
@@ -3982,6 +4045,7 @@ namespace StatsDirect.UI
             }
         }
 
+        /// <remarks>Note that outputParameters will contain key->null for parameters that are optional and missing.  Callers must be able to deal with this.</remarks>
         /// <returns>true if doValidation is false, true if everything's valid, false if there are any validation errors</returns>
         bool ExtractCurrentValues(ParameterBag outputParameters, ParameterBag context, bool doValidation)
         {
@@ -4071,7 +4135,14 @@ namespace StatsDirect.UI
                             {
                                 // Missing or zero-length?
                                 if (raw.Length == 0)
-                                    return null == parameter.CancelSkipsParameter ? cbo : null;
+                                {
+                                    // If the parameter should be filled in, this is an error
+                                    if (null == parameter.CancelSkipsParameter)
+                                        return cbo;
+                                    // If the parameter is optional and also missing, note the missing in the output parameter bag.  It is up to the caller to deal with nulls in the output parameter bag.
+                                    outputParameters[parameter.Name] = null;
+                                    return null;
+                                }
                             }
                             double value = Parsing.Cdbl_Txt(raw);
                             // Turn from percentage to fraction
@@ -4104,7 +4175,14 @@ namespace StatsDirect.UI
                             {
                                 // Missing or zero-length?
                                 if (raw.Length == 0)
-                                    return null == parameter.CancelSkipsParameter ? txt : null;
+                                {
+                                    // If the parameter should be filled in, this is an error
+                                    if (null == parameter.CancelSkipsParameter)
+                                        return txt;
+                                    // If the parameter is optional and also missing, note the missing in the output parameter bag.  It is up to the caller to deal with nulls in the output parameter bag.
+                                    outputParameters[parameter.Name] = null;
+                                    return null;
+                                }
                             }
                             DateTime value = Parsing.Cdate_Txt(raw);
                             outputParameters[parameter.Name] = new FilledParameter(true, value);
@@ -4114,11 +4192,19 @@ namespace StatsDirect.UI
                         {
                             TextBox txt = (TextBox)control;
                             string raw = txt.Text.Trim();
+                            bool isMissing = string.IsNullOrWhiteSpace(raw);
                             if (doValidation)
                             {
                                 // Missing or zero-length?
-                                if (raw.Length == 0)
-                                    return (null == parameter.CancelSkipsParameter) ? txt : null;
+                                if (isMissing)
+                                {
+                                    // If the parameter should be filled in, this is an error
+                                    if (null == parameter.CancelSkipsParameter)
+                                        return txt;
+                                    // If the parameter is optional and also missing, note the missing in the output parameter bag.  It is up to the caller to deal with nulls in the output parameter bag.
+                                    outputParameters[parameter.Name] = null;
+                                    return null;
+                                }
                             }
                             double value = Parsing.Cdbl_Txt(raw);
                             if (doValidation)
@@ -4129,7 +4215,7 @@ namespace StatsDirect.UI
                                     return txt;
                             }
                             // If we get here, it's OK.
-                            outputParameters[parameter.Name] = new FilledParameter(true, value);
+                            outputParameters[parameter.Name] = isMissing ? null : new FilledParameter(true, value);
                             return null;
                         }
                     case ParameterType.Double2By2:
@@ -4259,18 +4345,14 @@ namespace StatsDirect.UI
                             DataGridView gridEditGrid = (DataGridView)control;
                             string[] data = new string[gridEditGrid.Rows.Count];
                             for (int i = 0; i < gridEditGrid.Rows.Count; i++)
-                            {
                                 data[i] = (string)gridEditGrid.Rows[i].Cells[1].Value;
-                            }
                             StringVariable newValues = new StringVariable(data);
                             EditGridParameter egp = (EditGridParameter)parameter;
                             newValues.Title = egp.ValueVariable;
                             DataFrame oldFrame = context[egp.Source].AsDataFrame;
                             DataFrame newFrame = new DataFrame();
                             foreach (Variable v in oldFrame.Variables)
-                            {
                                 newFrame.Variables.Add(egp.ValueVariable.Equals(v.Title) ? newValues : v);
-                            }
                             outputParameters[parameter.Name] = new FilledParameter(true, newFrame);
                             return null;
                         }
@@ -4312,7 +4394,14 @@ namespace StatsDirect.UI
                             {
                                 // Missing or zero-length?
                                 if (raw.Length == 0)
-                                    return null == parameter.CancelSkipsParameter ? txt : null;
+                                {
+                                    // If the parameter should be filled in, this is an error
+                                    if (null == parameter.CancelSkipsParameter)
+                                        return txt;
+                                    // If the parameter is optional and also missing, note the missing in the output parameter bag.  It is up to the caller to deal with nulls in the output parameter bag.
+                                    outputParameters[parameter.Name] = null;
+                                    return null;
+                                }
                             }
                             int value = Parsing.Cint_Txt(raw);
                             if (doValidation)
@@ -4665,7 +4754,7 @@ namespace StatsDirect.UI
             if (null == fileName)
                 return;
 
-            OpenFile(fileName);
+            OpenFile(fileName, true);
         }
 
         private List<ToolStripMenuItem> toolsMenuItems;
@@ -5225,6 +5314,306 @@ namespace StatsDirect.UI
             SDApplication.SoleInstance.CheckForUpdates();
         }
 
+        private int mostRecentModalMessageButtonPressed;
+        private bool waitingForModalMessage;
+
+        internal DialogResult ShowModalMessage(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton, string helpFile, HelpNavigator helpNavigator, string helpTopic)
+        {
+            IButtonControl oldAcceptButton = this.AcceptButton;
+            IButtonControl oldCancelButton = this.CancelButton;
+            lblModalMessageText.Text = text;
+            Bitmap rawIcon = IconFromMessageBoxIcon(icon);
+            if (null != rawIcon)
+                picModalMessageIcon.Image = rawIcon;
+            SetupModalButtons(buttons, defaultButton);
+            PushPanel(PanelType.ModalMessage, false);
+            try
+            {
+                WaitForModalMessage();
+                return DecodeModalButtons(buttons);
+            }
+            finally
+            {
+                this.AcceptButton = oldAcceptButton;
+                this.CancelButton = oldCancelButton;
+                PopPanel(false);
+            }
+        }
+
+        private void SetupModalButtons(MessageBoxButtons buttons, MessageBoxDefaultButton defaultButton)
+        {
+            switch (buttons)
+            {
+                case MessageBoxButtons.AbortRetryIgnore:
+                    cmdModalMessage1.Visible = true;
+                    cmdModalMessage2.Visible = true;
+                    cmdModalMessage3.Visible = true;
+                    cmdModalMessage1.Text = "Abort";
+                    cmdModalMessage2.Text = "Retry";
+                    cmdModalMessage3.Text = "Ignore";
+                    break;
+                case MessageBoxButtons.OK:
+                    cmdModalMessage1.Visible = true;
+                    cmdModalMessage2.Visible = false;
+                    cmdModalMessage3.Visible = false;
+                    cmdModalMessage1.Text = "OK";
+                    break;
+                case MessageBoxButtons.OKCancel:
+                    cmdModalMessage1.Visible = true;
+                    cmdModalMessage2.Visible = true;
+                    cmdModalMessage3.Visible = false;
+                    cmdModalMessage1.Text = "OK";
+                    cmdModalMessage2.Text = "Cancel";
+                    this.CancelButton = cmdModalMessage2;
+                    break;
+                case MessageBoxButtons.RetryCancel:
+                    cmdModalMessage1.Visible = true;
+                    cmdModalMessage2.Visible = true;
+                    cmdModalMessage3.Visible = false;
+                    cmdModalMessage1.Text = "Retry";
+                    cmdModalMessage2.Text = "Cancel";
+                    this.CancelButton = cmdModalMessage2;
+                    break;
+                case MessageBoxButtons.YesNo:
+                    cmdModalMessage1.Visible = true;
+                    cmdModalMessage2.Visible = true;
+                    cmdModalMessage3.Visible = false;
+                    cmdModalMessage1.Text = "Yes";
+                    cmdModalMessage2.Text = "No";
+                    break;
+                case MessageBoxButtons.YesNoCancel:
+                    cmdModalMessage1.Visible = true;
+                    cmdModalMessage2.Visible = true;
+                    cmdModalMessage3.Visible = true;
+                    cmdModalMessage1.Text = "Yes";
+                    cmdModalMessage2.Text = "No";
+                    cmdModalMessage3.Text = "Cancel";
+                    this.CancelButton = cmdModalMessage3;
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            Button db = null;
+            switch (defaultButton)
+            {
+                case MessageBoxDefaultButton.Button1:
+                    db = cmdModalMessage1;
+                    break;
+                case MessageBoxDefaultButton.Button2:
+                    db = cmdModalMessage2;
+                    break;
+                case MessageBoxDefaultButton.Button3:
+                    db = cmdModalMessage3;
+                    break;
+            }
+            if (null != db)
+            {
+                this.AcceptButton = db;
+                db.Focus();
+            }
+        }
+
+        private System.Windows.Forms.DialogResult DecodeModalButtons(MessageBoxButtons buttons)
+        {
+            switch (buttons)
+            {
+                case MessageBoxButtons.AbortRetryIgnore:
+                    switch (mostRecentModalMessageButtonPressed)
+                    {
+                        case 1:
+                            return DialogResult.Abort;
+                        case 2:
+                            return DialogResult.Retry;
+                        case 3:
+                            return DialogResult.Ignore;
+                        default:
+                            return DialogResult.None;
+                    }
+                case MessageBoxButtons.OK:
+                    switch (mostRecentModalMessageButtonPressed)
+                    {
+                        case 1:
+                            return DialogResult.OK;
+                        default:
+                            return DialogResult.None;
+                    }
+                case MessageBoxButtons.OKCancel:
+                    switch (mostRecentModalMessageButtonPressed)
+                    {
+                        case 1:
+                            return DialogResult.OK;
+                        case 2:
+                            return DialogResult.Cancel;
+                        default:
+                            return DialogResult.None;
+                    }
+                case MessageBoxButtons.RetryCancel:
+                    switch (mostRecentModalMessageButtonPressed)
+                    {
+                        case 1:
+                            return DialogResult.Retry;
+                        case 2:
+                            return DialogResult.Cancel;
+                        default:
+                            return DialogResult.None;
+                    }
+                case MessageBoxButtons.YesNo:
+                    switch (mostRecentModalMessageButtonPressed)
+                    {
+                        case 1:
+                            return DialogResult.Yes;
+                        case 2:
+                            return DialogResult.No;
+                        default:
+                            return DialogResult.None;
+                    }
+                case MessageBoxButtons.YesNoCancel:
+                    switch (mostRecentModalMessageButtonPressed)
+                    {
+                        case 1:
+                            return DialogResult.Yes;
+                        case 2:
+                            return DialogResult.No;
+                        case 3:
+                            return DialogResult.Cancel;
+                        default:
+                            return DialogResult.None;
+                    }
+                default:
+                    return DialogResult.None;
+            }
+        }
+
+        private void WaitForModalMessage()
+        {
+            // wait here until user presses one of the modal dialog buttons or an equivalent key
+            waitingForModalMessage = true;
+            mnuMain.Enabled = false;
+            // Disabling a form appears to pop any enabled form over the top of it.  Therefore, disable the active form last.  See #681.
+            Form activeForm = ActiveMdiChild;
+            foreach (Form f in MdiChildren)
+                if (f != activeForm)
+                    f.Enabled = false;
+            if (null != activeForm)
+                activeForm.Enabled = false;
+            do
+            {
+                Application.DoEvents(); // HACK: Force an inner event loop
+                System.Threading.Thread.Sleep(5);
+            } while (waitingForModalMessage);
+            mnuMain.Enabled = true;
+            foreach (Form f in MdiChildren)
+            {
+                f.Enabled = true;
+            }
+            if (null != puntedException)
+            {
+                Exception ex = puntedException;
+                puntedException = null;
+                throw ex;
+            }
+        }
+
+        private void cmdModalMessage1_Click(object sender, EventArgs e)
+        {
+            mostRecentModalMessageButtonPressed = 1;
+            waitingForModalMessage = false;
+        }
+
+        private void cmdModalMessage2_Click(object sender, EventArgs e)
+        {
+            mostRecentModalMessageButtonPressed = 2;
+            waitingForModalMessage = false;
+        }
+
+        private void cmdModalMessage3_Click(object sender, EventArgs e)
+        {
+            mostRecentModalMessageButtonPressed = 3;
+            waitingForModalMessage = false;
+        }
+
+        private Bitmap IconFromMessageBoxIcon(MessageBoxIcon icon)
+        {
+            Icon rawIcon;
+            switch (icon)
+            {
+                case MessageBoxIcon.Asterisk:
+                // case MessageBoxIcon.Information:
+                    rawIcon = SystemIcons.Asterisk;
+                    break;
+                case MessageBoxIcon.Error:
+                // case MessageBoxIcon.Hand:
+                // case MessageBoxIcon.Stop:
+                    rawIcon = SystemIcons.Error;
+                    break;
+                case MessageBoxIcon.Exclamation:
+                // case MessageBoxIcon.Warning:
+                    rawIcon = SystemIcons.Exclamation;
+                    break;
+                case MessageBoxIcon.None:
+                    rawIcon = null;
+                    break;
+                case MessageBoxIcon.Question:
+                    rawIcon = SystemIcons.Question;
+                    break;
+                default:
+                    rawIcon = null;
+                    break;
+            }
+            Icon sizedIcon = new Icon(rawIcon, 40, 40);
+            Bitmap bmp = new Bitmap(sizedIcon.Width, sizedIcon.Height);
+            Graphics gxMem = Graphics.FromImage(bmp);
+            gxMem.DrawIcon(sizedIcon, 0, 0);
+            gxMem.Dispose();
+            return bmp;
+        }
+
+        private void cmdVariables_Click(object sender, EventArgs e)
+        {
+            int durationMilliseconds = 10000;
+            tipVariables.Show(tipVariables.GetToolTip(cmdVariables), cmdVariables, durationMilliseconds);
+        }
+
+        private void cmdModalMessageKeyPress(object sender, KeyPressEventArgs e)
+        {
+            switch (e.KeyChar)
+            {
+                case 'y':
+                case 'Y':
+                    e.Handled = FindAndFakeModalButtonPress("Yes");
+                    break;
+                case 'n':
+                case 'N':
+                    e.Handled = FindAndFakeModalButtonPress("No");
+                    break;
+                case 'c':
+                case 'C':
+                    e.Handled = FindAndFakeModalButtonPress("Cancel");
+                    break;
+                default:
+                    // Do nothing
+                    break;
+            }
+        }
+
+        private bool FindAndFakeModalButtonPress(string buttonLabel)
+        {
+            int buttonNumber = 0;
+            if (cmdModalMessage1.Text.Equals(buttonLabel))
+                buttonNumber = 1;
+            else if (cmdModalMessage2.Text.Equals(buttonLabel))
+                buttonNumber = 2;
+            else if (cmdModalMessage3.Text.Equals(buttonLabel))
+                buttonNumber = 3;
+            bool found = buttonNumber > 0;
+            if (found)
+            {
+                mostRecentModalMessageButtonPressed = buttonNumber;
+                waitingForModalMessage = false;
+            }
+            return found;
+        }
     }
 
     class DrawingControl

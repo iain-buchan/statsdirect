@@ -1,5 +1,6 @@
 using System;
 using System.Xml.Serialization;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.Templates
 {
@@ -9,6 +10,11 @@ namespace StatsDirect.Templates
     [Serializable, XmlType(Namespace = "http://www.statsdirect.com/schemas/Operation.xsd", TypeName = "output-frame")]
     public sealed class OutputFrameStep: Step
     {
+        public OutputFrameStep()
+        {
+            MissingIndicator = Formatting.ASTERISK;
+        }
+
         /// <summary>
         /// The name of the parameter containing the frame to be output
         /// </summary>
@@ -20,6 +26,9 @@ namespace StatsDirect.Templates
 
         [XmlAttribute(AttributeName = "formulae")]
         public bool IsFormulae { get; set; }
+
+        [XmlAttribute(AttributeName = "missing-indicator")]
+        public string MissingIndicator { get; set; }
 
         /// <summary>
         /// If true, prefer inserting before the selection.  If false (default), prefer inserting after the selection.

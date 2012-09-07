@@ -74,6 +74,9 @@ namespace StatsDirect.UI
             this.edpdf.Name = "edpdf";
             this.edpdf.Size = new System.Drawing.Size(175, 20);
             this.edpdf.TabIndex = 0;
+            this.edpdf.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
+            this.edpdf.Enter += new System.EventHandler(this.EnterTextbox);
+            this.edpdf.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // eddf
             // 
@@ -81,6 +84,9 @@ namespace StatsDirect.UI
             this.eddf.Name = "eddf";
             this.eddf.Size = new System.Drawing.Size(175, 20);
             this.eddf.TabIndex = 1;
+            this.eddf.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
+            this.eddf.Enter += new System.EventHandler(this.EnterTextbox);
+            this.eddf.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // eddf2
             // 
@@ -88,6 +94,9 @@ namespace StatsDirect.UI
             this.eddf2.Name = "eddf2";
             this.eddf2.Size = new System.Drawing.Size(175, 20);
             this.eddf2.TabIndex = 2;
+            this.eddf2.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
+            this.eddf2.Enter += new System.EventHandler(this.EnterTextbox);
+            this.eddf2.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // edlp
             // 
@@ -95,6 +104,9 @@ namespace StatsDirect.UI
             this.edlp.Name = "edlp";
             this.edlp.Size = new System.Drawing.Size(175, 20);
             this.edlp.TabIndex = 3;
+            this.edlp.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
+            this.edlp.Enter += new System.EventHandler(this.EnterTextbox);
+            this.edlp.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // edup
             // 
@@ -102,6 +114,9 @@ namespace StatsDirect.UI
             this.edup.Name = "edup";
             this.edup.Size = new System.Drawing.Size(175, 20);
             this.edup.TabIndex = 4;
+            this.edup.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
+            this.edup.Enter += new System.EventHandler(this.EnterTextbox);
+            this.edup.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // ed2p
             // 
@@ -109,6 +124,9 @@ namespace StatsDirect.UI
             this.ed2p.Name = "ed2p";
             this.ed2p.Size = new System.Drawing.Size(175, 20);
             this.ed2p.TabIndex = 5;
+            this.ed2p.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
+            this.ed2p.Enter += new System.EventHandler(this.EnterTextbox);
+            this.ed2p.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // combo_cl
             // 
@@ -182,6 +200,7 @@ namespace StatsDirect.UI
             this.Save.TabIndex = 7;
             this.Save.Text = "&Save";
             this.Save.UseVisualStyleBackColor = true;
+            this.Save.Click += new System.EventHandler(this.SaveClick);
             // 
             // Calc
             // 
@@ -191,6 +210,7 @@ namespace StatsDirect.UI
             this.Calc.TabIndex = 6;
             this.Calc.Text = "&Calculate";
             this.Calc.UseVisualStyleBackColor = true;
+            this.Calc.Click += new System.EventHandler(this.Calc_Click);
             // 
             // label_cl
             // 
@@ -209,6 +229,7 @@ namespace StatsDirect.UI
             this.btn_ucl.TabIndex = 22;
             this.btn_ucl.Text = "&Upper CL";
             this.btn_ucl.UseVisualStyleBackColor = true;
+            this.btn_ucl.Click += new System.EventHandler(this.btn_ucl_Click);
             // 
             // btn_lcl
             // 
@@ -218,6 +239,7 @@ namespace StatsDirect.UI
             this.btn_lcl.TabIndex = 21;
             this.btn_lcl.Text = "&Lower CL";
             this.btn_lcl.UseVisualStyleBackColor = true;
+            this.btn_lcl.Click += new System.EventHandler(this.btn_lcl_Click);
             // 
             // tlpOuter
             // 
@@ -381,24 +403,24 @@ namespace StatsDirect.UI
 
         } 
         
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.TextBox edpdf; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.TextBox eddf; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.TextBox eddf2; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.TextBox edlp; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.TextBox edup; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.TextBox ed2p; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.ComboBox combo_cl; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Label lbpdf; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Label lbdf; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Label lbdf2; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Label lblp; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Label lbup;
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Label lb2p; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Button Save; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Button Calc; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Label label_cl; 
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Button btn_ucl;
-        internal /* TRANSINFO: WithEvents */ System.Windows.Forms.Button btn_lcl;
+        internal System.Windows.Forms.TextBox edpdf; 
+        internal System.Windows.Forms.TextBox eddf; 
+        internal System.Windows.Forms.TextBox eddf2; 
+        internal System.Windows.Forms.TextBox edlp; 
+        internal System.Windows.Forms.TextBox edup; 
+        internal System.Windows.Forms.TextBox ed2p; 
+        internal System.Windows.Forms.ComboBox combo_cl; 
+        internal System.Windows.Forms.Label lbpdf; 
+        internal System.Windows.Forms.Label lbdf; 
+        internal System.Windows.Forms.Label lbdf2; 
+        internal System.Windows.Forms.Label lblp; 
+        internal System.Windows.Forms.Label lbup;
+        internal System.Windows.Forms.Label lb2p; 
+        internal System.Windows.Forms.Button Save; 
+        internal System.Windows.Forms.Button Calc; 
+        internal System.Windows.Forms.Label label_cl; 
+        internal System.Windows.Forms.Button btn_ucl;
+        internal System.Windows.Forms.Button btn_lcl;
         private System.Windows.Forms.TableLayoutPanel tlpOuter;
         private System.Windows.Forms.Panel pnlRight;
         private System.Windows.Forms.TableLayoutPanel tlpLeft;

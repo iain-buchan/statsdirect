@@ -673,7 +673,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static string x_lifetab_interval(ref int i, ref int rows, ref double[] x)
+        private static string x_lifetab_interval(int i, int rows, double[] x)
         {
             int j = i == 1 ? 0 : 1;
             if (i < rows)
@@ -1706,7 +1706,6 @@ namespace StatsDirect.Builtins
         public static StepResult RptAbridgedLifetable(ITemplateHost host, ParameterBag parameters)
         {
             double se; double lci; double uci;
-            int i; int j;
 
             double eh;
             double emo; double emd;
@@ -1741,57 +1740,43 @@ namespace StatsDirect.Builtins
             double[] vs = new double[rows + 1 /* for VB to C# conversion */];
             double[] u = new double[rows + 1 /* for VB to C# conversion */ ];
             x[1] = 0.0;
-            for (i = 1; i <= rows - 1; i++)
+            for (int i = 1; i <= rows - 1; i++)
             {
                 r[i] = intervalsVariable.Data[i - 1];
                 if (i < rows)
-                {
                     x[i + 1] = x[i] + r[i];
-                }
             }
 
             DataFrame populationFrame = parameters["population"].AsDataFrame;
             DoubleVariable populationVariable = populationFrame.Variables[0].AsDoubleVariable;
-            for (i = 1; i <= rows; i++)
-            {
+            for (int i = 1; i <= rows; i++)
                 P[i] = populationVariable.Data[i - 1];
-            }
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
             bool novariance = false;
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 D[i] = Math.Abs(deathsVariable.Data[i - 1]);
                 if (D[i] <= 0.0)
-                {
                     novariance = true;
-                }
             }
 
             if (parameters.ContainsKey("fractions") && parameters["fractions"] != null)
             {
                 DataFrame fractionsFrame = parameters["fractions"].AsDataFrame;
                 DoubleVariable fractionsVariable = fractionsFrame.Variables[0].AsDoubleVariable;
-                for (i = 1; i <= rows - 1; i++)
-                {
+                for (int i = 1; i <= rows - 1; i++)
                     a[i] = fractionsVariable.Data[i - 1];
-                }
             }
             else
             {
-                for (i = 1; i <= rows; i++)
-                {
+                for (int i = 1; i <= rows; i++)
                     a[i] = 0.5;
-                }
                 if (r[1] <= 1.0)
-                {
                     a[1] = 0.1;
-                }
                 if (r[2] <= 5.0)
-                {
                     a[2] = 0.4;
-                }
             }
 
             if (parameters.ContainsKey("weights") && parameters["weights"] != null)
@@ -1800,25 +1785,20 @@ namespace StatsDirect.Builtins
                 DoubleVariable weightsVariable = weightsFrame.Variables[0].AsDoubleVariable;
                 uti = weightsVariable.Title;
                 util = true;
-                for (i = 1; i <= rows; i++)
-                {
+                for (int i = 1; i <= rows; i++)
                     u[i] = weightsVariable.Data[i - 1];
-                }
             }
             else
             {
                 util = false;
-                for (i = 1; i <= rows; i++)
-                {
+                for (int i = 1; i <= rows; i++)
                     u[i] = 1.0;
-                }
             }
 
             int simits = Parsing.Cint_Txt(parameters["iterations"].AsString);
             if (simits < 3000)
-            {
                 simits = 3000;
-            }
+
             bool save_details = parameters["save"].AsBoolean;
 
             // simulation
@@ -1827,17 +1807,22 @@ namespace StatsDirect.Builtins
             double[] emdsim = new double[simits + 1 /* for VB to C# conversion */ ];
             PoissonRNG RNG = new PoissonRNG();
             //  RNG.Seed(DefaultSeed()) not required as the default seed is used if the RNG isn't seeded on first call
-            for (j = 1; j <= simits; j++)
+            host.StartProgress("Simulating...");
+            for (int j = 1; j <= simits; j++)
             {
-                for (i = 1; i <= rows; i++)
+                if (host.UpdateProgress(j / (double)simits))
                 {
-                    dsim[i] = RNG.GenPoisson(D[i]);
+                    host.FinishProgress();
+                    throw new TemplateOperationCancelledException();
                 }
+                for (int i = 1; i <= rows; i++)
+                    dsim[i] = RNG.GenPoisson(D[i]);
                 x_ab_lifetable_basics(ref rows, ref dsim, ref P, ref a, ref sl, ref rm, ref r, ref Q, ref dd, ref yl, ref t, ref e);
                 esim[j] = e[1];
                 x_ab_lifetable_median_mode(ref rows, ref dd, out emo, out emd, ref sl, ref x);
                 emdsim[j] = emd;
             }
+            host.FinishProgress();
             Array.Sort(esim, 1, simits);
             double esimll = MathDbl.quantile_from_sorted(esim, simits, 0.05);
             double esimul = MathDbl.quantile_from_sorted(esim, simits, 0.95);
@@ -1849,13 +1834,13 @@ namespace StatsDirect.Builtins
             x_ab_lifetable_basics(ref rows, ref D, ref P, ref a, ref sl, ref rm, ref r, ref Q, ref dd, ref yl, ref t, ref e);
 
             // Chiang variances
-            if (novariance == false)
+            if (!novariance)
             {
                 x_ab_lifetable_variance(ref rows, ref vq, ref Q, ref D, ref a, ref r, ref e, ref sl, ref ve, ref vs);
             }
             else
             {
-                for (i = 1; i <= rows; i++)
+                for (int i = 1; i <= rows; i++)
                 {
                     ve[i] = Constant.MISSING;
                     vs[i] = Constant.MISSING;
@@ -1870,11 +1855,11 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("int", x_lifetab_interval(ref i, ref rows, ref x));
+                inputsParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
                 inputsParameters.AddOutput("pop", host.RoundU(P[i]));
                 inputsParameters.AddOutput("dead", host.RoundU(D[i]));
                 inputsParameters.AddOutput("rate", host.RoundU(rm[i]));
@@ -1885,11 +1870,11 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> pdyingList = new List<ParameterBag>();
             outputParameters.AddOutput("*pdying", pdyingList);
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 ParameterBag pdyingParameters = new ParameterBag();
                 pdyingList.Add(pdyingParameters);
-                pdyingParameters.AddOutput("int", x_lifetab_interval(ref i, ref rows, ref x));
+                pdyingParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
                 pdyingParameters.AddOutput("q", host.RoundU(Q[i]));
                 if (vq[i] < 0.0 | vq[i] == Constant.MISSING)
                 {
@@ -1911,11 +1896,11 @@ namespace StatsDirect.Builtins
             // numbers living, dying from a standard population of usually 100k, fraction of last interval of life a
             IList<ParameterBag> livingList = new List<ParameterBag>();
             outputParameters.AddOutput("*living", livingList);
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 ParameterBag livingParameters = new ParameterBag();
                 livingList.Add(livingParameters);
-                livingParameters.AddOutput("int", x_lifetab_interval(ref i, ref rows, ref x));
+                livingParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
                 livingParameters.AddOutput("l", Convert.ToInt32(sl[i]).ToString());
                 livingParameters.AddOutput("d", Convert.ToInt32(dd[i]).ToString());
                 livingParameters.AddOutput("a", host.RoundU(a[i]));
@@ -1924,11 +1909,11 @@ namespace StatsDirect.Builtins
             // years in interval, years beyond age x(i)
             IList<ParameterBag> yearsList = new List<ParameterBag>();
             outputParameters.AddOutput("*years", yearsList);
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 ParameterBag yearsParameters = new ParameterBag();
                 yearsList.Add(yearsParameters);
-                yearsParameters.AddOutput("int", x_lifetab_interval(ref i, ref rows, ref x));
+                yearsParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
                 yearsParameters.AddOutput("L", Convert.ToInt32(yl[i]).ToString());
                 yearsParameters.AddOutput("T", Convert.ToInt32(t[i]).ToString());
             }
@@ -1936,11 +1921,11 @@ namespace StatsDirect.Builtins
             // expectation of life e, se, ci
             IList<ParameterBag> expectationList = new List<ParameterBag>();
             outputParameters.AddOutput("*expectation", expectationList);
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 ParameterBag expectationParameters = new ParameterBag();
                 expectationList.Add(expectationParameters);
-                expectationParameters.AddOutput("int", x_lifetab_interval(ref i, ref rows, ref x));
+                expectationParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
                 expectationParameters.AddOutput("e", host.RoundU(e[i]));
                 if (ve[i] < 0.0 | i == rows | ve[i] == Constant.MISSING)
                 {
@@ -1969,19 +1954,15 @@ namespace StatsDirect.Builtins
                 utilParameters.AddOutput("uti", uti);
                 IList<ParameterBag> adjustedList = new List<ParameterBag>();
                 utilParameters.AddOutput("*adjusted", adjustedList);
-                for (i = 1; i <= rows; i++)
+                for (int i = 1; i <= rows; i++)
                 {
                     ParameterBag adjustedParameters = new ParameterBag();
                     adjustedList.Add(adjustedParameters);
-                    adjustedParameters.AddOutput("int", x_lifetab_interval(ref i, ref rows, ref x));
-                    if (sl[i] == 0.0 | sl[i] == Constant.MISSING)
-                    {
+                    adjustedParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
+                    if (sl[i] == 0.0 || sl[i] == Constant.MISSING)
                         eh = Constant.MISSING;
-                    }
                     else
-                    {
                         eh = (u[i] * t[i]) / sl[i];
-                    }
                     adjustedParameters.AddOutput("eh", host.RoundU(eh));
                 }
             }
@@ -1996,7 +1977,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("med_uci", host.RoundU(emdsimul));
 
             outputParameters.AddOutput("elb", host.RoundU(e[1]));
-            if (ve[1] < 0.0 || i == rows || ve[1] == Constant.MISSING)
+            if (ve[1] < 0.0 || ve[1] == Constant.MISSING)
             {
                 se = Constant.MISSING;
                 lci = Constant.MISSING;
@@ -2048,22 +2029,16 @@ namespace StatsDirect.Builtins
                 resultsFrame.Variables.Add(lciEVariable);
                 resultsFrame.Variables.Add(uciEVariable);
                 if (util)
-                {
                     resultsFrame.Variables.Add(aEVariable);
-                }
 
-                for (i = 1; i <= rows; i++)
+                for (int i = 1; i <= rows; i++)
                 {
-                    j = i == 1 ? 0 : 1;
+                    int j = i == 1 ? 0 : 1;
                     string xx;
                     if (i < rows)
-                    {
                         xx = Convert.ToInt32(x[i]).ToString() + " to " + Convert.ToInt32(x[i + 1] - j).ToString();
-                    }
                     else
-                    {
                         xx = Convert.ToInt32(x[i]).ToString() + " up";
-                    }
                     intervalVariable.set_Data(i - 1, xx);
                     qHatVariable.set_Data(i - 1, Q[i]);
                     varQVariable.set_Data(i - 1, vq[i]);

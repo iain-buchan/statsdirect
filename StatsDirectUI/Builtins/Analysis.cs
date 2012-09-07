@@ -1700,7 +1700,7 @@ namespace StatsDirect.Builtins
             return null;
         }
 
-
+        /**
         public static StepResult rptRateSMR(ITemplateHost Host, ParameterBag Parameters)
         {
             double etot = 0;
@@ -1711,8 +1711,8 @@ namespace StatsDirect.Builtins
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
             int rows = datFrame.MaxRows;
-            double[] asm = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] spop = new double[rows + 1 /* VB to C# conversion */ ];
+            double[] asm = new double[rows + 1];
+            double[] spop = new double[rows + 1];
 
             double nunit = Parsing.Cdbl_Txt(Parameters["nunit"].AsString);
             double cco = Parameters["cco"].AsDouble;
@@ -1788,7 +1788,7 @@ namespace StatsDirect.Builtins
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
+**/
 
         public static StepResult RptPropPairs(ITemplateHost host, ParameterBag parameters)
         {

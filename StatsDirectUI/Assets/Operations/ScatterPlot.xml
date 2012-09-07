@@ -24,7 +24,7 @@
           <parameters>
             <frame>
               <name>Ynew</name>
-              <prompt>Select data for Y axis</prompt>
+              <prompt>="Select data for Y axis: SERIES " + Parameters["i"].AsInt32.ToString()</prompt>
               <same-length>false</same-length>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
@@ -35,7 +35,7 @@
             </frame>
             <frame>
               <name>Xnew</name>
-              <prompt>Select data for X axis</prompt>
+              <prompt>="Select data for X axis: SERIES " + Parameters["i"].AsInt32.ToString()</prompt>
               <same-length>false</same-length>
               <mode>NumericReplaceMissing</mode>
               <same-length-as>Y0</same-length-as>

@@ -20,7 +20,7 @@ namespace StatsDirect.Templates
     /// <summary>
     /// An interface-agnostic template operation processor.
     /// </summary>
-    public sealed class TemplateProcessor: ITemplateProcessor
+    public sealed class TemplateProcessor : ITemplateProcessor
     {
         private readonly ITemplateHost host;
         private const string STATSDIRECT_CHART_OPTIONS = "statsdirect-chart-options";
@@ -109,14 +109,24 @@ namespace StatsDirect.Templates
                 result = step.ExecuteInternal(this, Parameters, isRedo);
 
             // If required, transfer input parameters where the same name is not already present in the results.
-            if (step.ShouldCopyInputParameters && null != result)
+            if (null != result)
             {
                 ParameterBag results = result.ParameterBag;
                 if (null != results)
                 {
-                    foreach (KeyValuePair<string, FilledParameter> inputParameter in Parameters.Pairs)
-                        if (!results.ContainsKey(inputParameter.Key))
-                            results.Add(inputParameter.Key, inputParameter.Value);
+                    if (step.ShouldCopyInputParameters)
+                    {
+                        foreach (KeyValuePair<string, FilledParameter> inputParameter in Parameters.Pairs)
+                            if (!results.ContainsKey(inputParameter.Key))
+                                results.Add(inputParameter.Key, inputParameter.Value);
+                    }
+                    // Remove explicit blanks now that they have prevented copying.
+                    List<string> keysToRemove = new List<string>();
+                    foreach (KeyValuePair<string, FilledParameter> pair in results.Pairs)
+                        if (null == pair.Value)
+                            keysToRemove.Add(pair.Key);
+                    foreach (string keyToRemove in keysToRemove)
+                        results.Remove(keyToRemove);
                 }
             }
             return result;
@@ -449,7 +459,8 @@ namespace StatsDirect.Templates
                         HistogramOptions hOptions = new HistogramOptions(host.Preferences.ShouldUseColour)
                                                     {
                                                         IsAscii = step.IsAscii,
-                                                        LineWidth = 2, HistoSeriesOptions = new List<HistogramSeriesOptions>(series.Count)
+                                                        LineWidth = 2,
+                                                        HistoSeriesOptions = new List<HistogramSeriesOptions>(series.Count)
                                                     };
 
                         // Series
@@ -541,8 +552,7 @@ namespace StatsDirect.Templates
                     }
                 case ChartType.Pyramid:
                     {
-                        PyramidOptions pOptions = new PyramidOptions(host.Preferences.ShouldUseColour)
-                                                      {ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits};
+                        PyramidOptions pOptions = new PyramidOptions(host.Preferences.ShouldUseColour) { ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits };
                         if (parameters.ContainsKey("Male"))
                         {
                             pOptions.MaleFrame = parameters["Male"].AsDataFrame;
@@ -819,7 +829,7 @@ namespace StatsDirect.Templates
 
         public StepResult ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo)
         {
-            ChartDefinition definition = new ChartDefinition {ChartType = step.ChartType};
+            ChartDefinition definition = new ChartDefinition { ChartType = step.ChartType };
             // Series: First X...
             string dataName = null;
             if (null != step.XSeriesDataName)
@@ -933,7 +943,7 @@ namespace StatsDirect.Templates
                 if (Parameters.ContainsKey(STATSDIRECT_FRAME_PANE)
                     && null != Parameters[STATSDIRECT_FRAME_PANE])
                     preferredPaneAndPosition = Parameters[STATSDIRECT_FRAME_PANE].AsPaneAndPosition;
-                host.OutputFrame(frame, step.KeepSelection, step.IsFormulae, preferredPaneAndPosition);
+                host.OutputFrame(frame, step.KeepSelection, step.IsFormulae, step.MissingIndicator, preferredPaneAndPosition);
             }
             return new StepResult(StepSuccess.Success, new ParameterBag());
         }
@@ -945,6 +955,14 @@ namespace StatsDirect.Templates
             return new StepResult(StepSuccess.Success, new ParameterBag());
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="step"></param>
+        /// <param name="parms"></param>
+        /// <param name="isRedo"></param>
+        /// <returns></returns>
+        /// <remarks>Note that this may return parameters with null values; it is up to the caller to remove these.</remarks>
         public StepResult ExecuteInternal(ParametersStep step, ParameterBag parms, bool isRedo)
         {
             // If we're redoing a previous operation, then all parameters are taken from the previous operation.  We do not request any.
@@ -1025,18 +1043,20 @@ namespace StatsDirect.Templates
                             foreach (Parameter outstandingParameter in outstandingParameters)
                             {
                                 if (ValidationMode.NotSet != outstandingParameter.ValidationMode)
-                                {
                                     Validate(outstandingParameter.ValidationMode, outstandingParameter, outstandingFilledParameters, outstandingParameter.ValidationFailMessage);
-                                }
                                 MaybeRemember(outstandingParameter, outstandingFilledParameters);
                             }
                             foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
                             {
-                                if (filledParameters.ContainsKey(pair.Key))
+                                // Handle removal of explicit blanks
+                                if (null == pair.Value)
                                 {
-                                    // MessageBox.Show("Trying to add key '" + pair.Key + "' which is already in the parameters - will overwrite.");
+                                    // Don't copy this parameter over; but remove it from filledParameters if present.
+                                    if (filledParameters.ContainsKey(pair.Key))
+                                        filledParameters.Remove(pair.Key);
                                 }
-                                filledParameters [pair.Key] = pair.Value;
+                                else
+                                    filledParameters[pair.Key] = pair.Value;
                             }
                             outstandingParameters.Clear();
                         }
@@ -1079,22 +1099,14 @@ namespace StatsDirect.Templates
                             parmsAndFilledParameters.Add(pair);
                     }
 
-                    /** Reports are no longer handled using parameters
-                    if (step.Operation.ShouldRequestTargetAfter(step, Step.StepType.Report) == HasInput.NoAndTypeFound)
-                    {
-                        SpecialParameter reportParameter = new SpecialParameter();
-                        reportParameter.Name = STATSDIRECT_REPORT_PANE;
-                        reportParameter.SpecialType = "report";
-                        host.FillParameter(this, reportParameter, parmsAndFilledParameters, true);
-                    }
-                     */
                     Step frameStep;
                     Step outputForFrameStep;
                     if ((step.Operation.ShouldRequestTargetAfter(step, Step.StepType.Frame, out frameStep) == HasInput.NoAndTypeFound)
                         || (step.Operation.ShouldRequestTargetAfter(step, Step.StepType.SelectOutputForFrame, out outputForFrameStep) == HasInput.NoAndTypeFound))
                     {
-                        bool preferInPlaceInsertion = null != frameStep && ((OutputFrameStep) frameStep).PreferInPlaceInsertion;
-                        SpecialParameter frameParameter = new SpecialParameter {Name = STATSDIRECT_FRAME_PANE, SpecialType = "frame", ExtraData = preferInPlaceInsertion};
+                        bool preferInPlaceInsertion = null != frameStep && ((OutputFrameStep)frameStep).PreferInPlaceInsertion;
+                        string missingIndicator = null == frameStep ? Formatting.ASTERISK : ((OutputFrameStep)frameStep).MissingIndicator;
+                        SpecialParameter frameParameter = new SpecialParameter { Name = STATSDIRECT_FRAME_PANE, SpecialType = "frame", ExtraData = new object[] { preferInPlaceInsertion, missingIndicator } };
                         host.FillParameter(this, frameParameter, parmsAndFilledParameters, true);
                     }
 
@@ -1111,9 +1123,7 @@ namespace StatsDirect.Templates
                         MaybeRemember(outstandingParameter, outstandingFilledParameters);
                     }
                     foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
-                    {
                         filledParameters[pair.Key] = pair.Value;
-                    }
                     outstandingParameters.Clear();
                 }
                 return new StepResult(StepSuccess.Success, filledParameters);
@@ -1449,7 +1459,7 @@ namespace StatsDirect.Templates
 
         private DoubleSeries VariableToSeries(DoubleVariable variable)
         {
-            DoubleSeries series = new DoubleSeries {Title = variable.Title, Data = variable.Data};
+            DoubleSeries series = new DoubleSeries { Title = variable.Title, Data = variable.Data };
             return series;
         }
 
@@ -1528,10 +1538,10 @@ namespace StatsDirect.Templates
                 }
             }
 
-            ClassifierVariable cv = new ClassifierVariable {Title = v.Title, Data = v.Data};
+            ClassifierVariable cv = new ClassifierVariable { Title = v.Title, Data = v.Data };
             for (int i = 0; i < ng; i++)
             {
-                Group grp = new Group(g[i].ToString(), g[i]) {NBin = gin[i]};
+                Group grp = new Group(g[i].ToString(), g[i]) { NBin = gin[i] };
                 cv.Groups.Add(grp);
             }
             return cv;

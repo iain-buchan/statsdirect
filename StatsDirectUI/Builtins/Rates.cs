@@ -70,95 +70,108 @@ namespace StatsDirect.Builtins
 
 
 
-        public static StepResult rptRateSmr(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult RptRateSmr(ITemplateHost host, ParameterBag parameters)
         {
-            int j;
-            int fault; int i;
-
-            double cco = Parameters["cco"].AsDouble;
-            if (cco > 1.0 | cco < 0.0)
-            {
+            double cco = parameters["cco"].AsDouble;
+            if (cco > 1.0 || cco < 0.0)
                 cco = 0.95;
-            }
 
-            DataFrame data = Parameters["data"].AsDataFrame;
+            DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable ratesVariable = data.Variables[0].AsDoubleVariable;
             DoubleVariable timesVariable = data.Variables[1].AsDoubleVariable;
-            double nunit = Parsing.Cdbl_Txt(Parameters["nunit"].AsString);
+            double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
             if (nunit <= 0.0)
-            {
                 nunit = 1.0;
-            }
             int rows = ratesVariable.Length;
             double[] asm = new double[rows + 1 /* for VB to C# conversion */ ];
             double[] spop = new double[rows + 1 /* for VB to C# conversion */ ];
-            for (i = 1; i <= rows; i++)
-            {
+            for (int i = 1; i <= rows; i++)
                 asm[i] = ratesVariable.Data[i - 1] / nunit;
-            }
 
             double etot = 0.0;
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 spop[i] = timesVariable.Data[i - 1];
                 etot += asm[i] * spop[i];
             }
             if (etot <= 0)
-            {
                 throw new InvalidDataException();
+
+            bool stratlab;
+            string[] title = new string[rows + 2 + 1 /* VB to C# conversion */ ];
+            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            {
+                stratlab = true;
+                DataFrame strataFrame = parameters["strata"].AsDataFrame;
+                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                for (int i = 1; i <= rows; i++)
+                {
+                    string buf = strataVariable.Data[i - 1].Trim();
+                    if (buf.Length > 0)
+                    {
+                        if (buf.Length > 50)
+                            buf = buf.Substring(0, 50);
+                        title[i] = buf;
+                    }
+                    else
+                        title[i] = "stratum " + i.ToString();
+                }
             }
-            double dead = Parameters["dead"].AsDouble;
+            else
+            {
+                stratlab = false;
+                for (int i = 1; i <= rows; i++)
+                    title[i] = "stratum " + i.ToString();
+            }
+
+            double dead = parameters["dead"].AsDouble;
 
             //  RTF_LoadTemplate("stdmort.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> groupsList = new List<ParameterBag>();
             outputParameters.AddOutput("*groups", groupsList);
-            for (j = 1; j <= rows; j++)
+            for (int j = 1; j <= rows; j++)
             {
                 ParameterBag groupsParameters = new ParameterBag();
                 groupsList.Add(groupsParameters);
-                groupsParameters.AddOutput("group", Host.RoundU(asm[j]));
+                groupsParameters.AddOutput("group", host.RoundU(asm[j]));
                 groupsParameters.AddOutput("observed", spop[j].ToString());
-                groupsParameters.AddOutput("expected", Host.RoundU(spop[j] * asm[j]));
+                groupsParameters.AddOutput("expected", host.RoundU(spop[j] * asm[j]));
+                groupsParameters.AddOutput("lb", stratlab ? title[j] : "");
             }
             outputParameters.AddOutput("total", etot.ToString());
 
+            int fault;
             PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
             if (fault == 0)
             {
-                outputParameters.AddOutput("ratio", Host.RoundU(dead / etot));
+                outputParameters.AddOutput("ratio", host.RoundU(dead / etot));
                 outputParameters.AddOutput("smr", Formatting.XRound(Convert.ToInt32((dead / etot) * 100), 0));
 
                 double xu;
-                double XL;
-                poisson_ci(1.0 - cco, dead, 1.0, out XL, out xu);
+                double xl;
+                poisson_ci(1.0 - cco, dead, 1.0, out xl, out xu);
 
-                if (XL != Constant.MISSING)
-                {
-                    XL = XL / etot;
-                }
-                if (XL != Constant.MISSING)
-                {
+                if (xl != Constant.MISSING)
+                    xl = xl / etot;
+                if (xu != Constant.MISSING)
                     xu = xu / etot;
-                }
                 outputParameters.AddOutput("pc", Formatting.XRound(100 * cco, 2));
-                outputParameters.AddOutput("from", Host.RoundU(XL));
-                outputParameters.AddOutput("to", Host.RoundU(xu));
-                outputParameters.AddOutput("from100", Formatting.XRound(Convert.ToInt32(100 * XL), 0));
-                outputParameters.AddOutput("to100", Host.RoundU(Convert.ToInt32(100 * xu)));
+                outputParameters.AddOutput("from", host.RoundU(xl));
+                outputParameters.AddOutput("to", host.RoundU(xu));
+                outputParameters.AddOutput("from100", Formatting.XRound(Convert.ToInt32(100 * xl), 0));
+                outputParameters.AddOutput("to100", host.RoundU(Convert.ToInt32(100 * xu)));
 
                 double term;
                 double plo;
                 double phi;
                 ExFortran.poisson(etot, Convert.ToInt32(dead), out phi, out plo, out term, out fault);
                 if (fault != 0)
-                {
                     phi = Constant.MISSING;
-                }
 
                 outputParameters.AddOutput("qty", Convert.ToInt64(dead).ToString());
-                outputParameters.AddOutput("p_hi", Host.pval(phi));
-                outputParameters.AddOutput("p_lo", Host.pval(plo));
+                outputParameters.AddOutput("p_hi", host.pval(phi));
+                outputParameters.AddOutput("p_lo", host.pval(plo));
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -371,16 +384,14 @@ namespace StatsDirect.Builtins
             double sreu_bino; double srel_bino; double sreu; double srel;
             double crru; double f; double crrl;
             double crr; double crneu; double crnel; double creu; double crel;
-            double cit; double P;
             int i;
-            // int ierr = 0;
             bool stratlab;
             string warn1; string warn2;
             string tmp;
-            // bool fault = false;
             int ifault;
 
             double cco = parameters["cco"].AsDouble;
+            double cit; double P;
             if (cco > 0)
             {
                 P = (1.0 - cco) / 2.0;
@@ -748,7 +759,7 @@ namespace StatsDirect.Builtins
                 ratesParameters.AddOutput("lb", tmp);
             }
 
-            outputParameters.AddOutput("model", model == 1 ? "Poisson (small rates)" : "Binomial");
+            outputParameters.AddOutput("model_out", model == 1 ? "Poisson (small rates)" : "Binomial");
             if (nunit == 1.0)
             {
                 outputParameters.AddOutput("units", "1 unit");

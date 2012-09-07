@@ -298,19 +298,19 @@ namespace StatsDirect.UI
             int centileDef = 1;
             int rows = v.Length;
             string title = v.Title;
-            sx.FullSummaryFromXSort(ref ao, ref ao, ref rows, ref title, ref GAMMA, ref userCentL, ref userCentU, ref centileDef);
+            sx.FullSummaryFromXSort(ao, out ao, rows, title, GAMMA, userCentL, userCentU, centileDef);
             const int flt = 6;
             const int k = 19;
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Title: " + v.Title + "\r\n");
             sb.AppendLine(Formatting.PadTo("Valid data", k) + sx.ValidData.ToString());
             sb.AppendLine(Formatting.PadTo("Missing", k) + sx.MissingData.ToString());
-            sb.AppendLine(Formatting.PadTo("Sum", k) + Formatting.RoundOut(sx.sum, flt));
-            sb.AppendLine(Formatting.PadTo("Mean", k) + Formatting.RoundOut(sx.mean, flt));
+            sb.AppendLine(Formatting.PadTo("Sum", k) + Formatting.RoundOut(sx.Sum, flt));
+            sb.AppendLine(Formatting.PadTo("Mean", k) + Formatting.RoundOut(sx.Mean, flt));
             sb.AppendLine(Formatting.PadTo("Variance", k) + Formatting.RoundOut(sx.Variance, flt));
-            sb.AppendLine(Formatting.PadTo("Std. dev.", k) + Formatting.RoundOut(sx.sd, flt));
+            sb.AppendLine(Formatting.PadTo("Std. dev.", k) + Formatting.RoundOut(sx.Sd, flt));
             sb.AppendLine(Formatting.PadTo("Variation coef.", k) + Formatting.RoundOut(sx.VarianceCoefficient, flt));
-            sb.AppendLine(Formatting.PadTo("Std. err.", k) + Formatting.RoundOut(sx.sem, flt));
+            sb.AppendLine(Formatting.PadTo("Std. err.", k) + Formatting.RoundOut(sx.Sem, flt));
             sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * GAMMA, 1) + "% Upper CL", k) + Formatting.RoundOut(sx.MeanUCL, flt));
             sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * GAMMA, 1) + "% Lower CL", k) + Formatting.RoundOut(sx.MeanLCL, flt));
             sb.AppendLine(Formatting.PadTo("Geometric mean", k) + Formatting.RoundOut(sx.GeometricMean, flt));
@@ -319,7 +319,7 @@ namespace StatsDirect.UI
             sb.AppendLine(Formatting.PadTo("Maximum", k) + Formatting.RoundOut(sx.Maximum, flt));
             sb.AppendLine(Formatting.PadTo("95th percentile", k) + Formatting.RoundOut(sx.UserCentileU, flt));
             sb.AppendLine(Formatting.PadTo("Upper quartile", k) + Formatting.RoundOut(sx.UpperQuartile, flt));
-            sb.AppendLine(Formatting.PadTo("Median", k) + Formatting.RoundOut(sx.median, flt));
+            sb.AppendLine(Formatting.PadTo("Median", k) + Formatting.RoundOut(sx.Median, flt));
             sb.AppendLine(Formatting.PadTo("Lower quartile", k) + Formatting.RoundOut(sx.LowerQuartile, flt));
             sb.AppendLine(Formatting.PadTo("5th percentile", k) + Formatting.RoundOut(sx.UserCentileL, flt));
             sb.AppendLine(Formatting.PadTo("Minimum", k) + Formatting.RoundOut(sx.Minimum, flt));
@@ -337,7 +337,9 @@ namespace StatsDirect.UI
             {
                 double zmin = 0;
                 double zint = 0;
-                Charting.AxisScaler.v_axis(ref sx.Minimum, ref sx.Maximum, ref nsteps, ref zmin, ref zint);
+                double min = sx.Minimum;
+                double max = sx.Maximum;
+                Charting.AxisScaler.v_axis(ref min, ref max, ref nsteps, ref zmin, ref zint);
                 txtIntervals.Text = nsteps.ToString();
                 txtMinimum.Text = Math.Round(zmin, 14).ToString();
                 txtInterval.Text = Math.Round(zint, 14).ToString();

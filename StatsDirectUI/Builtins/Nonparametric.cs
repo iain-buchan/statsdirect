@@ -2133,15 +2133,14 @@ namespace StatsDirect.Builtins
                 double dimlim = n1d + n1d * (n1d + 1.0) * nd - (n1d * (n1d + 1.0) * (2.0 * n1d + 1.0)) / 3.0 + 1.0;
                 double P;
                 double pl;
-                if ((n1 > 30 & n2 > 30) | n1 > 80 | n2 > 80 | (xf != 0 & dimlim > 64000))
+                if ((n1 > 100 && n2 > 100) || (xf != 0 && dimlim > 1000000) || (xf == 0 && n1 * (((int)(Math.Floor((double)n2 / 2))) + 1) > 1000000))
                 {
                     outputParameters.AddOutput("stats", "Normalised statistic = " + host.RoundU(z) + adj);
                     pl = PDF.alnorm(z);
                     if (pl > 1.0 - pl)
-                    {
                         P = 1.0 - pl;
-                    }
-                    else { P = pl; }
+                    else
+                        P = pl;
                     outputParameters.AddOutput("p_l", host.pval(pl));
                     outputParameters.AddOutput("p_u", host.pval(1.0 - pl));
                     outputParameters.AddOutput("p_2", host.pval(P * 2.0));
@@ -2999,45 +2998,34 @@ namespace StatsDirect.Builtins
 
             int q = 0;
             MersenneTwister rnd = new MersenneTwister(seed);
-            bool OK = true;
-            for (int iteration = 1; iteration <= iterations; iteration++)
+            int iteration;
+            for (iteration = 1; iteration <= iterations; iteration++)
             {
+                if (iteration % boots_divisor == 0)
+                {
+                    if (host.UpdateProgress(iteration / (double)iterations))
+                        break;
+                }
                 ShuffleValuesWithinRows(x, rnd, treatments, N);
                 CalcFriedman(x, w2, N, treatments, ref A2, ref B2, ref t1, ref t2, ref nd);
                 double t = allAreBinary ? t1 : t2;
                 if (t >= actualT)
-                {
                     q += 1;
-                }
-                if (iteration % boots_divisor == 0)
-                {
-                    if (host.UpdateProgress(iteration / (double)iterations))
-                    {
-                        OK = false;
-                        break;
-                    }
-                }
             }
+            int actualIterations = iteration - 1;
 
             ParameterBag outputParameters = new ParameterBag();
-            if (OK)
-            {
-                double p = Convert.ToDouble(q) / Convert.ToDouble(iterations);
-                outputParameters.AddOutput("p", host.pval(p));
-                //  CI
-                double ll; double ul;
-                string warn;
-                MathDbl.binci(Convert.ToDouble(q), Convert.ToDouble(iterations), out ll, out ul, ci, out warn);
-                outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
-                outputParameters.AddOutput("ll", host.RoundU(ll));
-                outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
-                outputParameters.AddOutput("k", iterations.ToString("N0"));
-                outputParameters.AddOutput("seed_fmt", seed.ToString());
-            }
-            else
-            {
-                outputParameters.AddOutput("p", "P = * (cancelled)");
-            }
+            double p = Convert.ToDouble(q) / Convert.ToDouble(actualIterations);
+            outputParameters.AddOutput("p", host.pval(p));
+            //  CI
+            double ll; double ul;
+            string warn;
+            MathDbl.binci(Convert.ToDouble(q), Convert.ToDouble(actualIterations), out ll, out ul, ci, out warn);
+            outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
+            outputParameters.AddOutput("ll", host.RoundU(ll));
+            outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
+            outputParameters.AddOutput("k", actualIterations.ToString("N0"));
+            outputParameters.AddOutput("seed_fmt", seed.ToString());
             host.FinishProgress();
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -3500,8 +3488,8 @@ namespace StatsDirect.Builtins
                 {
                     if (val != Constant.MISSING)
                     {
-                        qty = qty + 1;
-                        cnt = cnt + 1;
+                        qty++;
+                        cnt++;
                         x[qty] = val;
                     }
                 }
@@ -3523,9 +3511,14 @@ namespace StatsDirect.Builtins
 
             int r = 0;
             MersenneTwister rnd = new MersenneTwister(seed);
-            bool ok = true;
-            for (int iteration = 1; iteration <= iterations; iteration++)
+            int iteration;
+            for (iteration = 1; iteration <= iterations; iteration++)
             {
+                if (iteration % bootsDivisor == 0)
+                {
+                    if (host.UpdateProgress(iteration / (double)iterations))
+                        break;
+                }
                 ShuffleValuesWithinArray(w1, rnd, 1, lx);
                 double h;
                 double ha = 0;
@@ -3535,35 +3528,21 @@ namespace StatsDirect.Builtins
                 {
                     r += 1;
                 }
-                if (iteration % bootsDivisor == 0)
-                {
-                    if (host.UpdateProgress(iteration / (double)iterations))
-                    {
-                        ok = false;
-                        break;
-                    }
-                }
             }
+            int actualIterations = iteration - 1;
 
             ParameterBag outputParameters = new ParameterBag();
-            if (ok)
-            {
-                double p = Convert.ToDouble(r) / Convert.ToDouble(iterations);
-                outputParameters.AddOutput("p", host.pval(p));
-                //  CI
-                double ll; double ul;
-                string warn;
-                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(iterations), out ll, out ul, ci, out warn);
-                outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
-                outputParameters.AddOutput("ll", host.RoundU(ll));
-                outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
-                outputParameters.AddOutput("k", iterations.ToString("N0"));
-                outputParameters.AddOutput("seed_fmt", seed.ToString());
-            }
-            else
-            {
-                outputParameters.AddOutput("p", "P = * (cancelled)");
-            }
+            double p = Convert.ToDouble(r) / Convert.ToDouble(actualIterations);
+            outputParameters.AddOutput("p", host.pval(p));
+            //  CI
+            double ll; double ul;
+            string warn;
+            MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out ll, out ul, ci, out warn);
+            outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
+            outputParameters.AddOutput("ll", host.RoundU(ll));
+            outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
+            outputParameters.AddOutput("k", actualIterations.ToString("N0"));
+            outputParameters.AddOutput("seed_fmt", seed.ToString());
             host.FinishProgress();
             return new StepResult(StepSuccess.Success, outputParameters);
         }

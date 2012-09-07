@@ -8,6 +8,11 @@ namespace StatsDirect.Templates
     /// </summary>
     public abstract class RangeParameter : Parameter
     {
+        protected RangeParameter()
+        {
+            ShowLimits = true;
+        }
+
         /// <summary>
         /// If false, an input real value will be used in preference to the default.
         /// If true, the default will be (re-)evaluated in preference to any input value.

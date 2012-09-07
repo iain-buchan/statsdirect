@@ -71,6 +71,14 @@ namespace StatsDirect.Templates
             get { return StepType.Parameters; }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="parms"></param>
+        /// <param name="isRedo"></param>
+        /// <returns></returns>
+        /// <remarks>Note that this may return parameters with key->null; it is up to the caller to deal with this.</remarks>
         public override StepResult ExecuteInternal(ITemplateProcessor processor, ParameterBag parms, bool isRedo)
         {
             return processor.ExecuteInternal(this, parms, isRedo);

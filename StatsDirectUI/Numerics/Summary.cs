@@ -1,337 +1,314 @@
-using StatsDirect.Utilities; 
+using StatsDirect.Utilities;
 
 using System;
 using System.Collections.Generic;
 namespace StatsDirect.Numerics
 {
-    // TRANSMISSINGCOMMENT: Class Summary
-    public class Summary  
-    { 
-        public int ValidData; 
-        public int MissingData; 
-        public double sum; 
-        public double mean; 
-        public double Variance; 
-        public double sd; 
-        public double sem; 
-        public double MeanLCL; 
-        public double MeanUCL; 
-        public double ConfidenceLevel; 
-        public double GeometricMean; 
-        public double Skewness; 
-        public double Kurtosis; 
-        public double VarianceCoefficient; 
-        
-        public double Maximum; 
-        public double UpperQuartile; 
-        public double median; 
-        public double LowerQuartile; 
-        public double Minimum; 
-        public double UserCentileL; 
-        public double UserCentileU; 
-        public double Range; 
-        public double WeightSum; 
-        
-        public string UserCentileLCaption; 
-        public string UserCentileUCaption; 
-        public string CLCaption; 
-        public string title; 
-        
-        public int CentileType; 
-        
-        private struct VarAndWt 
-        { 
-            public double Data; 
-            public double wt; 
-        } 
-        
-        private VarAndWt[] xs; 
-        
+    public class Summary
+    {
+        public int ValidData { get; set; }
+        public int MissingData { get; set; }
+        public double Sum { get; set; }
+        public double Mean { get; set; }
+        public double Variance { get; set; }
+        public double Sd { get; set; }
+        public double Sem { get; set; }
+        public double MeanLCL { get; set; }
+        public double MeanUCL { get; set; }
+        public double ConfidenceLevel { get; set; }
+        public double GeometricMean { get; set; }
+        public double Skewness { get; set; }
+        public double Kurtosis { get; set; }
+        public double VarianceCoefficient { get; set; }
+
+        public double Maximum { get; set; }
+        public double UpperQuartile { get; set; }
+        public double Median { get; set; }
+        public double LowerQuartile { get; set; }
+        public double Minimum { get; set; }
+        public double UserCentileL { get; set; }
+        public double UserCentileU { get; set; }
+        public double Range { get; set; }
+        public double WeightedSum { get; set; }
+        public double SumOfWeights { get; set; }
+
+        public string UserCentileLCaption { get; set; }
+        public string UserCentileUCaption { get; set; }
+        public string CLCaption { get; set; }
+        public string Title { get; set; }
+
+        public int CentileType;
+
+        private struct VarAndWt
+        {
+            public double Data;
+            public double wt;
+        }
+
         private class VarAndWtByData : IComparer<VarAndWt>
         {
-            private int Compare( VarAndWt x, VarAndWt y ) 
-            { 
+            private int Compare(VarAndWt x, VarAndWt y)
+            {
                 //  First check TM
-                if ( x.Data > y.Data ) 
-                    return 1; 
-                if ( x.Data < y.Data ) 
-                    return -1; 
+                if (x.Data > y.Data)
+                    return 1;
+                if (x.Data < y.Data)
+                    return -1;
 
                 //  If we get here, there are no meaningful differences
-                return 0; 
-            } 
-            // interface methods implemented by Compare
-            int IComparer<VarAndWt>.Compare( VarAndWt x, VarAndWt y )
-            { 
-                return Compare( x, y );
+                return 0;
             }
-            
-        } 
-        
-        
+            // interface methods implemented by Compare
+            int IComparer<VarAndWt>.Compare(VarAndWt x, VarAndWt y)
+            {
+                return Compare(x, y);
+            }
+
+        }
+
+
         ///  <summary>
         ///  Univariate summary statistics with optional analytical weights
         ///  </summary>
         ///  <param name="x"></param>
         ///  <param name="v"></param>
-        ///  <param name="Start"></param>
+        ///  <param name="start"></param>
         ///  <param name="finish"></param>
-        ///  <param name="UserCL"></param>
-        ///  <param name="UserCentL"></param>
-        ///  <param name="UserCentU"></param>
-        ///  <param name="NVSum"></param>
+        ///  <param name="userCL"></param>
+        ///  <param name="userCentL"></param>
+        ///  <param name="userCentU"></param>
+        ///  <param name="nvSum"></param>
         ///  <returns></returns>
         ///  <remarks>see Gleason JR. Univariate summaries with boxplots. Stata Technical Bulletin sg67, 1997 and sg67.1, 1999.</remarks>
-        private bool FullSummary( double[] x, double[] v, int Start, int finish, double UserCL, double UserCentL, double UserCentU, double NVSum ) 
-        { 
-            bool fullSummaryReturn;
-            int i;
-            
-            
+        private bool FullSummary(double[] x, double[] v, int start, int finish, double userCL, double userCentL, double userCentU, double nvSum, out VarAndWt[] xs)
+        {
             // preparatory counting and feeder arrays
             bool doUserCentL;
-            if (UserCentL > 0.0 & UserCentL < 100.0) 
-            { 
-                doUserCentL = true; 
-                UserCentileLCaption = "Centile " + UserCentL.ToString(); 
-            } 
-            else 
-            { 
-                doUserCentL = false; 
-                UserCentileLCaption = ""; 
+            if (userCentL > 0.0 && userCentL < 100.0)
+            {
+                doUserCentL = true;
+                UserCentileLCaption = "Centile " + userCentL.ToString();
+            }
+            else
+            {
+                doUserCentL = false;
+                UserCentileLCaption = "";
             }
             bool doUserCentU;
-            if (UserCentU > 0.0 & UserCentU < 100.0) 
-            { 
+            if (userCentU > 0.0 && userCentU < 100.0)
+            {
                 doUserCentU = true;
-                UserCentileUCaption = "Centile " + UserCentU.ToString(); 
-            } 
-            else 
-            { 
-                doUserCentU = false; 
-                UserCentileUCaption = ""; 
-            } 
-            ValidData = finish - Start + 1;
-            xs = new VarAndWt[ValidData + 1 /* VB to C# conversion */ ];
-            double[] xo = new double[ValidData + 1 /* VB to C# conversion */ ];
-            double[] w = new double[ValidData + 1 /* VB to C# conversion */ ]; 
-            ValidData = 0; 
+                UserCentileUCaption = "Centile " + userCentU.ToString();
+            }
+            else
+            {
+                doUserCentU = false;
+                UserCentileUCaption = "";
+            }
+            ValidData = finish - start + 1;
+            xs = new VarAndWt[ValidData + 1];
+            double[] xo = new double[ValidData + 1];
+            double[] w = new double[ValidData + 1];
+            ValidData = 0;
             double sumv = 0.0;
             int k = 0;
-            for ( i=Start; i <= finish; i++ ) 
-            { 
-                if ( x[ i ] != Constant.MISSING & v[ i ] != Constant.MISSING ) 
-                { 
-                    k = k + 1; 
-                    xs[ k ].Data = x[ i ]; 
-                    xo[ k ] = x[ i ]; 
-                    sumv = sumv + v[ i ]; 
-                    ValidData = ValidData + 1; 
-                } 
-            } 
-            MissingData = ( finish - Start ) - ValidData + 1; 
-            double nnx = Convert.ToDouble( ValidData ); 
-            // set up normalised analytical weights
-            WeightSum = 0.0; 
-            if ( sumv == 0 ) 
-            { 
-                ValidData = 0; 
-            } 
-            else 
+            for (int i = start; i <= finish; i++)
             {
-                double nsumv;
-                if ( NVSum != Constant.MISSING )
-                { 
-                    nsumv = NVSum; 
-                } else { nsumv = nnx / sumv; } 
-                for ( i=1; i <= ValidData; i++ ) 
-                { 
-                    w[ i ] = v[ i ] * nsumv; 
-                    xs[ i ].wt = w[ i ]; 
-                    WeightSum = WeightSum + w[ i ]; 
-                } 
-            } 
+                if (x[i] != Constant.MISSING & v[i] != Constant.MISSING)
+                {
+                    k++;
+                    xs[k].Data = x[i];
+                    xo[k] = x[i];
+                    sumv += v[i];
+                    ValidData++;
+                }
+            }
+            MissingData = (finish - start) - ValidData + 1;
+            double nnx = Convert.ToDouble(ValidData);
+
+            // set up normalised analytical weights
+            WeightedSum = 0.0;
+            SumOfWeights = 0.0;
+            if (sumv == 0)
+                ValidData = 0;
+            else
+            {
+                double nsumv = (nvSum != Constant.MISSING) ? nvSum : nnx / sumv;
+                for (int i = 1; i <= ValidData; i++)
+                {
+                    SumOfWeights += v[i];
+                    w[i] = v[i] * nsumv;
+                    xs[i].wt = w[i];
+                    WeightedSum += w[i];
+                }
+            }
             // confidence interval prep
-            if ( UserCL <= 0.0 | UserCL >= 1.0 )
-            { 
-                UserCL = 0.95; 
-            } 
-            double P = ( 1.0 - UserCL ) / 2.0; 
-            if ( P > 1.0 - P )
+            if (userCL <= 0.0 || userCL >= 1.0)
+                userCL = 0.95;
+            double P = (1.0 - userCL) / 2.0;
+            if (P > 1.0 - P)
                 P = 1.0 - P;
-            double cit = PDF.tfromp( P, Convert.ToDouble( ValidData - 1 ) ); 
-            CLCaption = " " + Formatting.XRound( UserCL * 100, 1 ) + "% CL"; 
-            
-            if ( ValidData > 1 ) 
-            { 
+            double cit = PDF.tfromp(P, Convert.ToDouble(ValidData - 1));
+            CLCaption = " " + Formatting.XRound(userCL * 100, 1) + "% CL";
+
+            if (ValidData > 1)
+            {
                 // nonparametric summary
-                
-                Array.Sort( xs, 1, ValidData, new VarAndWtByData() ); 
-                
+
+                Array.Sort(xs, 1, ValidData, new VarAndWtByData());
+
                 // get quantiles
-                Minimum = GetCentile( xs, ValidData, 0 ); 
-                LowerQuartile = GetCentile( xs, ValidData, 0.25 ); 
-                median = GetCentile( xs, ValidData, 0.5 ); 
-                UpperQuartile = GetCentile( xs, ValidData, 0.75 ); 
-                Maximum = GetCentile( xs, ValidData, 1 ); 
-                Range = Maximum - Minimum; 
-                UserCentileL = doUserCentL ? GetCentile( xs, ValidData, UserCentL / 100.0 ) : Constant.MISSING; 
-                UserCentileU = doUserCentU ? GetCentile( xs, ValidData, UserCentU / 100.0 ) : Constant.MISSING; 
-                
+                Minimum = GetCentile(xs, ValidData, 0);
+                LowerQuartile = GetCentile(xs, ValidData, 0.25);
+                Median = GetCentile(xs, ValidData, 0.5);
+                UpperQuartile = GetCentile(xs, ValidData, 0.75);
+                Maximum = GetCentile(xs, ValidData, 1);
+                Range = Maximum - Minimum;
+                UserCentileL = doUserCentL ? GetCentile(xs, ValidData, userCentL / 100.0) : Constant.MISSING;
+                UserCentileU = doUserCentU ? GetCentile(xs, ValidData, userCentU / 100.0) : Constant.MISSING;
+
                 // parametric univariate summary
-                
+
                 // basic sums
-                sum = 0.0; 
-                double slog = 0.0; 
-                double sumsqdev = 0.0; 
-                bool gmok = false; 
-                for ( i=1; i <= ValidData; i++ ) 
-                { 
-                    sum = sum + xo[ i ] * w[ i ]; 
-                    if ( xo[ i ] * w[ i ] > 0.0 )
-                    { 
-                        slog = slog + Math.Log( xo[ i ] * w[ i ] ); 
-                    } 
+                Sum = 0.0;
+                double slog = 0.0;
+                double sumsqdev = 0.0;
+                bool gmok = false;
+                for (int i = 1; i <= ValidData; i++)
+                {
+                    Sum += xo[i] * w[i];
+                    if (xo[i] * w[i] > 0.0)
+                        slog += Math.Log(xo[i] * w[i]);
+                    else
+                        gmok = true;
+                }
+                Mean = Sum / nnx;
+
+                // deviations from the mean
+                for (int i = 1; i <= ValidData; i++)
+                {
+                    if (Math.Abs(sumsqdev) > 1.0E+300)
+                    {
+                        sumsqdev = Constant.MISSING;
+                        break;
+                    }
+                    sumsqdev += (xo[i] - Mean) * (xo[i] - Mean) * w[i];
+                }
+                if (sumsqdev == Constant.MISSING)
+                    Variance = Constant.MISSING;
+                else
+                    Variance = sumsqdev / Convert.ToDouble(ValidData - 1);
+                Sd = Variance < 0.0 ? Constant.MISSING : Math.Sqrt(Variance);
+                if (ValidData <= 0 || Sd == Constant.MISSING)
+                {
+                    Sem = Constant.MISSING;
+                    MeanLCL = Constant.MISSING;
+                    MeanUCL = Constant.MISSING;
+                }
+                else
+                {
+                    Sem = Sd / Math.Sqrt(nnx);
+                    double bit = cit * Sd / Math.Sqrt(nnx);
+                    MeanLCL = Mean - bit;
+                    MeanUCL = Mean + bit;
+                }
+                GeometricMean = gmok == false ? Math.Exp(slog / nnx) : Constant.MISSING;
+                if (Sd != Constant.MISSING & Mean != Constant.MISSING & Mean != 0.0)
+                {
+                    VarianceCoefficient = Sd / Mean;
+                }
+                else
+                {
+                    VarianceCoefficient = Constant.MISSING;
+                }
+
+                // moments
+                if (Variance != Constant.MISSING & Variance != 0 & ValidData > 3)
+                {
+                    double m2 = 0.0;
+                    double m3 = 0.0;
+                    double m4 = 0.0;
+                    bool toobig = false;
+                    for (int i = 1; i <= ValidData; i++)
+                    {
+                        double xd = xo[i] - Mean;
+                        m2 += (Math.Pow(xd, 2.0)) * w[i];
+                        m3 += (Math.Pow(xd, 3.0)) * w[i];
+                        m4 += (Math.Pow(xd, 4.0)) * w[i];
+                        if (m4 > 1.0E+300)
+                        {
+                            toobig = true;
+                            break;
+                        }
+                    }
+                    if (toobig)
+                    {
+                        Skewness = Constant.MISSING;
+                        Kurtosis = Constant.MISSING;
+                    }
                     else
                     {
-                        gmok = true;
-                    } 
-                } 
-                mean = sum / nnx; 
-                
-                // deviations from the mean
-                for ( i=1; i <= ValidData; i++ ) 
-                { 
-                    if ( Math.Abs( sumsqdev ) > 1.0E+300 ) 
-                    { 
-                        sumsqdev = Constant.MISSING; 
-                        break;
-                    } 
-                    sumsqdev = sumsqdev + ( xo[ i ] - mean ) * ( xo[ i ] - mean ) * w[ i ]; 
-                } 
-                if ( sumsqdev == Constant.MISSING ) 
-                { 
-                    Variance = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    Variance = sumsqdev / Convert.ToDouble( ValidData - 1 ); 
-                } 
-                sd = Variance < 0.0 ? Constant.MISSING : Math.Sqrt( Variance ); 
-                if ( ValidData <= 0 | sd == Constant.MISSING ) 
-                { 
-                    sem = Constant.MISSING; 
-                    MeanLCL = Constant.MISSING; 
-                    MeanUCL = Constant.MISSING; 
-                } 
-                else 
-                { 
-                    sem = sd / Math.Sqrt( nnx ); 
-                    double bit = cit * sd / Math.Sqrt( nnx ); 
-                    MeanLCL = mean - bit; 
-                    MeanUCL = mean + bit; 
-                } 
-                GeometricMean = gmok == false ? Math.Exp( slog / nnx ) : Constant.MISSING; 
-                if ( sd != Constant.MISSING & mean != Constant.MISSING & mean != 0.0 ) 
-                { 
-                    VarianceCoefficient = sd / mean; 
-                } 
-                else 
-                { 
-                    VarianceCoefficient = Constant.MISSING; 
-                } 
-                
-                // moments
-                if ( Variance != Constant.MISSING & Variance != 0 & ValidData > 3 ) 
-                { 
-                    double m2 = 0.0; 
-                    double m3 = 0.0; 
-                    double m4 = 0.0; 
-                    bool toobig = false;
-                    for ( i=1; i <= ValidData; i++ ) 
-                    { 
-                        double xd = xo[ i ] - mean; 
-                        m2 = m2 + ( Math.Pow( xd, 2.0 ) ) * w[ i ]; 
-                        m3 = m3 + ( Math.Pow( xd, 3.0 ) ) * w[ i ]; 
-                        m4 = m4 + ( Math.Pow( xd, 4.0 ) ) * w[ i ]; 
-                        if ( m4 > 1.0E+300 ) 
-                        { 
-                            toobig = true; 
-                            break;
-                        } 
-                    } 
-                    if ( toobig ) 
-                    { 
-                        Skewness = Constant.MISSING; 
-                        Kurtosis = Constant.MISSING; 
-                    } 
-                    else 
-                    { 
-                        m2 = m2 / nnx; 
-                        m3 = m3 / nnx; 
-                        m4 = m4 / nnx; 
+                        m2 = m2 / nnx;
+                        m3 = m3 / nnx;
+                        m4 = m4 / nnx;
                         // Numerically consistent with R but not Stata
-                        Skewness = m3 * Math.Pow( m2, ( -1.5 ) ); 
-                        Kurtosis = m4 * Math.Pow( m2, ( -2.0 ) ); 
-                    } 
-                } 
-                else 
-                { 
-                    Skewness = Constant.MISSING; 
-                    Kurtosis = Constant.MISSING; 
-                } 
-                fullSummaryReturn = true; 
-                
-            } 
-            else if ( ValidData == 1 ) 
-            { 
-                Skewness = Constant.MISSING; 
-                Kurtosis = Constant.MISSING; 
-                LowerQuartile = Constant.MISSING; 
-                UpperQuartile = Constant.MISSING; 
-                UserCentileL = Constant.MISSING; 
-                UserCentileU = Constant.MISSING; 
-                GeometricMean = Constant.MISSING; 
-                median = Constant.MISSING; 
-                Variance = Constant.MISSING; 
-                Maximum = xo[ 1 ]; 
-                Minimum = xo[ 1 ]; 
-                sum = xo[ 1 ]; 
-                sd = Constant.MISSING; 
-                sem = Constant.MISSING; 
-                MeanLCL = Constant.MISSING; 
-                MeanUCL = Constant.MISSING; 
-                fullSummaryReturn = true; 
-                
-            } 
-            else 
-            { 
-                Skewness = Constant.MISSING; 
-                Kurtosis = Constant.MISSING; 
-                LowerQuartile = Constant.MISSING; 
-                UpperQuartile = Constant.MISSING; 
-                UserCentileL = Constant.MISSING; 
-                UserCentileU = Constant.MISSING; 
-                GeometricMean = Constant.MISSING; 
-                median = Constant.MISSING; 
-                mean = Constant.MISSING; 
-                Variance = Constant.MISSING; 
-                Maximum = Constant.MISSING; 
-                Minimum = Constant.MISSING; 
-                sum = Constant.MISSING; 
-                sd = Constant.MISSING; 
-                sem = Constant.MISSING; 
-                VarianceCoefficient = Constant.MISSING; 
-                MeanLCL = Constant.MISSING; 
-                MeanUCL = Constant.MISSING; 
-                Range = Constant.MISSING; 
-                fullSummaryReturn = false; 
-            } 
-            
-            return fullSummaryReturn;
-        } 
-        
-        
+                        Skewness = m3 * Math.Pow(m2, (-1.5));
+                        Kurtosis = m4 * Math.Pow(m2, (-2.0));
+                    }
+                }
+                else
+                {
+                    Skewness = Constant.MISSING;
+                    Kurtosis = Constant.MISSING;
+                }
+                return true;
+
+            }
+            else if (ValidData == 1)
+            {
+                Skewness = Constant.MISSING;
+                Kurtosis = Constant.MISSING;
+                LowerQuartile = Constant.MISSING;
+                UpperQuartile = Constant.MISSING;
+                UserCentileL = Constant.MISSING;
+                UserCentileU = Constant.MISSING;
+                GeometricMean = Constant.MISSING;
+                Median = Constant.MISSING;
+                Variance = Constant.MISSING;
+                Maximum = xo[1];
+                Minimum = xo[1];
+                Sum = xo[1];
+                Sd = Constant.MISSING;
+                Sem = Constant.MISSING;
+                MeanLCL = Constant.MISSING;
+                MeanUCL = Constant.MISSING;
+                return true;
+            }
+            else
+            {
+                Skewness = Constant.MISSING;
+                Kurtosis = Constant.MISSING;
+                LowerQuartile = Constant.MISSING;
+                UpperQuartile = Constant.MISSING;
+                UserCentileL = Constant.MISSING;
+                UserCentileU = Constant.MISSING;
+                GeometricMean = Constant.MISSING;
+                Median = Constant.MISSING;
+                Mean = Constant.MISSING;
+                Variance = Constant.MISSING;
+                Maximum = Constant.MISSING;
+                Minimum = Constant.MISSING;
+                Sum = Constant.MISSING;
+                Sd = Constant.MISSING;
+                Sem = Constant.MISSING;
+                VarianceCoefficient = Constant.MISSING;
+                MeanLCL = Constant.MISSING;
+                MeanUCL = Constant.MISSING;
+                Range = Constant.MISSING;
+                return false;
+            }
+        }
+
         ///  <summary>
         ///  
         ///  </summary>
@@ -340,125 +317,117 @@ namespace StatsDirect.Numerics
         ///  <param name="centile"></param>
         ///  <returns></returns>
         ///  <remarks>see Gleason JR. Univariate summaries with boxplots. Stata Technical Bulletin sg67, 1997 and sg67.1, 1999.</remarks>
-        private double GetCentile( VarAndWt[] x, int N, double centile ) 
-        { 
+        private double GetCentile(VarAndWt[] x, int N, double centile)
+        {
             double index;
             double lastcumsum = 0;
 
-            if ( centile < 0.0 | centile > 1.0 ) 
-            { 
-                return Constant.MISSING; 
-            } 
-            if ( centile == 0.0 ) 
-            { 
-                return x[ 1 ].Data; 
-            } 
-            if ( centile == 1.0 ) 
-            { 
-                return x[ N ].Data; 
-            } 
-            if ( CentileType == 2 ) 
-            { 
-                index = Math.Floor(centile * Convert.ToDouble( N + 1 )); 
-                double h = centile * Convert.ToDouble( N + 1 ) - index;
-                int bottom = index < 1 ? 1 : Convert.ToInt32( index );
+            if (centile < 0.0 | centile > 1.0)
+            {
+                return Constant.MISSING;
+            }
+            if (centile == 0.0)
+            {
+                return x[1].Data;
+            }
+            if (centile == 1.0)
+            {
+                return x[N].Data;
+            }
+            if (CentileType == 2)
+            {
+                index = Math.Floor(centile * Convert.ToDouble(N + 1));
+                double h = centile * Convert.ToDouble(N + 1) - index;
+                int bottom = index < 1 ? 1 : Convert.ToInt32(index);
                 int top;
-                if ( index + 1 > N )
-                { 
-                    top = N; 
-                } else { top = Convert.ToInt32( index ) + 1; } 
-                return ( 1.0 - h ) * x[ bottom ].Data + h * x[ top ].Data; 
-            } 
+                if (index + 1 > N)
+                {
+                    top = N;
+                }
+                else { top = Convert.ToInt32(index) + 1; }
+                return (1.0 - h) * x[bottom].Data + h * x[top].Data;
+            }
 
-            index = centile * Convert.ToDouble( N ); 
+            index = centile * Convert.ToDouble(N);
             double cumsum = 0.0;
             int i;
-            for ( i=1; i <= N; i++ ) 
-            { 
-                cumsum = cumsum + x[ i ].wt; 
-                if ( cumsum > index )
+            for (i = 1; i <= N; i++)
+            {
+                cumsum = cumsum + x[i].wt;
+                if (cumsum > index)
                     break;
                 lastcumsum = cumsum;
-            } 
-            if ( i > N )
-            { 
-                i = N; 
-            } 
-            if ( lastcumsum == index ) 
-                return ( x[ i - 1 ].Data + x[ i ].Data ) / 2.0; 
-            return x[ i ].Data; 
-        } 
-        
-        
-        // TRANSMISSINGCOMMENT: Method WeightedSummaryFromXK
-        public bool WeightedSummaryFromXK( int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, double[,] wt, string wti, double NVSum ) 
+            }
+            if (i > N)
+            {
+                i = N;
+            }
+            if (lastcumsum == index)
+                return (x[i - 1].Data + x[i].Data) / 2.0;
+            return x[i].Data;
+        }
+
+        public bool WeightedSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, double[,] wt, string wti, double nvSum)
         {
-            title = ti + " (weight: " + wti + ")";
+            Title = ti + " (weight: " + wti + ")";
             double[] z = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] v = new double[rows + 1 /* VB to C# conversion */ ]; 
-            for (int i=1; i <= rows; i++ ) 
-            { 
-                z[ i ] = x[ k, i ]; 
-                v[ i ] = wt[ k, i ]; 
-            } 
-            CentileType = 1; 
-            bool weightedSummaryFromXKReturn = FullSummary( z, v, 1, rows, userCL, userCentL, userCentU, NVSum ); 
-            xs = null; 
-            return weightedSummaryFromXKReturn;
-        } 
-        
-        
-        // TRANSMISSINGCOMMENT: Method FullSummaryFromXSort
-        public bool FullSummaryFromXSort( ref double[] x, ref double[] XSRT, ref int rows, ref string ti, ref double UserCL, ref double UserCentL, ref double UserCentU, ref int CentileDef ) 
+            double[] v = new double[rows + 1 /* VB to C# conversion */ ];
+            for (int i = 1; i <= rows; i++)
+            {
+                z[i] = x[k, i];
+                v[i] = wt[k, i];
+            }
+            CentileType = 1;
+            VarAndWt[] xsrt;
+            return FullSummary(z, v, 1, rows, userCL, userCentL, userCentU, nvSum, out xsrt);
+        }
+
+        public bool FullSummaryFromXSort(double[] x, out double[] xSorted, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
         {
-            int i; 
-            
-            title = ti;
-            double[] v = new double[rows + 1 /* for VB to C# conversion */ ]; 
-            for ( i=1; i <= rows; i++ ) 
-            { 
-                v[ i ] = 1.0; 
-            } 
-            CentileType = CentileDef; 
-            bool fullSummaryFromXSortReturn = FullSummary( x, v, 1, rows, UserCL, UserCentL, UserCentU, Constant.MISSING ); 
-            for ( i=1; i <= rows; i++ ) 
-            { 
-                XSRT[ i ] = xs[ i ].Data; 
-            } 
-            xs = null; 
+            int i;
+
+            Title = ti;
+            double[] v = new double[rows + 1 /* for VB to C# conversion */ ];
+            for (i = 1; i <= rows; i++)
+                v[i] = 1.0;
+            CentileType = centileDef;
+            VarAndWt[] xs;
+            bool fullSummaryFromXSortReturn = FullSummary(x, v, 1, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
+            xSorted = new double[rows + 1];
+            for (i = 1; i <= rows; i++)
+                xSorted[i] = xs[i].Data;
             return fullSummaryFromXSortReturn;
-        } 
-        
-        public bool FullSummaryFromX( double[] x, int rows, string ti, double UserCL, double UserCentL, double UserCentU, int CentileDef ) 
+        }
+
+        public bool FullSummaryFromX(double[] x, int rows, string ti, double UserCL, double UserCentL, double UserCentU, int CentileDef)
         {
-            title = ti;
-            double[] v = new double[rows + 1 /* VB to C# conversion */ ]; 
-            for (int i=1; i <= rows; i++ ) 
-                v[ i ] = 1.0; 
-            CentileType = CentileDef; 
-            bool fullSummaryFromXReturn = FullSummary( x, v, 1, rows, UserCL, UserCentL, UserCentU, Constant.MISSING ); 
-            xs = null; 
+            Title = ti;
+            double[] v = new double[rows + 1 /* VB to C# conversion */ ];
+            for (int i = 1; i <= rows; i++)
+                v[i] = 1.0;
+            CentileType = CentileDef;
+            VarAndWt[] xs;
+            bool fullSummaryFromXReturn = FullSummary(x, v, 1, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out xs);
             return fullSummaryFromXReturn;
-        } 
-        
-        
-        public bool FullSummaryFromXK( int k, double[,] x, int rows, string ti, double UserCL, double UserCentL, double UserCentU, int CentileDef ) 
+        }
+
+        public bool FullSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
         {
-            title = ti;
+            Title = ti;
             double[] z = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] v = new double[rows + 1 /* VB to C# conversion */ ]; 
-            for (int i=1; i <= rows; i++ ) 
-            { 
-                z[ i ] = x[ k, i ]; 
-                v[ i ] = 1.0; 
-            } 
-            CentileType = CentileDef; 
-            bool fullSummaryFromXKReturn = FullSummary( z, v, 1, rows, UserCL, UserCentL, UserCentU, Constant.MISSING ); 
-            xs = null; 
+            double[] v = new double[rows + 1 /* VB to C# conversion */ ];
+            for (int i = 1; i <= rows; i++)
+            {
+                z[i] = x[k, i];
+                v[i] = 1.0;
+            }
+            CentileType = centileDef;
+            VarAndWt[] xs;
+            bool fullSummaryFromXKReturn = FullSummary(z, v, 1, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
             return fullSummaryFromXKReturn;
-        } 
-        
-    } 
-    
-    
-} 
+        }
+
+    }
+
+
+}

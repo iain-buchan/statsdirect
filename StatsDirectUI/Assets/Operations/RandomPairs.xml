@@ -17,6 +17,11 @@
           <must-request>true</must-request>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
         </integer>
+        <boolean>
+          <name>balance</name>
+          <prompt>Try balanced allocation</prompt>
+          <must-request>true</must-request>
+        </boolean>
       </parameters>
     </settings>
   	<builtin function-name="rptRandomPairs" />

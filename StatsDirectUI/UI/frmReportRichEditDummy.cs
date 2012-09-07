@@ -24,7 +24,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to select all document content.", "RTE - Select", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -36,7 +36,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to copy document content.", "RTE - Copy", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -48,7 +48,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to cut document content.", "RTE - Cut", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -60,7 +60,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to copy clipboard content to document.", "RTE - Paste", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

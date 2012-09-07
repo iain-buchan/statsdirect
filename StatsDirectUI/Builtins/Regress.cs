@@ -4691,12 +4691,9 @@ namespace StatsDirect.Builtins
             double dev = context.DEV;
 
             int j; int i;
-            int fault = 0;
             int iq = 0;
             double cit; double P0; double[] offst;
             string msg;
-
-
 
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out cit, GAMMA, out P0);
@@ -4713,8 +4710,8 @@ namespace StatsDirect.Builtins
                 gtot += Convert.ToInt32(t[j]);
             }
             int boots = parameters["boots"].AsInt32;
-            host.StartProgress("Bootstrapping " + boots.ToString() + " iterations, click stop to abort...");
-            double[,] qo = new double[ip + 1 /* for VB to C# conversion */, boots + 1 /* for VB to C# conversion */];
+            host.StartProgress("Bootstrapping " + boots.ToString() + " iterations");
+            double[,] qo = new double[ip + 1, boots + 1 /* for VB to C# conversion */];
             double[] theta = new double[ip + 1 /* for VB to C# conversion */ ];
             double[] ql = new double[ip + 1 /* for VB to C# conversion */];
             double[] qu = new double[ip + 1 /* for VB to C# conversion */ ];
@@ -4723,13 +4720,11 @@ namespace StatsDirect.Builtins
             for (i = 1; i <= boots; i++)
             {
                 if (host.UpdateProgress(i / (double)boots))
-                {
-                    fault = 1;
                     break;
-                }
-                double[] rndy = new double[N + 1 /* for VB to C# conversion */];
-                double[] rndt = new double[N + 1 /* for VB to C# conversion */];
-                double[] rndwt = new double[N + 1 /* for VB to C# conversion */];
+
+                double[] rndy = new double[N + 1];
+                double[] rndt = new double[N + 1];
+                double[] rndwt = new double[N + 1];
                 for (j = 1; j <= gtot; j++)
                 {
                     int pick = Convert.ToInt32((gtot - 1) * rng.NextDouble()) + 1;
@@ -4740,12 +4735,10 @@ namespace StatsDirect.Builtins
                         pivot += Convert.ToInt32(t[k]);
                         if (pick <= pivot)
                         {
-                            rndt[k] = rndt[k] + 1;
+                            rndt[k]++;
                             if (rng.NextDouble() <= (Convert.ToInt64(y[k]) / (double)Convert.ToInt64(t[k])))
-                            {
-                                rndy[k] = rndy[k] + 1;
-                            }
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                                rndy[k]++;
+                            break;
                         }
                     }
                 }
@@ -4778,27 +4771,25 @@ namespace StatsDirect.Builtins
                 offst = new double[N + 1 /* for VB to C# conversion */ ];
                 msg = "";
                 bool iweight = true;
+                int fault;
                 Regress1.X_LOGIREG(mean, false, ref iweight, N, x, M, isx, ip, rndy, rndt, rndwt, ref dev, ref idf, b, ref irank, se, cov, tol, 50, fvl, var, dr, h, offst, out fault, ref msg);
                 if (fault == 0)
                 {
-                    booted = booted + 1;
+                    booted++;
                     for (j = 1; j <= ip; j++)
                     {
                         qo[j, booted] = Formatting.SafeExp(b[j]);
                         if (qo[j, booted] < 1000.0 * ob[j])
-                        {
-                            theta[j] = theta[j] + qo[j, booted];
-                        }
+                            theta[j] += qo[j, booted];
                     }
                 }
             }
             host.FinishProgress();
+
+            // In the case of the bootstrap not running to its full iterations because the user cancelled, present results as far as it's got (#669)
+            boots = i - 1;
+
             ParameterBag outputParameters = new ParameterBag();
-            if (fault != 0)
-            {
-                host.Error("Bootstrap aborted", "Logistic regression");
-                throw new TemplateOperationCancelledException();
-            }
 
             for (j = 1; j <= ip; j++)
             {
@@ -4827,18 +4818,12 @@ namespace StatsDirect.Builtins
             }
             // RTF_LoadTemplate("lr_bootstrap.rtf")
             if (boots == booted)
-            {
                 outputParameters.AddOutput("boots", booted.ToString());
-            }
             else
-            {
                 outputParameters.AddOutput("boots", booted.ToString() + ", warning: " + (boots - booted).ToString() + " re-samples were dropped because they caused error in the regression");
-            }
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
             if (mean)
-            {
                 iq = 1;
-            }
             List<ParameterBag> parametersList = new List<ParameterBag>();
             outputParameters.AddOutput("*parameters", parametersList);
             for (i = 1; i <= ip; i++)
@@ -4869,7 +4854,8 @@ namespace StatsDirect.Builtins
             h = new double[N + 1 /* for VB to C# conversion */];
             offst = new double[N + 1 /* for VB to C# conversion */ ];
             msg = "";
-            Regress1.X_LOGIREG(mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, 50, fvl, var, dr, h, offst, out fault, ref msg);
+            int scrapFault;
+            Regress1.X_LOGIREG(mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, 50, fvl, var, dr, h, offst, out scrapFault, ref msg);
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 

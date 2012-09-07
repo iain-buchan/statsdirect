@@ -88,6 +88,8 @@ namespace StatsDirect.Templates
         {
             get
             {
+                if (!filledParameters.ContainsKey(key))
+                    throw new Exception("Cannot find parameter named '" + key + "' in filled parameters");
                 return filledParameters[key];
             }
             set

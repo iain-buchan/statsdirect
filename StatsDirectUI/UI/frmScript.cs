@@ -100,25 +100,28 @@ namespace StatsDirect.UI
         }
          */
 
-        public override bool OpenFile(string Filename)
+        public override bool OpenFile(string filename, bool isTempFile)
         {
-            string strExt = System.IO.Path.GetExtension(Filename);
+            string strExt = System.IO.Path.GetExtension(filename);
             if (null != strExt)
                 strExt = strExt.ToLower();
             if (".rtf".Equals(strExt))
-                rtbDoc.LoadFile(Filename, RichTextBoxStreamType.RichText);
+                rtbDoc.LoadFile(filename, RichTextBoxStreamType.RichText);
             else
             {
-                using (StreamReader txtReader = new StreamReader(Filename))
+                using (StreamReader txtReader = new StreamReader(filename))
                 {
                     rtbDoc.Text = txtReader.ReadToEnd();
                 }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;
             }
-            currentFile = Filename;
-            rtbDoc.Modified = false;
-            Path = Filename;
+            if (!isTempFile)
+            {
+                currentFile = filename;
+                Path = filename;
+            }
+            rtbDoc.Modified = isTempFile;
             // Set the selected language according to the loaded file
             if (".vb".Equals(strExt))
                 cboLanguage.SelectedIndex = 2;
@@ -181,7 +184,7 @@ namespace StatsDirect.UI
             currentFile = SaveFileDialog1.FileName;
             rtbDoc.Modified = false;
             Path = currentFile;
-            SDApplication.SoleInstance.NoteRecentFile(currentFile);
+            SDApplication.SoleInstance.NoteRecentFile(currentFile, true);
         }
 
         private void SelectAllToolStripMenuItem_Click(object sender, EventArgs e)
@@ -192,7 +195,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to select all document content.", "RTE - Select", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -204,7 +207,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to copy document content.", "RTE - Copy", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -216,7 +219,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to cut document content.", "RTE - Cut", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -228,7 +231,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to copy clipboard content to document.", "RTE - Paste", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

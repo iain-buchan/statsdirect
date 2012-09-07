@@ -17,6 +17,12 @@ namespace StatsDirect.Utilities
         {
             try
             {
+                if (null != s)
+                {
+                    // Fix up e.g. 1.0D-3 to 1.0E-3
+                    s = s.Replace('D', 'E');
+                    s = s.Replace('d', 'e');
+                }
                 return Math.Round(double.Parse(s), 14);
             }
             catch (FormatException)

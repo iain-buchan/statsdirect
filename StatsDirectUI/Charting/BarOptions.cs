@@ -33,7 +33,7 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  If false, bars should be drawn side-by-side.  If true, bars should be drawn end-to-end.
         ///  </summary>
-        public bool Stacked;
+        public bool Stacked { get; set; }
 
         /// <summary>
         /// If false, stacked bar charts should be drawn per Excel.  If true, they should be drawn per StatsDirect.
@@ -44,11 +44,10 @@ namespace StatsDirect.Charting
         ///  If Stacked and true, bars should be drawn end-to-end scaled 0..1.  If Stacked and false, bars should be drawn end-to-end scaled to the largest bar.
         ///  If not Stacked, no effect.
         ///  </summary>
-        public bool Stacked100Percent; 
+        public bool Stacked100Percent { get; set; } 
 
         private bool _ShowLegendIsRelevant; 
         
-        // TRANSMISSINGCOMMENT: Method SetMarkers
         public void SetMarkers( IList <Series>seriesToUse ) 
         { 
             //  Markers will be calculated automatically as required (though we need to force fills); we just need to set up the option descriptors.
@@ -71,7 +70,7 @@ namespace StatsDirect.Charting
                                                           };
                 SeriesOptions.Add( soleOptions ); 
             } 
-            _ShowLegendIsRelevant = seriesToUse.Count > 1; 
+            _ShowLegendIsRelevant = Stacked || seriesToUse.Count > 1; 
         } 
         
         

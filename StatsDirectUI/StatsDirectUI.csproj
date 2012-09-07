@@ -730,9 +730,7 @@
     <Compile Include="UI\StatsDirectToolStripRenderer.cs" />
     <Compile Include="TemplateProcessing\ScriptEngine.cs" />
     <Compile Include="TemplateProcessing\TemplateProcessor.cs" />
-    <Compile Include="UI\TextRuler.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="UI\TextRuler.cs" />
     <Compile Include="UI\VerticalLabel.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -1656,7 +1654,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

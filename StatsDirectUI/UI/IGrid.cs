@@ -49,7 +49,7 @@ namespace StatsDirect.UI
         /// <param name="frame"></param>
         /// <param name="isFormulae"> </param>
         /// <param name="writePosition"> </param>
-        void WriteDataFrame(DataFrame frame, bool isFormulae, RelativePosition writePosition);
+        void WriteDataFrame(DataFrame frame, bool isFormulae, string missingIndicator, RelativePosition writePosition);
 
         /// <summary>
         /// The portion of the sheet that is in use.

@@ -30,9 +30,10 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.0.66.0")]
-[assembly: AssemblyFileVersion("3.0.66.0")]
+[assembly: AssemblyVersion("3.0.68.0")]
+[assembly: AssemblyFileVersion("3.0.68.0")]
 
+/*
 [assembly: Dependency("DevExpress.Data.v11.2", LoadHint.Always)]
 [assembly: Dependency("DevExpress.Printing.v11.2.Core", LoadHint.Always)]
 [assembly: Dependency("DevExpress.RichEdit.v11.2.Core", LoadHint.Always)]
@@ -45,5 +46,6 @@ using System.Runtime.InteropServices;
 [assembly: Dependency("DevExpress.XtraRichEdit.v11.2.Extensions", LoadHint.Always)]
 [assembly: Dependency("DevExpress.XtraTreeList.v11.2.Printing", LoadHint.Always)]
 [assembly: Dependency("SpreadsheetGear", LoadHint.Always)]
+*/
 
 [assembly: CLSCompliant(false)]

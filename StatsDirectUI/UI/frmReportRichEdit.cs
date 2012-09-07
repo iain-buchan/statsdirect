@@ -42,25 +42,28 @@ namespace StatsDirect.UI
             dirty = true;
         }
 
-        public override bool OpenFile(string Filename)
+        public override bool OpenFile(string filename, bool isTempFile)
         {
-            string strExt = System.IO.Path.GetExtension(Filename) ?? "";
+            string strExt = System.IO.Path.GetExtension(filename) ?? "";
             strExt = strExt.ToLower();
             if (".rtf".Equals(strExt))
-                richEditControl1.LoadDocument(Filename, DocumentFormat.Rtf);
+                richEditControl1.LoadDocument(filename, DocumentFormat.Rtf);
             else if (".htm".Equals(strExt) || ".html".Equals(strExt))
-                richEditControl1.LoadDocument(Filename, DocumentFormat.Html);
+                richEditControl1.LoadDocument(filename, DocumentFormat.Html);
             else if (".mht".Equals(strExt) || ".mhtml".Equals(strExt))
-                richEditControl1.LoadDocument(Filename, DocumentFormat.Mht);
+                richEditControl1.LoadDocument(filename, DocumentFormat.Mht);
             else
             {
-                using (StreamReader txtReader = new StreamReader(Filename))
+                using (StreamReader txtReader = new StreamReader(filename))
                 {
                     richEditControl1.Text = txtReader.ReadToEnd();
                 }
             }
-            currentFile = Filename;
-            Path = Filename;
+            if (!isTempFile)
+            {
+                currentFile = filename;
+                Path = filename;
+            }
             return true;
         }
 
@@ -82,7 +85,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to select all document content.", "RTE - Select", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -94,7 +97,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to copy document content.", "RTE - Copy", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -106,7 +109,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to cut document content.", "RTE - Cut", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -118,7 +121,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                MessageBox.Show("Unable to copy clipboard content to document.", "RTE - Paste", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.msgbox_x("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -466,7 +469,7 @@ namespace StatsDirect.UI
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.PlainText);
             }
             currentFile = SaveFileDialog1.FileName;
-            SDApplication.SoleInstance.NoteRecentFile(currentFile);
+            SDApplication.SoleInstance.NoteRecentFile(currentFile, true);
             Text = currentFile;
             ((WindowInformation)Tag).Path = currentFile;
             richEditControl1.Modified = false;

@@ -25,12 +25,10 @@ namespace StatsDirect.Builtins
             string studyType = parameters["study_type"].AsString;
             bool isCaseControl = "casecontrol".Equals(studyType);
             bool isCohort = "cohort".Equals(studyType);
-            bool doFisher = parameters["doFisher"].AsBoolean;
+            bool doFisher = parameters.ContainsKey("doFisher") ? parameters["doFisher"].AsBoolean : false;
 
-            if (cco <= 0.0 | cco >= 1.0)
-            {
+            if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
-            }
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
 
             double a = parameters["a"].AsDouble;
@@ -44,7 +42,7 @@ namespace StatsDirect.Builtins
             double N = P + Q;
             ParameterBag outputParameters = new ParameterBag();
             //  RTF_LoadTemplate("chi2x2.rtf")
-            if (!((fault == 0 & (P > 0 | Q > 0 | r > 0 | s > 0) & (P * Q * r * s > 0))))
+            if (!((fault == 0 && (P > 0 || Q > 0 || r > 0 || s > 0) && (P * Q * r * s > 0))))
             {
                 throw new InvalidDataException();
             }
@@ -717,23 +715,24 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            int r = 0;
+            int r;
+            int actualIterations;
             int ierror = 0;
-            Chi2TrendResample(host, x, wt, rows, cols, x2, iterations, ref r, seed, ref ierror);
+            Chi2TrendResample(host, x, wt, rows, cols, x2, iterations, out r, out actualIterations, seed, ref ierror);
 
             ParameterBag outputParameters = new ParameterBag();
             if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
             {
-                double p = Convert.ToDouble(r) / Convert.ToDouble(iterations);
+                double p = Convert.ToDouble(r) / Convert.ToDouble(actualIterations);
                 outputParameters.AddOutput("p", host.pval(p));
                 //  CI
                 double ll; double ul;
                 string warn;
-                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(iterations), out ll, out ul, ci, out warn);
+                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out ll, out ul, ci, out warn);
                 outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
                 outputParameters.AddOutput("ll", host.RoundU(ll));
                 outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
-                outputParameters.AddOutput("k", iterations.ToString("N0"));
+                outputParameters.AddOutput("k", actualIterations.ToString("N0"));
                 outputParameters.AddOutput("seed_fmt", seed.ToString());
             }
             else
@@ -759,7 +758,7 @@ namespace StatsDirect.Builtins
         ///  <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
         ///  <remarks></remarks>
-        private static void Chi2TrendResample(ITemplateHost host, int[,] x, double[] wt, int nrow, int ncol, double x2, int iter, ref int r, int iseed, ref int ierror)
+        private static void Chi2TrendResample(ITemplateHost host, int[,] x, double[] wt, int nrow, int ncol, double x2, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
         {
             int[] ncolt = new int[ncol + 1 /* for VB to C# conversion */];
             int[] nrowt = new int[nrow + 1 /* for VB to C# conversion */ ];
@@ -793,6 +792,7 @@ namespace StatsDirect.Builtins
             double[] fact = new double[1 + 1 /* for VB to C# conversion */ ];
             int[] jwork = new int[1 + 1 /* for VB to C# conversion */ ];
 
+            r = 0;
             for (i = 1; i <= iter; i++)
             {
                 if (i % boots_divisor == 0)
@@ -809,7 +809,7 @@ namespace StatsDirect.Builtins
                     r += 1;
                 }
             }
-
+            actualIterations = i - 1;
             host.FinishProgress();
         }
 

@@ -1444,7 +1444,7 @@ namespace StatsDirect.Charting
                     int q = 13 - L;
                     if (L >= 13)
                         q = 1;
-                    WriteAsciiYX(Y2, q, definition.YSeries[y].Title.Substring(0, 13));
+                    WriteAsciiYX(Y2, q, definition.YSeries[y].Title.Substring(0, Math.Min(L, 13)));
                     WriteAsciiYX(Y2, 14, "|");
                     WriteAsciiYX(Y2 + 1, 14, "+");
                 }
@@ -3026,7 +3026,7 @@ namespace StatsDirect.Charting
         ///  <param name="lines">The number of lines of text in the ASCII plot</param>
         private void ASCII_InitPlot(int lines)
         {
-            shTx = new string[lines];
+            shTx = new string[lines + 1];
             for (int c = 0; c <= shTx.GetUpperBound(0); c++)
             {
                 shTx[c] = String.Empty.PadLeft(85);
@@ -3963,147 +3963,150 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotBoxWhiskerAscii
-        private ParameterBag PlotBoxWhiskerAscii(List<Series> SeriesToUse)
+        private ParameterBag PlotBoxWhiskerAscii(List<Series> seriesToUse)
         {
-            // sort the array and get the min, max values
-            GetMinMaxSort(SeriesToUse, out dataMinX, out dataMaxX);
-
-            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
-
-            double P = (1.0 - bwOptions.Cco) / 2.0;
-            if (P > 1.0 - P)
-                P = 1.0 - P;
-
-            ASCII_InitPlot(SeriesToUse.Count * 2 + 4);
-
-            // Draw the scale
-            DrawAxes(definition.ChartOptions.Title + "\r\n", new Axis(bwOptions.XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, 0, definition.ScaleParameters.X.ScaleType), false, true, false);
-
-            if (shTx[0].Length > bwOptions.XAxisTitle.Length)
+            try
             {
-                WriteAsciiYX(0, 45 - bwOptions.XAxisTitle.Length / 2, bwOptions.XAxisTitle);
-            }
-            else
-            {
-                //  Axis title is larger than the chart, so replace the entire first string
-                shTx[0] = bwOptions.XAxisTitle;
-            }
+                // sort the array and get the min, max values
+                GetMinMaxSort(seriesToUse, out dataMinX, out dataMaxX);
 
-            divx = axisXMax - axisXMin;
-            offx = Convert.ToInt32(-(axisXMin / divx * 60) + 16);
-            divy = SeriesToUse.Count + 1;
-            offy = Convert.ToInt32(-(0 / divy * 20) + ASCII_Ytxt);
+                BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
 
-            // work through the columns
-            for (int c = 0; c <= SeriesToUse.Count - 1; c++)
-            {
-                DoubleSeries s = SeriesToUse[c].AsDoubleSeries;
-                double mdn = 0; double Q1 = 0; double Q3 = 0;
-                double innerFenceL = 0; double innerFenceR = 0;
-                double outerFenceL = 0; double outerFenceR = 0;
-                double otherMark = 0;
-                bool centreIsMedian = false;
-                PlotBoxWhiskerCalc(s, bwOptions.Method, P, ref mdn, ref Q1, ref Q3, ref innerFenceL, ref innerFenceR, bwOptions.UseInnerFence, ref outerFenceL, ref outerFenceR, bwOptions.UseOuterFence, ref otherMark, ref centreIsMedian);
+                double P = (1.0 - bwOptions.Cco) / 2.0;
+                if (P > 1.0 - P)
+                    P = 1.0 - P;
 
-                bool gatedl;
-                int XL;
-                if (s.Data[0] < outerFenceL & outerFenceL < Q1)
+                ASCII_InitPlot(seriesToUse.Count * 2 + 4);
+
+                // Draw the scale
+                DrawAxes(definition.ChartOptions.Title + "\r\n", new Axis(bwOptions.XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, 0, definition.ScaleParameters.X.ScaleType), false, true, false);
+
+                if (shTx[0].Length > bwOptions.XAxisTitle.Length)
                 {
-                    XL = Convert.ToInt32(offx + outerFenceL / divx * 60);
-                    gatedl = true;
+                    WriteAsciiYX(0, 45 - bwOptions.XAxisTitle.Length / 2, bwOptions.XAxisTitle);
                 }
                 else
                 {
-                    XL = Convert.ToInt32(offx + s.Data[0] / divx * 60);
-                    gatedl = false;
+                    //  Axis title is larger than the chart, so replace the entire first string
+                    shTx[0] = bwOptions.XAxisTitle;
                 }
 
-                bool gatedr;
-                int XR;
-                if (s.Data[s.Data.Length - 1] > outerFenceR & outerFenceR > Q3)
+                divx = axisXMax - axisXMin;
+                offx = Convert.ToInt32(-(axisXMin / divx * 60) + 16);
+                divy = seriesToUse.Count + 1;
+                offy = Convert.ToInt32(-(0 / divy * 20) + ASCII_Ytxt);
+
+                // work through the columns
+                for (int c = 0; c <= seriesToUse.Count - 1; c++)
                 {
-                    XR = Convert.ToInt32(offx + outerFenceR / divx * 60);
-                    gatedr = true;
-                }
-                else
-                {
-                    XR = Convert.ToInt32(offx + s.Data[s.Data.Length - 1] / divx * 60);
-                    gatedr = false;
-                }
+                    DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                    double mdn = 0; double Q1 = 0; double Q3 = 0;
+                    double innerFenceL = 0; double innerFenceR = 0;
+                    double outerFenceL = 0; double outerFenceR = 0;
+                    double otherMark = 0;
+                    bool centreIsMedian = false;
+                    PlotBoxWhiskerCalc(s, bwOptions.Method, P, ref mdn, ref Q1, ref Q3, ref innerFenceL, ref innerFenceR, bwOptions.UseInnerFence, ref outerFenceL, ref outerFenceR, bwOptions.UseOuterFence, ref otherMark, ref centreIsMedian);
 
-                int XM = Convert.ToInt32(offx + (mdn / divx * 60));
-
-                int LQ = Convert.ToInt32(offx + (Q1 / divx * 60));
-                int UQ = Convert.ToInt32(offx + (Q3 / divx * 60));
-
-                // Plot it
-                int Y2 = 3 + c * 2;
-                WriteAsciiYX(Y2, LQ, new string('.', UQ - LQ));
-                WriteAsciiYX(Y2, XM, "*");
-
-                int L;
-                if (gatedl)
-                {
-                    L = LQ - XL;
-                    if (L < 2)
+                    bool gatedl;
+                    int XL;
+                    if (s.Data[0] < outerFenceL & outerFenceL < Q1)
                     {
-                        L = 2;
+                        XL = Convert.ToInt32(offx + outerFenceL / divx * 60);
+                        gatedl = true;
                     }
-                    WriteAsciiYX(Y2, XL, "|" + new string('-', L - 2) + "[");
-                    for (int r = 0; r <= s.Data.Length - 1; r++)
+                    else
                     {
-                        if (s.Data[r] < outerFenceL)
+                        XL = Convert.ToInt32(offx + s.Data[0] / divx * 60);
+                        gatedl = false;
+                    }
+
+                    bool gatedr;
+                    int XR;
+                    if (s.Data[s.Data.Length - 1] > outerFenceR & outerFenceR > Q3)
+                    {
+                        XR = Convert.ToInt32(offx + outerFenceR / divx * 60);
+                        gatedr = true;
+                    }
+                    else
+                    {
+                        XR = Convert.ToInt32(offx + s.Data[s.Data.Length - 1] / divx * 60);
+                        gatedr = false;
+                    }
+
+                    int XM = Convert.ToInt32(offx + (mdn / divx * 60));
+
+                    int LQ = Convert.ToInt32(offx + (Q1 / divx * 60));
+                    int UQ = Convert.ToInt32(offx + (Q3 / divx * 60));
+
+                    // Plot it
+                    int Y2 = 3 + c * 2;
+                    WriteAsciiYX(Y2, LQ, new string('.', UQ - LQ));
+                    WriteAsciiYX(Y2, XM, "*");
+
+                    int L;
+                    if (gatedl)
+                    {
+                        L = LQ - XL;
+                        if (L < 2)
                         {
-                            int x1 = Convert.ToInt32(offx + s.Data[r] / divx * 60);
-                            WriteAsciiYX(Y2, x1, ".");
+                            L = 2;
+                        }
+                        WriteAsciiYX(Y2, XL, "|" + new string('-', L - 2) + "[");
+                        for (int r = 0; r <= s.Data.Length - 1; r++)
+                        {
+                            if (s.Data[r] < outerFenceL)
+                            {
+                                int x1 = Convert.ToInt32(offx + s.Data[r] / divx * 60);
+                                WriteAsciiYX(Y2, x1, ".");
+                            }
                         }
                     }
-                }
-                else
-                {
-                    L = LQ - XL;
-                    if (L < 2)
+                    else
                     {
-                        L = 2;
-                    }
-                    WriteAsciiYX(Y2, XL, ">" + new string('-', L - 2) + "[");
-                }
-
-                if (gatedr)
-                {
-                    L = XR - UQ;
-                    if (L < 2)
-                    {
-                        L = 2;
-                    }
-                    WriteAsciiYX(Y2, UQ, "]" + new string('-', L - 2) + "|");
-                    for (int r = 0; r <= s.Data.Length - 1; r++)
-                    {
-                        if (s.Data[r] > outerFenceR)
+                        L = LQ - XL;
+                        if (L < 2)
                         {
-                            int x1 = Convert.ToInt32(offx + s.Data[r] / divx * 60);
-                            WriteAsciiYX(Y2, x1, ".");
+                            L = 2;
+                        }
+                        WriteAsciiYX(Y2, XL, ">" + new string('-', L - 2) + "[");
+                    }
+
+                    if (gatedr)
+                    {
+                        L = XR - UQ;
+                        if (L < 2)
+                        {
+                            L = 2;
+                        }
+                        WriteAsciiYX(Y2, UQ, "]" + new string('-', L - 2) + "|");
+                        for (int r = 0; r <= s.Data.Length - 1; r++)
+                        {
+                            if (s.Data[r] > outerFenceR)
+                            {
+                                int x1 = Convert.ToInt32(offx + s.Data[r] / divx * 60);
+                                WriteAsciiYX(Y2, x1, ".");
+                            }
                         }
                     }
-                }
-                else
-                {
-                    L = XR - UQ;
-                    if (L < 2)
+                    else
                     {
-                        L = 2;
+                        L = XR - UQ;
+                        if (L < 2)
+                        {
+                            L = 2;
+                        }
+                        WriteAsciiYX(Y2, UQ, "]" + new string('-', L - 2) + "<");
                     }
-                    WriteAsciiYX(Y2, UQ, "]" + new string('-', L - 2) + "<");
-                }
 
+                }
+                return new ParameterBag();
             }
-            return new ParameterBag();
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method GetBarScaleParameters
         private ScaleParameters GetBarScaleParameters()
         {
             BarOptions bOptions = ((BarOptions)(definition.ChartOptions));
@@ -4249,9 +4252,7 @@ namespace StatsDirect.Charting
                         {
                             double seriesValue = seriesToUse[seriesIndex].AsDoubleSeries.Data[barIndex];
                             if (seriesValue != Constant.MISSING)
-                            {
                                 totalOfAllBars += seriesValue;
-                            }
                         }
                         largestSetOfBars = Math.Max(largestSetOfBars, totalOfAllBars);
                     }
@@ -4260,6 +4261,7 @@ namespace StatsDirect.Charting
             }
 
             //  If there's a legend, work out how many series there are and extend the plot area as required to hold the legend
+            bool shouldDrawLegend = bOptions.Stacked || (bOptions.ShowLegend && bOptions.ShowLegendIsRelevant);
 
             //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
             double legendFontHeight;
@@ -4276,7 +4278,7 @@ namespace StatsDirect.Charting
             double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
             double legendRowHeight = Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
             double legendSpacing = MINIMUM_LEGEND_GAP + legendRowHeight;
-            if (bOptions.ShowLegend && bOptions.ShowLegendIsRelevant)
+            if (shouldDrawLegend)
             {
                 double legendBottom = legendTop - (seriesToUse.Count * legendSpacing);
                 if (legendBottom < LOWEST_ALLOWED_LEGEND)
@@ -4452,23 +4454,17 @@ namespace StatsDirect.Charting
                     }
 
                     //  Legend
-                    if (bOptions.ShowLegend && bOptions.ShowLegendIsRelevant)
+                    if (shouldDrawLegend)
                     {
                         if (barBrush != null)
-                        {
                             FillRectangle(barBrush, xAxisCanvas, legendTop - (c * legendSpacing), legendRowHeight, legendRowHeight);
-                        }
                         if (!(definition.ChartOptions.UseColour))
-                        {
                             DrawRectangle(barPen, xAxisCanvas, legendTop - (c * legendSpacing), legendRowHeight, legendRowHeight);
-                        }
                         DrawStringLegendL(definition.XSeries[c].Title, xAxisCanvas + 9 + legendRowHeight, legendTop - (c * legendSpacing));
                     }
 
                     if (barBrush != null)
-                    {
                         barBrush.Dispose();
-                    }
                 }
             }
             else
@@ -4623,36 +4619,26 @@ namespace StatsDirect.Charting
                                     double barY = ToCanvasY(dataLowY + dataH);
 
                                     if (barBrush != null)
-                                    {
                                         FillRectangle(barBrush, barX, barY, barW, barH);
-                                    }
                                     if (!(definition.ChartOptions.UseColour))
-                                    {
                                         DrawRectangle(barPen, barX, barY, barW, barH);
-                                    }
                                 }
                             }
                         }
                     }
 
                     //  Legend
-                    if (bOptions.ShowLegend && bOptions.ShowLegendIsRelevant)
+                    if (shouldDrawLegend)
                     {
                         if (barBrush == null)
-                        {
                             DrawRectangle(barPen, xAxisCanvas, legendTop - (c * legendSpacing), legendRowHeight, legendRowHeight);
-                        }
                         else
-                        {
                             FillRectangle(barBrush, xAxisCanvas, legendTop - (c * legendSpacing), legendRowHeight, legendRowHeight);
-                        }
                         DrawStringLegendL(definition.YSeries[c].Title, xAxisCanvas + 9 + legendRowHeight, legendTop - (c * legendSpacing));
                     }
 
                     if (barBrush != null)
-                    {
                         barBrush.Dispose();
-                    }
                 }
             }
             MaybeDrawMarkerLines();
@@ -4660,8 +4646,6 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method MaybeDrawMarkerLines
         private void MaybeDrawMarkerLines()
         {
             if (definition != null)
@@ -5122,9 +5106,7 @@ namespace StatsDirect.Charting
             return sp;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotHistogram
-        private ParameterBag PlotHistogram(Stream OutputStream)
+        private ParameterBag PlotHistogram(Stream outputStream)
         {
             HistogramOptions histOptions = ((HistogramOptions)(definition.ChartOptions));
             bool showRelativeFrequencies = histOptions.ShowRelativeFrequencies;
@@ -5146,7 +5128,7 @@ namespace StatsDirect.Charting
                     //  If there's more than one series, they're to be plotted separately.  Each plot is the same height as the original.
                     metaH = metaH * SeriesToUse.Count;
 
-                    StartMetafile(OutputStream);
+                    StartMetafile(outputStream);
 
                     originalMarkerTypes = _markerTypes;
                     _markerTypes = new MarkerType[originalMarkerTypes.Length];
@@ -5351,9 +5333,9 @@ namespace StatsDirect.Charting
                         //  At this point, C is one past the number of series in the chart
                         WriteAsciiYX(C + ASCII_Ytxt - 1, 16, "Mid-points");
                         WriteAsciiYX(C + ASCII_Ytxt - 1, 1, "Counts");
-                        shTx[2] = "     " + shTx[2].Substring(0, 85);
-                        shTx[1] = "     " + shTx[1].Substring(0, 85);
-                        shTx[0] = "     " + shTx[0].Substring(0, 85);
+                        shTx[2] = "     " + shTx[2].Substring(0, Math.Min(shTx[2].Length, 85));
+                        shTx[1] = "     " + shTx[1].Substring(0, Math.Min(shTx[1].Length, 85));
+                        shTx[0] = "     " + shTx[0].Substring(0, Math.Min(shTx[0].Length, 85));
 
                         //  Save this plot
                         for (int i = shTx.Length - 1; i >= 0; i--)
@@ -5384,6 +5366,12 @@ namespace StatsDirect.Charting
 
                 return new ParameterBag();
             }
+#if DEBUG
+            catch (Exception ex)
+            {
+                throw;
+            }
+#endif
             finally
             {
                 if (originalMarkerTypes != null)
@@ -8340,21 +8328,15 @@ namespace StatsDirect.Charting
                 if (pg == null || pg[i] == 0)
                 {
                     if (gn[i] != Constant.MISSING & gn[i] > max_gn)
-                    {
                         max_gn = gn[i];
-                    }
                 }
                 if (odr[i] != Constant.MISSING)
                 {
-                    kok = kok + 1;
+                    kok++;
                     if (odr[i] > ormax)
-                    {
                         ormax = odr[i];
-                    }
                     if (odr[i] < ormin)
-                    {
                         ormin = odr[i];
-                    }
                     if (odrl[i] > odru[i])
                     {
                         double tmp = odrl[i];
@@ -8362,13 +8344,9 @@ namespace StatsDirect.Charting
                         odru[i] = tmp;
                     }
                     if (odrl[i] < orlmin)
-                    {
                         orlmin = odrl[i];
-                    }
                     if (odru[i] > orumax)
-                    {
                         orumax = odru[i];
-                    }
                 }
             }
 
@@ -8376,29 +8354,19 @@ namespace StatsDirect.Charting
             for (int i = 0; i <= k - 1; i++)
             {
                 if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0)
-                {
                     absmin = Math.Abs(odr[i]);
-                }
                 if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0)
-                {
                     absmin = Math.Abs(odrl[i]);
-                }
                 if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0)
-                {
                     absmin = Math.Abs(odru[i]);
-                }
             }
 
             DataMaxX = ormax;
             if (DataMaxX < orumax && orumax != Constant.MISSING)
-            {
                 dataMaxX = orumax;
-            }
             DataMinX = ormin;
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
-            {
                 dataMinX = orlmin;
-            }
 
             ScaleParameters sp = new ScaleParameters
                                      {
@@ -8435,9 +8403,7 @@ namespace StatsDirect.Charting
             {
                 scaleYAxis = 1 + (k - 10) / 20;
                 if (scaleYAxis > 5)
-                {
                     scaleYAxis = 5;
-                }
                 metaH = scaleYAxis * DEFAULT_METAH;
             }
             else
@@ -8465,36 +8431,26 @@ namespace StatsDirect.Charting
                 {
                     if (pg == null || pg[i] == 0)
                     {
-                        if (gn[i] != Constant.MISSING & gn[i] > max_gn)
-                        {
+                        if (gn[i] != Constant.MISSING && gn[i] > max_gn)
                             max_gn = gn[i];
-                        }
                     }
                     if (odr[i] != Constant.MISSING)
                     {
-                        kok = kok + 1;
+                        kok++;
                         if (odr[i] > ormax)
-                        {
                             ormax = odr[i];
-                        }
-                        if (odr[i] < ormin & odr[i] > 0)
-                        {
+                        if (odr[i] < ormin && odr[i] > 0)
                             ormin = odr[i];
-                        }
                         if (odrl[i] > odru[i])
                         {
                             tmp = odrl[i];
                             odrl[i] = odru[i];
                             odru[i] = tmp;
                         }
-                        if (odrl[i] < orlmin & odrl[i] > 0)
-                        {
+                        if (odrl[i] < orlmin && odrl[i] > 0)
                             orlmin = odrl[i];
-                        }
                         if (odru[i] > orumax)
-                        {
                             orumax = odru[i];
-                        }
                     }
                 }
             }
@@ -8504,22 +8460,16 @@ namespace StatsDirect.Charting
                 {
                     if (pg == null || pg[i] == 0)
                     {
-                        if (gn[i] != Constant.MISSING & gn[i] > max_gn)
-                        {
+                        if (gn[i] != Constant.MISSING && gn[i] > max_gn)
                             max_gn = gn[i];
-                        }
                     }
                     if (odr[i] != Constant.MISSING)
                     {
-                        kok = kok + 1;
+                        kok++;
                         if (odr[i] > ormax)
-                        {
                             ormax = odr[i];
-                        }
                         if (odr[i] < ormin)
-                        {
                             ormin = odr[i];
-                        }
                         if (odrl[i] > odru[i])
                         {
                             tmp = odrl[i];
@@ -8527,13 +8477,9 @@ namespace StatsDirect.Charting
                             odru[i] = tmp;
                         }
                         if (odrl[i] < orlmin)
-                        {
                             orlmin = odrl[i];
-                        }
                         if (odru[i] > orumax)
-                        {
                             orumax = odru[i];
-                        }
                     }
                 }
             }
@@ -8542,31 +8488,21 @@ namespace StatsDirect.Charting
             for (int i = 0; i <= k - 1; i++)
             {
                 if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0)
-                {
                     absmin = Math.Abs(odr[i]);
-                }
                 if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0)
-                {
                     absmin = Math.Abs(odrl[i]);
-                }
                 if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0)
-                {
                     absmin = Math.Abs(odru[i]);
-                }
             }
 
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 
             DataMaxX = ormax;
             if (DataMaxX < orumax && orumax != Constant.MISSING)
-            {
                 dataMaxX = orumax;
-            }
             DataMinX = ormin;
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
-            {
                 dataMinX = orlmin;
-            }
 
             DefaultAxes();
             double rgap = 0;
@@ -8579,21 +8515,15 @@ namespace StatsDirect.Charting
                 {
                     w = TitleWidth(title[i]) + 30;
                     if (w > xtra + xAxisCanvas)
-                    {
                         xtra = w - xAxisCanvas - 5;
-                    }
                     w = LegendWidth(Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")");
                     if (w > rgap)
-                    {
                         rgap = w;
-                    }
                 }
             }
             w = TitleWidth(combo_ti(fOptions.Title)) + 30;
             if (w > xtra + xAxisCanvas)
-            {
                 xtra = w - xAxisCanvas - 5;
-            }
             xExtCanvas = 940 - rgap;
 
             if (isLogScale)
@@ -8637,11 +8567,11 @@ namespace StatsDirect.Charting
                 }
                 DataMinX = Math.Log(realamin);
                 DataMaxX = Math.Log(realamax);
-                DrawAxes(fOptions.Title, new Axis(null, AxisMode.LineOnly, 0, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false, false);
+                DrawAxes(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.LineOnly, 0, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false, false);
             }
             else
             {
-                DrawAxes(fOptions.Title, new Axis(null, AxisMode.Scale, 0, ScaleType.NotSet), new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false, false);
+                DrawAxes(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.Scale, 0, ScaleType.NotSet), new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false, false);
                 DataMinX = axisXMin;
                 DataMaxX = axisXMax;
             }
@@ -8660,21 +8590,16 @@ namespace StatsDirect.Charting
                     {
                         xm = ToCanvasX(Math.Log(tic[i]));
                         string Lab;
-                        if (tic[i] > 1000 | tic[i] < 0.001)
-                        {
+                        if (tic[i] > 1000 || tic[i] < 0.001)
                             Lab = tic[i].ToString("E");
-                        }
                         else
-                        {
                             Lab = tic[i].ToString();
-                        }
                         DrawStringLabel(Lab, xm, yAxisCanvas - 12, StringAlignment.Center);
                         DrawLine(axisPen, xm, yAxisCanvas - 12, xm, yAxisCanvas);
                     }
                 }
             }
 
-            double rmh = -99;
             int r = 0;
             double botlim = isLogScale ? realamin : double.MinValue;
 
@@ -8734,7 +8659,6 @@ namespace StatsDirect.Charting
                                     DrawLine(ciTenPen, XR, yc, XL, yc);
                                     if (pg[i] < 0)
                                     {
-                                        rmh = odr[i];
                                         // pooled effect marker
                                         DrawLine(effectTenPen, xm, yt, xm, ToCanvasY(k + pbias - 0.5));
                                     }
@@ -8753,11 +8677,6 @@ namespace StatsDirect.Charting
                         }
                     }
                 }
-            }
-
-            if (rmh != -99)
-            {
-                DrawXAxisTitle(fOptions.XAxisTitle);
             }
 
             EndMetafile();
@@ -9361,7 +9280,7 @@ namespace StatsDirect.Charting
             DrawAxes("", new Axis(xtxt, AxisMode.Scale, 0, ScaleType.Linear), new Axis(ytxt, AxisMode.Scale, 0, ScaleType.Linear), false, true, false);
             // Draw the titles
             int size2 = labelFont.Height * 2;
-            DrawStringLegend("mean difference ? " + Formatting.XRound(GAMMA * 100.0, 2) + "% limits of agreement", xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas + size2, StringAlignment.Far);
+            DrawStringLegend("mean difference \u00B1 " + Formatting.XRound(GAMMA * 100.0, 2) + "% limits of agreement", xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas + size2, StringAlignment.Far);
 
             // get the offsets for the Markers
             SetStandardScaling();
@@ -9389,15 +9308,11 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method get_y1
         private double get_y1(double ynow, bool reverse)
         {
             return reverse ? yExtCanvas + yAxisCanvas + yAxisCanvas - ToCanvasY(ynow) : ToCanvasY(ynow);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method GetAgreementPairScaleParameters
         private ScaleParameters GetAgreementPairScaleParameters()
         {
             if (!((definition == null || definition.ChartOptions == null)))
@@ -11524,6 +11439,10 @@ namespace StatsDirect.Charting
 
         private void WriteAsciiYX(int y, int x, string text)
         {
+#if DEBUG
+            if (y < 0 || y >= shTx.Length)
+                throw new ArgumentOutOfRangeException("y is out of the renderer's range");
+#endif
             shTx[y] = ReplaceAt(shTx[y], x, text);
         }
 
@@ -11534,12 +11453,14 @@ namespace StatsDirect.Charting
 
         private string ReplaceAt(string buffer, int x, string text)
         {
-            return buffer.Substring(0, 0) + text + buffer.Substring(x + text.Length);
+            int l = buffer.Length;
+            int tl = text.Length;
+            return buffer.Substring(0, Math.Min(l, x)) + new string(' ', Math.Max(0, x - l)) + text + (x + tl >= l ? string.Empty : buffer.Substring(x + tl));
         }
 
         private string ReplaceAt(string buffer, int x, char c)
         {
-            return buffer.Substring(0, 0) + c + buffer.Substring(x + 1);
+            return buffer.Substring(0, x) + c + buffer.Substring(x + 1);
         }
 
         public void SetBox0To1()
@@ -11697,79 +11618,16 @@ namespace StatsDirect.Charting
 
         private string ImageStreamToRtf(Stream stream)
         {
-            /*
-            FileStream inStream = File.OpenRead(@"C:\Users\peter\AppData\Local\Temp\meta-634783979138531694.emf");
-            using (Image image = Image.FromStream(inStream))
-            {
-                return Formatting.ImageToRtf(image);
-            }
-            */
             try
             {
-                /*
-                stream.Position = 0;
-                byte[] bytes = stream.ToArray();
-                FileStream fs = File.Create(@"C:\Users\peter\AppData\Local\Temp\meta-" + DateTime.Now.Ticks.ToString() + ".emf");
-                fs.Write(bytes, 0, bytes.Length);
-                fs.Close();
-                */
                 stream.Position = 0;
                 return MetastreamToRtf(stream);
-                /*
-                using (Image image = Image.FromStream(stream))
-                {
-                    return ImageToRtf(image);
-                }
-                 */
             }
             catch (OutOfMemoryException ex)
             {
                 throw new Exception("Couldn't convert a chart to RTF", ex);
             }
         }
-
-        /*
-        /// <summary>
-        /// Returns the RTF corresponding to an image.  The image is wrapped in a Windows
-        /// Format Metafile, because although Microsoft discourages the use of a WMF,
-        /// the RichTextBox (and even MS Word), wraps an image in a WMF before inserting
-        /// the image into a document.  The WMF is attached in HEX format (a string of
-        /// HEX numbers).
-        /// 
-        /// The RTF Specification v1.6 says that you should be able to insert bitmaps,
-        /// .jpegs, .gifs, .pngs, and Enhanced Metafiles (.emf) directly into an RTF
-        /// document without the WMF wrapper. This works fine with MS Word,
-        /// however, when you don't wrap images in a WMF, WordPad and
-        /// RichTextBoxes simply ignore them.  Both use the riched20.dll or msfted.dll.
-        /// </summary>
-        /// <param name="image"></param>
-        private static string ImageToRtf(Image image)
-        {
-            StringBuilder rtf = new StringBuilder();
-
-            // Append the RTF header
-            rtf.Append(RTF_HEADER);
-
-            // Create the font table using the RichTextBox's current font and append it to the RTF string
-            // _rtf.Append(GetFontTable(this.Font));
-            // _rtf.Append(GetFontTable(FontFamily.GenericSansSerif));
-
-            // Create the image control string and append it to the RTF string
-            float pixelWidth = image.Width;
-            const float desiredInches = 6.0F;
-            float desiredPixelsPerInch = (float)Math.Ceiling(pixelWidth / desiredInches);
-            rtf.Append(GetImagePrefix(image, desiredPixelsPerInch, desiredPixelsPerInch));
-
-            // Create the Windows Metafile and append its bytes in HEX format
-            rtf.Append(GetRtfImage(image));
-
-            // Close the RTF image control string
-            rtf.Append(RTF_IMAGE_POST);
-            rtf.Append(RTF_FOOTER);
-
-            return rtf.ToString();
-        }
-        */
 
         private string MetastreamToRtf(Stream metaStream)
         {
@@ -11827,176 +11685,5 @@ namespace StatsDirect.Charting
 
             return rtf.ToString();
         }
-
-        /*
-        /// <summary>
-        /// Creates the RTF control string that describes the image being inserted.
-        /// This description (in this case) specifies that the image is an
-        /// MM_ANISOTROPIC metafile, meaning that both X and Y axes can be scaled
-        /// independently.  The control string also gives the images current dimensions,
-        /// and its target dimensions, so if you want to control the size of the
-        /// image being inserted, this would be the place to do it. The prefix should
-        /// have the form ...
-        /// 
-        /// {\pict\wmetafile8\picw[A]\pich[B]\picwgoal[C]\pichgoal[D]
-        /// 
-        /// where ...
-        /// 
-        /// A	= current width of the metafile in hundredths of millimeters (0.01mm)
-        ///		= Image Width in Inches * Number of (0.01mm) per inch
-        ///		= (Image Width in Pixels / Graphics Context's Horizontal Resolution) * 2540
-        ///		= (Image Width in Pixels / Graphics.DpiX) * 2540
-        /// 
-        /// B	= current height of the metafile in hundredths of millimeters (0.01mm)
-        ///		= Image Height in Inches * Number of (0.01mm) per inch
-        ///		= (Image Height in Pixels / Graphics Context's Vertical Resolution) * 2540
-        ///		= (Image Height in Pixels / Graphics.DpiX) * 2540
-        /// 
-        /// C	= target width of the metafile in twips
-        ///		= Image Width in Inches * Number of twips per inch
-        ///		= (Image Width in Pixels / Graphics Context's Horizontal Resolution) * 1440
-        ///		= (Image Width in Pixels / Graphics.DpiX) * 1440
-        /// 
-        /// D	= target height of the metafile in twips
-        ///		= Image Height in Inches * Number of twips per inch
-        ///		= (Image Height in Pixels / Graphics Context's Horizontal Resolution) * 1440
-        ///		= (Image Height in Pixels / Graphics.DpiX) * 1440
-        ///	
-        /// </summary>
-        /// <remarks>
-        /// The Graphics Context's resolution is simply the current resolution at which
-        /// windows is being displayed.  Normally it's 96 dpi, but instead of assuming
-        /// I just added the code.
-        /// 
-        /// According to Ken Howe at pbdr.com, "Twips are screen-independent units
-        /// used to ensure that the placement and proportion of screen elements in
-        /// your screen application are the same on all display systems."
-        /// 
-        /// Units Used
-        /// ----------
-        /// 1 Twip = 1/20 Point
-        /// 1 Point = 1/72 Inch
-        /// 1 Twip = 1/1440 Inch
-        /// 
-        /// 1 Inch = 2.54 cm
-        /// 1 Inch = 25.4 mm
-        /// 1 Inch = 2540 (0.01)mm
-        /// </remarks>
-        /// <param name="image"></param>
-        ///<param name="xDpi"></param>
-        ///<param name="yDpi"></param>
-        ///<returns></returns>
-        private static string GetImagePrefix(Image image, float xDpi, float yDpi)
-        {
-
-            StringBuilder rtf = new StringBuilder();
-
-            // Calculate the current width of the image in (0.01)mm
-            // TODO: HACK: DevExpress seems to undo+redo insertion with the image very large unless this 2.6 bodge factor is in place.
-            int picw = (int)Math.Round((image.Width / xDpi) * HMM_PER_INCH * 2.6);
-
-            // Calculate the current height of the image in (0.01)mm
-            int pich = (int)Math.Round((image.Height / yDpi) * HMM_PER_INCH * 2.6);
-
-            // Calculate the target width of the image in twips
-            int picwgoal = (int)Math.Round((image.Width / xDpi) * TWIPS_PER_INCH);
-
-            // Calculate the target height of the image in twips
-            int pichgoal = (int)Math.Round((image.Height / yDpi) * TWIPS_PER_INCH);
-
-            // Append values to RTF string
-            rtf.Append(@"{\pict");
-            rtf.Append(@"\emfblip");
-            rtf.Append(@"\picw");
-            rtf.Append(picw);
-            rtf.Append(@"\pich");
-            rtf.Append(pich);
-            rtf.Append(@"\picwgoal");
-            rtf.Append(picwgoal);
-            rtf.Append(@"\pichgoal");
-            rtf.Append(pichgoal);
-            rtf.Append(" ");
-
-            return rtf.ToString();
-        }
-         */
-
-        /*
-        /// <summary>
-        /// Wraps the image in an Enhanced Metafile by drawing the image onto the
-        /// graphics context, then converts the Enhanced Metafile to a Windows
-        /// Metafile, and finally appends the bits of the Windows Metafile in HEX
-        /// to a string and returns the string.
-        /// </summary>
-        /// <param name="image"></param>
-        /// <returns>
-        /// A string containing the bits of a Windows Metafile in HEX
-        /// </returns>
-        private static string GetRtfImage(Image image)
-        {
-            // Handle to the device context used to create the metafile
-
-            StringBuilder rtf = new StringBuilder();
-            using (MemoryStream stream = new MemoryStream())
-            {
-                int imageWidth = image.Width;
-                int imageHeight = image.Height;
-                // Get a graphics context from the RichTextBox
-                using (Bitmap b = new Bitmap(imageWidth, imageHeight, PixelFormat.Format32bppArgb))
-                {
-                    using (Graphics graphics = Graphics.FromImage(b))
-                    {
-                        // Get the device context from the graphics context
-                        IntPtr hdc = graphics.GetHdc();
-
-                        // Create a new Enhanced Metafile from the device context
-                        using (Metafile metaFile = new Metafile(stream, hdc))
-                        {
-                            // Release the device context
-                            graphics.ReleaseHdc(hdc);
-
-                            // Get a graphics context from the Enhanced Metafile
-                            using (Graphics graphics2 = Graphics.FromImage(metaFile))
-                            {
-                                // Draw the image on the Enhanced Metafile
-                                Rectangle r = new Rectangle(0, 0, imageWidth, imageHeight);
-                                graphics2.DrawImage(image, r);
-                            }
-
-                            // Get the handle of the Enhanced Metafile
-                            IntPtr hEmf = metaFile.GetHenhmetafile();
-
-                            uint bufferSize = NativeMethods.GetEnhMetaFileBits(hEmf, 0, null);
-                            byte[] buffer = new byte[bufferSize];
-                            NativeMethods.GetEnhMetaFileBits(hEmf, bufferSize, buffer);
-                            NativeMethods.DeleteEnhMetaFile(hEmf);
-
-                            // Append the bits to the RTF string
-                            foreach (byte t in buffer)
-                                rtf.Append(String.Format("{0:X2}", t));
-
-                            return rtf.ToString();
-                        }
-                    }
-                }
-            }
-        }
-        */
-
-        /*
-        private static class NativeMethods
-        {
-            [DllImport("gdi32")]
-            public static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, byte[] lpbBuffer);
-
-            [DllImport("gdi32")]
-            public static extern bool DeleteEnhMetaFile(IntPtr hemfbitHandle);
-        }
-
-        private static void Pause(string where)
-        {
-            MessageBox.Show(where);
-        }
-         */
     }
 }

@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Security;
-using Lambda.Collections.Generic;
-using StatsDirect.Templates;
-using System.Windows.Forms;
-using StatsDirect.Configuration;
-using StatsDirect.Data;
-using System.Security.Permissions;
-using StatsDirect.Utilities;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Diagnostics;
+using System.Windows.Forms;
+using System.Security.Permissions;
+
+using Lambda.Collections.Generic;
+
+using StatsDirect.Templates;
+using StatsDirect.Configuration;
+using StatsDirect.Data;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
@@ -193,6 +195,9 @@ namespace StatsDirect.UI
                         string windowName = wi.FriendlyName;
                         if (windowName.StartsWith("Report "))
                         {
+                            // We don't want to load Report 1.rtf and create Report 1 again (#673).  Strip any suffix before comparison.
+                            if (Path.HasExtension(windowName))
+                                windowName = Path.GetFileNameWithoutExtension(windowName);
                             string windowNumberAsString = windowName.Substring(7).Trim();
                             int windowNumber;
                             if (int.TryParse(windowNumberAsString, out windowNumber))
@@ -526,7 +531,7 @@ namespace StatsDirect.UI
                                                              new Expression(
                                                              "Pick the sheet in which you want the output to appear")
                                                      };
-                    ParameterBag results = FillSingleParameter(parameter);
+                    ParameterBag results = FillSingleParameter(parameter); // Will never return a null value as the parameter cannot be skipped
                     bool cancelled = (null == results || !results.ContainsKey(KEY));
                     if (cancelled)
                         throw new TemplateOperationCancelledException();
@@ -612,7 +617,7 @@ namespace StatsDirect.UI
         /// <param name="keepSelection"></param>
         /// <param name="isFormulae"></param>
         /// <param name="preferredOutputLocation"></param>
-        void ITemplateHost.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, PaneAndPosition preferredOutputLocation)
+        void ITemplateHost.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation)
         {
             IGrid grid;
             RelativePosition writePosition;
@@ -639,7 +644,7 @@ namespace StatsDirect.UI
             }
             if (null == grid)
                 throw new TemplateOperationCancelledException();
-            grid.WriteDataFrame(frame, isFormulae, writePosition);
+            grid.WriteDataFrame(frame, isFormulae, missingIndicator, writePosition);
             grid.EnsureActive();
         }
 
@@ -1110,16 +1115,27 @@ namespace StatsDirect.UI
             msgbox_x(explanation + "\r\n" + ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
         }
 
-        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, bool showHelpButton)
+        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon)
         {
-            if (showHelpButton)
-                return msgbox_x(text, buttons, icon, caption, SoleInstance.HelpFilePath, SoleInstance.ActiveHelpTopic);
-            return MessageBox.Show(mainWindow, text, caption, buttons, icon, MessageBoxDefaultButton.Button1, 0);
+            return msgbox_x(text, buttons, icon, "StatsDirect", false);
         }
 
-        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, string helpFile, int helpTopic)
+        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, bool showHelpButton, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
-            return MessageBox.Show(mainWindow, text, caption, buttons, icon, MessageBoxDefaultButton.Button1, 0, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
+            if (showHelpButton)
+                return msgbox_x(text, buttons, icon, caption, SoleInstance.HelpFilePath, SoleInstance.ActiveHelpTopic, defaultButton);
+
+            // Use a Windows message box if our own interface isn't visible; use our own if it is.
+            if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized)
+                return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0);
+            return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
+        }
+
+        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, string helpFile, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
+        {
+            if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized)
+                return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
+            return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
         bool IChartHost.DisplayOptions(OptionDescriptor Descriptor)
@@ -1149,6 +1165,12 @@ namespace StatsDirect.UI
             return msgbox_x(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, "TODO:", helpTopic) == DialogResult.Yes;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        /// <remarks>The returned bag may contain key->null pairs; it is up to the caller to handle this.</remarks>
         private ParameterBag FillSingleParameter(Parameter parameter)
         {
             ITemplateHost host = this;
@@ -1170,7 +1192,7 @@ namespace StatsDirect.UI
                                                             CancelSkipsParameter = "Skip"
                                                         };
             ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(KEY));
+            cancelled = (null == results || !results.ContainsKey(KEY) || null == results[KEY]);
             if (cancelled)
                 return 0.0;
             return results[KEY].AsDouble;
@@ -1187,7 +1209,7 @@ namespace StatsDirect.UI
                                                 CancelSkipsParameter = "Skip"
                                             };
             ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(KEY));
+            cancelled = (null == results || !results.ContainsKey(KEY) || null == results[KEY]);
             return cancelled ? 0.0 : results[KEY].AsDouble;
         }
 
@@ -1202,7 +1224,7 @@ namespace StatsDirect.UI
                                                  CancelSkipsParameter = "Skip"
                                              };
             ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(KEY));
+            cancelled = (null == results || !results.ContainsKey(KEY) || null == results[KEY]);
             return cancelled ? 0 : results[KEY].AsInt32;
         }
 
@@ -1619,16 +1641,19 @@ namespace StatsDirect.UI
             return pval(P * 2);
         }
 
-        internal void NoteRecentFile(string path)
+        internal void NoteRecentFile(string path, bool openedOk)
         {
             // Ensure the path is the most recently used and appears no more than once; ensure no more than MAX_RECENT_FILES files are kept
             System.Collections.Specialized.StringCollection recentFiles = Properties.Settings.Default.RecentFileList ??
                                                                           new System.Collections.Specialized.StringCollection();
             if (recentFiles.Contains(path))
                 recentFiles.Remove(path);
-            recentFiles.Add(path);
-            if (recentFiles.Count > MAX_RECENT_FILES)
-                recentFiles.RemoveAt(0);
+            if (openedOk)
+            {
+                recentFiles.Add(path);
+                if (recentFiles.Count > MAX_RECENT_FILES)
+                    recentFiles.RemoveAt(0);
+            }
             Properties.Settings.Default.RecentFileList = recentFiles;
         }
 

@@ -481,25 +481,10 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptRandomPairs(ITemplateHost host, ParameterBag parameters)
         {
-            bool balance;
-            const string caption = "Allocate intervention-control pairs";
-
             int Seed = AutoSeed(parameters);
             MersenneTwister mt = new MersenneTwister(Seed);
             int pairs = parameters["pairs"].AsInt32;
-            if (pairs >= 1 & (Math.Floor(pairs / 2.0) == pairs / 2.0))
-            {
-                bool wasCancelled;
-                balance = host.GetBoolean("Use equal number of intervention-control and control-intervention pairs?", caption, true, out wasCancelled);
-                if (wasCancelled)
-                {
-                    throw new TemplateOperationCancelledException();
-                }
-            }
-            else
-            {
-                balance = false;
-            }
+            bool balance = pairs >= 1 && (Math.Floor(pairs / 2.0) == pairs / 2.0) && parameters["balance"].AsBoolean;
             //  RTF_LoadTemplate("r_pair.rtf")
             ParameterBag outputParameters = new ParameterBag();
             if (balance)

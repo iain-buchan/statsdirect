@@ -44,6 +44,8 @@ namespace StatsDirect.UI
             RefreshVersion();
             RefreshSysInfo();
             RefreshUserInfo();
+            // GC.Collect();
+            // long allocatedBytes = GC.GetTotalMemory(true);
         }
 
         private void RefreshSysInfo()

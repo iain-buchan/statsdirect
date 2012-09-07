@@ -21,7 +21,7 @@ namespace StatsDirect.UI
         public static void Main(string[] args)
         {
             // Right at the start, cope with as many variants of chaos as we can.
-            // CatchMostErrors();
+            CatchMostErrors();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -74,7 +74,7 @@ namespace StatsDirect.UI
 
             if (args.Length >= 2)
                 if ("FileOpen".Equals(args[0]) && null != args[1])
-                    SDApplication.SoleInstance.MainWindow.OpenFile(args[1]);
+                    SDApplication.SoleInstance.MainWindow.OpenFile(args[1], true);
             Application.Run(mainWindow);
         }
 

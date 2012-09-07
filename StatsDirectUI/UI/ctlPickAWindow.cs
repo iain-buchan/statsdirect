@@ -27,7 +27,7 @@ namespace StatsDirect.UI
             parameterName = parameter.Name;
             this.outputType = outputType;
             bool preferBefore = parameter is SpecialParameter && null != ((SpecialParameter) parameter).ExtraData &&
-                                (bool) ((SpecialParameter) parameter).ExtraData;
+                                (bool) ((object[])((SpecialParameter) parameter).ExtraData)[0];
             WritePosition = preferBefore ? RelativePosition.BeforeSelection : RelativePosition.AfterSelection;
         }
 

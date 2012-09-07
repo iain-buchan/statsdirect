@@ -39,7 +39,7 @@ namespace StatsDirect.UI
 
             if (startPosition < 0)
             {
-                MessageBox.Show("String: '" + txtSearchTerm.Text + "' not found", "No Matches", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                SDApplication.SoleInstance.msgbox_x("String: '" + txtSearchTerm.Text + "' not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
                 return;
             }
 
@@ -60,7 +60,7 @@ namespace StatsDirect.UI
 
             if (startPosition < 0)
             {
-                MessageBox.Show("String: " + txtSearchTerm.Text + " not found", "No Matches", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                SDApplication.SoleInstance.msgbox_x("String: " + txtSearchTerm.Text + " not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
                 return;
             }
 
@@ -85,7 +85,7 @@ namespace StatsDirect.UI
 
             if (startPosition < 0)
             {
-                MessageBox.Show("String: '" + txtSearchTerm.Text + "' not found", "No Matches", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                SDApplication.SoleInstance.msgbox_x("String: '" + txtSearchTerm.Text + "' not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
                 return;
             }
 

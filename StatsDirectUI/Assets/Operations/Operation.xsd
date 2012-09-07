@@ -365,6 +365,8 @@
       <xs:extension base="sdop:Step">
         <xs:attribute name="frame-name" type="xs:string" />
         <xs:attribute name="keep-selection" type="xs:boolean" />
+        <xs:attribute name="formulae" type="xs:boolean" />
+        <xs:attribute name="missing-indicator" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

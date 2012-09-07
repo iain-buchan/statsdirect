@@ -5,6 +5,7 @@ using StatsDirect.Builtins;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
@@ -102,7 +103,7 @@ namespace StatsDirect.UI
                 if (!chkKeepRowPositions.Checked)
                     outputVariable.TruncateDataToLength(cnt);
 
-                host.OutputFrame(outputFrame, false, false, windowPicker.SelectedPaneAndPosition());
+                host.OutputFrame(outputFrame, false, false, Formatting.ASTERISK, windowPicker.SelectedPaneAndPosition());
     
                 txtMessage.Text = cnt.ToString() + " data points were extracted into the new variable: " + t;
                 // this.Show();

@@ -95,7 +95,7 @@ namespace StatsDirect.UI
         private void OpenFromList()
         {
             Close();
-            SDApplication.SoleInstance.MainWindow.OpenFile((string)lstRecent.SelectedItem);
+            SDApplication.SoleInstance.MainWindow.OpenFile((string)lstRecent.SelectedItem, true);
         }
 
         private void BrowseForFile()
