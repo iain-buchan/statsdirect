@@ -6,6 +6,17 @@
   <steps>
     <settings>
       <parameters>
+        <multiple-options>
+          <prompt>Select survival plot options</prompt>
+          <options>
+            <option name="use-tics" selected="true">Show censorship tics</option>
+            <option name="use-markers" selected="false">Show event markers</option>
+          </options>
+        </multiple-options>
+        <boolean>
+          <name>save</name>
+          <prompt>Save estimates and CIs to worksheet?</prompt>
+        </boolean>
         <frame>
           <name>times</name>
           <prompt>Select data for TIMES</prompt>
@@ -47,17 +58,6 @@
 			</iftrue>
 		</test>
 		<report filename="kap_meir.rtf" />
-    <settings>
-      <parameters>
-        <multiple-options>
-          <prompt>Select survival plot options</prompt>
-          <options>
-            <option name="use-tics" selected="true">Show censorship tics</option>
-            <option name="use-markers" selected="false">Show event markers</option>
-          </options>
-        </multiple-options>
-      </parameters>
-    </settings>
 		<builtin function-name="rptKaplanMeierPlots" />
 		<report filename="charts.rtf" />
 	</steps>

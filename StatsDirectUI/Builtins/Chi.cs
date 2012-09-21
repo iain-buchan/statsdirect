@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -25,7 +24,7 @@ namespace StatsDirect.Builtins
             string studyType = parameters["study_type"].AsString;
             bool isCaseControl = "casecontrol".Equals(studyType);
             bool isCohort = "cohort".Equals(studyType);
-            bool doFisher = parameters.ContainsKey("doFisher") ? parameters["doFisher"].AsBoolean : false;
+            bool doFisher = parameters.ContainsKey("doFisher") && parameters["doFisher"].AsBoolean;
 
             if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
@@ -677,7 +676,7 @@ namespace StatsDirect.Builtins
                 o[cnt, 4] = rtd;
             }
 
-            return Tables.Woolf(host, ref o, ref k, ref showIntermediates, ref cit, ref cco, out ierr);
+            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out ierr);
         }
 
         public static StepResult RptChi2ByNWithTrendSimulateExactP(ITemplateHost host, ParameterBag parameters)
@@ -743,7 +742,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         ///  <summary>
         ///  Simulated exact P for Cochran-Armitage trend test
         ///  </summary>
@@ -755,7 +753,8 @@ namespace StatsDirect.Builtins
         ///  <param name="x2">chi-square for trend (could add independence chi-square too)</param>
         ///  <param name="iter">Monte Carlo iterations</param>
         ///  <param name="r">Monte Carlo P numerator</param>
-        ///  <param name="iseed">RNG seed (0 for automatic)</param>
+        /// <param name="actualIterations">The number of Monte Carlo iterations actually performed</param>
+        /// <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
         ///  <remarks></remarks>
         private static void Chi2TrendResample(ITemplateHost host, int[,] x, double[] wt, int nrow, int ncol, double x2, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
@@ -1012,11 +1011,7 @@ namespace StatsDirect.Builtins
                             int j = (id - nlm) * (ia - nlm);
 
                             if (j == 0)
-                            {
-
                                 lsp = true;
-
-                            }
                             else
                             {
 

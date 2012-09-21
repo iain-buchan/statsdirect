@@ -48,8 +48,45 @@ namespace StatsDirect.Templates
     /// <summary>
     /// An application capable of hosting the template language.
     /// </summary>
-    public interface ITemplateHost : IChartHost
+    public interface ITemplateHost
     {
+        /// <summary>
+        /// Presents the specified options to the user in some appropriate way; modifies the options in-place with the user's selections.
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns>true if the options are to be used, false if the user cancelled the option selection.</returns>
+        bool DisplayOptions(OptionDescriptor descriptor);
+
+        string RoundU(double amount);
+
+        /// <summary>
+        /// Format a probability, using the default number of decimal places
+        /// </summary>
+        string pval(double p);
+
+        string pval_half(double p);
+
+        string zvalp1(double xz);
+        string zvalp2(double xz);
+
+        bool GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled);
+        bool GetBoolean(string prompt, string Title, bool InitialValue, int HelpIndex, out bool cancelled);
+        double GetConfidenceInterval(out bool cancelled);
+        double GetDouble(string prompt, string Title, double InitialValue, out bool cancelled);
+        int GetInteger(string prompt, string Title, int initialValue, out bool cancelled);
+
+        /// <summary>
+        /// Prompt the user for a string; return the user-entered string, or Nothing if the user cancels.
+        /// </summary>
+        /// <returns>The user-entered string, or Nothing if the user cancels</returns>
+        /// <remarks></remarks>
+        string GetString(string prompt, string title, string initialValue);
+
+        bool MetaPlotCI { get; }
+
+        int MetaPlotMethod { get; }
+
+        bool CheckScale(ScaleParameters scaleParameters);
         /// <summary>
         /// Cause the report to be output in some way, for example by asking the user where to render it, then rendering it.
         /// </summary>

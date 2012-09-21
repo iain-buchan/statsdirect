@@ -7,8 +7,8 @@ namespace StatsDirect.Templates
     public sealed class DoubleParameter: RangeParameter
     {
         private Expression defaultValue;
-        private double minimumValue = double.MinValue;
-        private double maximumValue = double.MaxValue;
+        private Expression minimumValue;
+        private Expression maximumValue;
 
         public DoubleParameter()
         {
@@ -22,8 +22,28 @@ namespace StatsDirect.Templates
                 return null;
             object o = processor.Evaluate(defaultValue, parameters);
             if (o is int)
-                return (double?)(int)o;
+                return (int)o;
             return (double?)o;
+        }
+
+        public double MinimumValue(ITemplateProcessor processor, ParameterBag parameters)
+        {
+            if (null == minimumValue || null == minimumValue.Body)
+                return double.MinValue;
+            object o = processor.Evaluate(minimumValue, parameters);
+            if (o is int)
+                return (int)o;
+            return (double)o;
+        }
+
+        public double MaximumValue(ITemplateProcessor processor, ParameterBag parameters)
+        {
+            if (null == maximumValue || null == maximumValue.Body)
+                return double.MaxValue;
+            object o = processor.Evaluate(maximumValue, parameters);
+            if (o is int)
+                return (int)o;
+            return (double)o;
         }
 
         [XmlElement(ElementName = "default-value")]
@@ -34,14 +54,14 @@ namespace StatsDirect.Templates
         }
 
         [XmlElement(ElementName = "minimum-value")]
-        public double MinimumValue
+        public Expression MinimumValueExpression
         {
             get { return minimumValue; }
             set { minimumValue = value; }
         }
 
         [XmlElement(ElementName = "maximum-value")]
-        public double MaximumValue
+        public Expression MaximumValueExpression
         {
             get { return maximumValue; }
             set { maximumValue = value; }

@@ -921,5 +921,16 @@ namespace StatsDirect.UI
         {
             richEditControl1.Document.InsertText(richEditControl1.Document.CaretPosition, DateTime.Now.ToString("dd MMMM yyyy @ hh:MM:ss"));
         }
+        /*
+        public new void Dispose()
+        {
+            base.Dispose();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+         */
     }
 }

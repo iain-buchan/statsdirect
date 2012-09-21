@@ -257,6 +257,19 @@ namespace StatsDirect.Numerics
     public class PDF
     {
         /// <summary>
+        /// normal deviate Z for a given lower tail area of P; Z is accurate to about 1 part in 10**16.  This version is for the many users who are not interested in ifault.
+        /// </summary>
+        /// <remarks>
+        /// Wichura MJ. Algorithm AS 241: The Percentage Points of the Normal Distribution.
+        /// Applied Statistics 1988, 37, 477-484.
+        /// </remarks>
+        public static double gauinv(double p)
+        {
+            int ifault;
+            return gauinv(p, out ifault);
+        }
+
+        /// <summary>
         /// normal deviate Z for a given lower tail area of P; Z is accurate to about 1 part in 10**16.
         /// </summary>
         /// <remarks>
@@ -318,18 +331,17 @@ namespace StatsDirect.Numerics
                       f5 = 1.84631831751005468180e-5,
                       f6 = 1.42151175831644588870e-7,
                       f7 = 2.04426310338993978564e-15;
-            double r, val;
+            double r;
 
             ifault = 0;
             double q = p - half;
             if (Math.Abs(q) <= split1)
             {
                 r = const1 - q * q;
-                val = q * (((((((a7 * r + a6) * r + a5) * r + a4) * r + a3)
+                return q * (((((((a7 * r + a6) * r + a5) * r + a4) * r + a3)
                     * r + a2) * r + a1) * r + a0) /
                     (((((((b7 * r + b6) * r + b5) * r + b4) * r + b3)
                     * r + b2) * r + b1) * r + one);
-                return val;
             }
             if (q < zero)
                 r = p;
@@ -339,10 +351,10 @@ namespace StatsDirect.Numerics
             if (r <= zero)
             {
                 ifault = 1;
-                val = zero;
-                return val;
+                return zero;
             }
             r = Math.Sqrt(-Math.Log(r));
+            double val;
             if (r <= split2)
             {
                 r = r - const2;
@@ -362,6 +374,7 @@ namespace StatsDirect.Numerics
             if (q < zero) val = -val;
             return val;
         }
+
         /// <summary>
         /// log of the absolute value of the gamma function
         /// </summary>
@@ -1805,7 +1818,8 @@ namespace StatsDirect.Numerics
                     ifault = 1;
                     break;
                 }
-                if (dx <= acc) break;
+                if (dx <= acc)
+                    break;
             }
             //     bisect to converge upon p
             double bis = x1;
@@ -1819,10 +1833,12 @@ namespace StatsDirect.Numerics
                     xmid = bis + dx;
                     poisson(xmid, nl, out phi, out plo, out trm, out ifault);
                     fmid = phi;
-                    if (ifault != 0) break;
+                    if (ifault != 0)
+                        break;
                     if (fmid - p <= 0.0) bis = xmid;
-                    if ((Math.Abs(dx) <= acc) | (Math.Abs(fmid - p) == 0.0)) break;
-                    istep = istep + 1;
+                    if ((Math.Abs(dx) <= acc) || (Math.Abs(fmid - p) == 0.0))
+                        break;
+                    istep++;
                     if (istep > imax)
                     {
                         ifault = 3;
@@ -2366,12 +2382,16 @@ namespace StatsDirect.Numerics
             int j;
             int ii = i;
             double x = 0.0;
-            if (n < 1) return x;
-            if (i < 1) ii = 1;
-            if (i > n) ii = n;
+            if (n < 1)
+                return x;
+            if (i < 1)
+                ii = 1;
+            if (i > n)
+                ii = n;
             int ioe = n % 2;
             int m = (n + 1) / 2;
-            if (ii - m == 0 && ioe != 0) return 0.0;
+            if (ii - m == 0 && ioe != 0)
+                return 0.0;
             const double seta = Constant.DBL_MIN;
             double smexe = Math.Log(seta);
             double alogp5 = Math.Log(0.5);
@@ -2401,6 +2421,7 @@ namespace StatsDirect.Numerics
             if (p >= smexe + alogp5) f = f + 0.5 * Math.Exp(p);
             return -.05 * f;
         }
+
         public static double quantsr(double p, double t, double df)
         {
             int[] ir = new int[4];

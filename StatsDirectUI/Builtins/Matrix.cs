@@ -1003,7 +1003,7 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         public static void mxfac( int n, double[] a, int lda, double tol, ref int irank, double[] r, int ldr, ref int ifault ) 
         { 
-            if ( tol < 0.0 | tol > 1.0 ) 
+            if ( tol < 0.0 || tol > 1.0 ) 
             { 
                 ifault = 1; 
             } 
@@ -1065,7 +1065,7 @@ namespace StatsDirect.Builtins
                 } 
                 else 
                 { 
-                    irank = irank + 1; 
+                    irank++; 
                 } 
                 r[ j + ldr * ( j - 1 ) ] = Math.Sqrt( s ); 
             } 

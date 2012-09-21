@@ -2349,7 +2349,7 @@ namespace StatsDirect.UI
                         ciDescriptor.SetAsConfidence();
                         descriptor.SelectionBoxes.Add(ciDescriptor);
                     }
-                    if (!((IChartHost)SDApplication.SoleInstance).DisplayOptions(descriptor))
+                    if (!((ITemplateHost)SDApplication.SoleInstance).DisplayOptions(descriptor))
                         break;
 
                     yrep = useYReplicatesDescriptor.Checked;

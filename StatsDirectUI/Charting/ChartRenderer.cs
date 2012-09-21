@@ -8989,7 +8989,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        private void Plot_Bias_MA(Stream outputStream, IChartHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
+        private void Plot_Bias_MA(Stream outputStream, ITemplateHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
         {
             string ytx = null;
             double[] y;
@@ -9421,7 +9421,7 @@ namespace StatsDirect.Charting
         }
 
 
-        private void get_ma_ordinate(IChartHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, ref string ytx, string xtxt, out int plot_method, Transformation xform, ref bool reverse, ref bool use_ci)
+        private void get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, ref string ytx, string xtxt, out int plot_method, Transformation xform, ref bool reverse, ref bool use_ci)
         {
             y = new double[rows + 1 /* for VB to C# conversion */ ];
             y[0] = Constant.MISSING;

@@ -38,7 +38,19 @@
         </frame>
       </parameters>
     </settings>
-		<builtin function-name="rptFollowUpLifetable" />
+    <builtin function-name="rptFollowUpLifetableCalculateNatst" />
+    <settings>
+      <parameters>
+        <double>
+          <name>natst</name>
+          <prompt>Number alive at start</prompt>
+          <must-request>true</must-request>
+          <minimum-value>=Parameters["natst-min"].AsDouble</minimum-value>
+          <default-value>=Parameters["natst-min"].AsDouble</default-value>
+        </double>
+      </parameters>
+    </settings>
+    <builtin function-name="rptFollowUpLifetable" />
 		<report filename="lifetab.rtf" />
 	</steps>
 </operation>

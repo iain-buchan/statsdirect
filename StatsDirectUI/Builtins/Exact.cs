@@ -382,7 +382,7 @@ namespace StatsDirect.Builtins
                 o[cnt, 4] = rtd;
             }
 
-            return Tables.Woolf(host, ref o, ref k, ref showIntermediates, ref cit, ref cco, out ierr);
+            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out ierr);
         }
 
 

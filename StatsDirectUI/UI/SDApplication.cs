@@ -917,16 +917,18 @@ namespace StatsDirect.UI
 
         ParameterBag FillParameter(ITemplateProcessor processor, DoubleParameter Parameter, ParameterBag context)
         {
+            double minimumValue = Parameter.MinimumValue(processor, context);
+            double maximumValue = Parameter.MaximumValue(processor, context);
             // Prompt for the range
             string suffix = "";
-            if (Parameter.MinimumValue > double.MinValue || Parameter.MaximumValue < double.MaxValue)
+            if (minimumValue > double.MinValue || maximumValue < double.MaxValue)
             {
                 suffix = " (";
-                if (Parameter.MinimumValue > double.MinValue)
-                    suffix += Parameter.MinimumValue.ToString();
+                if (minimumValue > double.MinValue)
+                    suffix += minimumValue.ToString();
                 suffix += " to ";
-                if (Parameter.MaximumValue < double.MaxValue)
-                    suffix += Parameter.MaximumValue.ToString();
+                if (maximumValue < double.MaxValue)
+                    suffix += maximumValue.ToString();
                 suffix += ")";
             }
             while (true)
@@ -945,7 +947,7 @@ namespace StatsDirect.UI
                     throw new TemplateOperationCancelledException();
                 }
                 double result = double.Parse(response);
-                if (result >= Parameter.MinimumValue && result <= Parameter.MaximumValue)
+                if (result >= minimumValue && result <= maximumValue)
                     return new ParameterBag(Parameter.Name, new FilledParameter(true, result));
                 // else go round and prompt again
             }
@@ -961,7 +963,7 @@ namespace StatsDirect.UI
             }
             if (descriptor.CheckBoxes.Count > 0)
                 descriptor.CheckBoxes[0].Checked = true;
-            if (!((IChartHost)this).DisplayOptions(descriptor))
+            if (!DisplayOptions(descriptor))
             {
                 if (null != Parameter.CancelSkipsParameter)
                 {
@@ -1004,7 +1006,7 @@ namespace StatsDirect.UI
                 sb.SelectedValue = option.DefaultValue;
                 descriptor.SelectionBoxes.Add(sb);
             }
-            if (!((IChartHost)this).DisplayOptions(descriptor))
+            if (!DisplayOptions(descriptor))
             {
                 if (null != Parameter.CancelSkipsParameter)
                 {
@@ -1058,7 +1060,7 @@ namespace StatsDirect.UI
                                             };
                 descriptor.CheckBoxes.Add(cd);
             }
-            if (!((IChartHost)this).DisplayOptions(descriptor))
+            if (!DisplayOptions(descriptor))
             {
                 if (null != parameter.CancelSkipsParameter)
                 {
@@ -1138,28 +1140,28 @@ namespace StatsDirect.UI
             return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
-        bool IChartHost.DisplayOptions(OptionDescriptor Descriptor)
+        public bool DisplayOptions(OptionDescriptor Descriptor)
         {
             return AmendUsingControl(Descriptor);
         }
 
-        bool IChartHost.MetaPlotCI
+        public bool MetaPlotCI
         {
             get { return Preferences.MetaPlotCI; }
         }
 
-        int IChartHost.MetaPlotMethod
+        public int MetaPlotMethod
         {
             get { return Preferences.MetaPlotMethod; }
         }
 
-        bool IChartHost.GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
+        public bool GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
         {
             cancelled = false;
             return msgbox_x(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, true) == DialogResult.Yes;
         }
 
-        bool IChartHost.GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
+        public bool GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
         {
             Cancelled = false;
             return msgbox_x(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, "TODO:", helpTopic) == DialogResult.Yes;
@@ -1180,7 +1182,7 @@ namespace StatsDirect.UI
             return host.FillCombinedParameters(processor, context);
         }
 
-        double IChartHost.GetConfidenceInterval(out bool cancelled)
+        public double GetConfidenceInterval(out bool cancelled)
         {
             const string KEY = "solo";
             ConfidenceIntervalParameter parameter = new ConfidenceIntervalParameter
@@ -1198,7 +1200,7 @@ namespace StatsDirect.UI
             return results[KEY].AsDouble;
         }
 
-        double IChartHost.GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)
+        public double GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)
         {
             const string KEY = "solo";
             DoubleParameter parameter = new DoubleParameter
@@ -1213,7 +1215,7 @@ namespace StatsDirect.UI
             return cancelled ? 0.0 : results[KEY].AsDouble;
         }
 
-        int IChartHost.GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
+        public int GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
         {
             const string KEY = "solo";
             IntegerParameter parameter = new IntegerParameter
@@ -1228,57 +1230,57 @@ namespace StatsDirect.UI
             return cancelled ? 0 : results[KEY].AsInt32;
         }
 
-        string IChartHost.GetString(string Prompt, string Caption, string DefaultValue)
+        public string GetString(string Prompt, string Caption, string DefaultValue)
         {
             return this.Prompt(Prompt, Caption, DefaultValue);
         }
 
-        void ITemplateHost.Error(string Message, string Caption)
+        public void Error(string Message, string Caption)
         {
             msgbox_x(Message, MessageBoxButtons.OK, MessageBoxIcon.Error, Caption, true);
         }
 
-        void ITemplateHost.StartProgress(string operationDescription)
+        public void StartProgress(string operationDescription)
         {
             if (null != mainWindow)
                 mainWindow.StartProgress(operationDescription);
         }
 
-        bool ITemplateHost.UpdateProgress(double fractionComplete)
+        public bool UpdateProgress(double fractionComplete)
         {
             if (null == mainWindow)
                 return false;
             return mainWindow.UpdateProgress(fractionComplete);
         }
 
-        void ITemplateHost.FinishProgress()
+        public void FinishProgress()
         {
             if (null != mainWindow)
                 mainWindow.FinishProgress();
         }
 
-        int ITemplateHost.PDecimalPlaces
+        public int PDecimalPlaces
         {
             get { return Properties.Settings.Default.PDecimalPlaces; }
         }
 
-        void ITemplateHost.NoteError(Exception ex)
+        public void NoteError(Exception ex)
         {
             msgbox_x("Error in calculation, report invalid.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", true);
         }
 
-        void ITemplateHost.Warning(string message, string caption)
+        public void Warning(string message, string caption)
         {
             msgbox_x(message, MessageBoxButtons.OK, MessageBoxIcon.Warning, caption, true);
         }
 
-        bool ITemplateHost.Query(string message, string caption)
+        public bool Query(string message, string caption)
         {
             DialogResult result = msgbox_x(message, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, caption, true);
             return DialogResult.OK == result;
         }
 
-        bool ITemplateHost.Amend(IFillable fillable, ParameterBag context)
+        public bool Amend(IFillable fillable, ParameterBag context)
         {
             if ("Categorise".Equals(fillable.FillerToUse))
                 return Amend((Builtins.CategoriseOptions)fillable);
@@ -1625,7 +1627,7 @@ namespace StatsDirect.UI
             get { return false; }
         }
 
-        string IChartHost.zvalp1(double xz)
+        public string zvalp1(double xz)
         {
             double P = 1 - Numerics.PDF.alnorm(xz);
             if (P > 1 - P)
@@ -1633,7 +1635,7 @@ namespace StatsDirect.UI
             return pval(P);
         }
 
-        string IChartHost.zvalp2(double xz)
+        public string zvalp2(double xz)
         {
             double P = 1 - Numerics.PDF.alnorm(xz);
             if (P > 1 - P)

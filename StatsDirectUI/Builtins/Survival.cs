@@ -253,13 +253,7 @@ namespace StatsDirect.Builtins
             double[,] s = new double[nmax + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
             int[] cnx = new int[groups + 1 /* for VB to C# conversion */];
 
-            // Check if data to be saved
-            bool wasCancelled;
-            bool Save = host.GetBoolean("Save estimates and CIs to worksheet?", "Kaplan-Meier", false, out wasCancelled);
-            if (wasCancelled)
-            {
-                Save = false;
-            }
+            bool save = parameters["save"].AsBoolean;
 
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> groupList = new List<ParameterBag>();
@@ -483,7 +477,7 @@ namespace StatsDirect.Builtins
                     groupParameters.AddOutput("ll", host.RoundU(Constant.MISSING));
                     groupParameters.AddOutput("ul", host.RoundU(Constant.MISSING));
                 }
-                if (Save)
+                if (save)
                 {
                     x_plsave(resultsFrame, ref stime, ref nat, ref dead, ref s, ref h, ref vs, ref vh, ref nx, ref lap, ref GAMMA, ref lc, ref allcens, ref alltime);
                 }
@@ -498,7 +492,7 @@ namespace StatsDirect.Builtins
             outputParameters.Add("ngroups", new FilledParameter(true, groups));
             outputParameters.Add("cnx", new FilledParameter(true, cnx));
             outputParameters.Add("glab", new FilledParameter(true, glab));
-            if (Save)
+            if (save)
             {
                 outputParameters.AddOutput("results", resultsFrame);
             }
@@ -2091,19 +2085,38 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
+        public static StepResult RptFollowUpLifetableCalculateNatst(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
+            DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
+
+            double natst = 0.0;
+            foreach (double d in deathsVariable.Data)
+            {
+                if (d != Constant.MISSING)
+                    natst += d;
+            }
+
+            DataFrame withdrawalsFrame = parameters["withdrawals"].AsDataFrame;
+            DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0].AsDoubleVariable;
+
+            foreach (double w in withdrawalsVariable.Data)
+            {
+                if (w != Constant.MISSING)
+                    natst += w;
+            }
+
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("natst-min", natst);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
 
         public static StepResult RptFollowUpLifetable(ITemplateHost host, ParameterBag parameters)
         {
-            int j;
-            int r;
-            double var;
-            string xx;
-
             const string nan = Formatting.ASTERISK;
-            double GAMMA = parameters["gamma"].AsDouble;
-            double P = (1.0 - GAMMA) / 2.0;
-            int ifault;
-            double cit = PDF.gauinv(1.0 - P, out ifault);
+            double gamma = parameters["gamma"].AsDouble;
+            double P = (1.0 - gamma) / 2.0;
+            double cit = PDF.gauinv(1.0 - P);
 
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
@@ -2112,62 +2125,34 @@ namespace StatsDirect.Builtins
             double[] t = new double[rows + 1 /* for VB to C# conversion */];
             td[0] = new ColumnData { Title = timesVariable.Title };
 
-            for (r = 1; r <= rows; r++)
-            {
+            for (int r = 1; r <= rows; r++)
                 t[r] = timesVariable.Data[r - 1];
-            }
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
             double[] D = new double[rows + 1 /* for VB to C# conversion */];
             td[1] = new ColumnData { Title = deathsVariable.Title };
 
-            double natst = 0.0;
-            for (r = 1; r <= rows; r++)
-            {
+            for (int r = 1; r <= rows; r++)
                 D[r] = deathsVariable.Data[r - 1];
-                if (D[r] != Constant.MISSING)
-                {
-                    natst = natst + D[r];
-                }
-            }
 
             DataFrame withdrawalsFrame = parameters["withdrawals"].AsDataFrame;
             DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0].AsDoubleVariable;
             double[] w = new double[rows + 1 /* for VB to C# conversion */];
             td[2] = new ColumnData { Title = withdrawalsVariable.Title };
 
-            for (r = 1; r <= rows; r++)
-            {
+            for (int r = 1; r <= rows; r++)
                 w[r] = withdrawalsVariable.Data[r - 1];
-                if (w[r] != Constant.MISSING)
-                {
-                    natst = natst + w[r];
-                }
-            }
 
-            do
-            {
-                bool wasCancelled;
-                double ret = host.GetDouble("Enter number alive at start (at least " + natst.ToString() + ")", "Life Table", natst, out wasCancelled);
-                if (wasCancelled)
-                {
-                    throw new TemplateOperationCancelledException();
-                }
-                if (ret >= natst)
-                {
-                    natst = ret;
-                    break; /* TRANSWARNING: check that break is in correct scope */
-                }
-            }
-            while (true);
+            double natst = parameters["natst"].AsDouble;
+
             Trisvar[] qx = new Trisvar[rows + 1 /* for VB to C# conversion */ ];
             int nx = 0;
-            for (j = 1; j <= rows; j++)
+            for (int j = 1; j <= rows; j++)
             {
-                if (t[j] != Constant.MISSING & D[j] != Constant.MISSING & w[j] != Constant.MISSING)
+                if (t[j] != Constant.MISSING && D[j] != Constant.MISSING && w[j] != Constant.MISSING)
                 {
-                    nx = nx + 1;
+                    nx++;
                     qx[j] = new Trisvar { TM = Math.Floor(t[j]), gp = Convert.ToInt32(w[j]), cs = Convert.ToInt32(D[j]) };
                 }
             }
@@ -2176,23 +2161,21 @@ namespace StatsDirect.Builtins
             D = new double[nx + 1 /* for VB to C# conversion */];
             w = new double[nx + 1 /* for VB to C# conversion */];
             int nt = 0;
-            for (j = 1; j <= nx; j++)
+            for (int j = 1; j <= nx; j++)
             {
                 int k;
                 for (k = j + 1; k <= nx; k++)
                 {
-                    if (qx[k].TM != qx[j].TM | k == nx)
-                    {
-                        break; /* TRANSWARNING: check that break is in correct scope */
-                    }
+                    if (qx[k].TM != qx[j].TM || k == nx)
+                        break;
                 }
                 int cnt = k - j;
-                nt = nt + 1;
+                nt++;
                 t[nt] = qx[j].TM;
                 for (k = 1; k <= cnt; k++)
                 {
-                    w[nt] = w[nt] + qx[j + k - 1].gp;
-                    D[nt] = D[nt] + qx[j + k - 1].cs;
+                    w[nt] += qx[j + k - 1].gp;
+                    D[nt] += qx[j + k - 1].cs;
                 }
                 j = j + cnt - 1;
             }
@@ -2205,7 +2188,7 @@ namespace StatsDirect.Builtins
             double[] xp = new double[nt + 1 /* for VB to C# conversion */];
             IList<ParameterBag> deathsList = new List<ParameterBag>();
             outputParameters.AddOutput("*deaths", deathsList);
-            for (j = 1; j <= nt; j++)
+            for (int j = 1; j <= nt; j++)
             {
                 double en1 = natr - w[j] / 2.0;
                 double Q = D[j] / en1;
@@ -2215,20 +2198,17 @@ namespace StatsDirect.Builtins
                 {
                     var1 = var1 + Q / (en1 * P);
                 }
-                var = cump * cump * var1;
+                double var = cump * cump * var1;
                 xp[j] = P;
                 xcump[j] = cump;
                 xvar[j] = var;
                 ParameterBag deathsParameters = new ParameterBag();
                 deathsList.Add(deathsParameters);
+                string xx;
                 if (j < nt)
-                {
                     xx = Convert.ToInt32(t[j]).ToString() + " to " + Convert.ToInt32(t[j + 1]).ToString();
-                }
                 else
-                {
                     xx = Convert.ToInt32(t[j]).ToString() + " up";
-                }
                 deathsParameters.AddOutput("int", xx);
                 deathsParameters.AddOutput("death", D[j].ToString());
                 deathsParameters.AddOutput("wdrawn", w[j].ToString());
@@ -2245,7 +2225,7 @@ namespace StatsDirect.Builtins
                 }
                 natr = natr - D[j] - w[j];
             }
-            outputParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100, 1));
+            outputParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 1));
 
             IList<ParameterBag> survivalList = new List<ParameterBag>();
             outputParameters.AddOutput("*survival", survivalList);
@@ -2258,10 +2238,10 @@ namespace StatsDirect.Builtins
             survivalParameters.AddOutput("var", nan);
             survivalParameters.AddOutput("lci", nan);
             survivalParameters.AddOutput("uci", nan);
-            for (j = 1; j <= nt - 1; j++)
+            for (int j = 1; j <= nt - 1; j++)
             {
                 cump = xcump[j];
-                var = xvar[j];
+                double var = xvar[j];
                 string sd;
                 string lc;
                 string uc;
@@ -2281,14 +2261,11 @@ namespace StatsDirect.Builtins
                 }
                 survivalParameters = new ParameterBag();
                 survivalList.Add(survivalParameters);
+                string xx;
                 if (j < nt - 1)
-                {
                     xx = Convert.ToInt32(t[j + 1]).ToString() + " to " + Convert.ToInt32(t[j + 2]).ToString();
-                }
                 else
-                {
                     xx = Convert.ToInt32(t[j + 1]).ToString() + " up";
-                }
                 survivalParameters.AddOutput("int", xx);
                 survivalParameters.AddOutput("p", j < nt - 1 ? host.RoundU(xp[j + 1]) : nan);
                 survivalParameters.AddOutput("lx", host.RoundU(100.0 * cump));

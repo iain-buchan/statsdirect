@@ -116,8 +116,8 @@
       <xs:extension base="sdop:Parameter">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
           <xs:element minOccurs="1" maxOccurs="1" name="default-value" type="xs:string" />
-          <xs:element minOccurs="1" maxOccurs="1" name="minimum-value" type="xs:double" />
-          <xs:element minOccurs="1" maxOccurs="1" name="maximum-value" type="xs:double" />
+          <xs:element minOccurs="1" maxOccurs="1" name="minimum-value" type="xs:string" />
+          <xs:element minOccurs="1" maxOccurs="1" name="maximum-value" type="xs:string" />
         </xs:choice>
       </xs:extension>
     </xs:complexContent>

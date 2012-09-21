@@ -2491,16 +2491,18 @@ namespace StatsDirect.UI
             string suffix = "";
             if (doubleParameter.ShowLimits)
             {
-                if (doubleParameter.MinimumValue > double.MinValue || doubleParameter.MaximumValue < double.MaxValue)
+                double minimumValue = doubleParameter.MinimumValue(processor, context);
+                double maximumValue = doubleParameter.MaximumValue(processor, context);
+                if (minimumValue > double.MinValue || maximumValue < double.MaxValue)
                 {
                     suffix = " (";
-                    if (doubleParameter.MinimumValue > double.MinValue)
-                        suffix += doubleParameter.MinimumValue.ToString();
+                    if (minimumValue > double.MinValue)
+                        suffix += minimumValue.ToString();
                     else
                         suffix += "-\u221E";
                     suffix += " to ";
-                    if (doubleParameter.MaximumValue < double.MaxValue)
-                        suffix += doubleParameter.MaximumValue.ToString();
+                    if (maximumValue < double.MaxValue)
+                        suffix += maximumValue.ToString();
                     else
                         suffix += "\u221E";
                     suffix += ")";
@@ -3443,7 +3445,7 @@ namespace StatsDirect.UI
                 TableLayoutPanel tlp = (TableLayoutPanel)sender;
                 ParameterBag ambientParameters = new ParameterBag();
                 ParameterBag context = fillCombinedParametersContext;
-                ExtractCurrentValues(ambientParameters, context, false);
+                ExtractCurrentValues(new TemplateProcessor(SDApplication.SoleInstance), ambientParameters, context, false);
                 if (null != context)
                 {
                     // Add in ambient parameters; do not overwrite current parameters (which will include key->null for empty optional parameters)
@@ -3788,7 +3790,7 @@ namespace StatsDirect.UI
                                              {
                                                  Name = specialParameter.Name,
                                                  PromptExpression = specialParameter.PromptExpression,
-                                                 MinimumValue = minimumC,
+                                                 MinimumValueExpression = new Expression(minimumC.ToString()),
                                                  DefaultValueExpression = new Expression(suggestedC.ToString()),
                                                  CancelSkipsParameter = "Skip"
                                              };
@@ -3967,7 +3969,7 @@ namespace StatsDirect.UI
 
             if (!shouldShow)
             {
-                bool allValid = ExtractCurrentValues(outputParameters, context, true);
+                bool allValid = ExtractCurrentValues(processor, outputParameters, context, true);
                 if (!allValid)
                 {
                     // TODO: How on earth do we get people to set valid parameters when the defaults are invalid and we're not supposed to show them anything?
@@ -4007,7 +4009,7 @@ namespace StatsDirect.UI
                             outputParameters = allSkippable ? new ParameterBag() : null;
                             return;
                         }
-                        bool allValid = ExtractCurrentValues(outputParameters, context, true);
+                        bool allValid = ExtractCurrentValues(processor, outputParameters, context, true);
                         if (allValid)
                         {
                             break;
@@ -4047,7 +4049,7 @@ namespace StatsDirect.UI
 
         /// <remarks>Note that outputParameters will contain key->null for parameters that are optional and missing.  Callers must be able to deal with this.</remarks>
         /// <returns>true if doValidation is false, true if everything's valid, false if there are any validation errors</returns>
-        bool ExtractCurrentValues(ParameterBag outputParameters, ParameterBag context, bool doValidation)
+        bool ExtractCurrentValues(ITemplateProcessor processor, ParameterBag outputParameters, ParameterBag context, bool doValidation)
         {
             bool allValid = true;
             Control firstInvalidControl = null;
@@ -4056,14 +4058,14 @@ namespace StatsDirect.UI
             {
                 foreach (Control control in tlp.Controls)
                 {
-                    Control invalidControlOrNull = ExtractCurrentValue(control, outputParameters, context, doValidation);
+                    Control invalidControlOrNull = ExtractCurrentValue(processor, control, outputParameters, context, doValidation);
                     if (null != invalidControlOrNull && null == firstInvalidControl)
                         firstInvalidControl = invalidControlOrNull;
                     allValid &= (null == invalidControlOrNull);
                 }
             }
             // The CI combo may also be in use
-            Control iC = ExtractCurrentValue(cboConfidenceInterval, outputParameters, context, doValidation);
+            Control iC = ExtractCurrentValue(processor, cboConfidenceInterval, outputParameters, context, doValidation);
             allValid &= null == iC;
             if (null != iC && null == firstInvalidControl)
                 firstInvalidControl = iC;
@@ -4106,7 +4108,7 @@ namespace StatsDirect.UI
         }
 
         /// <returns>null if the parameter is valid (or has no validation or validation is disabled), the control to be selected if the parameter fails validation.</returns>
-        Control ExtractCurrentValue(Control control, ParameterBag outputParameters, ParameterBag context, bool doValidation)
+        Control ExtractCurrentValue(ITemplateProcessor processor, Control control, ParameterBag outputParameters, ParameterBag context, bool doValidation)
         {
             // We're interested in non-label controls that have been tagged with Parameters.
             // Labels are uninteresting as they'll never contain a useful user-entered value.
@@ -4211,7 +4213,9 @@ namespace StatsDirect.UI
                             {
                                 // In range?
                                 DoubleParameter dp = (DoubleParameter) parameter;
-                                if (value < dp.MinimumValue || value > dp.MaximumValue)
+                                double minimumValue = dp.MinimumValue(processor, context);
+                                double maximumValue = dp.MaximumValue(processor, context);
+                                if (value < minimumValue || value > maximumValue)
                                     return txt;
                             }
                             // If we get here, it's OK.
@@ -4855,6 +4859,7 @@ namespace StatsDirect.UI
             {
                 frm.ShowDialog(this);
             }
+            GC.Collect();
         }
 
         private void openToolStripButton_Click(object sender, EventArgs e)

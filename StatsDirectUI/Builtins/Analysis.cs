@@ -1067,26 +1067,24 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double k = 0;
-            double sek = 0;
-            double kcil = 0;
-            double kciu = 0;
-            double kw = 0;
-            double sekw = 0;
-            double kwcil = 0;
-            double kwciu = 0;
-            double po = 0;
-            double pe = 0;
-            double pow = 0;
-            double pew = 0;
-            double spe = 0;
-            double spi = 0;
+            double k;
+            double sek;
+            double kcil;
+            double kciu;
+            double kw;
+            double sekw;
+            double kwcil;
+            double kwciu;
+            double po;
+            double pe;
+            double pow;
+            double pew;
+            double spe;
+            double spi;
             bool ierror;
-            Tables.Kappa(host, o, w, g, ref k, ref sek, ref kcil, ref kciu, ref kw, ref sekw, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out ierror);
+            Tables.Kappa(host, o, w, g, out k, out sek, out kcil, out kciu, out kw, out sekw, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out ierror);
             if (ierror)
-            {
                 return null;
-            }
 
             //  RTF_LoadTemplate("kappa.rtf")
             ParameterBag outputParameters = new ParameterBag();
@@ -1153,7 +1151,7 @@ namespace StatsDirect.Builtins
                 double ka = 0;
                 double lwr = 0;
                 double upr = 0;
-                Tables.x_kappa_ci_22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, ref ka, ref lwr, ref upr, out fault);
+                Tables.x_kappa_ci_22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, out ka, out lwr, out upr, out fault);
                 if (fault == 0)
                 {
                     ParameterBag deciParameters = new ParameterBag();
@@ -1277,7 +1275,8 @@ namespace StatsDirect.Builtins
         public static StepResult RptMiscNumberNeededToTreat(ITemplateHost host, ParameterBag parameters)
         {
             double tmp;
-            double rre; double rrel; double rreu; double rrne; double rrnel; double rrneu;
+            double rrel; double rreu;
+            double rrnel; double rrneu;
             double cl; double cu;
             double eor = 0; double ulf; double llf; double ulm; double llm; double p1f = 0; double p2f = 0; double p1m = 0; double p2m = 0;
             int ierr;
@@ -1356,7 +1355,7 @@ namespace StatsDirect.Builtins
                 rrel = rreu;
                 rreu = tmp;
             }
-            rre = pc != 0 ? pt / pc : double.PositiveInfinity;
+            double rre = pc != 0 ? pt / pc : double.PositiveInfinity;
             outputParameters.AddOutput("rre", host.RoundU(rre));
             outputParameters.AddOutput("rre_from", host.RoundU(rrel));
             outputParameters.AddOutput("rre_to", host.RoundU(rreu));
@@ -1376,7 +1375,7 @@ namespace StatsDirect.Builtins
                 rrnel = rrneu;
                 rrneu = tmp;
             }
-            rrne = pc != 1.0 ? (1.0 - pt) / (1.0 - pc) : double.PositiveInfinity;
+            double rrne = pc != 1.0 ? (1.0 - pt) / (1.0 - pc) : double.PositiveInfinity;
             outputParameters.AddOutput("rrne", host.RoundU(rrne));
             outputParameters.AddOutput("rrne_from", host.RoundU(rrnel));
             outputParameters.AddOutput("rrne_to", host.RoundU(rrneu));

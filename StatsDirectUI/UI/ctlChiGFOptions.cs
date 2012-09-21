@@ -19,22 +19,22 @@ namespace StatsDirect.UI
 
         private void SetFormFromOptions()
         {
-            txtDegreesOfFreedom.Text = options.df.ToString();
-            lblCategories.Text = "Categories = " + options.categories.ToString();
-            lblN.Text = "n = " + options.n.ToString();
-            for (int i = 0; i < options.x.Count; i++)
+            txtDegreesOfFreedom.Text = options.Df.ToString();
+            lblCategories.Text = "Categories = " + options.Categories.ToString();
+            lblN.Text = "n = " + options.N.ToString();
+            for (int i = 0; i < options.X.Count; i++)
             {
-                ListViewItem item = new ListViewItem(new[] { options.x[i], options.xn[i].ToString(), options.xe[i].ToString() });
+                ListViewItem item = new ListViewItem(new[] { options.X[i], options.Xn[i].ToString(), options.Xe[i].ToString() });
                 lstFrequencies.Items.Add(item);
             }
         }
 
         private void SetOptionsFromForm()
         {
-            options.df = Utilities.Parsing.Cint_Txt(txtDegreesOfFreedom.Text);
-            for (int i = 0; i < options.xe.Count; i++)
+            options.Df = Utilities.Parsing.Cint_Txt(txtDegreesOfFreedom.Text);
+            for (int i = 0; i < options.Xe.Count; i++)
             {
-                options.xe[i] = Utilities.Parsing.Cdbl_Txt(lstFrequencies.Items[i].SubItems[2].Text);
+                options.Xe[i] = Utilities.Parsing.Cdbl_Txt(lstFrequencies.Items[i].SubItems[2].Text);
             }
         }
 
@@ -50,7 +50,7 @@ namespace StatsDirect.UI
                 int index = lstFrequencies.SelectedIndices[0];
                 double rawValue = Double.Parse(lstFrequencies.Items[index].SubItems[2].Text);
                 if (useProportionOfN)
-                    rawValue /= options.n;
+                    rawValue /= options.N;
                 txtValue.Text = rawValue.ToString();
                 txtValue.SelectAll();
                 txtValue.Select();
@@ -94,7 +94,7 @@ namespace StatsDirect.UI
                 {
                     if (useProportionOfN && valueIsDirty)
                     {
-                        ex *= options.n;
+                        ex *= options.N;
                     }
                     valueIsDirty = false;
                     lstFrequencies.Items[listIndexAtFocus].SubItems[2].Text = ex.ToString();
