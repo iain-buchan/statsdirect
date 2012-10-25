@@ -234,12 +234,14 @@ namespace StatsDirect.UI
         {
             ScatterXYOptions scatterXYOptions = (ScatterXYOptions)options;
             scatterXYOptions.PlotMarkers = chkScatterXYPlotMarkers.Checked;
+            scatterXYOptions.JoinMarkersWithLines = chkScatterXYPlotLines.Checked;
         }
 
         private void FillErrorBarOptionsFromForm()
         {
             ErrorBarOptions errorBarOptions = (ErrorBarOptions)options;
             errorBarOptions.PlotMarkers = chkScatterXYPlotMarkers.Checked;
+            errorBarOptions.JoinMarkersWithLines = chkScatterXYPlotLines.Checked;
         }
 
         private void FillForestOptionsFromForm()
@@ -323,7 +325,9 @@ namespace StatsDirect.UI
             pnlPyramidOptions.Visible = options.ShowPyramidOptions;
             pnlRocOptions.Visible = options.ShowRocOptions;
             // Pure scatter charts always show their markers, which is the only option; line charts may or may not, and error bars may or may not.
-            pnlScatterXYOptions.Visible = (options.ShowScatterXYOptions && definition.ChartType != ChartType.ScatterXY) | options.ShowErrorBarOptions;
+            tlpScatterXYOptions.Visible = (options.ShowScatterXYOptions) || options.ShowErrorBarOptions;
+            chkScatterXYPlotMarkers.Visible = definition.ChartType != ChartType.ScatterXY;
+            chkScatterXYPlotLines.Visible = definition.ChartType != ChartType.LineXY;
             pnlSurvivalOptions.Visible = options.ShowSurvivalOptions;
             pnlLegendFont.Visible = options.ShowControlOptions;
             pnlTitleFont.Visible = options.UsesTitleFontDescriptor;
@@ -544,12 +548,14 @@ namespace StatsDirect.UI
         {
             ScatterXYOptions scatterXYOptions = (ScatterXYOptions)options;
             chkScatterXYPlotMarkers.Checked = scatterXYOptions.PlotMarkers;
+            chkScatterXYPlotLines.Checked = scatterXYOptions.JoinMarkersWithLines;
         }
 
         private void FillFormFromErrorBarOptions()
         {
             ErrorBarOptions errorBarOptions = (ErrorBarOptions)options;
             chkScatterXYPlotMarkers.Checked = errorBarOptions.PlotMarkers;
+            chkScatterXYPlotLines.Checked = errorBarOptions.JoinMarkersWithLines;
         }
 
         private void FillFormFromForestOptions()

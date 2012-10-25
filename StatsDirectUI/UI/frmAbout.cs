@@ -127,7 +127,7 @@ namespace StatsDirect.UI
             Close();
             using (frmLicense f = new frmLicense(SDApplication.SoleInstance.UserInfo))
             {
-                f.ShowDialog();
+                f.ShowDialog(this);
             }
         }
 

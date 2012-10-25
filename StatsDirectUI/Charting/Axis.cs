@@ -1,4 +1,5 @@
 using StatsDirect.Templates;
+using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
@@ -9,7 +10,7 @@ namespace StatsDirect.Charting
         public AxisMode Mode { get; set; }
 
         ///  <summary>
-        ///  Space by which the axis should be shifted in
+        ///  Space by which the axis should be shifted in or the canvas enlarged, depending on the renderer
         ///  </summary>
         public double ExtraSpace { get; set; }
 
@@ -19,6 +20,12 @@ namespace StatsDirect.Charting
         public double AxisTitleOffset { get; set; }
 
         public ScaleType ScaleType { get; set; }
+
+        /// <summary>
+        /// For ScaleType.Series, this is the series to use for the names
+        /// </summary>
+        public IList<Series> Series { get; set; }
+        public IList<string> Labels { get; set; }
 
         public Axis( string title, AxisMode mode, double extraSpace, ScaleType scaleType ) 
         { 

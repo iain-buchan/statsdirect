@@ -72,6 +72,7 @@
             <menu-item label="&amp;Normal Scores" operation="Normal" />
             <menu-item label="&amp;Standardization" operation="Standardize" />
             <menu-item label="&amp;Ranks" operation="Rank" />
+            <menu-item label="S&amp;ummary" operation="UnivariateSummaryToWorksheetOnly" />
           </sub-items>
         </menu-item>
         <menu-item label="&amp;Organizing">

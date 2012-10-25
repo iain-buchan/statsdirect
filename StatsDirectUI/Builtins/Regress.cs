@@ -573,26 +573,28 @@ namespace StatsDirect.Builtins
         public static StepResult RptPrincipalComponentsRegressionCorrelation(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
+            bool correctForReversal = parameters["correctForReversal"].AsBoolean;
             double[,] x;
             double[,] xc;
             double[,] xr;
             double[,] v;
             int N;
             int nx;
-            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 1, out N, out nx);
+            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 1, out N, out nx, correctForReversal);
         }
 
 
         public static StepResult RptPrincipalComponentsRegressionCovariance(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
+            bool correctForReversal = parameters["correctForReversal"].AsBoolean;
             double[,] x;
             double[,] xc;
             double[,] xr;
             double[,] v;
             int N;
             int nx;
-            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 2, out N, out nx);
+            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 2, out N, out nx, correctForReversal);
         }
 
 
@@ -609,7 +611,7 @@ namespace StatsDirect.Builtins
         ///  <param name="nx">Set to the number of rows in the input</param>
         /// <param name="host"></param>
         /// <remarks></remarks>
-        private static StepResult CalcPrincipal(ITemplateHost host, DataFrame frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, int irv, out int N, out int nx)
+        private static StepResult CalcPrincipal(ITemplateHost host, DataFrame frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, int irv, out int N, out int nx, bool correctForReversal)
         {
             int j; int i;
             int ifault = 0;
@@ -636,9 +638,7 @@ namespace StatsDirect.Builtins
                 {
                     inx = inx + 1;
                     for (i = 1; i <= N; i++)
-                    {
                         x[i, inx] = frame.Variables[i - 1].AsDoubleVariable.Data[j - 1];
-                    }
                 }
             }
             nx = inx;
@@ -653,18 +653,12 @@ namespace StatsDirect.Builtins
                 if (!(revx[i]))
                 {
                     signrev = true;
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
             if (signrev)
             {
-                bool wasCancelled;
-                bool shouldCorrect = host.GetBoolean("Do you want StatsDirect to correct for possible scale reversal?", "Principal components", true, out wasCancelled);
-                if (wasCancelled)
-                {
-                    throw new TemplateOperationCancelledException();
-                }
-                if (shouldCorrect)
+                if (correctForReversal)
                 {
                     for (i = 1; i <= N; i++)
                     {

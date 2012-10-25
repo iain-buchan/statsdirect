@@ -1520,13 +1520,13 @@ namespace StatsDirect.Builtins
                         if (temp == gpid[j])
                         {
                             OK = false;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     if (OK)
                     {
                         igot = igot + 1;
-                        // create temp variable for copying values 
+                        // create temp variable for copying values - TODO: Optimise
                         double[] transTemp6 = new double[igot + 1 /* for VB to C# conversion */ ];
                         Array.Copy(gpid, transTemp6, Math.Min(gpid.Length, transTemp6.Length));
                         gpid = transTemp6;
@@ -1542,7 +1542,7 @@ namespace StatsDirect.Builtins
                     if (gpid[j] == g[r])
                     {
                         g[r] = j;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
             }
@@ -1664,12 +1664,7 @@ namespace StatsDirect.Builtins
             if (groups > 2)
             {
                 score = new double[groups + 1 /* for VB to C# conversion */ ];
-                bool wasCancelled;
-                bool use123 = host.GetBoolean("Use 1, 2, 3... etc. for group scores in trend test?", "Log-rank and Wilcoxon", true, out wasCancelled);
-                if (wasCancelled)
-                {
-                    throw new TemplateOperationCancelledException();
-                }
+                bool use123 = parameters["use123"].AsBoolean;
                 if (use123)
                 {
                     for (j = 1; j <= groups; j++)
@@ -1681,6 +1676,7 @@ namespace StatsDirect.Builtins
                 {
                     for (j = 1; j <= groups; j++)
                     {
+                        bool wasCancelled;
                         score[j] = host.GetDouble("Score/weight for group " + j.ToString(), "Log rank & Wilcoxon", j, out wasCancelled);
                         if (wasCancelled)
                         {

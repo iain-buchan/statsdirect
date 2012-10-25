@@ -57,6 +57,11 @@
             <option value="3">Tarone-Ware</option>
           </options>
         </option>
+        <boolean>
+          <name>use123</name>
+          <prompt>Use 1, 2, 3... etc. for group scores in trend test?</prompt>
+          <must-request>true</must-request>
+        </boolean>
       </parameters>
     </settings>
 		<builtin function-name="rptLogRank" />

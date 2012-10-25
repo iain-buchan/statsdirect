@@ -120,7 +120,6 @@ namespace StatsDirect.UI
             this.pnlPyramidOptions = new System.Windows.Forms.Panel();
             this.txtPyramidScaleMaximum = new System.Windows.Forms.TextBox();
             this.lblPyramidScaleMaximum = new System.Windows.Forms.Label();
-            this.pnlScatterXYOptions = new System.Windows.Forms.Panel();
             this.chkScatterXYPlotMarkers = new System.Windows.Forms.CheckBox();
             this.pnlRocOptions = new System.Windows.Forms.Panel();
             this.grpRocOptions = new System.Windows.Forms.GroupBox();
@@ -142,6 +141,8 @@ namespace StatsDirect.UI
             this.chkSurvivalShowCensorshipTics = new System.Windows.Forms.CheckBox();
             this.ctlBoxWhiskerOptions1 = new StatsDirect.UI.ctlBoxWhiskerOptions();
             this.ctlHistogramOptions1 = new StatsDirect.UI.ctlHistogramOptions();
+            this.tlpScatterXYOptions = new System.Windows.Forms.TableLayoutPanel();
+            this.chkScatterXYPlotLines = new System.Windows.Forms.CheckBox();
             this.tlpDisplay.SuspendLayout();
             this.pnlLegendFont.SuspendLayout();
             this.pnlSeriesLabelFont.SuspendLayout();
@@ -174,11 +175,11 @@ namespace StatsDirect.UI
             this.grpNormalScaling.SuspendLayout();
             this.grpNormalOptions.SuspendLayout();
             this.pnlPyramidOptions.SuspendLayout();
-            this.pnlScatterXYOptions.SuspendLayout();
             this.pnlRocOptions.SuspendLayout();
             this.grpRocOptions.SuspendLayout();
             this.pnlSurvivalOptions.SuspendLayout();
             this.grpSurvivalOptions.SuspendLayout();
+            this.tlpScatterXYOptions.SuspendLayout();
             this.SuspendLayout();
             // 
             // tlpDisplay
@@ -480,8 +481,8 @@ namespace StatsDirect.UI
             // 
             // txtChartTitle
             // 
-            this.txtChartTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtChartTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtChartTitle.Location = new System.Drawing.Point(72, 4);
             this.txtChartTitle.Name = "txtChartTitle";
             this.txtChartTitle.Size = new System.Drawing.Size(168, 20);
@@ -830,7 +831,7 @@ namespace StatsDirect.UI
             this.tlpOuter.Name = "tlpOuter";
             this.tlpOuter.RowCount = 1;
             this.tlpOuter.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlpOuter.Size = new System.Drawing.Size(857, 1498);
+            this.tlpOuter.Size = new System.Drawing.Size(857, 1521);
             this.tlpOuter.TabIndex = 1;
             // 
             // tlpFunction
@@ -895,11 +896,11 @@ namespace StatsDirect.UI
             this.tlpCustom.Controls.Add(this.pnlForestOptions, 0, 3);
             this.tlpCustom.Controls.Add(this.pnlNormalOptions, 0, 4);
             this.tlpCustom.Controls.Add(this.pnlPyramidOptions, 0, 5);
-            this.tlpCustom.Controls.Add(this.pnlScatterXYOptions, 0, 6);
             this.tlpCustom.Controls.Add(this.pnlRocOptions, 0, 7);
             this.tlpCustom.Controls.Add(this.pnlSurvivalOptions, 0, 8);
             this.tlpCustom.Controls.Add(this.ctlBoxWhiskerOptions1, 0, 9);
             this.tlpCustom.Controls.Add(this.ctlHistogramOptions1, 0, 10);
+            this.tlpCustom.Controls.Add(this.tlpScatterXYOptions, 0, 6);
             this.tlpCustom.Location = new System.Drawing.Point(452, 0);
             this.tlpCustom.Margin = new System.Windows.Forms.Padding(0);
             this.tlpCustom.Name = "tlpCustom";
@@ -916,7 +917,7 @@ namespace StatsDirect.UI
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpCustom.Size = new System.Drawing.Size(405, 1498);
+            this.tlpCustom.Size = new System.Drawing.Size(405, 1521);
             this.tlpCustom.TabIndex = 2;
             // 
             // pnlPreview
@@ -924,7 +925,7 @@ namespace StatsDirect.UI
             this.pnlPreview.AutoSize = true;
             this.pnlPreview.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlPreview.Controls.Add(this.cmdPreview);
-            this.pnlPreview.Location = new System.Drawing.Point(0, 1468);
+            this.pnlPreview.Location = new System.Drawing.Point(0, 1491);
             this.pnlPreview.Margin = new System.Windows.Forms.Padding(0);
             this.pnlPreview.Name = "pnlPreview";
             this.pnlPreview.Size = new System.Drawing.Size(82, 30);
@@ -1274,21 +1275,10 @@ namespace StatsDirect.UI
             this.lblPyramidScaleMaximum.TabIndex = 0;
             this.lblPyramidScaleMaximum.Text = "Scale maximum";
             // 
-            // pnlScatterXYOptions
-            // 
-            this.pnlScatterXYOptions.AutoSize = true;
-            this.pnlScatterXYOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.pnlScatterXYOptions.Controls.Add(this.chkScatterXYPlotMarkers);
-            this.pnlScatterXYOptions.Location = new System.Drawing.Point(0, 623);
-            this.pnlScatterXYOptions.Margin = new System.Windows.Forms.Padding(0);
-            this.pnlScatterXYOptions.Name = "pnlScatterXYOptions";
-            this.pnlScatterXYOptions.Size = new System.Drawing.Size(132, 23);
-            this.pnlScatterXYOptions.TabIndex = 19;
-            // 
             // chkScatterXYPlotMarkers
             // 
             this.chkScatterXYPlotMarkers.AutoSize = true;
-            this.chkScatterXYPlotMarkers.Location = new System.Drawing.Point(6, 3);
+            this.chkScatterXYPlotMarkers.Location = new System.Drawing.Point(3, 3);
             this.chkScatterXYPlotMarkers.Name = "chkScatterXYPlotMarkers";
             this.chkScatterXYPlotMarkers.Size = new System.Drawing.Size(123, 17);
             this.chkScatterXYPlotMarkers.TabIndex = 0;
@@ -1300,7 +1290,7 @@ namespace StatsDirect.UI
             this.pnlRocOptions.AutoSize = true;
             this.pnlRocOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlRocOptions.Controls.Add(this.grpRocOptions);
-            this.pnlRocOptions.Location = new System.Drawing.Point(0, 646);
+            this.pnlRocOptions.Location = new System.Drawing.Point(0, 669);
             this.pnlRocOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlRocOptions.Name = "pnlRocOptions";
             this.pnlRocOptions.Size = new System.Drawing.Size(338, 124);
@@ -1479,7 +1469,7 @@ namespace StatsDirect.UI
             this.pnlSurvivalOptions.AutoSize = true;
             this.pnlSurvivalOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlSurvivalOptions.Controls.Add(this.grpSurvivalOptions);
-            this.pnlSurvivalOptions.Location = new System.Drawing.Point(0, 770);
+            this.pnlSurvivalOptions.Location = new System.Drawing.Point(0, 793);
             this.pnlSurvivalOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlSurvivalOptions.Name = "pnlSurvivalOptions";
             this.pnlSurvivalOptions.Size = new System.Drawing.Size(267, 65);
@@ -1532,7 +1522,7 @@ namespace StatsDirect.UI
             // 
             this.ctlBoxWhiskerOptions1.AutoSize = true;
             this.ctlBoxWhiskerOptions1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ctlBoxWhiskerOptions1.Location = new System.Drawing.Point(3, 838);
+            this.ctlBoxWhiskerOptions1.Location = new System.Drawing.Point(3, 861);
             this.ctlBoxWhiskerOptions1.Name = "ctlBoxWhiskerOptions1";
             this.ctlBoxWhiskerOptions1.Size = new System.Drawing.Size(282, 227);
             this.ctlBoxWhiskerOptions1.TabIndex = 22;
@@ -1542,11 +1532,38 @@ namespace StatsDirect.UI
             // 
             this.ctlHistogramOptions1.AutoSize = true;
             this.ctlHistogramOptions1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ctlHistogramOptions1.Location = new System.Drawing.Point(3, 1071);
+            this.ctlHistogramOptions1.Location = new System.Drawing.Point(3, 1094);
             this.ctlHistogramOptions1.Name = "ctlHistogramOptions1";
             this.ctlHistogramOptions1.Size = new System.Drawing.Size(322, 394);
             this.ctlHistogramOptions1.TabIndex = 23;
             this.ctlHistogramOptions1.ScaleChanged += new System.EventHandler(this.ctlHistogramOptions1_ScaleChanged);
+            // 
+            // tlpScatterXYOptions
+            // 
+            this.tlpScatterXYOptions.AutoSize = true;
+            this.tlpScatterXYOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.tlpScatterXYOptions.ColumnCount = 1;
+            this.tlpScatterXYOptions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tlpScatterXYOptions.Controls.Add(this.chkScatterXYPlotMarkers, 0, 0);
+            this.tlpScatterXYOptions.Controls.Add(this.chkScatterXYPlotLines, 0, 1);
+            this.tlpScatterXYOptions.Location = new System.Drawing.Point(0, 623);
+            this.tlpScatterXYOptions.Margin = new System.Windows.Forms.Padding(0);
+            this.tlpScatterXYOptions.Name = "tlpScatterXYOptions";
+            this.tlpScatterXYOptions.RowCount = 2;
+            this.tlpScatterXYOptions.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tlpScatterXYOptions.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tlpScatterXYOptions.Size = new System.Drawing.Size(129, 46);
+            this.tlpScatterXYOptions.TabIndex = 25;
+            // 
+            // chkScatterXYPlotLines
+            // 
+            this.chkScatterXYPlotLines.AutoSize = true;
+            this.chkScatterXYPlotLines.Location = new System.Drawing.Point(3, 26);
+            this.chkScatterXYPlotLines.Name = "chkScatterXYPlotLines";
+            this.chkScatterXYPlotLines.Size = new System.Drawing.Size(68, 17);
+            this.chkScatterXYPlotLines.TabIndex = 1;
+            this.chkScatterXYPlotLines.Text = "Plot lines";
+            this.chkScatterXYPlotLines.UseVisualStyleBackColor = true;
             // 
             // ctlChartOptions
             // 
@@ -1558,7 +1575,7 @@ namespace StatsDirect.UI
             this.Margin = new System.Windows.Forms.Padding(0);
             this.MinimumSize = new System.Drawing.Size(405, 40);
             this.Name = "ctlChartOptions";
-            this.Size = new System.Drawing.Size(857, 1498);
+            this.Size = new System.Drawing.Size(857, 1521);
             this.tlpDisplay.ResumeLayout(false);
             this.tlpDisplay.PerformLayout();
             this.pnlLegendFont.ResumeLayout(false);
@@ -1616,14 +1633,14 @@ namespace StatsDirect.UI
             this.grpNormalOptions.PerformLayout();
             this.pnlPyramidOptions.ResumeLayout(false);
             this.pnlPyramidOptions.PerformLayout();
-            this.pnlScatterXYOptions.ResumeLayout(false);
-            this.pnlScatterXYOptions.PerformLayout();
             this.pnlRocOptions.ResumeLayout(false);
             this.grpRocOptions.ResumeLayout(false);
             this.grpRocOptions.PerformLayout();
             this.pnlSurvivalOptions.ResumeLayout(false);
             this.grpSurvivalOptions.ResumeLayout(false);
             this.grpSurvivalOptions.PerformLayout();
+            this.tlpScatterXYOptions.ResumeLayout(false);
+            this.tlpScatterXYOptions.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1692,7 +1709,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.RadioButton rdoNormalVanDerWaerden;
         private System.Windows.Forms.RadioButton rdoNormalScaled;
         private System.Windows.Forms.RadioButton rdoNormalRaw;
-        private System.Windows.Forms.Panel pnlScatterXYOptions;
         private System.Windows.Forms.CheckBox chkScatterXYPlotMarkers;
         private System.Windows.Forms.Panel pnlOrientation;
         private System.Windows.Forms.GroupBox grpOrientation;
@@ -1745,6 +1761,8 @@ namespace StatsDirect.UI
         private System.Windows.Forms.Button cmdPreview;
         private ctlBarOptions ctlBarOptions;
         private System.Windows.Forms.CheckBox chkRocShowCutOffCalculator;
+        private System.Windows.Forms.TableLayoutPanel tlpScatterXYOptions;
+        private System.Windows.Forms.CheckBox chkScatterXYPlotLines;
 
 
     }

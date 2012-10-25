@@ -445,7 +445,7 @@ namespace StatsDirect.UI
                 SaveFileDialog1.InitialDirectory = System.IO.Path.GetDirectoryName(currentFile);
                 SaveFileDialog1.FileName = System.IO.Path.GetFileName(currentFile);
             }
-            DialogResult res = SaveFileDialog1.ShowDialog();
+            DialogResult res = SaveFileDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow);
             if (res != DialogResult.OK)
                 return false;
             if (string.IsNullOrEmpty(SaveFileDialog1.FileName))

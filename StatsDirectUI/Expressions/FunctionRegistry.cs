@@ -158,7 +158,7 @@ namespace StatsDirect.Expressions
                            new FunctionDefinition("INVPOISSONTAIL", "SDMath.InvPoissonTail", new[] { new ArgumentDefinition("mean"), p }),
                            new FunctionDefinition("INVTTAIL", "SDMath.InvTTail", new[] { df, p }),
                            new FunctionDefinition("IZ", "SDMath.Iz", new[] { p }),
-                           new FunctionDefinition("LN", "Math.Ln", new[] { x }),
+                           new FunctionDefinition("LN", "Math.Log", new[] { x }),
                            new FunctionDefinition("LNNORMAL", "SDMath.Lz", new[] { q }),
                            new FunctionDefinition("LOG", "Math.Log", new[] { x }),
                            new FunctionDefinition("LOG!", "SDMath.LogFactorial", new[] { x }),

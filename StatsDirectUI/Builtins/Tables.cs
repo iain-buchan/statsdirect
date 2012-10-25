@@ -2210,7 +2210,7 @@ namespace StatsDirect.Builtins
                         x_symmetrise_xtab(ref xcats, ref xcat, ref ycats, ref ycat, 1);
                 }
 
-                if (!(ok))
+                if (!ok)
                     continue;
 
                 ParameterBag columnsParameters = new ParameterBag();
@@ -2237,8 +2237,6 @@ namespace StatsDirect.Builtins
                             }
                         }
                     }
-                    y = null;
-                    z = null;
                     if (xcats == 2 && ycats == 2)
                     {
                         OptionDescriptor d = new OptionDescriptor { Title = "Which type of study produced your data?" };
@@ -2262,74 +2260,6 @@ namespace StatsDirect.Builtins
                     }
                     // three factor  <-----
                 }
-                else
-                {
-                    // two factor xtab ---->
-                    double cco = parameters["cco"].AsDouble;
-                    double[,] xt = new double[xcats + 1 /* for VB to C# conversion */, ycats + 1 /* for VB to C# conversion */];
-                    tot = 0.0;
-                    for (int i = 1; i <= xcats; i++)
-                    {
-                        for (int j = 1; j <= ycats; j++)
-                        {
-                            for (int k = 1; k <= N; k++)
-                            {
-                                if (x[k] == xcat[i].x && y[k] == ycat[j].x)
-                                    xt[i, j] ++;
-                            }
-                            tot += xt[i, j];
-                        }
-                    }
-                    //  RTF_LoadTemplate("xtab.rtf")
-                    List<ParameterBag> xtabList = new List<ParameterBag>();
-                    columnsParameters.AddOutput("*xtab", xtabList);
-                    ParameterBag xtabParameters = new ParameterBag();
-                    xtabList.Add(xtabParameters);
-                    xtabParameters.AddOutput("ylab", ylab);
-                    xtabParameters.AddOutput("xlab", xlab);
-                    List<ParameterBag> xList = new List<ParameterBag>();
-                    xtabParameters.AddOutput("*x", xList);
-                    for (int i = 1; i <= xcats; i++)
-                    {
-                        ParameterBag xParameters = new ParameterBag();
-                        xList.Add(xParameters);
-                        xParameters.AddOutput("x", xcat[i].Ti);
-                    }
-                    List<ParameterBag> yList = new List<ParameterBag>();
-                    xtabParameters.AddOutput("*y", yList);
-                    for (int i = 1; i <= ycats; i++)
-                    {
-                        ParameterBag yParameters = new ParameterBag();
-                        yList.Add(yParameters);
-                        yParameters.AddOutput("y", ycat[i].Ti);
-                        List<ParameterBag> totList = new List<ParameterBag>();
-                        yParameters.AddOutput("*tot", totList);
-                        for (int j = 1; j <= xcats; j++)
-                        {
-                            ParameterBag totParameters = new ParameterBag();
-                            totList.Add(totParameters);
-                            totParameters.AddOutput("tot", host.RoundU(xt[j, i]));
-                        }
-                    }
-                    List<ParameterBag> chirxcList = new List<ParameterBag>();
-                    columnsParameters.AddOutput("*chirxc", chirxcList);
-                    if (tot > 0.0)
-                    {
-                        //  RTF_LoadTemplate("chirxc.rtf") Then
-                        double[,] w;
-                        MathDbl.transpose_cr_rc(xt, out w);
-                        bool doExact = parameters["doExact"].AsBoolean;
-                        bool pc = parameters["show_pc"].AsBoolean;
-                        bool xp = parameters["xp"].AsBoolean;
-                        bool cs = parameters["cs"].AsBoolean;
-                        bool xs = parameters["xs"].AsBoolean;
-                        bool specifyScores = parameters["specify_scores"].AsBoolean;
-
-                        // w() was passed to a FORTRAN routine so must redim to (1 to c, 1 to r)
-                        ParameterBag chirxcParameters = s_chi(host, ref cco, w, ycats, xcats, doExact, pc, xp, cs, xs, specifyScores).ParameterBag;
-                        chirxcList.Add(chirxcParameters);
-                    }
-                } // two factor <-----
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }

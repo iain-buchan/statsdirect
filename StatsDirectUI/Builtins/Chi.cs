@@ -426,12 +426,7 @@ namespace StatsDirect.Builtins
                 return null;
 
             // Try exact Mantel
-            bool wasCancelled;
-            bool tryExact = host.GetBoolean("Try exact methods?" + "\r\n" + "This occasionally takes a long time.", "StatsDirect pooled odds ratios", false, out wasCancelled);
-            if (wasCancelled)
-            {
-                throw new TemplateOperationCancelledException();
-            }
+            bool tryExact = parameters["try_exact"].AsBoolean;
             if (tryExact)
             {
                 ExactBB.Rec2x2[] tbl = new ExactBB.Rec2x2[k + 1 /* for VB to C# conversion */];

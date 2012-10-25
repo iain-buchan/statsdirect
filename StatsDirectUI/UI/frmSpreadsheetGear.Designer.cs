@@ -84,7 +84,7 @@ namespace StatsDirect.UI
             this.pnlSpreadsheetGear = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.formulaBar = new SpreadsheetGear.Windows.Forms.FormulaBar();
-            this.workbookView = new StatsDirect.UI.SDWorkbookView();
+            this.workbookView = new SpreadsheetGear.Windows.Forms.WorkbookView();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.formatCellsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
@@ -106,6 +106,8 @@ namespace StatsDirect.UI
             this.goToContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.findAndReplaceContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.summaryContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.pnlSpreadsheetGear.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -603,9 +605,9 @@ namespace StatsDirect.UI
             // 
             this.pnlSpreadsheetGear.Controls.Add(this.tableLayoutPanel1);
             this.pnlSpreadsheetGear.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlSpreadsheetGear.Location = new System.Drawing.Point(0, 24);
+            this.pnlSpreadsheetGear.Location = new System.Drawing.Point(0, 0);
             this.pnlSpreadsheetGear.Name = "pnlSpreadsheetGear";
-            this.pnlSpreadsheetGear.Size = new System.Drawing.Size(483, 362);
+            this.pnlSpreadsheetGear.Size = new System.Drawing.Size(483, 386);
             this.pnlSpreadsheetGear.TabIndex = 6;
             // 
             // tableLayoutPanel1
@@ -621,7 +623,7 @@ namespace StatsDirect.UI
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(483, 362);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(483, 386);
             this.tableLayoutPanel1.TabIndex = 2;
             this.tableLayoutPanel1.Visible = false;
             // 
@@ -644,7 +646,7 @@ namespace StatsDirect.UI
             this.workbookView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.workbookView.Location = new System.Drawing.Point(3, 30);
             this.workbookView.Name = "workbookView";
-            this.workbookView.Size = new System.Drawing.Size(477, 329);
+            this.workbookView.Size = new System.Drawing.Size(477, 353);
             this.workbookView.TabIndex = 1;
             this.workbookView.WorkbookSetState = resources.GetString("workbookView.WorkbookSetState");
             this.workbookView.ActiveTabChanged += new SpreadsheetGear.Windows.Forms.ActiveTabChangedEventHandler(this.workbookView_ActiveTabChanged);
@@ -673,28 +675,30 @@ namespace StatsDirect.UI
             this.deleteCommentContextMenuItem,
             this.separatorContextMenuItem3,
             this.goToContextMenuItem,
-            this.findAndReplaceContextMenuItem});
+            this.findAndReplaceContextMenuItem,
+            this.toolStripMenuItem1,
+            this.summaryContextMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
             this.contextMenuStrip.ShowImageMargin = false;
-            this.contextMenuStrip.Size = new System.Drawing.Size(149, 380);
+            this.contextMenuStrip.Size = new System.Drawing.Size(144, 408);
             this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
             // 
             // formatCellsContextMenuItem
             // 
             this.formatCellsContextMenuItem.Name = "formatCellsContextMenuItem";
-            this.formatCellsContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.formatCellsContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.formatCellsContextMenuItem.Text = "&Format Cells...";
             this.formatCellsContextMenuItem.Click += new System.EventHandler(this.formatCellsContextMenuItem_Click);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(145, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(140, 6);
             // 
             // cutContextMenuItem
             // 
             this.cutContextMenuItem.Name = "cutContextMenuItem";
-            this.cutContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.cutContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.cutContextMenuItem.Tag = "#{help=1336}";
             this.cutContextMenuItem.Text = "&Cut";
             this.cutContextMenuItem.Click += new System.EventHandler(this.cutContextMenuItem1_Click);
@@ -702,7 +706,7 @@ namespace StatsDirect.UI
             // copyContextMenuItem
             // 
             this.copyContextMenuItem.Name = "copyContextMenuItem";
-            this.copyContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.copyContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.copyContextMenuItem.Tag = "#{help=1288}";
             this.copyContextMenuItem.Text = "C&opy";
             this.copyContextMenuItem.Click += new System.EventHandler(this.copyContextMenuItem_Click);
@@ -710,7 +714,7 @@ namespace StatsDirect.UI
             // pasteContextMenuItem
             // 
             this.pasteContextMenuItem.Name = "pasteContextMenuItem";
-            this.pasteContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.pasteContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.pasteContextMenuItem.Tag = "#{help=1304}";
             this.pasteContextMenuItem.Text = "&Paste";
             this.pasteContextMenuItem.Click += new System.EventHandler(this.pasteContextMenuItem_Click);
@@ -718,7 +722,7 @@ namespace StatsDirect.UI
             // pasteSpecialContextMenuItem
             // 
             this.pasteSpecialContextMenuItem.Name = "pasteSpecialContextMenuItem";
-            this.pasteSpecialContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.pasteSpecialContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.pasteSpecialContextMenuItem.Tag = "#{help=1378}";
             this.pasteSpecialContextMenuItem.Text = "P&aste Special...";
             this.pasteSpecialContextMenuItem.Click += new System.EventHandler(this.pasteSpecialContextMenuItem_Click);
@@ -726,85 +730,85 @@ namespace StatsDirect.UI
             // separatorContextMenuItem1
             // 
             this.separatorContextMenuItem1.Name = "separatorContextMenuItem1";
-            this.separatorContextMenuItem1.Size = new System.Drawing.Size(145, 6);
+            this.separatorContextMenuItem1.Size = new System.Drawing.Size(140, 6);
             // 
             // insertContextMenuItem
             // 
             this.insertContextMenuItem.Name = "insertContextMenuItem";
-            this.insertContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.insertContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.insertContextMenuItem.Text = "Insert...";
             this.insertContextMenuItem.Click += new System.EventHandler(this.insertContextMenuItem_Click);
             // 
             // deleteContextMenuItem
             // 
             this.deleteContextMenuItem.Name = "deleteContextMenuItem";
-            this.deleteContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.deleteContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.deleteContextMenuItem.Text = "Delete...";
             this.deleteContextMenuItem.Click += new System.EventHandler(this.deleteContextMenuItem_Click);
             // 
             // clearContentsContextMenuItem
             // 
             this.clearContentsContextMenuItem.Name = "clearContentsContextMenuItem";
-            this.clearContentsContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.clearContentsContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.clearContentsContextMenuItem.Text = "Clear Contents";
             this.clearContentsContextMenuItem.Click += new System.EventHandler(this.clearContentsContextMenuItem_Click);
             // 
             // separatorContextMenuItem2
             // 
             this.separatorContextMenuItem2.Name = "separatorContextMenuItem2";
-            this.separatorContextMenuItem2.Size = new System.Drawing.Size(145, 6);
+            this.separatorContextMenuItem2.Size = new System.Drawing.Size(140, 6);
             // 
             // insertCommentContextMenuItem
             // 
             this.insertCommentContextMenuItem.Name = "insertCommentContextMenuItem";
-            this.insertCommentContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.insertCommentContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.insertCommentContextMenuItem.Text = "Insert Comment";
             this.insertCommentContextMenuItem.Click += new System.EventHandler(this.insertCommentContextMenuItem_Click);
             // 
             // showCommentContextMenuItem
             // 
             this.showCommentContextMenuItem.Name = "showCommentContextMenuItem";
-            this.showCommentContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.showCommentContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.showCommentContextMenuItem.Text = "Show Comment";
             this.showCommentContextMenuItem.Click += new System.EventHandler(this.showCommentContextMenuItem_Click);
             // 
             // hideCommentContextMenuItem
             // 
             this.hideCommentContextMenuItem.Name = "hideCommentContextMenuItem";
-            this.hideCommentContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.hideCommentContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.hideCommentContextMenuItem.Text = "Hide Comment";
             this.hideCommentContextMenuItem.Click += new System.EventHandler(this.hideCommentContextMenuItem_Click);
             // 
             // editCommentContextMenuItem
             // 
             this.editCommentContextMenuItem.Name = "editCommentContextMenuItem";
-            this.editCommentContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.editCommentContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.editCommentContextMenuItem.Text = "Edit Comment";
             this.editCommentContextMenuItem.Click += new System.EventHandler(this.editCommentContextMenuItem_Click);
             // 
             // deleteCommentContextMenuItem
             // 
             this.deleteCommentContextMenuItem.Name = "deleteCommentContextMenuItem";
-            this.deleteCommentContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.deleteCommentContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.deleteCommentContextMenuItem.Text = "Delete Comment";
             this.deleteCommentContextMenuItem.Click += new System.EventHandler(this.deleteCommentContextMenuItem_Click);
             // 
             // separatorContextMenuItem3
             // 
             this.separatorContextMenuItem3.Name = "separatorContextMenuItem3";
-            this.separatorContextMenuItem3.Size = new System.Drawing.Size(145, 6);
+            this.separatorContextMenuItem3.Size = new System.Drawing.Size(140, 6);
             // 
             // goToContextMenuItem
             // 
             this.goToContextMenuItem.Name = "goToContextMenuItem";
-            this.goToContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.goToContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.goToContextMenuItem.Text = "Go To...";
             this.goToContextMenuItem.Click += new System.EventHandler(this.goToContextMenuItem_Click);
             // 
             // findAndReplaceContextMenuItem
             // 
             this.findAndReplaceContextMenuItem.Name = "findAndReplaceContextMenuItem";
-            this.findAndReplaceContextMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.findAndReplaceContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.findAndReplaceContextMenuItem.Text = "Find and Replace...";
             this.findAndReplaceContextMenuItem.Click += new System.EventHandler(this.findAndReplaceContextMenuItem_Click);
             // 
@@ -813,6 +817,18 @@ namespace StatsDirect.UI
             this.saveFileDialog.DefaultExt = "xlsx";
             this.saveFileDialog.Filter = "Excel 2007/2010 files (*.xlsx)|*.xlsx|Excel 97-2003 files (*.xls)|*.xls|All files" +
     "|*.*";
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(140, 6);
+            // 
+            // summaryContextMenuItem
+            // 
+            this.summaryContextMenuItem.Name = "summaryContextMenuItem";
+            this.summaryContextMenuItem.Size = new System.Drawing.Size(143, 22);
+            this.summaryContextMenuItem.Text = "Summary...";
+            this.summaryContextMenuItem.Click += new System.EventHandler(this.summaryContextMenuItem_Click);
             // 
             // frmSpreadsheetGear
             // 
@@ -896,7 +912,7 @@ namespace StatsDirect.UI
         private System.Windows.Forms.ToolStripMenuItem autoFitWidthToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importDataToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportDataToolStripMenuItem;
-        internal SDWorkbookView workbookView;
+        internal SpreadsheetGear.Windows.Forms.WorkbookView workbookView;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem cutContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyContextMenuItem;
@@ -919,6 +935,8 @@ namespace StatsDirect.UI
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ToolStripMenuItem formatCellsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem summaryContextMenuItem;
     }
 }
 

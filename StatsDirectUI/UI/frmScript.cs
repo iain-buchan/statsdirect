@@ -162,7 +162,7 @@ namespace StatsDirect.UI
             SaveFileDialog1.DefaultExt = "rtf";
             SaveFileDialog1.Filter = "Script Files|*.cs;*.vb|All Files|*.*";
             SaveFileDialog1.FilterIndex = 1;
-            SaveFileDialog1.ShowDialog();
+            SaveFileDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow);
             if (SaveFileDialog1.FileName.Length == 0)
                 return;
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName);
@@ -238,7 +238,7 @@ namespace StatsDirect.UI
         private void PageColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ColorDialog1.Color = rtbDoc.BackColor;
-            if (ColorDialog1.ShowDialog() == DialogResult.OK)
+            if (ColorDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow) == DialogResult.OK)
             {
                 rtbDoc.BackColor = ColorDialog1.Color;
             }
@@ -273,7 +273,7 @@ namespace StatsDirect.UI
             try
             {
                 PrintPreviewDialog1.Document = PrintDocument1;
-                PrintPreviewDialog1.ShowDialog();
+                PrintPreviewDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow);
             }
             catch
             {
@@ -284,14 +284,14 @@ namespace StatsDirect.UI
         private void PrintToolStripMenuItem_Click(object sender, EventArgs e)
         {
             PrintDialog1.Document = PrintDocument1;
-            if (PrintDialog1.ShowDialog() == DialogResult.OK)
+            if (PrintDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow) == DialogResult.OK)
                 PrintDocument1.Print();
         }
 
         private void mnuPageSetup_Click(object sender, EventArgs e)
         {
             PageSetupDialog1.Document = PrintDocument1;
-            PageSetupDialog1.ShowDialog();
+            PageSetupDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow);
         }
 
         #endregion
@@ -468,7 +468,7 @@ namespace StatsDirect.UI
         internal override void Print()
         {
             PrintDialog1.Document = PrintDocument1;
-            if (PrintDialog1.ShowDialog() == DialogResult.OK)
+            if (PrintDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow) == DialogResult.OK)
                 PrintDocument1.Print();
         }
 

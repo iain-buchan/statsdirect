@@ -20,12 +20,16 @@
           <name>cco</name>
           <must-request>true</must-request>
         </confidence-interval>
-        <options>
+        <boolean>
+          <name>plot_forest</name>
+          <prompt>Forest plot</prompt>
           <must-request>true</must-request>
-          <options>
-            <option name="plot_forest">Forest plot</option>
-          </options>
-        </options>
+        </boolean>
+        <boolean>
+          <name>try_exact</name>
+          <prompt>Try exact methods? (this occasionally takes a long time)</prompt>
+          <must-request>true</must-request>
+        </boolean>
       </parameters>
     </settings>
   	<builtin function-name="rptChiMantel" />

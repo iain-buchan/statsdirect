@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Sockets;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -36,10 +37,42 @@ namespace StatsDirect.UI
         private void StartCheck()
         {
             Application.UseWaitCursor = true;
-            client = new WebClient();
-            client.DownloadStringCompleted += client_DownloadStringCompleted;
-            client.DownloadStringAsync(new Uri("http://www.statsdirect.com/update.aspx"));
-            Application.DoEvents(); // HACK: Horrible bodge because buttons aren't drawn otherwise
+            // Just using DownloadStringAsync can block on DNS resolution; so perform async DNS resolution for www.statsdirect.com
+            Dns.BeginGetHostAddresses("www.statsdirect.com", DnsCompleted, null);
+            // Application.DoEvents(); // HACK: Horrible bodge because buttons aren't drawn otherwise
+        }
+
+        private void DnsCompleted(IAsyncResult ar)
+        {
+            if (!ar.IsCompleted)
+            {
+                UpdateStatus("Could not resolve www.statsdirect.com; are you connected to a network?");
+                return;
+            }
+            try
+            {
+                var addresses = Dns.EndGetHostAddresses(ar);
+                client = new WebClient();
+                client.DownloadStringCompleted += client_DownloadStringCompleted;
+                client.DownloadStringAsync(new Uri(string.Format("http://{0}/update.aspx", addresses[0])));
+            }
+            catch (SocketException)
+            {
+                UpdateStatus("Could not resolve www.statsdirect.com; are you connected to a network?");
+            }
+        }
+
+        private void UpdateStatus(string status)
+        {
+            Application.UseWaitCursor = false;
+            if (lblStatus.InvokeRequired)
+            {
+                lblStatus.Invoke(new MethodInvoker(delegate { lblStatus.Text = status; }));
+            }
+            else
+            {
+                lblStatus.Text = status;
+            }
         }
 
         private void client_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
@@ -49,20 +82,24 @@ namespace StatsDirect.UI
             if (e.Cancelled)
                 return;
             if (null != e.Error)
-                lblStatus.Text = "Could not check for updates. Please check your Internet connection.";
+            {
+                UpdateStatus("Could not check for updates. Please check your Internet connection.");
+                return;
+            }
+
             // Success - look for the version
             string downloadedPage = e.Result;
             int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.Ordinal);
             if (latestVersionPos < 0)
             {
-                lblStatus.Text = "Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx";
+                UpdateStatus("Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx");
                 return;
             }
             string latestVersion = downloadedPage.Substring(latestVersionPos + prefix.Length);
             int versionEndPos = latestVersion.IndexOf(' ');
             if (versionEndPos < 0)
             {
-                lblStatus.Text = "Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx";
+                UpdateStatus("Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx");
                 return;
             }
             latestVersion = latestVersion.Substring(0, versionEndPos - 1);
@@ -80,7 +117,7 @@ namespace StatsDirect.UI
                 int latestValue;
                 if (!(int.TryParse(splitCurrentVersion[i], out currentValue) && int.TryParse(splitLatestVersion[i], out latestValue)))
                 {
-                    lblStatus.Text = "Cannot tell which version is newer. Please check manually at www.statsdirect.com/update.aspx";
+                    UpdateStatus("Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx");
                     return;
                 }
                 if (latestValue > currentValue)

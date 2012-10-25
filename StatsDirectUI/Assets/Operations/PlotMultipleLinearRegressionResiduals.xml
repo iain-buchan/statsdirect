@@ -2,7 +2,8 @@
 <operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
 	<name>PlotMultipleLinearRegressionResiduals</name>
 	<friendly-name lang="en-GB">Plot residuals</friendly-name>
-	<steps>
+  <help chm-id="1277" />
+  <steps>
 		<builtin function-name="plotMultipleLinearRegressionResiduals" />
 		<report filename="charts.rtf" />
 	</steps>

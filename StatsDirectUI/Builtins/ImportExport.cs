@@ -4,6 +4,7 @@ using System.Windows.Forms;
 
 using StatsDirect.Data;
 using StatsDirect.Templates;
+using StatsDirect.UI;
 
 namespace StatsDirect.Builtins
 {
@@ -19,7 +20,7 @@ namespace StatsDirect.Builtins
                 C_FD.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab|Text file (*.txt)|*.txt|All files (*.*)|*.*";
                 C_FD.CheckFileExists = true;
 
-                DialogResult result = C_FD.ShowDialog();
+                DialogResult result = C_FD.ShowDialog(SDApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK != result)
                 {
                     return null;
@@ -55,7 +56,7 @@ namespace StatsDirect.Builtins
                 C_FD.Filter = "ASCII Text (*.txt)|*.txt|All files (*.*)|*.*";
                 C_FD.CheckFileExists = true;
 
-                DialogResult result = C_FD.ShowDialog();
+                DialogResult result = C_FD.ShowDialog(SDApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK != result)
                 {
                     return null;
@@ -143,7 +144,7 @@ namespace StatsDirect.Builtins
                 string source = data.Name;
                 C_FD.FileName = source.Contains(".") ? source.Substring(0, source.Length - 4) + ".csv" : source + ".csv";
                 C_FD.OverwritePrompt = true;
-                DialogResult result = C_FD.ShowDialog();
+                DialogResult result = C_FD.ShowDialog(SDApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK == result)
                 {
                     bool tabout = C_FD.FileName.Substring(C_FD.FileName.Length - 3).ToLower() == "tab";

@@ -113,7 +113,7 @@ namespace StatsDirect.UI
                 saveFileDialog.InitialDirectory = System.IO.Path.GetDirectoryName(path);
                 saveFileDialog.FileName = System.IO.Path.GetFileName(path);
             }
-            DialogResult result = saveFileDialog.ShowDialog();
+            DialogResult result = saveFileDialog.ShowDialog(SDApplication.SoleInstance.MainWindow);
             if (DialogResult.Cancel == result)
             {
                 // User cancelled, failed save
@@ -2929,7 +2929,7 @@ namespace StatsDirect.UI
                 pageSetupDialog.PageSettings = pgSettings;
                 pageSetupDialog.AllowOrientation = true;
                 pageSetupDialog.AllowMargins = true;
-                pageSetupDialog.ShowDialog();
+                pageSetupDialog.ShowDialog(SDApplication.SoleInstance.MainWindow);
                 // TODO: Now what?
             }
         }
@@ -3692,6 +3692,25 @@ namespace StatsDirect.UI
             {
                 workbookView.ReleaseLock();
             }
+        }
+
+        private void summaryContextMenuItem_Click(object sender, EventArgs e)
+        {
+            // This describes the column.  If there's not a column selection... select it!
+            if (workbookView.RangeSelection.CellCount < 2)
+            {
+                workbookView.GetLock();
+                try
+                {
+                    IRange cellSelection = workbookView.RangeSelection;
+                    cellSelection.EntireColumn.Select();
+                }
+                finally
+                {
+                    workbookView.ReleaseLock();
+                }
+            }
+            DoOperation("QuickSummary");
         }
 
     }

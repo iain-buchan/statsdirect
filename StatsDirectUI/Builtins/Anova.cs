@@ -1208,10 +1208,8 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptBonferroni(ITemplateHost host, ParameterBag parameters)
         {
-
             DataFrame frame = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
             int[] variables = ((int[])(parameters["variables"].Data));
@@ -1222,9 +1220,7 @@ namespace StatsDirect.Builtins
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
 
             if (comparisons < 1)
-            {
                 comparisons = 1;
-            }
 
             double means = carrier.mean[z_va] - carrier.mean[z_vb];
             double se = Math.Sqrt(carrier.msx * ((1.0 / carrier.tnx[z_vb]) + (1.0 / carrier.tnx[z_va])));
@@ -1246,21 +1242,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", carrier.dferr.ToString());
             double P = PDF.tvalp(Math.Abs(tav), Convert.ToDouble(carrier.dferr));
             if (P > 1.0 - P)
-            {
                 P = 1.0 - P;
-            }
             outputParameters.AddOutput("p", host.pval(P * 2.0));
-            string qx;
-            if (comparisons == 1)
-            {
-                qx = comparisons.ToString() + " comparison";
-            }
-            else { qx = comparisons.ToString() + " comparisons"; }
+            string qx = comparisons.ToString() + " comparison" + ((comparisons == 1) ? "" : "s");
             outputParameters.AddOutput("comp", qx);
-            outputParameters.AddOutput("bonf", host.RoundU(0.05 / Convert.ToDouble(comparisons)));
+            outputParameters.AddOutput("bonf", host.RoundU(0.05 / comparisons));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
 
         public static StepResult RptTukey(ITemplateHost host, ParameterBag parameters)
         {
@@ -1283,14 +1271,12 @@ namespace StatsDirect.Builtins
 
             bool n_same = true;
             int ntot = 0;
-            for (int N = 0; N <= k; N++)
+            for (int n = 0; n <= k; n++)
             {
-                ntot = ntot + tnx[N];
-                if (N > 0 & n_same & tnx[N] != lastTnx)
-                {
+                ntot += tnx[n];
+                if (n > 0 && n_same && tnx[n] != lastTnx)
                     n_same = false;
-                }
-                lastTnx = tnx[N];
+                lastTnx = tnx[n];
             }
             int nu = ntot - k - 1;
             double pse = Math.Sqrt(mserr);
@@ -1301,7 +1287,7 @@ namespace StatsDirect.Builtins
             }
 
             double dalpha = 1.0 - gamma;
-            if (dalpha <= 0.0 | dalpha > 1.0)
+            if (dalpha <= 0.0 || dalpha > 1.0)
             {
                 dalpha = 0.05;
             }
@@ -1390,7 +1376,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*summary", ContrasterSummary(hold, 1, ctr, dalpha));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
 
         public static StepResult RptScheffe(ITemplateHost host, ParameterBag parameters)
         {

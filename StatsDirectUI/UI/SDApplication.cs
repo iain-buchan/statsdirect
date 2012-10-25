@@ -1033,7 +1033,7 @@ namespace StatsDirect.UI
         {
             using (frmEffectOptions frm = new frmEffectOptions())
             {
-                frm.ShowDialog();
+                frm.ShowDialog(mainWindow);
                 if (frm.UserCancelled)
                 {
                     if (null != parameter.CancelSkipsParameter)
@@ -1128,14 +1128,34 @@ namespace StatsDirect.UI
                 return msgbox_x(text, buttons, icon, caption, SoleInstance.HelpFilePath, SoleInstance.ActiveHelpTopic, defaultButton);
 
             // Use a Windows message box if our own interface isn't visible; use our own if it is.
-            if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized)
+            if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
                 return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0);
             return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
         }
 
+        /// <summary>
+        /// Detect whether we
+        /// </summary>
+        /// <returns></returns>
+        private bool ModalDialogShowing()
+        {
+            return null != mainWindow && ModalDialogShowing(mainWindow);
+        }
+
+        private bool ModalDialogShowing(Form f)
+        {
+            // Approximate by detecting child forms of the main window and any MDI children.  Most are modal; this will therefore fail safe and occasionally show a dialog box when it could have presented in the main window.
+            if (f.OwnedForms.Length > 0)
+                return true;
+            foreach (Form child in f.MdiChildren)
+                if (ModalDialogShowing(child))
+                    return true;
+            return false;
+        }
+
         public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, string helpFile, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
-            if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized)
+            if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
                 return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
             return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
         }
@@ -1180,24 +1200,6 @@ namespace StatsDirect.UI
             ParameterBag context = new ParameterBag();
             host.FillParameter(processor, parameter, context, true);
             return host.FillCombinedParameters(processor, context);
-        }
-
-        public double GetConfidenceInterval(out bool cancelled)
-        {
-            const string KEY = "solo";
-            ConfidenceIntervalParameter parameter = new ConfidenceIntervalParameter
-                                                        {
-                                                            Name = KEY,
-                                                            PromptExpression =
-                                                                new Expression(
-                                                                "Enter confidence interval (%, in the range [0, 100])"),
-                                                            CancelSkipsParameter = "Skip"
-                                                        };
-            ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(KEY) || null == results[KEY]);
-            if (cancelled)
-                return 0.0;
-            return results[KEY].AsDouble;
         }
 
         public double GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)

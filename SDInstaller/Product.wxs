@@ -1071,6 +1071,9 @@
             <Component Id="UnivariateSummary.xml">
               <File Id="UnivariateSummary.xml" Name="UnivariateSummary.xml" KeyPath="yes" />
             </Component>
+            <Component Id="UnivariateSummaryToWorksheetOnly.xml">
+              <File Id="UnivariateSummaryToWorksheetOnly.xml" Name="UnivariateSummaryToWorksheetOnly.xml" KeyPath="yes" />
+            </Component>
             <Component Id="UniversalAgreement.xml">
               <File Id="UniversalAgreement.xml" Name="UniversalAgreement.xml" KeyPath="yes" />
             </Component>
@@ -1905,6 +1908,7 @@
       <ComponentRef Id="TwoWayNested.xml" />
       <ComponentRef Id="TwoWayNestedMeans.xml" />
       <ComponentRef Id="UnivariateSummary.xml" />
+      <ComponentRef Id="UnivariateSummaryToWorksheetOnly.xml" />
       <ComponentRef Id="UniversalAgreement.xml" />
       <ComponentRef Id="UniversalAgreementSimulateExactP.xml" />
       <ComponentRef Id="UniversalRCompare.xml" />

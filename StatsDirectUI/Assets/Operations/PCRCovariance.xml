@@ -19,6 +19,11 @@
           <min-columns>2</min-columns>
           <max-columns>200</max-columns>
         </frame>
+        <boolean>
+          <name>correctForReversal</name>
+          <prompt>Correct for possible scale reversal?</prompt>
+          <default-value>true</default-value>
+        </boolean>
       </parameters>
     </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />

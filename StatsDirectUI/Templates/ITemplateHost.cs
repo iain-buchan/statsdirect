@@ -71,7 +71,6 @@ namespace StatsDirect.Templates
 
         bool GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled);
         bool GetBoolean(string prompt, string Title, bool InitialValue, int HelpIndex, out bool cancelled);
-        double GetConfidenceInterval(out bool cancelled);
         double GetDouble(string prompt, string Title, double InitialValue, out bool cancelled);
         int GetInteger(string prompt, string Title, int initialValue, out bool cancelled);
 

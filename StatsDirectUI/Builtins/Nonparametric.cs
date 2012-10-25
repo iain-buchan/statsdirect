@@ -978,441 +978,6 @@ namespace StatsDirect.Builtins
             return 0;
         }
 
-
-        private static double XChance(int v, int N)
-        {
-            double P;
-            int i;
-
-            int[] iv = new int[1000 + 1 /* for VB to C# conversion */ ];
-            double[] vv = new double[1000 + 1 /* for VB to C# conversion */];
-            double nnow = Convert.ToDouble(N);
-            int its = N - 1;
-            double vmax = Convert.ToDouble(N) * Convert.ToDouble(N + 1) / 2.0;
-            if (v > (vmax - v - 1.0))
-            {
-                vv[1] = vmax - v - 1.0;
-                iv[1] = -1;
-                P = Math.Pow(2.0, Convert.ToDouble(N));
-            }
-            else
-            {
-                vv[1] = v;
-                iv[1] = 1;
-                P = 0.0;
-            }
-            int iterms = 1;
-            if (its != 0)
-            {
-                int iter;
-                for (iter = 1; iter <= its; iter++)
-                {
-                    int xnext = iterms + 1;
-                    int j;
-                    for (j = 1; j <= iterms; j++)
-                    {
-                        if (vv[j] - nnow >= 0.0)
-                        {
-                            vv[xnext] = vv[j] - nnow;
-                            iv[xnext] = iv[j];
-                            xnext = xnext + 1;
-                        }
-                    }
-                    vmax = vmax - nnow;
-                    nnow = nnow - 1;
-                    for (j = 1; j <= iterms; j++)
-                    {
-                        if (vv[j] >= vmax)
-                        {
-                            P = P + Math.Pow(2.0, nnow) * Convert.ToDouble(iv[j]);
-                            iv[j] = 0;
-                        }
-                    }
-                    iterms = xnext - 1;
-                    for (j = 1; j <= iterms; j++)
-                    {
-                        if (vmax - vv[j] - 1 < vv[j])
-                        {
-                            P = P + Math.Pow(2.0, nnow) * Convert.ToDouble(iv[j]);
-                            iv[j] = -iv[j];
-                            vv[j] = vmax - vv[j] - 1;
-                        }
-                    }
-                    if (iterms >= 2)
-                    {
-                        int itm1 = iterms - 1;
-                        for (i = 1; i <= itm1; i++)
-                        {
-                            if (iv[i] != 0)
-                            {
-                                double vvi = vv[i];
-                                j = i + 1;
-                                int jj;
-                                for (jj = j; jj <= iterms; jj++)
-                                {
-                                    if (vvi == vv[jj])
-                                    {
-                                        iv[i] = iv[i] + iv[jj];
-                                        iv[jj] = 0;
-                                    }
-                                }
-                            }
-                        }
-                        int itnew = 0;
-                        for (i = 1; i <= iterms; i++)
-                        {
-                            if (iv[i] != 0)
-                            {
-                                itnew = itnew + 1;
-                                vv[itnew] = vv[i];
-                                iv[itnew] = iv[i];
-                            }
-                        }
-                        iterms = itnew;
-                        if (iterms == 0)
-                        {
-                            break; /* TRANSWARNING: check that break is in correct scope */
-                        }
-                    }
-                }
-            }
-            for (i = 1; i <= iterms; i++)
-            {
-                P += iv[i] * (vv[i] + 1);
-            }
-            return P;
-        }
-
-
-        private static void XWsr(ref double[] x, ref double[] y, ref int N, ref double w, ref int n1, ref double P, ref double ned, ref double xf, out bool fault)
-        {
-            int i;
-            int k;
-
-            fault = true;
-            if (N < 1)
-            {
-                return;
-            }
-            n1 = 0;
-            int npos = 0;
-            double[] w1 = new double[N + 1 /* for VB to C# conversion */ ];
-            double[] w2 = new double[N + 1 /* for VB to C# conversion */ ];
-            for (i = 1; i <= N; i++)
-            {
-                double zz = x[i] - y[i];
-                if (zz != 0)
-                {
-                    if (zz > 0)
-                    {
-                        npos = npos + 1;
-                    }
-                    n1 = n1 + 1;
-                    w1[n1] = Math.Abs(zz);
-                }
-            }
-            if (n1 < 1)
-            {
-                return;
-            }
-            ExFortran.Rank(w1, w2, 1, n1, 1, out xf);
-            if (N > 50)
-            {
-                double wt = 0.0;
-                w = 0.0;
-                k = 0;
-                for (i = 1; i <= N; i++)
-                {
-                    if ((x[i] - y[i]) < 0.0)
-                    {
-                        k = k + 1;
-                        wt = wt + Math.Pow(w2[k], 2.0);
-                        w = w + (w2[k] * -1);
-                    }
-                    else if ((x[i] - y[i]) > 0.0)
-                    {
-                        k = k + 1;
-                        wt = wt + Math.Pow(w2[k], 2.0);
-                        w = w + w2[k];
-                    }
-                }
-                ned = w / Math.Sqrt(wt);
-                P = PDF.alnorm(ned);
-            }
-            else
-            {
-                w = 0.0;
-                int xn1 = n1;
-                if (npos != 0)
-                {
-                    int j = 0;
-                    k = 0;
-                    for (i = 1; i <= N; i++)
-                    {
-                        if ((x[i] - y[i]) < 0.0)
-                        {
-                            k = k + 1;
-                        }
-                        else if ((x[i] - y[i]) > 0.0)
-                        {
-                            k = k + 1;
-                            j = j + 1;
-                            w = w + w2[k];
-                            if (j == npos)
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
-                double S1 = xn1 * (xn1 + 1) / 4.0;
-                P = 0.5;
-                if (Math.Abs(w - S1) >= 0.6)
-                {
-                    int ix = ((int)(Math.Floor(w + 0.6)));
-                    if (w > S1)
-                    {
-                        ix = ((int)(Math.Floor(w - 0.6)));
-                    }
-                    P = XChance(ix, n1) / (Math.Pow(2.0, Convert.ToDouble(n1)));
-                }
-            }
-            fault = false;
-        }
-
-
-        private static void XSrk(ref int sizei, ref double GAMMA, out int k, out double lev)
-        {
-            double alpha = (1 - GAMMA) / 2;
-            // TRANSWARNING: check selectVal type/name in Select 
-            int selectVal = sizei;
-            if ((selectVal < 4))
-                k = -99;
-            else if ((selectVal == 4))
-                k = 0;
-            else if ((selectVal == 5))
-                k = GAMMA == 0.99 ? 0 : (GAMMA == 0.9 ? 1 : 0);
-            else if ((selectVal == 6))
-                k = GAMMA == 0.99 ? 0 : (GAMMA == 0.9 ? 3 : 1);
-            else if ((selectVal == 7))
-                k = GAMMA == 0.99 ? 0 : (GAMMA == 0.9 ? 4 : 3);
-            else if ((selectVal == 8))
-                k = GAMMA == 0.99 ? 1 : (GAMMA == 0.9 ? 6 : 4);
-            else if ((selectVal == 9))
-                k = GAMMA == 0.99 ? 2 : (GAMMA == 0.9 ? 9 : 6);
-            else if ((selectVal == 10))
-                k = GAMMA == 0.99 ? 4 : (GAMMA == 0.9 ? 11 : 9);
-            else if ((selectVal == 11))
-                k = GAMMA == 0.99 ? 6 : (GAMMA == 0.9 ? 14 : 11);
-            else if ((selectVal == 12))
-                k = GAMMA == 0.99 ? 8 : (GAMMA == 0.9 ? 18 : 14);
-            else if ((selectVal == 13))
-                k = GAMMA == 0.99 ? 10 : (GAMMA == 0.9 ? 22 : 18);
-            else if ((selectVal == 14))
-                k = GAMMA == 0.99 ? 13 : (GAMMA == 0.9 ? 26 : 22);
-            else if ((selectVal == 15))
-                k = GAMMA == 0.99 ? 16 : (GAMMA == 0.9 ? 31 : 26);
-            else if ((selectVal == 16))
-                k = GAMMA == 0.99 ? 20 : (GAMMA == 0.9 ? 36 : 30);
-            else if ((selectVal == 17))
-                k = GAMMA == 0.99 ? 24 : (GAMMA == 0.9 ? 42 : 35);
-            else if ((selectVal == 18))
-                k = GAMMA == 0.99 ? 28 : (GAMMA == 0.9 ? 48 : 41);
-            else if ((selectVal == 19))
-                k = GAMMA == 0.99 ? 33 : (GAMMA == 0.9 ? 54 : 47);
-            else if ((selectVal == 20))
-                k = GAMMA == 0.99 ? 38 : (GAMMA == 0.9 ? 61 : 53);
-            else if ((selectVal == 21))
-                k = GAMMA == 0.99 ? 43 : (GAMMA == 0.9 ? 68 : 59);
-            else if ((selectVal == 22))
-                k = GAMMA == 0.99 ? 49 : (GAMMA == 0.9 ? 76 : 66);
-            else if ((selectVal == 23))
-                k = GAMMA == 0.99 ? 55 : (GAMMA == 0.9 ? 84 : 74);
-            else if ((selectVal == 24))
-                k = GAMMA == 0.99 ? 62 : (GAMMA == 0.9 ? 92 : 82);
-            else if ((selectVal == 25))
-                k = GAMMA == 0.99 ? 69 : (GAMMA == 0.9 ? 101 : 90);
-            else if ((selectVal == 26))
-                k = GAMMA == 0.99 ? 76 : (GAMMA == 0.9 ? 111 : 99);
-            else if ((selectVal == 27))
-                k = GAMMA == 0.99 ? 84 : (GAMMA == 0.9 ? 120 : 108);
-            else if ((selectVal == 28))
-                k = GAMMA == 0.99 ? 92 : (GAMMA == 0.9 ? 131 : 117);
-            else if ((selectVal == 29))
-                k = GAMMA == 0.99 ? 101 : (GAMMA == 0.9 ? 141 : 127);
-            else
-            {
-                double sizes = Convert.ToDouble(sizei);
-                int ifault;
-                k =
-                    Convert.ToInt32(((sizes * (sizes + 1)) / 4) +
-                                    (PDF.gauinv(alpha, out ifault) * Math.Sqrt((sizes * (sizes + 1) * ((2 * sizes) + 1)) / 24)));
-                k = k + 1;
-            }
-            if (k == -99)
-            {
-                lev = -99;
-                return;
-            }
-            if (sizei > 29)
-            {
-                lev = -99;
-                return;
-            }
-            double S1 = Convert.ToDouble(sizei) * Convert.ToDouble(sizei + 1) / 4.0;
-            int kq = k - 1;
-            if (kq < 0)
-            {
-                kq = 0;
-            }
-            if (Math.Abs(kq - S1) < 0.6)
-            {
-                lev = GAMMA;
-                return;
-            }
-            int ix = ((int)(Math.Floor(kq + 0.6)));
-            if (kq > S1)
-            {
-                ix = ((int)(Math.Floor(kq - 0.6)));
-            }
-            double P = XChance(ix, sizei) / (Math.Pow(2.0, sizei));
-            if (P > 0.5)
-            {
-                P = 1.0 - P;
-            }
-            lev = 1.0 - (P * 2.0);
-        }
-
-
-        private static ParameterBag XSrcon(ITemplateHost host, int size, int k, double[] x, double[] y)
-        {
-            double median = 0; double kl = 0;
-            int occurences;
-            int midl;
-            int midu;
-            int j;
-
-            ParameterBag outputParameters = new ParameterBag();
-            int limit = Convert.ToInt32(size * (size + 1) / 2);
-            if (limit > int.MaxValue || k > int.MaxValue)
-            {
-                host.Error("Sample is too large for exact confidence interval calculation.", "Signed Ranks");
-                outputParameters.AddOutput("from", Formatting.ASTERISK);
-                outputParameters.AddOutput("to", Formatting.ASTERISK);
-                outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
-                return outputParameters;
-            }
-            host.StartProgress("Calculating Confidence Interval");
-            double bigx = x[1];
-            for (j = 1; j <= size; j++)
-            {
-                if (x[j] > bigx)
-                {
-                    bigx = x[j];
-                }
-                if (y[j] > bigx)
-                {
-                    bigx = y[j];
-                }
-            }
-            int scaler = 100000;
-            do
-            {
-                if (bigx * Convert.ToDouble(scaler) < Convert.ToDouble(int.MaxValue) / 10.0)
-                {
-                    break;
-                }
-                scaler = Convert.ToInt32(scaler / 10);
-            }
-            while (true);
-            int[] xx = new int[size + 1 /* for VB to C# conversion */ ];
-            for (j = 1; j <= size; j++)
-            {
-                xx[j] = Convert.ToInt32((x[j] - y[j]) * scaler);
-            }
-            Array.Sort(xx, 1, size);
-            if (limit % 2 == 0)
-            {
-                midu = Convert.ToInt32(Math.Floor((double)limit / 2) + 1);
-                midl = ((int)(Math.Floor((double)limit / 2)));
-            }
-            else
-            {
-                midu = ((int)(Math.Floor((double)(limit + 1) / 2)));
-                midl = midu;
-            }
-            bool domed = true;
-            bool dokl = true;
-            int goal = midu + k;
-            int C = 2 * xx[1] - 1;
-            int i = 0;
-            while (i < midu)
-            {
-                C = ExFortran.pairnext(out occurences, C, xx, size);
-                i = i + occurences;
-                if (host.UpdateProgress(i / (double)goal))
-                {
-                    outputParameters.AddOutput("from", Formatting.ASTERISK);
-                    outputParameters.AddOutput("to", Formatting.ASTERISK);
-                    outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
-                    return outputParameters;
-                }
-                if (i >= k)
-                {
-                    if (dokl)
-                    {
-                        dokl = false;
-                        kl = C / ((double)scaler) / 2.0;
-                    }
-                }
-                if (i >= midl)
-                {
-                    if (domed)
-                    {
-                        domed = false;
-                        median = C / ((double)scaler) / 2.0;
-                    }
-                }
-            }
-            if (midu != midl)
-            {
-                if (domed)
-                {
-                    median = C / ((double)scaler) / 2.0;
-                }
-                else
-                {
-                    median = (median + C / ((double)scaler) / 2.0) / 2.0;
-                }
-            }
-            for (j = 1; j <= size; j++)
-            {
-                xx[j] = -xx[j];
-            }
-            Array.Sort(xx, 1, size);
-            C = 2 * xx[1] - 1;
-            i = 0;
-            while (i < k)
-            {
-                C = ExFortran.pairnext(out occurences, C, xx, size);
-                i = i + occurences;
-                if (host.UpdateProgress((midu + i) / (double)goal))
-                {
-                    outputParameters.AddOutput("from", Formatting.ASTERISK);
-                    outputParameters.AddOutput("to", Formatting.ASTERISK);
-                    outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
-                    return outputParameters;
-                }
-            }
-            double ku = -C / ((double)scaler) / 2.0;
-            host.FinishProgress();
-            outputParameters.AddOutput("from", host.RoundU(kl));
-            outputParameters.AddOutput("to", host.RoundU(ku));
-            outputParameters.AddOutput("med_diff", host.RoundU(median));
-            return outputParameters;
-        }
-
-
         public static StepResult RptCuzick(ITemplateHost host, ParameterBag parameters)
         {
             double varz = 0; double ez = 0; double st = 0; double tie;
@@ -2073,10 +1638,10 @@ namespace StatsDirect.Builtins
         {
             double lev = 0;
             double r1 = 0; double xf = 0; double z = 0; double u = 0;
-            int cnt = 0; int N; int k = 0;
+            int cnt = 0; int n; int k = 0;
 
-            double GAMMA = parameters["gamma"].AsDouble;
-            if (GAMMA <= 0)
+            double gamma = parameters["gamma"].AsDouble;
+            if (gamma <= 0)
             {
                 return new StepResult(StepSuccess.Success, new ParameterBag());
             }
@@ -2087,40 +1652,40 @@ namespace StatsDirect.Builtins
             double[] x = new double[v0.Length + v1.Length + 1 /* for VB to C# conversion */ ];
             double[] w1 = new double[v0.Length + v1.Length + 1 /* for VB to C# conversion */ ];
 
-            for (N = 0; N <= v0.Length - 1; N++)
+            for (n = 0; n <= v0.Length - 1; n++)
             {
-                if (v0.Data[N] != Constant.MISSING)
+                if (v0.Data[n] != Constant.MISSING)
                 {
                     cnt = cnt + 1;
-                    x[cnt] = v0.Data[N];
+                    x[cnt] = v0.Data[n];
                 }
             }
             int n1 = cnt;
 
-            for (N = 0; N <= v1.Length - 1; N++)
+            for (n = 0; n <= v1.Length - 1; n++)
             {
-                if (v1.Data[N] != Constant.MISSING)
+                if (v1.Data[n] != Constant.MISSING)
                 {
                     cnt = cnt + 1;
-                    x[cnt] = v1.Data[N];
+                    x[cnt] = v1.Data[n];
                 }
             }
             int n2 = cnt - n1;
-            N = cnt;
+            n = cnt;
 
             bool fault;
-            NonParametric.x_mwut(ref x, N, n1, n2, w1, ref u, ref z, ref xf, ref r1, out fault);
+            NonParametric.x_mwut(ref x, n, n1, n2, w1, ref u, ref z, ref xf, ref r1, out fault);
 
             ParameterBag outputParameters = new ParameterBag();
 
             outputParameters.AddOutput("sample_1", v0.Title);
             outputParameters.AddOutput("obs_1", n1.ToString());
-            outputParameters.AddOutput("median_1", host.RoundU(XXmdn(x, N, n1, 1)));
+            outputParameters.AddOutput("median_1", host.RoundU(XXmdn(x, n, n1, 1)));
             outputParameters.AddOutput("ranksum", host.RoundU(r1));
 
             outputParameters.AddOutput("sample_2", v1.Title);
             outputParameters.AddOutput("obs_2", n2.ToString());
-            outputParameters.AddOutput("median_2", host.RoundU(XXmdn(x, N, n1, n2)));
+            outputParameters.AddOutput("median_2", host.RoundU(XXmdn(x, n, n1, n2)));
 
             outputParameters.AddOutput("u", host.RoundU(u));
             outputParameters.AddOutput("u_prime", host.RoundU(Convert.ToDouble(n1) * Convert.ToDouble(n2) - u));
@@ -2129,7 +1694,7 @@ namespace StatsDirect.Builtins
             {
                 string adj = xf > 0 ? " (adjusted for ties)" : "";
                 double n1d = Convert.ToDouble(n1);
-                double nd = Convert.ToDouble(N);
+                double nd = Convert.ToDouble(n);
                 double dimlim = n1d + n1d * (n1d + 1.0) * nd - (n1d * (n1d + 1.0) * (2.0 * n1d + 1.0)) / 3.0 + 1.0;
                 double P;
                 double pl;
@@ -2155,6 +1720,11 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("p_2", host.pval(P * 2.0));
                 }
 
+                outputParameters.AddOutput("pc0", Formatting.XRound(gamma * 100, 1));
+                outputParameters.AddOutput("theta", host.RoundU(u / (n1 * n2)));
+                outputParameters.AddOutput("tll", host.RoundU(ThetaLl(u, n1, n2, gamma)));
+                outputParameters.AddOutput("tul", host.RoundU(ThetaUl(u, n1, n2, gamma)));
+
                 if (n1 < 4 || n2 < 4)
                 {
                     //  "CI not calculated if n1 or n2 < 4"
@@ -2167,7 +1737,7 @@ namespace StatsDirect.Builtins
                 {
                     IList<ParameterBag> confList = new List<ParameterBag>();
                     bool approx;
-                    x_invu(n2, n1, GAMMA, ref lev, ref k, out approx);
+                    x_invu(n2, n1, gamma, ref lev, ref k, out approx);
                     ParameterBag confParameters = x_mwcon(host, ref x, k, n1, n2);
                     confParameters.AddOutput("pc", Formatting.XRound((1 - lev * 2) * 100, 1));
                     if (approx)
@@ -2180,6 +1750,126 @@ namespace StatsDirect.Builtins
                 }
             }
             return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+        private static double theta_tzmin(bool upper, double tzpre, double ypre, double lp, double ln, double z, double t, int m, int n)
+        {
+
+            //Newcombe's Method 5 quadratic minimization for the Mann-Whitney theta (U/mn)
+
+            const double prec = Double.Epsilon * 10;
+            double y = 0;
+            int i;
+            for (i = 1; i <= 100; i++)
+            {
+                if (tzpre < 0)
+                {
+                    y = (lp + ypre) / 2;
+                }
+                else
+                {
+                    y = (ln + ypre) / 2;
+                }
+                double tz = ThetaTzfn(upper, y, z, t, m, n);
+                if (tzpre >= 0) lp = ypre;
+                if (tzpre <= 0) ln = ypre;
+                ypre = y;
+                tzpre = tz;
+                if (Math.Abs(tz) < prec) break;
+            }
+            return y;
+        }
+
+        private static double ThetaTzfn(bool upper, double y, double z, double t, int m, int n)
+        {
+            double offset = z * Math.Sqrt(y * (1 - y) * (1 + (0.5 * (m + n) - 1) * ((1 - y) / (2 - y) + y / (1 + y))) / (m * n)) - t;
+            return upper ? y + offset : y - offset;
+        }
+
+        private static double ThetaLl(double u, int m, int n, double gamma)
+        {
+
+            //Newcombe's Method 5 lower confidence limit for the Mann-Whitney theta (U/mn)
+
+            double tll;
+            int ifault;
+
+            double alpha = (1 - gamma) / 2;
+            double z = PDF.gauinv(alpha, out ifault);
+
+            double t = u / (m * n);
+
+            if (t == 0)
+            {
+                tll = 0;
+            }
+            else if (t < 0 || t > 1)
+            {
+                tll = Double.NaN;
+            }
+            else
+            {
+                const double y0 = 0;
+                double tz0 = ThetaTzfn(false, y0, z, t, m, n);
+                const double y1 = 1;
+                double tz1 = ThetaTzfn(false, y1, z, t, m, n);
+                const double y2 = 0.5;
+                double tz2 = ThetaTzfn(false, y2, z, t, m, n);
+                double lp = tz1 < 0 ? Double.NaN : y1;
+                double ln = tz0 > 0 ? Double.NaN : y0;
+                if (Double.IsNaN(lp) || Double.IsNaN(ln))
+                {
+                    tll = Double.NaN;
+                }
+                else
+                {
+                    tll = theta_tzmin(false, tz2, y2, lp, ln, z, t, m, n);
+                }
+            }
+            return tll;
+        }
+
+        private static double ThetaUl(double u, int m, int n, double gamma)
+        {
+
+            //Newcombe's Method 5 upper confidence limit for the Mann-Whitney theta (U/mn)
+
+            double tul;
+            int ifault;
+
+            double alpha = (1 - gamma) / 2;
+            double z = PDF.gauinv(alpha, out ifault);
+
+            double t = u / (m * n);
+
+            if (t == 1)
+            {
+                tul = 1;
+            }
+            else if (t < 0 || t > 1)
+            {
+                tul = Double.NaN;
+            }
+            else
+            {
+                const double y0 = 0;
+                double tz0 = ThetaTzfn(true, y0, z, t, m, n);
+                const double y1 = 1;
+                double tz1 = ThetaTzfn(true, y1, z, t, m, n);
+                const double y2 = 0.5;
+                double tz2 = ThetaTzfn(true, y2, z, t, m, n);
+                double lp = tz1 < 0 ? Double.NaN : y1;
+                double ln = tz0 > 0 ? Double.NaN : y0;
+                if (Double.IsNaN(lp) || Double.IsNaN(ln))
+                {
+                    tul = Double.NaN;
+                }
+                else
+                {
+                    tul = theta_tzmin(true, tz2, y2, lp, ln, z, t, m, n);
+                }
+            }
+            return tul;
         }
 
 
@@ -2310,7 +2000,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptNpRegression(ITemplateHost host, ParameterBag parameters)
         {
             double Intercept = 0;
@@ -2327,9 +2016,7 @@ namespace StatsDirect.Builtins
 
             double GAMMA = parameters["gamma"].AsDouble;
             if (GAMMA <= 0.0)
-            {
                 GAMMA = 0.95;
-            }
             double cit = PDF.gauinv(1.0 - (1.0 - GAMMA) / 2.0, out ifault);
 
             DataFrame outcomeFrame = parameters["outcome"].AsDataFrame;
@@ -2553,17 +2240,16 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptWilcoxon(ITemplateHost host, ParameterBag parameters)
         {
-            int N; double xf = 0; double ned = 0; double w = 0; double P = 0;
+            int n; double xf = 0; double ned = 0; double w = 0; double pl = 0; double pu = 0; double p2 = 0;
             int n1 = 0; int cnt = 0;
             string txc;
             bool fault;
 
 
-            double GAMMA = parameters["gamma"].AsDouble;
-            if (GAMMA <= 0)
+            double gamma = parameters["gamma"].AsDouble;
+            if (gamma <= 0)
             {
                 throw new Exception("Gamma must be greater than zero");
             }
@@ -2574,40 +2260,40 @@ namespace StatsDirect.Builtins
 
             if (frame.VariableCount == 1)
             {
-                for (N = 0; N <= v0.Length - 1; N++)
+                for (n = 0; n <= v0.Length - 1; n++)
                 {
-                    if (v0.Data[N] != Constant.MISSING)
+                    if (v0.Data[n] != Constant.MISSING)
                     {
                         cnt = cnt + 1;
                         y[cnt] = 0;
-                        x[cnt] = v0.Data[N];
+                        x[cnt] = v0.Data[n];
                     }
                 }
-                N = cnt;
+                n = cnt;
                 txc = "(N/A * differences used)";
             }
             else
             {
                 DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
-                for (N = 0; N <= v0.Length - 1; N++)
+                for (n = 0; n <= v0.Length - 1; n++)
                 {
-                    if (v0.Data[N] != Constant.MISSING & v1.Data[N] != Constant.MISSING)
+                    if (v0.Data[n] != Constant.MISSING & v1.Data[n] != Constant.MISSING)
                     {
                         cnt = cnt + 1;
-                        y[cnt] = v1.Data[N];
-                        x[cnt] = v0.Data[N];
+                        y[cnt] = v1.Data[n];
+                        x[cnt] = v0.Data[n];
                     }
                 }
-                N = cnt;
+                n = cnt;
                 txc = v1.Title;
             }
 
-            if (N < 2)
+            if (n < 2)
             {
                 return new StepResult(StepSuccess.Failed, new ParameterBag());
             }
 
-            XWsr(ref x, ref y, ref N, ref w, ref n1, ref P, ref ned, ref xf, out fault);
+            XWSR(x, y, n, ref w, ref n1, ref ned, ref xf, ref pl, ref pu, ref p2, out fault);
 
             if (fault)
             {
@@ -2640,13 +2326,9 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
             }
 
-            outputParameters.AddOutput("p_l", host.pval(P));
-            outputParameters.AddOutput("p_u", host.pval(1.0 - P));
-            if (1.0 - P < P)
-            {
-                P = 1.0 - P;
-            }
-            outputParameters.AddOutput("p_2", host.pval(P * 2.0));
+            outputParameters.AddOutput("p_l", host.pval(pl));
+            outputParameters.AddOutput("p_u", host.pval(pu));
+            outputParameters.AddOutput("p_2", host.pval(p2));
 
             if (n1 < 4)
             {
@@ -2661,8 +2343,8 @@ namespace StatsDirect.Builtins
                 IList<ParameterBag> confList = new List<ParameterBag>();
                 double lev;
                 int k;
-                XSrk(ref N, ref GAMMA, out k, out lev);
-                ParameterBag confParameters = XSrcon(host, N, k, x, y);
+                XSRK(n, gamma, out k, out lev);
+                ParameterBag confParameters = XSrcon(host, n, k, x, y);
 
                 if (lev != -99)
                 {
@@ -2671,7 +2353,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    confParameters.AddOutput("pc", "Approximate " + Formatting.XRound(GAMMA * 100, 1) + "% confidence interval");
+                    confParameters.AddOutput("pc", "Approximate " + Formatting.XRound(gamma * 100, 1) + "% confidence interval");
                     confParameters.AddOutput("k", "for difference between population medians:");
                 }
                 confList.Add(confParameters);
@@ -2682,6 +2364,479 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
+        private static void XWSR(double[] x, double[] y, int n, ref double w, ref int nonzero, ref double ned, ref double xf, ref double pl, ref double pu, ref double p2, out bool fault)
+        {
+
+            fault = true;
+            if (n < 1)
+            {
+                return;
+            }
+
+            //count the number of non-zero differences and record their signs and absolute values
+            nonzero = 0;
+            double[] d = new double[n + 1];
+            bool[] pos = new bool[n + 1];
+            int i;
+            int nz = 0;
+            for (i = 1; i <= n; i++)
+            {
+                double delta = x[i] - y[i];
+                if (delta != 0.0)
+                {
+                    nonzero = nonzero + 1;
+                    d[nonzero] = Math.Abs(delta);
+                    if (delta > 0.0)
+                    {
+                        pos[nonzero] = true;
+                    }
+                    else
+                    {
+                        pos[nonzero] = false;
+                    }
+                }
+                else
+                {
+                    nz = nz + 1;
+                }
+            }
+            if (nonzero < 1)
+            {
+                return;
+            }
+
+            //rank the non-zero differences and calculate the tie correction factor (ties^3-ties)/12
+            double[] r = new double[nonzero + 1];
+            ExFortran.Rank(d, r, 1, nonzero, 1, out xf);
+
+            //compute the test statistic as a sum of ranks for positive differences
+            w = 0.0;
+            for (i = 1; i <= nonzero; i++)
+            {
+                if (pos[i])
+                    w += r[i];
+            }
+            double wmax = nonzero * (nonzero + 1) / 2.0;
+
+            if (n > 200)
+            {
+                //compute the normalized test
+                double var = 0.0;
+                double q = 0.0;
+                for (i = 1; i <= nonzero; i++)
+                {
+                    if (!pos[i])
+                    {
+                        var = var + r[i] * r[i];
+                        q = q + (r[i] * -1);
+                    }
+                    else
+                    {
+                        var = var + r[i] * r[i];
+                        q = q + r[i];
+                    }
+                }
+                ned = q / Math.Sqrt(var);
+
+                //lower tail P
+                pl = w == wmax ? 1.0 : PDF.alnorm((q + 1.0) / var);
+
+                //upper tail P
+                if (q > 0.0)
+                {
+                    pu = 1.0 - PDF.alnorm(ned);
+                }
+                else
+                {
+                    pu = w == 0.0 ? 1.0 : PDF.alnorm((q - 1.0) / var);
+                }
+
+                //two tailed P	
+                p2 = PDF.alnorm(ned);
+                p2 = 2.0 * Math.Min(p2, 1.0 - p2);
+            }
+            else
+            {
+                //compute the exact test
+
+                int iwmax = Convert.ToInt32(wmax);
+
+                int[] ir = new int[nonzero + 1];
+                int iw;
+                if (xf == 0.0)
+                {
+                    for (i = 1; i <= nonzero; i++)
+                    {
+                        ir[i] = Convert.ToInt32(r[i]);
+                    }
+                    iw = Convert.ToInt32(w);
+                }
+                else
+                {
+                    for (i = 1; i <= nonzero; i++)
+                    {
+                        ir[i] = Convert.ToInt32(2 * r[i]);
+                    }
+                    iw = Convert.ToInt32(2 * w);
+                    iwmax = 2 * iwmax;
+                }
+                Array.Sort(ir, 1, nonzero);
+
+                //lower tail P
+                if (iw == iwmax)
+                {
+                    pl = 1.0;
+                }
+                else if (2 * iw > iwmax)
+                {
+                    pl = XWSRLTP(ir, iwmax - iw - 1, nonzero);
+                    pl = 1.0 - pl;
+                }
+                else
+                {
+                    pl = XWSRLTP(ir, iw, nonzero);
+                }
+
+                //upper tail P
+                if (iw == 0)
+                {
+                    pu = 1.0;
+                }
+                else if (2 * iw > iwmax)
+                {
+                    pu = XWSRLTP(ir, iwmax - iw, nonzero);
+                }
+                else
+                {
+                    pu = XWSRLTP(ir, iw - 1, nonzero);
+                    pu = 1.0 - pu;
+                }
+
+                //two tailed P		
+                if (2 * iw > iwmax)
+                {
+                    p2 = 2.0 * XWSRLTP(ir, iwmax - iw, nonzero);
+                }
+                else
+                {
+                    p2 = 2.0 * XWSRLTP(ir, iw, nonzero);
+                }
+                if (p2 > 1.0) p2 = 1.0;
+
+            }
+
+            fault = false;
+        }
+
+        private static double XWSRLTP(int[] rank, int score, int n)
+        {
+            //given a vector of ranks and the Wilcoxon signed ranks test statistic
+            //this calculated a lower side probability based on Norbert Neumann's
+            //shift algorithm in Statistical Software Newsletter 1988
+
+            int iwork = n * (n / 2) + (n / 2) + 1;
+            double[] prob = new double[iwork + 1];
+            int i;
+            for (i = 1; i <= score + 1; i++)
+            {
+                prob[i] = 1.0;
+            }
+
+            score = Math.Abs(score);
+
+            int upper = 0;
+            for (int j = 1; j <= n; j++)
+            {
+                int shift = rank[j];
+                if (shift >= score + 1)
+                {
+                    prob[score + 1] = prob[score + 1] / (Math.Pow(2, (n - j + 1)));
+                    break;
+                }
+                upper = upper + shift;
+                int limit = upper + 1;
+                if (upper > score) limit = score + 1;
+                int k;
+                for (k = limit; k >= 1; k--)
+                {
+                    prob[k] = 0.5 * prob[k];
+                    if (shift <= k - 1) prob[k] = prob[k] + 0.5 * prob[k - shift];
+                }
+            }
+            double p = prob[score + 1];
+            if (p < 0.0) p = 0.0;
+            if (p > 1.0) p = 1.0;
+            return p;
+        }
+
+        private static void XSRK(int sizei, double gamma, out int k, out double lev)
+        {
+            double alpha = (1 - gamma) / 2;
+            if (sizei < 4)
+                k = -99;
+            else if (sizei >= 4 && sizei < 200)
+                k = wsr_inv(alpha, sizei);
+            else
+            {
+                double s = Convert.ToDouble(sizei);
+                int ifault;
+                k = Convert.ToInt32(Math.Floor(((s * (s + 1)) / 4) + (PDF.gauinv(alpha, out ifault) * Math.Sqrt((s * (s + 1) * ((2 * s) + 1)) / 24)))) + 1;
+            }
+            if (k == -99)
+            {
+                lev = -99;
+                return;
+            }
+            if (sizei > 1000)
+            {
+                lev = 1.0 - (alpha * 2.0);
+                return;
+            }
+            double p = wsr_p(k - 1, sizei);
+            if (p > 0.5)
+            {
+                p = 1.0 - p;
+            }
+            lev = 1.0 - (p * 2.0);
+        }
+
+        /// <summary>
+        /// upper tail P for Wilcoxon signed rank statistic x and sample size n
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        private static double wsr_p(double x, int n)
+        {
+            if (n <= 0) return Double.NaN;
+            x = Math.Floor(x + 1e-7);
+            if (x < 0.0) return 0.0;
+            if (x >= n * (n + 1) / 2.0) return 1.0;
+
+            double[] w = new double[((n * (n + 1) / 2) / 2) + 1];
+
+            double f = Math.Exp(-n * Math.Log(2.0));
+            double p = 0;
+            int i;
+            if (x <= (n * (n + 1) / 4.0))
+            {
+                for (i = 0; i <= x; i++)
+                    p += wsr_enum(i, n, ref w) * f;
+            }
+            else
+            {
+                x = n * (n + 1) / 2.0 - x;
+                for (i = 0; i < x; i++)
+                    p += wsr_enum(i, n, ref w) * f;
+            }
+
+            return p;
+        }
+
+        /// <summary>
+        /// inverse of Wilcoxon signed ranks statistic distribution for sample size n and upper tail probability p
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        private static int wsr_inv(double x, int n)
+        {
+            if (n <= 0) return -99;
+            if (x <= 0) return 0;
+            if (x >= 1) return n * (n + 1) / 2;
+
+            double[] w = new double[((n * (n + 1) / 2) / 2) + 1];
+
+            double f = Math.Exp(-n * Math.Log(2.0));
+            double p = 0;
+            int q = 0;
+            if (x <= 0.5)
+            {
+                x = x - 10 * Double.Epsilon;
+                for (; ; )
+                {
+                    p += wsr_enum(q, n, ref w) * f;
+                    if (p >= x)
+                        break;
+                    q++;
+                }
+            }
+            else
+            {
+                x = 1 - x + 10 * Double.Epsilon;
+                for (; ; )
+                {
+                    p += wsr_enum(q, n, ref w) * f;
+                    if (p > x)
+                    {
+                        q = n * (n + 1) / 2 - q;
+                        break;
+                    }
+                    q++;
+                }
+            }
+
+            return q;
+        }
+
+        /// <summary>
+        /// enumeration within the Wilcoxon signed ranks statistic distribution
+        /// </summary>
+        /// <param name="k"></param>
+        /// <param name="n"></param>
+        /// <param name="w"></param>
+        /// <returns></returns>
+        private static double wsr_enum(int k, int n, ref double[] w)
+        {
+            int u = n * (n + 1) / 2;
+            int c = (u / 2);
+
+            if (k < 0 || k > u) return 0;
+            if (k > c) k = u - k;
+
+            if (n == 1) return 1.0;
+            if (w[0] == 1.0) return w[k];
+
+            w[0] = w[1] = 1.0;
+            for (int j = 2; j < n + 1; ++j)
+            {
+                int fin = Math.Min(j * (j + 1) / 2, c);
+                for (int i = fin; i >= j; --i)
+                {
+                    w[i] += w[i - j];
+                }
+            }
+
+            return w[k];
+        }
+
+        private static ParameterBag XSrcon(ITemplateHost host, int size, int k, double[] x, double[] y)
+        {
+            double median = 0; double kl = 0;
+            int occurences;
+            int midl;
+            int midu;
+            int j;
+
+            ParameterBag outputParameters = new ParameterBag();
+            int limit = Convert.ToInt32(size * (size + 1) / 2);
+            if (limit > int.MaxValue || k > int.MaxValue)
+            {
+                host.Error("Sample is too large for exact confidence interval calculation.", "Signed Ranks");
+                outputParameters.AddOutput("from", Formatting.ASTERISK);
+                outputParameters.AddOutput("to", Formatting.ASTERISK);
+                outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
+                return outputParameters;
+            }
+            host.StartProgress("Calculating Confidence Interval");
+            double bigx = x[1];
+            for (j = 1; j <= size; j++)
+            {
+                if (x[j] > bigx)
+                {
+                    bigx = x[j];
+                }
+                if (y[j] > bigx)
+                {
+                    bigx = y[j];
+                }
+            }
+            int scaler = 100000;
+            do
+            {
+                if (bigx * Convert.ToDouble(scaler) < Convert.ToDouble(int.MaxValue) / 10.0)
+                {
+                    break;
+                }
+                scaler = Convert.ToInt32(scaler / 10);
+            }
+            while (true);
+            int[] xx = new int[size + 1 /* for VB to C# conversion */ ];
+            for (j = 1; j <= size; j++)
+            {
+                xx[j] = Convert.ToInt32((x[j] - y[j]) * scaler);
+            }
+            Array.Sort(xx, 1, size);
+            if (limit % 2 == 0)
+            {
+                midu = Convert.ToInt32(Math.Floor((double)limit / 2) + 1);
+                midl = ((int)(Math.Floor((double)limit / 2)));
+            }
+            else
+            {
+                midu = ((int)(Math.Floor((double)(limit + 1) / 2)));
+                midl = midu;
+            }
+            bool domed = true;
+            bool dokl = true;
+            int goal = midu + k;
+            int C = 2 * xx[1] - 1;
+            int i = 0;
+            while (i < midu)
+            {
+                C = ExFortran.pairnext(out occurences, C, xx, size);
+                i = i + occurences;
+                if (host.UpdateProgress(i / (double)goal))
+                {
+                    outputParameters.AddOutput("from", Formatting.ASTERISK);
+                    outputParameters.AddOutput("to", Formatting.ASTERISK);
+                    outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
+                    return outputParameters;
+                }
+                if (i >= k)
+                {
+                    if (dokl)
+                    {
+                        dokl = false;
+                        kl = C / ((double)scaler) / 2.0;
+                    }
+                }
+                if (i >= midl)
+                {
+                    if (domed)
+                    {
+                        domed = false;
+                        median = C / ((double)scaler) / 2.0;
+                    }
+                }
+            }
+            if (midu != midl)
+            {
+                if (domed)
+                {
+                    median = C / ((double)scaler) / 2.0;
+                }
+                else
+                {
+                    median = (median + C / ((double)scaler) / 2.0) / 2.0;
+                }
+            }
+            for (j = 1; j <= size; j++)
+            {
+                xx[j] = -xx[j];
+            }
+            Array.Sort(xx, 1, size);
+            C = 2 * xx[1] - 1;
+            i = 0;
+            while (i < k)
+            {
+                C = ExFortran.pairnext(out occurences, C, xx, size);
+                i = i + occurences;
+                if (host.UpdateProgress((midu + i) / (double)goal))
+                {
+                    outputParameters.AddOutput("from", Formatting.ASTERISK);
+                    outputParameters.AddOutput("to", Formatting.ASTERISK);
+                    outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
+                    return outputParameters;
+                }
+            }
+            double ku = -C / ((double)scaler) / 2.0;
+            host.FinishProgress();
+            outputParameters.AddOutput("from", host.RoundU(kl));
+            outputParameters.AddOutput("to", host.RoundU(ku));
+            outputParameters.AddOutput("med_diff", host.RoundU(median));
+            return outputParameters;
+        }
 
         public static StepResult RptSmirnov(ITemplateHost host, ParameterBag parameters)
         {

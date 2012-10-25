@@ -1,5 +1,5 @@
-#define RELEASE_EXCEPTIONS
-// #define WATCH_EXCEPTIONS
+// #define RELEASE_EXCEPTIONS
+#define WATCH_EXCEPTIONS
 
 // If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
 // Current uses:
@@ -1120,7 +1120,7 @@ namespace StatsDirect.UI
         {
             // Unknown path, prompt for path to which to save
             openFileDialog.Title = "Open file";
-            DialogResult result = openFileDialog.ShowDialog();
+            DialogResult result = openFileDialog.ShowDialog(this);
             if (DialogResult.Cancel == result)
             {
                 // User cancelled, failed open
