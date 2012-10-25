@@ -6,7 +6,6 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using InvalidDataException = StatsDirect.Templates.InvalidDataException;
 
 namespace StatsDirect.Builtins
 {
@@ -95,7 +94,7 @@ namespace StatsDirect.Builtins
                 etot += asm[i] * spop[i];
             }
             if (etot <= 0)
-                throw new InvalidDataException();
+                throw new Templates.InvalidDataException();
 
             bool stratlab;
             string[] title = new string[rows + 2 + 1 /* VB to C# conversion */ ];
@@ -213,7 +212,7 @@ namespace StatsDirect.Builtins
                 ntot += idxn[i];
                 if (idxy[i] > idxn[i])
                 {
-                    throw new InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
+                    throw new Templates.InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
                 }
             }
             DataFrame refnFrame = Parameters["refn"].AsDataFrame;
@@ -254,7 +253,7 @@ namespace StatsDirect.Builtins
             double nunit = Parsing.Cdbl_Txt(Parameters["nunit"].AsString);
             if (refntot <= 0.0 || ntot <= 0.0)
             {
-                throw new InvalidDataException();
+                throw new Templates.InvalidDataException();
             }
             //  RTF_LoadTemplate("dstdr.rtf")
             ParameterBag outputParameters = new ParameterBag();

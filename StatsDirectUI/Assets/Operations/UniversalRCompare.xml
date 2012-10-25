@@ -10,14 +10,14 @@
           <name>r1_in</name>
           <prompt>Agreement statistic R for the first group of judges</prompt>
           <must-request>true</must-request>
-          <minimum-value>0</minimum-value>
+          <minimum-value>-1</minimum-value>
           <maximum-value>1</maximum-value>
         </double>
         <double>
           <name>r2_in</name>
           <prompt>Agreement statistic R for the second (independent) group of judges</prompt>
           <must-request>true</must-request>
-          <minimum-value>0</minimum-value>
+          <minimum-value>-1</minimum-value>
           <maximum-value>1</maximum-value>
         </double>
         <double>
@@ -34,11 +34,13 @@
           <name>var1_in</name>
           <prompt>Variance of delta value for the first group</prompt>
           <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <double>
           <name>var2_in</name>
           <prompt>Variance of delta value for the second group</prompt>
           <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <double>
           <name>gam1_in</name>

@@ -159,7 +159,7 @@ namespace StatsDirect.Builtins
             opts.SelectionBoxes[1].Title = "Confidence interval (%)";
             opts.SelectionBoxes[1].SetAsConfidence();
             opts.CheckBoxes.Add(new CheckBoxDescriptor("conservative", "Conservative CI", false, false));
-            if (!(host.DisplayOptions(opts)))
+            if (null == host.DisplayOptions(opts))
             {
                 throw new TemplateOperationCancelledException();
             }
@@ -282,7 +282,7 @@ namespace StatsDirect.Builtins
             }
             Array.Sort(r, 1, rx);
             double qc = (1.0 - qrr) / 2.0;
-            Nonparametric.XQci(ref qc, ref rx, ref r, ref xq, ref GAMMA, out ll, out ul, ref cover, ref do_conservative, ref capUpper, ref capLower, out fault);
+            Nonparametric.XQci(qc, rx, r, ref xq, GAMMA, out ll, out ul, ref cover, do_conservative, ref capUpper, ref capLower, out fault);
             outputParameters.AddOutput("qx_any", host.RoundU(qc));
             outputParameters.AddOutput("qxv_any", host.RoundU(xq));
             string contype = do_conservative ? "(conservative)" : "(non-conservative)";
@@ -294,7 +294,7 @@ namespace StatsDirect.Builtins
             x = capLower | capUpper ? "  (* limit capped at min/max)" : "";
             outputParameters.AddOutput("co_any", host.RoundU(cover) + "%" + x);
             qc = 1.0 - ((1.0 - qrr) / 2.0);
-            Nonparametric.XQci(ref qc, ref rx, ref r, ref xq, ref GAMMA, out ll, out ul, ref cover, ref do_conservative, ref capUpper, ref capLower, out fault);
+            Nonparametric.XQci(qc, rx, r, ref xq, GAMMA, out ll, out ul, ref cover, do_conservative, ref capUpper, ref capLower, out fault);
             outputParameters.AddOutput("qx", host.RoundU(qc));
             outputParameters.AddOutput("qxv", host.RoundU(xq));
             x = capLower ? "* " : "";
@@ -1374,7 +1374,7 @@ namespace StatsDirect.Builtins
             transTemp2.Title = "Population mean";
             transTemp2.FillFactor(0, 0, 1, "", 0);
 
-            if (!(host.DisplayOptions(options)))
+            if (null == host.DisplayOptions(options))
             {
                 throw new TemplateOperationCancelledException();
             }

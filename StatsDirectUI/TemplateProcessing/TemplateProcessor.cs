@@ -152,7 +152,7 @@ namespace StatsDirect.Templates
             definition.ChartOptions = options;
             if (step.RequestUserInput)
             {
-                if (!host.Amend(definition, parameters))
+                if (null == host.Amend(definition, parameters))
                     throw new TemplateOperationCancelledException();
             }
             PostProcessFilledChartOptions(step, definition);
@@ -623,18 +623,27 @@ namespace StatsDirect.Templates
                             }
                             dataName = frame.Name;
                         }
+                        double pmn = 1;
+                        double amn = 1;
+                        for (int C = 0; C < definition.XSeries.Count; C++)
+                        {
+                            DoubleSeries xs = definition.XSeries[C].AsDoubleSeries;
+                            DoubleSeries ys = definition.YSeries[C].AsDoubleSeries;
+                            pmn = xs.Sum / xs.Points;
+                            amn = ys.Sum / ys.Points;
+                        }
 
                         ROCOptions rocOptions = new ROCOptions(host.Preferences.ShouldUseColour, definition.XSeries)
                                                     {
                                                         ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
                                                         Title =
                                                             null == dataName ? "ROC plot" : "ROC plot from " + dataName,
-                                                        Showopts = ComparisonValue.GE,
                                                         ShowCutOffCalculator = true,
                                                         ShowOptimumCutOff = true,
                                                         Weight = 1.0,
                                                         GAMMA = host.Preferences.DefaultConfidenceInterval
                                                     };
+                        rocOptions.Showopts = (pmn > amn)  ? ComparisonValue.GE : ComparisonValue.LE;
 
                         if (parameters.ContainsKey("GAMMA"))
                             rocOptions.GAMMA = parameters["GAMMA"].AsDouble;
@@ -947,13 +956,13 @@ namespace StatsDirect.Templates
             }
             return new StepResult(StepSuccess.Success, new ParameterBag());
         }
-
+        /*
         public StepResult ExecuteInternal(SelectOutputForFrameStep step, ParameterBag Parameters, bool isRedo)
         {
             if ((!Parameters.ContainsKey(STATSDIRECT_FRAME_PANE)) || null == Parameters[STATSDIRECT_FRAME_PANE])
                 host.SelectOutputForFrame();
             return new StepResult(StepSuccess.Success, new ParameterBag());
-        }
+        }*/
 
         /// <summary>
         /// 
@@ -1008,9 +1017,9 @@ namespace StatsDirect.Templates
                     if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && !parmsAndFilledParameters.ContainsKey(parameter.Name))
                     {
                         IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
-                        if (savedParametersPerOperation.ContainsKey(parameter.Operation.Names[0]))
+                        if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
                         {
-                            ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Names[0]];
+                            ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
                             if (savedParameters.ContainsKey(parameter.Name))
                             {
                                 filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
@@ -1173,10 +1182,10 @@ namespace StatsDirect.Templates
                     {
                         IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
                         ParameterBag savedParameterBag;
-                        if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Names[0], out savedParameterBag))
+                        if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
                         {
                             savedParameterBag = new ParameterBag();
-                            savedParametersPerOperation.Add(parameter.Operation.Names[0], savedParameterBag);
+                            savedParametersPerOperation.Add(parameter.Operation.Name, savedParameterBag);
                         }
                         savedParameterBag[parameter.Name] = filledParameterToSave;
                     }

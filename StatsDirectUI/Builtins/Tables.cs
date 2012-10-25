@@ -5,7 +5,6 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using InvalidDataException = StatsDirect.Templates.InvalidDataException;
 
 namespace StatsDirect.Builtins
 {
@@ -1864,7 +1863,6 @@ namespace StatsDirect.Builtins
             if (!((expectedIsProbability || Convert.ToInt32(expectedTotal) == Convert.ToInt32(observedTotal))))
             {
                 w2 = Formatting.WRNCOLON + "total expected not equal to total observed";
-                host.Error(w2, cgft);
             }
             else
             {
@@ -2244,7 +2242,7 @@ namespace StatsDirect.Builtins
                         d.CheckBoxes.Add(new CheckBoxDescriptor("casecontrol", "Case-control study", false, true));
                         d.CheckBoxes.Add(new CheckBoxDescriptor("cohort", "Cohort study", false, true));
                         d.CheckBoxes.Add(new CheckBoxDescriptor("neither", "Neither", false, true));
-                        if (host.DisplayOptions(d))
+                        if (null != host.DisplayOptions(d))
                         {
                         }
                     }
@@ -2448,7 +2446,7 @@ namespace StatsDirect.Builtins
                         d.CheckBoxes.Add(new CheckBoxDescriptor("casecontrol", "Case-control study", false, true));
                         d.CheckBoxes.Add(new CheckBoxDescriptor("cohort", "Cohort study", false, true));
                         d.CheckBoxes.Add(new CheckBoxDescriptor("neither", "Neither", false, true));
-                        if (host.DisplayOptions(d))
+                        if (null != host.DisplayOptions(d))
                         {
                             if (d.CheckBoxes[0].Checked)
                             {
@@ -2589,7 +2587,7 @@ namespace StatsDirect.Builtins
                 sOptions.Values2.Add(rowScore[i]);
             for (int i = 1; i <= irows; i++)
                 sOptions.Values1.Add(colScore[i]);
-            bool userOk = host.Amend(sOptions, null);
+            bool userOk = null != host.Amend(sOptions, null);
             if (!userOk)
                 return null;
 
@@ -2884,7 +2882,7 @@ namespace StatsDirect.Builtins
                     sOptions.Values1.Add(r);
                 for (int C = 1; C <= cols; C++)
                     sOptions.Values2.Add(C);
-                bool userOk = host.Amend(sOptions, null);
+                bool userOk = null != host.Amend(sOptions, null);
                 if (userOk)
                 {
                     for (int r = 1; r <= rows; r++)

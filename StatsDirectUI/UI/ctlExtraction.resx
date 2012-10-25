@@ -117,10 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="lblStrata.Text" xml:space="preserve">
-    <value>SPLITTING RATIO:  At any event time x, if the ratio of the
-proportionality constant at all times before x is more than R
- times that for all times after x then StatsDirect splits the data
- into another stratum.  R is the ratio to enter below:</value>
-  </data>
 </root>

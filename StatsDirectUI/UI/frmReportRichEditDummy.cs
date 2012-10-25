@@ -237,7 +237,7 @@ namespace StatsDirect.UI
             if (!string.IsNullOrEmpty(redoInformation))
             {
                 string safeXml = redoInformation.Replace(@"\", "&#92;");
-                document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!redo!-> " + "\"" + operation.Names[0] + "\" " + safeXml + @" <-!redo!! }}");
+                document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!redo!-> " + "\"" + operation.Name + "\" " + safeXml + @" <-!redo!! }}");
             }
             string[] splitInserts = Rtf.Split(new[] { "/split/" }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string piece in splitInserts)

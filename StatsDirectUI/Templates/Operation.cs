@@ -16,16 +16,13 @@ namespace StatsDirect.Templates
        XmlRoot(Namespace = "http://www.statsdirect.com/schemas/Operation.xsd", ElementName = "operation")]
     public class Operation : IMightRequireInput
     {
-        private IList<string> names;
         private IList<Step> steps;
         private IList<string> friendlyNames;
         private IList<string> prerequisiteOperationNames;
         private List<SuggestedOperation> suggestedOperations;
-        private HelpContext helpContext;
 
         public Operation()
         {
-            names = new List<string>();
             steps = new List<Step>();
             friendlyNames = new List<string>();
             prerequisiteOperationNames = new List<string>();
@@ -39,34 +36,10 @@ namespace StatsDirect.Templates
         }
 
         [XmlElement(ElementName="help")]
-        public HelpContext HelpContext
-        {
-            get { return helpContext; }
-            set { helpContext = value; }
-        }
+        public HelpContext HelpContext { get; set; }
 
         [XmlElement(ElementName = "name")]
-        public string[] NamesForXml
-        {
-            get
-            {
-                return ListToStringArray(names);
-            }
-            set
-            {
-                foreach (string name in value)
-                    names.Add(name);
-            }
-        }
-
-        /// <summary>
-        /// The internal names of this operation.  An operation may have more than one name, though this is unlikely to be used much in reality.
-        /// </summary>
-        [XmlIgnore]
-        public IList<string> Names
-        {
-            get { return names; }
-        }
+        public string Name { get; set; }
 
         [XmlElement(ElementName = "friendly-name")]
         public string[] FriendlyNamesForXml
@@ -156,7 +129,6 @@ namespace StatsDirect.Templates
             XmlArrayItem(ElementName = "settings", Type = typeof(ParametersStep)),
             XmlArrayItem(ElementName = "report", Type = typeof(ReportStep)),
             XmlArrayItem(ElementName = "script", Type = typeof(ScriptStep)),
-            XmlArrayItem(ElementName = "select-output-for-frame", Type = typeof(SelectOutputForFrameStep)),
             XmlArrayItem(ElementName = "test", Type = typeof(TestStep))
         ]
         public Step[] StepsForXml
@@ -201,7 +173,7 @@ namespace StatsDirect.Templates
             {
                 foreach (SuggestedOperation su in suggestedOperations)
                 {
-                    if (names.Contains(su.Name))
+                    if (Name.Equals(su.Name))
                         return true;
                 }
                 return false;

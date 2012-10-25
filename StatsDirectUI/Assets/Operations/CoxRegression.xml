@@ -44,22 +44,22 @@
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
-        <multiple-options>
-          <prompt>Cox regression options</prompt>
-          <format-hint>coxRegressionOptions</format-hint>
-          <options>
-            <option name="centre-continuous-covariates" selected="true">Centre continuous covariates</option>
-          </options>
-          <strings>
-            <string name="accuracy" default-value="0.0000001">Precision of estimates</string>
-          </strings>
-          <selects>
-            <combo name="splitting-ratio" prompt="TODO:" default-value="1000">
-              <option value="1000">1000</option>
-              <option value="no split">no split</option>
-            </combo>
-          </selects>
-        </multiple-options>
+        <double>
+          <name>accuracy</name>
+          <prompt>Precision of estimates</prompt>
+          <default-value>0.0000001</default-value>
+          <minimum-value>0</minimum-value>
+        </double>
+        <double>
+          <name>splitting-ratio</name>
+          <rubric>SPLITTING RATIO:  At any event time x, if the ratio of the proportionality constant at all times before x is more than R times that for all times after x then StatsDirect splits the data into another stratum.  R is the ratio to enter below.</rubric>
+          <default-value>1000</default-value>
+        </double>
+        <boolean>
+          <name>centre-continuous-covariates</name>
+          <prompt>Centre continuous covariates</prompt>
+          <default-value>true</default-value>
+        </boolean>
       </parameters>
     </settings>
 		<builtin function-name="rptCoxRegression" />

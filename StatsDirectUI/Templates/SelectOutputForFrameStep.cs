@@ -1,4 +1,5 @@
-using System;
+/*
+ * using System;
 using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
@@ -25,3 +26,4 @@ namespace StatsDirect.Templates
         }
     }
 }
+*/

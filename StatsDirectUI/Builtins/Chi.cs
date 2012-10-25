@@ -5,7 +5,6 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using InvalidDataException = StatsDirect.Templates.InvalidDataException;
 
 namespace StatsDirect.Builtins
 {
@@ -223,9 +222,10 @@ namespace StatsDirect.Builtins
             double t = 0;
             double b = 0;
             double a = 0;
-            int r;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
+            if (datFrame.VariableCount < ((z > 1) ? 3 : 2))
+                throw new InvalidDataException("Please fill in all columns of the data");
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
             DoubleVariable datV2 = null;
@@ -241,7 +241,7 @@ namespace StatsDirect.Builtins
 
             //  RTF_LoadTemplate("chi2xc.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
                 double a1 = datV0.Data[r - 1];
                 double b1 = datV1.Data[r - 1];
@@ -265,7 +265,7 @@ namespace StatsDirect.Builtins
             double n1 = 0;
             List<ParameterBag> rowList = new List<ParameterBag>();
             outputParameters.AddOutput("*row", rowList);
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
                 double a1 = f[r];
                 double b1 = g[r];

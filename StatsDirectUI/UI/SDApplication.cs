@@ -647,18 +647,18 @@ namespace StatsDirect.UI
             grid.WriteDataFrame(frame, isFormulae, missingIndicator, writePosition);
             grid.EnsureActive();
         }
-
+        /*
         /// <summary>
         /// Select a new or existing user-selected grid window for future output.
         /// </summary>
-        void ITemplateHost.SelectOutputForFrame()
+        public void SelectOutputForFrame()
         {
             RelativePosition scrap;
             IGrid grid = PickGridWindow(true, out scrap);
             if (null == grid)
                 throw new TemplateOperationCancelledException();
         }
-
+        */
         private void InitialiseFunctionRegistry()
         {
             BuiltinRegistry.SoleInstance.AddAll(Builtins.Registry.GetFunctionRegistry());
@@ -963,7 +963,7 @@ namespace StatsDirect.UI
             }
             if (descriptor.CheckBoxes.Count > 0)
                 descriptor.CheckBoxes[0].Checked = true;
-            if (!DisplayOptions(descriptor))
+            if (null == DisplayOptions(descriptor))
             {
                 if (null != Parameter.CancelSkipsParameter)
                 {
@@ -1006,7 +1006,7 @@ namespace StatsDirect.UI
                 sb.SelectedValue = option.DefaultValue;
                 descriptor.SelectionBoxes.Add(sb);
             }
-            if (!DisplayOptions(descriptor))
+            if (null == DisplayOptions(descriptor))
             {
                 if (null != Parameter.CancelSkipsParameter)
                 {
@@ -1060,7 +1060,7 @@ namespace StatsDirect.UI
                                             };
                 descriptor.CheckBoxes.Add(cd);
             }
-            if (!DisplayOptions(descriptor))
+            if (null == DisplayOptions(descriptor))
             {
                 if (null != parameter.CancelSkipsParameter)
                 {
@@ -1077,14 +1077,13 @@ namespace StatsDirect.UI
             return outputParameters;
         }
 
-        private bool FillChartOptions(Charting.ChartDefinition ChartDefinition, ParameterBag context)
+        private ParameterBag FillChartOptions(Charting.ChartDefinition ChartDefinition, ParameterBag context)
         {
             ITemplateHost ith = this;
             TemplateProcessor processor = new TemplateProcessor(ith);
             ChartOptionsParameter chartOptionsParameter = new ChartOptionsParameter("dummy", ChartDefinition);
             ith.FillParameter(processor, chartOptionsParameter, context, true);
-            ParameterBag filledParameters = ith.FillCombinedParameters(processor, context);
-            return null != filledParameters;
+            return ith.FillCombinedParameters(processor, context);
         }
 
         /// <summary>
@@ -1160,7 +1159,7 @@ namespace StatsDirect.UI
             return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
-        public bool DisplayOptions(OptionDescriptor Descriptor)
+        public ParameterBag DisplayOptions(OptionDescriptor Descriptor)
         {
             return AmendUsingControl(Descriptor);
         }
@@ -1282,7 +1281,7 @@ namespace StatsDirect.UI
             return DialogResult.OK == result;
         }
 
-        public bool Amend(IFillable fillable, ParameterBag context)
+        public ParameterBag Amend(IFillable fillable, ParameterBag context)
         {
             if ("Categorise".Equals(fillable.FillerToUse))
                 return Amend((Builtins.CategoriseOptions)fillable);
@@ -1297,7 +1296,7 @@ namespace StatsDirect.UI
             if ("Dummy".Equals(fillable.FillerToUse))
                 return AmendUsingControl(fillable);
             if ("Extraction".Equals(fillable.FillerToUse))
-                return Amend((Builtins.ExtractionOptions)fillable);
+                return AmendUsingControl(fillable);
             if ("GraphicsOptions".Equals(fillable.FillerToUse))
                 return Amend((Builtins.GraphicsOptions)fillable);
             if ("ROCCutoff".Equals(fillable.FillerToUse))
@@ -1311,7 +1310,7 @@ namespace StatsDirect.UI
             throw new ArgumentOutOfRangeException("fillable", fillable, "fillable.FillerToUse: Unknown option");
         }
 
-        private bool AmendUsingControl(IFillable fillable)
+        private ParameterBag AmendUsingControl(IFillable fillable)
         {
             ITemplateHost ith = this;
             TemplateProcessor processor = new TemplateProcessor(ith);
@@ -1319,10 +1318,10 @@ namespace StatsDirect.UI
             FillableParameter fillableParameter = new FillableParameter("dummy", fillable);
             ith.FillParameter(processor, fillableParameter, context, true);
             ParameterBag filledParameters = ith.FillCombinedParameters(processor, context);
-            return null != filledParameters;
+            return filledParameters;
         }
 
-        private bool Amend(Builtins.CategoriseOptions categoriseOptions)
+        private ParameterBag Amend(Builtins.CategoriseOptions categoriseOptions)
         {
             using (frmCategorise options = new frmCategorise(categoriseOptions))
             {
@@ -1330,12 +1329,11 @@ namespace StatsDirect.UI
                 {
                     options.ShowDialog(mainWindow);
                 }
-                bool userCancelled = options.UserCancelled;
-                return !userCancelled;
+                return options.UserCancelled ? null : new ParameterBag();
             }
         }
 
-        private bool Amend(Builtins.ChartExplorerOptions options)
+        private ParameterBag Amend(Builtins.ChartExplorerOptions options)
         {
             throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0");
             /*
@@ -1348,19 +1346,7 @@ namespace StatsDirect.UI
              */
         }
 
-        private bool Amend(Builtins.ExtractionOptions options)
-        {
-            using (frmExtraction f = new frmExtraction(options))
-            {
-                using (new DefaultCursor())
-                {
-                    f.ShowDialog(mainWindow);
-                }
-            }
-            return true;
-        }
-
-        private bool Amend(Builtins.GraphicsOptions options)
+        private ParameterBag Amend(Builtins.GraphicsOptions options)
         {
             using (frmGraphicsOptions f = new frmGraphicsOptions())
             {
@@ -1368,11 +1354,11 @@ namespace StatsDirect.UI
                 {
                     f.ShowDialog(mainWindow);
                 }
-                return true;
+                return new ParameterBag();
             }
         }
 
-        private bool Amend(Charting.ROCCutoff options)
+        private ParameterBag Amend(Charting.ROCCutoff options)
         {
             using (frmROCCutoff f = new frmROCCutoff(options.SeriesRecord, options.Weight, options.Title))
             {
@@ -1381,11 +1367,11 @@ namespace StatsDirect.UI
                     f.ShowDialog(mainWindow);
                 }
                 options.SeriesRecord = f.CurrentRecord;
-                return true;
+                return new ParameterBag();
             }
         }
 
-        private bool Amend(Builtins.ScoresOptions scores)
+        private ParameterBag Amend(Builtins.ScoresOptions scores)
         {
             using (frmScores options = new frmScores(scores))
             {
@@ -1393,12 +1379,11 @@ namespace StatsDirect.UI
                 {
                     options.ShowDialog(mainWindow);
                 }
-                bool userCancelled = options.UserCancelled;
-                return !userCancelled;
+                return options.UserCancelled ? null : new ParameterBag();
             }
         }
 
-        private bool Amend(Builtins.SummaryStatisticsOptions summaryStatisticsOptions)
+        private ParameterBag Amend(Builtins.SummaryStatisticsOptions summaryStatisticsOptions)
         {
             using (frmSummaryStatistics options = new frmSummaryStatistics(summaryStatisticsOptions))
             {
@@ -1406,7 +1391,7 @@ namespace StatsDirect.UI
                 {
                     options.ShowDialog(mainWindow);
                 }
-                return true;
+                return new ParameterBag();
             }
         }
 

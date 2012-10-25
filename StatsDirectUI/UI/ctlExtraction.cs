@@ -9,35 +9,30 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
-    public partial class frmExtraction : Form
+    public partial class ctlExtraction : UserControl, IFillParameterBag
     {
         private static bool EXT_KEEPROW;
         private static string EXT_EXPRESSION = "X1=";
 
         readonly ExtractionOptions options;
 
-        public frmExtraction(ExtractionOptions options)
+        public ctlExtraction(ExtractionOptions options)
         {
             this.options = options;
             InitializeComponent();
-            LoadDefaults();
+            FillControlFromOptions();
         }
 
-        private void Extract(bool count)
+        private Control Extract(bool count, ParameterBag outputParameters)
         {
             ITemplateHost host = SDApplication.SoleInstance;
 
             int cols = options.IdentifiersFrame.VariableCount;
             string dtitle = options.Title;
-            txtMessage.Text = "";
 
             string Q = txtExpression.Text.Trim().ToUpper();
             if (0 == Q.Length)
-            {
-                host.Error("Please enter an expression first", "Extract variable");
-                txtExpression.Text = EXT_EXPRESSION;
-                txtExpression.Select();
-            }
+                return txtExpression;
   
             bool OK = false;
             for (int k = 0; k < cols; k++)
@@ -51,9 +46,7 @@ namespace StatsDirect.UI
             if (!OK || "X1=".Equals(Q))
             {
                 host.Error("Invalid expression, you must enter an expression such as X1>0 or X1=1 etc.", "Extract variable");
-                txtExpression.Text = EXT_EXPRESSION;
-                txtExpression.Select();
-                return;
+                return txtExpression;
             }
 
             int rows = options.Data.Length;
@@ -67,12 +60,13 @@ namespace StatsDirect.UI
             qx = dtitle + " [" + qx + "]";
             if (!count)
             {
+                /*
                 string t = host.GetString("Name for new variable", "Extract variables from " + dtitle, qx);
                 if (null == t)
                     return;
+                 */
+                string t = "Extract variables from " + dtitle;
   
-                // this.Hide();
-
                 DataFrame outputFrame = new DataFrame();
                 StringVariable outputVariable = new StringVariable(rows, t);
                 outputFrame.Variables.Add(outputVariable);
@@ -103,10 +97,9 @@ namespace StatsDirect.UI
                 if (!chkKeepRowPositions.Checked)
                     outputVariable.TruncateDataToLength(cnt);
 
-                host.OutputFrame(outputFrame, false, false, Formatting.ASTERISK, windowPicker.SelectedPaneAndPosition());
-    
-                txtMessage.Text = cnt.ToString() + " data points were extracted into the new variable: " + t;
-                // this.Show();
+                outputParameters.AddOutput("extracted", outputFrame);
+
+                // host.OutputFrame(outputFrame, false, false, Formatting.ASTERISK, windowPicker.SelectedPaneAndPosition());
             }
  
             else
@@ -129,53 +122,37 @@ namespace StatsDirect.UI
                             cnt++;
                     }
                 }
-                txtMessage.Text = cnt.ToString() + " data points out of " + rows.ToString() + " match your expression.";
+                lblMessage.Text = cnt.ToString() + " data points out of " + rows.ToString() + " match your expression.";
             }
+            return null;
         }
 
-        private void SetFormFromOptions()
-        {
-            Text = "Extract Data from " + options.Title;
-            lblIdentifiers.Text = options.IdentifierNames;
-            txtMessage.Text = "";
-        }
-
-        private void SaveDefaults()
-        {
-            EXT_KEEPROW = chkKeepRowPositions.Checked;
-            EXT_EXPRESSION = txtExpression.Text;
-        }
-
-        private void LoadDefaults()
+        private void FillControlFromOptions()
         {
             chkKeepRowPositions.Checked = EXT_KEEPROW;
             txtExpression.Text = EXT_EXPRESSION;
+            lblIdentifiers.Text = options.IdentifierNames;
+        }
+
+        private Control FillOptionsFromControl(ParameterBag outputParameters)
+        {
+            EXT_KEEPROW = chkKeepRowPositions.Checked;
+            EXT_EXPRESSION = txtExpression.Text;
+            return Extract(false, outputParameters);
         }
 
         private void cmdCount_Click(object sender, EventArgs e)
         {
-            Extract(true);
+            Control errorControl = Extract(true, null);
+            if (null != errorControl)
+            {
+                errorControl.Focus();
+            }
         }
 
-        private void cmdExtract_Click(object sender, EventArgs e)
+        public Control Fill(ParameterBag outputParameters, bool doValidation)
         {
-            Extract(false);
-        }
-
-        private void cmdClose_Click(object sender, EventArgs e)
-        {
-            SaveDefaults();
-            Close();
-        }
-
-        private void frmExtraction_Shown(object sender, EventArgs e)
-        {
-            SetFormFromOptions();
-        }
-
-        private void cmdHelp_Click(object sender, EventArgs e)
-        {
-            SDApplication.SoleInstance.ShowCurrentHelp();
+            return FillOptionsFromControl(outputParameters);
         }
     }
 }

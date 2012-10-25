@@ -33,26 +33,40 @@
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
-        <multiple-options>
-          <prompt>Select probit options</prompt>
-          <options>
-            <option name="calc-log10-doses" selected="true">Calc log10 of doses</option>
-          </options>
-          <selects>
-            <combo name="conf" prompt="Confidence (%)" default-value="95">
-              <option value="90">90</option>
-              <option value="91">91</option>
-              <option value="92">92</option>
-              <option value="93">93</option>
-              <option value="94">94</option>
-              <option value="95">95</option>
-              <option value="96">96</option>
-              <option value="97">97</option>
-              <option value="98">98</option>
-              <option value="99">99</option>
-            </combo>
-          </selects>
-        </multiple-options>
+      </parameters>
+    </settings>
+    <builtin function-name="ProbitOrLogitDataHasControls"/>
+    <settings>
+      <parameters>
+        <integer>
+          <name>nc</name>
+          <prompt>How many control subjects do you have?</prompt>
+          <acquire-if-true>=!(Parameters.ContainsKey("dataHasControls") &amp;&amp; Parameters["dataHasControls"].AsBoolean)</acquire-if-true>
+          <minimum-value>0</minimum-value>
+        </integer>
+        <integer>
+          <name>nrc</name>
+          <prompt>How many control subjects responded?</prompt>
+          <acquire-if-true>=(!(Parameters.ContainsKey("dataHasControls") &amp;&amp; Parameters["dataHasControls"].AsBoolean)) &amp;&amp; (Parameters.ContainsKey("nc") &amp;&amp; Parameters["nc"].AsInt32 > 0)</acquire-if-true>
+          <minimum-value>0</minimum-value>
+          <!-- <maximum-value>=Parameters["nc"].AsInt32</maximum-value> -->
+        </integer>
+        <boolean>
+          <name>calc-log10-doses</name>
+          <prompt>Calculate log10 of doses</prompt>
+          <default-value>true</default-value>
+        </boolean>
+        <confidence-interval>
+          <name>conf</name>
+        </confidence-interval>
+        <double>
+          <name>qld</name>
+          <rubric>Two values are calculated for the independent variable (Dose, Stimulus etc.). The first gives 50% proportional response (ED50, LD50 etc) and the other X%.</rubric>
+          <prompt>Enter the other centile (X)</prompt>
+          <minimum-value>0</minimum-value>
+          <maximum-value>100</maximum-value>
+          <default-value>90</default-value>
+        </double>
       </parameters>
     </settings>
 		<builtin function-name="rptLogit" />

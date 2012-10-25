@@ -5951,9 +5951,7 @@ namespace StatsDirect.Charting
             ROCOptions rOptions = ((ROCOptions)(definition.ChartOptions));
             double GAMMA = rOptions.GAMMA;
             if (GAMMA <= 0)
-            {
                 return null;
-            }
             double cit;
             double P0;
             MathDbl.civ(0, out cit, GAMMA, out P0);
@@ -5966,24 +5964,19 @@ namespace StatsDirect.Charting
                 seriesData[C] = new ROCSeriesRecord();
                 DoubleSeries xs = definition.XSeries[C].AsDoubleSeries;
                 DoubleSeries ys = definition.YSeries[C].AsDoubleSeries;
-                ROCSeriesRecord transTemp78 = seriesData[C];
-                transTemp78.pdata = xs.Data;
-                transTemp78.adata = ys.Data;
-                transTemp78.pmn = xs.Sum / Convert.ToDouble(xs.Points);
-                transTemp78.amn = ys.Sum / Convert.ToDouble(ys.Points);
-                transTemp78.min = Math.Min(xs.Min, ys.Min);
-                transTemp78.max = Math.Max(xs.Max, ys.Max);
+                seriesData[C].pdata = xs.Data;
+                seriesData[C].adata = ys.Data;
+                seriesData[C].pmn = xs.Sum / Convert.ToDouble(xs.Points);
+                seriesData[C].amn = ys.Sum / Convert.ToDouble(ys.Points);
+                seriesData[C].min = Math.Min(xs.Min, ys.Min);
+                seriesData[C].max = Math.Max(xs.Max, ys.Max);
                 // get a sorted list of all data in order to calculate cut points
-                transTemp78.tdata = new double[xs.Points + ys.Points];
+                seriesData[C].tdata = new double[xs.Points + ys.Points];
                 for (int r = 0; r < xs.Points; r++)
-                {
-                    transTemp78.tdata[r] = xs.Data[r];
-                }
+                    seriesData[C].tdata[r] = xs.Data[r];
                 for (int r = 0; r < ys.Points; r++)
-                {
-                    transTemp78.tdata[xs.Points + r] = ys.Data[r];
-                }
-                Array.Sort(transTemp78.tdata);
+                    seriesData[C].tdata[xs.Points + r] = ys.Data[r];
+                Array.Sort(seriesData[C].tdata);
 
             }
 
@@ -6051,19 +6044,9 @@ namespace StatsDirect.Charting
                 ROCSeriesRecord thisData = seriesData[cs];
                 DoubleSeries xs = definition.XSeries[cs].AsDoubleSeries;
                 DoubleSeries ys = definition.YSeries[cs].AsDoubleSeries;
-                //  TODO: Move this to the options screen
-                // If thisData.pmn > thisData.amn Then
-                // descriptor.CheckBoxes(0).Checked = True
-                // showopt = ComparisonValue.GE
-                // Else
-                // descriptor.CheckBoxes(2).Checked = True
-                // showopt = ComparisonValue.LE
-                // End If
                 double Weight = rOptions.Weight;
                 if (Weight <= 0)
-                {
                     Weight = 1.0;
-                }
 
                 // Draw the legend for each series
                 DrawMarker(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendTop - (cs * legendSpacing) - markerMidlineOffset, LEGEND_MARKER_SIZE, definition.YSeries[cs].AsDoubleSeries);
@@ -6071,9 +6054,9 @@ namespace StatsDirect.Charting
 
                 int a;
                 int b;
-                int C;
-                int D;
-                double CUTOFF;
+                int c;
+                int d;
+                double cutoff;
                 double sens;
                 if (!(hideopt))
                 {
@@ -6083,81 +6066,65 @@ namespace StatsDirect.Charting
                     {
                         a = 0;
                         b = 0;
-                        CUTOFF = thisData.tdata[r];
+                        cutoff = thisData.tdata[r];
                         for (int j = 0; j <= thisData.pdata.Length - 1; j++)
                         {
                             switch (showopt)
                             {
                                 case ComparisonValue.LT:
-                                    if (thisData.pdata[j] < CUTOFF)
-                                    {
-                                        a = a + 1;
-                                    }
+                                    if (thisData.pdata[j] < cutoff)
+                                        a++;
                                     break;
                                 case ComparisonValue.LE:
-                                    if (thisData.pdata[j] <= CUTOFF)
-                                    {
-                                        a = a + 1;
-                                    }
+                                    if (thisData.pdata[j] <= cutoff)
+                                        a++;
                                     break;
                                 case ComparisonValue.GT:
-                                    if (thisData.pdata[j] > CUTOFF)
-                                    {
-                                        a = a + 1;
-                                    }
+                                    if (thisData.pdata[j] > cutoff)
+                                        a++;
                                     break;
                                 default:
-                                    if (thisData.pdata[j] >= CUTOFF)
-                                    {
-                                        a = a + 1;
-                                    }
+                                    if (thisData.pdata[j] >= cutoff)
+                                        a++;
                                     break;
                             }
 
                         }
-                        C = thisData.pdata.Length - a;
+                        c = thisData.pdata.Length - a;
                         for (int j = 0; j <= thisData.adata.Length - 1; j++)
                         {
                             switch (showopt)
                             {
                                 case ComparisonValue.LT:
-                                    if (thisData.adata[j] < CUTOFF)
-                                    {
-                                        b = b + 1;
-                                    }
+                                    if (thisData.adata[j] < cutoff)
+                                        b++;
                                     break;
                                 case ComparisonValue.LE:
-                                    if (thisData.adata[j] <= CUTOFF)
-                                    {
-                                        b = b + 1;
-                                    }
+                                    if (thisData.adata[j] <= cutoff)
+                                        b++;
                                     break;
                                 case ComparisonValue.GT:
-                                    if (thisData.adata[j] > CUTOFF)
-                                    {
-                                        b = b + 1;
-                                    }
+                                    if (thisData.adata[j] > cutoff)
+                                        b++;
                                     break;
                                 default:
-                                    if (thisData.adata[j] >= CUTOFF)
-                                    {
-                                        b = b + 1;
-                                    }
+                                    if (thisData.adata[j] >= cutoff)
+                                        b++;
                                     break;
                             }
 
                         }
-                        D = thisData.adata.Length - b;
-                        sens = Convert.ToDouble(a) / Convert.ToDouble(a + C);
-                        double spec = Convert.ToDouble(D) / Convert.ToDouble(b + D);
+                        d = thisData.adata.Length - b;
+                        sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
+                        double spec = Convert.ToDouble(d) / Convert.ToDouble(b + d);
                         if (Weight * sens + spec > maxss)
                         {
                             maxss = Weight * sens + spec;
-                            thisData.cutoff = CUTOFF;
+                            thisData.cutoff = cutoff;
                             thisData.a = a;
                             thisData.b = b;
-                            thisData.c = C;
-                            thisData.d = D;
+                            thisData.c = c;
+                            thisData.d = d;
                             thisData.sens = sens;
                             thisData.spec = spec;
                         }
@@ -6177,73 +6144,57 @@ namespace StatsDirect.Charting
                 // make first mark
                 a = 0;
                 b = 0;
-                CUTOFF = thisData.cutoff;
+                cutoff = thisData.cutoff;
                 for (int r = 0; r <= thisData.pdata.Length - 1; r++)
                 {
                     switch (showopt)
                     {
                         case ComparisonValue.LT:
-                            if (thisData.pdata[r] < CUTOFF)
-                            {
-                                a = a + 1;
-                            }
+                            if (thisData.pdata[r] < cutoff)
+                                a++;
                             break;
                         case ComparisonValue.LE:
-                            if (thisData.pdata[r] <= CUTOFF)
-                            {
-                                a = a + 1;
-                            }
+                            if (thisData.pdata[r] <= cutoff)
+                                a++;
                             break;
                         case ComparisonValue.GT:
-                            if (thisData.pdata[r] > CUTOFF)
-                            {
-                                a = a + 1;
-                            }
+                            if (thisData.pdata[r] > cutoff)
+                                a++;
                             break;
                         default:
-                            if (thisData.pdata[r] >= CUTOFF)
-                            {
-                                a = a + 1;
-                            }
+                            if (thisData.pdata[r] >= cutoff)
+                                a++;
                             break;
                     }
 
                 }
-                C = thisData.pdata.Length - a;
+                c = thisData.pdata.Length - a;
                 for (int r = 0; r <= thisData.adata.Length - 1; r++)
                 {
                     switch (showopt)
                     {
                         case ComparisonValue.LT:
-                            if (thisData.adata[r] < CUTOFF)
-                            {
-                                b = b + 1;
-                            }
+                            if (thisData.adata[r] < cutoff)
+                                b++;
                             break;
                         case ComparisonValue.LE:
-                            if (thisData.adata[r] <= CUTOFF)
-                            {
-                                b = b + 1;
-                            }
+                            if (thisData.adata[r] <= cutoff)
+                                b++;
                             break;
                         case ComparisonValue.GT:
-                            if (thisData.adata[r] > CUTOFF)
-                            {
-                                b = b + 1;
-                            }
+                            if (thisData.adata[r] > cutoff)
+                                b++;
                             break;
                         default:
-                            if (thisData.adata[r] >= CUTOFF)
-                            {
-                                b = b + 1;
-                            }
+                            if (thisData.adata[r] >= cutoff)
+                                b++;
                             break;
                     }
 
                 }
-                D = thisData.adata.Length - b;
-                sens = Convert.ToDouble(a) / Convert.ToDouble(a + C);
-                double mspec = 1.0 - Convert.ToDouble(D) / Convert.ToDouble(b + D);
+                d = thisData.adata.Length - b;
+                sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
+                double mspec = 1.0 - Convert.ToDouble(d) / Convert.ToDouble(b + d);
                 double x1 = offx + mspec * xExtCanvas;
                 double y1 = offy + sens * yExtCanvas;
 
@@ -6255,104 +6206,84 @@ namespace StatsDirect.Charting
                 {
                     a = 0;
                     b = 0;
-                    CUTOFF = thisData.tdata[r];
+                    cutoff = thisData.tdata[r];
                     for (int j = 0; j <= thisData.pdata.Length - 1; j++)
                     {
                         switch (showopt)
                         {
                             case ComparisonValue.LT:
-                                if (thisData.pdata[j] < CUTOFF)
-                                {
-                                    a = a + 1;
-                                }
+                                if (thisData.pdata[j] < cutoff)
+                                    a++;
                                 break;
                             case ComparisonValue.LE:
-                                if (thisData.pdata[j] <= CUTOFF)
-                                {
-                                    a = a + 1;
-                                }
+                                if (thisData.pdata[j] <= cutoff)
+                                    a++;
                                 break;
                             case ComparisonValue.GT:
-                                if (thisData.pdata[j] > CUTOFF)
-                                {
-                                    a = a + 1;
-                                }
+                                if (thisData.pdata[j] > cutoff)
+                                    a++;
                                 break;
                             default:
-                                if (thisData.pdata[j] >= CUTOFF)
-                                {
-                                    a = a + 1;
-                                }
+                                if (thisData.pdata[j] >= cutoff)
+                                    a++;
                                 break;
                         }
 
                     }
-                    C = thisData.pdata.Length - a;
-                    for (int j = 0; j <= thisData.adata.Length - 1; j++)
+                    c = thisData.pdata.Length - a;
+                    for (int j = 0; j < thisData.adata.Length; j++)
                     {
                         switch (showopt)
                         {
                             case ComparisonValue.LT:
-                                if (thisData.adata[j] < CUTOFF)
-                                {
-                                    b = b + 1;
-                                }
+                                if (thisData.adata[j] < cutoff)
+                                    b++;
                                 break;
                             case ComparisonValue.LE:
-                                if (thisData.adata[j] <= CUTOFF)
-                                {
-                                    b = b + 1;
-                                }
+                                if (thisData.adata[j] <= cutoff)
+                                    b++;
                                 break;
                             case ComparisonValue.GT:
-                                if (thisData.adata[j] > CUTOFF)
-                                {
-                                    b = b + 1;
-                                }
+                                if (thisData.adata[j] > cutoff)
+                                    b++;
                                 break;
                             default:
-                                if (thisData.adata[j] >= CUTOFF)
-                                {
-                                    b = b + 1;
-                                }
+                                if (thisData.adata[j] >= cutoff)
+                                    b++;
                                 break;
                         }
 
                     }
-                    D = thisData.adata.Length - b;
-                    sens = Convert.ToDouble(a) / Convert.ToDouble(a + C);
+                    d = thisData.adata.Length - b;
+                    sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
                     ry[r] = sens;
-                    mspec = 1.0 - Convert.ToDouble(D) / Convert.ToDouble(b + D);
+                    mspec = 1.0 - Convert.ToDouble(d) / Convert.ToDouble(b + d);
                     rx[r] = mspec;
                 }
 
-                double x2;
-                double Y2;
-                for (int r = 0; r <= stps - 1; r++)
+                for (int r = 0; r < stps; r++)
                 {
-                    x2 = offx + rx[r] * xExtCanvas;
-                    Y2 = offy + ry[r] * yExtCanvas;
-                    DrawMarker(x2, Y2, ys.MarkerSize, definition.YSeries[cs].AsDoubleSeries);
+                    double x2 = offx + rx[r] * xExtCanvas;
+                    double y2 = offy + ry[r] * yExtCanvas;
+                    DrawMarker(x2, y2, ys.MarkerSize, definition.YSeries[cs].AsDoubleSeries);
                 }
 
                 double last_x2 = x1;
                 double last_y2 = y1;
-                for (int r = 0; r <= stps - 1; r++)
+                for (int r = 0; r < stps; r++)
                 {
-                    x2 = offx + rx[r] * xExtCanvas;
-                    Y2 = offy + ry[r] * yExtCanvas;
-                    if (r > 0 & (x2 != last_x2 | Y2 != last_y2))
-                    {
-                        DrawLine(xs.StyledPen, last_x2, last_y2, x2, Y2);
-                    }
+                    double x2 = offx + rx[r] * xExtCanvas;
+                    double y2 = offy + ry[r] * yExtCanvas;
+                    if (r > 0 && (x2 != last_x2 || y2 != last_y2))
+                        DrawLine(xs.StyledPen, last_x2, last_y2, x2, y2);
                     last_x2 = x2;
-                    last_y2 = Y2;
+                    last_y2 = y2;
                 }
 
                 // mark cutoff point
-                x2 = offx + (1.0 - thisData.spec) * xExtCanvas;
-                Y2 = offy + thisData.sens * yExtCanvas;
-                DrawMarker(x2, Y2, rOptions.MarkerTypes[definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[definition.XSeries.Count + cs]);
+                double x = offx + (1.0 - thisData.spec) * xExtCanvas;
+                double y = offy + thisData.sens * yExtCanvas;
+                DrawMarker(x, y, rOptions.MarkerTypes[definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[definition.XSeries.Count + cs]);
 
                 thisData.auc = MathDbl.trapezoid_xy_roc(rx, ry, 0, stps);
 
@@ -6362,14 +6293,14 @@ namespace StatsDirect.Charting
                     allResults.Add(thisResults);
                     // Wilcoxon estimate for AUC
                     // Hanley JA, mcNeil BJ, Radiology 143:29-36
-                    //  Note that mwx and mwr are 1-based!
+                    //  Note that mwx and mwr are 1-based
                     double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1 /* for VB to C# conversion */ ];
                     double[] mwr = new double[thisData.pdata.Length + thisData.adata.Length + 1 /* for VB to C# conversion */ ];
-                    for (int j = 0; j <= thisData.pdata.Length - 1; j++)
+                    for (int j = 0; j < thisData.pdata.Length; j++)
                     {
                         mwx[j + 1] = thisData.pdata[j];
                     }
-                    for (int j = 0; j <= thisData.adata.Length - 1; j++)
+                    for (int j = 0; j < thisData.adata.Length; j++)
                     {
                         mwx[thisData.pdata.Length + j + 1] = thisData.adata[j];
                     }

@@ -936,7 +936,6 @@ namespace StatsDirect.UI
 
                             DoubleVariable variable = new DoubleVariable(values.Length, title);
                             frame.Variables.Add(variable);
-                            variable.Sum = 0;
 
                             variable.Data = new double[values.Length];
                             // Eliminate MISSING values by copying, then truncating the array
@@ -945,10 +944,7 @@ namespace StatsDirect.UI
                             {
                                 double v = values[row];
                                 if (v != Constant.MISSING && v != Constant.MISSING * 10D)
-                                {
-                                    variable.Sum += v;
                                     variable.Data[size++] = v;
-                                }
                             }
 
                             if (size < 1)
@@ -984,7 +980,6 @@ namespace StatsDirect.UI
 
                             DoubleVariable variable = new DoubleVariable(lrow + 1, title);
                             frame.Variables.Add(variable);
-                            variable.Sum = 0;
 
                             variable.Data = new double[lrow + 1];
                             for (int row = 0; row <= lrow; row++)
@@ -993,8 +988,6 @@ namespace StatsDirect.UI
                                 if (Constant.MISSING * 10D == v)
                                     v = Constant.MISSING;
                                 variable.Data[row] = v;
-                                if (v != Constant.MISSING)
-                                    variable.Sum += v;
                             }
                             variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
                         }
@@ -2349,7 +2342,7 @@ namespace StatsDirect.UI
                         ciDescriptor.SetAsConfidence();
                         descriptor.SelectionBoxes.Add(ciDescriptor);
                     }
-                    if (!((ITemplateHost)SDApplication.SoleInstance).DisplayOptions(descriptor))
+                    if (null == ((ITemplateHost)SDApplication.SoleInstance).DisplayOptions(descriptor))
                         break;
 
                     yrep = useYReplicatesDescriptor.Checked;

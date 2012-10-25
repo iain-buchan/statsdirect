@@ -310,6 +310,12 @@
     <Compile Include="TextProcessing\ActiveRtfLexer.cs" />
     <Compile Include="TextProcessing\ActiveRtfParser.cs" />
     <Compile Include="TextProcessing\ActiveRtfParserPartial.cs" />
+    <Compile Include="UI\ctlExtraction.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlExtraction.Designer.cs">
+      <DependentUpon>ctlExtraction.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\ctlPDF.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -463,12 +469,6 @@
     <Compile Include="UI\ctlOptions.Designer.cs">
       <DependentUpon>ctlOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlCoxRegressionOptions.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\ctlCoxRegressionOptions.Designer.cs">
-      <DependentUpon>ctlCoxRegressionOptions.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\ctlChiGFOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -534,12 +534,6 @@
     </Compile>
     <Compile Include="UI\frmInsertCells.Designer.cs">
       <DependentUpon>frmInsertCells.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\frmExtraction.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmExtraction.Designer.cs">
-      <DependentUpon>frmExtraction.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\frmGraphicsOptions.cs">
       <SubType>Form</SubType>
@@ -762,6 +756,10 @@
     <EmbeddedResource Include="Calculator\frmStatsDirectCalculator.resx">
       <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlExtraction.resx">
+      <DependentUpon>ctlExtraction.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlDummyOptions.resx">
       <DependentUpon>ctlDummyOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -847,10 +845,6 @@
       <DependentUpon>ctlOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlCoxRegressionOptions.resx">
-      <DependentUpon>ctlCoxRegressionOptions.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlChiGFOptions.resx">
       <DependentUpon>ctlChiGFOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -893,10 +887,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInsertCells.resx">
       <DependentUpon>frmInsertCells.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmExtraction.resx">
-      <DependentUpon>frmExtraction.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmGraphicsOptions.resx">
@@ -1658,7 +1648,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

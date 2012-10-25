@@ -26,5 +26,6 @@
       </parameters>
     </settings>
     <builtin function-name="shtGroupExtract"/>
+    <output-frame frame-name="extracted"/>
 	</steps>
 </operation>

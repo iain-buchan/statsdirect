@@ -352,12 +352,9 @@ namespace StatsDirect.Builtins
             int ifix = 0;
             int itie = 0;
             int maxit = 30;
-            string ratioString = parameters["splitting-ratio"].AsString;
-            if (ratioString == "no split")
-            {
+            ratio = parameters["splitting-ratio"].AsDouble;
+            if (ratio <= 0)
                 ratio = -1.0;
-            }
-            else { ratio = Parsing.Cdbl_Txt(ratioString); }
             bool centre = parameters["centre-continuous-covariates"].AsBoolean;
             int nobs = rows;
             int ldcoef = nef;

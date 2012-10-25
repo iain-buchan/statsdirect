@@ -66,7 +66,8 @@ namespace StatsDirect.UI
         /// If true, non-grid data entry is inprogress using the top bar
         /// </summary>
         private bool inputtingData /* = false */;
-        private bool okSelected /* = false */;
+        private bool okPressed /* = false */;
+        private bool cancelPressed /* = false */;
 
         /// <summary>
         /// The index of the tab that was most recently right-clicked.
@@ -927,7 +928,8 @@ namespace StatsDirect.UI
             if (null != cancelButtonLabel)
                 cmdCancel.Text = cancelButtonLabel;
             selectingData = true;
-            okSelected = false;
+            okPressed = false;
+            cancelPressed = false;
             // wait here until user presses OK or Cancel, or does something else suitable
             do
             {
@@ -940,7 +942,7 @@ namespace StatsDirect.UI
                 puntedException = null;
                 throw ex;
             }
-            if (okSelected)
+            if (okPressed)
             {
                 status = true;
                 wasPivoted = false;
@@ -970,7 +972,7 @@ namespace StatsDirect.UI
         /// <param name="ok"></param>
         public void NoteEndOfSelection(bool ok)
         {
-            okSelected = ok;
+            okPressed = ok;
             selectingData = false;
             inputtingData = false;
         }
@@ -1181,6 +1183,7 @@ namespace StatsDirect.UI
                 // The Close button is sometimes visible in place of the Cancel button.  Deal with this!
                 if (selectingData || inputtingData)
                 {
+                    cancelPressed = true;
                     bool wasInputting = inputtingData;
                     IEnumerable<Parameter> parametersBeingCollected = GetAllOutstandingParameters();
                     CancelCurrentOperation();
@@ -1320,7 +1323,7 @@ namespace StatsDirect.UI
                 {
                     selectingData = false;
                     inputtingData = false;
-                    okSelected = true;
+                    okPressed = true;
                     return;
                 }
                 DoCalculate();
@@ -1436,6 +1439,10 @@ namespace StatsDirect.UI
                         // Keep existing input parameters.  TODO: Is this correct, or should we be going back to the originals?
                         inputParameters = ex.InputParameters;
                         // Go round again, processing this operation
+
+                        if (!ShouldRunOperationOnSelection(operation, inputParameters))
+                        {
+                        }
                     }
                 }
                 catch (CloseCurrentOperationException)
@@ -1471,8 +1478,8 @@ namespace StatsDirect.UI
             {
                 selectingData = false;
                 inputtingData = false;
-                okSelected = false;
-                cancelPressed = false;
+                okPressed = false;
+                cancelProgressPressed = false;
                 // No other state needs fixing.
             }
             // We may have had one or more parameters displayed
@@ -1563,7 +1570,7 @@ namespace StatsDirect.UI
             if (!results.ContainsKey(OPERATION_MEMORY_NAME))
                 results.Add(OPERATION_MEMORY_NAME, new FilledParameter(true, new List<string>()));
             IList<string> operations = results[OPERATION_MEMORY_NAME].AsStringList;
-            string operationName = operation.Names[0];
+            string operationName = operation.Name;
             if (!operations.Contains(operationName))
                 operations.Add(operationName);
         }
@@ -1615,7 +1622,7 @@ namespace StatsDirect.UI
                 foreach (SuggestedOperation su in availableSuggestedOperations)
                 {
                     Operation suggestedOperation = TemplateFactory.Operations[su.Name];
-                    string name = suggestedOperation.Names[0];
+                    string name = suggestedOperation.Name;
                     if (suggestedOperation.FriendlyNames.Count > 0)
                         name = suggestedOperation.FriendlyNames[0];
                     suggestedListItems.Add(new SDListItem(name, su.Name));
@@ -1653,7 +1660,7 @@ namespace StatsDirect.UI
                     foreach (SDListItem suggestedListItem in suggestedListItems)
                     {
                         cboOperation.Items.Add(suggestedListItem);
-                        if (currentOperation.Names.Contains(suggestedListItem.Operation))
+                        if (currentOperation.Name.Equals(suggestedListItem.Operation))
                         {
                             selectedItemNumber = itemNumber;
                         }
@@ -1666,7 +1673,7 @@ namespace StatsDirect.UI
                     foreach (object oSuggestedOperation in cboOperation.Items)
                     {
                         SDListItem suggestedListItem = (SDListItem)oSuggestedOperation;
-                        if (currentOperation.Names.Contains(suggestedListItem.Operation))
+                        if (currentOperation.Name.Equals(suggestedListItem.Operation))
                         {
                             selectedItemNumber = itemNumber;
                             break;
@@ -1676,6 +1683,7 @@ namespace StatsDirect.UI
                 }
                 if (cboOperation.Items.Count > 0)
                 {
+                    cboOperation.Enabled = cboOperation.Items.Count > 1;
                     ShowPanel(PanelType.Operations, false);
                     knownParameters = inputParameters;
 // ReSharper disable RedundantCheckBeforeAssignment
@@ -1877,14 +1885,14 @@ namespace StatsDirect.UI
             SDApplication.SoleInstance.ShowHelp(this);
         }
 
-        private bool cancelPressed;
+        private bool cancelProgressPressed;
 
         internal void StartProgress(string operationDescription)
         {
             ShowPanel(PanelType.Progress, false);
             progressBar.Value = 0;
             lblProgress.Text = operationDescription;
-            cancelPressed = false;
+            cancelProgressPressed = false;
         }
 
         internal bool UpdateProgress(double fractionComplete)
@@ -1896,8 +1904,8 @@ namespace StatsDirect.UI
                 fractionComplete = 1;
             progressBar.Value = (int)(progressBar.Maximum * fractionComplete);
             Application.DoEvents(); // Force the display to update, and catch any cancellations
-            bool retVal = cancelPressed;
-            cancelPressed = false;
+            bool retVal = cancelProgressPressed;
+            cancelProgressPressed = false;
             return retVal;
         }
 
@@ -2212,7 +2220,7 @@ namespace StatsDirect.UI
                 table.Dispose();
             }
             cmdCalculate.Text = "&OK";
-            cmdClose.Text = "C&lose";
+            cmdClose.Text = "C&ancel";
         }
 
         internal void StartCombinedParameters()
@@ -2307,7 +2315,7 @@ namespace StatsDirect.UI
                     {
                         selectingData = false;
                         inputtingData = false;
-                        okSelected = true;
+                        okPressed = true;
                         e.Handled = true;
                         return;
                     }
@@ -2965,15 +2973,20 @@ namespace StatsDirect.UI
         private FilledParameter PrepareCombinedParameter(ITemplateHost host, FillableParameter fillableParameter)
         {
             IFillable fillable = fillableParameter.Fillable;
+            string fillerToUse = fillable.FillerToUse;
             TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
             Control ctl;
-            if ("ChiSquareGoodnessOfFit".Equals(fillable.FillerToUse))
+            if ("ChiSquareGoodnessOfFit".Equals(fillerToUse))
                 ctl = new ctlChiGFOptions((Builtins.ChiSquareGoodnessOfFitOptions)fillable);
-            else if ("Distribution".Equals(fillable.FillerToUse))
+            else if ("Distribution".Equals(fillerToUse))
                 ctl = new ctlPDF((Builtins.DistributionOptions)fillable, host);
-            else if ("Dummy".Equals(fillable.FillerToUse))
+            else if ("Dummy".Equals(fillerToUse))
                 ctl = new ctlDummyOptions((Builtins.DummyOptions)fillable);
-            else if ("SortInPlace".Equals(fillable.FillerToUse))
+            else if ("Extraction".Equals(fillerToUse))
+                ctl = new ctlExtraction((Builtins.ExtractionOptions)fillable);
+            else if ("OptionDescriptor".Equals(fillable.FillerToUse))
+                ctl = new ctlOptions((OptionDescriptor)fillable);
+            else if ("SortInPlace".Equals(fillerToUse))
             {
                 // HACK: Break layering completely
                 frmSpreadsheetGear gearForm = (frmSpreadsheetGear)ActiveMdiChild;
@@ -2981,11 +2994,6 @@ namespace StatsDirect.UI
                     return null;
                 IRange range = gearForm.workbookView.RangeSelection.Areas[0];
                 ctl = new ctlSort(range, gearForm.workbookView);
-            }
-            else if ("OptionDescriptor".Equals(fillable.FillerToUse))
-            {
-                OptionDescriptor descriptor = (OptionDescriptor)fillableParameter.Fillable;
-                ctl = new ctlOptions(descriptor);
             }
             /**
         else if ("Extraction".Equals(fillable.FillerToUse))
@@ -3299,9 +3307,7 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
             Control ctl;
-            if ("coxRegressionOptions".Equals(parameter.FormatHint))
-                ctl = new ctlCoxRegressionOptions(parameter);
-            else if ("effectOptions".Equals(parameter.FormatHint))
+            if ("effectOptions".Equals(parameter.FormatHint))
                 ctl = new ctlEffectOptions(parameter);
             else
             {
@@ -3398,18 +3404,14 @@ namespace StatsDirect.UI
         /// </summary>
         void AddAppropriateEventHandlersTo(Control control)
         {
+            if (control is CheckBox)
+                ((CheckBox)control).CheckedChanged += OptionParameter_CheckedChanged;
             if (control is RadioButton)
-            {
                 ((RadioButton)control).CheckedChanged += OptionParameter_CheckedChanged;
-            }
             if (control is ComboBox || control is TextBox)
-            {
                 control.KeyPress += EnterMovesDown;
-            }
             if (control is ctlPickAWindow)
-            {
                 ((ctlPickAWindow)control).InsideKeyPress += EnterMovesDown;
-            }
             control.LostFocus += RunChecksAfterLostFocus;
         }
 
@@ -3759,6 +3761,13 @@ namespace StatsDirect.UI
                 grid.GetLock();
                 try
                 {
+                    if (context.ContainsKey(specialParameter.Name) && null != context[specialParameter.Name] && context[specialParameter.Name].IsInputParameter && context[specialParameter.Name].IsDataFrame)
+                    {
+                        DataFrame sourceFrame = context[specialParameter.Name].AsDataFrame;
+                        for (int col = 0; col < sourceFrame.VariableCount; col++)
+                            if (sourceFrame.Variables[col].IsDoubleVariable)
+                                DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, col, sourceFrame.Variables[col].AsDoubleVariable);
+                    }
                     grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
                 }
@@ -3998,11 +4007,19 @@ namespace StatsDirect.UI
                     while (true)
                     {
                         inputtingData = true;
-                        okSelected = false;
+                        okPressed = false;
+                        cancelPressed = false;
                         DoNestedEventLoop();
 
+                        // Did we fall out of the loop?
+                        if (!(okPressed || cancelPressed))
+                        {
+                            outputParameters = null;
+                            return;
+                        }
+
                         // Did the user cancel?
-                        if (!okSelected)
+                        if (cancelPressed)
                         {
                             // Are all the parameters skippable?
                             bool allSkippable = CheckAllParametersSkippable(tlp);
@@ -4016,7 +4033,7 @@ namespace StatsDirect.UI
                         }
 
                         // Otherwise, at least one parameter's invalid and focus should already have been set to it.  Go round again.
-                        SDApplication.SoleInstance.msgbox_x("Invalid data. Please correct it and try the operation again.", MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
+                        // SDApplication.SoleInstance.msgbox_x("Invalid data. Please correct it and try the operation again.", MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
                     }
                 }
             }
@@ -4024,7 +4041,7 @@ namespace StatsDirect.UI
             {
                 fillCombinedParametersContext = null;
                 cmdCalculate.Text = "&OK";
-                cmdClose.Text = "&Close";
+                cmdClose.Text = "&Cancel";
                 PopPanel(true);
             }
 
@@ -4072,8 +4089,9 @@ namespace StatsDirect.UI
             if (!allValid /* && null != firstInvalidControl - always the case */)
             {
                 // Set focus to the first invalid control.
+                firstInvalidControl.BackColor = Color.FromArgb(192, 255, 255);
                 firstInvalidControl.Focus();
-                System.Media.SystemSounds.Exclamation.Play(); 
+                // System.Media.SystemSounds.Exclamation.Play(); 
             }
             return allValid;
         }
@@ -4135,6 +4153,7 @@ namespace StatsDirect.UI
                             string raw = cbo.Text.Trim();
                             if (doValidation)
                             {
+                                control.BackColor = SystemColors.Window;
                                 // Missing or zero-length?
                                 if (raw.Length == 0)
                                 {
@@ -4159,11 +4178,14 @@ namespace StatsDirect.UI
                         }
                     case ParameterType.Custom:
                         {
-                            if (typeof(ChartOptionsParameter) == parameter.GetType()
-                                || typeof(FillableParameter) == parameter.GetType())
+                            if (control is IOkable)
                             {
                                 IOkable okable = (IOkable)control;
                                 okable.OkClicked();
+                            }
+                            else if (control is IFillParameterBag)
+                            {
+                                return ((IFillParameterBag)control).Fill(outputParameters, true);
                             }
                             else
                                 throw new ArgumentOutOfRangeException("control", "control.Tag: Only ChartOptionParameter and FillableParameter are known types of custom parameter");
@@ -4175,6 +4197,7 @@ namespace StatsDirect.UI
                             string raw = txt.Text.Trim();
                             if (doValidation)
                             {
+                                control.BackColor = SystemColors.Window;
                                 // Missing or zero-length?
                                 if (raw.Length == 0)
                                 {
@@ -4197,6 +4220,7 @@ namespace StatsDirect.UI
                             bool isMissing = string.IsNullOrWhiteSpace(raw);
                             if (doValidation)
                             {
+                                control.BackColor = SystemColors.Window;
                                 // Missing or zero-length?
                                 if (isMissing)
                                 {
@@ -4238,6 +4262,10 @@ namespace StatsDirect.UI
 
                             if (doValidation)
                             {
+                                txtTL.BackColor = SystemColors.Window;
+                                txtTR.BackColor = SystemColors.Window;
+                                txtBL.BackColor = SystemColors.Window;
+                                txtBR.BackColor = SystemColors.Window;
                                 // Validate
                                 if (tl == Constant.MISSING)
                                 {
@@ -4300,6 +4328,10 @@ namespace StatsDirect.UI
 
                             if (doValidation)
                             {
+                                txtTL.BackColor = SystemColors.Window;
+                                txtTR.BackColor = SystemColors.Window;
+                                txtBL.BackColor = SystemColors.Window;
+                                txtBR.BackColor = SystemColors.Window;
                                 // Validate
                                 if (tl == Constant.MISSING)
                                 {
@@ -4396,6 +4428,7 @@ namespace StatsDirect.UI
                             string raw = txt.Text.Trim();
                             if (doValidation)
                             {
+                                txt.BackColor = SystemColors.Window;
                                 // Missing or zero-length?
                                 if (raw.Length == 0)
                                 {
@@ -4522,26 +4555,30 @@ namespace StatsDirect.UI
                                 try
                                 {
                                     value = worksheet.UsedRange.Value;
-                                    if (!value.GetType().IsArray)
+                                    if (null != value && !value.GetType().IsArray)
                                         value = new[,] { { value } };
                                 }
                                 finally
                                 {
                                     grid.ReleaseLock();
                                 }
-                                object[,] ary = (object[,])value;
 
-                                DataFrame frame = new DataFrame();
-                                for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
+                                if (null != value)
                                 {
-                                    DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
-                                    for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
+                                    object[,] ary = (object[,])value;
+
+                                    DataFrame frame = new DataFrame();
+                                    for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
                                     {
-                                        dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
+                                        for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
+                                        {
+                                            dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                                        }
+                                        frame.Variables.Add(dv);
                                     }
-                                    frame.Variables.Add(dv);
+                                    outputParameters[parameter.Name] = new FilledParameter(true, frame);
                                 }
-                                outputParameters[parameter.Name] = new FilledParameter(true, frame);
                                 return null;
                             }
                             if ("chi-3-column".Equals(specialParameter.SpecialType)
@@ -4555,26 +4592,30 @@ namespace StatsDirect.UI
                                 try
                                 {
                                     value = worksheet.UsedRange.Value;
-                                    if (!value.GetType().IsArray)
+                                    if (null != value && !value.GetType().IsArray)
                                         value = new[,] { { value } };
                                 }
                                 finally
                                 {
                                     grid.ReleaseLock();
                                 }
-                                object[,] ary = (object[,])value;
 
-                                DataFrame frame = new DataFrame();
-                                for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
+                                if (null != value)
                                 {
-                                    DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
-                                    for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
+                                    object[,] ary = (object[,])value;
+
+                                    DataFrame frame = new DataFrame();
+                                    for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
                                     {
-                                        dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
+                                        for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
+                                        {
+                                            dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                                        }
+                                        frame.Variables.Add(dv);
                                     }
-                                    frame.Variables.Add(dv);
+                                    outputParameters[parameter.Name] = new FilledParameter(true, frame);
                                 }
-                                outputParameters[parameter.Name] = new FilledParameter(true, frame);
                                 return null;
                             }
                             if ("raters-2d".Equals(specialParameter.SpecialType))
@@ -4594,22 +4635,25 @@ namespace StatsDirect.UI
                                 {
                                     grid.ReleaseLock();
                                 }
-                                object[,] ary = (object[,]) value;
-
-                                DataFrame frame = new DataFrame();
-                                if (null != ary)
+                                if (null != value)
                                 {
-                                    for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
+                                    object[,] ary = (object[,])value;
+
+                                    DataFrame frame = new DataFrame();
+                                    if (null != ary)
                                     {
-                                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
-                                        for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
+                                        for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
                                         {
-                                            dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                                            DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
+                                            for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
+                                            {
+                                                dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                                            }
+                                            frame.Variables.Add(dv);
                                         }
-                                        frame.Variables.Add(dv);
                                     }
+                                    outputParameters[parameter.Name] = new FilledParameter(true, frame);
                                 }
-                                outputParameters[parameter.Name] = new FilledParameter(true, frame);
                                 return null;
                             }
                             if ("report".Equals(specialParameter.SpecialType)
@@ -5007,7 +5051,7 @@ namespace StatsDirect.UI
 
         private void cmdCancelProgress_Click(object sender, EventArgs e)
         {
-            cancelPressed = true;
+            cancelProgressPressed = true;
         }
 
         private void newToolStripButton_Click(object sender, EventArgs e)
@@ -5341,7 +5385,7 @@ namespace StatsDirect.UI
             {
                 this.AcceptButton = oldAcceptButton;
                 this.CancelButton = oldCancelButton;
-                PopPanel(false);
+                PopPanel(true);
             }
         }
 

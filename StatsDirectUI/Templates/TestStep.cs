@@ -26,7 +26,6 @@ namespace StatsDirect.Templates
             XmlArrayItem(ElementName = "settings", Type = typeof(ParametersStep)),
             XmlArrayItem(ElementName = "report", Type = typeof(ReportStep)),
             XmlArrayItem(ElementName = "script", Type = typeof(ScriptStep)),
-            XmlArrayItem(ElementName = "select-output-for-frame", Type = typeof(SelectOutputForFrameStep)),
             XmlArrayItem(ElementName = "test", Type = typeof(TestStep))
         ]
         public Step[] TrueStepsForXml
@@ -54,7 +53,6 @@ namespace StatsDirect.Templates
             XmlArrayItem(ElementName = "settings", Type = typeof(ParametersStep)),
             XmlArrayItem(ElementName = "report", Type = typeof(ReportStep)),
             XmlArrayItem(ElementName = "script", Type = typeof(ScriptStep)),
-            XmlArrayItem(ElementName = "select-output-for-frame", Type = typeof(SelectOutputForFrameStep)),
             XmlArrayItem(ElementName = "test", Type = typeof(TestStep))
         ]
         public Step[] FalseStepsForXml

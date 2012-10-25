@@ -28,7 +28,7 @@ namespace StatsDirect.Builtins
             double[] refw = new double[rows + 1 /* VB to C# conversion */ ];
 
             double cco = parameters["cco"].AsDouble;
-            if (cco > 1.0 | cco < 0.0)
+            if (cco > 1.0 || cco < 0.0)
             {
                 cco = 0.95;
             }
@@ -57,7 +57,7 @@ namespace StatsDirect.Builtins
                 }
                 x = datV2.Data[j - 1];
                 refn[j] = x;
-                refntot = refntot + x;
+                refntot += x;
                 if (idxy[j] > idxn[j])
                 {
                     throw new InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
@@ -81,8 +81,8 @@ namespace StatsDirect.Builtins
             {
                 idxr[j] = idxy[j] / idxn[j];
                 stdr = stdr + idxr[j] * refn[j];
-                pois_var = pois_var + refn[j] * refn[j] * idxr[j] / idxn[j];
-                bino_var = bino_var + refn[j] * refn[j] * idxr[j] * (1.0 - idxr[j]) / idxn[j];
+                pois_var += refn[j] * refn[j] * idxr[j] / idxn[j];
+                bino_var += refn[j] * refn[j] * idxr[j] * (1.0 - idxr[j]) / idxn[j];
             }
             stdr = stdr / refntot;
             pois_var = pois_var / (refntot * refntot);

@@ -153,8 +153,7 @@ namespace StatsDirect.Builtins
 
         }
 
-
-        public static void XQci(ref double qc, ref int rx, ref double[] r, ref double xq, ref double GAMMA, out double ll, out double ul, ref double cover, ref bool conservative, ref bool cap_upper, ref bool cap_lower, out int fault)
+        public static void XQci(double qc, int rx, double[] r, ref double xq, double GAMMA, out double ll, out double ul, ref double cover, bool conservative, ref bool cap_upper, ref bool cap_lower, out int fault)
         {
             double ll_plox; double ul_plox;
             double ul_id = 0; double ll_id = 0;
@@ -966,13 +965,9 @@ namespace StatsDirect.Builtins
                 double mdn = 0.5 * (N + 1);
                 double median;
                 if (mdn - Math.Floor(mdn) != 0)
-                {
                     median = ((ax[Convert.ToInt32(mdn - 0.5)] + ax[Convert.ToInt32(mdn + 0.5)]) / 2.0);
-                }
                 else
-                {
                     median = ax[Convert.ToInt32(mdn)];
-                }
                 return median;
             }
             return 0;
@@ -1036,11 +1031,11 @@ namespace StatsDirect.Builtins
             {
                 for (int k = 1; k <= gn[j]; k++)
                 {
-                    count = count + 1;
-                    st = st + (r[count] * score[j]);
+                    count++;
+                    st += r[count] * score[j];
                 }
-                ez = ez + (score[j] * Convert.ToDouble(gn[j]) / Convert.ToDouble(N));
-                varz = varz + (score[j] * score[j] * Convert.ToDouble(gn[j]) / Convert.ToDouble(N));
+                ez += score[j] * Convert.ToDouble(gn[j]) / Convert.ToDouble(N);
+                varz += score[j] * score[j] * Convert.ToDouble(gn[j]) / Convert.ToDouble(N);
             }
             varz = varz - (ez * ez);
             double et = Convert.ToDouble(N) / 2.0 * Convert.ToDouble(N + 1) * ez;
@@ -1053,11 +1048,9 @@ namespace StatsDirect.Builtins
             string qtq = "";
             for (int j = 0; j <= frame.VariableCount - 1; j++)
             {
-                qtq = qtq + frame.Variables[j].Title;
+                qtq += frame.Variables[j].Title;
                 if (j != frame.VariableCount - 1)
-                {
-                    qtq = qtq + ", ";
-                }
+                    qtq += ", ";
             }
             outputParameters.AddOutput("order", qtq);
             outputParameters.AddOutput("ez", host.RoundU(ez));
@@ -2897,38 +2890,13 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptQuantile(ITemplateHost host, ParameterBag parameters)
         {
-            OptionDescriptor descriptor = new OptionDescriptor { Title = "Quantile Confidence Interval" };
-
-
-            CheckBoxDescriptor conservativeCi = new CheckBoxDescriptor { Text = "Conservative CI" };
-
-            descriptor.CheckBoxes.Add(conservativeCi);
-
-            SelectionBoxDescriptor confidence = new SelectionBoxDescriptor { Title = "Confidence (%)" };
-
-            confidence.SetAsConfidence();
-            descriptor.SelectionBoxes.Add(confidence);
-
-            SelectionBoxDescriptor quantile = new SelectionBoxDescriptor { Title = "Quantile to evaluate" };
-
-            quantile.FillFactor(0.25, 0.75, 0.25, "0.00", 1);
-            descriptor.SelectionBoxes.Add(quantile);
-
-            if (!(host.DisplayOptions(descriptor)))
-            {
-                throw new TemplateOperationCancelledException();
-            }
-
-            bool do_conservative = conservativeCi.Checked;
-            double GAMMA = Parsing.Cdbl_Txt(confidence.Value) / 100.0;
-            double qc = Parsing.Cdbl_Txt(quantile.Value);
-            if (qc >= 1 | qc <= 0)
-            {
+            bool do_conservative = parameters["conservative-ci"].AsBoolean;
+            double GAMMA = parameters["gamma"].AsDouble;
+            double qc = parameters["quantile"].AsDouble;
+            if (qc >= 1 || qc <= 0)
                 qc = 0.5;
-            }
 
             DataFrame frame = parameters["data"].AsDataFrame;
 
@@ -2937,16 +2905,15 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> variableList = new List<ParameterBag>();
             outputParameters.AddOutput("*variable", variableList);
-            for (int k = 0; k <= frame.VariableCount - 1; k++)
+            for (int k = 0; k < frame.VariableCount; k++)
             {
-
                 DoubleVariable v = frame.Variables[k].AsDoubleVariable;
                 int rx = 0;
                 foreach (double val in v.Data)
                 {
                     if (val != Constant.MISSING)
                     {
-                        rx = rx + 1;
+                        rx++;
                         r[rx] = val;
                     }
                 }
@@ -2955,12 +2922,12 @@ namespace StatsDirect.Builtins
                 bool cap_lower = false; bool cap_upper = false;
                 double cover = 0; double ul; double ll; double xq = 0;
                 int fault;
-                XQci(ref qc, ref rx, ref r, ref xq, ref GAMMA, out ll, out ul, ref cover, ref do_conservative, ref cap_upper, ref cap_lower, out fault);
+                XQci(qc, rx, r, ref xq, GAMMA, out ll, out ul, ref cover, do_conservative, ref cap_upper, ref cap_lower, out fault);
 
                 ParameterBag variableParameters = new ParameterBag();
                 variableParameters.AddOutput("sample", v.Title);
                 variableParameters.AddOutput("size", rx.ToString());
-                variableParameters.AddOutput("quantile", qc == 0.5 ? "median" : qc.ToString());
+                variableParameters.AddOutput("quantile_name", qc == 0.5 ? "median" : qc.ToString());
                 variableParameters.AddOutput("value", host.RoundU(xq));
                 variableParameters.AddOutput("pc", (GAMMA * 100).ToString());
                 variableParameters.AddOutput("type", do_conservative ? "(conservative)" : "(non-conservative)");

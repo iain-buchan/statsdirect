@@ -54,8 +54,8 @@ namespace StatsDirect.Templates
         /// Presents the specified options to the user in some appropriate way; modifies the options in-place with the user's selections.
         /// </summary>
         /// <param name="descriptor"></param>
-        /// <returns>true if the options are to be used, false if the user cancelled the option selection.</returns>
-        bool DisplayOptions(OptionDescriptor descriptor);
+        /// <returns>a parameter bag if the options are to be used, null if the user cancelled the option selection.</returns>
+        ParameterBag DisplayOptions(OptionDescriptor descriptor);
 
         string RoundU(double amount);
 
@@ -101,8 +101,8 @@ namespace StatsDirect.Templates
         /// </summary>
         /// <param name="options"></param>
         /// <param name="context"></param>
-        /// <returns>true if the options shold be processed, false if the user cancelled</returns>
-        bool Amend(IFillable options, ParameterBag context);
+        /// <returns>a parameter bag if the options shold be processed, null if the user cancelled or the operation failed</returns>
+        ParameterBag Amend(IFillable options, ParameterBag context);
 
         /// <summary>
         /// Return a clean, initialised instance of a script engine capable of running code in the specified language.
@@ -179,12 +179,12 @@ namespace StatsDirect.Templates
         /// <param name="missingIndicator">The text to place in the output if a value in the frame is missing.</param>
         /// <param name="preferredOutputLocation">If non-null, indicates a possible host-controlled place to put the output</param>
         void OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation);
-
+        /*
         /// <summary>
         /// In systems that have a choice of output location for frames (such as multiple grids), ask the user where they want to output future frames.
         /// </summary>
         void SelectOutputForFrame();
-
+        */
         /// <summary>
         /// Notes that an operation has started with the specified description that might take a while.
         /// A host might elect to show a progress bar at this point, for example.

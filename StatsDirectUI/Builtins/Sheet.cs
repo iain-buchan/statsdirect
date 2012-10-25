@@ -66,11 +66,10 @@ namespace StatsDirect.Builtins
 
     public class ExtractionOptions : IFillable
     {
-        public string Title;
-        public double[] PASSX;
-        public DoubleVariable Data;
-        public DataFrame IdentifiersFrame;
-        public string IdentifierNames;
+        public string Title { get; set; }
+        public DoubleVariable Data { get; set; }
+        public DataFrame IdentifiersFrame { get; set; }
+        public string IdentifierNames { get; set; }
 
         public string FillerToUse
         {
@@ -438,13 +437,13 @@ namespace StatsDirect.Builtins
                 return null;
             }
 
-            // sort categories bt label to be consistent with Stata xi etc.
+            // sort categories by label to be consistent with Stata xi etc.
             Array.Sort(gcat, 0, ng);
 
             DummyOptions dm = new DummyOptions { MaxCatTi = maxcatti, Names = new List<string>() };
             for (int j = 0; j <= ng - 1; j++)
                 dm.Names.Add(gcat[j].Ti);
-            bool wasOk = host.Amend(dm, parameters);
+            bool wasOk = null != host.Amend(dm, parameters);
             if (!(wasOk))
             {
                 throw new TemplateOperationCancelledException();
@@ -2059,7 +2058,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult ShtGroupCategorise(ITemplateHost host, ParameterBag parameters)
+        public static StepResult shtGroupCategorise(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
@@ -2070,7 +2069,7 @@ namespace StatsDirect.Builtins
                                                 PASSX = new double[rows - 1 + 1 /* for VB to C# conversion */],
                                                 Data = inputVariable
                                             };
-            if (!(host.Amend(options, parameters)))
+            if (null == host.Amend(options, parameters))
             {
                 throw new TemplateOperationCancelledException();
             }
@@ -2097,7 +2096,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult ShtGroupExtract(ITemplateHost host, ParameterBag parameters)
+        public static StepResult shtGroupExtract(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
@@ -2107,11 +2106,13 @@ namespace StatsDirect.Builtins
 
             int cols = identifiersFrame.VariableCount;
             string l = "";
+            /* #537: Always use X1, X2 etc.
             if (cols == 1)
             {
                 l += "X: " + identifiersFrame.Variables[0].Title + "\r\n";
             }
             else
+             */
             {
                 int j;
                 for (j = 1; j <= cols; j++)
@@ -2127,8 +2128,8 @@ namespace StatsDirect.Builtins
                                                 Data = dataVariable,
                                                 IdentifiersFrame = identifiersFrame
                                             };
-            host.Amend(options, parameters);
-            return new StepResult(StepSuccess.Success, new ParameterBag());
+            ParameterBag outputParameters = host.Amend(options, parameters);
+            return new StepResult(StepSuccess.Success, outputParameters);
         }
 
     }

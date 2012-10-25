@@ -4439,7 +4439,7 @@ namespace StatsDirect.Builtins
             }
             if (ctr >= 1 & P - iq > 1)
             {
-                if (host.DisplayOptions(descriptor))
+                if (null != host.DisplayOptions(descriptor))
                 {
                     L = nsel[sb.SelectedIndex];
                     for (j = 2; j >= 1; j--)
@@ -5883,7 +5883,7 @@ namespace StatsDirect.Builtins
             }
             for (int i = 1; i <= P; i++)
             {
-                if (i > 1 | Intercept == false)
+                if (i > 1 || !Intercept)
                 {
                     bool OK = false;
                     int k = Intercept ? i - 1 : i;
@@ -5891,13 +5891,8 @@ namespace StatsDirect.Builtins
                     for (int j = 1; j <= nx; j++)
                     {
                         r[j] = xd[j, k];
-                        if (!(OK))
-                        {
-                            if (r[j] != 1.0 & r[j] != 0.0 & r[j] != -1.0)
-                            {
-                                OK = true;
-                            }
-                        }
+                        if (!OK)
+                            OK = r[j] != 1.0 && r[j] != 0.0 && r[j] != -1.0;
                     }
                     if (OK)
                     {
@@ -5913,60 +5908,75 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public enum ProbitModel
         {
             Probit = 1,
             Logit = 2,
         }
 
-
         public static StepResult RptProbit(ITemplateHost host, ParameterBag parameters)
         {
             return RptProbitOrLogit(host, parameters, ProbitModel.Probit);
         }
-
 
         public static StepResult RptLogit(ITemplateHost host, ParameterBag parameters)
         {
             return RptProbitOrLogit(host, parameters, ProbitModel.Logit);
         }
 
+        public static StepResult ProbitOrLogitDataHasControls(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame doseFrame = parameters["dose"].AsDataFrame;
+            DoubleVariable doseVariable = doseFrame.Variables[0].AsDoubleVariable;
+
+            DataFrame subjectsFrame = parameters["subjects"].AsDataFrame;
+            DoubleVariable subjectsVariable = subjectsFrame.Variables[0].AsDoubleVariable;
+
+            DataFrame respondersFrame = parameters["responders"].AsDataFrame;
+            DoubleVariable respondersVariable = respondersFrame.Variables[0].AsDoubleVariable;
+
+            ParameterBag outputParameters = new ParameterBag();
+            for (int n = 0; n < doseVariable.Length; n++)
+            {
+                if (doseVariable.Data[n] == 0.0 && subjectsVariable.Data[n] != Constant.MISSING && respondersVariable.Data[n] != Constant.MISSING)
+                {
+                    outputParameters.AddInput("dataHasControls", true);
+                    outputParameters.AddInput("nc", Convert.ToInt32(subjectsVariable.Data[n]));
+                    outputParameters.AddInput("nrc", Convert.ToInt32(respondersVariable.Data[n]));
+                    break;
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
 
         private static StepResult RptProbitOrLogit(ITemplateHost host, ParameterBag parameters, ProbitModel model)
         {
             DataFrame doseFrame = parameters["dose"].AsDataFrame;
             DoubleVariable doseVariable = doseFrame.Variables[0].AsDoubleVariable;
-            ColumnData[] cd = new ColumnData[2 + 1 /* for VB to C# conversion */ ];
+            ColumnData[] cd = new ColumnData[3];
             cd[0] = new ColumnData { Title = doseVariable.Title };
 
             int rows = doseVariable.Length;
             double[] dv = new double[rows + 1 /* for VB to C# conversion */];
             for (int row = 1; row <= rows; row++)
-            {
                 dv[row] = doseVariable.Data[row - 1];
-            }
 
             DataFrame subjectsFrame = parameters["subjects"].AsDataFrame;
             DoubleVariable subjectsVariable = subjectsFrame.Variables[0].AsDoubleVariable;
             cd[1] = new ColumnData { Title = subjectsVariable.Title };
-            double[] sv = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] sv = new double[rows + 1];
             for (int row = 1; row <= rows; row++)
-            {
                 sv[row] = subjectsVariable.Data[row - 1];
-            }
 
             DataFrame respondersFrame = parameters["responders"].AsDataFrame;
             DoubleVariable respondersVariable = respondersFrame.Variables[0].AsDoubleVariable;
             cd[2] = new ColumnData { Title = respondersVariable.Title };
             // Store the Responders Data
-            double[] rv = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] rv = new double[rows + 1];
             for (int row = 1; row <= rows; row++)
-            {
                 rv[row] = respondersVariable.Data[row - 1];
-            }
 
-            double ici = Parsing.Cdbl_Txt(parameters["conf"].AsString) / 100.0;
+            double ici = parameters["conf"].AsDouble;
             bool clog = parameters["calc-log10-doses"].AsBoolean;
             // Get the data into the Public arrays
             //  0 = dv, 1 = sv, 2 = rv
@@ -5992,9 +6002,9 @@ namespace StatsDirect.Builtins
             double[] r = new double[k + 1 /* for VB to C# conversion */ ];
             for (N = 1; N <= k; N++)
             {
-                if (dv[N] != Constant.MISSING & sv[N] != Constant.MISSING & rv[N] != Constant.MISSING)
+                if (dv[N] != Constant.MISSING && sv[N] != Constant.MISSING && rv[N] != Constant.MISSING)
                 {
-                    if (dv[N] == 0 & C1 == 0.0)
+                    if (dv[N] == 0 && C1 == 0.0)
                     {
                         nc = Convert.ToInt32(sv[N]);
                         nrc = Convert.ToInt32(rv[N]);
@@ -6002,7 +6012,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        nx = nx + 1;
+                        nx++;
                         D[nx] = dv[N];
                         s[nx] = sv[N];
                         r[nx] = rv[N];
@@ -6022,33 +6032,19 @@ namespace StatsDirect.Builtins
             double[] transTemp16 = new double[k + 1 /* for VB to C# conversion */];
             Array.Copy(r, transTemp16, Math.Min(r.Length, transTemp16.Length));
             r = transTemp16;
-            bool wasCancelled;
             if (C1 == 0.0)
             {
-                nc = host.GetInteger("How many control subjects do you have?", "Probit analysis", 0, out wasCancelled);
-                if (wasCancelled)
-                {
-                    throw new TemplateOperationCancelledException();
-                }
+                nc = parameters["nc"].AsInt32;
                 if (nc > 0)
                 {
-                    nrc = host.GetInteger("How many control subjects responded?", "Probit analysis", 0, out wasCancelled);
-                    if (wasCancelled)
-                    {
-                        throw new TemplateOperationCancelledException();
-                    }
+                    nrc = parameters["nrc"].AsInt32;
                     C1 = -1.0;
                 }
             }
-            double qld = host.GetDouble("Two values are calculated for the independent variable (Dose, Stimulus etc)" + "\r\n" + "\r\n" + "The first gives 50% proportional response (ED50, LD50 etc) and the other X%." + "\r\n" + "\r\n" + "Enter the other centile (X) (0 to 100)", "Probit Analysis", 90.0, out wasCancelled);
-            if (wasCancelled)
-            {
-                throw new TemplateOperationCancelledException();
-            }
-            if (qld >= 100.0 | qld <= 0.0)
-            {
+            double qld = parameters["qld"].AsDouble;
+            if (qld >= 100.0 || qld <= 0.0)
                 qld = 90.0;
-            }
+
             double[] P = new double[k + 1 /* for VB to C# conversion */ ];
             double[] w = new double[k + 1 /* for VB to C# conversion */ ];
             double[] y = new double[k + 1 /* for VB to C# conversion */ ];
@@ -6056,18 +6052,16 @@ namespace StatsDirect.Builtins
             double[] x = new double[k + 1 /* for VB to C# conversion */ ];
             x_sortbydose(ref D, ref s, ref r, k);
             double C = 0;
-            x_probits(model, k, ref C1, ref C, ref nc, nrc, clog, qld, D, s, ref r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out ifault);
+            x_probits(model, k, ref C1, ref C, ref nc, nrc, clog, qld, D, s, r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out ifault);
             if (ifault == 0)
             {
                 x_qdcl(ref model, ref k, out C2, ref ici, ref clog, ref qld, ref dose50, ref doseq, ref a, ref b, ref nohetllm, ref nohetulm, ref hetllm, ref hetulm, ref nohetllq, ref nohetulq, ref hetllq, ref hetulq, ref C, out se, ref cse, out seh, ref cseh, ref I1, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref sw, out varb, ref icount, out ifault2);
             }
-            outputParameters.AddOutput("title",
-                                       model == ProbitModel.Probit ? "probit sigmoid curve" : "logit sigmoid curve");
+            outputParameters.AddOutput("title", model == ProbitModel.Probit ? "probit sigmoid curve" : "logit sigmoid curve");
             x_profolt(ifault, host);
             if (ifault != 0)
-            {
                 throw new TemplateOperationCancelledException();
-            }
+
             outputParameters.AddOutput("a", host.RoundU(a));
             outputParameters.AddOutput("b", host.RoundU(b));
             x_profolt(ifault2, host);
@@ -6090,7 +6084,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("to", host.RoundU(nohetulm));
             }
             outputParameters.AddOutput("centile", host.RoundU(qld));
-            outputParameters.AddOutput("dose", host.RoundU(doseq));
+            outputParameters.AddOutput("doseq", host.RoundU(doseq));
             if (hetp < 0.05)
             {
                 outputParameters.AddOutput("het_cent", "(Heterogeneity)");
@@ -6192,8 +6186,41 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        public static void x_probits(ProbitModel Model, int k, ref double C1, ref double C, ref int nc, int nrc, bool clog, double qld, double[] D, double[] s, ref double[] r, double[] P, double[] w, double[] y, double[] pob, double[] x, ref double a, ref double b, ref int laps, ref double S1, ref double S2, ref double s3, ref double s4, ref double s6, ref double del, ref double TM, ref double XM, ref double ym, ref double sw, ref int icount, out int ifault)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Model"></param>
+        /// <param name="k"></param>
+        /// <param name="C1">Experimental value of natural mortality</param>
+        /// <param name="C"></param>
+        /// <param name="nc"></param>
+        /// <param name="nrc"></param>
+        /// <param name="clog"></param>
+        /// <param name="qld"></param>
+        /// <param name="D"></param>
+        /// <param name="s"></param>
+        /// <param name="r"></param>
+        /// <param name="P"></param>
+        /// <param name="w"></param>
+        /// <param name="y"></param>
+        /// <param name="pob"></param>
+        /// <param name="x"></param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="laps"></param>
+        /// <param name="S1"></param>
+        /// <param name="S2"></param>
+        /// <param name="s3"></param>
+        /// <param name="s4"></param>
+        /// <param name="s6"></param>
+        /// <param name="del"></param>
+        /// <param name="TM"></param>
+        /// <param name="XM"></param>
+        /// <param name="ym"></param>
+        /// <param name="sw"></param>
+        /// <param name="icount"></param>
+        /// <param name="ifault"></param>
+        public static void x_probits(ProbitModel Model, int k, ref double C1, ref double C, ref int nc, int nrc, bool clog, double qld, double[] D, double[] s, double[] r, double[] P, double[] w, double[] y, double[] pob, double[] x, ref double a, ref double b, ref int laps, ref double S1, ref double S2, ref double s3, ref double s4, ref double s6, ref double del, ref double TM, ref double XM, ref double ym, ref double sw, ref int icount, out int ifault)
         {
             int i;
             double PP;
@@ -6204,8 +6231,7 @@ namespace StatsDirect.Builtins
 
             double[] Y2 = new double[k + 1 /* for VB to C# conversion */];
             double[] t2 = new double[k + 1 /* for VB to C# conversion */];
-            //  ***  CALCULATE EXPERIMENTAL VALUE OF NATURAL MORTALITY (C1) AND RESET
-            //  ***  CPOOL
+            //  ***  CALCULATE EXPERIMENTAL VALUE OF NATURAL MORTALITY (C1) AND RESET CPOOL
             double rc = nrc;
             double cpool = -1.0;
             if (C1 < 0.0)

@@ -15,6 +15,20 @@
           <max-columns>200</max-columns>
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
+        <boolean>
+          <name>conservative-ci</name>
+          <prompt>Conservative CI</prompt>
+        </boolean>
+        <double>
+          <name>quantile</name>
+          <prompt>Quantile to evaluate</prompt>
+          <default-value>0.5</default-value>
+          <minimum-value>0</minimum-value>
+          <maximum-value>1</maximum-value>
+        </double>
       </parameters>
     </settings>
 		<builtin function-name="rptQuantile" />

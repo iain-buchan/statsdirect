@@ -17,7 +17,6 @@
       <xs:element minOccurs="1" maxOccurs="1" name="test" nillable="true" type="sdop:test" />
       <xs:element minOccurs="1" maxOccurs="1" name="script" nillable="true" type="sdop:ScriptStep" />
       <xs:element minOccurs="1" maxOccurs="1" name="output-frame" nillable="true" type="sdop:output-frame" />
-      <xs:element minOccurs="1" maxOccurs="1" name="select-output-for-frame" nillable="true" type="sdop:select-output-for-frame" />
       <xs:element minOccurs="1" maxOccurs="1" name="iteration" nillable="true" type="sdop:IterationStep" />
       <xs:element minOccurs="1" maxOccurs="1" name="builtin" nillable="true" type="sdop:BuiltinStep" />
       <xs:element minOccurs="1" maxOccurs="1" name="chart" nillable="true" type="sdop:ChartStep" />
@@ -40,11 +39,6 @@
           <xs:element minOccurs="1" maxOccurs="1" name="loop-variable-name" type="xs:string" />
         </xs:choice>
       </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="select-output-for-frame">
-    <xs:complexContent mixed="false">
-      <xs:extension base="sdop:Step" />
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="ScriptStep" mixed="true">

@@ -10,6 +10,12 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class SpecialParameter: Parameter
     {
+        public SpecialParameter()
+        {
+            // By default, remember value per operation.  Deserialization can override this.
+            Lifetime = ParameterLifetime.SessionForThisOperation;
+        }
+
         [XmlElement(ElementName="type")]
         public string SpecialType { get; set; }
 

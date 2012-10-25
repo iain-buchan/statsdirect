@@ -8,7 +8,6 @@ using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using InvalidDataException = StatsDirect.Templates.InvalidDataException;
 
 namespace StatsDirect.Builtins
 {
@@ -117,13 +116,13 @@ namespace StatsDirect.Builtins
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 | sn[i] < 0 | sn[i] < sr[i])
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
                 o[i, 2] = Math.Abs(XR[i]);
                 o[i, 4] = Math.Abs(xn[i] - XR[i]);
                 if (XR[i] < 0 | xn[i] < 0 | xn[i] < XR[i])
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
             }
 
@@ -181,7 +180,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                throw new InvalidDataException();
+                throw new Templates.InvalidDataException();
             }
 
             // combinability
@@ -659,20 +658,20 @@ namespace StatsDirect.Builtins
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 | sn[i] < 0 | sn[i] < sr[i])
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
                 o[i, 2] = Math.Abs(XR[i]);
                 o[i, 4] = Math.Abs(xn[i] - XR[i]);
                 if (XR[i] < 0 | xn[i] < 0 | xn[i] < XR[i])
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
             }
 
             riskdifma(host, k, o, ref rmh, ref ll, ref ul, ref x2rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrd, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
             if (ierr == -1)
             {
-                throw new InvalidDataException();
+                throw new Templates.InvalidDataException();
             }
 
             //  RTF_LoadTemplate("rdmeta.rtf")
@@ -899,20 +898,20 @@ namespace StatsDirect.Builtins
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 || sn[i] < 0 || sn[i] < sr[i])
                 {
-                    throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
+                    throw new Templates.InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
                 }
                 o[i, 2] = Math.Abs(xr[i]);
                 o[i, 4] = Math.Abs(xn[i] - xr[i]);
                 if (xr[i] < 0 || xn[i] < 0 || xn[i] < xr[i])
                 {
-                    throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
+                    throw new Templates.InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
                 }
             }
 
             relriskma(host, ref k, out realk, ref o, ref rmh, ref ll, ref ul, ref x2rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
             if (ierr == -1)
             {
-                throw new InvalidDataException("relriskma() returned an error");
+                throw new Templates.InvalidDataException("relriskma() returned an error");
             }
 
             //  RTF_LoadTemplate("rrmeta.rtf")
@@ -1714,7 +1713,7 @@ namespace StatsDirect.Builtins
                 rkx[i] = N;
                 if (N <= 0)
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
 
                 if (include_table(o, i))
@@ -1908,7 +1907,7 @@ namespace StatsDirect.Builtins
                 //  rd across strata
                 if (N <= 0)
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
                 // standard weights - do this before continuity correction
                 double nmn = (a + C) * (b + D) / N;
@@ -2143,7 +2142,7 @@ namespace StatsDirect.Builtins
             }
             if (ierr == -1)
             {
-                throw new InvalidDataException();
+                throw new Templates.InvalidDataException();
             }
 
             if (index == 2)
@@ -2475,13 +2474,13 @@ namespace StatsDirect.Builtins
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 | sn[i] < 0 | sn[i] < sr[i])
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
                 o[i, 2] = Math.Abs(XR[i]);
                 o[i, 4] = Math.Abs(xn[i] - XR[i]);
                 if (XR[i] < 0.0 | xn[i] < 0.0 | xn[i] < XR[i])
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
             }
 
@@ -2490,7 +2489,7 @@ namespace StatsDirect.Builtins
             {
                 if (ierr != 99)
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
                 throw new TemplateOperationCancelledException();
             }
@@ -2737,7 +2736,7 @@ namespace StatsDirect.Builtins
                 odx[i] = N;
                 if (N <= 0)
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
 
                 if (host.Preferences.MetaExact)
@@ -3363,7 +3362,7 @@ namespace StatsDirect.Builtins
                 {
                     if (y[i] <= 0.0)
                     {
-                        throw new InvalidDataException();
+                        throw new Templates.InvalidDataException();
                     }
                 }
             }
@@ -3400,7 +3399,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            throw new InvalidDataException();
+                            throw new Templates.InvalidDataException();
                         }
                     }
                     if (ll_y[i] > ul_y[i])
@@ -3480,7 +3479,7 @@ namespace StatsDirect.Builtins
             {
                 if (se_y[i] == 0.0)
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
                 wt[i] = 1.0 / (se_y[i] * se_y[i]);
                 sumwt = sumwt + wt[i];
@@ -3781,7 +3780,7 @@ namespace StatsDirect.Builtins
             {
                 if (se_y[i] == 0.0)
                 {
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 }
                 wt[i] = ss[i] - 3;
                 sumwt += wt[i];
@@ -4226,7 +4225,7 @@ namespace StatsDirect.Builtins
                     allREqualN = false;
                 if (sr[i] < 0.0 || sn[i] < sr[i])
                 {
-                    throw new InvalidDataException("Each value of r must be between 0 and its corresponding n");
+                    throw new Templates.InvalidDataException("Each value of r must be between 0 and its corresponding n");
                 }
             }
 
@@ -4269,7 +4268,7 @@ namespace StatsDirect.Builtins
                 y[i] = arcsine_p(sr[i], sn[i]);
                 se_y[i] = arcsine_se(ref sn[i], fudge);
                 if (se_y[i] == 0.0)
-                    throw new InvalidDataException();
+                    throw new Templates.InvalidDataException();
                 wt[i] = 1.0 / (se_y[i] * se_y[i]);
                 sumwt += wt[i];
                 sumsqwt += wt[i] * wt[i];

@@ -74,9 +74,14 @@
           <prompt>Also save to worksheet?</prompt>
           <default-value>false</default-value>
         </boolean>
+        <special>
+          <name>solo</name>
+          <prompt>Pick the sheet in which you want the output to appear</prompt>
+          <acquire-if-true>=Parameters["output-to-frame"].AsBoolean</acquire-if-true>
+          <type>frame</type>
+        </special>
       </parameters>
     </settings>
-    <select-output-for-frame />
     <builtin function-name="rptUnivariateSummary" />
     <report filename="describe.rtf" />
     <test>

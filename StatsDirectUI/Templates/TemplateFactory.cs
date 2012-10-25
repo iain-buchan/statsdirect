@@ -50,8 +50,7 @@ namespace StatsDirect.Templates
                     {
                         TextReader fs = info.OpenText();
                         Operation o = (Operation)s.Deserialize(fs);
-                        foreach (string name in o.Names)
-                            operations.Add(name, o);
+                        operations.Add(o.Name, o);
                         fs.Close();
                         o.FixAfterLoading();
                     }
