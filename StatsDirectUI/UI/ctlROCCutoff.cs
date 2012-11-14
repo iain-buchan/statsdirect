@@ -5,9 +5,9 @@ namespace StatsDirect.UI
 {
     public partial class ctlROCCutoff : UserControl, IOkable
     {
-        private readonly double INC;
-        private double ADD;
-        private double LASTCUT;
+        private readonly double inc;
+        private double add;
+        private double lastcut;
         private readonly Charting.ROCSeriesRecord originalRecord;
         private Charting.ROCSeriesRecord currentRecord;
         private readonly double weight;
@@ -25,7 +25,7 @@ namespace StatsDirect.UI
             currentRecord = seriesRecord.Clone();
             this.weight = weight;
             this.titleSuffix = titleSuffix;
-            INC = seriesRecord.cutoff / 300.0;
+            inc = seriesRecord.cutoff / 300.0;
         }
 
         private void PopulateFormFromData(Charting.ROCSeriesRecord record)
@@ -41,7 +41,7 @@ namespace StatsDirect.UI
             double npv = record.d / ((double)record.d + record.c);
             txtPositive.Text = Numerics.Constant.MISSING == ppv ? "*" : SDApplication.SoleInstance.RoundU(ppv);
             txtNegative.Text = Numerics.Constant.MISSING == npv ? "*" : SDApplication.SoleInstance.RoundU(npv);
-            LASTCUT = record.cutoff;
+            lastcut = record.cutoff;
         }
 
         private void PopulateDataFromForm(Charting.ROCSeriesRecord record)
@@ -92,7 +92,7 @@ namespace StatsDirect.UI
             if (13 == e.KeyChar)
             {
                 currentRecord.cutoff = Utilities.Parsing.Cdbl_Txt(txtCutoff.Text);
-                if (currentRecord.cutoff != LASTCUT)
+                if (currentRecord.cutoff != lastcut)
                 {
                     ReCutAndDisplay(); // Sets LASTCUT, so we don't need to
                 }
@@ -132,13 +132,13 @@ namespace StatsDirect.UI
 
         private void StartSpinDown()
         {
-            ADD = -INC;
+            add = -inc;
             timer1.Enabled = true;
         }
 
         private void StartSpinUp()
         {
-            ADD = INC;
+            add = inc;
             timer1.Enabled = true;
         }
 
@@ -154,8 +154,8 @@ namespace StatsDirect.UI
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            currentRecord.cutoff += ADD;
-            if (currentRecord.cutoff != LASTCUT)
+            currentRecord.cutoff += add;
+            if (currentRecord.cutoff != lastcut)
             {
                 ReCutAndDisplay(); // Sets LASTCUT, so we don't have to
             }

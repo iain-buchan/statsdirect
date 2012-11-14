@@ -621,6 +621,7 @@ namespace StatsDirect.UI
         /// <param name="frame">The frame to output</param>
         /// <param name="keepSelection"></param>
         /// <param name="isFormulae"></param>
+        /// <param name="missingIndicator"> </param>
         /// <param name="preferredOutputLocation"></param>
         void ITemplateHost.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation)
         {
@@ -1129,7 +1130,7 @@ namespace StatsDirect.UI
         public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, bool showHelpButton, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
             if (showHelpButton)
-                return msgbox_x(text, buttons, icon, caption, SoleInstance.HelpFilePath, SoleInstance.ActiveHelpTopic, defaultButton);
+                return msgbox_x(text, buttons, icon, caption, SoleInstance.ActiveHelpTopic, defaultButton);
 
             // Use a Windows message box if our own interface isn't visible; use our own if it is.
             if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
@@ -1157,11 +1158,11 @@ namespace StatsDirect.UI
             return false;
         }
 
-        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, string helpFile, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
+        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
             if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
-                return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
-            return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, helpFile, HelpNavigator.TopicId, helpTopic.ToString());
+                return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
+            return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
         public ParameterBag DisplayOptions(OptionDescriptor Descriptor)
@@ -1188,7 +1189,7 @@ namespace StatsDirect.UI
         public bool GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
         {
             Cancelled = false;
-            return msgbox_x(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, "TODO:", helpTopic) == DialogResult.Yes;
+            return msgbox_x(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, helpTopic) == DialogResult.Yes;
         }
 
         /// <summary>
@@ -1373,18 +1374,6 @@ namespace StatsDirect.UI
                 }
                 options.SeriesRecord = f.CurrentRecord;
                 return new ParameterBag();
-            }
-        }
-
-        private ParameterBag Amend(Builtins.ScoresOptions scores)
-        {
-            using (frmScores options = new frmScores(scores))
-            {
-                using (new DefaultCursor())
-                {
-                    options.ShowDialog(mainWindow);
-                }
-                return options.UserCancelled ? null : new ParameterBag();
             }
         }
 

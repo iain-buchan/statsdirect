@@ -109,6 +109,8 @@ namespace StatsDirect.Builtins
             bool[] lerr = new bool[k + 1 /* for VB to C# conversion */];
             bool[] uerr = new bool[k + 1 /* for VB to C# conversion */];
             bool[] cced = new bool[k + 1 /* for VB to C# conversion */ ];
+            double[] standardized_effect = new double[k + 1];
+            double[] se = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 cced[i] = false;
@@ -147,6 +149,8 @@ namespace StatsDirect.Builtins
                     odx[i] = N;
                     if (v > 0)
                     {
+                        se[i] = v; // TODO: Correct?
+                        standardized_effect[i] = oe[i]/v;
                         odr[i] = Math.Exp(oe[i] / v);
                         odz[i] = oe[i] / Math.Sqrt(v);
                         odrl[i] = Math.Exp((oe[i] - cit * Math.Sqrt(v)) / v);
@@ -227,6 +231,8 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("uci", host.RoundU(odru[i]));
                 oddsParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
                 oddsParameters.AddOutput("lb", get_meta_label(host, o, i, stratlab, cced, title));
+                oddsParameters.AddOutput("standardized_effect", host.RoundU(standardized_effect[i]));
+                oddsParameters.AddOutput("se", host.RoundU(se[i]));
             }
 
             IList<ParameterBag> zList = new List<ParameterBag>();
@@ -604,10 +610,10 @@ namespace StatsDirect.Builtins
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
             DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
-            double[] XR = new double[k + 1 /* for VB to C# conversion */];
+            double[] xr = new double[k + 1 /* for VB to C# conversion */];
             for (i = 1; i <= k; i++)
             {
-                XR[i] = xrVariable.Data[i - 1];
+                xr[i] = xrVariable.Data[i - 1];
             }
 
             string[] title = new string[k + 1 /* for VB to C# conversion */ ];
@@ -652,6 +658,8 @@ namespace StatsDirect.Builtins
             bool[] lerr = new bool[k + 1 /* for VB to C# conversion */ ];
             bool[] uerr = new bool[k + 1 /* for VB to C# conversion */ ];
             bool[] cced = new bool[k + 1 /* for VB to C# conversion */ ];
+            double[] standardized_effect = new double[k+1];
+            double[] se = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
@@ -660,15 +668,15 @@ namespace StatsDirect.Builtins
                 {
                     throw new Templates.InvalidDataException();
                 }
-                o[i, 2] = Math.Abs(XR[i]);
-                o[i, 4] = Math.Abs(xn[i] - XR[i]);
-                if (XR[i] < 0 | xn[i] < 0 | xn[i] < XR[i])
+                o[i, 2] = Math.Abs(xr[i]);
+                o[i, 4] = Math.Abs(xn[i] - xr[i]);
+                if (xr[i] < 0 | xn[i] < 0 | xn[i] < xr[i])
                 {
                     throw new Templates.InvalidDataException();
                 }
             }
 
-            riskdifma(host, k, o, ref rmh, ref ll, ref ul, ref x2rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrd, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
+            Riskdifma(host, k, o, ref rmh, ref ll, ref ul, ref x2rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrd, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, standardized_effect, se, out ierr);
             if (ierr == -1)
             {
                 throw new Templates.InvalidDataException();
@@ -715,6 +723,8 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("wt", host.RoundU(100 * rkw[i] / Formatting.dsum(rkw, 1)));
                 differencesParameters.AddOutput("dwt", host.RoundU(100 * dsw[i] / Formatting.dsum(dsw, 1)));
                 differencesParameters.AddOutput("lb", stratlab ? title[i] : "");
+                differencesParameters.AddOutput("standardized_effect", host.RoundU(standardized_effect[i]));
+                differencesParameters.AddOutput("se", host.RoundU(se[i]));
                 // double a = o[ i, 1 ]; 
                 // double b = o[ i, 2 ]; 
                 // double C = o[ i, 3 ]; 
@@ -1046,7 +1056,7 @@ namespace StatsDirect.Builtins
             double[] em = null; double[] es = null;
             double[] cm = null; double[] cs = null;
             double[] D;
-            double[] LCID; double[] ucid;
+            double[] lcid; double[] ucid;
             double[] rkw; double[] rkx;
             bool poolok; bool gotg;
             int fault;
@@ -1077,16 +1087,15 @@ namespace StatsDirect.Builtins
                     break;
             }
 
-
-            DataFrame enFrame = parameters["En"].AsDataFrame;
+            DataFrame enFrame = parameters["en"].AsDataFrame;
             DoubleVariable enVariable = enFrame.Variables[0].AsDoubleVariable;
             int k = enVariable.Length;
-            double[] En = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] en = new double[k + 1 /* for VB to C# conversion */ ];
             double[] g = new double[k + 1 /* for VB to C# conversion */ ];
             string[] title = new string[k + 1 /* for VB to C# conversion */ ];
             for (i = 1; i <= k; i++)
             {
-                En[i] = enVariable.Data[i - 1];
+                en[i] = enVariable.Data[i - 1];
             }
 
             if (proc != 2)
@@ -1186,7 +1195,7 @@ namespace StatsDirect.Builtins
                 // single effect analysis
                 D = new double[k + 1 /* for VB to C# conversion */ ];
                 double[] gj = new double[k + 1 /* for VB to C# conversion */];
-                LCID = new double[k + 1 /* for VB to C# conversion */];
+                lcid = new double[k + 1 /* for VB to C# conversion */];
                 ucid = new double[k + 1 /* for VB to C# conversion */ ];
                 double[] lcig = new double[k + 1 /* for VB to C# conversion */ ];
                 double[] ucig = new double[k + 1 /* for VB to C# conversion */ ];
@@ -1198,10 +1207,10 @@ namespace StatsDirect.Builtins
                 {
                     for (i = 1; i <= k; i++)
                     {
-                        N = cn[i] + En[i];
-                        if (((En[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (N - 2.0) > 0)
+                        N = cn[i] + en[i];
+                        if (((en[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (N - 2.0) > 0)
                         {
-                            double s = Math.Sqrt(((En[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (N - 2.0));
+                            double s = Math.Sqrt(((en[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (N - 2.0));
                             g[i] = (em[i] - cm[i]) / s;
                         }
                         else
@@ -1214,7 +1223,7 @@ namespace StatsDirect.Builtins
                 double vard;
                 for (i = 1; i <= k; i++)
                 {
-                    N = cn[i] + En[i];
+                    N = cn[i] + en[i];
                     rkx[i] = N;
                     if (g[i] != Constant.MISSING)
                     {
@@ -1228,11 +1237,11 @@ namespace StatsDirect.Builtins
                             gj[i] = 1.0 - 3.0 / (4.0 * M - 1.0);
                         }
                         D[i] = gj[i] * g[i];
-                        vard = N / (cn[i] * En[i]) + Math.Pow(D[i], 2.0) / (2.0 * N);
-                        LCID[i] = D[i] - cit * Math.Sqrt(vard);
+                        vard = N / (cn[i] * en[i]) + Math.Pow(D[i], 2.0) / (2.0 * N);
+                        lcid[i] = D[i] - cit * Math.Sqrt(vard);
                         ucid[i] = D[i] + cit * Math.Sqrt(vard);
-                        double z = Math.Sqrt(cn[i] * En[i] / N);
-                        ginterval(g[i], Convert.ToInt32(N - 2), z, (1.0 - cco) / 2.0, LCID[i], ucid[i], out lcig[i], out ucig[i]);
+                        double z = Math.Sqrt(cn[i] * en[i] / N);
+                        ginterval(g[i], Convert.ToInt32(N - 2), z, (1.0 - cco) / 2.0, lcid[i], ucid[i], out lcig[i], out ucig[i]);
                     }
                     else
                     {
@@ -1240,7 +1249,7 @@ namespace StatsDirect.Builtins
                         g[i] = Constant.MISSING;
                         gj[i] = Constant.MISSING;
                         D[i] = Constant.MISSING;
-                        LCID[i] = Constant.MISSING;
+                        lcid[i] = Constant.MISSING;
                         ucid[i] = Constant.MISSING;
                         lcig[i] = Constant.MISSING;
                         ucig[i] = Constant.MISSING;
@@ -1254,12 +1263,12 @@ namespace StatsDirect.Builtins
                     sumdwt = 0;
                     for (i = 1; i <= k; i++)
                     {
-                        N = cn[i] + En[i];
-                        vard = N / (cn[i] * En[i]) + Math.Pow(D[i], 2.0) / (2.0 * N);
+                        N = cn[i] + en[i];
+                        vard = N / (cn[i] * en[i]) + Math.Pow(D[i], 2.0) / (2.0 * N);
                         wt = 1.0 / vard;
                         rkw[i] = wt;
-                        sumwt = sumwt + wt;
-                        sumdwt = sumdwt + D[i] * wt;
+                        sumwt += wt;
+                        sumdwt += D[i] * wt;
                     }
                     dplus = sumdwt / sumwt;
                     vardplus = 1 / sumwt;
@@ -1271,12 +1280,12 @@ namespace StatsDirect.Builtins
                     sumsqwt = 0;
                     for (i = 1; i <= k; i++)
                     {
-                        N = cn[i] + En[i];
-                        vard = N / (cn[i] * En[i]) + (D[i] * D[i]) / (2.0 * N);
+                        N = cn[i] + en[i];
+                        vard = N / (cn[i] * en[i]) + (D[i] * D[i]) / (2.0 * N);
                         wt = 1.0 / vard;
-                        qc = qc + wt * Math.Pow((D[i] - dplus), 2.0);
-                        sumwt = sumwt + wt;
-                        sumsqwt = sumsqwt + wt * wt;
+                        qc += wt * Math.Pow((D[i] - dplus), 2.0);
+                        sumwt += wt;
+                        sumsqwt += wt * wt;
                     }
 
                     // DerSimonian-Laird treatment
@@ -1296,12 +1305,12 @@ namespace StatsDirect.Builtins
                     sumdwt = 0;
                     for (i = 1; i <= k; i++)
                     {
-                        N = cn[i] + En[i];
-                        vard = N / (cn[i] * En[i]) + (D[i] * D[i]) / (2.0 * N);
+                        N = cn[i] + en[i];
+                        vard = N / (cn[i] * en[i]) + (D[i] * D[i]) / (2.0 * N);
                         wt = 1.0 / vard;
                         wt = 1.0 / (tausq + 1.0 / wt);
-                        sumwt = sumwt + wt;
-                        sumdwt = sumdwt + D[i] * wt;
+                        sumwt += wt;
+                        sumdwt += D[i] * wt;
                     }
 
                     dsd = sumdwt / sumwt;
@@ -1335,10 +1344,10 @@ namespace StatsDirect.Builtins
                     ParameterBag approximateParameters = new ParameterBag();
                     approximateList.Add(approximateParameters);
                     approximateParameters.AddOutput("st", i.ToString());
-                    approximateParameters.AddOutput("ne", En[i].ToString());
+                    approximateParameters.AddOutput("ne", en[i].ToString());
                     approximateParameters.AddOutput("nc", cn[i].ToString());
                     approximateParameters.AddOutput("d", host.RoundU(D[i]));
-                    approximateParameters.AddOutput("lci", host.RoundU(LCID[i]));
+                    approximateParameters.AddOutput("lci", host.RoundU(lcid[i]));
                     approximateParameters.AddOutput("uci", host.RoundU(ucid[i]));
                     approximateParameters.AddOutput("lb", stratlab ? title[i] : "");
                 }
@@ -1374,7 +1383,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*egger", eggerList);
                 ParameterBag eggerParameters = new ParameterBag();
                 eggerList.Add(eggerParameters);
-                x_metabias(host, eggerParameters, D, LCID, ucid, k, ref cco, Transformation.None);
+                x_metabias(host, eggerParameters, D, lcid, ucid, k, ref cco, Transformation.None);
 
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
@@ -1384,7 +1393,7 @@ namespace StatsDirect.Builtins
                 {
                     using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                     {
-                        string rtf = ch.PlotBiasMAAndReturnRtf(host, D, rkx, rkw, k, "Effect size", LCID, ucid, cco, cit, dplus, Transformation.None, false);
+                        string rtf = ch.PlotBiasMAAndReturnRtf(host, D, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false);
                         chartParameters = new ParameterBag();
                         chartList.Add(chartParameters);
                         chartParameters.AddOutput("chart", rtf);
@@ -1393,7 +1402,7 @@ namespace StatsDirect.Builtins
 
                 using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, En, title, dplus, dplusll, dplusul, cco, D, LCID, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "effect size");
+                    string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, en, title, dplus, dplusll, dplusul, cco, D, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "effect size");
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
@@ -1401,7 +1410,7 @@ namespace StatsDirect.Builtins
 
                 using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, En, title, dsd, dsll, dsul, cco, D, LCID, ucid, "Effect size meta-analysis plot [random effects]", 1, "effect size");
+                    string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, en, title, dsd, dsll, dsul, cco, D, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "effect size");
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
@@ -1413,27 +1422,27 @@ namespace StatsDirect.Builtins
             {
                 // single wmd analysis
                 D = new double[k + 1 /* for VB to C# conversion */ ];
-                LCID = new double[k + 1 /* for VB to C# conversion */];
+                lcid = new double[k + 1 /* for VB to C# conversion */];
                 ucid = new double[k + 1 /* for VB to C# conversion */ ];
                 rkw = new double[k + 1 /* for VB to C# conversion */];
                 rkx = new double[k + 1 /* for VB to C# conversion */];
                 poolok = k > 1;
                 for (i = 1; i <= k; i++)
                 {
-                    N = cn[i] + En[i];
+                    N = cn[i] + en[i];
                     rkx[i] = N;
-                    if (En[i] > 0 & cn[i] > 0 & cs[i] > 0)
+                    if (en[i] > 0 & cn[i] > 0 & cs[i] > 0)
                     {
-                        double spool = ((En[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (En[i] + cn[i] - 2.0);
-                        double sed = Math.Sqrt(spool * (1.0 / En[i] + 1.0 / cn[i]));
+                        double spool = ((en[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (en[i] + cn[i] - 2.0);
+                        double sed = Math.Sqrt(spool * (1.0 / en[i] + 1.0 / cn[i]));
                         D[i] = em[i] - cm[i];
-                        LCID[i] = D[i] - cit * sed;
+                        lcid[i] = D[i] - cit * sed;
                         ucid[i] = D[i] + cit * sed;
                     }
                     else
                     {
                         D[i] = Constant.MISSING;
-                        LCID[i] = Constant.MISSING;
+                        lcid[i] = Constant.MISSING;
                         ucid[i] = Constant.MISSING;
                         poolok = false;
                     }
@@ -1446,7 +1455,7 @@ namespace StatsDirect.Builtins
                     sumdwt = 0;
                     for (i = 1; i <= k; i++)
                     {
-                        wt = 1.0 / (Math.Pow(es[i], 2.0) / En[i] + Math.Pow(cs[i], 2.0) / cn[i]);
+                        wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
                         rkw[i] = wt;
                         sumwt = sumwt + wt;
                         sumdwt = sumdwt + D[i] * wt;
@@ -1461,7 +1470,7 @@ namespace StatsDirect.Builtins
                     sumsqwt = 0;
                     for (i = 1; i <= k; i++)
                     {
-                        wt = 1.0 / (Math.Pow(es[i], 2.0) / En[i] + Math.Pow(cs[i], 2.0) / cn[i]);
+                        wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
                         qc = qc + wt * Math.Pow((D[i] - dplus), 2.0);
                         sumwt = sumwt + wt;
                         sumsqwt = sumsqwt + wt * wt;
@@ -1484,7 +1493,7 @@ namespace StatsDirect.Builtins
                     sumdwt = 0;
                     for (i = 1; i <= k; i++)
                     {
-                        wt = 1.0 / (Math.Pow(es[i], 2.0) / En[i] + Math.Pow(cs[i], 2.0) / cn[i]);
+                        wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
                         wt = 1.0 / (tausq + 1.0 / wt);
                         sumwt = sumwt + wt;
                         sumdwt = sumdwt + D[i] * wt;
@@ -1505,10 +1514,10 @@ namespace StatsDirect.Builtins
                     ParameterBag approximateParameters = new ParameterBag();
                     approximateList.Add(approximateParameters);
                     approximateParameters.AddOutput("st", i.ToString());
-                    approximateParameters.AddOutput("ne", En[i].ToString());
+                    approximateParameters.AddOutput("ne", en[i].ToString());
                     approximateParameters.AddOutput("nc", cn[i].ToString());
                     approximateParameters.AddOutput("d", host.RoundU(D[i]));
-                    approximateParameters.AddOutput("lci", host.RoundU(LCID[i]));
+                    approximateParameters.AddOutput("lci", host.RoundU(lcid[i]));
                     approximateParameters.AddOutput("uci", host.RoundU(ucid[i]));
                     approximateParameters.AddOutput("lb", stratlab ? title[i] : "");
                 }
@@ -1544,7 +1553,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*egger", eggerList);
                 ParameterBag eggerParameters = new ParameterBag();
                 eggerList.Add(eggerParameters);
-                x_metabias(host, eggerParameters, D, LCID, ucid, k, ref cco, Transformation.None);
+                x_metabias(host, eggerParameters, D, lcid, ucid, k, ref cco, Transformation.None);
 
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
@@ -1554,7 +1563,7 @@ namespace StatsDirect.Builtins
                 {
                     using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                     {
-                        string rtf = ch.PlotBiasMAAndReturnRtf(host, D, rkx, rkw, k, "Effect size", LCID, ucid, cco, cit, dplus, Transformation.None, false);
+                        string rtf = ch.PlotBiasMAAndReturnRtf(host, D, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false);
                         chartParameters = new ParameterBag();
                         chartList.Add(chartParameters);
                         chartParameters.AddOutput("chart", rtf);
@@ -1564,7 +1573,7 @@ namespace StatsDirect.Builtins
                 // bool bfault = false; 
                 using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, En, title, dplus, dplusll, dplusul, cco, D, LCID, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "weighted mean difference");
+                    string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, en, title, dplus, dplusll, dplusul, cco, D, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "weighted mean difference");
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
@@ -1572,7 +1581,7 @@ namespace StatsDirect.Builtins
 
                 using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, En, title, dsd, dsll, dsul, cco, D, LCID, ucid, "Effect size meta-analysis plot [random effects]", 1, "weighted mean difference");
+                    string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, en, title, dsd, dsll, dsul, cco, D, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "weighted mean difference");
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
@@ -1593,8 +1602,8 @@ namespace StatsDirect.Builtins
             const double acc = 0.0001;
             double x = t; // LCID* z; 
             double na = ExFortran.pnct(t, df, x, out fault);
-            double DELTA = Math.Abs(na - al);
-            double last = DELTA;
+            double delta = Math.Abs(na - al);
+            double last = delta;
             double gstep = x;
             int cnt = 0;
             double gtry;
@@ -1612,7 +1621,7 @@ namespace StatsDirect.Builtins
                 na = ExFortran.pnct(t, df, gtry, out fault);
             }
             while (!(na > 0 & na < 1));
-            if (Math.Abs(na - al) > DELTA)
+            if (Math.Abs(na - al) > delta)
             {
                 gstep = -gstep;
             }
@@ -1628,24 +1637,24 @@ namespace StatsDirect.Builtins
                 }
                 gtry = gtry + gstep;
                 na = ExFortran.pnct(t, df, gtry, out fault);
-                DELTA = Math.Abs(na - al);
-                if (DELTA < acc)
+                delta = Math.Abs(na - al);
+                if (delta < acc)
                 {
                     lcig = gtry / z;
                     break;
                 }
-                if (DELTA > last)
+                if (delta > last)
                 {
                     gstep = -gstep / 10.0;
                 }
-                last = DELTA;
+                last = delta;
             }
             while (true);
 
             x = ucid * z;
             na = ExFortran.pnct(t, df, x, out fault);
-            DELTA = Math.Abs(na - au);
-            last = DELTA;
+            delta = Math.Abs(na - au);
+            last = delta;
             gstep = x;
             cnt = 0;
             do
@@ -1660,7 +1669,7 @@ namespace StatsDirect.Builtins
                 na = ExFortran.pnct(t, df, gtry, out fault);
             }
             while (!(na > 0 & na < 1));
-            if (Math.Abs(na - au) > DELTA)
+            if (Math.Abs(na - au) > delta)
             {
                 gstep = -gstep;
             }
@@ -1677,21 +1686,20 @@ namespace StatsDirect.Builtins
                 }
                 gtry = gtry + gstep;
                 na = ExFortran.pnct(t, df, gtry, out fault);
-                DELTA = Math.Abs(na - au);
-                if (DELTA < acc)
+                delta = Math.Abs(na - au);
+                if (delta < acc)
                 {
                     ucig = gtry / z;
                     break;
                 }
-                if (DELTA > last)
+                if (delta > last)
                 {
                     gstep = -gstep / 10.0;
                 }
-                last = DELTA;
+                last = delta;
             }
             while (true);
         }
-
 
         public static void relriskma(ITemplateHost Host, ref int k, out int realk, ref double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2rmh, ref double sk, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref double[] rkx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double dsrr, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, ref bool[] cced, out int ierr)
         {
@@ -1864,11 +1872,11 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void riskdifma(ITemplateHost host, int k, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2rmh, ref double sk, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref double[] rkx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double dsrd, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, ref bool[] cced, out int ierr)
+        private static void Riskdifma(ITemplateHost host, int k, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2rmh, ref double sk, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref double[] rkx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double dsrd, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, ref bool[] cced, double[] standardized_effect, double[] se, out int ierr)
         {
             double wt;
             double rkrs;
-            double a; double b; double C; double D; double vark;
+            double a; double b; double c; double d; double vark;
             int i;
 
             ierr = -1;
@@ -1879,12 +1887,12 @@ namespace StatsDirect.Builtins
             {
                 a = o[i, 1];
                 b = o[i, 2];
-                C = o[i, 3];
-                D = o[i, 4];
-                double N = a + b + C + D;
+                c = o[i, 3];
+                d = o[i, 4];
+                double N = a + b + c + d;
                 rkx[i] = N;
                 // rd and ci for stratum
-                if ((b + D) <= 0.0 | (a + C) <= 0.0)
+                if ((b + d) <= 0.0 || (a + c) <= 0.0)
                 {
                     rkr[i] = Constant.MISSING;
                     rkrl[i] = Constant.MISSING;
@@ -1894,13 +1902,13 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    rkr[i] = a / (a + C) - b / (b + D);
+                    rkr[i] = a / (a + c) - b / (b + d);
                     if (host.Preferences.MetaExact)
                     {
                         double r1 = a;
-                        double n1 = a + C;
+                        double n1 = a + c;
                         double r2 = b;
-                        double n2 = b + D;
+                        double n2 = b + d;
                         MathDbl.uppci(Convert.ToInt32(r1), Convert.ToInt32(n1), Convert.ToInt32(r2), Convert.ToInt32(n2), out rkrl[i], out rkru[i], cit, 100.0 * cco);
                     }
                 }
@@ -1910,14 +1918,14 @@ namespace StatsDirect.Builtins
                     throw new Templates.InvalidDataException();
                 }
                 // standard weights - do this before continuity correction
-                double nmn = (a + C) * (b + D) / N;
+                double nmn = (a + c) * (b + d) / N;
                 rkw[i] = nmn;
-                mhn = mhn + (a * (b + D) / N - b * (a + C) / N);
+                mhn = mhn + (a * (b + d) / N - b * (a + c) / N);
                 mhd = mhd + nmn;
-                if (a <= 0.0 | b <= 0.0 | C <= 0.0 | D <= 0.0)
+                if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                 {
-                    continuity_correct(host, a, b, C, D, out a, out b, out C, out D);
-                    N = a + b + C + D;
+                    continuity_correct(host, a, b, c, d, out a, out b, out c, out d);
+                    N = a + b + c + d;
                     cced[i] = true;
                 }
                 else
@@ -1925,15 +1933,17 @@ namespace StatsDirect.Builtins
                     cced[i] = false;
                 }
                 //  Greenland-Robins pooled risk difference
-                double lk = (a * C * Math.Pow((b + D), 3.0) + b * D * Math.Pow((a + C), 3.0)) / ((a + C) * (b + D) * Math.Pow(N, 2.0));
+                double lk = (a * c * Math.Pow((b + d), 3.0) + b * d * Math.Pow((a + c), 3.0)) / ((a + c) * (b + d) * Math.Pow(N, 2.0));
                 sumlk = sumlk + lk;
                 // inverse variance weights
                 // rkw(i) = 1# / vark
                 if (!(host.Preferences.MetaExact))
                 {
-                    vark = a * C / Math.Pow((a + C), 3.0) + b * D / Math.Pow((b + D), 3.0);
-                    rkrl[i] = rkr[i] - cit * Math.Sqrt(vark);
-                    rkru[i] = rkr[i] + cit * Math.Sqrt(vark);
+                    vark = a * c / Math.Pow((a + c), 3.0) + b * d / Math.Pow((b + d), 3.0);
+                    se[i] = Math.Sqrt(vark);
+                    standardized_effect[i] = rkr[i];
+                    rkrl[i] = rkr[i] - cit * se[i];
+                    rkru[i] = rkr[i] + cit * se[i];
                 }
                 if (rkrl[i] != Constant.MISSING)
                 {
@@ -1963,19 +1973,19 @@ namespace StatsDirect.Builtins
             {
                 a = o[i, 1];
                 b = o[i, 2];
-                C = o[i, 3];
-                D = o[i, 4];
+                c = o[i, 3];
+                d = o[i, 4];
                 // nmn = ( a + C ) * ( b + D ) / N; 
-                rkrs = a / (a + C) - b / (b + D);
-                if (a <= 0.0 | b <= 0.0 | C <= 0.0 | D <= 0.0)
+                rkrs = a / (a + c) - b / (b + d);
+                if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                 {
-                    continuity_correct(host, a, b, C, D, out a, out b, out C, out D);
+                    continuity_correct(host, a, b, c, d, out a, out b, out c, out d);
                 }
-                vark = a * C / Math.Pow((a + C), 3.0) + b * D / Math.Pow((b + D), 3.0);
+                vark = a * c / Math.Pow((a + c), 3.0) + b * d / Math.Pow((b + d), 3.0);
                 wt = 1.0 / vark;
-                qc = qc + wt * Math.Pow((rkrs - rmh), 2.0);
-                sumwt = sumwt + wt;
-                sumsqwt = sumsqwt + wt * wt;
+                qc += wt * Math.Pow((rkrs - rmh), 2.0);
+                sumwt += wt;
+                sumsqwt += wt * wt;
             }
             // DerSimonian-Laird random effects
             if ((sumwt - sumsqwt / sumwt) == 0.0)
@@ -1997,20 +2007,22 @@ namespace StatsDirect.Builtins
             {
                 a = o[i, 1];
                 b = o[i, 2];
-                C = o[i, 3];
-                D = o[i, 4];
+                c = o[i, 3];
+                d = o[i, 4];
                 // nmn = ( ( a + C ) * ( b + D ) ) / N; 
-                rkrs = a / (a + C) - b / (b + D);
-                if (a <= 0.0 | b <= 0.0 | C <= 0.0 | D <= 0.0)
+                rkrs = a / (a + c) - b / (b + d);
+                standardized_effect[i] = rkrs;
+                se[i] = 0; // TODO: What?
+                if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                 {
-                    continuity_correct(host, a, b, C, D, out a, out b, out C, out D);
+                    continuity_correct(host, a, b, c, d, out a, out b, out c, out d);
                 }
-                vark = a * C / Math.Pow((a + C), 3) + b * D / Math.Pow((b + D), 3);
+                vark = a * c / Math.Pow((a + c), 3) + b * d / Math.Pow((b + d), 3);
                 wt = 1.0 / vark;
-                double Weight = 1.0 / (tausq + 1.0 / wt);
-                dsw[i] = Weight;
-                wrd = wrd + rkrs * Weight;
-                sumwt = sumwt + Weight;
+                double weight = 1.0 / (tausq + 1.0 / wt);
+                dsw[i] = weight;
+                wrd += rkrs * weight;
+                sumwt += weight;
             }
             dsrd = wrd / sumwt;
             dsx2 = Math.Pow(wrd, 2.0) / sumwt;
@@ -2020,6 +2032,7 @@ namespace StatsDirect.Builtins
             {
                 Utilities.Utilities.Swap(ref dsll, ref dsul);
             }
+            ierr = 0;
         }
 
 
@@ -2062,7 +2075,7 @@ namespace StatsDirect.Builtins
             DataFrame aFrame = parameters["a"].AsDataFrame;
             DoubleVariable aVariable = aFrame.Variables[0].AsDoubleVariable;
             int k = aVariable.Length;
-            double[] a = new double[k + 1 /* for VB to C# conversion */];
+            double[] a = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 a[i] = aVariable.Data[i - 1];
@@ -2070,7 +2083,7 @@ namespace StatsDirect.Builtins
 
             DataFrame pt1Frame = parameters["pt1"].AsDataFrame;
             DoubleVariable pt1Variable = pt1Frame.Variables[0].AsDoubleVariable;
-            double[] pt1 = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] pt1 = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 pt1[i] = pt1Variable.Data[i - 1];
@@ -2078,7 +2091,7 @@ namespace StatsDirect.Builtins
 
             DataFrame bFrame = parameters["b"].AsDataFrame;
             DoubleVariable bVariable = bFrame.Variables[0].AsDoubleVariable;
-            double[] b = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] b = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 b[i] = bVariable.Data[i - 1];
@@ -2086,13 +2099,13 @@ namespace StatsDirect.Builtins
 
             DataFrame pt2Frame = parameters["pt2"].AsDataFrame;
             DoubleVariable pt2Variable = pt2Frame.Variables[0].AsDoubleVariable;
-            double[] pt2 = new double[k + 1 /* for VB to C# conversion */];
+            double[] pt2 = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 pt2[i] = pt2Variable.Data[i - 1];
             }
 
-            string[] title = new string[k + 1 /* for VB to C# conversion */ ];
+            string[] title = new string[k + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
             {
                 stratlab = true;
@@ -2124,21 +2137,23 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
-            double[] rkr = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] rkw = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] dsw = new double[k + 1 /* for VB to C# conversion */];
-            double[] rkrl = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] rkru = new double[k + 1 /* for VB to C# conversion */];
-            bool[] lerr = new bool[k + 1 /* for VB to C# conversion */ ];
-            bool[] uerr = new bool[k + 1 /* for VB to C# conversion */ ];
+            double[,] o = new double[k + 1, 4 + 1];
+            double[] rkr = new double[k + 1];
+            double[] rkw = new double[k + 1];
+            double[] dsw = new double[k + 1];
+            double[] rkrl = new double[k + 1];
+            double[] rkru = new double[k + 1];
+            bool[] lerr = new bool[k + 1];
+            bool[] uerr = new bool[k + 1];
+            double[] standardizedEffect = new double[k + 1];
+            double se;
             if (index == 1)
             {
-                irdmeta(ref k, ref a, ref b, ref pt1, ref pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref lerr, ref uerr, out qc, out dsird, out dz, out dsll, out dsul, out realk, out tausq, out ierr);
+                IrdMeta(k, a, b, pt1, pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsird, out dz, out dsll, out dsul, out realk, out tausq, standardizedEffect, out se, out ierr);
             }
             else
             {
-                irrmeta(ref k, ref a, ref b, ref pt1, ref pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref lerr, ref uerr, out qc, out dsirr, out dz, out dsll, out dsul, out realk, out tausq, out ierr);
+                IrrMeta(k, a, b, pt1, pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsirr, out dz, out dsll, out dsul, out realk, out tausq, standardizedEffect, out se, out ierr);
             }
             if (ierr == -1)
             {
@@ -2217,6 +2232,8 @@ namespace StatsDirect.Builtins
                                            ? host.RoundU(100 * dsw[i] / Formatting.dsum(dsw, 1))
                                            : Formatting.ASTERISK);
                 irParameters.AddOutput("lb", stratlab ? title[i] : "");
+                irParameters.AddOutput("standardized_effect", host.RoundU(standardizedEffect[i]));
+                irParameters.AddOutput("se", host.RoundU(se));
             }
 
             outputParameters.AddOutput("rmh", host.RoundU(rmh));
@@ -2484,7 +2501,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            Mantel(host, true, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, ref dsor, ref dsx2, ref dsll, ref dsul, ref cced, ref tausq, out ierr);
+            Mantel(host, true, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out dsor, out dsx2, out dsll, out dsul, ref cced, ref tausq, out ierr);
             if (ierr != 0)
             {
                 if (ierr != 99)
@@ -2555,6 +2572,8 @@ namespace StatsDirect.Builtins
                 orList.Add(orParameters);
                 orParameters.AddOutput("st", i.ToString());
                 orParameters.AddOutput("or", host.RoundU(odr[i]));
+                orParameters.AddOutput("standardized_effect", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
+                orParameters.AddOutput("se", "TODO: ?");
                 orParameters.AddOutput("lci", host.RoundU(odrl[i]));
                 orParameters.AddOutput("uci", host.RoundU(odru[i]));
                 orParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
@@ -2565,13 +2584,14 @@ namespace StatsDirect.Builtins
                     tmp = tmp.Replace("[CC", "[late CC");
                 }
                 orParameters.AddOutput("lb", tmp);
-                if (host.Preferences.MetaExact & ((i) == Constant.MISSING | odru[i] == Constant.MISSING))
+                if (host.Preferences.MetaExact & ((i) == Constant.MISSING || odru[i] == Constant.MISSING))
                 {
                     orci_corn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
                     orParameters = new ParameterBag();
                     orList.Add(orParameters);
                     orParameters.AddOutput("st", "* " + i.ToString());
                     orParameters.AddOutput("or", "");
+                    orParameters.AddOutput("standardized_effect", "");
                     orParameters.AddOutput("lci", host.RoundU(odrl[i]));
                     orParameters.AddOutput("uci", host.RoundU(odru[i]));
                     orParameters.AddOutput("wt", "");
@@ -2636,7 +2656,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_ds", 1.ToString());
             outputParameters.AddOutput("xp_ds", host.pval(PDF.chivalp(dsx2, 1.0)));
 
-            get_logit_ci(host, o, k, cit, axll, axul);
+            GetLogitCi(host, o, k, cit, axll, axul);
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
@@ -2697,8 +2717,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static void Mantel(ITemplateHost host, bool fromSheet, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, ref double cco, ref double[] odr, ref double[] odw, ref double[] dswt, ref double[] odrl, ref double[] odru, ref double[] odx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double bd, ref double dsor, ref double dsx2, ref double dsll, ref double dsul, ref bool[] cced, ref double tausq, out int
-         ierr)
+        public static void Mantel(ITemplateHost host, bool fromSheet, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, ref double cco, ref double[] odr, ref double[] odw, ref double[] dswt, ref double[] odrl, ref double[] odru, ref double[] odx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref bool[] cced, ref double tausq, out int ierr)
         {
             double lori; double vrbgi;
             double weight; double N; double a; double b; double c; double d;
@@ -2756,7 +2775,7 @@ namespace StatsDirect.Builtins
                     // only do cc at this stage if absolutely necessary (all a or all d cells zero)
                     if (rkok == false)
                     {
-                        if (a <= 0 | b <= 0 | c <= 0 | d <= 0)
+                        if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                         {
                             continuity_correct(host, a, b, c, d, out a, out b, out c, out d);
                             N = a + b + c + d;
@@ -2893,10 +2912,10 @@ namespace StatsDirect.Builtins
                     vrbgi = svd1 / 2.0 / rr / rr + svd2 / 2.0 / rr / ss + svd3 / 2.0 / ss / ss;
                     weight = 1.0 / vrbgi;
                     lori = Math.Log((a * d) / (b * c));
-                    qc = qc + weight * Math.Pow((lori - Math.Log(rmh)), 2.0);
-                    wlor = wlor + lori * weight;
-                    sumwt = sumwt + weight;
-                    sumsqwt = sumsqwt + weight * weight;
+                    qc += weight * Math.Pow((lori - Math.Log(rmh)), 2.0);
+                    wlor += lori * weight;
+                    sumwt += weight;
+                    sumsqwt += weight * weight;
                 }
             }
             // DerSimonian-Laird
@@ -2922,7 +2941,7 @@ namespace StatsDirect.Builtins
                 d = o[i, 4];
                 if (include_table(o, i))
                 {
-                    if (a <= 0.0 | b <= 0.0 | c <= 0.0 | d <= 0.0)
+                    if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                     {
                         continuity_correct(host, a, b, c, d, out a, out b, out c, out d);
                     }
@@ -2938,8 +2957,8 @@ namespace StatsDirect.Builtins
                     weight = 1.0 / (tausq + vrbgi);
                     dswt[i] = weight;
                     lori = Math.Log((a * d) / (b * c));
-                    wlor = wlor + lori * weight;
-                    sumwt = sumwt + weight;
+                    wlor += lori * weight;
+                    sumwt += weight;
                 }
             }
             dsor = Math.Exp(wlor / sumwt);
@@ -2954,7 +2973,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static void get_logit_ci(ITemplateHost Host, double[,] o, int k, double cit, double[] axll, double[] axul)
+        public static void GetLogitCi(ITemplateHost Host, double[,] o, int k, double cit, double[] axll, double[] axul)
         {
             for (int i = 1; i <= k; i++)
             {
@@ -3058,21 +3077,18 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void irdmeta(ref int k, ref double[] a, ref double[] b, ref double[] pt1, ref double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref bool[] lerr, ref bool[] uerr, out double qc, out double dsrd, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
+        private static void IrdMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dz, out double dsll, out double dsul, out double realk, out double tausq, double[] standardizedEffect, out double se, out int ierr)
         {
-            double t;
-            int i;
-
             ierr = -1;
             double sumwt = 0.0;
             double sumwi = 0.0;
             realk = 0.0;
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 // ird and ci for stratum
                 double pt = pt1[i] + pt2[i];
-                double M = a[i] + b[i];
-                if (a[i] + b[i] <= 0.0 | pt1[i] <= 0.0 | pt2[i] <= 0.0)
+                double m = a[i] + b[i];
+                if (a[i] + b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
                 {
                     rkr[i] = Constant.MISSING;
                     rkw[i] = Constant.MISSING;
@@ -3087,7 +3103,7 @@ namespace StatsDirect.Builtins
                     double ir1 = a[i] / pt1[i];
                     double ir2 = b[i] / pt2[i];
                     double ird = ir1 - ir2;
-                    double xmh = ((a[i] - (M * pt1[i]) / pt) * (a[i] - (M * pt1[i]) / pt)) / ((M * pt1[i] * pt2[i]) / (pt * pt));
+                    double xmh = ((a[i] - (m * pt1[i]) / pt) * (a[i] - (m * pt1[i]) / pt)) / ((m * pt1[i] * pt2[i]) / (pt * pt));
                     if (xmh == 0)
                     {
                         rkrl[i] = Constant.MISSING;
@@ -3107,37 +3123,40 @@ namespace StatsDirect.Builtins
                         rkru[i] = ird + cit * Math.Sqrt((ird * ird) / xmh);
                     }
                     rkr[i] = ird;
+                    standardizedEffect[i] = ird;
                     //  pooled incidence risk difference
                     double vark = a[i] / (pt1[i] * pt1[i]) + b[i] / (pt2[i] * pt2[i]);
                     rkw[i] = 1.0 / vark;
-                    sumwt = sumwt + rkw[i];
-                    sumwi = sumwi + rkw[i] * ird;
+                    sumwt += rkw[i];
+                    sumwi += rkw[i] * ird;
                 }
             }
             rmh = sumwi / sumwt;
-            double se = Math.Sqrt(1.0 / sumwt);
+            se = Math.Sqrt(1.0 / sumwt);
             ll = rmh - se * cit;
             ul = rmh + se * cit;
             if (ll > ul)
             {
-                t = ll;
+                double t = ll;
                 ll = ul;
                 ul = t;
             }
             zrmh = rmh / se;
+
             // Q (combinability)
             qc = 0.0;
             sumwt = 0.0;
             double sumsqwt = 0.0;
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 if (rkw[i] != Constant.MISSING)
                 {
-                    qc = qc + rkw[i] * Math.Pow((rkr[i] - rmh), 2.0);
-                    sumwt = sumwt + rkw[i];
-                    sumsqwt = sumsqwt + rkw[i] * rkw[i];
+                    qc += rkw[i] * Math.Pow((rkr[i] - rmh), 2.0);
+                    sumwt += rkw[i];
+                    sumsqwt += rkw[i] * rkw[i];
                 }
             }
+
             // DerSimonian-Laird random effects
             if ((sumwt - sumsqwt / sumwt) == 0.0)
             {
@@ -3154,14 +3173,14 @@ namespace StatsDirect.Builtins
             double wrd = 0.0;
             sumwt = 0.0;
             // sumsqwt = 0.0; - unused
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 if (rkw[i] != Constant.MISSING)
                 {
-                    double Weight = 1.0 / (tausq + 1.0 / rkw[i]);
-                    dsw[i] = Weight;
-                    wrd = wrd + rkr[i] * Weight;
-                    sumwt = sumwt + Weight;
+                    double weight = 1.0 / (tausq + 1.0 / rkw[i]);
+                    dsw[i] = weight;
+                    wrd += rkr[i] * weight;
+                    sumwt += weight;
                 }
                 else
                 {
@@ -3174,18 +3193,15 @@ namespace StatsDirect.Builtins
             dsul = wrd / sumwt + cit / Math.Sqrt(sumwt);
             if (dsll > dsul)
             {
-                t = dsll;
+                double t = dsll;
                 dsll = dsul;
                 dsul = t;
             }
             ierr = 0;
         }
 
-
-        private static void irrmeta(ref int k, ref double[] a, ref double[] b, ref double[] pt1, ref double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref bool[] lerr, ref bool[] uerr, out double qc, out double dsirr, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
+        private static void IrrMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsirr, out double dz, out double dsll, out double dsul, out double realk, out double tausq, double[] standardizedEffect, out double se, out int ierr)
         {
-            double t;
-
             ierr = -1;
             double sumwt = 0.0;
             double sumwi = 0.0;
@@ -3230,24 +3246,26 @@ namespace StatsDirect.Builtins
                         f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - P);
                         rkru[i] = (pt2[i] / pt1[i]) * ((a[i] + 1.0) / b[i]) * f;
                         rkr[i] = ir1 / ir2;
+                        if (rkr[i] > 0)
+                        standardizedEffect[i] = Math.Log(rkr[i]);
                     }
                     // pooled incidence rate ratio
                     // vark = 1# / a(i) + 1# / b(i) - as expressed in Lau paper on AZT
                     rkw[i] = (a[i] * b[i]) / (a[i] + b[i]);
-                    sumwt = sumwt + rkw[i];
+                    sumwt += rkw[i];
                     if (rkr[i] > 0)
                     {
-                        sumwi = sumwi + rkw[i] * Math.Log(rkr[i]);
+                        sumwi += rkw[i] * Math.Log(rkr[i]);
                     }
                 }
             }
             rmh = Math.Exp(sumwi / sumwt);
-            double se = Math.Sqrt(1.0 / sumwt);
+            se = Math.Sqrt(1.0 / sumwt);
             ll = Math.Exp(Math.Log(rmh) - se * cit);
             ul = Math.Exp(Math.Log(rmh) + se * cit);
             if (ll > ul)
             {
-                t = ll;
+                double t = ll;
                 ll = ul;
                 ul = t;
             }
@@ -3294,7 +3312,7 @@ namespace StatsDirect.Builtins
                     {
                         wrd += Math.Log(rkr[i]) * Weight;
                     }
-                    sumwt = sumwt + Weight;
+                    sumwt += Weight;
                 }
                 else
                 {
@@ -3307,7 +3325,7 @@ namespace StatsDirect.Builtins
             dsul = Math.Exp(wrd / sumwt + cit / Math.Sqrt(sumwt));
             if (dsll > dsul)
             {
-                t = dsll;
+                double t = dsll;
                 dsll = dsul;
                 dsul = t;
             }
@@ -3348,12 +3366,12 @@ namespace StatsDirect.Builtins
             DataFrame yFrame = parameters["y"].AsDataFrame;
             DoubleVariable yVariable = yFrame.Variables[0].AsDoubleVariable;
             int k = yVariable.Length;
-            double[] y = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] se_y = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] ll_y = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] ul_y = new double[k + 1 /* for VB to C# conversion */ ];
-            string[] title = new string[k + 1 /* for VB to C# conversion */ ];
-            int[] pg = new int[k + 1 /* for VB to C# conversion */ ];
+            double[] y = new double[k + 2];
+            double[] se_y = new double[k + 2];
+            double[] ll_y = new double[k + 2];
+            double[] ul_y = new double[k + 2];
+            string[] title = new string[k + 2];
+            int[] pg = new int[k + 2];
             for (i = 1; i <= k; i++)
             {
                 y[i] = yVariable.Data[i - 1];
@@ -3473,8 +3491,8 @@ namespace StatsDirect.Builtins
             double sumwt = 0.0;
             double sumsqwt = 0.0;
             double sumywt = 0.0;
-            double[] wt = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] dswt = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] wt = new double[k + 2];
+            double[] dswt = new double[k + 2];
             for (i = 1; i <= k; i++)
             {
                 if (se_y[i] == 0.0)
@@ -3546,16 +3564,16 @@ namespace StatsDirect.Builtins
             // sumsqwt = 0.0; - unused
             for (i = 1; i <= k; i++)
             {
-                double Weight = 1.0 / (tausq + 1.0 / wt[i]);
-                dswt[i] = Weight;
-                sumwt = sumwt + Weight;
+                double weight = 1.0 / (tausq + 1.0 / wt[i]);
+                dswt[i] = weight;
+                sumwt += weight;
                 if (use_ratio)
                 {
-                    wlrr = wlrr + Math.Log(y[i]) * Weight;
+                    wlrr += Math.Log(y[i]) * weight;
                 }
                 else
                 {
-                    wlrr = wlrr + y[i] * Weight;
+                    wlrr += y[i] * weight;
                 }
             }
             if (use_ratio)
@@ -3594,6 +3612,7 @@ namespace StatsDirect.Builtins
                 studiesParameters.AddOutput("to", host.RoundU(ul_y[i]));
                 studiesParameters.AddOutput("wt", host.RoundU(100 * wt[i] / Formatting.dsum(wt, 1)));
                 studiesParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
+                studiesParameters.AddOutput("standardized_effect", host.RoundU(y[i])); // TODO: Correct?  Is re-using se correct?
                 studiesParameters.AddOutput("lb", stratlab ? title[i] : "");
             }
 
@@ -3675,7 +3694,6 @@ namespace StatsDirect.Builtins
 
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
 
         public static StepResult RptMetaCorrelation(ITemplateHost host, ParameterBag parameters)
         {
@@ -3826,7 +3844,7 @@ namespace StatsDirect.Builtins
             {
                 double Weight = 1.0 / (tausq + 1.0 / wt[i]);
                 dswt[i] = Weight;
-                sumwt = sumwt + Weight;
+                sumwt += Weight;
                 wlrr += MathDbl.rtoz(y[i]) * Weight;
             }
             double dsrr = MathDbl.ztor(wlrr / sumwt);
@@ -3901,6 +3919,8 @@ namespace StatsDirect.Builtins
                 studiesParameters.AddOutput("wt", host.RoundU(100 * wt[i] / Formatting.dsum(wt, 1)));
                 studiesParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
                 studiesParameters.AddOutput("nwt", host.RoundU(100 * ss[i] / Formatting.dsum(ss, 1)));
+                studiesParameters.AddOutput("standardized_effect", host.RoundU(y[i])); // TODO: Correct?
+                studiesParameters.AddOutput("se", host.RoundU(Math.Sqrt(sumwt))); // TODO: Correct?
                 studiesParameters.AddOutput("lb", stratlab ? title[i] : "");
             }
 
@@ -4266,7 +4286,7 @@ namespace StatsDirect.Builtins
             {
                 // arcsine transformation to stabilize the variance of the proportion
                 y[i] = arcsine_p(sr[i], sn[i]);
-                se_y[i] = arcsine_se(ref sn[i], fudge);
+                se_y[i] = arcsine_se(sn[i], fudge);
                 if (se_y[i] == 0.0)
                     throw new Templates.InvalidDataException();
                 wt[i] = 1.0 / (se_y[i] * se_y[i]);
@@ -4299,10 +4319,10 @@ namespace StatsDirect.Builtins
             // sumsqwt = 0.0; unused
             for (int i = 1; i <= k; i++)
             {
-                double Weight = 1.0 / (tausq + 1.0 / wt[i]);
-                dswt[i] = Weight;
-                sumwt = sumwt + Weight;
-                wlrr = wlrr + y[i] * Weight;
+                double weight = 1.0 / (tausq + 1.0 / wt[i]);
+                dswt[i] = weight;
+                sumwt += weight;
+                wlrr += y[i] * weight;
             }
             double dspr = wlrr / sumwt;
             double dsll = wlrr / sumwt - cit / Math.Sqrt(sumwt);
@@ -4372,6 +4392,8 @@ namespace StatsDirect.Builtins
                 proportionsParameters.AddOutput("to_y", host.RoundU(ul_y[i]) + tmp);
                 proportionsParameters.AddOutput("wt", host.RoundU(100 * wt[i] / Formatting.dsum(wt, 1)));
                 proportionsParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
+                proportionsParameters.AddOutput("standardized_effect", host.RoundU(y[i] > 0 ? Math.Log(y[i]) : 0));
+                proportionsParameters.AddOutput("se", host.RoundU(se_y[i]));
                 if (stratlab)
                 {
                     tmp = title[i] + tmp;
@@ -4462,7 +4484,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static double arcsine_se(ref double n, double fudge)
+        private static double arcsine_se(double n, double fudge)
         {
             // Anscombe (1948)
             // arcsine_se = (N ^ (-0.5)) / 2#

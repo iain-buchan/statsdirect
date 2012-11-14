@@ -35,7 +35,7 @@
           <validator>CheckForNonDummiedCategories</validator>
           <same-length>true</same-length>
           <same-length-as>stratum</same-length-as>
-          <mode>NumericReplaceMissing</mode>
+          <mode>NumericCodingTextToCategories</mode>
           <min-columns>1</min-columns>
           <max-columns>200</max-columns>
           <clear-selection-first>true</clear-selection-first>

@@ -24,6 +24,7 @@
         Text = 101,
         DateReplaceMissing = 102,
         TextWithFormulae = 103,
-        TextNoTitles = 104
+        TextNoTitles = 104,
+        NumericCodingTextToCategories = 105
     }
 }

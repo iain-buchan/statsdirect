@@ -87,9 +87,15 @@ namespace StatsDirect.Utilities
             }
             if (Math.Abs(x) < Math.Pow(10D, -decpm) && 0 != x)
             {
-                return x.ToString("E");
+                return x.ToString(PreferredScientificMask(decpm));
             }
             return x.ToString("F" + decpm.ToString());
+        }
+
+        public static string PreferredScientificMask(int decpm)
+        {
+            int extraSigDigits = Math.Max(0, decpm - 2);
+            return "0.0" + new string('#', extraSigDigits) + "E0";
         }
 
         public static string RoundMeta(double x, double min, int decpm)
@@ -102,8 +108,8 @@ namespace StatsDirect.Utilities
                 return INFRESNEG;
             try
             {
-                if (Math.Abs(x) < Math.Pow(10D, -decpm) && 0 != x)
-                    return x.ToString("E");
+                if (Math.Abs(x) < Math.Pow(10, -decpm) && 0 != x)
+                    return x.ToString(PreferredScientificMask(decpm));
             }
             catch (Exception)
             {

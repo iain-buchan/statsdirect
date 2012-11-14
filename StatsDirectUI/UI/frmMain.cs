@@ -1417,8 +1417,11 @@ namespace StatsDirect.UI
                 {
                     string errorMessage = ex.Message;
                     SDApplication.SoleInstance.msgbox_x(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                    // Treat this as a restart of the operation, without keeping any data - we don't know which data is bad, and if we keep it we risk getting stuck in a loop
+                    /*
                     // That one failed due to invalid data - keep the same data and try it again, which should prompt the user to fix it!
                     inputParameters = ex.InputParameters;
+                     */
                 }
                 catch (CancelCurrentOperationAndDoException ex)
                 {
@@ -1848,7 +1851,7 @@ namespace StatsDirect.UI
         private void ShowHelp()
         {
             // Check for hovering over a menu item
-            if (null != lastSeenMenuItemTag && lastSeenMenuItemTag is Dictionary<string, string>)
+            if (lastSeenMenuItemTag is Dictionary<string, string>)
             {
                 Dictionary<string, string> tags = (Dictionary<string, string>) lastSeenMenuItemTag;
                 string menuTopic;
@@ -2999,19 +3002,16 @@ namespace StatsDirect.UI
                 IRange range = gearForm.workbookView.RangeSelection.Areas[0];
                 ctl = new ctlSort(range, gearForm.workbookView);
             }
+            else if ("Scores".Equals(fillable.FillerToUse))
+                ctl = new ctlScores((Builtins.ScoresOptions)fillable);
             /**
-        else if ("Extraction".Equals(fillable.FillerToUse))
-            return Amend((StatsDirect.Builtins.ExtractionOptions)fillable);
-        else if ("GraphicsOptions".Equals(fillable.FillerToUse))
-            return Amend((StatsDirect.Builtins.GraphicsOptions)fillable);
-        else if ("ROCCutoff".Equals(fillable.FillerToUse))
-            return Amend((Charting.SDChart.ROCCutoff)fillable);
-        else if ("Scores".Equals(fillable.FillerToUse))
-            return Amend((StatsDirect.Builtins.ScoresOptions)fillable);
-        else if ("SummaryStatistics".Equals(fillable.FillerToUse))
-            return Amend((StatsDirect.Builtins.SummaryStatisticsOptions)fillable);
+            else if ("GraphicsOptions".Equals(fillable.FillerToUse))
+                return Amend((StatsDirect.Builtins.GraphicsOptions)fillable);
+            else if ("ROCCutoff".Equals(fillable.FillerToUse))
+                return Amend((Charting.SDChart.ROCCutoff)fillable);
+            else if ("SummaryStatistics".Equals(fillable.FillerToUse))
+                return Amend((StatsDirect.Builtins.SummaryStatisticsOptions)fillable);
              **/
-                nb scores here!
             else
                 throw new ArgumentOutOfRangeException("fillableParameter", fillable.FillerToUse, "fillableParameter.Fillable.FillerToUse: Unknown option");
             ctl.Tag = fillableParameter;
@@ -3847,6 +3847,13 @@ namespace StatsDirect.UI
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
             }
+            if ("scores".Equals(specialParameter.SpecialType))
+            {
+                ctlScores ctl = new ctlScores(context) { Tag = specialParameter };
+                tlp.Controls.Add(ctl);
+                tlp.SetColumnSpan(ctl, 2);
+                return null;
+            }
             throw new ArgumentOutOfRangeException("specialParameter", specialParameter.SpecialType, "specialParameter.SpecialType: Unknown option");
         }
 
@@ -3938,7 +3945,7 @@ namespace StatsDirect.UI
             {
                 return true;
             }
-            return !(null != c.Tag && c.Tag is Parameter && ((Parameter)c.Tag).Type == ParameterType.Special && "report".Equals(((SpecialParameter)c.Tag).SpecialType));
+            return !(c.Tag is Parameter && ((Parameter)c.Tag).Type == ParameterType.Special && "report".Equals(((SpecialParameter)c.Tag).SpecialType));
         }
 
         internal void SelectFirstUsefulControlIn(Control c)
@@ -4120,7 +4127,7 @@ namespace StatsDirect.UI
         {
             // We're interested in non-label controls that have been tagged with Parameters.
             // Labels are uninteresting as they'll never contain a useful user-entered value.
-            if (null != control.Tag && control.Tag is Parameter && typeof(Label) != control.GetType())
+            if (control.Tag is Parameter && typeof(Label) != control.GetType())
             {
                 Parameter parameter = (Parameter)control.Tag;
                 return null != parameter.CancelSkipsParameter;
@@ -4135,7 +4142,7 @@ namespace StatsDirect.UI
         {
             // We're interested in non-label controls that have been tagged with Parameters.
             // Labels are uninteresting as they'll never contain a useful user-entered value.
-            if (null != control.Tag && control.Tag is Parameter && typeof(Label) != control.GetType())
+            if (control.Tag is Parameter && typeof(Label) != control.GetType())
             {
                 // Hidden controls should never have their values extracted and are always OK.
                 if (!control.Visible)
@@ -4193,7 +4200,7 @@ namespace StatsDirect.UI
                                 return ((IFillParameterBag)control).Fill(outputParameters, true);
                             }
                             else
-                                throw new ArgumentOutOfRangeException("control", "control.Tag: Only ChartOptionParameter and FillableParameter are known types of custom parameter");
+                                throw new ArgumentOutOfRangeException("control", "Couldn't request a custom parameter to fill itself in");
                         }
                         break;
                     case ParameterType.Date:
@@ -4661,6 +4668,7 @@ namespace StatsDirect.UI
                             if ("report".Equals(specialParameter.SpecialType)
                                 || "frame".Equals(specialParameter.SpecialType)
                                 || "dummyVariables".Equals(specialParameter.SpecialType)
+                                || "scores".Equals(specialParameter.SpecialType)
                                 || "textToNumbers".Equals(specialParameter.SpecialType))
                             {
                                 IFillParameterBag ifpb = (IFillParameterBag)control;
@@ -4720,7 +4728,7 @@ namespace StatsDirect.UI
         {
             foreach (ToolStripItem candidate in menuStrip.Items)
             {
-                if (null != candidate.Tag && candidate.Tag is string && ((string)(candidate.Tag)).StartsWith("#{") && ((string)(candidate.Tag)).Contains("help="))
+                if (candidate.Tag is string && ((string)(candidate.Tag)).StartsWith("#{") && ((string)(candidate.Tag)).Contains("help="))
                 {
                     candidate.MouseEnter += menuItem_MouseEnter;
                     candidate.MouseLeave += menuItem_MouseLeave;
@@ -4737,7 +4745,7 @@ namespace StatsDirect.UI
         {
             foreach (ToolStripItem candidate in toolStripDropDown.Items)
             {
-                if (null != candidate.Tag && candidate.Tag is string && ((string)(candidate.Tag)).StartsWith("#{") && ((string)(candidate.Tag)).Contains("help="))
+                if (candidate.Tag is string && ((string)(candidate.Tag)).StartsWith("#{") && ((string)(candidate.Tag)).Contains("help="))
                 {
                     candidate.MouseEnter += menuItem_MouseEnter;
                     candidate.MouseLeave += menuItem_MouseLeave;

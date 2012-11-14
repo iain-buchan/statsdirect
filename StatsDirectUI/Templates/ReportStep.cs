@@ -137,13 +137,14 @@ namespace StatsDirect.Templates
                         // A nested value.  Look for a nested template with the given name and fill it in.
                         string nestedTemplateName = pair.Key.Substring(1);
                         string nestedTemplate = FindNestedTemplate(template, nestedTemplateName);
-                        if (null != nestedTemplate)
+                        while (null != nestedTemplate)
                         {
                             IList<ParameterBag> value = null;
                             if (null != pair.Value)
                                 value = pair.Value.AsParameterBagList;
                             string nestedResult = SubstituteInternal(nestedTemplate, value);
                             template = template.Replace(nestedTemplate, nestedResult);
+                            nestedTemplate = FindNestedTemplate(template, nestedTemplateName);
                         }
                     }
                     else

@@ -20,7 +20,7 @@
           </options>
         </option>
         <frame>
-          <name>En</name>
+          <name>en</name>
           <prompt>Select SIZES of EXPERIMENTAL/TREATED groups</prompt>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>

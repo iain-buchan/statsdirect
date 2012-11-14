@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -169,7 +170,6 @@ namespace StatsDirect.Builtins
             else if (isCohort)
             {
                 //  RTF_LoadTemplate("relrisk.rtf")
-                //  TODO: Handle InvalidDataException
                 relRiskList.Add(Analysis.RptMiscRelRisk(host, parameters).ParameterBag);
             }
 
@@ -177,7 +177,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*fisher", fisherList);
             if (!(done_exact))
             {
-                if (E1 < 5 | e2 < 5 | e3 < 5 | e4 < 5 | N < 20)
+                if (E1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || N < 20)
                 {
                     //  RTF_LoadTemplate("fisher.rtf")
                     fisherList.Add(Exact.RptExactFisher(host, parameters).ParameterBag);
@@ -249,6 +249,7 @@ namespace StatsDirect.Builtins
                 if (t1 <= 0.0)
                     throw new InvalidDataException();
 
+                Debug.Assert(z != 2 || datV2 != null);
                 double s1 = z == 2 ? datV2.Data[r - 1] : r;
                 f[r] = a1;
                 g[r] = b1;
@@ -358,10 +359,10 @@ namespace StatsDirect.Builtins
             double llf = 0;
             double ulf = 0;
             double eor = 0;
-            double dsul = 0;
-            double dsll = 0;
-            double dsx2 = 0;
-            double dsor = 0;
+            double dsul;
+            double dsll;
+            double dsx2;
+            double dsor;
             double bd = 0;
             double qc = 0;
             double sk;
@@ -421,7 +422,7 @@ namespace StatsDirect.Builtins
             int fault;
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
 
-            Meta.Mantel(host, false, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, ref dsor, ref dsx2, ref dsll, ref dsul, ref cced, ref tausq, out ierr);
+            Meta.Mantel(host, false, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out dsor, out dsx2, out dsll, out dsul, ref cced, ref tausq, out ierr);
             if (ierr != 0)
                 return null;
 
@@ -559,7 +560,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_ds", 1.ToString());
             outputParameters.AddOutput("xp_ds", host.pval(PDF.chivalp(dsx2, 1.0)));
 
-            Meta.get_logit_ci(host, o, k, cit, axll, axul);
+            Meta.GetLogitCi(host, o, k, cit, axll, axul);
 
             List<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);

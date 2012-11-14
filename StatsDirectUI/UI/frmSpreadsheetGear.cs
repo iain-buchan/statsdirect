@@ -995,258 +995,184 @@ namespace StatsDirect.UI
                             variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
                         }
                         break;
-
                     case DataAcquisitionMode.MODE3:
                     case DataAcquisitionMode.CategoryReplaceMissing:
                     case DataAcquisitionMode.CategoryCombineAllColumns:
                     case DataAcquisitionMode.MODE6:
                     case DataAcquisitionMode.Text:
-                        // code text categories as numbers
+                        {
+                            // code text categories as numbers
 
-                        // is the top row unique (i.e. not duplicated in the column data) and long?  Works out min and max lengths as a side-effect
-                        bool isUnique = true;
-                        bool isShort = false;
-                        int minRowCount = int.MaxValue;
-                        int maxRowCount = int.MinValue;
-                        for (int c = 0; c < cellSelection.TotalColumns; c++)
-                        {
-                            int rc = cellSelection.ColumnSelections[c].RowCount;
-                            if (rc < minRowCount)
-                                minRowCount = rc;
-                            if (rc > maxRowCount)
-                                maxRowCount = rc;
-
-                            int gridColumn = cellSelection.ColumnSelections[c].ColumnIndex;
-                            string qtitle = GetCellText(cellSelection.ColumnSelections[c].RowIndex, gridColumn).Trim();
-                            if (qtitle.Length < 3)
-                                isShort = true;
-                            string[] ColumnArray = GetCellTexts(gridColumn, cellSelection.ColumnSelections[c].RowIndex + 1, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1);
-                            foreach (string candidate in ColumnArray)
-                            {
-                                string bufr = (null == candidate) ? "" : candidate.Trim();
-                                if (bufr.Length > 0)
-                                {
-                                    if (bufr.Equals(qtitle))
-                                    {
-                                        isUnique = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            // If we have duplicate names, there's no point looking further
-                            if (!isUnique)
-                                break;
-                        }
-
-                        // Work out the top row of data, depending on whether we think titles are present or not
-                        int topRow;
-                        if (isRefill)
-                            topRow = titleWasInData ? 1 : 0;
-                        else if (minRowCount == maxRowCount && minRowCount == rowLengthHint)
-                            topRow = 0;
-                        else if (minRowCount == maxRowCount && minRowCount == rowLengthHint + 1)
-                            topRow = 1;
-                        else if (isShort && isUnique)
-                        {
-                            PointNormal();
-                            switch (SDApplication.SoleInstance.msgbox_x("Does the top row of your selection contain titles?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, "Worksheet Categorical Data Selection", true))
-                            {
-                                case DialogResult.Yes:
-                                    topRow = 1;
-                                    break;
-                                case DialogResult.Cancel:
-                                    return null;
-                                default:
-                                    topRow = 0;
-                                    break;
-                            }
-                        }
-                        else if (isUnique)
-                        {
-                            topRow = 1;
-                        }
-                        else
-                        {
-                            topRow = 0;
-                        }
-
-                        // At this point, we know whether we have titles or not.  Now obtain our data strings.
-                        string[,] hold = new string[cellSelection.LongestRowCount, cellSelection.TotalColumns];
-                        for (int c = 0; c < cellSelection.TotalColumns; c++)
-                        {
-                            int rx = 0;
-                            int gridColumn = cellSelection.ColumnSelections[c].ColumnIndex;
-                            // get text not entry because we want formulae translated
-                            string[] ColumnArray = GetCellTexts(gridColumn, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1);
-                            foreach (string t in ColumnArray)
-                            {
-                                string bufr = (null == t) ? "" : t.Trim();
-                                hold[rx++, c] = bufr;
-                            }
-                        }
-
-                        if (DataAcquisitionMode.CategoryReplaceMissing == mode)
-                        {
-                            // Include missing values
-                            // Updated to match DeJagger by PJC July 2008, from code by IEB Sep 2007
-                            int lrow = 0;
-                            for (int c = 0; c <= hold.GetUpperBound(1); c++)
-                            {
-                                int r;
-                                for (r = hold.GetUpperBound(0); r >= topRow; --r)
-                                {
-                                    if (hold[r, c].Length > 0 && !Formatting.ASTERISK.Equals(hold[r, c]))
-                                        break;
-                                }
-                                if (r > lrow)
-                                    lrow = r;
-                            }
-                            // At this point, lrow is the index of the last row that contains data.
-                            for (int c = 0; c <= hold.GetUpperBound(1); c++)
-                            {
-                                for (int r = lrow; r >= topRow; --r)
-                                {
-                                    if (hold[r, c].Length > 0)
-                                    {
-                                        if (Formatting.ASTERISK.Equals(hold[r, c]))
-                                            hold[r, c] = Formatting.MISSINGLABEL;
-                                    }
-                                    else
-                                    {
-                                        hold[r, c] = Formatting.MISSINGLABEL;
-                                    }
-                                }
-                            }
-                        } // of DataAcquisitionMode.CategoryReplaceMissing
-
-                        if (DataAcquisitionMode.Text == mode)
-                        {
+                            // is the top row unique (i.e. not duplicated in the column data) and long?  Works out min and max lengths as a side-effect
+                            bool isUnique = true;
+                            bool isShort = false;
+                            int minRowCount = int.MaxValue;
+                            int maxRowCount = int.MinValue;
                             for (int c = 0; c < cellSelection.TotalColumns; c++)
                             {
-                                int totRows = cellSelection.ColumnSelections[c].RowCount;
-                                // Remove any trailing blanks from the selection
-                                while (totRows > topRow && hold[totRows - 1, c].Length == 0)
-                                    totRows--;
+                                int rc = cellSelection.ColumnSelections[c].RowCount;
+                                if (rc < minRowCount)
+                                    minRowCount = rc;
+                                if (rc > maxRowCount)
+                                    maxRowCount = rc;
 
-                                string title = 0 == topRow
-                                                     ? GetGridColumnTitle(
-                                                         cellSelection.ColumnSelections[c].ColumnIndex)
-                                                     : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
-                                                                   cellSelection.ColumnSelections[c].ColumnIndex).
-                                                           Trim();
-                                if (totRows > topRow || !string.IsNullOrEmpty(title))
+                                int gridColumn = cellSelection.ColumnSelections[c].ColumnIndex;
+                                string qtitle =
+                                    GetCellText(cellSelection.ColumnSelections[c].RowIndex, gridColumn).Trim();
+                                if (qtitle.Length < 3)
+                                    isShort = true;
+                                string[] ColumnArray = GetCellTexts(gridColumn,
+                                                                    cellSelection.ColumnSelections[c].RowIndex + 1,
+                                                                    cellSelection.ColumnSelections[c].RowIndex +
+                                                                    cellSelection.ColumnSelections[c].RowCount - 1);
+                                foreach (string candidate in ColumnArray)
                                 {
-                                    StringVariable variable = new StringVariable();
-                                    frame.Variables.Add(variable);
-                                    variable.EnsureLength(totRows - topRow);
-                                    int size = 0;
-                                    for (int r = topRow; r < totRows; r++)
+                                    string bufr = (null == candidate) ? "" : candidate.Trim();
+                                    if (bufr.Length > 0)
                                     {
-                                        variable.Data[size++] = hold[r, c];
-                                    }
-
-                                    // Fill in column title
-                                    variable.Title = title;
-                                    variable.Origin = new WorksheetOrigin(
-                                        cellSelection.ColumnSelections[c].WorkbookPath,
-                                        cellSelection.ColumnSelections[c].WorksheetName,
-                                        cellSelection.ColumnSelections[c].ColumnIndex,
-                                        cellSelection.ColumnSelections[c].RowIndex,
-                                        cellSelection.ColumnSelections[c].RowCount, mode,
-                                        topRow > 0);
-                                }
-                            }
-                        }
-                        else if (mode == DataAcquisitionMode.CategoryCombineAllColumns)
-                        {
-                            // Categories combined across columns; output as row pattern
-                            int totRows = cellSelection.LongestRowCount;
-                            int totCols = cellSelection.TotalColumns;
-                            string[] foundwhat = new string[totRows];
-                            int[] nbin = new int[totRows];
-                            int found = 0;
-                            int size = 0;
-                            ClassifierVariable variable = new ClassifierVariable();
-                            frame.Variables.Add(variable);
-                            for (int r = topRow; r < totRows; r++)
-                            {
-                                // Build the pattern for row r
-                                StringBuilder patternBuilder = new StringBuilder();
-                                for (int c = 0; c < totCols; c++)
-                                {
-                                    if (null == hold[r, c] || hold[r, c].Length == 0 || "*".Equals(hold[r, c]))
-                                    {
-                                        // Make the row pattern empty if any data are missing
-                                        patternBuilder.Length = 0;
-                                        break;
-                                    }
-                                    // Allow neat string pattern for later bin naming purposes
-                                    if (c > 0)
-                                        patternBuilder.Append(", ");
-                                    patternBuilder.Append(hold[r, c]);
-                                }
-                                string pattern = patternBuilder.ToString();
-
-                                // Enumerate categories and put results in variable
-                                if (pattern.Length > 0)
-                                {
-                                    bool wasFound = false;
-                                    for (int i = 0; i < found; i++)
-                                    {
-                                        if (pattern.Equals(foundwhat[i]))
+                                        if (bufr.Equals(qtitle))
                                         {
-                                            wasFound = true;
-                                            size++;
-                                            variable.EnsureLength(size);
-                                            if (pattern.Contains(Formatting.MISSINGLABEL))
-                                                variable.Data[size - 1] = Constant.MISSING;
-                                            else
-                                                variable.Data[size - 1] = i;
-                                            nbin[i]++;
+                                            isUnique = false;
                                             break;
                                         }
                                     }
-                                    if (!wasFound)
-                                    {
-                                        nbin[found] = 1;
-                                        foundwhat[found] = pattern;
-                                        size++;
-                                        variable.EnsureLength(size);
-                                        if (pattern.Contains(Formatting.MISSINGLABEL))
-                                            variable.Data[size - 1] = Constant.MISSING;
-                                        else
-                                            variable.Data[size - 1] = found;
-                                        found++;
-                                    }
+                                }
+                                // If we have duplicate names, there's no point looking further
+                                if (!isUnique)
+                                    break;
+                            }
+
+                            // Work out the top row of data, depending on whether we think titles are present or not
+                            int topRow;
+                            if (isRefill)
+                                topRow = titleWasInData ? 1 : 0;
+                            else if (minRowCount == maxRowCount && minRowCount == rowLengthHint)
+                                topRow = 0;
+                            else if (minRowCount == maxRowCount && minRowCount == rowLengthHint + 1)
+                                topRow = 1;
+                            else if (isShort && isUnique)
+                            {
+                                PointNormal();
+                                switch (
+                                    SDApplication.SoleInstance.msgbox_x(
+                                        "Does the top row of your selection contain titles?",
+                                        MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question,
+                                        "Worksheet Categorical Data Selection", true))
+                                {
+                                    case DialogResult.Yes:
+                                        topRow = 1;
+                                        break;
+                                    case DialogResult.Cancel:
+                                        return null;
+                                    default:
+                                        topRow = 0;
+                                        break;
+                                }
+                            }
+                            else if (isUnique)
+                            {
+                                topRow = 1;
+                            }
+                            else
+                            {
+                                topRow = 0;
+                            }
+
+                            // At this point, we know whether we have titles or not.  Now obtain our data strings.
+                            string[,] hold = new string[cellSelection.LongestRowCount,cellSelection.TotalColumns];
+                            for (int c = 0; c < cellSelection.TotalColumns; c++)
+                            {
+                                int rx = 0;
+                                int gridColumn = cellSelection.ColumnSelections[c].ColumnIndex;
+                                // get text not entry because we want formulae translated
+                                string[] ColumnArray = GetCellTexts(gridColumn,
+                                                                    cellSelection.ColumnSelections[c].RowIndex,
+                                                                    cellSelection.ColumnSelections[c].RowIndex +
+                                                                    cellSelection.ColumnSelections[c].RowCount - 1);
+                                foreach (string t in ColumnArray)
+                                {
+                                    string bufr = (null == t) ? "" : t.Trim();
+                                    hold[rx++, c] = bufr;
                                 }
                             }
 
-                            // fill in column details
-                            for (int i = 0; i < found; i++)
+                            if (DataAcquisitionMode.CategoryReplaceMissing == mode)
                             {
-                                Group group = new Group(foundwhat[i], i);
-                                group.NBin = nbin[i];
-                                variable.set_Group(i, group);
-                            }
+                                // Include missing values
+                                // Updated to match DeJagger by PJC July 2008, from code by IEB Sep 2007
+                                int lrow = 0;
+                                for (int c = 0; c <= hold.GetUpperBound(1); c++)
+                                {
+                                    int r;
+                                    for (r = hold.GetUpperBound(0); r >= topRow; --r)
+                                    {
+                                        if (hold[r, c].Length > 0 && !Formatting.ASTERISK.Equals(hold[r, c]))
+                                            break;
+                                    }
+                                    if (r > lrow)
+                                        lrow = r;
+                                }
+                                // At this point, lrow is the index of the last row that contains data.
+                                for (int c = 0; c <= hold.GetUpperBound(1); c++)
+                                {
+                                    for (int r = lrow; r >= topRow; --r)
+                                    {
+                                        if (hold[r, c].Length > 0)
+                                        {
+                                            if (Formatting.ASTERISK.Equals(hold[r, c]))
+                                                hold[r, c] = Formatting.MISSINGLABEL;
+                                        }
+                                        else
+                                        {
+                                            hold[r, c] = Formatting.MISSINGLABEL;
+                                        }
+                                    }
+                                }
+                            } // of DataAcquisitionMode.CategoryReplaceMissing
 
-                            // column title is a hybrid of all columns
-                            StringBuilder titleBuilder = new StringBuilder();
-                            for (int c = 0; c < totCols; c++)
+                            if (DataAcquisitionMode.Text == mode)
                             {
-                                if (c > 0)
-                                    titleBuilder.Append(", ");
-                                titleBuilder.Append(0 == topRow ? GetGridColumnTitle(cellSelection.ColumnSelections[c].ColumnIndex) : GetCellText(cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].ColumnIndex).Trim());
+                                for (int c = 0; c < cellSelection.TotalColumns; c++)
+                                {
+                                    int totRows = cellSelection.ColumnSelections[c].RowCount;
+                                    // Remove any trailing blanks from the selection
+                                    while (totRows > topRow && hold[totRows - 1, c].Length == 0)
+                                        totRows--;
+
+                                    string title = 0 == topRow
+                                                       ? GetGridColumnTitle(
+                                                           cellSelection.ColumnSelections[c].ColumnIndex)
+                                                       : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
+                                                                     cellSelection.ColumnSelections[c].ColumnIndex).
+                                                             Trim();
+                                    if (totRows > topRow || !string.IsNullOrEmpty(title))
+                                    {
+                                        StringVariable variable = new StringVariable();
+                                        frame.Variables.Add(variable);
+                                        variable.EnsureLength(totRows - topRow);
+                                        int size = 0;
+                                        for (int r = topRow; r < totRows; r++)
+                                        {
+                                            variable.Data[size++] = hold[r, c];
+                                        }
+
+                                        // Fill in column title
+                                        variable.Title = title;
+                                        variable.Origin = new WorksheetOrigin(
+                                            cellSelection.ColumnSelections[c].WorkbookPath,
+                                            cellSelection.ColumnSelections[c].WorksheetName,
+                                            cellSelection.ColumnSelections[c].ColumnIndex,
+                                            cellSelection.ColumnSelections[c].RowIndex,
+                                            cellSelection.ColumnSelections[c].RowCount, mode,
+                                            topRow > 0);
+                                    }
+                                }
                             }
-                            variable.Title = titleBuilder.ToString();
-                            // TODO: This origin is incorrect; it should include all the columns that were combined, and it doesn't.
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[0].WorkbookPath, cellSelection.ColumnSelections[0].WorksheetName, cellSelection.ColumnSelections[0].ColumnIndex, cellSelection.ColumnSelections[0].RowIndex, cellSelection.ColumnSelections[0].RowCount, mode, topRow > 0);
-                        }
-                        else
-                        {
-                            // Modes 3, 4 or 6: categories per column
-                            for (int c = 0; c < cellSelection.TotalColumns; c++)
+                            else if (mode == DataAcquisitionMode.CategoryCombineAllColumns)
                             {
-                                int totRows = cellSelection.ColumnSelections[c].RowCount;
+                                // Categories combined across columns; output as row pattern
+                                int totRows = cellSelection.LongestRowCount;
+                                int totCols = cellSelection.TotalColumns;
                                 string[] foundwhat = new string[totRows];
                                 int[] nbin = new int[totRows];
                                 int found = 0;
@@ -1255,43 +1181,58 @@ namespace StatsDirect.UI
                                 frame.Variables.Add(variable);
                                 for (int r = topRow; r < totRows; r++)
                                 {
-                                    string pattern = hold[r, c];
-                                    // Ignore missing values
-                                    if (string.IsNullOrEmpty(pattern) || "*".Equals(pattern))
-                                        continue;
+                                    // Build the pattern for row r
+                                    StringBuilder patternBuilder = new StringBuilder();
+                                    for (int c = 0; c < totCols; c++)
+                                    {
+                                        if (null == hold[r, c] || hold[r, c].Length == 0 || "*".Equals(hold[r, c]))
+                                        {
+                                            // Make the row pattern empty if any data are missing
+                                            patternBuilder.Length = 0;
+                                            break;
+                                        }
+                                        // Allow neat string pattern for later bin naming purposes
+                                        if (c > 0)
+                                            patternBuilder.Append(", ");
+                                        patternBuilder.Append(hold[r, c]);
+                                    }
+                                    string pattern = patternBuilder.ToString();
 
                                     // Enumerate categories and put results in variable
-                                    bool wasFound = false;
-                                    for (int i = 0; i < found; i++)
+                                    if (pattern.Length > 0)
                                     {
-                                        if (pattern.Equals(foundwhat[i]))
+                                        bool wasFound = false;
+                                        for (int i = 0; i < found; i++)
                                         {
-                                            wasFound = true;
+                                            if (pattern.Equals(foundwhat[i]))
+                                            {
+                                                wasFound = true;
+                                                size++;
+                                                variable.EnsureLength(size);
+                                                if (pattern.Contains(Formatting.MISSINGLABEL))
+                                                    variable.Data[size - 1] = Constant.MISSING;
+                                                else
+                                                    variable.Data[size - 1] = i;
+                                                nbin[i]++;
+                                                break;
+                                            }
+                                        }
+                                        if (!wasFound)
+                                        {
+                                            nbin[found] = 1;
+                                            foundwhat[found] = pattern;
                                             size++;
                                             variable.EnsureLength(size);
                                             if (pattern.Contains(Formatting.MISSINGLABEL))
                                                 variable.Data[size - 1] = Constant.MISSING;
                                             else
-                                                variable.Data[size - 1] = i;
-                                            nbin[i]++;
-                                            break;
+                                                variable.Data[size - 1] = found;
+                                            found++;
                                         }
-                                    }
-                                    if (!wasFound)
-                                    {
-                                        foundwhat[found] = pattern;
-                                        size++;
-                                        variable.EnsureLength(size);
-                                        if (pattern.Contains(Formatting.MISSINGLABEL))
-                                            variable.Data[size - 1] = Constant.MISSING;
-                                        else
-                                            variable.Data[size - 1] = found;
-                                        nbin[found] = 1;
-                                        found++;
                                     }
                                 }
 
-                                // Fill in column details
+                                // fill in column details
                                 for (int i = 0; i < found; i++)
                                 {
                                     Group group = new Group(foundwhat[i], i);
@@ -1299,9 +1240,100 @@ namespace StatsDirect.UI
                                     variable.set_Group(i, group);
                                 }
 
-                                // Fill in column title
-                                variable.Title = 0 == topRow ? GetGridColumnTitle(cellSelection.ColumnSelections[c].ColumnIndex) : GetCellText(cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].ColumnIndex).Trim();
-                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, topRow > 0);
+                                // column title is a hybrid of all columns
+                                StringBuilder titleBuilder = new StringBuilder();
+                                for (int c = 0; c < totCols; c++)
+                                {
+                                    if (c > 0)
+                                        titleBuilder.Append(", ");
+                                    titleBuilder.Append(0 == topRow
+                                                            ? GetGridColumnTitle(
+                                                                cellSelection.ColumnSelections[c].ColumnIndex)
+                                                            : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
+                                                                          cellSelection.ColumnSelections[c].ColumnIndex)
+                                                                  .Trim());
+                                }
+                                variable.Title = titleBuilder.ToString();
+                                // TODO: This origin is incorrect; it should include all the columns that were combined, and it doesn't.
+                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[0].WorkbookPath,
+                                                                      cellSelection.ColumnSelections[0].WorksheetName,
+                                                                      cellSelection.ColumnSelections[0].ColumnIndex,
+                                                                      cellSelection.ColumnSelections[0].RowIndex,
+                                                                      cellSelection.ColumnSelections[0].RowCount, mode,
+                                                                      topRow > 0);
+                            }
+                            else
+                            {
+                                // Modes 3, 4 or 6: categories per column
+                                for (int c = 0; c < cellSelection.TotalColumns; c++)
+                                {
+                                    int totRows = cellSelection.ColumnSelections[c].RowCount;
+                                    string[] foundwhat = new string[totRows];
+                                    int[] nbin = new int[totRows];
+                                    int found = 0;
+                                    int size = 0;
+                                    ClassifierVariable variable = new ClassifierVariable();
+                                    frame.Variables.Add(variable);
+                                    for (int r = topRow; r < totRows; r++)
+                                    {
+                                        string pattern = hold[r, c];
+                                        // Ignore missing values
+                                        if (string.IsNullOrEmpty(pattern) || "*".Equals(pattern))
+                                            continue;
+
+                                        // Enumerate categories and put results in variable
+                                        bool wasFound = false;
+                                        for (int i = 0; i < found; i++)
+                                        {
+                                            if (pattern.Equals(foundwhat[i]))
+                                            {
+                                                wasFound = true;
+                                                size++;
+                                                variable.EnsureLength(size);
+                                                if (pattern.Contains(Formatting.MISSINGLABEL))
+                                                    variable.Data[size - 1] = Constant.MISSING;
+                                                else
+                                                    variable.Data[size - 1] = i;
+                                                nbin[i]++;
+                                                break;
+                                            }
+                                        }
+                                        if (!wasFound)
+                                        {
+                                            foundwhat[found] = pattern;
+                                            size++;
+                                            variable.EnsureLength(size);
+                                            if (pattern.Contains(Formatting.MISSINGLABEL))
+                                                variable.Data[size - 1] = Constant.MISSING;
+                                            else
+                                                variable.Data[size - 1] = found;
+                                            nbin[found] = 1;
+                                            found++;
+                                        }
+                                    }
+
+                                    // Fill in column details
+                                    for (int i = 0; i < found; i++)
+                                    {
+                                        Group group = new Group(foundwhat[i], i);
+                                        group.NBin = nbin[i];
+                                        variable.set_Group(i, group);
+                                    }
+
+                                    // Fill in column title
+                                    variable.Title = 0 == topRow
+                                                         ? GetGridColumnTitle(
+                                                             cellSelection.ColumnSelections[c].ColumnIndex)
+                                                         : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
+                                                                       cellSelection.ColumnSelections[c].ColumnIndex).
+                                                               Trim();
+                                    variable.Origin = new WorksheetOrigin(
+                                        cellSelection.ColumnSelections[c].WorkbookPath,
+                                        cellSelection.ColumnSelections[c].WorksheetName,
+                                        cellSelection.ColumnSelections[c].ColumnIndex,
+                                        cellSelection.ColumnSelections[c].RowIndex,
+                                        cellSelection.ColumnSelections[c].RowCount, mode, topRow > 0);
+                                }
                             }
                         }
                         break;
@@ -1349,6 +1381,102 @@ namespace StatsDirect.UI
                             StringVariable variable = new StringVariable(GetCellTexts(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null);
                             variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false);
                             frame.Variables.Add(variable);
+                        }
+                        break;
+                    case DataAcquisitionMode.NumericCodingTextToCategories:
+                        for (int c = 0; c < cellSelection.TotalColumns; c++)
+                        {
+                            int dataRows;
+                            int gridColumn;
+                            int gridFirstDataRow;
+                            bool titleIsInData;
+                            string title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn, out titleIsInData);
+                            double[] numericValues = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
+
+                            // If there's no data in the row (for example if it's hidden), ignore the row
+                            if (null == numericValues)
+                                continue;
+
+                            string[] textValues = GetCellTexts(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
+
+                            // Find the last row
+                            int lastNumericRow;
+                            for (lastNumericRow = dataRows - 1; lastNumericRow >= 0; lastNumericRow--)
+                                if (numericValues[lastNumericRow] != Constant.MISSING)
+                                    break;
+                            int lastTextRow;
+                            text rows should not use datarows!!!
+                            for (lastTextRow = dataRows - 1; lastTextRow >= 0; lastTextRow--)
+                                if (!string.IsNullOrWhiteSpace(textValues[lastTextRow]))
+                                    break;
+                            int lastRow = Math.Max(lastNumericRow, lastTextRow);
+                            // If there are any numeric missing values where the text is not missing, treat the column as textual and code as a category
+                            bool isTextual = false;
+                            for (int row = 0; row <= lastRow; row++)
+                            {
+                                if (numericValues[row] == Constant.MISSING && !string.IsNullOrWhiteSpace(textValues[row]))
+                                {
+                                    isTextual = true;
+                                    break;
+                                }
+                            }
+                            if (isTextual)
+                            {
+                                ClassifierVariable variable = new ClassifierVariable();
+                                variable.EnsureLength(lastRow + 1);
+                                frame.Variables.Add(variable);
+                                // code text categories as numbers
+
+                                Dictionary<string, Group> groupsByLabel = new Dictionary<string, Group>();
+                                Dictionary<double, Group> groupsById = new Dictionary<double, Group>();
+                                int nextGroupNumber = 1;
+
+                                for (int row = 0; row <= lastRow; row++)
+                                {
+                                    string pattern = textValues[row];
+                                    // Ignore missing values
+                                    if (string.IsNullOrEmpty(pattern) || "*".Equals(pattern))
+                                        continue;
+
+                                    // Enumerate categories and put results in variable
+                                    Group probe;
+                                    if (!groupsByLabel.TryGetValue(pattern, out probe))
+                                    {
+                                        // New group
+                                        probe = new Group(pattern, nextGroupNumber++);
+                                        groupsByLabel.Add(probe.Label, probe);
+                                        groupsById.Add(probe.Id, probe);
+                                    }
+                                    // By now, we have always found or created the group for this row
+                                    probe.NBin++;
+                                    variable.Data[row] = probe.Id;
+                                }
+
+                                // Fill in groups
+                                variable.EnsureGroups(groupsByLabel.Count);
+                                foreach (Group group in groupsByLabel.Values)
+                                {
+                                    variable.set_Group(((int)group.Id) - 1, group);
+                                }
+
+                                // Fill in column title
+                                variable.Title = title;
+                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, titleIsInData);
+                            }
+                            else
+                            {
+                                DoubleVariable variable = new DoubleVariable(lastRow + 1, title);
+                                frame.Variables.Add(variable);
+
+                                for (int row = 0; row <= lastRow; row++)
+                                {
+                                    double v = numericValues[row];
+                                    if (Constant.MISSING*10D == v)
+                                        v = Constant.MISSING;
+                                    variable.Data[row] = v;
+                                }
+                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
+                            }
                         }
                         break;
                     default:

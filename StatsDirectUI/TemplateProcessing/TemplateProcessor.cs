@@ -1014,7 +1014,7 @@ namespace StatsDirect.Templates
                     }
 
                     // If we don't already have the parameter and its lifetime is something other than just this operation, see whether it's already in the session
-                    if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && !parmsAndFilledParameters.ContainsKey(parameter.Name))
+                    if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
                     {
                         IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
                         if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
@@ -1026,7 +1026,7 @@ namespace StatsDirect.Templates
                             }
                         }
                     }
-                    if (parameter.Lifetime == ParameterLifetime.SessionForAllOperations && !parmsAndFilledParameters.ContainsKey(parameter.Name))
+                    if (parameter.Lifetime == ParameterLifetime.SessionForAllOperations && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
                     {
                         ParameterBag savedParameters = host.SessionParametersAcrossOperations;
                         if (savedParameters.ContainsKey(parameter.Name))
@@ -1271,7 +1271,7 @@ namespace StatsDirect.Templates
                         if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
                             return;
 
-                        // Otherwise ensure the number of bins is the square root of the number of values
+                        // Otherwise ensure the number of bins, if >2, is at least 12 (or they're all distinct)
                         DataFrame frame = filledParameters[parameter.Name].AsDataFrame;
                         foreach (DoubleVariable v in frame.Variables)
                         {

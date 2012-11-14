@@ -43,6 +43,48 @@
           </parameters>
         </settings>
       </iftrue>
+      <iffalse>
+        <settings>
+          <parameters>
+            <boolean>
+              <name>doExact</name>
+              <prompt>Try exact test</prompt>
+              <must-request>true</must-request>
+              <default-value>false</default-value>
+            </boolean>
+            <boolean>
+              <name>show_pc</name>
+              <prompt>Show percentages</prompt>
+              <must-request>true</must-request>
+              <default-value>true</default-value>
+            </boolean>
+            <boolean>
+              <name>xp</name>
+              <prompt>Show expected counts</prompt>
+              <must-request>true</must-request>
+              <default-value>false</default-value>
+            </boolean>
+            <boolean>
+              <name>cs</name>
+              <prompt>Show cell chi-square</prompt>
+              <must-request>true</must-request>
+              <default-value>false</default-value>
+            </boolean>
+            <boolean>
+              <name>xs</name>
+              <prompt>Show trend scores</prompt>
+              <must-request>true</must-request>
+              <default-value>false</default-value>
+            </boolean>
+            <boolean>
+              <name>specify_scores</name>
+              <prompt>Specify trend scores</prompt>
+              <must-request>true</must-request>
+              <default-value>false</default-value>
+            </boolean>
+          </parameters>
+        </settings>
+      </iffalse>
     </test>
     <settings>
       <parameters>
@@ -51,7 +93,41 @@
         </confidence-interval>
       </parameters>
     </settings>
-		<builtin function-name="rptCrosstabs" />
+    <builtin function-name="rptCrosstabsPreprocess" />
+    <test>
+      <condition>=Parameters["strat"].AsBoolean</condition>
+      <iftrue>
+        <test>
+          <condition>=Parameters["xcats"].AsInt32 == 2 &amp;&amp; Parameters["ycats"].AsInt32 == 2</condition>
+          <iftrue>
+            <settings>
+              <parameters>
+                <option>
+                  <name>study_type</name>
+                  <prompt>Which type of study produced your data?</prompt>
+                  <options>
+                    <option value="casecontrol">Case-control study</option>
+                    <option value="cohort">Cohort study</option>
+                    <option value="neither">Neither</option>
+                  </options>
+                  <default-value>casecontrol</default-value>
+                </option>
+              </parameters>
+            </settings>
+          </iftrue>
+          <iffalse>
+            <settings>
+              <parameters>
+                <special>
+                  <type>scores</type>
+                </special>
+              </parameters>
+            </settings>
+          </iffalse>
+        </test>
+      </iftrue>
+    </test>
+    <builtin function-name="rptCrosstabs" />
 		<report filename="xtabouter.rtf" />
 	</steps>
 </operation>
