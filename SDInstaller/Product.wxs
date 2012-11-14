@@ -248,13 +248,24 @@
           <Component Id="DevExpress.XtraTreeList.v12.1.dll">
             <File Id="DevExpress.XtraTreeList.v12.1.dll" KeyPath="yes" Name="DevExpress.XtraTreeList.v12.1.dll" Checksum="yes" />
           </Component>
+          
+          <!-- SpreadsheetGear -->
+          <Component Id="SpreadsheetGear2012.Core.dll">
+            <File Id="SpreadsheetGear2012.Core.dll" KeyPath="yes" Name="SpreadsheetGear2012.Core.dll" Checksum="yes" />
+          </Component>
+          <Component Id="SpreadsheetGear2012.Drawing.dll">
+            <File Id="SpreadsheetGear2012.Drawing.dll" KeyPath="yes" Name="SpreadsheetGear2012.Drawing.dll" Checksum="yes" />
+          </Component>
+          <Component Id="SpreadsheetGear2012.Windows.Forms.dll">
+            <File Id="SpreadsheetGear2012.Windows.Forms.dll" KeyPath="yes" Name="SpreadsheetGear2012.Windows.Forms.dll" Checksum="yes" />
+          </Component>
+          <Component Id="SpreadsheetGear2012.Windows.Forms.Integration.dll">
+            <File Id="SpreadsheetGear2012.Windows.Forms.Integration.dll" KeyPath="yes" Name="SpreadsheetGear2012.Windows.Forms.Integration.dll" Checksum="yes" />
+          </Component>
 
           <!-- SD3 -->
           <Component Id="menu.xml">
             <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
-          </Component>
-          <Component Id="SpreadsheetGear.dll">
-            <File Id="SpreadsheetGear.dll" KeyPath="yes" Name="SpreadsheetGear.dll" Checksum="yes" />
           </Component>
           <Component Id="Antlr3.Runtime.dll">
             <File Id="Antlr3.Runtime.dll" KeyPath="yes" Name="Antlr3.Runtime.dll" Checksum="yes" />
@@ -353,6 +364,9 @@
             </Component>
             <Component Id="ControlPlot.xml">
               <File Id="ControlPlot.xml" Name="ControlPlot.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="ConvertUnits.xml">
+              <File Id="ConvertUnits.xml" Name="ConvertUnits.xml" KeyPath="yes" />
             </Component>
             <Component Id="CoxBaselineToReport.xml">
               <File Id="CoxBaselineToReport.xml" Name="CoxBaselineToReport.xml" KeyPath="yes" />
@@ -1619,6 +1633,7 @@
       <!-- Main files -->
       <ComponentRef Id="ProductComponent" />
 
+      <!-- DevExpress -->
       <ComponentRef Id="DevExpress.Data.v12.1.dll" />
       <ComponentRef Id="DevExpress.Office.v12.1.Core.dll" />
       <ComponentRef Id="DevExpress.Printing.v12.1.Core.dll" />
@@ -1632,8 +1647,13 @@
       <ComponentRef Id="DevExpress.XtraRichEdit.v12.1.Printing.dll" />
       <ComponentRef Id="DevExpress.XtraTreeList.v12.1.dll" />
 
+      <!-- SpreadsheetGear -->
+      <ComponentRef Id="SpreadsheetGear2012.Core.dll" />
+      <ComponentRef Id="SpreadsheetGear2012.Drawing.dll" />
+      <ComponentRef Id="SpreadsheetGear2012.Windows.Forms.dll" />
+      <ComponentRef Id="SpreadsheetGear2012.Windows.Forms.Integration.dll" />
+
       <ComponentRef Id="menu.xml" />
-      <ComponentRef Id="SpreadsheetGear.dll" />
       <ComponentRef Id="Antlr3.Runtime.dll" />
       <ComponentRef Id="STATSDIRECT.chm" />
       <ComponentRef Id="StatsDirect.exe.config" />
@@ -1669,6 +1689,7 @@
       <ComponentRef Id="Combine.xml" />
       <ComponentRef Id="ConditionalLogisticRegression.xml" />
       <ComponentRef Id="ControlPlot.xml" />
+      <ComponentRef Id="ConvertUnits.xml" />
       <ComponentRef Id="CoxBaselineToReport.xml" />
       <ComponentRef Id="CoxBaselineToWorksheet.xml" />
       <ComponentRef Id="CoxHazardPlots.xml" />

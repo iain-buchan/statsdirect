@@ -73,6 +73,7 @@
             <menu-item label="&amp;Standardization" operation="Standardize" />
             <menu-item label="&amp;Ranks" operation="Rank" />
             <menu-item label="S&amp;ummary" operation="UnivariateSummaryToWorksheetOnly" />
+            <menu-item label="&amp;Convert Units" operation="ConvertUnits" />
           </sub-items>
         </menu-item>
         <menu-item label="&amp;Organizing">

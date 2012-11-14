@@ -24,6 +24,8 @@ using System.Runtime.InteropServices;
 using System.IO;
 using SpreadsheetGear.Windows.Forms;
 using SpreadsheetGear;
+using Color = System.Drawing.Color;
+using SystemColors = System.Drawing.SystemColors;
 
 namespace StatsDirect.UI
 {
@@ -41,6 +43,10 @@ namespace StatsDirect.UI
         /// The name of the parameter to be passed around a result set that contains a list of operations that have contributed to the list.
         /// </summary>
         private const string OPERATION_MEMORY_NAME = "statsdirect-operation-list";
+        /// <summary>
+        /// Maximum length of the recent operations list
+        /// </summary>
+        private const int MAX_RECENT_OPERATIONS = 10;
         /// <summary>
         /// The presumed mean width in pixels of a character in a text box, for use when controlling the box's max length.
         /// </summary>
@@ -95,6 +101,7 @@ namespace StatsDirect.UI
 
         private Operation mostRecentOperation;
         private bool settingUpSubOperations /* = false */;
+        private bool settingUpRecentOperations /* = false */;
 
         /// <summary>
         /// Outside the debugger, the runtime cannot propagate exception through native code - the native handler gets them and fails.
@@ -399,7 +406,7 @@ namespace StatsDirect.UI
                 {
                     try
                     {
-                        bool succeeded = SDApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
+                        bool succeeded = DoOperationOnceOrUntilCancelled(operation, null);
                         if (!succeeded)
                             break;
                     }
@@ -1074,7 +1081,6 @@ namespace StatsDirect.UI
         /// <returns></returns>
         private bool ShouldShowClose()
         {
-            // #
             // If the operation is unknown, back out of it as soon as possible.  This case should never occur in theory.
             if (null == mostRecentOperation)
                 return true;
@@ -1136,7 +1142,7 @@ namespace StatsDirect.UI
             using (new WaitCursor())
             {
                 string fileName = Path.GetFileName(path);
-                bool isTempFile = fileName.StartsWith("~");
+                bool isTempFile = null != fileName && fileName.StartsWith("~");
                 // User wants to open the file - but which file type?
                 string extension = Path.GetExtension(path);
                 if (null != extension)
@@ -1404,8 +1410,7 @@ namespace StatsDirect.UI
             {
                 try
                 {
-                    if (null != operation.FriendlyNames && operation.FriendlyNames.Count > 0 && !string.IsNullOrEmpty(operation.FriendlyNames[0]))
-                        Text = "StatsDirect: " + operation.FriendlyNames[0];
+                    Text = "StatsDirect: " + operation;
                     return DoOperationInternal(operation, inputParameters, isRedo);
                 }
                 catch (Templates.InvalidDataException ex)
@@ -1504,6 +1509,7 @@ namespace StatsDirect.UI
             using (new WaitCursor())
             {
                 mostRecentOperation = operation;
+                NoteRecentOperation(operation);
 
                 // Set help
                 if (null != operation.HelpContext)
@@ -1622,9 +1628,7 @@ namespace StatsDirect.UI
                 foreach (SuggestedOperation su in availableSuggestedOperations)
                 {
                     Operation suggestedOperation = TemplateFactory.Operations[su.Name];
-                    string name = suggestedOperation.Name;
-                    if (suggestedOperation.FriendlyNames.Count > 0)
-                        name = suggestedOperation.FriendlyNames[0];
+                    string name = suggestedOperation.FriendlyName ?? suggestedOperation.Name;
                     suggestedListItems.Add(new SDListItem(name, su.Name));
                 }
                 ParameterBag strippedParameters = null == inputParameters ? new ParameterBag() : inputParameters.CopyWithoutOutputParameters();
@@ -1694,7 +1698,11 @@ namespace StatsDirect.UI
                         cboOperation.SelectedIndex = selectedItemNumber;
                     }
                     if (SuggestionTime.AfterOperation == suggestionTime)
-                        MaybeRunSelectedOperation();
+                    {
+                        SDListItem selectedItem = (SDListItem)cboOperation.SelectedItem;
+                        Operation operation = TemplateFactory.Operations[selectedItem.Operation];
+                        MaybeRunSelectedOperation(operation);
+                    }
                 }
             }
             finally
@@ -1772,7 +1780,9 @@ namespace StatsDirect.UI
                 if (settingUpSubOperations)
                     return;
 
-                MaybeRunSelectedOperation();
+                SDListItem selectedItem = (SDListItem)cboOperation.SelectedItem;
+                Operation operation = TemplateFactory.Operations[selectedItem.Operation];
+                MaybeRunSelectedOperation(operation);
             }
             catch (Exception ex)
             {
@@ -1780,11 +1790,8 @@ namespace StatsDirect.UI
             }
         }
 
-        private void MaybeRunSelectedOperation()
+        private void MaybeRunSelectedOperation(Operation operation)
         {
-            SDListItem selectedItem = (SDListItem)cboOperation.SelectedItem;
-            Operation operation = TemplateFactory.Operations[selectedItem.Operation];
-
             if (InOperation)
             {
                 // There's already an operation running; deal with it
@@ -2650,10 +2657,7 @@ namespace StatsDirect.UI
             panel2By2ByK.Controls.Add(lblColumnsPrompt, 0, 0);
             panel2By2ByK.SetColumnSpan(lblColumnsPrompt, 3);
 
-            Label lblLeftColumnPrompt = new Label();
-            lblLeftColumnPrompt.Padding = new Padding(3, 6, 3, 3);
-            lblLeftColumnPrompt.AutoSize = true;
-            lblLeftColumnPrompt.Text = "Present";
+            Label lblLeftColumnPrompt = new Label {Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Present"};
             panel2By2ByK.Controls.Add(lblLeftColumnPrompt, 0, 1);
 
             Label lblRightColumnPrompt = new Label {Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Absent"};
@@ -3007,6 +3011,7 @@ namespace StatsDirect.UI
         else if ("SummaryStatistics".Equals(fillable.FillerToUse))
             return Amend((StatsDirect.Builtins.SummaryStatisticsOptions)fillable);
              **/
+                nb scores here!
             else
                 throw new ArgumentOutOfRangeException("fillableParameter", fillable.FillerToUse, "fillableParameter.Fillable.FillerToUse: Unknown option");
             ctl.Tag = fillableParameter;
@@ -4640,17 +4645,14 @@ namespace StatsDirect.UI
                                     object[,] ary = (object[,])value;
 
                                     DataFrame frame = new DataFrame();
-                                    if (null != ary)
+                                    for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
                                     {
-                                        for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
+                                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
+                                        for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
                                         {
-                                            DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
-                                            for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
-                                            {
-                                                dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
-                                            }
-                                            frame.Variables.Add(dv);
+                                            dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
                                         }
+                                        frame.Variables.Add(dv);
                                     }
                                     outputParameters[parameter.Name] = new FilledParameter(true, frame);
                                 }
@@ -5330,7 +5332,7 @@ namespace StatsDirect.UI
                 return;
             try
             {
-                string cell = ((ITemplateHost)SDApplication.SoleInstance).GetString("Enter the cell address, for example G54", "Go to cell", "");
+                string cell = SDApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", "");
                 workbookView.GetLock();
                 if (null != cell)
                 {
@@ -5339,7 +5341,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                ((ITemplateHost)SDApplication.SoleInstance).Warning(ex.Message, "Go to cell");
+                SDApplication.SoleInstance.Warning(ex.Message, "Go to cell");
             }
             finally
             {
@@ -5368,8 +5370,8 @@ namespace StatsDirect.UI
 
         internal DialogResult ShowModalMessage(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton, string helpFile, HelpNavigator helpNavigator, string helpTopic)
         {
-            IButtonControl oldAcceptButton = this.AcceptButton;
-            IButtonControl oldCancelButton = this.CancelButton;
+            IButtonControl oldAcceptButton = AcceptButton;
+            IButtonControl oldCancelButton = CancelButton;
             lblModalMessageText.Text = text;
             Bitmap rawIcon = IconFromMessageBoxIcon(icon);
             if (null != rawIcon)
@@ -5383,8 +5385,8 @@ namespace StatsDirect.UI
             }
             finally
             {
-                this.AcceptButton = oldAcceptButton;
-                this.CancelButton = oldCancelButton;
+                AcceptButton = oldAcceptButton;
+                CancelButton = oldCancelButton;
                 PopPanel(true);
             }
         }
@@ -5413,7 +5415,7 @@ namespace StatsDirect.UI
                     cmdModalMessage3.Visible = false;
                     cmdModalMessage1.Text = "OK";
                     cmdModalMessage2.Text = "Cancel";
-                    this.CancelButton = cmdModalMessage2;
+                    CancelButton = cmdModalMessage2;
                     break;
                 case MessageBoxButtons.RetryCancel:
                     cmdModalMessage1.Visible = true;
@@ -5421,7 +5423,7 @@ namespace StatsDirect.UI
                     cmdModalMessage3.Visible = false;
                     cmdModalMessage1.Text = "Retry";
                     cmdModalMessage2.Text = "Cancel";
-                    this.CancelButton = cmdModalMessage2;
+                    CancelButton = cmdModalMessage2;
                     break;
                 case MessageBoxButtons.YesNo:
                     cmdModalMessage1.Visible = true;
@@ -5437,7 +5439,7 @@ namespace StatsDirect.UI
                     cmdModalMessage1.Text = "Yes";
                     cmdModalMessage2.Text = "No";
                     cmdModalMessage3.Text = "Cancel";
-                    this.CancelButton = cmdModalMessage3;
+                    CancelButton = cmdModalMessage3;
                     break;
                 default:
                     throw new NotImplementedException();
@@ -5458,12 +5460,12 @@ namespace StatsDirect.UI
             }
             if (null != db)
             {
-                this.AcceptButton = db;
+                AcceptButton = db;
                 db.Focus();
             }
         }
 
-        private System.Windows.Forms.DialogResult DecodeModalButtons(MessageBoxButtons buttons)
+        private DialogResult DecodeModalButtons(MessageBoxButtons buttons)
         {
             switch (buttons)
             {
@@ -5610,6 +5612,8 @@ namespace StatsDirect.UI
                     rawIcon = null;
                     break;
             }
+            if (null == rawIcon)
+                return null;
             Icon sizedIcon = new Icon(rawIcon, 40, 40);
             Bitmap bmp = new Bitmap(sizedIcon.Width, sizedIcon.Height);
             Graphics gxMem = Graphics.FromImage(bmp);
@@ -5620,7 +5624,7 @@ namespace StatsDirect.UI
 
         private void cmdVariables_Click(object sender, EventArgs e)
         {
-            int durationMilliseconds = 10000;
+            const int durationMilliseconds = 10000;
             tipVariables.Show(tipVariables.GetToolTip(cmdVariables), cmdVariables, durationMilliseconds);
         }
 
@@ -5639,9 +5643,6 @@ namespace StatsDirect.UI
                 case 'c':
                 case 'C':
                     e.Handled = FindAndFakeModalButtonPress("Cancel");
-                    break;
-                default:
-                    // Do nothing
                     break;
             }
         }
@@ -5662,6 +5663,46 @@ namespace StatsDirect.UI
                 waitingForModalMessage = false;
             }
             return found;
+        }
+
+        private void cboRecentOperations_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                // If we're merely setting up the list, we still get events.  However, they're not user-triggered and should be ignored.
+                if (settingUpRecentOperations)
+                    return;
+
+                SDListItem selectedItem = (SDListItem)cboRecentOperations.SelectedItem;
+                Operation operation = TemplateFactory.Operations[selectedItem.Operation];
+                DoOperationOnceOrUntilCancelled(operation, new ParameterBag());
+            }
+            catch (Exception ex)
+            {
+                PuntThroughEventLoop(ex);
+            }
+        }
+
+        private void NoteRecentOperation(Operation operation)
+        {
+            // We're not willing to add operations with prereqs to the recent operations list, as we can't guarantee the prereq has been run at the instant the operation is invoked.
+            if (operation.HasPrerequisites)
+                return;
+
+            // Prevent rogue calls from modifying the list
+            settingUpRecentOperations = true;
+
+            // Insert the new candidate at the top, removing it if it was further down the list.
+            SDListItem candidate = new SDListItem(operation.FriendlyName, operation.Name);
+            if (cboRecentOperations.Items.Contains(candidate))
+                cboRecentOperations.Items.Remove(candidate);
+            cboRecentOperations.Items.Insert(0, candidate);
+
+            // Trim the recent operation list by removing least recently used
+            while (cboRecentOperations.Items.Count > MAX_RECENT_OPERATIONS)
+                cboRecentOperations.Items.RemoveAt(cboRecentOperations.Items.Count - 1);
+
+            settingUpRecentOperations = false;
         }
     }
 

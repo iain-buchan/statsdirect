@@ -77,145 +77,162 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptPreferences(ITemplateHost host, ParameterBag parameters)
         {
-            int i; int held;
-            int k; int extra; int nrp; int tp; int tn; int OK = 0; int j;
-            double cap = 0;
-
             const string pg = "Preference Groups";
 
-            int Seed = parameters["seed"].AsInt32;
+            int seed = parameters["seed"].AsInt32;
             DataFrame capacitiesFrame = parameters["capacities"].AsDataFrame;
             DoubleVariable capacitiesVariable = capacitiesFrame.Variables[0].AsDoubleVariable;
-            int ng = capacitiesVariable.Length;
-            double[] gc = new double[ng + 1 /* VB to C# conversion */ ];
-            for (i = 1; i <= ng; i++)
+            int groups = capacitiesVariable.Length;
+            int[] groupCapacities = new int[groups + 1];
+            int capacity = 0;
+            for (int i = 1; i <= groups; i++)
             {
-                gc[i] = capacitiesVariable.Data[i - 1];
-                cap += gc[i];
+                groupCapacities[i] = (int)capacitiesVariable.Data[i - 1];
+                capacity += groupCapacities[i];
             }
             DataFrame preferencesFrame = parameters["preferences"].AsDataFrame;
-            int P = preferencesFrame.VariableCount;
-            int s = preferencesFrame.Variables[0].Length;
-            double[,] x = new double[P + 1 /* VB to C# conversion */, s + 1 /* VB to C# conversion */];
-            for (i = 1; i <= P; i++)
+            int preferences = preferencesFrame.VariableCount;
+            int subjects = preferencesFrame.Variables[0].Length;
+            int[,] x = new int[preferences + 1, subjects + 1];
+            for (int i = 1; i <= preferences; i++)
             {
                 DoubleVariable preferencesVariable = preferencesFrame.Variables[i - 1].AsDoubleVariable;
-                for (j = 1; j <= s; j++)
+                for (int j = 1; j <= subjects; j++)
                 {
-                    x[i, j] = preferencesVariable.Data[j - 1];
-                    if (x[i, j] < 1 | x[i, j] > ng)
+                    x[i, j] = (int)preferencesVariable.Data[j - 1];
+                    if (x[i, j] < 1 || x[i, j] > groups)
                     {
                         host.Error("invalid preference in group " + i.ToString() + "at row " + j.ToString(), pg);
                         throw new TemplateOperationCancelledException();
                     }
                 }
             }
-            if (ng < P)
+            if (groups < preferences)
             {
                 host.Error("fewer groups than preferences", pg);
                 throw new TemplateOperationCancelledException();
             }
-            if (cap < Convert.ToDouble(s))
+            if (capacity < Convert.ToDouble(subjects))
             {
-                host.Error("more subects (" + s.ToString() + ") than total capacity of groups (" + cap.ToString() + ")", pg);
+                host.Error("more subects (" + subjects.ToString() + ") than total capacity of groups (" + capacity.ToString() + ")", pg);
                 throw new TemplateOperationCancelledException();
             }
-            int[] done = new int[s + 1 /* VB to C# conversion */ ];
-            int[] gp = new int[s + 1 /* VB to C# conversion */ ];
-            int[] full = new int[ng + 1 /* VB to C# conversion */ ];
-            int[] tmp = new int[s + 1 + 1 /* VB to C# conversion */ ];
-            MersenneTwister mt = new MersenneTwister(Seed);
-            for (i = 1; i <= P; i++)
+            bool[] done = new bool[subjects + 1];
+            int[] allocatedGroup = new int[subjects + 1];
+            int[] allocatedSoFar = new int[groups + 1];
+            int[] toConsider = new int[subjects + 2];
+            MersenneTwister mt = new MersenneTwister(seed);
+            int ok = 0;
+            // First allocate according to preferences where possible - 1st preference, then 2nd preference, etc..
+            for (int preference = 1; preference <= preferences; preference++)
             {
-                for (j = 1; j <= ng; j++)
+                for (int grp = 1; grp <= groups; grp++)
                 {
-                    held = 0;
-                    for (k = 1; k <= s; k++)
+                    // If the group is already full, there's no point trying to assign any more at this preference
+                    if (allocatedSoFar[grp] < groupCapacities[grp])
                     {
-                        if (x[i, k] == j & done[k] == 0 & full[j] < gc[j])
+                        // Gather all subjects who have expressed a preference here for group grp
+                        int underConsideration = 0;
+                        for (int subject = 1; subject <= subjects; subject++)
                         {
-                            held++;
-                            tmp[held] = k;
-                        }
-                    }
-                    if (held > 0)
-                    {
-                        if (held > 1)
-                        {
-                            for (tn = 1; tn <= 3; tn++)
+                            if (x[preference, subject] == grp && !done[subject])
                             {
-                                for (k = 1; k <= held; k++)
-                                {
-                                    nrp = Convert.ToInt32((held - 2) * mt.NextDouble()) + 1;
-                                    tp = tmp[k];
-                                    tmp[k] = tmp[nrp];
-                                    tmp[nrp] = tp;
-                                }
+                                underConsideration++;
+                                toConsider[underConsideration] = subject;
                             }
                         }
-                        extra = held >= gc[j] ? (int)(Math.Floor(held - gc[j])) : 0;
-                        for (k = 1; k <= held - extra; k++)
+                        // Allocate those who want this group to it; if it's over-subscribed, shuffle the candidates so that all have an equal chance to get their choice.
+                        if (underConsideration > 0)
                         {
-                            gp[tmp[k]] = j;
-                            done[tmp[k]] = -1;
-                            full[j] = full[j] + 1;
-                            OK = OK + 1;
+                            Shuffle(mt, toConsider, 1, underConsideration);
+                            int space = groupCapacities[grp] - allocatedSoFar[grp];
+                            int successfulCandidates = Math.Min(space, underConsideration);
+                            for (int toAllocate = 1; toAllocate <= successfulCandidates; toAllocate++)
+                            {
+                                int subject = toConsider[toAllocate];
+                                allocatedGroup[subject] = grp;
+                                done[subject] = true;
+                                allocatedSoFar[grp]++;
+                                ok++;
+                            }
                         }
                     }
                 }
             }
-            if (OK < s)
+
+            // By now, we've assigned by preference wherever possible.  Allocate any remaining subjects randomly to groups that have space.
+            while (ok < subjects)
             {
-                held = 0;
-                for (j = 1; j <= ng; j++)
+                // Put groups with remaining space into toConsider...
+                int availableGroups = 0;
+                for (int grp = 1; grp <= groups; grp++)
                 {
-                    if (full[j] < gc[j])
+                    if (allocatedSoFar[grp] < groupCapacities[grp])
                     {
-                        for (k = 1; k <= ((int)(Math.Floor(gc[j] - full[j]))); k++)
+                        for (int k = 1; k <= groupCapacities[grp] - allocatedSoFar[grp]; k++)
                         {
-                            held++;
-                            tmp[held] = j;
+                            availableGroups++;
+                            toConsider[availableGroups] = grp;
                         }
                     }
                 }
-                for (tn = 1; tn <= 3; tn++)
+                // ... and shuffle them so that they're filled in random order
+                Shuffle(mt, toConsider, 1, availableGroups);
+
+                // Find unallocated subjects and allocate one to a random group until we run out of subjects or groups.
+                int groupToUse = 0;
+                for (int k = 1; k <= subjects; k++)
                 {
-                    for (k = 1; k <= held; k++)
+                    if (!done[k])
                     {
-                        nrp = Convert.ToInt32((held - 2) * mt.NextDouble()) + 1;
-                        tp = tmp[k];
-                        tmp[k] = tmp[nrp];
-                        tmp[nrp] = tp;
+                        groupToUse++;
+                        allocatedGroup[k] = toConsider[groupToUse];
+                        ok++;
                     }
-                }
-                extra = 0;
-                for (k = 1; k <= s; k++)
-                {
-                    if (done[k] == 0)
-                    {
-                        extra = extra + 1;
-                        gp[k] = tmp[extra];
-                    }
+
+                    // Go round again if we have more subjects than groups into which to place them in this pass
+                    if (groupToUse >= availableGroups)
+                        break;
                 }
             }
             //  RTF_LoadTemplate("prefer.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("groups", ng.ToString());
-            outputParameters.AddOutput("capacity", cap.ToString());
-            outputParameters.AddOutput("subjects", s.ToString());
-            outputParameters.AddOutput("seed", Seed.ToString());
+            outputParameters.AddOutput("groups", groups.ToString());
+            outputParameters.AddOutput("capacity", capacity.ToString());
+            outputParameters.AddOutput("subjects", subjects.ToString());
+            outputParameters.AddOutput("seed", seed.ToString());
             IList<ParameterBag> groupsList = new List<ParameterBag>();
             outputParameters.AddOutput("*groups", groupsList);
-            for (i = 1; i <= s; i++)
+            for (int i = 1; i <= subjects; i++)
             {
                 ParameterBag groupsParameters = new ParameterBag();
                 groupsList.Add(groupsParameters);
                 groupsParameters.AddOutput("sub", i.ToString());
-                groupsParameters.AddOutput("grp", gp[i].ToString());
+                groupsParameters.AddOutput("grp", allocatedGroup[i].ToString());
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
+        /// <summary>
+        /// Randomly change the order of items ary[lowerBound] to ary[upperBound] inclusive, taking random numbers from mt.
+        /// </summary>
+        private static void Shuffle(MersenneTwister mt, int[] ary, int lowerBound, int upperBound)
+        {
+            if (upperBound - lowerBound <= 0)
+                return;
+            {
+                for (int tn = 1; tn <= 3; tn++)
+                {
+                    for (int k = lowerBound; k <= upperBound; k++)
+                    {
+                        int nrp = Convert.ToInt32((upperBound - lowerBound - 1) * mt.NextDouble()) + lowerBound;
+                        int tp = ary[k];
+                        ary[k] = ary[nrp];
+                        ary[nrp] = tp;
+                    }
+                }
+            }
+        }
 
         public static StepResult RptFrequency(ITemplateHost host, ParameterBag parameters)
         {

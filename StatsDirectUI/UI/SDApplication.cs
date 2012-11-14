@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Security;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -60,7 +61,11 @@ namespace StatsDirect.UI
         /// </summary>
         internal static SDApplication SoleInstance
         {
-            get { return soleInstance ?? (soleInstance = new SDApplication()); }
+            get
+            {
+                Contract.Ensures(null != Contract.Result<SDApplication>());
+                return soleInstance ?? (soleInstance = new SDApplication());
+            }
         }
 
         internal static bool HasInstance
@@ -1302,7 +1307,7 @@ namespace StatsDirect.UI
             if ("ROCCutoff".Equals(fillable.FillerToUse))
                 return Amend((Charting.ROCCutoff)fillable);
             if ("Scores".Equals(fillable.FillerToUse))
-                return Amend((Builtins.ScoresOptions)fillable);
+                return AmendUsingControl(fillable);
             if ("SortInPlace".Equals(fillable.FillerToUse))
                 return AmendUsingControl(fillable);
             if ("SummaryStatistics".Equals(fillable.FillerToUse))

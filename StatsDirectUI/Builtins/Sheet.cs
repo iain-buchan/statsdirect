@@ -198,6 +198,39 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
+        public static StepResult ShtConvertUnits(ITemplateHost host, ParameterBag parameters)
+        {
+            string conversion = parameters["conversion"].AsString;
+            string[] splitConversion = conversion.Split('|');
+            string formula = splitConversion[0];
+            string outputUnits = splitConversion[1];
+            Calcit c = new Calcit(formula);
+            double[] x = new double[1];
+
+            DataFrame dataFrame = parameters["data"].AsDataFrame;
+            DataFrame outputFrame = new DataFrame();
+            foreach (Variable inputVariable in dataFrame.Variables)
+            {
+                DoubleVariable dataVariable = inputVariable.AsDoubleVariable;
+                DoubleVariable outputVariable = new DoubleVariable(dataVariable.Length, inputVariable.Title + " {" + outputUnits + "}");
+                outputFrame.Variables.Add(outputVariable);
+                double[] data = dataVariable.Data;
+                double[] output = outputVariable.Data;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    if (data[i] == Constant.MISSING)
+                        output[i] = Constant.MISSING;
+                    else
+                    {
+                        x[0] = data[i];
+                        output[i] = c.Evaluate(x);
+                    }
+                }
+            }
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("output", outputFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
 
         ///  <summary>
         ///  Returns a constant to add to all input values to ensure that all f(x) with the given input data are valid.

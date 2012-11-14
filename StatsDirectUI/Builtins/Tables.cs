@@ -2102,18 +2102,12 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptCrosstabsPreprocess(ITemplateHost host, ParameterBag parameters)
         {
-            double[] z = null;
-            string zlab = null;
-            int zcats = 0;
             bool strat = false;
-            Namevar[] zcat = null;
 
             //  First classifier
             DataFrame c1Frame = parameters["c1"].AsDataFrame;
             ClassifierVariable c1Variable = c1Frame.Variables[0].AsClassifierVariable;
-            int N = c1Variable.Length;
             int ycats = c1Variable.GroupCount;
-            double[] y = new double[N + 1 /* for VB to C# conversion */ ];
             Namevar[] ycat = new Namevar[ycats + 1 /* for VB to C# conversion */ ];
             string ylab = c1Variable.Title;
             int cnt = 0;
@@ -2128,8 +2122,6 @@ namespace StatsDirect.Builtins
             }
             ycats = cnt;
 
-            for (int r = 1; r <= N; r++)
-                y[r] = c1Variable.Data[r - 1];
             SortName(ycats, ycat, 1);
 
             //  Second classifier
@@ -2143,25 +2135,13 @@ namespace StatsDirect.Builtins
                 {
                     DataFrame c3Frame = parameters["c3"].AsDataFrame;
                     ClassifierVariable c3Variable = c3Frame.Variables[0].AsClassifierVariable;
-                    zcats = c3Variable.GroupCount;
-                    z = new double[N + 1];
-                    zcat = new Namevar[zcats + 1];
-                    zlab = c3Variable.Title;
                     cnt = 0;
-                    for (int i = 0; i <= zcats - 1; i++)
+                    for (int i = 0; i < c3Variable.GroupCount; i++)
                     {
                         if (c3Variable.Groups[i].Label != Formatting.MISSINGLABEL)
-                        {
                             cnt++;
-                            zcat[cnt].Ti = c3Variable.Groups[i].Label;
-                            zcat[cnt].x = Convert.ToDouble(i);
-                        }
                     }
-                    zcats = cnt;
-                    for (int r = 1; r <= N; r++)
-                        z[r] = c3Variable.Data[r - 1];
-                    SortName(zcats, zcat, 1);
-                    strat = zcats > 1;
+                    strat = cnt > 1;
                 }
             }
 
@@ -2172,7 +2152,6 @@ namespace StatsDirect.Builtins
             {
                 ClassifierVariable c2Variable = c2Frame.Variables[c].AsClassifierVariable;
                 int xcats = c2Variable.GroupCount;
-                double[] x = new double[N + 1];
                 Namevar[] xcat = new Namevar[xcats + 1 /* for VB to C# conversion */ ];
                 string xlab = c2Variable.Title;
                 cnt = 0;
@@ -2186,8 +2165,6 @@ namespace StatsDirect.Builtins
                     }
                 }
                 xcats = cnt;
-                for (int r = 1; r <= N; r++)
-                    x[r] = c2Variable.Data[r - 1];
                 SortName(xcats, xcat, 1);
 
                 bool ok = true;
@@ -2213,28 +2190,9 @@ namespace StatsDirect.Builtins
 
                 ParameterBag columnsParameters = new ParameterBag();
                 columnsList.Add(columnsParameters);
-                double tot;
                 if (strat)
                 {
                     // three factor xtab ---->
-                    double cco = parameters["cco"].AsDouble;
-                    double[, ,] zt = new double[xcats + 1, ycats + 1, zcats + 1];
-                    tot = 0.0;
-                    for (int i = 1; i <= xcats; i++)
-                    {
-                        for (int j = 1; j <= ycats; j++)
-                        {
-                            for (int m = 1; m <= zcats; m++)
-                            {
-                                for (int k = 1; k <= N; k++)
-                                {
-                                    if (x[k] == xcat[i].x && y[k] == ycat[j].x && z[k] == zcat[m].x)
-                                        zt[i, j, m]++;
-                                }
-                                tot += zt[i, j, m];
-                            }
-                        }
-                    }
                     if (xcats == 2 && ycats == 2)
                     {
                         OptionDescriptor d = new OptionDescriptor { Title = "Which type of study produced your data?" };
@@ -2248,13 +2206,11 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        ParameterBag gencmhParameters = tab_cmh(host, zcats, ycats, xcats, zt, ylab, xlab, zlab);
-                        if (gencmhParameters != null)
-                        {
-                            List<ParameterBag> gencmhList = new List<ParameterBag>();
-                            columnsParameters.AddOutput("*gencmh", gencmhList);
-                            gencmhList.Add(gencmhParameters);
-                        }
+                        double[] rowScores;
+                        double[] colScores;
+                        if (!tab_cmh_preprocess(host, ycats, xcats, ylab, xlab, out rowScores, out colScores))
+                            throw new TemplateOperationCancelledException();
+                        // TODO: Save rowScores and colScores
                     }
                     // three factor  <-----
                 }
@@ -2656,6 +2612,30 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        private static bool tab_cmh_preprocess(ITemplateHost host, int irows, int icols, string ylab, string xlab, out double[] rowScore, out double[] colScore)
+        {
+            rowScore = new double[icols + 1];
+            colScore = new double[irows + 1];
+            for (int i = 1; i <= irows; i++)
+                colScore[i] = i;
+            for (int i = 1; i <= icols; i++)
+                rowScore[i] = i;
+            // ask for scores --->
+            ScoresOptions sOptions = new ScoresOptions { Title1 = ylab, Title2 = xlab };
+            for (int i = 1; i <= icols; i++)
+                sOptions.Values2.Add(rowScore[i]);
+            for (int i = 1; i <= irows; i++)
+                sOptions.Values1.Add(colScore[i]);
+            bool userOk = null != host.Amend(sOptions, null);
+            if (!userOk)
+                return false;
+
+            for (int i = 1; i <= icols; i++)
+                rowScore[i] = sOptions.Values2[i - 1];
+            for (int i = 1; i <= irows; i++)
+                colScore[i] = sOptions.Values1[i - 1];
+            return true;
+        }
 
         private static ParameterBag tab_rr(ITemplateHost host, double cco, ref int zcats, ref double[, ,] zt, ref Namevar[] zcat)
         {

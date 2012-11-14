@@ -1162,7 +1162,8 @@ namespace StatsDirect.Charting
             }
 
             // Draw the chart title now that we know it's safe to do so.
-            DrawTitle(title);
+            if (!IsAscii)
+                DrawTitle(title);
             extraHeightRequired = 0;
             return true;
         }
@@ -2025,7 +2026,8 @@ namespace StatsDirect.Charting
             }
             else
             {
-                ASCII_InitPlot(25);
+                int y = definition.ScaleParameters.Y.Div;
+                ASCII_InitPlot(5 + y); // 5 = Title, top axis title, bottom axis, bottom scale, bottom axis title
 
                 // Draw the scale
                 DefaultAxes(0);

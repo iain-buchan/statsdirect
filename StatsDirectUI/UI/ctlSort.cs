@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Windows.Forms;
 using SpreadsheetGear;
+using SpreadsheetGear.Commands;
 using StatsDirect.Utilities;
 using SpreadsheetGear.Windows.Forms;
 

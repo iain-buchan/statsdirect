@@ -404,6 +404,7 @@ namespace StatsDirect.Builtins
                                                      new Builtin("shtClearMissing", Sheet.ShtClearMissing,
                                                                  InputDuringStep.Never),
                                                      new Builtin("shtCombine", Sheet.ShtCombine, InputDuringStep.Never),
+                                                     new Builtin("shtConvertUnits", Sheet.ShtConvertUnits, InputDuringStep.Never),
                                                      new Builtin("shtDates", Sheet.ShtDates, InputDuringStep.Never),
                                                      new Builtin("shtDetabulate", Tables.ShtDetabulate,
                                                                  InputDuringStep.Never),

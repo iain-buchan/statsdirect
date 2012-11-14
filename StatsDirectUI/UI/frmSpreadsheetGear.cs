@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using SpreadsheetGear.Commands;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -121,7 +122,9 @@ namespace StatsDirect.UI
             }
             // User wants to save the file
             Path = saveFileDialog.FileName;
-            string extension = System.IO.Path.GetExtension(Path).ToLower();
+            string extension = System.IO.Path.GetExtension(Path);
+            if (!string.IsNullOrEmpty(extension))
+                extension = extension.ToLower();
             FileFormat format = ".xlsx".Equals(extension) ? FileFormat.OpenXMLWorkbook : FileFormat.Excel8;
             workbookView.GetLock();
             try
@@ -1232,10 +1235,7 @@ namespace StatsDirect.UI
                             {
                                 if (c > 0)
                                     titleBuilder.Append(", ");
-                                if (0 == topRow)
-                                    titleBuilder.Append(GetGridColumnTitle(cellSelection.ColumnSelections[c].ColumnIndex));
-                                else
-                                    titleBuilder.Append(GetCellText(cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].ColumnIndex).Trim());
+                                titleBuilder.Append(0 == topRow ? GetGridColumnTitle(cellSelection.ColumnSelections[c].ColumnIndex) : GetCellText(cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].ColumnIndex).Trim());
                             }
                             variable.Title = titleBuilder.ToString();
                             // TODO: This origin is incorrect; it should include all the columns that were combined, and it doesn't.
@@ -1443,7 +1443,7 @@ namespace StatsDirect.UI
                         return frame;
                     }
                     // Unequal - ask the user, if they accept then force all the data to maximum length, missing-padded
-                    if (SDApplication.SoleInstance.msgbox_x("Warning: unequal length columns, if you select yes then\n\rthe jagged ends of columns will be padded with missing data.", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true) == DialogResult.OK)
+                    if (SDApplication.SoleInstance.msgbox_x("Warning: unequal length columns. If you select OK then the jagged ends of columns will be padded with missing data.", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true) == DialogResult.OK)
                     {
                         foreach (Variable v in frame.Variables)
                             v.EnsureLength(maxRows, true);
@@ -2673,7 +2673,7 @@ namespace StatsDirect.UI
                         {
                             DataFrame2D frame = new DataFrame2D();
                             bool userCancelled;
-                            int groups = ((ITemplateHost)SDApplication.SoleInstance).GetInteger("Number of groups", gridParameter.Operation.FriendlyNames[0], 1, out userCancelled);
+                            int groups = SDApplication.SoleInstance.GetInteger("Number of groups", gridParameter.Operation.ToString(), 1, out userCancelled);
                             if (userCancelled || groups < 1 || groups > 10)
                             {
                                 if (null != gridParameter.CancelSkipsParameter)
@@ -2723,7 +2723,7 @@ namespace StatsDirect.UI
                         {
                             DataFrame2D frame = new DataFrame2D();
                             bool userCancelled;
-                            int repeats = ((ITemplateHost)SDApplication.SoleInstance).GetInteger("Number of repeats", gridParameter.Operation.FriendlyNames[0], 2, out userCancelled);
+                            int repeats = SDApplication.SoleInstance.GetInteger("Number of repeats", gridParameter.Operation.ToString(), 2, out userCancelled);
                             if (userCancelled || repeats <= 1)
                             {
                                 if (null != gridParameter.CancelSkipsParameter)
@@ -2777,7 +2777,7 @@ namespace StatsDirect.UI
                                 {
                                     if (repeatFrame.MinRows != rows || repeatFrame.VariableCount != cols)
                                     {
-                                        SDApplication.SoleInstance.msgbox_x("You must have the same number of subjects and treatments for each repeat, mark missing data with an asterisk if they are at the end of a column", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, gridParameter.Operation.FriendlyNames[0], true);
+                                        SDApplication.SoleInstance.msgbox_x("You must have the same number of subjects and treatments for each repeat, mark missing data with an asterisk if they are at the end of a column", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, gridParameter.Operation.ToString(), true);
                                         rpt--; // Try again
                                         OK = false;
                                     }
@@ -2917,14 +2917,60 @@ namespace StatsDirect.UI
 
         private void pageSetupToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (PageSetupDialog pageSetupDialog = new PageSetupDialog())
+            if (null != workbookView && null != workbookView.ActiveWorksheet)
             {
-                pageSetupDialog.PageSettings = pgSettings;
-                pageSetupDialog.AllowOrientation = true;
-                pageSetupDialog.AllowMargins = true;
-                pageSetupDialog.ShowDialog(SDApplication.SoleInstance.MainWindow);
-                // TODO: Now what?
+                IPageSetup pageSetup = workbookView.ActiveWorksheet.PageSetup;
+
+                // Show the dialog
+                using (PageSetupDialog pageSetupDialog = new PageSetupDialog())
+                {
+                    workbookView.GetLock();
+                    try
+                    {
+                        // Pull settings into the page setup dialog
+                        pageSetupDialog.PageSettings = new System.Drawing.Printing.PageSettings { Color = !pageSetup.BlackAndWhite, Landscape = pageSetup.Orientation == PageOrientation.Landscape, Margins = { Top = PointsToHundredths(pageSetup.TopMargin), Bottom = PointsToHundredths(pageSetup.BottomMargin), Left = PointsToHundredths(pageSetup.LeftMargin), Right = PointsToHundredths(pageSetup.RightMargin) } };
+                        // pageSetupDialog.PageSettings.PaperSize = pageSetup.PaperSize;
+                    }
+                    finally
+                    {
+                        workbookView.ReleaseLock();
+                    }
+
+                    pageSetupDialog.AllowOrientation = true;
+                    pageSetupDialog.AllowMargins = true;
+                    // pageSetupDialog.AllowPaper = true;
+                    DialogResult res = pageSetupDialog.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                    if (res == DialogResult.OK)
+                    {
+                        // Save settings into SSG's sheet settings
+                        workbookView.GetLock();
+                        try
+                        {
+                            pageSetup.BlackAndWhite = !pageSetupDialog.PageSettings.Color;
+                            pageSetup.Orientation = pageSetupDialog.PageSettings.Landscape ? PageOrientation.Landscape : PageOrientation.Portrait;
+                            pageSetup.TopMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Top);
+                            pageSetup.BottomMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Bottom);
+                            pageSetup.LeftMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Left);
+                            pageSetup.RightMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Right);
+                            // pageSetupDialog.PageSettings.PaperSize = pageSetup.PaperSize;
+                        }
+                        finally
+                        {
+                            workbookView.ReleaseLock();
+                        }
+                    }
+                }
             }
+        }
+
+        private double HundredthsToPoints(int hundredths)
+        {
+            return hundredths / 100.0 * 72.0;
+        }
+
+        private int PointsToHundredths(double points)
+        {
+            return (int)(points / 72.0 * 100.0);
         }
 
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3086,7 +3132,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                string cell = ((ITemplateHost)SDApplication.SoleInstance).GetString("Enter the cell address, for example G54", "Go to cell", "");
+                string cell = SDApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", "");
                 workbookView.GetLock();
                 if (null != cell)
                 {
@@ -3095,7 +3141,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                ((ITemplateHost)SDApplication.SoleInstance).Warning(ex.Message, "Go to cell");
+                SDApplication.SoleInstance.Warning(ex.Message, "Go to cell");
             }
             finally
             {
@@ -3193,7 +3239,7 @@ namespace StatsDirect.UI
 
         private void deleteSheetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            bool shouldDelete = ((ITemplateHost)SDApplication.SoleInstance).Query("This will delete the current sheet.  You cannot undo this operation.\nAre you sure you want to delete this sheet?", "Delete sheet");
+            bool shouldDelete = SDApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.\nAre you sure you want to delete this sheet?", "Delete sheet");
             if (shouldDelete)
             {
                 workbookView.GetLock();

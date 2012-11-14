@@ -105,9 +105,9 @@ namespace StatsDirect.UI
             this.separatorContextMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.goToContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.findAndReplaceContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.summaryContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip.SuspendLayout();
             this.pnlSpreadsheetGear.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -605,9 +605,9 @@ namespace StatsDirect.UI
             // 
             this.pnlSpreadsheetGear.Controls.Add(this.tableLayoutPanel1);
             this.pnlSpreadsheetGear.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlSpreadsheetGear.Location = new System.Drawing.Point(0, 0);
+            this.pnlSpreadsheetGear.Location = new System.Drawing.Point(0, 25);
             this.pnlSpreadsheetGear.Name = "pnlSpreadsheetGear";
-            this.pnlSpreadsheetGear.Size = new System.Drawing.Size(483, 386);
+            this.pnlSpreadsheetGear.Size = new System.Drawing.Size(483, 361);
             this.pnlSpreadsheetGear.TabIndex = 6;
             // 
             // tableLayoutPanel1
@@ -623,7 +623,7 @@ namespace StatsDirect.UI
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(483, 386);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(483, 361);
             this.tableLayoutPanel1.TabIndex = 2;
             this.tableLayoutPanel1.Visible = false;
             // 
@@ -646,7 +646,7 @@ namespace StatsDirect.UI
             this.workbookView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.workbookView.Location = new System.Drawing.Point(3, 30);
             this.workbookView.Name = "workbookView";
-            this.workbookView.Size = new System.Drawing.Size(477, 353);
+            this.workbookView.Size = new System.Drawing.Size(477, 328);
             this.workbookView.TabIndex = 1;
             this.workbookView.WorkbookSetState = resources.GetString("workbookView.WorkbookSetState");
             this.workbookView.ActiveTabChanged += new SpreadsheetGear.Windows.Forms.ActiveTabChangedEventHandler(this.workbookView_ActiveTabChanged);
@@ -812,12 +812,6 @@ namespace StatsDirect.UI
             this.findAndReplaceContextMenuItem.Text = "Find and Replace...";
             this.findAndReplaceContextMenuItem.Click += new System.EventHandler(this.findAndReplaceContextMenuItem_Click);
             // 
-            // saveFileDialog
-            // 
-            this.saveFileDialog.DefaultExt = "xlsx";
-            this.saveFileDialog.Filter = "Excel 2007/2010 files (*.xlsx)|*.xlsx|Excel 97-2003 files (*.xls)|*.xls|All files" +
-    "|*.*";
-            // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
@@ -829,6 +823,12 @@ namespace StatsDirect.UI
             this.summaryContextMenuItem.Size = new System.Drawing.Size(143, 22);
             this.summaryContextMenuItem.Text = "Summary...";
             this.summaryContextMenuItem.Click += new System.EventHandler(this.summaryContextMenuItem_Click);
+            // 
+            // saveFileDialog
+            // 
+            this.saveFileDialog.DefaultExt = "xlsx";
+            this.saveFileDialog.Filter = "Excel 2007/2010 files (*.xlsx)|*.xlsx|Excel 97-2003 files (*.xls)|*.xls|All files" +
+    "|*.*";
             // 
             // frmSpreadsheetGear
             // 

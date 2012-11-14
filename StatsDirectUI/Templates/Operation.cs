@@ -17,14 +17,12 @@ namespace StatsDirect.Templates
     public class Operation : IMightRequireInput
     {
         private IList<Step> steps;
-        private IList<string> friendlyNames;
         private IList<string> prerequisiteOperationNames;
         private List<SuggestedOperation> suggestedOperations;
 
         public Operation()
         {
             steps = new List<Step>();
-            friendlyNames = new List<string>();
             prerequisiteOperationNames = new List<string>();
             suggestedOperations = new List<SuggestedOperation>();
         }
@@ -41,31 +39,11 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "name")]
         public string Name { get; set; }
 
-        [XmlElement(ElementName = "friendly-name")]
-        public string[] FriendlyNamesForXml
-        {
-            get
-            {
-                return ListToStringArray(friendlyNames);
-            }
-            set
-            {
-                if (null != value)
-                {
-                    foreach (string name in value)
-                        friendlyNames.Add(name);
-                }
-            }
-        }
-
         /// <summary>
         /// The friendly names of this operation.  TODO: Add language to this.
         /// </summary>
-        [XmlIgnore]
-        public IList<string> FriendlyNames
-        {
-            get { return friendlyNames; }
-        }
+        [XmlElement(ElementName = "friendly-name")]
+        public string FriendlyName { get; set; }
 
         [XmlArray(ElementName = "suggested-operations"),
         XmlArrayItem(ElementName="suggested-operation", Type=typeof(SuggestedOperation))]
@@ -229,6 +207,11 @@ namespace StatsDirect.Templates
                 }
             }
             return availableSuggestedOperations;
+        }
+
+        public override string ToString()
+        {
+            return FriendlyName ?? Name ?? "(Unnamed operation)";
         }
     }
 }
