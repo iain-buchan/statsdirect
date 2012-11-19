@@ -12,9 +12,9 @@ namespace StatsDirect.Builtins
     {
         private class Trisvar
         {
-            public double TM;
-            public int gp;
-            public int cs;
+            public double Tm;
+            public int Gp;
+            public int Cs;
         }
 
         private class TrisvarByTmThenGp : IComparer<Trisvar>
@@ -22,15 +22,15 @@ namespace StatsDirect.Builtins
             private int Compare(Trisvar x, Trisvar y)
             {
                 //  First check TM
-                if (x.TM > y.TM)
+                if (x.Tm > y.Tm)
                     return 1;
-                if (x.TM < y.TM)
+                if (x.Tm < y.Tm)
                     return -1;
 
                 //  Next check gp
-                if (x.gp > y.gp)
+                if (x.Gp > y.Gp)
                     return -1;
-                if (x.gp < y.gp)
+                if (x.Gp < y.Gp)
                     return 1;
 
                 //  If we get here, there are no meaningful differences
@@ -50,9 +50,9 @@ namespace StatsDirect.Builtins
             private int Compare(Trisvar x, Trisvar y)
             {
                 //  First check TM
-                if (x.TM > y.TM)
+                if (x.Tm > y.Tm)
                     return 1;
-                if (x.TM < y.TM)
+                if (x.Tm < y.Tm)
                     return -1;
 
                 //  If we get here, there are no meaningful differences
@@ -72,20 +72,20 @@ namespace StatsDirect.Builtins
             int lc = 0; int nmax = 0; int j;
             int lap;
             int lastk = 0; int groups;
-            double Stk = 0; double tk = 0;
+            double stk = 0; double tk = 0;
             string gid;
 
-            double GAMMA = parameters["gamma"].AsDouble;
-            if (GAMMA <= 0.0)
+            double gamma = parameters["gamma"].AsDouble;
+            if (gamma <= 0.0)
             {
-                GAMMA = 0.95;
+                gamma = 0.95;
             }
             int fault;
-            double cit = PDF.gauinv(1.0 - (1.0 - GAMMA) / 2.0, out fault);
+            double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out fault);
             double[] gpid = new double[1 + 1 /* for VB to C# conversion */];
             string[] glab = new string[1 + 1 /* for VB to C# conversion */];
             int r;
-            int C;
+            int c;
             double[] g;
 
             // Store the times data
@@ -104,14 +104,14 @@ namespace StatsDirect.Builtins
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
             cd[2] = new ColumnData { Title = deathsVariable.Title };
-            double[] D = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] d = new double[rows + 1 /* for VB to C# conversion */ ];
             int extra = 0;
             for (r = 1; r <= rows; r++)
             {
-                D[r] = deathsVariable.Data[r - 1];
-                if (D[r] > 1)
+                d[r] = deathsVariable.Data[r - 1];
+                if (d[r] > 1)
                 {
-                    extra = extra + Convert.ToInt32(D[r]) - 1;
+                    extra = extra + Convert.ToInt32(d[r]) - 1;
                 }
             }
 
@@ -148,18 +148,18 @@ namespace StatsDirect.Builtins
                     double temp = g[r];
                     if (temp != Constant.MISSING)
                     {
-                        bool OK = true;
+                        bool ok = true;
                         for (j = 1; j <= igot; j++)
                         {
                             if (temp == gpid[j])
                             {
-                                OK = false;
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                ok = false;
+                                break;
                             }
                         }
-                        if (OK)
+                        if (ok)
                         {
-                            igot = igot + 1;
+                            igot++;
                             // create temp variable for copying values 
                             double[] transTemp5 = new double[igot + 1 /* for VB to C# conversion */ ];
                             Array.Copy(gpid, transTemp5, Math.Min(gpid.Length, transTemp5.Length));
@@ -195,47 +195,47 @@ namespace StatsDirect.Builtins
             }
 
             // Put the data back into the Public array
-            double[,] ARR2 = new double[2 + 1 /* for VB to C# conversion */, rows + extra + 1 /* for VB to C# conversion */];
-            ColumnData[] CDAT1 = new ColumnData[2 + 1 /* for VB to C# conversion */ ];
-            for (C = 0; C <= 2; C++)
+            double[,] arr2 = new double[2 + 1 /* for VB to C# conversion */, rows + extra + 1 /* for VB to C# conversion */];
+            ColumnData[] cdat1 = new ColumnData[2 + 1 /* for VB to C# conversion */ ];
+            for (c = 0; c <= 2; c++)
             {
-                CDAT1[C] = cd[C];
-                CDAT1[C].Rows = rows + extra;
+                cdat1[c] = cd[c];
+                cdat1[c].Rows = rows + extra;
             }
             int ctr = 0;
             for (r = 1; r <= rows; r++)
             {
-                if (D[r] > 1 & D[r] != Constant.MISSING)
+                if (d[r] > 1 & d[r] != Constant.MISSING)
                 {
-                    for (j = 1; j <= Convert.ToInt32(D[r]); j++)
+                    for (j = 1; j <= Convert.ToInt32(d[r]); j++)
                     {
                         ctr = ctr + 1;
-                        ARR2[0, ctr] = g[r];
-                        ARR2[1, ctr] = t[r];
-                        ARR2[2, ctr] = 1;
+                        arr2[0, ctr] = g[r];
+                        arr2[1, ctr] = t[r];
+                        arr2[2, ctr] = 1;
                     }
                 }
                 else
                 {
-                    if (D[r] < 0)
+                    if (d[r] < 0)
                     {
-                        D[r] = 0;
+                        d[r] = 0;
                     }
                     ctr = ctr + 1;
-                    ARR2[0, ctr] = g[r];
-                    ARR2[1, ctr] = t[r];
-                    ARR2[2, ctr] = D[r];
+                    arr2[0, ctr] = g[r];
+                    arr2[1, ctr] = t[r];
+                    arr2[2, ctr] = d[r];
                 }
             }
 
-            int nt = CDAT1[0].Rows;
+            int nt = cdat1[0].Rows;
             int[] gnx = new int[groups + 1 /* for VB to C# conversion */];
             for (lap = 1; lap <= groups; lap++)
             {
                 int j2 = 0;
                 for (j = 1; j <= nt; j++)
                 {
-                    if (ARR2[0, j] != Constant.MISSING & ARR2[0, j] == lap)
+                    if (arr2[0, j] != Constant.MISSING & arr2[0, j] == lap)
                     {
                         j2 = j2 + 1;
                     }
@@ -269,7 +269,7 @@ namespace StatsDirect.Builtins
                 int[] allcens = new int[gnx[lap] + 1 /* for VB to C# conversion */ ];
                 double[] alltime = new double[gnx[lap] + 1 + 1 /* for VB to C# conversion */ ];
                 int nx;
-                x_plprep(ref ARR2, ref CDAT1, ref stime, ref dead, ref nat, ref cen, ref gnx, out nx, ref lap, out nt, ref allcens, ref alltime);
+                Plprep(ref arr2, ref cdat1, ref stime, ref dead, ref nat, ref cen, ref gnx, out nx, ref lap, out nt, ref allcens, ref alltime);
 
                 if (gid.Length == 0)
                 {
@@ -286,7 +286,7 @@ namespace StatsDirect.Builtins
                 cnx[lap] = nx;
                 double[] vh = new double[nx + 1 /* for VB to C# conversion */];
                 double[] vs = new double[nx + 1 /* for VB to C# conversion */];
-                x_plest(host, groupParameters, ref stime, ref nat, ref dead, ref cen, ref h, ref s, ref vh, ref vs, ref nx, ref lap);
+                Plest(host, groupParameters, ref stime, ref nat, ref dead, ref cen, ref h, ref s, ref vh, ref vs, ref nx, ref lap);
                 //  median survival time
                 //  Hosmer & Lemeshow
                 //  Andersen PK et al.. Statistical models based on counting processes. New York: Springer-Verlag 1993.
@@ -294,20 +294,20 @@ namespace StatsDirect.Builtins
                 int imed = biglong;
                 int ilp = biglong;
                 int iup = 0;
-                double area = 1.0 - GAMMA;
-                const double P = 0.5;
+                double area = 1.0 - gamma;
+                const double p = 0.5;
                 int i;
                 for (i = 1; i <= cnx[lap]; i++)
                 {
-                    if (s[i, lap] <= P & i < imed)
+                    if (s[i, lap] <= p & i < imed)
                     {
                         imed = i;
                     }
-                    if (s[i, lap] <= P - area & i < ilp)
+                    if (s[i, lap] <= p - area & i < ilp)
                     {
                         ilp = i;
                     }
-                    if (s[i, lap] >= P + area & i > iup)
+                    if (s[i, lap] >= p + area & i > iup)
                     {
                         iup = i;
                     }
@@ -343,7 +343,7 @@ namespace StatsDirect.Builtins
                     }
                 }
                 groupParameters.AddOutput("med", imed != 0 ? host.RoundU(stime[imed, lap]) : "can not estimate");
-                groupParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100, 1));
+                groupParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 1));
                 groupParameters.AddOutput("all", host.RoundU(ll));
                 groupParameters.AddOutput("aul", host.RoundU(ul));
                 //  Hosmer & Lemeshow
@@ -402,7 +402,7 @@ namespace StatsDirect.Builtins
                     if (cen[i] == 0)
                     {
                         tk = stime[i, lap];
-                        Stk = s[i, lap];
+                        stk = s[i, lap];
                         lastk = i;
                         break; /* TRANSWARNING: check that break is in correct scope */
                     }
@@ -416,10 +416,10 @@ namespace StatsDirect.Builtins
                 }
                 if (tk != tl)
                 {
-                    mu = mu + Stk * (tl - tk);
+                    mu += stk * (tl - tk);
                 }
                 //  are there both censored and uncensored at tk?
-                bool last_cen = false;
+                bool lastCen = false;
                 for (i = lastk; i >= 1; i--)
                 {
                     if (stime[i, lap] != tk)
@@ -428,7 +428,7 @@ namespace StatsDirect.Builtins
                     }
                     if (cen[i] == 1)
                     {
-                        last_cen = true;
+                        lastCen = true;
                         break; /* TRANSWARNING: check that break is in correct scope */
                     }
                 }
@@ -438,14 +438,14 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= lastk; i++)
                 {
                     double asq = 0;
-                    int L;
-                    for (L = i; L <= lastk - 1; L++)
+                    int l;
+                    for (l = i; l <= lastk - 1; l++)
                     {
-                        asq = asq + s[L, lap] * (stime[L + 1, lap] - stime[L, lap]);
+                        asq = asq + s[l, lap] * (stime[l + 1, lap] - stime[l, lap]);
                     }
-                    if (!(last_cen))
+                    if (!(lastCen))
                     {
-                        asq = asq + Stk * (tl - tk);
+                        asq = asq + stk * (tl - tk);
                     }
                     asq = asq * asq;
                     double denom = Convert.ToDouble(nat[i] * (nat[i] - dead[i, lap]));
@@ -479,12 +479,12 @@ namespace StatsDirect.Builtins
                 }
                 if (save)
                 {
-                    x_plsave(resultsFrame, ref stime, ref nat, ref dead, ref s, ref h, ref vs, ref vh, ref nx, ref lap, ref GAMMA, ref lc, ref allcens, ref alltime);
+                    Plsave(resultsFrame, ref stime, ref nat, ref dead, ref s, ref h, ref vs, ref vh, ref nx, ref lap, ref gamma, ref lc, ref allcens, ref alltime);
                 }
             }
 
-            outputParameters.Add("ARR2", new FilledParameter(true, ARR2));
-            outputParameters.Add("CDAT1", new FilledParameter(true, CDAT1));
+            outputParameters.Add("ARR2", new FilledParameter(true, arr2));
+            outputParameters.Add("CDAT1", new FilledParameter(true, cdat1));
             outputParameters.Add("h", new FilledParameter(true, h));
             outputParameters.Add("s", new FilledParameter(true, s));
             outputParameters.Add("stime", new FilledParameter(true, stime));
@@ -526,27 +526,31 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
-        private static void x_ab_lifetable_basics(ref int rows, ref double[] D, ref double[] P, ref double[] a, ref double[] sl, ref double[] rm, ref double[] r, ref double[] Q, ref double[] dd, ref double[] yl, ref double[] t, ref double[] e)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <param name="d"></param>
+        /// <param name="p"></param>
+        /// <param name="a"></param>
+        /// <param name="sl">number living at age x = 'l'</param>
+        /// <param name="rm">death rate of interval</param>
+        /// <param name="r">range or interval length = 'n'</param>
+        /// <param name="q">probability of dying in interval</param>
+        /// <param name="dd">number dying in interval</param>
+        /// <param name="yl">number of years lived in interval</param>
+        /// <param name="t">number of years lived beyond age x</param>
+        /// <param name="e">observed expectation of life at age x</param>
+        private static void XabLifetableBasics(int rows, double[] d, double[] p, double[] a, double[] sl, double[] rm, double[] r, double[] q, double[] dd, double[] yl, double[] t, double[] e)
         {
-            int i;
-
             sl[1] = 100000;
-            //  sl is number living at age x = 'l'
-            //  rm is death rate of interval
-            //  r is range or interval length = 'n'
-            //  q is probability of dying in interval
-            //  dd is  number dying in interval
-            //  yl is number of years lived in interval
-            //  t is number of years lived beyond age x
-            //  e is observed expectation of life at age x
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
-                rm[i] = D[i] / P[i];
+                rm[i] = d[i] / p[i];
                 if (i == rows)
                 {
                     dd[i] = sl[i];
-                    Q[i] = 1.0;
+                    q[i] = 1.0;
                     yl[i] = sl[i] / rm[i];
                     t[i] = yl[i];
                     if (sl[i] == 0.0)
@@ -560,13 +564,13 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    Q[i] = (r[i] * rm[i]) / (1.0 + (1.0 - a[i]) * r[i] * rm[i]);
-                    dd[i] = sl[i] * Q[i];
+                    q[i] = (r[i] * rm[i]) / (1.0 + (1.0 - a[i]) * r[i] * rm[i]);
+                    dd[i] = sl[i] * q[i];
                     sl[i + 1] = sl[i] - dd[i];
                     yl[i] = r[i] * (sl[i] - dd[i]) + (a[i] * r[i] * dd[i]);
                 }
             }
-            for (i = 1; i <= rows - 1; i++)
+            for (int i = 1; i <= rows - 1; i++)
             {
                 t[rows - i] = t[rows + 1 - i] + yl[rows - i];
                 if (sl[rows - i] == 0.0)
@@ -581,7 +585,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_ab_lifetable_median_mode(ref int rows, ref double[] dd, out double emo, out double emd, ref double[] sl, ref double[] x)
+        private static void ABLifetableMedianMode(int rows, double[] dd, out double emo, out double emd, double[] sl, double[] x)
         {
             int i;
 
@@ -611,26 +615,26 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_ab_lifetable_variance(ref int rows, ref double[] vq, ref double[] Q, ref double[] D, ref double[] a, ref double[] r, ref double[] e, ref double[] sl, ref double[] ve, ref double[] vs)
+        private static void ABLifetableVariance(int rows, double[] vq, double[] q, double[] d, double[] a, double[] r, double[] e, double[] sl, double[] ve, double[] vs)
         {
             int i;
             double w;
 
             double[] f = new double[rows + 1 /* for VB to C# conversion */];
-            double[] C = new double[rows + 1 /* for VB to C# conversion */];
+            double[] c = new double[rows + 1 /* for VB to C# conversion */];
             for (i = 1; i <= rows; i++)
             {
-                vq[i] = (Q[i] * Q[i] * (1.0 - Q[i])) / D[i];
+                vq[i] = (q[i] * q[i] * (1.0 - q[i])) / d[i];
                 if (i < rows)
                 {
                     double b = ((1.0 - a[i]) * r[i]) + e[i + 1];
-                    C[i] = sl[i] * sl[i] * b * b * vq[i];
+                    c[i] = sl[i] * sl[i] * b * b * vq[i];
                 }
             }
-            f[rows - 1] = C[rows - 1];
+            f[rows - 1] = c[rows - 1];
             for (i = 1; i <= rows - 2; i++)
             {
-                f[rows - 1 - i] = f[rows - i] + C[rows - 1 - i];
+                f[rows - 1 - i] = f[rows - i] + c[rows - 1 - i];
             }
             for (i = 1; i <= rows - 1; i++)
             {
@@ -667,7 +671,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static string x_lifetab_interval(int i, int rows, double[] x)
+        private static string LifetabInterval(int i, int rows, double[] x)
         {
             int j = i == 1 ? 0 : 1;
             if (i < rows)
@@ -678,7 +682,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_plest(ITemplateHost host, ParameterBag groupParameters, ref double[,] stime, ref int[] nat, ref int[,] dead, ref int[] cen, ref double[,] h, ref double[,] s, ref double[] vh, ref double[] vs, ref int nx, ref int lap)
+        private static void Plest(ITemplateHost host, ParameterBag groupParameters, ref double[,] stime, ref int[] nat, ref int[,] dead, ref int[] cen, ref double[,] h, ref double[,] s, ref double[] vh, ref double[] vs, ref int nx, ref int lap)
         {
             double var = 0;
             int j;
@@ -739,25 +743,25 @@ namespace StatsDirect.Builtins
         ///  A MUST BE POSITIVE SEMI-DEFINITE.  ETA IS SET TO MULTIPLYING FACTOR DETERMINING EFFECTIVE 0 FOR PIVOT.
         ///  </summary>
         ///  <param name="a"></param>
-        ///  <param name="N"></param>
+        ///  <param name="n"></param>
         ///  <param name="nn"></param>
         ///  <param name="u"></param>
         ///  <param name="nullty"></param>
         ///  <param name="ifault"></param>
         ///  <remarks>ALGORITHM AS 6 APPL. STATIST. (1968) VOL.17, P.195</remarks>
-        private static void x_chol(ref double[] a, ref int N, ref int nn, ref double[] u, ref int nullty, out int ifault)
+        private static void Chol(double[] a, int n, int nn, double[] u, ref int nullty, out int ifault)
         {
             int icol;
             double w = 0;
 
             const double eta = 0.000000001;
             ifault = 1;
-            if (N <= 0)
+            if (n <= 0)
             {
                 return;
             }
             ifault = 3;
-            if (nn != N * (N + 1) / 2)
+            if (nn != n * (n + 1) / 2)
             {
                 return;
             }
@@ -767,11 +771,11 @@ namespace StatsDirect.Builtins
             int k = 0;
             const double eta2 = eta * eta;
             int ii = 0;
-            for (icol = 1; icol <= N; icol++)
+            for (icol = 1; icol <= n; icol++)
             {
                 ii = ii + icol;
                 double x = eta2 * a[ii];
-                int L = 0;
+                int l = 0;
                 int kk = 0;
                 int irow;
                 for (irow = 1; irow <= icol; irow++)
@@ -779,23 +783,23 @@ namespace StatsDirect.Builtins
                     kk = kk + irow;
                     k = k + 1;
                     w = a[k];
-                    int M = j;
+                    int m = j;
                     int i;
                     for (i = 1; i <= irow; i++)
                     {
-                        L = L + 1;
+                        l = l + 1;
                         if (i == irow)
                         {
                             break; /* TRANSWARNING: check that break is in correct scope */
                         }
-                        w = w - u[L] * u[M];
-                        M = M + 1;
+                        w = w - u[l] * u[m];
+                        m = m + 1;
                     }
                     if (irow == icol)
                     {
                         break; /* TRANSWARNING: check that break is in correct scope */
                     }
-                    if (u[L] == 0)
+                    if (u[l] == 0)
                     {
                         if (w * w > Math.Abs(x * a[kk]))
                         {
@@ -805,7 +809,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        u[k] = w / u[L];
+                        u[k] = w / u[l];
                     }
                 }
                 if (Math.Abs(w) <= Math.Abs(eta * a[k]))
@@ -830,7 +834,7 @@ namespace StatsDirect.Builtins
         public static StepResult RptWeiLachin(ITemplateHost host, ParameterBag parameters)
         {
             int ifault;
-            int gid_2 = 0; int j;
+            int gid2 = 0; int j;
             int[,] s;
             double[,] x;
 
@@ -843,31 +847,31 @@ namespace StatsDirect.Builtins
             }
             int rows = gidVariable.Length;
             int[] g = new int[rows + 1 /* for VB to C# conversion */];
-            int[] N = new int[2 + 1 /* for VB to C# conversion */];
-            int gid_1 = Convert.ToInt32(gidVariable.Data[0]) + 1;
+            int[] n = new int[2 + 1 /* for VB to C# conversion */];
+            int gid1 = Convert.ToInt32(gidVariable.Data[0]) + 1;
             for (j = 1; j <= rows; j++)
             {
-                if (gidVariable.Data[j - 1] + 1 != gid_1)
+                if (gidVariable.Data[j - 1] + 1 != gid1)
                 {
-                    gid_2 = Convert.ToInt32(gidVariable.Data[j - 1]) + 1;
+                    gid2 = Convert.ToInt32(gidVariable.Data[j - 1]) + 1;
                 }
                 g[j] = Convert.ToInt32(gidVariable.Data[j - 1]) + 1;
             }
             for (j = 1; j <= rows; j++)
             {
-                if (g[j] == gid_1)
+                if (g[j] == gid1)
                 {
-                    N[1] = N[1] + 1;
+                    n[1]++;
                 }
-                else if (g[j] == gid_2)
+                else if (g[j] == gid2)
                 {
-                    N[2] = N[2] + 1;
+                    n[2]++;
                 }
             }
             int nr = parameters["nr"].AsInt32;
             if (nr > 0)
             {
-                double min_time = Constant.MISSING;
+                double minTime = Constant.MISSING;
                 s = new int[rows + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
                 x = new double[rows + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
 
@@ -881,9 +885,9 @@ namespace StatsDirect.Builtins
                     for (r = 1; r <= rows; r++)
                     {
                         x[r, j] = timesVariable.Data[r - 1];
-                        if (x[r, j] < min_time)
+                        if (x[r, j] < minTime)
                         {
-                            min_time = x[r, j];
+                            minTime = x[r, j];
                         }
                     }
                     for (r = 1; r <= rows; r++)
@@ -902,17 +906,17 @@ namespace StatsDirect.Builtins
                 }
                 //  find missing times, censor them, and code them as minimum observed time minus one
                 //  if min time is 0 and all time 0 are censored, assume that is a missing data pattern
-                double missing_code;
-                if (min_time == 0.0)
+                double missingCode;
+                if (minTime == 0.0)
                 {
-                    missing_code = 0.0;
+                    missingCode = 0.0;
                     for (j = 1; j <= nr; j++)
                     {
                         for (r = 1; r <= rows; r++)
                         {
                             if (x[r, j] == 0.0 & s[r, j] == 1)
                             {
-                                missing_code = min_time - 1.0;
+                                missingCode = minTime - 1.0;
                                 break; /* TRANSWARNING: check that break is in correct scope */
                             }
                         }
@@ -920,7 +924,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    missing_code = min_time - 1.0;
+                    missingCode = minTime - 1.0;
                 }
                 for (j = 1; j <= nr; j++)
                 {
@@ -928,7 +932,7 @@ namespace StatsDirect.Builtins
                     {
                         if (x[r, j] == Constant.MISSING)
                         {
-                            x[r, j] = missing_code;
+                            x[r, j] = missingCode;
                             s[r, j] = 0;
                         }
                     }
@@ -945,12 +949,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*outer", outerList);
             ParameterBag outerParameters = new ParameterBag();
             outerList.Add(outerParameters);
-            x_wl(host, outerParameters, nr, rows, N, g, s, x, 1, out ifault);
+            XWl(host, outerParameters, nr, rows, n, g, s, x, 1, out ifault);
             if (ifault == 0)
             {
                 outerParameters = new ParameterBag();
                 outerList.Add(outerParameters);
-                x_wl(host, outerParameters, nr, rows, N, g, s, x, 2, out ifault);
+                XWl(host, outerParameters, nr, rows, n, g, s, x, 2, out ifault);
             }
             if (ifault != 0)
             {
@@ -960,16 +964,16 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_wl(ITemplateHost host, ParameterBag outputParameters, int nr, int nt, int[] N, int[] g, int[,] s, double[,] x, int method, out int ifault)
+        private static void XWl(ITemplateHost host, ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
         {
-            int ifail; int nullty = 0; int j2; int i; int K2; int K1; int ipoint; int r;
+            int ifail; int nullty = 0; int j2; int i; int k2; int k1; int ipoint; int r;
             int j; int k;
-            double Q = 0;
+            double q = 0;
             string tx;
 
             int nn = ((int)(Math.Floor((double)nr * (nr + 1) / 2)));
             int[,] y = new int[2 + 1 /* for VB to C# conversion */, nt + 1 /* for VB to C# conversion */];
-            int[,] D = new int[2 + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
+            int[,] d = new int[2 + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
             double[] qe = new double[2 + 1 /* for VB to C# conversion */];
             double[,] ees = new double[2 + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
             double[, ,] mu = new double[2 + 1 /* for VB to C# conversion */, nt + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
@@ -985,10 +989,10 @@ namespace StatsDirect.Builtins
                 for (k = 1; k <= nr; k++)
                 {
                     ees[i, k] = 0.0;
-                    D[i, k] = 0;
-                    for (K2 = 1; K2 <= nr; K2++)
+                    d[i, k] = 0;
+                    for (k2 = 1; k2 <= nr; k2++)
                     {
-                        sig[i, k, K2] = 0.0;
+                        sig[i, k, k2] = 0.0;
                     }
                 }
             }
@@ -1022,20 +1026,20 @@ namespace StatsDirect.Builtins
                         }
                         if (method == 1)
                         {
-                            Q = sum / Convert.ToDouble(nt);
+                            q = sum / Convert.ToDouble(nt);
                         }
                         if (method == 2)
                         {
-                            Q = 1.0;
+                            q = 1.0;
                         }
                         for (i = 1; i <= 2; i++)
                         {
-                            qe[i] = Q * Convert.ToDouble(y[i, j]) / sum;
+                            qe[i] = q * Convert.ToDouble(y[i, j]) / sum;
                         }
                         mu[2, j, k] = qe[1];
                         mu[1, j, k] = qe[2];
                         ees[g[j], k] = ees[g[j], k] + mu[g[j], j, k];
-                        D[g[j], k] = D[g[j], k] + 1;
+                        d[g[j], k] = d[g[j], k] + 1;
                     }
                     else
                     {
@@ -1063,30 +1067,30 @@ namespace StatsDirect.Builtins
                 }
             }
             //   COMPUTE ENTRIES in COVARIANCE MATRIX (SEE EQNS. 2 AND 3)
-            for (K1 = 1; K1 <= nr; K1++)
+            for (k1 = 1; k1 <= nr; k1++)
             {
-                for (K2 = 1; K2 <= K1; K2++)
+                for (k2 = 1; k2 <= k1; k2++)
                 {
                     for (j = 1; j <= nt; j++)
                     {
                         i = g[j];
-                        if (N[i] == 0)
+                        if (n[i] == 0)
                         {
                             ifault = 2;
                             return;
                         }
-                        sig[i, K1, K2] = sig[i, K1, K2] + (mu[i, j, K1] * Convert.ToDouble(s[j, K1]) - psi[i, j, K1]) * (mu[i, j, K2] * Convert.ToDouble(s[j, K2]) - psi[i, j, K2]) / Convert.ToDouble(N[i]);
+                        sig[i, k1, k2] = sig[i, k1, k2] + (mu[i, j, k1] * Convert.ToDouble(s[j, k1]) - psi[i, j, k1]) * (mu[i, j, k2] * Convert.ToDouble(s[j, k2]) - psi[i, j, k2]) / Convert.ToDouble(n[i]);
                     }
-                    ipoint = ((int)(Math.Floor((double)K1 * (K1 - 1) / 2))) + K2;
-                    sigma[ipoint] = (Convert.ToDouble(N[1]) * sig[1, K1, K2] + Convert.ToDouble(N[2]) * sig[2, K1, K2]) / Convert.ToDouble(nt);
+                    ipoint = ((int)(Math.Floor((double)k1 * (k1 - 1) / 2))) + k2;
+                    sigma[ipoint] = (Convert.ToDouble(n[1]) * sig[1, k1, k2] + Convert.ToDouble(n[2]) * sig[2, k1, k2]) / Convert.ToDouble(nt);
                 }
             }
             //   COMPUTE WEI-LACHIN UNIVARIATE TEST NRUNIV (SEE EQNS 1 AND 6)
             outputParameters.AddOutput("title",
                                        method == 1 ? "Univariate Generalised Wilcoxon (Gehan)" : "Univariate Log-Rank");
             outputParameters.AddOutput("tot", nt.ToString());
-            outputParameters.AddOutput("grp_1", N[1].ToString());
-            outputParameters.AddOutput("grp_2", N[2].ToString());
+            outputParameters.AddOutput("grp_1", n[1].ToString());
+            outputParameters.AddOutput("grp_2", n[2].ToString());
             IList<ParameterBag> repeatsList = new List<ParameterBag>();
             outputParameters.AddOutput("*repeats", repeatsList);
             for (k = 1; k <= nr; k++)
@@ -1109,8 +1113,8 @@ namespace StatsDirect.Builtins
                 }
                 nruniv[k] = wlt[k] / Math.Sqrt(sigma[ipoint]);
                 repeatsParameters.AddOutput("time", k.ToString());
-                repeatsParameters.AddOutput("fail_1", D[1, k].ToString());
-                repeatsParameters.AddOutput("fail_2", D[2, k].ToString());
+                repeatsParameters.AddOutput("fail_1", d[1, k].ToString());
+                repeatsParameters.AddOutput("fail_2", d[2, k].ToString());
                 repeatsParameters.AddOutput("t", host.RoundU(wlt[k]));
                 if (wlt[k] == 0.0)
                 {
@@ -1129,7 +1133,7 @@ namespace StatsDirect.Builtins
             //   COMPUTE INVERSE OF COVARIANCE MATRIX AND WEI-LACHIN
             //   MULTIVARIATE STATISTICS CHIOMB (FOR OMNIBUS TEST) AND
             //   NRSTOC (FOR TEST OF STOCHASTIC ORDERING)  (SEE EQN 7)
-            x_syminv(ref sigma, ref nr, ref nn, ref siginv, ref nullty, out ifail);
+            Syminv(ref sigma, ref nr, ref nn, ref siginv, ref nullty, out ifail);
             double chiomb = 0.0;
             double tsum = 0.0;
             double sigsum = 0.0;
@@ -1152,52 +1156,52 @@ namespace StatsDirect.Builtins
                                        method == 1
                                            ? "Multivariate Generalised Wilcoxon (Gehan)"
                                            : "Multivariate Log-Rank");
-            int z_Imax = 0;
-            int z_Imin = 1;
+            int zImax = 0;
+            int zImin = 1;
             IList<ParameterBag> covarList = new List<ParameterBag>();
             outputParameters.AddOutput("*covar", covarList);
             for (r = 1; r <= nr; r++)
             {
-                z_Imax = r + z_Imax;
+                zImax = r + zImax;
                 tx = "";
-                for (i = z_Imin; i <= z_Imax; i++)
+                for (i = zImin; i <= zImax; i++)
                 {
                     tx = tx + host.RoundU(sigma[i]) + "\t";
                 }
                 ParameterBag covarParameters = new ParameterBag();
                 covarList.Add(covarParameters);
                 covarParameters.AddOutput("mat", tx);
-                z_Imin = z_Imax + 1;
+                zImin = zImax + 1;
             }
-            z_Imax = 0;
-            z_Imin = 1;
+            zImax = 0;
+            zImin = 1;
             IList<ParameterBag> invCovarList = new List<ParameterBag>();
             outputParameters.AddOutput("*inv_covar", invCovarList);
             for (r = 1; r <= nr; r++)
             {
-                z_Imax = r + z_Imax;
+                zImax = r + zImax;
                 tx = "";
-                for (i = z_Imin; i <= z_Imax; i++)
+                for (i = zImin; i <= zImax; i++)
                 {
                     tx = tx + host.RoundU(siginv[i]) + "\t";
                 }
                 ParameterBag invCovarParameters = new ParameterBag();
                 invCovarList.Add(invCovarParameters);
                 invCovarParameters.AddOutput("mat", tx);
-                z_Imin = z_Imax + 1;
+                zImin = zImax + 1;
             }
 
             outputParameters.AddOutput("rep", nr.ToString());
             outputParameters.AddOutput("stat", host.RoundU(chiomb));
             outputParameters.AddOutput("p_omnibus", host.pval(PDF.chivalp(chiomb, Convert.ToDouble(nr))));
             outputParameters.AddOutput("z", host.RoundU(nrstoc));
-            double P = 1.0 - PDF.alnorm(Math.Abs(nrstoc));
-            if (P > 1.0 - P)
+            double p = 1.0 - PDF.alnorm(Math.Abs(nrstoc));
+            if (p > 1.0 - p)
             {
-                P = 1.0 - P;
+                p = 1.0 - p;
             }
-            outputParameters.AddOutput("p_1", host.pval(P));
-            outputParameters.AddOutput("p_2", host.pval(P * 2.0));
+            outputParameters.AddOutput("p_1", host.pval(p));
+            outputParameters.AddOutput("p_2", host.pval(p * 2.0));
         }
 
 
@@ -1205,61 +1209,61 @@ namespace StatsDirect.Builtins
         ///  FORMS in C( ) AS LOWER TRIANGLE, A GENERALIZED INVERSE OF THE POSITIVE SEMI-DEFINATE SYMMETRIC MATRIX A() ORDER N, STORED AS LOWER TRIANGLE.
         ///  </summary>
         ///  <param name="a"></param>
-        ///  <param name="N"></param>
+        ///  <param name="n"></param>
         ///  <param name="nn"></param>
-        ///  <param name="C"></param>
+        ///  <param name="c"></param>
         ///  <param name="nullty"></param>
         ///  <param name="ifault"></param>
         ///  <remarks>ALGORITHM AS 7 APPL. STATIST. (1968) VOL.17, P.198</remarks>
-        private static void x_syminv(ref double[] a, ref int N, ref int nn, ref double[] C, ref int nullty, out int ifault)
+        private static void Syminv(ref double[] a, ref int n, ref int nn, ref double[] c, ref int nullty, out int ifault)
         {
-            double[] w = new double[N + 1 /* for VB to C# conversion */ ];
-            x_chol(ref a, ref N, ref nn, ref C, ref nullty, out ifault);
+            double[] w = new double[n + 1 /* for VB to C# conversion */ ];
+            Chol(a, n, nn, c, ref nullty, out ifault);
             if (ifault != 0)
             {
                 return;
             }
-            int irow = N;
+            int irow = n;
             int ndiag = nn;
             do
             {
-                int L = ndiag;
-                if (C[ndiag] != 0.0)
+                int l = ndiag;
+                if (c[ndiag] != 0.0)
                 {
                     int i;
-                    for (i = irow; i <= N; i++)
+                    for (i = irow; i <= n; i++)
                     {
-                        w[i] = C[L];
-                        L = L + i;
+                        w[i] = c[l];
+                        l = l + i;
                     }
-                    int icol = N;
+                    int icol = n;
                     int jcol = nn;
                     int mdiag = nn;
                     do
                     {
-                        L = jcol;
+                        l = jcol;
                         double x = 0.0;
                         if (icol == irow)
                         {
                             x = 1.0 / w[irow];
                         }
-                        int k = N;
+                        int k = n;
                         do
                         {
                             if (k == irow)
                             {
                                 break; /* TRANSWARNING: check that break is in correct scope */
                             }
-                            x = x - w[k] * C[L];
+                            x = x - w[k] * c[l];
                             k = k - 1;
-                            L = L - 1;
-                            if (L > mdiag)
+                            l = l - 1;
+                            if (l > mdiag)
                             {
-                                L = L - k + 1;
+                                l = l - k + 1;
                             }
                         }
                         while (true);
-                        C[L] = x / w[irow];
+                        c[l] = x / w[irow];
                         if (icol == irow)
                         {
                             break; /* TRANSWARNING: check that break is in correct scope */
@@ -1273,10 +1277,10 @@ namespace StatsDirect.Builtins
                 else
                 {
                     int j;
-                    for (j = irow; j <= N; j++)
+                    for (j = irow; j <= n; j++)
                     {
-                        C[L] = 0;
-                        L = L + j;
+                        c[l] = 0;
+                        l = l + j;
                     }
                 }
                 ndiag = ndiag - irow;
@@ -1286,15 +1290,15 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_plsave(DataFrame resultsFrame, ref double[,] stime, ref int[] nat, ref int[,] dead, ref double[,] s, ref double[,] h, ref double[] vs, ref double[] vh, ref int nx, ref int lap, ref double GAMMA, ref int lc, ref int[] allcens, ref double[] alltime)
+        private static void Plsave(DataFrame resultsFrame, ref double[,] stime, ref int[] nat, ref int[,] dead, ref double[,] s, ref double[,] h, ref double[] vs, ref double[] vh, ref int nx, ref int lap, ref double gamma, ref int lc, ref int[] allcens, ref double[] alltime)
         {
-            double P = (1.0 - GAMMA) / 2;
+            double p = (1.0 - gamma) / 2;
             int ifault;
-            double cit = PDF.gauinv(1.0 - P, out ifault);
+            double cit = PDF.gauinv(1.0 - p, out ifault);
             int r = 0;
             double sumn = 0.0;
             double sumd = 0.0;
-            string g = Formatting.XRound(GAMMA * 100, 1);
+            string g = Formatting.XRound(gamma * 100, 1);
             string grp = dead.GetUpperBound(1) > 1 ? " (group " + lap.ToString() + ")" : "";
             DoubleVariable timeVariable = new DoubleVariable(nx, "Time" + grp);
             StringVariable deathVariable = new StringVariable(nx, "Death/Event" + grp);
@@ -1408,34 +1412,34 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_plprep(ref double[,] ARR2, ref ColumnData[] CDAT1, ref double[,] stime, ref int[,] dead, ref int[] nat, ref int[] cen, ref int[] gnx, out int nx, ref int lap, out int nt, ref int[] allcens, ref double[] alltime)
+        private static void Plprep(ref double[,] arr2, ref ColumnData[] cdat1, ref double[,] stime, ref int[,] dead, ref int[] nat, ref int[] cen, ref int[] gnx, out int nx, ref int lap, out int nt, ref int[] allcens, ref double[] alltime)
         {
-            nt = CDAT1[0].Rows;
-            Trisvar[] Q = new Trisvar[nt + 1 /* for VB to C# conversion */];
+            nt = cdat1[0].Rows;
+            Trisvar[] q = new Trisvar[nt + 1 /* for VB to C# conversion */];
             int nxx = 0;
             for (int j = 1; j <= nt; j++)
             {
-                if (ARR2[1, j] != Constant.MISSING & ARR2[1, j] != Constant.MISSING & ARR2[2, j] != Constant.MISSING)
+                if (arr2[1, j] != Constant.MISSING & arr2[1, j] != Constant.MISSING & arr2[2, j] != Constant.MISSING)
                 {
                     if (j >= 1)
                     {
                         nxx = nxx + 1;
                     }
-                    Q[j] = new Trisvar { TM = ARR2[1, j], gp = Convert.ToInt32(ARR2[0, j]), cs = Convert.ToInt32(ARR2[2, j]) };
+                    q[j] = new Trisvar { Tm = arr2[1, j], Gp = Convert.ToInt32(arr2[0, j]), Cs = Convert.ToInt32(arr2[2, j]) };
                 }
             }
-            Array.Sort(Q, 1, nt, new TrisvarByTmThenGp());
+            Array.Sort(q, 1, nt, new TrisvarByTmThenGp());
             nx = 0;
             nt = nxx;
             nat[1] = gnx[lap];
             for (int j = 1; j <= nt; j++)
             {
-                if (Q[j].gp == lap)
+                if (q[j].Gp == lap)
                 {
                     int wdr = 0;
                     nx = nx + 1;
-                    stime[nx, lap] = Q[j].TM;
-                    dead[nx, lap] = Q[j].cs;
+                    stime[nx, lap] = q[j].Tm;
+                    dead[nx, lap] = q[j].Cs;
                     if (dead[nx, lap] == 0)
                     {
                         wdr = 1;
@@ -1443,9 +1447,9 @@ namespace StatsDirect.Builtins
                     int j2;
                     for (j2 = j; j2 <= nt - 1; j2++)
                     {
-                        if (Q[j].TM == Q[j2 + 1].TM & Q[j2 + 1].gp == Q[j].gp)
+                        if (q[j].Tm == q[j2 + 1].Tm & q[j2 + 1].Gp == q[j].Gp)
                         {
-                            if (Q[j2 + 1].cs == 1)
+                            if (q[j2 + 1].Cs == 1)
                             {
                                 dead[nx, lap] = dead[nx, lap] + 1;
                             }
@@ -1467,31 +1471,31 @@ namespace StatsDirect.Builtins
             int ctr = 0;
             for (int j = 1; j <= nt; j++)
             {
-                if (Q[j].gp == lap)
+                if (q[j].Gp == lap)
                 {
                     ctr = ctr + 1;
-                    alltime[ctr] = Q[j].TM;
-                    allcens[ctr] = Q[j].cs;
+                    alltime[ctr] = q[j].Tm;
+                    allcens[ctr] = q[j].Cs;
                 }
             }
         }
 
 
-        private static void x_petoprep(ITemplateHost host, ParameterBag parameters, ref int rows, out double GAMMA, ref double cit, ref int groups, ref int strata, ref double[] score, ref string gid, ref double[] gpid, ref string[] glab, ref string[] slab, out bool ifault, ref double[,] ARR2, ref ColumnData[] CDAT1)
+        private static void Petoprep(ITemplateHost host, ParameterBag parameters, ref int rows, out double gamma, ref double cit, ref int groups, ref int strata, ref double[] score, ref string gid, ref double[] gpid, ref string[] glab, ref string[] slab, out bool ifault, ref double[,] arr2, ref ColumnData[] cdat1)
         {
             int r; int j;
             double temp;
-            bool OK;
+            bool ok;
 
             ifault = true;
-            GAMMA = parameters["gamma"].AsDouble;
-            if (GAMMA < 0)
+            gamma = parameters["gamma"].AsDouble;
+            if (gamma < 0)
             {
                 throw new ArgumentException("gamma must be >= 0");
             }
-            double P = (1.0 - GAMMA) / 2.0;
+            double p = (1.0 - gamma) / 2.0;
             int iifault;
-            cit = PDF.gauinv(1.0 - P, out iifault);
+            cit = PDF.gauinv(1.0 - p, out iifault);
 
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0].AsClassifierVariable;
@@ -1514,16 +1518,16 @@ namespace StatsDirect.Builtins
                 temp = g[r];
                 if (temp != Constant.MISSING)
                 {
-                    OK = true;
+                    ok = true;
                     for (j = 1; j <= igot; j++)
                     {
                         if (temp == gpid[j])
                         {
-                            OK = false;
+                            ok = false;
                             break;
                         }
                     }
-                    if (OK)
+                    if (ok)
                     {
                         igot = igot + 1;
                         // create temp variable for copying values - TODO: Optimise
@@ -1557,10 +1561,10 @@ namespace StatsDirect.Builtins
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
-            double[] C = new double[rows + 1 /* for VB to C# conversion */];
+            double[] c = new double[rows + 1 /* for VB to C# conversion */];
             for (r = 1; r <= rows; r++)
             {
-                C[r] = deathsVariable.Data[r - 1];
+                c[r] = deathsVariable.Data[r - 1];
             }
 
             double[] s = new double[rows + 1 /* for VB to C# conversion */];
@@ -1584,16 +1588,16 @@ namespace StatsDirect.Builtins
                     temp = s[r];
                     if (temp != Constant.MISSING)
                     {
-                        OK = true;
+                        ok = true;
                         for (j = 1; j <= igots; j++)
                         {
                             if (temp == sid[j])
                             {
-                                OK = false;
+                                ok = false;
                                 break; /* TRANSWARNING: check that break is in correct scope */
                             }
                         }
-                        if (OK)
+                        if (ok)
                         {
                             igots = igots + 1;
                             // create temp variable for copying values 
@@ -1620,44 +1624,44 @@ namespace StatsDirect.Builtins
             int extra = 0;
             for (r = 1; r <= rows; r++)
             {
-                if (C[r] > 1)
+                if (c[r] > 1)
                 {
-                    extra = extra + ((int)(Math.Floor(C[r]))) - 1;
+                    extra = extra + ((int)(Math.Floor(c[r]))) - 1;
                 }
             }
             // put the data back into the Public array
-            ARR2 = new double[3 + 1 /* for VB to C# conversion */, rows + extra + 1 /* for VB to C# conversion */];
-            CDAT1 = new ColumnData[3 + 1 /* for VB to C# conversion */];
+            arr2 = new double[3 + 1 /* for VB to C# conversion */, rows + extra + 1 /* for VB to C# conversion */];
+            cdat1 = new ColumnData[3 + 1 /* for VB to C# conversion */];
             for (j = 0; j <= 3; j++)
             {
-                CDAT1[j] = new ColumnData { Rows = rows + extra };
+                cdat1[j] = new ColumnData { Rows = rows + extra };
 
             }
             int ctr = 0;
             for (r = 1; r <= rows; r++)
             {
-                if (C[r] > 1 & C[r] != Constant.MISSING)
+                if (c[r] > 1 & c[r] != Constant.MISSING)
                 {
-                    for (j = 1; j <= ((int)(Math.Floor(C[r]))); j++)
+                    for (j = 1; j <= ((int)(Math.Floor(c[r]))); j++)
                     {
                         ctr = ctr + 1;
-                        ARR2[0, ctr] = g[r];
-                        ARR2[1, ctr] = t[r];
-                        ARR2[2, ctr] = 1;
-                        ARR2[3, ctr] = s[r];
+                        arr2[0, ctr] = g[r];
+                        arr2[1, ctr] = t[r];
+                        arr2[2, ctr] = 1;
+                        arr2[3, ctr] = s[r];
                     }
                 }
                 else
                 {
-                    if (C[r] < 0)
+                    if (c[r] < 0)
                     {
-                        C[r] = 0;
+                        c[r] = 0;
                     }
                     ctr = ctr + 1;
-                    ARR2[0, ctr] = g[r];
-                    ARR2[1, ctr] = t[r];
-                    ARR2[2, ctr] = C[r];
-                    ARR2[3, ctr] = s[r];
+                    arr2[0, ctr] = g[r];
+                    arr2[1, ctr] = t[r];
+                    arr2[2, ctr] = c[r];
+                    arr2[3, ctr] = s[r];
                 }
             }
             rows = rows + extra;
@@ -1705,21 +1709,21 @@ namespace StatsDirect.Builtins
             bool util;
 
             // string lifetab = "Life table"; 
-            double GAMMA = parameters["gamma"].AsDouble;
-            double P0 = (1.0 - GAMMA) / 2.0;
+            double gamma = parameters["gamma"].AsDouble;
+            double p0 = (1.0 - gamma) / 2.0;
             int ifault;
-            double cit = PDF.gauinv(1.0 - P0, out ifault);
+            double cit = PDF.gauinv(1.0 - p0, out ifault);
 
             DataFrame intervalsFrame = parameters["intervals"].AsDataFrame;
             DoubleVariable intervalsVariable = intervalsFrame.Variables[0].AsDoubleVariable;
             int rows = intervalsVariable.Length + 1;
             double[] r = new double[rows + 1 /* for VB to C# conversion */];
             double[] x = new double[rows + 1 /* for VB to C# conversion */];
-            double[] P = new double[rows + 1 /* for VB to C# conversion */];
-            double[] D = new double[rows + 1 /* for VB to C# conversion */];
+            double[] p = new double[rows + 1 /* for VB to C# conversion */];
+            double[] d = new double[rows + 1 /* for VB to C# conversion */];
             double[] a = new double[rows + 1 /* for VB to C# conversion */];
             double[] rm = new double[rows + 1 /* for VB to C# conversion */];
-            double[] Q = new double[rows + 1 /* for VB to C# conversion */];
+            double[] q = new double[rows + 1 /* for VB to C# conversion */];
             double[] dd = new double[rows + 1 /* for VB to C# conversion */];
             double[] sl = new double[rows + 1 /* for VB to C# conversion */];
             double[] yl = new double[rows + 1 /* for VB to C# conversion */];
@@ -1740,15 +1744,15 @@ namespace StatsDirect.Builtins
             DataFrame populationFrame = parameters["population"].AsDataFrame;
             DoubleVariable populationVariable = populationFrame.Variables[0].AsDoubleVariable;
             for (int i = 1; i <= rows; i++)
-                P[i] = populationVariable.Data[i - 1];
+                p[i] = populationVariable.Data[i - 1];
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
             bool novariance = false;
             for (int i = 1; i <= rows; i++)
             {
-                D[i] = Math.Abs(deathsVariable.Data[i - 1]);
-                if (D[i] <= 0.0)
+                d[i] = Math.Abs(deathsVariable.Data[i - 1]);
+                if (d[i] <= 0.0)
                     novariance = true;
             }
 
@@ -1789,13 +1793,13 @@ namespace StatsDirect.Builtins
             if (simits < 3000)
                 simits = 3000;
 
-            bool save_details = parameters["save"].AsBoolean;
+            bool saveDetails = parameters["save"].AsBoolean;
 
             // simulation
             double[] dsim = new double[rows + 1 /* for VB to C# conversion */ ];
             double[] esim = new double[simits + 1 /* for VB to C# conversion */ ];
             double[] emdsim = new double[simits + 1 /* for VB to C# conversion */ ];
-            PoissonRNG RNG = new PoissonRNG();
+            PoissonRNG rng = new PoissonRNG();
             //  RNG.Seed(DefaultSeed()) not required as the default seed is used if the RNG isn't seeded on first call
             host.StartProgress("Simulating...");
             for (int j = 1; j <= simits; j++)
@@ -1806,10 +1810,10 @@ namespace StatsDirect.Builtins
                     throw new TemplateOperationCancelledException();
                 }
                 for (int i = 1; i <= rows; i++)
-                    dsim[i] = RNG.GenPoisson(D[i]);
-                x_ab_lifetable_basics(ref rows, ref dsim, ref P, ref a, ref sl, ref rm, ref r, ref Q, ref dd, ref yl, ref t, ref e);
+                    dsim[i] = rng.GenPoisson(d[i]);
+                XabLifetableBasics(rows, dsim, p, a, sl, rm, r, q, dd, yl, t, e);
                 esim[j] = e[1];
-                x_ab_lifetable_median_mode(ref rows, ref dd, out emo, out emd, ref sl, ref x);
+                ABLifetableMedianMode(rows, dd, out emo, out emd, sl, x);
                 emdsim[j] = emd;
             }
             host.FinishProgress();
@@ -1821,12 +1825,12 @@ namespace StatsDirect.Builtins
             double emdsimul = MathDbl.quantile_from_sorted(emdsim, simits, 0.95);
 
             // basic stats for abridged life table
-            x_ab_lifetable_basics(ref rows, ref D, ref P, ref a, ref sl, ref rm, ref r, ref Q, ref dd, ref yl, ref t, ref e);
+            XabLifetableBasics(rows, d, p, a, sl, rm, r, q, dd, yl, t, e);
 
             // Chiang variances
             if (!novariance)
             {
-                x_ab_lifetable_variance(ref rows, ref vq, ref Q, ref D, ref a, ref r, ref e, ref sl, ref ve, ref vs);
+                ABLifetableVariance(rows, vq, q, d, a, r, e, sl, ve, vs);
             }
             else
             {
@@ -1839,7 +1843,7 @@ namespace StatsDirect.Builtins
             }
 
             // mode e
-            x_ab_lifetable_median_mode(ref rows, ref dd, out emo, out emd, ref sl, ref x);
+            ABLifetableMedianMode(rows, dd, out emo, out emd, sl, x);
 
             // population, deaths, death rate
             ParameterBag outputParameters = new ParameterBag();
@@ -1849,14 +1853,14 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
-                inputsParameters.AddOutput("pop", host.RoundU(P[i]));
-                inputsParameters.AddOutput("dead", host.RoundU(D[i]));
+                inputsParameters.AddOutput("int", LifetabInterval(i, rows, x));
+                inputsParameters.AddOutput("pop", host.RoundU(p[i]));
+                inputsParameters.AddOutput("dead", host.RoundU(d[i]));
                 inputsParameters.AddOutput("rate", host.RoundU(rm[i]));
             }
 
             // probability of dying q, se, ci
-            outputParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100, 1));
+            outputParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 1));
 
             IList<ParameterBag> pdyingList = new List<ParameterBag>();
             outputParameters.AddOutput("*pdying", pdyingList);
@@ -1864,8 +1868,8 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag pdyingParameters = new ParameterBag();
                 pdyingList.Add(pdyingParameters);
-                pdyingParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
-                pdyingParameters.AddOutput("q", host.RoundU(Q[i]));
+                pdyingParameters.AddOutput("int", LifetabInterval(i, rows, x));
+                pdyingParameters.AddOutput("q", host.RoundU(q[i]));
                 if (vq[i] < 0.0 | vq[i] == Constant.MISSING)
                 {
                     se = Constant.MISSING;
@@ -1875,8 +1879,8 @@ namespace StatsDirect.Builtins
                 else
                 {
                     se = Math.Sqrt(vq[i]);
-                    lci = Q[i] - cit * se;
-                    uci = Q[i] + cit * se;
+                    lci = q[i] - cit * se;
+                    uci = q[i] + cit * se;
                 }
                 pdyingParameters.AddOutput("se", host.RoundU(se));
                 pdyingParameters.AddOutput("lci", host.RoundU(lci));
@@ -1890,7 +1894,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag livingParameters = new ParameterBag();
                 livingList.Add(livingParameters);
-                livingParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
+                livingParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 livingParameters.AddOutput("l", Convert.ToInt32(sl[i]).ToString());
                 livingParameters.AddOutput("d", Convert.ToInt32(dd[i]).ToString());
                 livingParameters.AddOutput("a", host.RoundU(a[i]));
@@ -1903,7 +1907,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag yearsParameters = new ParameterBag();
                 yearsList.Add(yearsParameters);
-                yearsParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
+                yearsParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 yearsParameters.AddOutput("L", Convert.ToInt32(yl[i]).ToString());
                 yearsParameters.AddOutput("T", Convert.ToInt32(t[i]).ToString());
             }
@@ -1915,7 +1919,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag expectationParameters = new ParameterBag();
                 expectationList.Add(expectationParameters);
-                expectationParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
+                expectationParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 expectationParameters.AddOutput("e", host.RoundU(e[i]));
                 if (ve[i] < 0.0 | i == rows | ve[i] == Constant.MISSING)
                 {
@@ -1948,7 +1952,7 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag adjustedParameters = new ParameterBag();
                     adjustedList.Add(adjustedParameters);
-                    adjustedParameters.AddOutput("int", x_lifetab_interval(i, rows, x));
+                    adjustedParameters.AddOutput("int", LifetabInterval(i, rows, x));
                     if (sl[i] == 0.0 || sl[i] == Constant.MISSING)
                         eh = Constant.MISSING;
                     else
@@ -1984,10 +1988,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("elb_mc_lci", host.RoundU(esimll));
             outputParameters.AddOutput("elb_mc_uci", host.RoundU(esimul));
 
-            if (save_details)
+            if (saveDetails)
             {
                 DataFrame resultsFrame = new DataFrame();
-                string g = Formatting.XRound(GAMMA * 100, 1);
+                string g = Formatting.XRound(gamma * 100, 1);
                 StringVariable intervalVariable = new StringVariable(rows, "Interval");
                 DoubleVariable qHatVariable = new DoubleVariable(rows, "Prob of dying [q hat]");
                 DoubleVariable varQVariable = new DoubleVariable(rows, "Var [q]");
@@ -1997,7 +2001,7 @@ namespace StatsDirect.Builtins
                 DoubleVariable dVariable = new DoubleVariable(rows, "Dying in interval [d]");
                 DoubleVariable fractionAVariable = new DoubleVariable(rows, "Fraction a");
                 DoubleVariable ylVariable = new DoubleVariable(rows, "Years in interval [L]");
-                DoubleVariable TVariable = new DoubleVariable(rows, "Years beyond [T]");
+                DoubleVariable tVariable = new DoubleVariable(rows, "Years beyond [T]");
                 DoubleVariable eVariable = new DoubleVariable(rows, "Expectation of life [e]");
                 DoubleVariable varEVariable = new DoubleVariable(rows, "Var [e]");
                 DoubleVariable lciEVariable = new DoubleVariable(rows, g + "% LCI [e]");
@@ -2013,7 +2017,7 @@ namespace StatsDirect.Builtins
                 resultsFrame.Variables.Add(dVariable);
                 resultsFrame.Variables.Add(fractionAVariable);
                 resultsFrame.Variables.Add(ylVariable);
-                resultsFrame.Variables.Add(TVariable);
+                resultsFrame.Variables.Add(tVariable);
                 resultsFrame.Variables.Add(eVariable);
                 resultsFrame.Variables.Add(varEVariable);
                 resultsFrame.Variables.Add(lciEVariable);
@@ -2030,12 +2034,12 @@ namespace StatsDirect.Builtins
                     else
                         xx = Convert.ToInt32(x[i]).ToString() + " up";
                     intervalVariable.set_Data(i - 1, xx);
-                    qHatVariable.set_Data(i - 1, Q[i]);
+                    qHatVariable.set_Data(i - 1, q[i]);
                     varQVariable.set_Data(i - 1, vq[i]);
                     if (vq[i] != Constant.MISSING & vq[i] >= 0.0)
                     {
-                        lci = Q[i] - Math.Sqrt(vq[i]) * cit;
-                        uci = Q[i] + Math.Sqrt(vq[i]) * cit;
+                        lci = q[i] - Math.Sqrt(vq[i]) * cit;
+                        uci = q[i] + Math.Sqrt(vq[i]) * cit;
                     }
                     else
                     {
@@ -2048,7 +2052,7 @@ namespace StatsDirect.Builtins
                     dVariable.set_Data(i - 1, dd[i]);
                     fractionAVariable.set_Data(i - 1, a[i]);
                     ylVariable.set_Data(i - 1, yl[i]);
-                    TVariable.set_Data(i - 1, t[i]);
+                    tVariable.set_Data(i - 1, t[i]);
                     eVariable.set_Data(i - 1, e[i]);
                     varEVariable.set_Data(i - 1, ve[i]);
                     if (ve[i] != Constant.MISSING & ve[i] >= 0.0)
@@ -2111,8 +2115,8 @@ namespace StatsDirect.Builtins
         {
             const string nan = Formatting.ASTERISK;
             double gamma = parameters["gamma"].AsDouble;
-            double P = (1.0 - gamma) / 2.0;
-            double cit = PDF.gauinv(1.0 - P);
+            double p = (1.0 - gamma) / 2.0;
+            double cit = PDF.gauinv(1.0 - p);
 
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
@@ -2126,11 +2130,11 @@ namespace StatsDirect.Builtins
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
-            double[] D = new double[rows + 1 /* for VB to C# conversion */];
+            double[] d = new double[rows + 1 /* for VB to C# conversion */];
             td[1] = new ColumnData { Title = deathsVariable.Title };
 
             for (int r = 1; r <= rows; r++)
-                D[r] = deathsVariable.Data[r - 1];
+                d[r] = deathsVariable.Data[r - 1];
 
             DataFrame withdrawalsFrame = parameters["withdrawals"].AsDataFrame;
             DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0].AsDoubleVariable;
@@ -2146,15 +2150,15 @@ namespace StatsDirect.Builtins
             int nx = 0;
             for (int j = 1; j <= rows; j++)
             {
-                if (t[j] != Constant.MISSING && D[j] != Constant.MISSING && w[j] != Constant.MISSING)
+                if (t[j] != Constant.MISSING && d[j] != Constant.MISSING && w[j] != Constant.MISSING)
                 {
                     nx++;
-                    qx[j] = new Trisvar { TM = Math.Floor(t[j]), gp = Convert.ToInt32(w[j]), cs = Convert.ToInt32(D[j]) };
+                    qx[j] = new Trisvar { Tm = Math.Floor(t[j]), Gp = Convert.ToInt32(w[j]), Cs = Convert.ToInt32(d[j]) };
                 }
             }
             Array.Sort(qx, 1, nx, new TrisvarByTm());
             t = new double[nx + 1 /* for VB to C# conversion */];
-            D = new double[nx + 1 /* for VB to C# conversion */];
+            d = new double[nx + 1 /* for VB to C# conversion */];
             w = new double[nx + 1 /* for VB to C# conversion */];
             int nt = 0;
             for (int j = 1; j <= nx; j++)
@@ -2162,16 +2166,16 @@ namespace StatsDirect.Builtins
                 int k;
                 for (k = j + 1; k <= nx; k++)
                 {
-                    if (qx[k].TM != qx[j].TM || k == nx)
+                    if (qx[k].Tm != qx[j].Tm || k == nx)
                         break;
                 }
                 int cnt = k - j;
                 nt++;
-                t[nt] = qx[j].TM;
+                t[nt] = qx[j].Tm;
                 for (k = 1; k <= cnt; k++)
                 {
-                    w[nt] += qx[j + k - 1].gp;
-                    D[nt] += qx[j + k - 1].cs;
+                    w[nt] += qx[j + k - 1].Gp;
+                    d[nt] += qx[j + k - 1].Cs;
                 }
                 j = j + cnt - 1;
             }
@@ -2187,15 +2191,15 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= nt; j++)
             {
                 double en1 = natr - w[j] / 2.0;
-                double Q = D[j] / en1;
-                P = 1.0 - Q;
-                cump = P * cump;
-                if ((P * en1) != 0.0)
+                double q = d[j] / en1;
+                p = 1.0 - q;
+                cump = p * cump;
+                if ((p * en1) != 0.0)
                 {
-                    var1 = var1 + Q / (en1 * P);
+                    var1 = var1 + q / (en1 * p);
                 }
                 double var = cump * cump * var1;
-                xp[j] = P;
+                xp[j] = p;
                 xcump[j] = cump;
                 xvar[j] = var;
                 ParameterBag deathsParameters = new ParameterBag();
@@ -2206,20 +2210,20 @@ namespace StatsDirect.Builtins
                 else
                     xx = Convert.ToInt32(t[j]).ToString() + " up";
                 deathsParameters.AddOutput("int", xx);
-                deathsParameters.AddOutput("death", D[j].ToString());
+                deathsParameters.AddOutput("death", d[j].ToString());
                 deathsParameters.AddOutput("wdrawn", w[j].ToString());
                 deathsParameters.AddOutput("risk", natr.ToString());
                 if (j < nt)
                 {
                     deathsParameters.AddOutput("nx", en1.ToString());
-                    deathsParameters.AddOutput("q", host.RoundU(Q));
+                    deathsParameters.AddOutput("q", host.RoundU(q));
                 }
                 else
                 {
                     deathsParameters.AddOutput("nx", nan);
                     deathsParameters.AddOutput("q", nan);
                 }
-                natr = natr - D[j] - w[j];
+                natr = natr - d[j] - w[j];
             }
             outputParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 1));
 
@@ -2279,40 +2283,40 @@ namespace StatsDirect.Builtins
             int strata = 0; int groups = 0;
             int stratum = 0;
             int nt = 0;
-            double p2m = 0; double p1m = 0; double p2f = 0; double p1f = 0; double llm = 0; double ulm = 0;
-            double llf = 0; double ulf = 0; double hr = 0; double x2t = 0;
+            double p2M = 0; double p1M = 0; double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0;
+            double llf = 0; double ulf = 0; double hr = 0; double x2T = 0;
             int ne = 0;
             double wt = 0;
-            double cit = 0; double GAMMA;
+            double cit = 0; double gamma;
             string gid = null;
             string zx = null;
-            ExactBB.Rec2x2[] tbl = null;
+            ExactBB.Rec2X2[] tbl = null;
             bool ifault;
 
             double[] score = new double[0 + 1 /* for VB to C# conversion */ ];
             double[] gpid = new double[1 + 1 /* for VB to C# conversion */];
             string[] glab = new string[1 + 1 /* for VB to C# conversion */];
             string[] slab = new string[1 + 1 /* for VB to C# conversion */];
-            double[,] ARR2 = null;
-            ColumnData[] CDAT1 = null;
-            x_petoprep(host, parameters, ref nt, out GAMMA, ref cit, ref groups, ref strata, ref score, ref gid, ref gpid, ref glab, ref slab, out ifault, ref ARR2, ref CDAT1);
+            double[,] arr2 = null;
+            ColumnData[] cdat1 = null;
+            Petoprep(host, parameters, ref nt, out gamma, ref cit, ref groups, ref strata, ref score, ref gid, ref gpid, ref glab, ref slab, out ifault, ref arr2, ref cdat1);
             if (ifault)
             {
                 throw new TemplateOperationCancelledException();
             }
 
-            int wt_method = int.Parse(parameters["wt_method"].AsString);
+            int wtMethod = int.Parse(parameters["wt_method"].AsString);
             //  RTF_LoadTemplate("logrank.rtf")
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> outerList = new List<ParameterBag>();
             outputParameters.AddOutput("*outer", outerList);
             double[] tesum = new double[groups + 1 /* for VB to C# conversion */];
             int[] tdg = new int[groups + 1 /* for VB to C# conversion */];
-            Trisvar[] Q = new Trisvar[nt + 1 + 1 /* for VB to C# conversion */];
+            Trisvar[] q = new Trisvar[nt + 1 + 1 /* for VB to C# conversion */];
             double[,] vsuml = new double[groups + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            double[] u0suml = new double[groups + 1 /* for VB to C# conversion */];
+            double[] u0Suml = new double[groups + 1 /* for VB to C# conversion */];
             double[,] vsumw = new double[groups + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            double[] u0sumw = new double[groups + 1 /* for VB to C# conversion */];
+            double[] u0Sumw = new double[groups + 1 /* for VB to C# conversion */];
             do
             {
                 // stratum loop
@@ -2326,37 +2330,37 @@ namespace StatsDirect.Builtins
                 int j;
                 for (j = 1; j <= nt; j++)
                 {
-                    if ((strata == 0 | ARR2[3, j] == stratum) & (ARR2[1, j] != Constant.MISSING & ARR2[2, j] != Constant.MISSING & ARR2[0, j] != Constant.MISSING))
+                    if ((strata == 0 | arr2[3, j] == stratum) & (arr2[1, j] != Constant.MISSING & arr2[2, j] != Constant.MISSING & arr2[0, j] != Constant.MISSING))
                     {
                         ntx = ntx + 1;
-                        Q[ntx] = new Trisvar
+                        q[ntx] = new Trisvar
                                      {
-                                         TM = ARR2[1, j],
-                                         cs = Convert.ToInt32(ARR2[2, j]),
-                                         gp = Convert.ToInt32(ARR2[0, j])
+                                         Tm = arr2[1, j],
+                                         Cs = Convert.ToInt32(arr2[2, j]),
+                                         Gp = Convert.ToInt32(arr2[0, j])
                                      };
-                        ng[Q[ntx].gp] = ng[Q[ntx].gp] + 1;
-                        if (Q[ntx].cs == 1)
+                        ng[q[ntx].Gp] = ng[q[ntx].Gp] + 1;
+                        if (q[ntx].Cs == 1)
                         {
-                            dg[Q[ntx].gp] = dg[Q[ntx].gp] + 1;
+                            dg[q[ntx].Gp] = dg[q[ntx].Gp] + 1;
                         }
                     }
                 }
-                Array.Sort(Q, 1, ntx, new TrisvarByTm());
-                int Test = 0;
+                Array.Sort(q, 1, ntx, new TrisvarByTm());
+                int test = 0;
                 // logrank then Wilcoxon test loop
                 do
                 {
-                    Test = Test + 1;
+                    test = test + 1;
                     int[] drop = new int[groups + 1 /* for VB to C# conversion */];
                     int[] rg = new int[groups + 1 /* for VB to C# conversion */];
                     int[] dead = new int[groups + 1 /* for VB to C# conversion */];
                     double[,] v = new double[groups + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
                     double[] u0 = new double[groups + 1 /* for VB to C# conversion */ ];
                     double[] esum = new double[groups + 1 /* for VB to C# conversion */ ];
-                    if (groups == 2 & Test == 1)
+                    if (groups == 2 && test == 1)
                     {
-                        tbl = new ExactBB.Rec2x2[ntx + 1 /* for VB to C# conversion */];
+                        tbl = new ExactBB.Rec2X2[ntx + 1 /* for VB to C# conversion */];
                     } // exact 2x2 test
 
                     for (j = 1; j <= groups; j++)
@@ -2374,26 +2378,26 @@ namespace StatsDirect.Builtins
                         {
                             risktot = risktot + rg[j2];
                         }
-                        drop[Q[j].gp] = 1;
-                        dead[Q[j].gp] = Q[j].cs;
-                        int totd = Q[j].cs;
+                        drop[q[j].Gp] = 1;
+                        dead[q[j].Gp] = q[j].Cs;
+                        int totd = q[j].Cs;
                         //  deaths at time J
-                        int N = j;
+                        int n = j;
                         do
                         {
-                            if (N >= ntx)
+                            if (n >= ntx)
                             {
                                 break; /* TRANSWARNING: check that break is in correct scope */
                             }
-                            if (Q[N].TM == Q[N + 1].TM)
+                            if (q[n].Tm == q[n + 1].Tm)
                             {
-                                drop[Q[N + 1].gp] = drop[Q[N + 1].gp] + 1;
-                                if (Q[N + 1].cs != 0)
+                                drop[q[n + 1].Gp] = drop[q[n + 1].Gp] + 1;
+                                if (q[n + 1].Cs != 0)
                                 {
-                                    dead[Q[N + 1].gp] = dead[Q[N + 1].gp] + 1;
+                                    dead[q[n + 1].Gp] = dead[q[n + 1].Gp] + 1;
                                     totd = totd + 1;
                                 }
-                                N = N + 1;
+                                n = n + 1;
                             }
                             else
                             {
@@ -2408,9 +2412,9 @@ namespace StatsDirect.Builtins
                             double jprop = jrisk / risktot;
                             double expect = deadx * jprop;
                             esum[j2] = esum[j2] + expect;
-                            if (Test == 2)
+                            if (test == 2)
                             {
-                                switch (wt_method)
+                                switch (wtMethod)
                                 {
                                     case 1:
                                         wt = sv * risktot / (risktot + 1.0);
@@ -2448,7 +2452,7 @@ namespace StatsDirect.Builtins
                             }
                         }
                         // exact test for 2 groups - a table for each unique survival time
-                        if (groups == 2 & Test == 1)
+                        if (groups == 2 & test == 1)
                         {
                             if (j == 1)
                             {
@@ -2456,7 +2460,7 @@ namespace StatsDirect.Builtins
                             }
                             else
                             {
-                                if (Q[j].TM == Q[j - 1].TM)
+                                if (q[j].Tm == q[j - 1].Tm)
                                 {
                                     // skip = true; 
                                 }
@@ -2465,12 +2469,12 @@ namespace StatsDirect.Builtins
                                     ne = ne + 1;
                                 }
                             }
-                            tbl[ne].a = Convert.ToDouble(dead[1]);
-                            tbl[ne].m1 = Convert.ToDouble(dead[1]) + Convert.ToDouble(dead[2]);
-                            tbl[ne].n1 = Convert.ToDouble(rg[1]);
-                            tbl[ne].n0 = Convert.ToDouble(rg[2]);
-                            tbl[ne].freq = 1;
-                            tbl[ne].informative = (dead[1] * (rg[2] - dead[2]) != 0) | (dead[2] * (rg[1] - dead[1]) != 0);
+                            tbl[ne].A = Convert.ToDouble(dead[1]);
+                            tbl[ne].M1 = Convert.ToDouble(dead[1]) + Convert.ToDouble(dead[2]);
+                            tbl[ne].N1 = Convert.ToDouble(rg[1]);
+                            tbl[ne].N0 = Convert.ToDouble(rg[2]);
+                            tbl[ne].Freq = 1;
+                            tbl[ne].Informative = (dead[1] * (rg[2] - dead[2]) != 0) | (dead[2] * (rg[1] - dead[1]) != 0);
                         }
                         for (j2 = 1; j2 <= groups; j2++)
                         {
@@ -2478,7 +2482,7 @@ namespace StatsDirect.Builtins
                             drop[j2] = 0;
                             dead[j2] = 0;
                         }
-                        j = N;
+                        j = n;
                         // survivor function - needed for Peto-Prentice weights
                         sv = sv * (risktot - Convert.ToDouble(totd) + 1.0) / risktot + 1;
                     }
@@ -2518,18 +2522,18 @@ namespace StatsDirect.Builtins
                         }
                     }
                     //  trend statistic (c'U0)^2 / c'Vc
-                    double x2den;
-                    double x2num;
+                    double x2Den;
+                    double x2Num;
                     if (groups > 2)
                     {
-                        x2num = 0.0;
+                        x2Num = 0.0;
                         for (k = 1; k <= groups; k++)
                         {
-                            x2num = x2num + u0[k] * score[k];
+                            x2Num = x2Num + u0[k] * score[k];
                         }
-                        x2num = x2num * x2num;
+                        x2Num = x2Num * x2Num;
                         vtemp = new double[groups + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
-                        x2den = 0.0;
+                        x2Den = 0.0;
                         for (j2 = 1; j2 <= groups; j2++)
                         {
                             for (k = 1; k <= groups; k++)
@@ -2539,16 +2543,16 @@ namespace StatsDirect.Builtins
                         }
                         for (k = 1; k <= groups; k++)
                         {
-                            x2den = x2den + vtemp[k, 1] * score[k];
+                            x2Den = x2Den + vtemp[k, 1] * score[k];
                         }
-                        x2t = x2num / x2den;
+                        x2T = x2Num / x2Den;
                     }
-                    if (Test == 1 & groups == 2)
+                    if (test == 1 & groups == 2)
                     {
                         // exact test
                         bool useLogScale = false;
                         int ierr;
-                        ExactBB.Exact22k(host, ne, 4, tbl, GAMMA, ref hr, out ulf, out llf, out ulm, out llm, ref p1f, ref p2f, ref p1m, ref p2m, ref useLogScale, out ierr);
+                        new ExactBB().Exact22K(host, ne, 4, tbl, gamma, ref hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                         if (ierr != 0)
                         {
                             hr = Constant.MISSING;
@@ -2556,23 +2560,23 @@ namespace StatsDirect.Builtins
                             llf = Constant.MISSING;
                             ulm = Constant.MISSING;
                             llm = Constant.MISSING;
-                            p1f = Constant.MISSING;
-                            p2f = Constant.MISSING;
-                            p1m = Constant.MISSING;
-                            p2m = Constant.MISSING;
+                            p1F = Constant.MISSING;
+                            p2F = Constant.MISSING;
+                            p1M = Constant.MISSING;
+                            p2M = Constant.MISSING;
                         }
                     }
                     // Start of data output
                     ParameterBag outerParameters = new ParameterBag();
                     outerList.Add(outerParameters);
                     string testname;
-                    if (Test == 1)
+                    if (test == 1)
                     {
                         testname = "Log-rank (Peto)";
                     }
                     else
                     {
-                        switch (wt_method)
+                        switch (wtMethod)
                         {
                             case 1:
                                 zx = "Peto-Prentice";
@@ -2597,7 +2601,7 @@ namespace StatsDirect.Builtins
                         outerParameters.AddOutput("strata", "");
                     }
                     double rr;
-                    if (Test == 1)
+                    if (test == 1)
                     {
                         //  more detail with log-rank test
                         IList<ParameterBag> groupsList = new List<ParameterBag>();
@@ -2656,8 +2660,8 @@ namespace StatsDirect.Builtins
                         outerParameters.AddOutput("*trends", trendsList);
                         ParameterBag trendsParameters = new ParameterBag();
                         trendsList.Add(trendsParameters);
-                        trendsParameters.AddOutput("trend", host.RoundU(x2t));
-                        trendsParameters.AddOutput("p_trend", host.pval(PDF.chivalp(x2t, 1.0)));
+                        trendsParameters.AddOutput("trend", host.RoundU(x2T));
+                        trendsParameters.AddOutput("p_trend", host.pval(PDF.chivalp(x2T, 1.0)));
                     }
                     else
                     {
@@ -2668,17 +2672,17 @@ namespace StatsDirect.Builtins
                         // sum score and variance matrices over strata for later combined calcs
                         for (j2 = 1; j2 <= groups; j2++)
                         {
-                            if (Test == 1)
+                            if (test == 1)
                             {
-                                u0suml[j2] = u0suml[j2] + u0[j2];
+                                u0Suml[j2] = u0Suml[j2] + u0[j2];
                             }
                             else
                             {
-                                u0sumw[j2] = u0sumw[j2] + u0[j2];
+                                u0Sumw[j2] = u0Sumw[j2] + u0[j2];
                             }
                             for (k = 1; k <= groups; k++)
                             {
-                                if (Test == 1)
+                                if (test == 1)
                                 {
                                     vsuml[j2, k] = vsuml[j2, k] + v[j2, k];
                                 }
@@ -2710,7 +2714,7 @@ namespace StatsDirect.Builtins
                             stratumParameters.AddOutput("tot", host.RoundU(Convert.ToDouble(tdg[j3]) / tesum[j3]));
                         }
                         // get U0'inv(V)U0 from combined matrices
-                        if (Test == 1)
+                        if (test == 1)
                         {
                             // stratified logrank
                             vtemp = new double[groups - 1 + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
@@ -2725,13 +2729,13 @@ namespace StatsDirect.Builtins
                                 {
                                     for (k = 1; k <= groups - 1; k++)
                                     {
-                                        vtemp[j2, 1] = vtemp[j2, 1] + vsuml[j2, k] * u0suml[k];
+                                        vtemp[j2, 1] = vtemp[j2, 1] + vsuml[j2, k] * u0Suml[k];
                                     }
                                 }
                                 x2 = 0.0;
                                 for (k = 1; k <= groups - 1; k++)
                                 {
-                                    x2 = x2 + vtemp[k, 1] * u0suml[k];
+                                    x2 = x2 + vtemp[k, 1] * u0Suml[k];
                                 }
                             }
                         }
@@ -2750,13 +2754,13 @@ namespace StatsDirect.Builtins
                                 {
                                     for (k = 1; k <= groups - 1; k++)
                                     {
-                                        vtemp[j2, 1] = vtemp[j2, 1] + vsumw[j2, k] * u0sumw[k];
+                                        vtemp[j2, 1] = vtemp[j2, 1] + vsumw[j2, k] * u0Sumw[k];
                                     }
                                 }
                                 x2 = 0.0;
                                 for (k = 1; k <= groups - 1; k++)
                                 {
-                                    x2 = x2 + vtemp[k, 1] * u0sumw[k];
+                                    x2 = x2 + vtemp[k, 1] * u0Sumw[k];
                                 }
                             }
                         }
@@ -2765,26 +2769,26 @@ namespace StatsDirect.Builtins
                         if (groups > 2)
                         {
                             // trend statistic (c'U0)^2 / c'Vc
-                            x2num = 0.0;
+                            x2Num = 0.0;
                             for (k = 1; k <= groups; k++)
                             {
-                                if (Test == 1)
+                                if (test == 1)
                                 {
-                                    x2num = x2num + u0suml[k] * score[k];
+                                    x2Num = x2Num + u0Suml[k] * score[k];
                                 }
                                 else
                                 {
-                                    x2num = x2num + u0sumw[k] * score[k];
+                                    x2Num = x2Num + u0Sumw[k] * score[k];
                                 }
                             }
-                            x2num = x2num * x2num;
+                            x2Num = x2Num * x2Num;
                             vtemp = new double[groups + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
-                            x2den = 0.0;
+                            x2Den = 0.0;
                             for (j2 = 1; j2 <= groups; j2++)
                             {
                                 for (k = 1; k <= groups; k++)
                                 {
-                                    if (Test == 1)
+                                    if (test == 1)
                                     {
                                         vtemp[j2, 1] = vtemp[j2, 1] + vsuml[j2, k] * score[k];
                                     }
@@ -2796,15 +2800,15 @@ namespace StatsDirect.Builtins
                             }
                             for (k = 1; k <= groups; k++)
                             {
-                                x2den = x2den + vtemp[k, 1] * score[k];
+                                x2Den = x2Den + vtemp[k, 1] * score[k];
                             }
-                            x2t = x2num / x2den;
+                            x2T = x2Num / x2Den;
                             IList<ParameterBag> strataTrendList = new List<ParameterBag>();
                             strataParameters.AddOutput("*strata_trend", strataTrendList);
                             ParameterBag strataTrendParameters = new ParameterBag();
                             strataTrendList.Add(strataTrendParameters);
-                            strataTrendParameters.AddOutput("strata_trend", host.RoundU(x2t));
-                            strataTrendParameters.AddOutput("p_strata_trend", host.pval(PDF.chivalp(x2t, 1.0)));
+                            strataTrendParameters.AddOutput("strata_trend", host.RoundU(x2T));
+                            strataTrendParameters.AddOutput("p_strata_trend", host.pval(PDF.chivalp(x2T, 1.0)));
                         }
                         else
                         {
@@ -2815,14 +2819,14 @@ namespace StatsDirect.Builtins
                     {
                         outerParameters.AddOutput("*strata", null);
                     }
-                    if (Test == 1 & (stratum == strata | strata == 0))
+                    if (test == 1 & (stratum == strata | strata == 0))
                     {
                         // Hazard Ratio" + " & approximate "
                         IList<ParameterBag> hazardsList = new List<ParameterBag>();
                         outerParameters.AddOutput("*hazards", hazardsList);
                         ParameterBag hazardsParameters = new ParameterBag();
                         hazardsList.Add(hazardsParameters);
-                        hazardsParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100, 2));
+                        hazardsParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 2));
 
                         IList<ParameterBag> hazardList = new List<ParameterBag>();
                         hazardsParameters.AddOutput("*hazard", hazardList);
@@ -2871,15 +2875,15 @@ namespace StatsDirect.Builtins
                             cmlList.Add(cmlParameters);
                             // exact Hazard Ratio
                             cmlParameters.AddOutput("hr", host.RoundU(hr));
-                            cmlParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100.0, 2));
+                            cmlParameters.AddOutput("pc", Formatting.XRound(gamma * 100.0, 2));
                             cmlParameters.AddOutput("llf", host.RoundU(llf));
                             cmlParameters.AddOutput("ulf", host.RoundU(ulf));
-                            cmlParameters.AddOutput("p1f", host.pval(p1f));
-                            cmlParameters.AddOutput("p2f", host.pval(p2f));
+                            cmlParameters.AddOutput("p1f", host.pval(p1F));
+                            cmlParameters.AddOutput("p2f", host.pval(p2F));
                             cmlParameters.AddOutput("llm", host.RoundU(llm));
                             cmlParameters.AddOutput("ulm", host.RoundU(ulm));
-                            cmlParameters.AddOutput("p1m", host.pval(p1m));
-                            cmlParameters.AddOutput("p2m", host.pval(p2m));
+                            cmlParameters.AddOutput("p1m", host.pval(p1M));
+                            cmlParameters.AddOutput("p2m", host.pval(p2M));
                         }
                         else
                         {
@@ -2891,7 +2895,7 @@ namespace StatsDirect.Builtins
                         outerParameters.AddOutput("*hazards", null);
                     }
                 }
-                while (!(Test >= 2));
+                while (!(test >= 2));
             }
             while (stratum != strata);
             return new StepResult(StepSuccess.Success, outputParameters);

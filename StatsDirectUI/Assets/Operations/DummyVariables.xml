@@ -16,16 +16,6 @@
         </frame>
       </parameters>
     </settings>
-    <!--
-    <settings>
-      <parameters>
-        <special>
-          <name>data</name>
-          <type>dummyVariables</type>
-          <must-request>true</must-request>
-        </special>
-      </parameters>
-    </settings> -->
     <builtin function-name="shtDummyVariables" />
     <output-frame frame-name="output" />
 	</steps>

@@ -33,21 +33,21 @@ namespace StatsDirect.UI
             LoadDefaults();
         }
 
-        private void cmdOK_Click(object sender, EventArgs e)
+        private void CmdOkClick(object sender, EventArgs e)
         {
             SaveDefaults();
             FillOptionsFromForm();
             Close();
         }
 
-        private void cmdCancel_Click(object sender, EventArgs e)
+        private void CmdCancelClick(object sender, EventArgs e)
         {
             userCancelled = true;
             SaveDefaults();
             Close();
         }
 
-        private void frmCategorise_Shown(object sender, EventArgs e)
+        private void FrmCategoriseShown(object sender, EventArgs e)
         {
             FillFormFromOptions();
         }
@@ -75,7 +75,7 @@ namespace StatsDirect.UI
 
         private void FillFormFromOptions()
         {
-            Summ_Stats(options.Data);
+            SummStats(options.Data);
             CalculateGroups();
             txtTitle.Text = options.Title;
         }
@@ -213,11 +213,11 @@ namespace StatsDirect.UI
                 }
                 if (Constant.MISSING == v.Data[i])
                 {
-                    options.PASSX[i] = Constant.MISSING;
+                    options.PassX[i] = Constant.MISSING;
                 }
                 else
                 {
-                    options.PASSX[i] = j;
+                    options.PassX[i] = j;
                 }
             }
         }
@@ -228,7 +228,7 @@ namespace StatsDirect.UI
             Method2 // Stata
         }
 
-        private void GetQuantiles(int N, double[] ao, int k, double[] Q, CentileMethod method)
+        private void GetQuantiles(int n, int k, double[] q, CentileMethod method)
         {
             if (k < 2)
                 return;
@@ -243,39 +243,39 @@ namespace StatsDirect.UI
                     case CentileMethod.Method1:
                         {
                             // "Method 1" - non-Stata
-                            double index = centile * N;
+                            double index = centile * n;
                             double cumsum = 0;
                             int j;
                             double lastcumsum = 0;
-                            for (j = 1; j <= N; j++)
+                            for (j = 1; j <= n; j++)
                             {
                                 cumsum += 1;
                                 if (cumsum > index)
                                     break;
                                 lastcumsum = cumsum;
                             }
-                            if (j > N)
-                                j = N;
+                            if (j > n)
+                                j = n;
                             if (lastcumsum == index)
-                                Q[i] = (ao[j - 1] + ao[j]) / 2.0;
+                                q[i] = (ao[j - 1] + ao[j]) / 2.0;
                             else
-                                Q[i] = ao[j];
+                                q[i] = ao[j];
                         }
                         break;
                     case CentileMethod.Method2:
                         {
-                            double index = Math.Floor(centile * (N + 1));
-                            double h = centile * (N + 1) - index;
-                            int bottom = (index < 1) ? 1 : index > N ? N : Convert.ToInt32(index);
-                            int top = index + 1 > N ? N : Convert.ToInt32(index) + 1;
-                            Q[i] = (1.0 - h) * ao[bottom] + h * ao[top];
+                            double index = Math.Floor(centile * (n + 1));
+                            double h = centile * (n + 1) - index;
+                            int bottom = (index < 1) ? 1 : index > n ? n : Convert.ToInt32(index);
+                            int top = index + 1 > n ? n : Convert.ToInt32(index) + 1;
+                            q[i] = (1.0 - h) * ao[bottom] + h * ao[top];
                         }
                         break;
                 }
             }
         }
 
-        private void Summ_Stats(DoubleVariable v)
+        private void SummStats(DoubleVariable v)
         {
             if (v.Length < 1)
             {
@@ -292,13 +292,13 @@ namespace StatsDirect.UI
                     reali += 1;
             }
             Summary sx = new Summary();
-            double GAMMA = 0.95;
-            double userCentL = 5;
-            double userCentU = 95;
-            int centileDef = 1;
+            const double gamma = 0.95;
+            const double userCentL = 5;
+            const double userCentU = 95;
+            const int centileDef = 1;
             int rows = v.Length;
             string title = v.Title;
-            sx.FullSummaryFromXSort(ao, out ao, rows, title, GAMMA, userCentL, userCentU, centileDef);
+            sx.FullSummaryFromXSort(ao, out ao, rows, title, gamma, userCentL, userCentU, centileDef);
             const int flt = 6;
             const int k = 19;
             StringBuilder sb = new StringBuilder();
@@ -311,8 +311,8 @@ namespace StatsDirect.UI
             sb.AppendLine(Formatting.PadTo("Std. dev.", k) + Formatting.RoundOut(sx.Sd, flt));
             sb.AppendLine(Formatting.PadTo("Variation coef.", k) + Formatting.RoundOut(sx.VarianceCoefficient, flt));
             sb.AppendLine(Formatting.PadTo("Std. err.", k) + Formatting.RoundOut(sx.Sem, flt));
-            sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * GAMMA, 1) + "% Upper CL", k) + Formatting.RoundOut(sx.MeanUCL, flt));
-            sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * GAMMA, 1) + "% Lower CL", k) + Formatting.RoundOut(sx.MeanLCL, flt));
+            sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * gamma, 1) + "% Upper CL", k) + Formatting.RoundOut(sx.MeanUCL, flt));
+            sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * gamma, 1) + "% Lower CL", k) + Formatting.RoundOut(sx.MeanLCL, flt));
             sb.AppendLine(Formatting.PadTo("Geometric mean", k) + Formatting.RoundOut(sx.GeometricMean, flt));
             sb.AppendLine(Formatting.PadTo("Skewness", k) + Formatting.RoundOut(sx.Skewness, flt));
             sb.AppendLine(Formatting.PadTo("Kurtosis", k) + Formatting.RoundOut(sx.Kurtosis, flt));
@@ -350,45 +350,45 @@ namespace StatsDirect.UI
         private void CalculateGroups()
         {
             CentileMethod method = rdoCentileMethod1.Checked ? CentileMethod.Method1 : CentileMethod.Method2;
-            int C;
+            int c;
             if (rdoQuartiles.Checked)
-                C = 0;
+                c = 0;
             else if (rdoQuintiles.Checked)
-                C = 1;
+                c = 1;
             else if (rdoDeciles.Checked)
-                C = 2;
+                c = 2;
             else if (rdoAge15By5.Checked)
-                C = 3;
+                c = 3;
             else if (rdoAge15By10.Checked)
-                C = 4;
+                c = 4;
             else if (rdoAge1By5.Checked)
-                C = 5;
+                c = 5;
             else if (rdoAge6Groups.Checked)
-                C = 6;
+                c = 6;
             else if (rdoTertiles.Checked)
-                C = 8;
+                c = 8;
             else // user-defined
-                C = 7;
+                c = 7;
             int nbins;
             double[] bin;
-            switch (C)
+            switch (c)
             {
                 case 0:
                     nbins = 4;
                     bin = new double[nbins + 1];
-                    GetQuantiles(reali, ao, 4, bin, method);
+                    GetQuantiles(reali, 4, bin, method);
                     nbins--;
                     break;
                 case 1:
                     nbins = 5;
                     bin = new double[nbins + 1];
-                    GetQuantiles(reali, ao, 5, bin, method);
+                    GetQuantiles(reali, 5, bin, method);
                     nbins--;
                     break;
                 case 2:
                     nbins = 10;
                     bin = new double[nbins + 1];
-                    GetQuantiles(reali, ao, 10, bin, method);
+                    GetQuantiles(reali, 10, bin, method);
                     nbins--;
                     break;
                 case 3:
@@ -470,7 +470,7 @@ namespace StatsDirect.UI
                 case 8: // Tertiles
                     nbins = 3;
                     bin = new double[nbins + 1];
-                    GetQuantiles(reali, ao, 3, bin, method);
+                    GetQuantiles(reali, 3, bin, method);
                     nbins--;
                     break;
                 default:
@@ -512,35 +512,35 @@ namespace StatsDirect.UI
             gridCutoffs.CurrentCell = gridCutoffs.Rows[0].Cells[0];
         }
 
-        private void txtInterval_TextChanged(object sender, EventArgs e)
+        private void TxtIntervalTextChanged(object sender, EventArgs e)
         {
             if (!filling)
                 rdoUserDefined.Checked = true;
         }
 
-        private void txtMinimum_TextChanged(object sender, EventArgs e)
+        private void TxtMinimumTextChanged(object sender, EventArgs e)
         {
             if (!filling)
                 rdoUserDefined.Checked = true;
         }
 
-        private void txtIntervals_TextChanged(object sender, EventArgs e)
+        private void TxtIntervalsTextChanged(object sender, EventArgs e)
         {
             if (!filling)
                 rdoUserDefined.Checked = true;
         }
 
-        private void cmdReGroup_Click(object sender, EventArgs e)
+        private void CmdReGroupClick(object sender, EventArgs e)
         {
             CalculateGroups();
         }
 
-        private void cmdRecalculate_Click(object sender, EventArgs e)
+        private void CmdRecalculateClick(object sender, EventArgs e)
         {
             CalculateCounts();
         }
 
-        private void cmdHelp_Click(object sender, EventArgs e)
+        private void CmdHelpClick(object sender, EventArgs e)
         {
             SDApplication.SoleInstance.ShowHelp(this, "1059");
         }

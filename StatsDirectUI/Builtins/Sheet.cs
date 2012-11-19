@@ -10,116 +10,17 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public class DummyOptions : IFillable
-    {
-        public string MaxCatTi;
-        public List<string> Names;
-
-        ///  <summary>
-        ///  The name that the user selected, or Nothing if no &lt;none> was selected.
-        ///  </summary>
-        public int JDrop;
-
-        public string FillerToUse
-        {
-            get
-            {
-                return "Dummy";
-            }
-        } // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
-            }
-        }
-
-    }
-
-
-    public class CategoriseOptions : IFillable
-    {
-        public string Title;
-        public double[] PASSX;
-        public string[] Categories;
-        public int[] Counts;
-        public DoubleVariable Data;
-
-        public string FillerToUse
-        {
-            get
-            {
-                return "Categorise";
-            }
-        } // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
-            }
-        }
-
-    }
-
-
-    public class ExtractionOptions : IFillable
-    {
-        public string Title { get; set; }
-        public DoubleVariable Data { get; set; }
-        public DataFrame IdentifiersFrame { get; set; }
-        public string IdentifierNames { get; set; }
-
-        public string FillerToUse
-        {
-            get
-            {
-                return "Extraction";
-            }
-        } // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
-            }
-        }
-
-    }
-
-
-    public class SortInPlaceOptions : IFillable
-    {
-        public string FillerToUse
-        {
-            get
-            {
-                return "SortInPlace";
-            }
-        } // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
-            }
-        }
-
-    }
-
-
     public class Sheet
     {
         private struct Catvar : IComparable<Catvar>
         {
-            public string Ti;
-            public int I;
+            public string Title;
+            public int Id;
 
             private int CompareTo(Catvar other)
             {
                 double mti, oti;
-                if (double.TryParse(Ti, out mti) && double.TryParse(other.Ti, out oti))
+                if (double.TryParse(Title, out mti) && double.TryParse(other.Title, out oti))
                 {
                     if (mti < oti)
                     {
@@ -127,7 +28,7 @@ namespace StatsDirect.Builtins
                     }
                     return mti == oti ? 0 : 1;
                 }
-                return String.CompareOrdinal(Ti, other.Ti);
+                return String.CompareOrdinal(Title, other.Title);
             }
             // interface methods implemented by CompareTo
             int IComparable<Catvar>.CompareTo(Catvar other)
@@ -139,12 +40,12 @@ namespace StatsDirect.Builtins
 
         private class SortPair : IComparable<SortPair>
         {
-            public readonly double Value;
+            private readonly double value;
             public readonly int Row;
 
             private int CompareTo(SortPair other)
             {
-                return Value.CompareTo(other.Value);
+                return value.CompareTo(other.value);
             }
 
             int IComparable<SortPair>.CompareTo(SortPair other)
@@ -154,7 +55,7 @@ namespace StatsDirect.Builtins
 
             public SortPair(double value, int row)
             {
-                Value = value;
+                this.value = value;
                 Row = row;
             }
         }
@@ -163,13 +64,9 @@ namespace StatsDirect.Builtins
         {
             int rows = parameters["rows"].AsInt32;
             if (rows < 1)
-            {
                 rows = 100;
-            }
             if (rows > 1000000)
-            {
                 rows = 1000000;
-            }
             double startval = parameters["startval"].AsDouble;
             string formula = parameters["formula"].AsString.ToUpper();
             if (formula.Length < 3)
@@ -235,30 +132,30 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Returns a constant to add to all input values to ensure that all f(x) with the given input data are valid.
         ///  </summary>
-        public static void XConstant(int rows, int lowerBound, double[] Data, out double minimumC, out double suggestedC)
+        public static void XConstant(int rows, int lowerBound, double[] data, out double minimumC, out double suggestedC)
         {
             //  Suggest constant to make all fn(x) possible
-            double a_min = double.MaxValue;
-            double a_max = double.MinValue;
+            double aMin = double.MaxValue;
+            double aMax = double.MinValue;
             for (int n = lowerBound; n <= rows + lowerBound - 1; n++)
             {
-                if (Data[n] != Constant.MISSING)
+                if (data[n] != Constant.MISSING)
                 {
-                    if (Data[n] < a_min)
+                    if (data[n] < aMin)
                     {
-                        a_min = Data[n];
+                        aMin = data[n];
                     }
-                    if (Data[n] > a_max)
+                    if (data[n] > aMax)
                     {
-                        a_max = Data[n];
+                        aMax = data[n];
                     }
                 }
             }
-            if (a_min < 0)
+            if (aMin < 0)
             {
                 double zmin = 0; double zstep = 0;
-                Charting.AxisScaler.Axis(ref a_min, ref a_max, 20, ref zmin, ref zstep);
-                minimumC = Math.Abs(a_min);
+                Charting.AxisScaler.Axis(ref aMin, ref aMax, 20, ref zmin, ref zstep);
+                minimumC = Math.Abs(aMin);
                 suggestedC = Math.Abs(zmin);
             }
             else
@@ -273,7 +170,6 @@ namespace StatsDirect.Builtins
         {
             int r;
             int ctr;
-            string userText;
 
             DataFrame data = parameters["data"].AsDataFrame;
             int totrows = data.MaxRows;
@@ -283,9 +179,9 @@ namespace StatsDirect.Builtins
             string clearRowString = parameters["row-or-cell"].AsString;
             bool clearRow = totcols > 1 && "row".Equals(clearRowString);
             double userNumber = parameters.ContainsKey("missing-double") ? parameters["missing-double"].AsDouble : Constant.MISSING;
-            userText = parameters.ContainsKey("missing-text") && parameters["missing-text"].AsString.Trim().Length > 0
-                           ? parameters["missing-text"].AsString
-                           : "";
+            string userText = parameters.ContainsKey("missing-text") && parameters["missing-text"].AsString.Trim().Length > 0
+                                  ? parameters["missing-text"].AsString
+                                  : "";
             for (int c = 0; c <= totcols - 1; c++)
             {
                 StringVariable v = data.Variables[c].AsStringVariable;
@@ -302,9 +198,9 @@ namespace StatsDirect.Builtins
 
             //  Set up the output
             DataFrame outputFrame = new DataFrame();
-            for (int C = 0; C <= totcols - 1; C++)
+            for (int c = 0; c <= totcols - 1; c++)
             {
-                string outputName = data.Variables[C].AsStringVariable.Title;
+                string outputName = data.Variables[c].AsStringVariable.Title;
                 if (outputName.Length > 0)
                 {
                     outputName += " [no gaps]";
@@ -329,29 +225,29 @@ namespace StatsDirect.Builtins
                     if (ctrx == totcols)
                     {
                         ctr = ctr + 1;
-                        for (int C = 0; C <= totcols - 1; C++)
+                        for (int c = 0; c <= totcols - 1; c++)
                         {
                             if (ctr > maxctr)
                             {
                                 maxctr = ctr;
                             }
-                            outputFrame.Variables[C].AsStringVariable.set_Data(ctr - 1, hold[r, C]);
+                            outputFrame.Variables[c].AsStringVariable.set_Data(ctr - 1, hold[r, c]);
                         }
                     }
                 }
-                for (int C = 0; C <= totcols - 1; C++)
+                for (int c = 0; c <= totcols - 1; c++)
                 {
-                    outputFrame.Variables[C].EnsureLength(ctr);
+                    outputFrame.Variables[c].EnsureLength(ctr);
                 }
             }
             else
             {
-                for (int C = 0; C <= totcols - 1; C++)
+                for (int c = 0; c <= totcols - 1; c++)
                 {
                     ctr = 0;
                     for (r = 1; r <= totrows; r++)
                     {
-                        string transTemp2 = hold[r, C];
+                        string transTemp2 = hold[r, c];
                         if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp2.Length > 0)
                         {
                             ctr = ctr + 1;
@@ -359,10 +255,10 @@ namespace StatsDirect.Builtins
                             {
                                 maxctr = ctr;
                             }
-                            outputFrame.Variables[C].AsStringVariable.set_Data(ctr - 1, hold[r, C]);
+                            outputFrame.Variables[c].AsStringVariable.set_Data(ctr - 1, hold[r, c]);
                         }
                     }
-                    outputFrame.Variables[C].EnsureLength(ctr);
+                    outputFrame.Variables[c].EnsureLength(ctr);
                 }
             }
             ParameterBag outputParameters = new ParameterBag();
@@ -397,29 +293,32 @@ namespace StatsDirect.Builtins
         {
             DataFrame data = parameters["data"].AsDataFrame;
             ClassifierVariable categoryVariable = data.Variables[0].AsClassifierVariable;
+            DataFrame outputFrame = ToDummyVariables(host, categoryVariable);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("output", outputFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+        public static DataFrame ToDummyVariables(ITemplateHost host, ClassifierVariable categoryVariable)
+        {
             int rows = categoryVariable.Length;
-            double[] gid = new double[rows + 1 /* for VB to C# conversion */ ];
-            for (int c = 1; c <= rows; c++)
-            {
-                gid[c] = categoryVariable.Data[c - 1];
-            }
             int cats = categoryVariable.GroupCount;
 
             // find missing data category
             int mc = -1;
-            for (int i = 0; i <= cats - 1; i++)
+            for (int i = 0; i < cats; i++)
             {
                 if (categoryVariable.Groups[i].Label == Formatting.MISSINGLABEL)
                 {
                     mc = i;
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
 
             // find the most prevalent category
             int maxcat = 0;
             int maxcatidx = 0;
-            for (int i = 0; i <= cats - 1; i++)
+            for (int i = 0; i < cats; i++)
             {
                 if (i != mc && categoryVariable.Groups[i].NBin > maxcat)
                 {
@@ -431,35 +330,35 @@ namespace StatsDirect.Builtins
 
             // get non-missing categories
             int ng = 1;
-            double[] g = new double[cats - 1 + 1 /* for VB to C# conversion */ ];
-            Catvar[] gcat = new Catvar[cats - 1 + 1 /* for VB to C# conversion */ ];
-            for (int j = 1; j <= rows; j++)
+            double[] g = new double[cats];
+            Catvar[] gcat = new Catvar[cats];
+            for (int j = 0; j < rows; j++)
             {
-                if (gid[j] != mc & gid[j] != Constant.MISSING)
+                if (categoryVariable.Data[j] != mc && categoryVariable.Data[j] != Constant.MISSING)
                 {
-                    g[0] = gid[j];
-                    gcat[0].Ti = categoryVariable.Groups[Convert.ToInt32(gid[j])].Label;
-                    gcat[0].I = Convert.ToInt32(gid[j]);
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    g[0] = categoryVariable.Data[j];
+                    gcat[0].Title = categoryVariable.Groups[Convert.ToInt32(categoryVariable.Data[j])].Label;
+                    gcat[0].Id = Convert.ToInt32(categoryVariable.Data[j]);
+                    break;
                 }
             }
-            for (int j = 2; j <= rows; j++)
+            for (int j = 1; j < rows; j++)
             {
                 bool newa = true;
-                for (int i = 0; i <= ng - 1; i++)
+                for (int i = 0; i < ng; i++)
                 {
-                    if (gid[j] == g[i] | gid[j] == mc | gid[j] == Constant.MISSING)
+                    if (categoryVariable.Data[j] == g[i] || categoryVariable.Data[j] == mc || categoryVariable.Data[j] == Constant.MISSING)
                     {
                         newa = false;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 if (newa)
                 {
-                    ng = ng + 1;
-                    g[ng - 1] = gid[j];
-                    gcat[ng - 1].Ti = categoryVariable.Groups[Convert.ToInt32(gid[j])].Label;
-                    gcat[ng - 1].I = Convert.ToInt32(gid[j]);
+                    g[ng] = categoryVariable.Data[j];
+                    gcat[ng].Title = categoryVariable.Groups[Convert.ToInt32(categoryVariable.Data[j])].Label;
+                    gcat[ng].Id = Convert.ToInt32(categoryVariable.Data[j]);
+                    ng++;
                 }
             }
 
@@ -474,48 +373,32 @@ namespace StatsDirect.Builtins
             Array.Sort(gcat, 0, ng);
 
             DummyOptions dm = new DummyOptions { MaxCatTi = maxcatti, Names = new List<string>() };
-            for (int j = 0; j <= ng - 1; j++)
-                dm.Names.Add(gcat[j].Ti);
-            bool wasOk = null != host.Amend(dm, parameters);
+            for (int j = 0; j < ng; j++)
+                dm.Names.Add(gcat[j].Title);
+            bool wasOk = null != host.Amend(dm, new ParameterBag());
             if (!(wasOk))
             {
                 throw new TemplateOperationCancelledException();
             }
 
-            int ctr = 0;
             DataFrame outputFrame = new DataFrame();
-            for (int j = 0; j <= ng - 1; j++)
+            for (int j = 0; j < ng; j++)
             {
                 if (j != dm.JDrop)
                 {
-                    ctr = ctr + 1;
-                    string ti = categoryVariable.Title + "(" + gcat[j].Ti + ")";
-                    DoubleVariable outputVariable = new DoubleVariable(rows, ti);
+                    string title = categoryVariable.Title + "(" + gcat[j].Title + ")";
+                    DoubleVariable outputVariable = new DoubleVariable(rows, title);
+                    for (int r = 0; r < rows; r++)
+                    {
+                        // only enter if not missing category mc
+                        if (categoryVariable.Data[r] != mc && categoryVariable.Data[r] != Constant.MISSING)
+                            outputVariable.Data[r] = categoryVariable.Data[r] == gcat[j].Id ? 1 : 0;
+                    }
                     outputFrame.Variables.Add(outputVariable);
                 }
             }
-            for (int r = 1; r <= rows; r++)
-            {
-                ctr = 0;
-                for (int j = 0; j <= ng - 1; j++)
-                {
-                    if (j != dm.JDrop)
-                    {
-                        ctr = ctr + 1;
-                        int dv = gid[r] == gcat[j].I ? 1 : 0;
-                        // only enter if not missing category mc
-                        if (gid[r] != mc && gid[r] != Constant.MISSING)
-                        {
-                            outputFrame.Variables[ctr - 1].AsDoubleVariable.set_Data(r - 1, dv);
-                        }
-                    }
-                }
-            }
-            ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("output", outputFrame);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputFrame;
         }
-
 
         public static StepResult ShtLadderPowers(ITemplateHost host, ParameterBag parameters)
         {
@@ -553,80 +436,80 @@ namespace StatsDirect.Builtins
             DoubleVariable squaredVariable = new DoubleVariable(inputVariable.Length, titleCore + "^2");
             outputFrame.Variables.Add(squaredVariable);
 
-            for (int N = 0; N <= inputVariable.Length - 1; N++)
+            for (int n = 0; n <= inputVariable.Length - 1; n++)
             {
-                if (inputVariable.Data[N] == Constant.MISSING)
+                if (inputVariable.Data[n] == Constant.MISSING)
                 {
-                    minusTwoVariable.set_Data(N, Constant.MISSING);
-                    minusOneVariable.set_Data(N, Constant.MISSING);
-                    minusHalfVariable.set_Data(N, Constant.MISSING);
-                    logVariable.set_Data(N, Constant.MISSING);
-                    halfVariable.set_Data(N, Constant.MISSING);
-                    squaredVariable.set_Data(N, Constant.MISSING);
+                    minusTwoVariable.set_Data(n, Constant.MISSING);
+                    minusOneVariable.set_Data(n, Constant.MISSING);
+                    minusHalfVariable.set_Data(n, Constant.MISSING);
+                    logVariable.set_Data(n, Constant.MISSING);
+                    halfVariable.set_Data(n, Constant.MISSING);
+                    squaredVariable.set_Data(n, Constant.MISSING);
                 }
                 else
                 {
-                    double z = inputVariable.Data[N] + cons;
+                    double z = inputVariable.Data[n] + cons;
                     // -2
                     if (z == 0)
                     {
-                        minusTwoVariable.set_Data(N, Constant.MISSING);
+                        minusTwoVariable.set_Data(n, Constant.MISSING);
                     }
                     else
                     {
                         try
                         {
-                            minusTwoVariable.set_Data(N, Math.Pow(z, -2.0));
+                            minusTwoVariable.set_Data(n, Math.Pow(z, -2.0));
                         }
                         catch (Exception)
                         {
-                            minusTwoVariable.Data[N] = Constant.MISSING;
+                            minusTwoVariable.Data[n] = Constant.MISSING;
                         }
                     }
                     // -1
-                    minusOneVariable.set_Data(N, z == 0 ? Constant.MISSING : Math.Pow(z, -1.0));
+                    minusOneVariable.set_Data(n, z == 0 ? Constant.MISSING : Math.Pow(z, -1.0));
                     // -0.5
                     if (z <= 0)
                     {
-                        minusHalfVariable.set_Data(N, Constant.MISSING);
+                        minusHalfVariable.set_Data(n, Constant.MISSING);
                     }
                     else
                     {
                         try
                         {
-                            minusHalfVariable.set_Data(N, Math.Pow(z, -0.5));
+                            minusHalfVariable.set_Data(n, Math.Pow(z, -0.5));
                         }
                         catch (Exception)
                         {
-                            minusHalfVariable.Data[N] = Constant.MISSING;
+                            minusHalfVariable.Data[n] = Constant.MISSING;
                         }
                     }
                     // log
-                    logVariable.set_Data(N, z <= 0 ? Constant.MISSING : Math.Log(z));
+                    logVariable.set_Data(n, z <= 0 ? Constant.MISSING : Math.Log(z));
                     // 0.5
                     if (z < 0)
                     {
-                        halfVariable.set_Data(N, Constant.MISSING);
+                        halfVariable.set_Data(n, Constant.MISSING);
                     }
                     else
                     {
                         try
                         {
-                            halfVariable.set_Data(N, Math.Pow(z, 0.5));
+                            halfVariable.set_Data(n, Math.Pow(z, 0.5));
                         }
                         catch (Exception)
                         {
-                            halfVariable.set_Data(N, Constant.MISSING);
+                            halfVariable.set_Data(n, Constant.MISSING);
                         }
                     }
                     // 2
                     try
                     {
-                        squaredVariable.set_Data(N, Math.Pow(z, 2.0));
+                        squaredVariable.set_Data(n, Math.Pow(z, 2.0));
                     }
                     catch (Exception)
                     {
-                        squaredVariable.set_Data(N, Constant.MISSING);
+                        squaredVariable.set_Data(n, Constant.MISSING);
                     }
                 }
             }
@@ -808,9 +691,9 @@ namespace StatsDirect.Builtins
             DoubleVariable dataVariable = new DoubleVariable(totrows, datti);
             outputFrame.Variables.Add(dataVariable);
             int row = 0;
-            for (int C = 0; C <= data.VariableCount - 1; C++)
+            for (int c = 0; c <= data.VariableCount - 1; c++)
             {
-                DoubleVariable v = data.Variables[C].AsDoubleVariable;
+                DoubleVariable v = data.Variables[c].AsDoubleVariable;
                 ep = v.Title.IndexOf("=", StringComparison.Ordinal) + 1;
                 string outputTitle = v.Title;
                 if (ok)
@@ -890,37 +773,37 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult shtGroupSplit(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtGroupSplit(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame gidsFrame = Parameters["gids"].AsDataFrame;
+            DataFrame gidsFrame = parameters["gids"].AsDataFrame;
             ClassifierVariable gidsVariable = gidsFrame.Variables[0].AsClassifierVariable;
             int rows = gidsVariable.Length;
             int ng = gidsVariable.GroupCount;
             double[] gid = new double[rows + 1 /* for VB to C# conversion */ ];
             string[] glabel = new string[ng + 1 /* for VB to C# conversion */ ];
             double[] g = new double[ng + 1 /* for VB to C# conversion */ ];
-            for (int C = 1; C <= ng; C++)
+            for (int c = 1; c <= ng; c++)
             {
                 if (gidsVariable.Title == "Group ID")
                 {
-                    glabel[C] = gidsVariable.get_Group(C - 1).Label;
+                    glabel[c] = gidsVariable.get_Group(c - 1).Label;
                 }
                 else
                 {
-                    glabel[C] = gidsVariable.Title + "=" + gidsVariable.get_Group(C - 1).Label;
+                    glabel[c] = gidsVariable.Title + "=" + gidsVariable.get_Group(c - 1).Label;
                 }
-                if (gidsVariable.get_Group(C - 1).Label == Formatting.MISSINGLABEL)
+                if (gidsVariable.get_Group(c - 1).Label == Formatting.MISSINGLABEL)
                 {
-                    g[C] = Constant.MISSING;
+                    g[c] = Constant.MISSING;
                 }
-                else { g[C] = Convert.ToDouble(C) - 1; }
+                else { g[c] = Convert.ToDouble(c) - 1; }
             }
-            for (int C = 1; C <= rows; C++)
+            for (int c = 1; c <= rows; c++)
             {
-                gid[C] = gidsVariable.Data[C - 1];
+                gid[c] = gidsVariable.Data[c - 1];
             }
 
-            DataFrame data = Parameters["data"].AsDataFrame;
+            DataFrame data = parameters["data"].AsDataFrame;
             int cols = data.VariableCount;
             double[,] x = new double[cols + 1 /* for VB to C# conversion */, rows + 1 /* for VB to C# conversion */];
             // Transfer data to working arrays, padding with MISSING as necessary
@@ -943,18 +826,18 @@ namespace StatsDirect.Builtins
             int lc = 0;
             for (int j = 1; j <= ng; j++)
             {
-                for (int C = 1; C <= cols; C++)
+                for (int c = 1; c <= cols; c++)
                 {
                     string variableName;
-                    if (data.Variables[C - 1].Title == "Data")
+                    if (data.Variables[c - 1].Title == "Data")
                     {
                         variableName = glabel[j];
                     }
                     else
                     {
-                        variableName = data.Variables[C - 1].Title + "~" + glabel[j];
+                        variableName = data.Variables[c - 1].Title + "~" + glabel[j];
                     }
-                    DoubleVariable v = new DoubleVariable(0, variableName); //  TODO: Efficiency: This will reallocate the data array many times.  Can we be more sensible?
+                    DoubleVariable v = new DoubleVariable(0, variableName); // TODO: Efficiency: This will reallocate the data array many times.  Can we be more sensible?
                     outputFrame.Variables.Add(v);
                 }
                 int rw = 0;
@@ -962,11 +845,9 @@ namespace StatsDirect.Builtins
                 {
                     if (gid[r] == g[j])
                     {
-                        for (int C = 1; C <= cols; C++)
-                        {
-                            outputFrame.Variables[lc + C - 1].AsDoubleVariable.set_Data(rw, x[C, r]);
-                        }
-                        rw += 1;
+                        for (int c = 1; c <= cols; c++)
+                            outputFrame.Variables[lc + c - 1].AsDoubleVariable.set_Data(rw, x[c, r]);
+                        rw++;
                     }
                 }
                 lc += cols;
@@ -986,12 +867,12 @@ namespace StatsDirect.Builtins
             int cx = 0; int c;
             double den;
 
-            string Lab = parameters["method"].AsString;
-            if ("vdW".Equals(Lab))
+            string lab = parameters["method"].AsString;
+            if ("vdW".Equals(lab))
             {
                 method = 1;
             }
-            else if ("Blom".Equals(Lab))
+            else if ("Blom".Equals(lab))
             {
                 method = 2;
             }
@@ -1019,10 +900,10 @@ namespace StatsDirect.Builtins
                 if (rows > 2500)
                 {
                     method = 1;
-                    Lab = "vdW";
+                    lab = "vdW";
                 }
             }
-            string pre = "Nml Score (" + Lab + "): ";
+            string pre = "Nml Score (" + lab + "): ";
             DataFrame outputFrame = new DataFrame();
             DoubleVariable outputVariable = new DoubleVariable(rows, pre + dataVariable.Title);
             outputFrame.Variables.Add(outputVariable);
@@ -1353,189 +1234,189 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-        public static StepResult shtRndBeta(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndBeta(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double a = Parameters["a"].AsDouble;
-            double b = Parameters["b"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndBeta(Host, rows, cols, a, b, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double a = parameters["a"].AsDouble;
+            double b = parameters["b"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndBeta(host, rows, cols, a, b, seed));
         }
 
-        public static StepResult shtRndBinomial(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndBinomial(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            int nn = Parameters["nn"].AsInt32;
-            double P = Parameters["p"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndBino(Host, rows, cols, nn, P, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            int nn = parameters["nn"].AsInt32;
+            double p = parameters["p"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndBino(host, rows, cols, nn, p, seed));
         }
 
-        public static StepResult shtRndCauchy(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndCauchy(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double l = Parameters["l"].AsDouble;
-            double s = Parameters["s"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndCauchy(Host, rows, cols, l, s, Seed));
-        }
-
-
-        public static StepResult shtRndChiSquare(ITemplateHost Host, ParameterBag Parameters)
-        {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double df = Parameters["df"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndChi(Host, rows, cols, df, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double l = parameters["l"].AsDouble;
+            double s = parameters["s"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndCauchy(host, rows, cols, l, s, seed));
         }
 
 
-        public static StepResult shtRndExponential(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndChiSquare(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double xm = Parameters["xm"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndExpo(Host, rows, cols, xm, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double df = parameters["df"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndChi(host, rows, cols, df, seed));
         }
 
 
-        public static StepResult shtRndF(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndExponential(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double dfn = Parameters["dfn"].AsDouble;
-            double dfd = Parameters["dfd"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndF(Host, rows, cols, dfn, dfd, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double xm = parameters["xm"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndExpo(host, rows, cols, xm, seed));
         }
 
 
-        public static StepResult shtRndGamma(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndF(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double a = Parameters["a"].AsDouble;
-            double b = Parameters["b"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndGamma(Host, rows, cols, a, b, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double dfn = parameters["dfn"].AsDouble;
+            double dfd = parameters["dfd"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndF(host, rows, cols, dfn, dfd, seed));
         }
 
 
-        public static StepResult shtRndGeometric(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndGamma(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double p = Parameters["p"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndGeom(Host, rows, cols, p, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double a = parameters["a"].AsDouble;
+            double b = parameters["b"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndGamma(host, rows, cols, a, b, seed));
         }
 
 
-        public static StepResult shtRndLogit(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndGeometric(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double mu = Parameters["mu"].AsDouble;
-            double sigma = Parameters["sigma"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndLogit(Host, rows, cols, mu, sigma, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double p = parameters["p"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndGeom(host, rows, cols, p, seed));
         }
 
 
-        public static StepResult shtRndLogNormal(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndLogit(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double xm = Parameters["xm"].AsDouble;
-            double sd = Parameters["sd"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndLogNorm(Host, rows, cols, xm, sd, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double mu = parameters["mu"].AsDouble;
+            double sigma = parameters["sigma"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndLogit(host, rows, cols, mu, sigma, seed));
         }
 
 
-        public static StepResult shtRndNegativeBinomial(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndLogNormal(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double n = Parameters["n"].AsDouble;
-            double p = Parameters["p"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndNegBin(Host, rows, cols, n, p, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double xm = parameters["xm"].AsDouble;
+            double sd = parameters["sd"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndLogNorm(host, rows, cols, xm, sd, seed));
         }
 
 
-        public static StepResult shtRndNormal(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndNegativeBinomial(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double xm = Parameters["xm"].AsDouble;
-            double sd = Parameters["sd"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndNorm(Host, rows, cols, xm, sd, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double n = parameters["n"].AsDouble;
+            double p = parameters["p"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndNegBin(host, rows, cols, n, p, seed));
         }
 
 
-        public static StepResult shtRndPoisson(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndNormal(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double xm = Parameters["xm"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndPoisson(Host, rows, cols, xm, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double xm = parameters["xm"].AsDouble;
+            double sd = parameters["sd"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndNorm(host, rows, cols, xm, sd, seed));
         }
 
 
-        public static StepResult shtRndT(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndPoisson(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double df = Parameters["df"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndT(Host, rows, cols, df, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double xm = parameters["xm"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndPoisson(host, rows, cols, xm, seed));
         }
 
 
-        public static StepResult shtRndUniform01(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndT(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndUni(Host, rows, cols, Constant.MISSING, Constant.MISSING, false, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double df = parameters["df"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndT(host, rows, cols, df, seed));
         }
 
 
-        public static StepResult shtRndUniformAB(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndUniform01(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double a = Parameters["a"].AsDouble;
-            double b = Parameters["b"].AsDouble;
-            bool isCount = "count".Equals(Parameters["numberType"].AsString);
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndUni(Host, rows, cols, a, b, isCount, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndUni(host, rows, cols, Constant.MISSING, Constant.MISSING, false, seed));
         }
 
 
-        public static StepResult shtRndWeibull(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRndUniformAB(ITemplateHost host, ParameterBag parameters)
         {
-            int cols = Parameters["cols"].AsInt32;
-            int rows = Parameters["rows"].AsInt32;
-            double a = Parameters["a"].AsDouble;
-            double b = Parameters["b"].AsDouble;
-            int Seed = Parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndWeibull(Host, rows, cols, a, b, Seed));
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double a = parameters["a"].AsDouble;
+            double b = parameters["b"].AsDouble;
+            bool isCount = "count".Equals(parameters["numberType"].AsString);
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndUni(host, rows, cols, a, b, isCount, seed));
         }
 
 
-        private static StepResult WrapFrame(string Name, DataFrame Frame)
+        public static StepResult ShtRndWeibull(ITemplateHost host, ParameterBag parameters)
+        {
+            int cols = parameters["cols"].AsInt32;
+            int rows = parameters["rows"].AsInt32;
+            double a = parameters["a"].AsDouble;
+            double b = parameters["b"].AsDouble;
+            int seed = parameters["seed"].AsInt32;
+            return WrapFrame("output", Random.rndWeibull(host, rows, cols, a, b, seed));
+        }
+
+
+        private static StepResult WrapFrame(string name, DataFrame frame)
         {
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput(Name, Frame);
+            outputParameters.AddOutput(name, frame);
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -1591,12 +1472,12 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Assumes the input is a frame of string variables.  Returns a frame mirrored around x=y.
         ///  </summary>
-        ///  <param name="Host"></param>
-        ///  <param name="Parameters"></param>
+        ///  <param name="host"></param>
+        ///  <param name="parameters"></param>
         ///  <returns></returns>
-        public static StepResult shtRotate(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult ShtRotate(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame data = Parameters["data"].AsDataFrame;
+            DataFrame data = parameters["data"].AsDataFrame;
             int cols = data.VariableCount;
             int rows = data.MaxRows;
             DataFrame outputFrame = new DataFrame();
@@ -1615,7 +1496,6 @@ namespace StatsDirect.Builtins
             }
             return WrapFrame("output", outputFrame);
         }
-
 
         private class DoubleAscending : IComparer<double>
         {
@@ -1832,22 +1712,22 @@ namespace StatsDirect.Builtins
                 {
                     cons = 0;
                 }
-                for (int N = 0; N <= rows - 1; N++)
+                for (int n = 0; n <= rows - 1; n++)
                 {
-                    if (inputData[N] == Constant.MISSING)
+                    if (inputData[n] == Constant.MISSING)
                     {
-                        a[N] = Constant.MISSING;
+                        a[n] = Constant.MISSING;
                     }
                     else
                     {
-                        double z = inputData[N] + cons;
+                        double z = inputData[n] + cons;
                         if (z <= 0.0)
                         {
-                            a[N] = Constant.MISSING;
+                            a[n] = Constant.MISSING;
                         }
                         else
                         {
-                            a[N] = Math.Log(z);
+                            a[n] = Math.Log(z);
                         }
                     }
                 }
@@ -1860,7 +1740,7 @@ namespace StatsDirect.Builtins
                 {
                     title = "Log(natural): " + inputVariable.Title;
                 }
-                return x_amanipst(a, title);
+                return WrapDoubleVariable(a, title);
             }
             if ((index == 1))
             {
@@ -1875,22 +1755,22 @@ namespace StatsDirect.Builtins
                     cons = 0;
                 }
                 double log10 = Math.Log(10.0);
-                for (int N = 0; N <= rows - 1; N++)
+                for (int n = 0; n <= rows - 1; n++)
                 {
-                    if (inputData[N] == Constant.MISSING)
+                    if (inputData[n] == Constant.MISSING)
                     {
-                        a[N] = Constant.MISSING;
+                        a[n] = Constant.MISSING;
                     }
                     else
                     {
-                        double z = inputData[N] + cons;
+                        double z = inputData[n] + cons;
                         if (z <= 0.0)
                         {
-                            a[N] = Constant.MISSING;
+                            a[n] = Constant.MISSING;
                         }
                         else
                         {
-                            a[N] = Math.Log(z) / log10;
+                            a[n] = Math.Log(z) / log10;
                         }
                     }
                 }
@@ -1903,54 +1783,54 @@ namespace StatsDirect.Builtins
                 {
                     title = "Log(base 10): " + inputVariable.Title;
                 }
-                return x_amanipst(a, title);
+                return WrapDoubleVariable(a, title);
             }
             if ((index == 2))
             {
-                double maxi = x_amanipdp(parameters["discrete"].AsString, inputData);
-                for (int N = 0; N <= rows - 1; N++)
+                double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
+                for (int n = 0; n <= rows - 1; n++)
                 {
-                    if (inputData[N] == Constant.MISSING)
+                    if (inputData[n] == Constant.MISSING)
                     {
-                        a[N] = Constant.MISSING;
+                        a[n] = Constant.MISSING;
                     }
                     else
                     {
-                        double prop = Math.Abs(inputData[N] / maxi);
+                        double prop = Math.Abs(inputData[n] / maxi);
                         if (prop == 1 | prop == 0)
                         {
-                            a[N] = Constant.MISSING;
+                            a[n] = Constant.MISSING;
                         }
                         else
                         {
                             if (prop / (1.0 - prop) < 0)
                             {
-                                a[N] = Constant.MISSING;
+                                a[n] = Constant.MISSING;
                             }
                             else
                             {
-                                a[N] = Math.Log(prop / (1.0 - prop));
+                                a[n] = Math.Log(prop / (1.0 - prop));
                             }
                         }
                     }
                 }
-                return x_amanipst(a, "Logit: " + inputVariable.Title);
+                return WrapDoubleVariable(a, "Logit: " + inputVariable.Title);
             }
             if ((index == 3))
             {
-                double maxi = x_amanipdp(parameters["discrete"].AsString, inputData);
-                for (int N = 0; N <= rows - 1; N++)
+                double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
+                for (int n = 0; n <= rows - 1; n++)
                 {
-                    if (inputData[N] == Constant.MISSING)
+                    if (inputData[n] == Constant.MISSING)
                     {
-                        a[N] = Constant.MISSING;
+                        a[n] = Constant.MISSING;
                     }
                     else
                     {
-                        double prop = Math.Abs(inputData[N] / maxi);
+                        double prop = Math.Abs(inputData[n] / maxi);
                         if (prop == 1.0 | prop == 0.0)
                         {
-                            a[N] = Constant.MISSING;
+                            a[n] = Constant.MISSING;
                         }
                         else
                         {
@@ -1958,65 +1838,65 @@ namespace StatsDirect.Builtins
                             double zed = PDF.gauinv(prop, out fault);
                             if (fault == 0)
                             {
-                                a[N] = 5 + zed;
+                                a[n] = 5 + zed;
                             }
-                            else { a[N] = Constant.MISSING; }
+                            else { a[n] = Constant.MISSING; }
                         }
                     }
                 }
-                return x_amanipst(a, "Probit: " + inputVariable.Title);
+                return WrapDoubleVariable(a, "Probit: " + inputVariable.Title);
             }
             if ((index == 4))
             {
-                double maxi = x_amanipdp(parameters["discrete"].AsString, inputData);
-                for (int N = 0; N <= rows - 1; N++)
+                double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
+                for (int n = 0; n <= rows - 1; n++)
                 {
-                    if (inputData[N] == Constant.MISSING)
+                    if (inputData[n] == Constant.MISSING)
                     {
-                        a[N] = Constant.MISSING;
+                        a[n] = Constant.MISSING;
                     }
                     else
                     {
-                        double prop = Math.Abs(inputData[N] / maxi);
+                        double prop = Math.Abs(inputData[n] / maxi);
                         if ((prop == 0.0))
                         {
-                            a[N] = 0;
+                            a[n] = 0;
                         }
                         else if ((prop == 1.0))
                         {
-                            a[N] = 90;
+                            a[n] = 90;
                         }
                         else if ((prop < 0.0) || (prop > 1.0))
                         {
-                            a[N] = Constant.MISSING;
+                            a[n] = Constant.MISSING;
                         }
                         else
                         {
                             double x = Math.Sqrt(prop);
-                            a[N] = 57.2957795130824 * (Math.Atan(x / Math.Sqrt(1.0 - x * x)));
+                            a[n] = 57.2957795130824 * (Math.Atan(x / Math.Sqrt(1.0 - x * x)));
                         }
                     }
                 }
-                return x_amanipst(a, "Angle: " + inputVariable.Title);
+                return WrapDoubleVariable(a, "Angle: " + inputVariable.Title);
             }
             if ((index == 5))
             {
-                for (int N = 0; N <= rows - 1; N++)
+                for (int n = 0; n <= rows - 1; n++)
                 {
-                    if (inputData[N] == Constant.MISSING)
+                    if (inputData[n] == Constant.MISSING)
                     {
-                        a[N] = Constant.MISSING;
+                        a[n] = Constant.MISSING;
                     }
-                    else if (N == 0)
+                    else if (n == 0)
                     {
-                        a[N] = inputData[N];
+                        a[n] = inputData[n];
                     }
                     else
                     {
-                        a[N] = a[N - 1] + inputData[N];
+                        a[n] = a[n - 1] + inputData[n];
                     }
                 }
-                return x_amanipst(a, "Cumulate: " + inputVariable.Title);
+                return WrapDoubleVariable(a, "Cumulate: " + inputVariable.Title);
             }
             if ((index == 6))
             {
@@ -2025,7 +1905,7 @@ namespace StatsDirect.Builtins
                 MathDbl.ecdf(inputData, fn, out err);
                 if (err == 0)
                 {
-                    return x_amanipst(fn, "ECDF: " + inputVariable.Title);
+                    return WrapDoubleVariable(fn, "ECDF: " + inputVariable.Title);
                 }
                 throw new ArgumentException("Insufficient data");
             }
@@ -2036,7 +1916,7 @@ namespace StatsDirect.Builtins
                 MathDbl.zscore(inputData, ref fn, false, out err);
                 if (err == 0)
                 {
-                    return x_amanipst(fn, "Z: " + inputVariable.Title);
+                    return WrapDoubleVariable(fn, "Z: " + inputVariable.Title);
                 }
                 throw new ArgumentException("Insufficient data");
             }
@@ -2047,7 +1927,7 @@ namespace StatsDirect.Builtins
                 MathDbl.zscore(inputData, ref fn, true, out err);
                 if (err == 0)
                 {
-                    return x_amanipst(fn, "Z score (ECDF): " + inputVariable.Title);
+                    return WrapDoubleVariable(fn, "Z score (ECDF): " + inputVariable.Title);
                 }
                 throw new ArgumentException("Insufficient data");
             }
@@ -2055,7 +1935,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static double x_amanipdp(string discrete, double[] data)
+        private static double XAmanipdp(string discrete, double[] data)
         {
             if ("discrete".Equals(discrete))
             {
@@ -2072,17 +1952,13 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                if (allMissing)
-                {
-                    return Constant.MISSING;
-                }
-                return maxi;
+                return allMissing ? Constant.MISSING : maxi;
             }
             return 1.0;
         }
 
 
-        private static StepResult x_amanipst(double[] a, string title)
+        private static StepResult WrapDoubleVariable(double[] a, string title)
         {
             DataFrame outputFrame = new DataFrame();
             DoubleVariable outputVariable = new DoubleVariable(a, title);
@@ -2091,7 +1967,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult shtGroupCategorise(ITemplateHost host, ParameterBag parameters)
+        public static StepResult ShtGroupCategorise(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
@@ -2099,7 +1975,7 @@ namespace StatsDirect.Builtins
             CategoriseOptions options = new CategoriseOptions
                                             {
                                                 Title = "Categorised: " + inputVariable.Title,
-                                                PASSX = new double[rows - 1 + 1 /* for VB to C# conversion */],
+                                                PassX = new double[rows - 1 + 1 /* for VB to C# conversion */],
                                                 Data = inputVariable
                                             };
             if (null == host.Amend(options, parameters))
@@ -2107,10 +1983,10 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             }
             DataFrame outputFrame = new DataFrame();
-            if ((options.PASSX != null) && options.PASSX.Length > 0)
+            if ((options.PassX != null) && options.PassX.Length > 0)
             {
-                string Lab = options.Title;
-                DoubleVariable boundariesVariable = new DoubleVariable(options.PASSX, Lab);
+                string lab = options.Title;
+                DoubleVariable boundariesVariable = new DoubleVariable(options.PassX, lab);
                 outputFrame.Variables.Add(boundariesVariable);
             }
             if (options.Categories != null)
@@ -2129,7 +2005,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult shtGroupExtract(ITemplateHost host, ParameterBag parameters)
+        public static StepResult ShtGroupExtract(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
@@ -2167,4 +2043,76 @@ namespace StatsDirect.Builtins
 
     }
 
+    public class DummyOptions : IFillable
+    {
+        public string MaxCatTi { get; set; }
+        public List<string> Names { get; set; }
+
+        ///  <summary>
+        ///  The name that the user selected, or Nothing if no &lt;none> was selected.
+        ///  </summary>
+        public int JDrop { get; set; }
+
+        public string FillerToUse
+        {
+            get
+            {
+                return "Dummy";
+            }
+        }
+
+        // interface properties implemented by FillerToUse
+        string IFillable.FillerToUse
+        {
+            get
+            {
+                return FillerToUse;
+            }
+        }
+
+    }
+
+    public class CategoriseOptions : IFillable
+    {
+        public string Title { get; set; }
+        public double[] PassX { get; set; }
+        public string[] Categories { get; set; }
+        public int[] Counts { get; set; }
+        public DoubleVariable Data { get; set; }
+
+        public string FillerToUse
+        {
+            get
+            {
+                return "Categorise";
+            }
+        }
+    }
+
+    public class ExtractionOptions : IFillable
+    {
+        public string Title { get; set; }
+        public DoubleVariable Data { get; set; }
+        public DataFrame IdentifiersFrame { get; set; }
+        public string IdentifierNames { get; set; }
+
+        public string FillerToUse
+        {
+            get
+            {
+                return "Extraction";
+            }
+        }
+    }
+
+    public class SortInPlaceOptions : IFillable
+    {
+        public string FillerToUse
+        {
+            get
+            {
+                return "SortInPlace";
+            }
+        }
+    }
 }

@@ -13,10 +13,6 @@ namespace StatsDirect.Builtins
     {
         public static StepResult RptChi2By2(ITemplateHost host, ParameterBag parameters)
         {
-            double p2m = 0;
-            double p1m = 0;
-            double p2f = 0;
-            double p1f = 0;
             double eor = 0;
             int fault;
 
@@ -32,70 +28,70 @@ namespace StatsDirect.Builtins
 
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
-            double C = parameters["c"].AsDouble;
-            double D = parameters["d"].AsDouble;
-            double P = a + b;
-            double Q = C + D;
-            double r = a + C;
-            double s = b + D;
-            double N = P + Q;
+            double c = parameters["c"].AsDouble;
+            double d = parameters["d"].AsDouble;
+            double p = a + b;
+            double q = c + d;
+            double r = a + c;
+            double s = b + d;
+            double n = p + q;
             ParameterBag outputParameters = new ParameterBag();
             //  RTF_LoadTemplate("chi2x2.rtf")
-            if (!((fault == 0 && (P > 0 || Q > 0 || r > 0 || s > 0) && (P * Q * r * s > 0))))
+            if (!((fault == 0 && (p > 0 || q > 0 || r > 0 || s > 0) && (p * q * r * s > 0))))
             {
                 throw new InvalidDataException();
             }
             outputParameters.AddOutput("tab3_a1", host.RoundU(a));
             outputParameters.AddOutput("tab3_b1", host.RoundU(b));
-            outputParameters.AddOutput("tab3_c1", host.RoundU(P));
-            outputParameters.AddOutput("tab3_a2", host.RoundU(C));
-            outputParameters.AddOutput("tab3_b2", host.RoundU(D));
-            outputParameters.AddOutput("tab3_c2", host.RoundU(Q));
+            outputParameters.AddOutput("tab3_c1", host.RoundU(p));
+            outputParameters.AddOutput("tab3_a2", host.RoundU(c));
+            outputParameters.AddOutput("tab3_b2", host.RoundU(d));
+            outputParameters.AddOutput("tab3_c2", host.RoundU(q));
             outputParameters.AddOutput("tab3_a3", host.RoundU(r));
             outputParameters.AddOutput("tab3_b3", host.RoundU(s));
-            outputParameters.AddOutput("tab3_c3", host.RoundU(N));
+            outputParameters.AddOutput("tab3_c3", host.RoundU(n));
 
-            double E1 = P * r / N;
-            double e2 = P * s / N;
-            double e3 = Q * r / N;
-            double e4 = Q * s / N;
+            double e1 = p * r / n;
+            double e2 = p * s / n;
+            double e3 = q * r / n;
+            double e4 = q * s / n;
 
-            outputParameters.AddOutput("tab_a1", host.RoundU(E1));
+            outputParameters.AddOutput("tab_a1", host.RoundU(e1));
             outputParameters.AddOutput("tab_b1", host.RoundU(e2));
             outputParameters.AddOutput("tab_a2", host.RoundU(e3));
             outputParameters.AddOutput("tab_b2", host.RoundU(e4));
 
-            double f = a * D - b * C;
-            double x2 = f * f * N / (P * Q * r * s);
+            double f = a * d - b * c;
+            double x2 = f * f * n / (p * q * r * s);
             outputParameters.AddOutput("chi", host.RoundU(x2));
             outputParameters.AddOutput("chi_p", host.pval(PDF.chivalp(x2, 1.0)));
 
-            f = Math.Abs(f) - N / 2;
+            f = Math.Abs(f) - n / 2;
             if (f < 0)
             {
                 f = 0;
             }
-            double x2c = f * f * N / (P * Q * r * s);
-            outputParameters.AddOutput("yates_chi", host.RoundU(x2c));
-            outputParameters.AddOutput("yates_chi_p", host.pval(PDF.chivalp(x2c, 1.0)));
+            double x2C = f * f * n / (p * q * r * s);
+            outputParameters.AddOutput("yates_chi", host.RoundU(x2C));
+            outputParameters.AddOutput("yates_chi_p", host.pval(PDF.chivalp(x2C, 1.0)));
 
             // coefficients (see Agresti p 23-4)
-            double P1 = Math.Sqrt(x2 / (x2 + N));
-            double C1 = ((a * D) - (b * C)) / Math.Sqrt(P * Q * r * s);
-            outputParameters.AddOutput("pearson", host.RoundU(P1));
-            outputParameters.AddOutput("vs", host.RoundU(C1));
+            double p1 = Math.Sqrt(x2 / (x2 + n));
+            double c1 = ((a * d) - (b * c)) / Math.Sqrt(p * q * r * s);
+            outputParameters.AddOutput("pearson", host.RoundU(p1));
+            outputParameters.AddOutput("vs", host.RoundU(c1));
 
             List<ParameterBag> warnList = new List<ParameterBag>();
             outputParameters.AddOutput("*warn", warnList);
-            if (E1 < 5 | e2 < 5 | e3 < 5 | e4 < 5 | N < 20)
+            if (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20)
             {
                 ParameterBag warnParameters = new ParameterBag();
                 warnList.Add(warnParameters);
-                string wrn = N < 20 ? "Number of observations" : "Expected frequencies";
+                string wrn = n < 20 ? "Number of observations" : "Expected frequencies";
                 warnParameters.AddOutput("wrn", wrn);
             }
 
-            bool done_exact = false;
+            bool doneExact = false;
 
             List<ParameterBag> oddsList = new List<ParameterBag>();
             outputParameters.AddOutput("*odds", oddsList);
@@ -109,10 +105,10 @@ namespace StatsDirect.Builtins
                 double yodr;
                 double odr;
                 double xodr;
-                if (b * C > 0.0 & a * D > 0.0)
+                if (b * c > 0.0 & a * d > 0.0)
                 {
-                    odr = (a * D) / (b * C);
-                    double seodr = Math.Sqrt(1.0 / a + 1.0 / b + 1.0 / C + 1.0 / D);
+                    odr = (a * d) / (b * c);
+                    double seodr = Math.Sqrt(1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d);
                     yodr = Math.Exp(Math.Log(odr) - cit * seodr);
                     xodr = Math.Exp(Math.Log(odr) + cit * seodr);
                 }
@@ -127,20 +123,24 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("woolf_ci_1", host.RoundU(yodr));
                 oddsParameters.AddOutput("woolf_ci_2", host.RoundU(xodr));
                 // CMLE
-                ExactBB.Rec2x2[] tabl = new ExactBB.Rec2x2[1 + 1 /* for VB to C# conversion */];
-                tabl[1].freq = 1;
-                tabl[1].a = a;
-                tabl[1].m1 = a + b;
-                tabl[1].n1 = a + C;
-                tabl[1].n0 = b + D;
-                tabl[1].informative = (a * D != 0) | (b * C != 0);
+                ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* for VB to C# conversion */];
+                tabl[1].Freq = 1;
+                tabl[1].A = a;
+                tabl[1].M1 = a + b;
+                tabl[1].N1 = a + c;
+                tabl[1].N0 = b + d;
+                tabl[1].Informative = (a * d != 0) | (b * c != 0);
                 bool useLogScale = false;
                 int ierr;
                 double llm;
                 double ulf;
                 double ulm;
                 double llf;
-                ExactBB.Exact22k(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, ref p1f, ref p2f, ref p1m, ref p2m, ref useLogScale, out ierr);
+                double p2M;
+                double p1M;
+                double p2F;
+                double p1F;
+                new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 if (ierr != 0)
                 {
                     // eor = Constant.MISSING; 
@@ -148,24 +148,24 @@ namespace StatsDirect.Builtins
                     llf = Constant.MISSING;
                     ulm = Constant.MISSING;
                     llm = Constant.MISSING;
-                    p1f = Constant.MISSING;
-                    p2f = Constant.MISSING;
-                    p1m = Constant.MISSING;
-                    p2m = Constant.MISSING;
+                    p1F = Constant.MISSING;
+                    p2F = Constant.MISSING;
+                    p1M = Constant.MISSING;
+                    p2M = Constant.MISSING;
                 }
                 else
                 {
-                    done_exact = true;
+                    doneExact = true;
                 }
                 oddsParameters.AddOutput("ci", Formatting.XRound(cco * 100.0, 2));
                 oddsParameters.AddOutput("llf", host.RoundU(llf));
                 oddsParameters.AddOutput("ulf", host.RoundU(ulf));
-                oddsParameters.AddOutput("p1f", host.pval(p1f));
-                oddsParameters.AddOutput("p2f", host.pval(p2f));
+                oddsParameters.AddOutput("p1f", host.pval(p1F));
+                oddsParameters.AddOutput("p2f", host.pval(p2F));
                 oddsParameters.AddOutput("llm", host.RoundU(llm));
                 oddsParameters.AddOutput("ulm", host.RoundU(ulm));
-                oddsParameters.AddOutput("p1m", host.pval(p1m));
-                oddsParameters.AddOutput("p2m", host.pval(p2m));
+                oddsParameters.AddOutput("p1m", host.pval(p1M));
+                oddsParameters.AddOutput("p2m", host.pval(p2M));
             }
             else if (isCohort)
             {
@@ -175,9 +175,9 @@ namespace StatsDirect.Builtins
 
             List<ParameterBag> fisherList = new List<ParameterBag>();
             outputParameters.AddOutput("*fisher", fisherList);
-            if (!(done_exact))
+            if (!(doneExact))
             {
-                if (E1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || N < 20)
+                if (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20)
                 {
                     //  RTF_LoadTemplate("fisher.rtf")
                     fisherList.Add(Exact.RptExactFisher(host, parameters).ParameterBag);
@@ -215,10 +215,10 @@ namespace StatsDirect.Builtins
 
         private static StepResult RptChi2ByN(ITemplateHost host, ParameterBag parameters, int z)
         {
-            double K4 = 0;
-            double K2 = 0;
-            double K1 = 0;
-            double C = 0;
+            double k4 = 0;
+            double k2 = 0;
+            double k1 = 0;
+            double c = 0;
             double t = 0;
             double b = 0;
             double a = 0;
@@ -258,10 +258,10 @@ namespace StatsDirect.Builtins
                 a += a1;
                 b += b1;
                 t += t1;
-                C += a1 * a1 / t1;
-                K1 += s1 * a1;
-                K2 += s1 * b1;
-                K4 += s1 * s1 * (a1 + b1);
+                c += a1 * a1 / t1;
+                k1 += s1 * a1;
+                k2 += s1 * b1;
+                k4 += s1 * s1 * (a1 + b1);
             }
             double n1 = 0;
             List<ParameterBag> rowList = new List<ParameterBag>();
@@ -306,7 +306,7 @@ namespace StatsDirect.Builtins
             }
 
             double n2 = rows - 1;
-            double x2 = (t * C - a * a) * t / (a * b);
+            double x2 = (t * c - a * a) * t / (a * b);
 
             outputParameters.AddOutput("chi", host.RoundU(x2));
             outputParameters.AddInput("x2", x2); //  For use with follow-on functions
@@ -318,15 +318,15 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*z", zList);
             if (z != 0)
             {
-                C = x2;
-                double K8 = b / a;
-                double D = (K4 - Math.Pow((K1 + K2), 2.0) / t) / K8;
-                if (D < 0)
+                c = x2;
+                double k8 = b / a;
+                double d = (k4 - Math.Pow((k1 + k2), 2.0) / t) / k8;
+                if (d < 0)
                 {
-                    D = 0;
+                    d = 0;
                 }
-                D = Math.Sqrt(D);
-                double x1 = (K1 - K2 / K8) / D;
+                d = Math.Sqrt(d);
+                double x1 = (k1 - k2 / k8) / d;
                 x2 = x1 * x1;
                 n2 = 1;
                 ParameterBag zParameters = new ParameterBag();
@@ -337,7 +337,7 @@ namespace StatsDirect.Builtins
                 zParameters.AddOutput("chi_1df", host.RoundU(x1));
                 zParameters.AddOutput("chi_lin_p", host.pval(PDF.chivalp(x2, n2)));
 
-                x2 = C - x2;
+                x2 = c - x2;
                 n2 = rows - 2;
                 zParameters.AddOutput("chi_non", host.RoundU(x2));
                 zParameters.AddOutput("df", n2.ToString());
@@ -350,10 +350,10 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptChiMantel(ITemplateHost host, ParameterBag parameters)
         {
-            double p2m = 0;
-            double p1m = 0;
-            double p2f = 0;
-            double p1f = 0;
+            double p2M = 0;
+            double p1M = 0;
+            double p2F = 0;
+            double p1F = 0;
             double llm = 0;
             double ulm = 0;
             double llf = 0;
@@ -430,18 +430,18 @@ namespace StatsDirect.Builtins
             bool tryExact = parameters["try_exact"].AsBoolean;
             if (tryExact)
             {
-                ExactBB.Rec2x2[] tbl = new ExactBB.Rec2x2[k + 1 /* for VB to C# conversion */];
+                ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1 /* for VB to C# conversion */];
                 for (i = 1; i <= k; i++)
                 {
-                    tbl[i].freq = 1;
-                    tbl[i].a = o[i, 1];
-                    tbl[i].m1 = o[i, 1] + o[i, 2];
-                    tbl[i].n1 = o[i, 1] + o[i, 3];
-                    tbl[i].n0 = o[i, 2] + o[i, 4];
-                    tbl[i].informative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
+                    tbl[i].Freq = 1;
+                    tbl[i].A = o[i, 1];
+                    tbl[i].M1 = o[i, 1] + o[i, 2];
+                    tbl[i].N1 = o[i, 1] + o[i, 3];
+                    tbl[i].N0 = o[i, 2] + o[i, 4];
+                    tbl[i].Informative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
                 }
                 bool useLogScale = false;
-                ExactBB.Exact22k(host, k, 1, tbl, cco, ref eor, out ulf, out llf, out ulm, out llm, ref p1f, ref p2f, ref p1m, ref p2m, ref useLogScale, out ierr);
+                new ExactBB().Exact22K(host, k, 1, tbl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
             }
             else
             {
@@ -454,10 +454,10 @@ namespace StatsDirect.Builtins
                 llf = Constant.MISSING;
                 ulm = Constant.MISSING;
                 llm = Constant.MISSING;
-                p1f = Constant.MISSING;
-                p2f = Constant.MISSING;
-                p1m = Constant.MISSING;
-                p2m = Constant.MISSING;
+                p1F = Constant.MISSING;
+                p2F = Constant.MISSING;
+                p1M = Constant.MISSING;
+                p2M = Constant.MISSING;
             }
 
             //  RTF_LoadTemplate("mantel.rtf")
@@ -489,10 +489,10 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("uci", host.RoundU(odru[i]));
                 orParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
                 orParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
-                orParameters.AddOutput("lb", Meta.get_meta_label(host, o, i, false, cced, title));
+                orParameters.AddOutput("lb", Meta.GetMetaLabel(host, o, i, false, cced, title));
                 if (host.Preferences.MetaExact & ((i) == Constant.MISSING | odru[i] == Constant.MISSING))
                 {
-                    Meta.orci_corn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
+                    Meta.OrciCorn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
                     orParameters = new ParameterBag();
                     orList.Add(orParameters);
                     orParameters.AddOutput("st", "* " + i.ToString());
@@ -531,12 +531,12 @@ namespace StatsDirect.Builtins
                 cmlParameters.AddOutput("eor", host.RoundU(eor));
                 cmlParameters.AddOutput("llf", host.RoundU(llf));
                 cmlParameters.AddOutput("ulf", host.RoundU(ulf));
-                cmlParameters.AddOutput("p1f", host.pval(p1f));
-                cmlParameters.AddOutput("p2f", host.pval(p2f));
+                cmlParameters.AddOutput("p1f", host.pval(p1F));
+                cmlParameters.AddOutput("p2f", host.pval(p2F));
                 cmlParameters.AddOutput("llm", host.RoundU(llm));
                 cmlParameters.AddOutput("ulm", host.RoundU(ulm));
-                cmlParameters.AddOutput("p1m", host.pval(p1m));
-                cmlParameters.AddOutput("p2m", host.pval(p2m));
+                cmlParameters.AddOutput("p1m", host.pval(p1M));
+                cmlParameters.AddOutput("p2m", host.pval(p2M));
             }
 
             outputParameters.AddOutput("bd", host.RoundU(bd));
@@ -547,7 +547,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", (realk - 1).ToString());
             outputParameters.AddOutput("xp_cochran", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
             outputParameters.AddOutput("tausq", host.RoundU(tausq));
-            Meta.isquare_ncc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
+            Meta.IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
@@ -566,13 +566,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new ParameterBag();
             eggerList.Add(eggerParameters);
-            Meta.x_metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
+            Meta.Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
 
             List<ParameterBag> horboldList = new List<ParameterBag>();
             outputParameters.AddOutput("*horbold", horboldList);
             ParameterBag horboldParameters = new ParameterBag();
             horboldList.Add(horboldParameters);
-            Meta.x_mod_metabias(host, horboldParameters, o, k, cco, 1);
+            Meta.ModMetabias(host, horboldParameters, o, k, cco, 1);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -611,12 +611,11 @@ namespace StatsDirect.Builtins
             double t = 0;
             for (int r = 1; r <= rows; r++)
             {
-                int C;
-                for (C = 1; C <= cols; C++)
+                for (int c = 1; c <= cols; c++)
                 {
-                    double A1 = dataFrame.Variables[C - 1].AsDoubleVariable.Data[r - 1];
-                    a[r, C] = A1;
-                    t += A1;
+                    double a1 = dataFrame.Variables[c - 1].AsDoubleVariable.Data[r - 1];
+                    a[r, c] = a1;
+                    t += a1;
                 }
             }
             if (t <= 0.0)
@@ -629,7 +628,7 @@ namespace StatsDirect.Builtins
             bool xs = parameters["xs"].AsBoolean;
             bool specifyScores = parameters["specify_scores"].AsBoolean;
 
-            StepResult outputResult = Tables.s_chi(host, ref cco, a, rows, cols, doExact, pc, xp, cs, xs, specifyScores);
+            StepResult outputResult = Tables.SChi(host, ref cco, a, rows, cols, doExact, pc, xp, cs, xs, specifyScores);
             return outputResult;
         }
 
@@ -762,7 +761,7 @@ namespace StatsDirect.Builtins
             int j;
             MersenneTwister rng = new MersenneTwister();
 
-            int boots_divisor = Math.Max(1, iter / 1000);
+            int bootsDivisor = Math.Max(1, iter / 1000);
 
             host.StartProgress("Simulating exact P");
 
@@ -790,7 +789,7 @@ namespace StatsDirect.Builtins
             r = 0;
             for (i = 1; i <= iter; i++)
             {
-                if (i % boots_divisor == 0)
+                if (i % bootsDivisor == 0)
                 {
                     if (host.UpdateProgress(i / (double)iter))
                     {

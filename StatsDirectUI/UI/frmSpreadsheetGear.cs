@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using SpreadsheetGear.Commands;
+using StatsDirect.Builtins;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -17,7 +18,6 @@ namespace StatsDirect.UI
 {
     internal partial class frmSpreadsheetGear : StatsDirectForm, IGrid
     {
-        readonly System.Drawing.Printing.PageSettings pgSettings = new System.Drawing.Printing.PageSettings();
         /// <summary>
         /// While batching, a storage point for the data area we've most recently selected.
         /// </summary>
@@ -675,20 +675,20 @@ namespace StatsDirect.UI
 
         private class CellColumnSelection
         {
-            public string WorkbookPath;
-            public string WorksheetName;
+            public string WorkbookPath { get; set; }
+            public string WorksheetName { get; set; }
             /// <summary>
             /// The grid column (from the grid's base - 0 for SpreadsheetGear)
             /// </summary>
-            public int ColumnIndex;
+            public int ColumnIndex { get; set; }
             /// <summary>
             /// The first grid row (from the grid's base - 0 for SpreadsheetGear)
             /// </summary>
-            public int RowIndex;
+            public int RowIndex { get; set; }
             /// <summary>
             /// The number of rows
             /// </summary>
-            public int RowCount;
+            public int RowCount { get; set; }
         }
 
         /// <summary>
@@ -696,11 +696,11 @@ namespace StatsDirect.UI
         /// </summary>
         private class CellSelection
         {
-            public List<CellColumnSelection> ColumnSelections;
+            public List<CellColumnSelection> ColumnSelections { get; set; }
             /// <summary>
             /// The number of rows in the longest column in this selection
             /// </summary>
-            public int LongestRowCount;
+            public int LongestRowCount { get; set; }
 
             public CellSelection()
             {
@@ -738,7 +738,7 @@ namespace StatsDirect.UI
         {
             // Handle default selections: we may need to come in with a pre-selected area and force the user to confirm it.  However, if the user gives an illegal selection, we need to give errors.  So we keep a state of whether the selection presently on the grid is the default or is user-selected.
             bool selectionIsDefault = selectionWasDefaulted;
-            const string msg_ti = "StatsDirect Data Selection";
+            const string msgTi = "StatsDirect Data Selection";
 
             // Get the number of selections & Last Row, Col info
             int rowtotal = 0; // The total number of rows in all columns
@@ -811,7 +811,7 @@ namespace StatsDirect.UI
                 // Create an intelligent message to the user and show it
                 if (hasSelection && sel.TotalColumns > 0 && !selectionIsDefault)
                 {
-                    SelNumWarn(minimumColumns, maximumColumns, sel.TotalColumns, msg_ti);
+                    SelNumWarn(minimumColumns, maximumColumns, sel.TotalColumns, msgTi);
                 }
                 string fullSelectionMessage = selectionMessage;
                 if (minimumColumns == maximumColumns)
@@ -930,7 +930,7 @@ namespace StatsDirect.UI
                             int gridColumn;
                             int gridFirstDataRow;
                             bool titleIsInData;
-                            string title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn, out titleIsInData);
+                            string title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
                             double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
 
                             // If there's no data in the row (for example if it's hidden), ignore the row
@@ -968,7 +968,7 @@ namespace StatsDirect.UI
                             int gridColumn;
                             int gridFirstDataRow;
                             bool titleIsInData;
-                            string title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn, out titleIsInData);
+                            string title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
                             double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
 
                             // If there's no data in the row (for example if it's hidden), ignore the row
@@ -1209,10 +1209,7 @@ namespace StatsDirect.UI
                                                 wasFound = true;
                                                 size++;
                                                 variable.EnsureLength(size);
-                                                if (pattern.Contains(Formatting.MISSINGLABEL))
-                                                    variable.Data[size - 1] = Constant.MISSING;
-                                                else
-                                                    variable.Data[size - 1] = i;
+                                                variable.Data[size - 1] = pattern.Contains(Formatting.MISSINGLABEL) ? Constant.MISSING : i;
                                                 nbin[i]++;
                                                 break;
                                             }
@@ -1223,10 +1220,7 @@ namespace StatsDirect.UI
                                             foundwhat[found] = pattern;
                                             size++;
                                             variable.EnsureLength(size);
-                                            if (pattern.Contains(Formatting.MISSINGLABEL))
-                                                variable.Data[size - 1] = Constant.MISSING;
-                                            else
-                                                variable.Data[size - 1] = found;
+                                            variable.Data[size - 1] = pattern.Contains(Formatting.MISSINGLABEL) ? Constant.MISSING : found;
                                             found++;
                                         }
                                     }
@@ -1348,7 +1342,7 @@ namespace StatsDirect.UI
                             int gridColumn;
                             int gridFirstDataRow;
                             bool titleIsInData;
-                            variable.Title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn, out titleIsInData);
+                            variable.Title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
                             // mrow isn't required, as GetColumnTitle adjusts rowindexes and totrows to skip the title.
                             DateTime[] values = GetCellDateValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
 
@@ -1384,20 +1378,21 @@ namespace StatsDirect.UI
                         }
                         break;
                     case DataAcquisitionMode.NumericCodingTextToCategories:
+                    case DataAcquisitionMode.NumericCodingTextToDummies:
                         for (int c = 0; c < cellSelection.TotalColumns; c++)
                         {
                             int dataRows;
                             int gridColumn;
                             int gridFirstDataRow;
                             bool titleIsInData;
-                            string title = GetColumnTitle(c, out dataRows, cellSelection.ColumnSelections, out gridFirstDataRow, out gridColumn, out titleIsInData);
+                            string title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
                             double[] numericValues = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
 
                             // If there's no data in the row (for example if it's hidden), ignore the row
                             if (null == numericValues)
                                 continue;
 
-                            string[] textValues = GetCellTexts(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
+                            string[] textValues = GetCellTexts(gridColumn, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1);
 
                             // Find the last row
                             int lastNumericRow;
@@ -1405,8 +1400,7 @@ namespace StatsDirect.UI
                                 if (numericValues[lastNumericRow] != Constant.MISSING)
                                     break;
                             int lastTextRow;
-                            text rows should not use datarows!!!
-                            for (lastTextRow = dataRows - 1; lastTextRow >= 0; lastTextRow--)
+                            for (lastTextRow = textValues.Length - 1; lastTextRow >= 0; lastTextRow--)
                                 if (!string.IsNullOrWhiteSpace(textValues[lastTextRow]))
                                     break;
                             int lastRow = Math.Max(lastNumericRow, lastTextRow);
@@ -1414,7 +1408,7 @@ namespace StatsDirect.UI
                             bool isTextual = false;
                             for (int row = 0; row <= lastRow; row++)
                             {
-                                if (numericValues[row] == Constant.MISSING && !string.IsNullOrWhiteSpace(textValues[row]))
+                                if ((numericValues.Length <= row || numericValues[row] == Constant.MISSING) && !string.IsNullOrWhiteSpace(textValues[row]))
                                 {
                                     isTextual = true;
                                     break;
@@ -1424,12 +1418,10 @@ namespace StatsDirect.UI
                             {
                                 ClassifierVariable variable = new ClassifierVariable();
                                 variable.EnsureLength(lastRow + 1);
-                                frame.Variables.Add(variable);
-                                // code text categories as numbers
 
+                                // Code text categories as numbers
                                 Dictionary<string, Group> groupsByLabel = new Dictionary<string, Group>();
-                                Dictionary<double, Group> groupsById = new Dictionary<double, Group>();
-                                int nextGroupNumber = 1;
+                                int nextGroupNumber = 0;
 
                                 for (int row = 0; row <= lastRow; row++)
                                 {
@@ -1445,7 +1437,6 @@ namespace StatsDirect.UI
                                         // New group
                                         probe = new Group(pattern, nextGroupNumber++);
                                         groupsByLabel.Add(probe.Label, probe);
-                                        groupsById.Add(probe.Id, probe);
                                     }
                                     // By now, we have always found or created the group for this row
                                     probe.NBin++;
@@ -1456,18 +1447,27 @@ namespace StatsDirect.UI
                                 variable.EnsureGroups(groupsByLabel.Count);
                                 foreach (Group group in groupsByLabel.Values)
                                 {
-                                    variable.set_Group(((int)group.Id) - 1, group);
+                                    variable.set_Group((int)group.Id, group);
                                 }
 
                                 // Fill in column title
                                 variable.Title = title;
                                 variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, titleIsInData);
+                                if (mode == DataAcquisitionMode.NumericCodingTextToCategories)
+                                {
+                                    frame.Variables.Add(variable);
+                                }
+                                else
+                                {
+                                    // Dummies
+                                    DataFrame dummyFrame = Sheet.ToDummyVariables(SDApplication.SoleInstance, variable);
+                                    foreach (Variable v in dummyFrame.Variables)
+                                        frame.Variables.Add(v);
+                                }
                             }
                             else
                             {
                                 DoubleVariable variable = new DoubleVariable(lastRow + 1, title);
-                                frame.Variables.Add(variable);
-
                                 for (int row = 0; row <= lastRow; row++)
                                 {
                                     double v = numericValues[row];
@@ -1476,6 +1476,77 @@ namespace StatsDirect.UI
                                     variable.Data[row] = v;
                                 }
                                 variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
+                                if (mode == DataAcquisitionMode.NumericCodingTextToCategories)
+                                {
+                                    frame.Variables.Add(variable);
+                                }
+                                else
+                                {
+                                    // Dummies?
+                                    // Look for 2-12 non-unique integer values: if so, ask if categorical and dummy them
+                                    Dictionary<int, Group> groupsByLabel = new Dictionary<int, Group>();
+                                    bool allInteger = true;
+                                    int nextGroupNumber = 0;
+                                    double[] classifierData = new double[variable.Length];
+                                    for (int row = 0; row <= lastRow; row++)
+                                    {
+                                        double v = variable.Data[row];
+                                        if (v < int.MinValue || v > int.MaxValue || v != Math.Floor(v))
+                                        {
+                                            allInteger = false;
+                                            break;
+                                        }
+                                        int pattern = (int)v;
+                                        Group probe;
+                                        if (!groupsByLabel.TryGetValue(pattern, out probe))
+                                        {
+                                            // New group
+                                            probe = new Group(pattern.ToString(), nextGroupNumber++);
+                                            groupsByLabel.Add(pattern, probe);
+                                        }
+                                        // By now, we have always found or created the group for this row
+                                        probe.NBin++;
+                                        classifierData[row] = probe.Id;
+                                    }
+                                    if (!allInteger)
+                                    {
+                                        // Some non-integer values.  Can't be categorical.  Treat as a single variable.
+                                        frame.Variables.Add(variable);
+                                    }
+                                    else if (groupsByLabel.Count <= 2 || groupsByLabel.Count >= Math.Min(variable.Length, 12))
+                                    {
+                                        // All distinct, too many groups, or already binary.  Treat as a single variable.
+                                        frame.Variables.Add(variable);
+                                    }
+                                    else
+                                    {
+                                        ClassifierVariable cv = new ClassifierVariable {Title = variable.Title, Data = classifierData};
+                                        cv.EnsureLength(variable.Data.Length);
+                                        cv.EnsureGroups(groupsByLabel.Count);
+                                        foreach (Group group in groupsByLabel.Values)
+                                        {
+                                            cv.set_Group((int)group.Id, group);
+                                        }
+                                        DataFrame dummyFrame;
+                                        try
+                                        {
+                                            dummyFrame = Sheet.ToDummyVariables(SDApplication.SoleInstance, cv);
+                                        }
+                                        catch (TemplateOperationCancelledException)
+                                        {
+                                            dummyFrame = null;
+                                        }
+                                        if (null != dummyFrame)
+                                        {
+                                            foreach (Variable v in dummyFrame.Variables)
+                                                frame.Variables.Add(v);
+                                        }
+                                        else
+                                        {
+                                            frame.Variables.Add(variable);
+                                        }
+                                    }
+                                }
                             }
                         }
                         break;
@@ -1484,7 +1555,7 @@ namespace StatsDirect.UI
                 } // of switch
                 return frame;
             }
-            catch (Exception ex)
+            catch (ArithmeticException ex)
             {
                 PointNormal();
                 SDApplication.SoleInstance.FriendlyError("Internal error reading data from worksheet", ex, false);
@@ -1688,6 +1759,7 @@ namespace StatsDirect.UI
             }
         }
 
+/*
         private DataFrame GIDXW(DataAcquisitionMode mode, int min, int max, int neq, string lab, out double[,] wt, ref string wtlab, ref double sumwt, out bool userCancelled)
         {
             const string msg_ti = "StatsDirect Data Selection";
@@ -1838,6 +1910,7 @@ namespace StatsDirect.UI
                 }
             } while (true);
         }
+*/
 
 
         /// <summary>
@@ -1871,22 +1944,21 @@ namespace StatsDirect.UI
 
         /// <summary>
         /// Find and return the column title.
-        /// Amends rindex[c] and totrows to step past a column title if found.
+        /// Amends ccs.RowIndex and totrows to step past a column title if found.
         /// </summary>
-        /// <param name="c">The number of the (virtual) column whose title is to be found</param>
-        /// <param name="dataRows">Filled in with the total number of DATA rows.  This may not be the same as the number of non-title rows, as there may be blanks between the titles and the data.</param>
         /// <param name="ccs"></param>
+        /// <param name="dataRows">Filled in with the total number of DATA rows.  This may not be the same as the number of non-title rows, as there may be blanks between the titles and the data.</param>
         /// <param name="gridFirstDataRow">Filled in with the grid row index of the first non-title, non-missing data row.</param>
         /// <param name="gridColumn">Filled in with the grid column index of the column.</param>
         /// <param name="titleIsInData">true iff the title has been found within the data; false if the title is auto-generated.</param>
         /// <returns></returns>
-        private string GetColumnTitle(int c, out int dataRows, IList<CellColumnSelection> ccs, out int gridFirstDataRow, out int gridColumn, out bool titleIsInData)
+        private string GetColumnTitle(CellColumnSelection ccs, out int dataRows, out int gridFirstDataRow, out int gridColumn, out bool titleIsInData)
         {
             string candidateTitle = string.Empty;
             titleIsInData = false;
-            gridColumn = ccs[c].ColumnIndex;
-            dataRows = ccs[c].RowCount;
-            int firstGridRow = ccs[c].RowIndex;
+            gridColumn = ccs.ColumnIndex;
+            dataRows = ccs.RowCount;
+            int firstGridRow = ccs.RowIndex;
             if (GetCellValue(firstGridRow, gridColumn) == Constant.MISSING)
             {
                 // Could be text, i.e. a title - let's find out
@@ -1894,7 +1966,7 @@ namespace StatsDirect.UI
                 if (candidateTitle.Length > 0)
                 {
                     firstGridRow++;
-                    ccs[c].RowIndex = firstGridRow;
+                    ccs.RowIndex = firstGridRow;
                     dataRows--;
                 }
                 else
@@ -1936,7 +2008,7 @@ namespace StatsDirect.UI
             // If the data block is half way down the column, or otherwise has no title, then grab row 0 entry i.e. a,b,c etc.
             if (candidateTitle.Length == 0)
             {
-                titleIsInData = false;
+                // titleIsInData = false; - always true if we get here
                 candidateTitle = GetGridColumnTitle(gridColumn).Trim();
             }
 
@@ -3367,7 +3439,7 @@ namespace StatsDirect.UI
 
         private void deleteSheetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            bool shouldDelete = SDApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.\nAre you sure you want to delete this sheet?", "Delete sheet");
+            bool shouldDelete = SDApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.\nAre \nyou \nsure \nyou \nwant \nto \ndelete this sheet?", "Delete sheet");
             if (shouldDelete)
             {
                 workbookView.GetLock();

@@ -1222,12 +1222,12 @@ namespace StatsDirect.Builtins
             if (comparisons < 1)
                 comparisons = 1;
 
-            double means = carrier.mean[z_va] - carrier.mean[z_vb];
-            double se = Math.Sqrt(carrier.msx * ((1.0 / carrier.tnx[z_vb]) + (1.0 / carrier.tnx[z_va])));
+            double means = carrier.Mean[z_va] - carrier.Mean[z_vb];
+            double se = Math.Sqrt(carrier.Msx * ((1.0 / carrier.Tnx[z_vb]) + (1.0 / carrier.Tnx[z_va])));
             double tav = means / se;
             double cit;
             double P0;
-            MathDbl.civ(carrier.dferr, out cit, GAMMA, out P0);
+            MathDbl.civ(carrier.Dferr, out cit, GAMMA, out P0);
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("var_a", frame.Variables[z_va].Title);
@@ -1239,8 +1239,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("from", host.RoundU(means - (cit * se)));
             outputParameters.AddOutput("to", host.RoundU(means + (cit * se)));
             outputParameters.AddOutput("t", host.RoundU(tav));
-            outputParameters.AddOutput("df", carrier.dferr.ToString());
-            double P = PDF.tvalp(Math.Abs(tav), Convert.ToDouble(carrier.dferr));
+            outputParameters.AddOutput("df", carrier.Dferr.ToString());
+            double P = PDF.tvalp(Math.Abs(tav), Convert.ToDouble(carrier.Dferr));
             if (P > 1.0 - P)
                 P = 1.0 - P;
             outputParameters.AddOutput("p", host.pval(P * 2.0));
@@ -1252,30 +1252,26 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptTukey(ITemplateHost host, ParameterBag parameters)
         {
-            int ifault;
-            double D;
-            int lastTnx = 0;
-            bool halted = false;
-
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
-            int[] tnx = carrier.tnx;
-            double[] mean = carrier.mean;
-            double mserr = carrier.msx;
+            int[] tnx = carrier.Tnx;
+            double[] mean = carrier.Mean;
+            double mserr = carrier.Msx;
 
             int k = frame.VariableCount - 1;
             int kn = k + 1;
-            double[] lam = new double[k + 1 /* for VB to C# conversion */ ]; //  1-based
-            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1 /* for VB to C# conversion */ ]; //  1-based
+            double[] lam = new double[k + 1]; //  1-based
+            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1]; //  1-based
 
-            bool n_same = true;
+            bool nSame = true;
             int ntot = 0;
+            int lastTnx = 0;
             for (int n = 0; n <= k; n++)
             {
                 ntot += tnx[n];
-                if (n > 0 && n_same && tnx[n] != lastTnx)
-                    n_same = false;
+                if (n > 0 && nSame && tnx[n] != lastTnx)
+                    nSame = false;
                 lastTnx = tnx[n];
             }
             int nu = ntot - k - 1;
@@ -1293,9 +1289,11 @@ namespace StatsDirect.Builtins
             }
             double cc = 1.0 - dalpha;
 
-            ExFortran.dmca(k, lam, nu, cc, out D, out ifault);
-            double Q = PDF.quantsr(cc, Convert.ToDouble(k + 1), Convert.ToDouble(nu));
-            if (Q == Constant.MISSING)
+            int ifault;
+            double d;
+            ExFortran.dmca(k, lam, nu, cc, out d, out ifault);
+            double q = PDF.quantsr(cc, Convert.ToDouble(k + 1), Convert.ToDouble(nu));
+            if (q == Constant.MISSING)
             {
                 host.Error("Fault in calculation", "Tukey Contrasts");
                 throw new TemplateOperationCancelledException();
@@ -1303,10 +1301,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
 
-            string lab = n_same ? "Tukey" : "Tukey-Kramer";
+            string lab = nSame ? "Tukey" : "Tukey-Kramer";
             outputParameters.AddOutput("method", lab);
-            outputParameters.AddOutput("q", host.RoundU(Q));
-            outputParameters.AddOutput("d", host.RoundU(D));
+            outputParameters.AddOutput("q", host.RoundU(q));
+            outputParameters.AddOutput("d", host.RoundU(d));
             outputParameters.AddOutput("psd", host.RoundU(pse));
             outputParameters.AddOutput("cn", tnx[0].ToString());
             outputParameters.AddOutput("pc", Formatting.XRound(100 * cc, 1));
@@ -1316,32 +1314,32 @@ namespace StatsDirect.Builtins
             {
                 for (int j = i + 1; j <= k; j++)
                 {
-                    ctr = ctr + 1;
-                    double DELTA = mean[i] - mean[j];
-                    hold[ctr] = new Contraster { Delta = DELTA, Lab1 = frame.Variables[i].Title, Lab2 = frame.Variables[j].Title };
+                    ctr++;
+                    double delta = mean[i] - mean[j];
+                    hold[ctr] = new Contraster { Delta = delta, Lab1 = frame.Variables[i].Title, Lab2 = frame.Variables[j].Title, Mean1 = mean[i], Mean2 = mean[j] };
                     double t;
-                    if (n_same)
+                    if (nSame)
                         t = (1.0 / Math.Sqrt(tnx[0])) * pse;
                     else
                         t = Math.Sqrt((mserr / 2.0) * (1.0 / tnx[j] + 1.0 / tnx[i]));
                     // The Shaffer-Holm statistic p 18 Hsu
-                    hold[ctr].Absdelta = Math.Abs(DELTA / t);
+                    hold[ctr].Absdelta = Math.Abs(delta / t);
                     // Lci = delta - d * pse * Sqr(1# / tnx(j) + 1# / tnx(i))
-                    double lci = DELTA - t * Q;
+                    double lci = delta - t * q;
                     hold[ctr].Ll = lci;
                     // Uci = delta + d * pse * Sqr(1# / tnx(j) + 1# / tnx(i))
-                    double uci = DELTA + t * Q;
+                    double uci = delta + t * q;
                     hold[ctr].Ul = uci;
                     // Call PPQ2(CLng(k), lam(1), NU, py, delta / (pse * Sqr(1# / tnx(j) + 1# / tnx(i))), ifault)
                     // py = 1# - Abs(py)
-                    double px = PDF.probsr(Math.Abs(DELTA / t), Convert.ToDouble(k + 1), Convert.ToDouble(nu));
+                    double px = PDF.probsr(Math.Abs(delta / t), Convert.ToDouble(k + 1), Convert.ToDouble(nu));
                     if (px != Constant.MISSING)
                     {
                         px = 1.0 - px;
                     }
                     else
                     {
-                        ExFortran.ppq2(k, lam, nu, out px, DELTA / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[j]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
+                        ExFortran.ppq2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[j]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
                         px = 1.0 - Math.Abs(px);
                     }
                     if (ifault != 0)
@@ -1354,6 +1352,7 @@ namespace StatsDirect.Builtins
             Array.Sort(hold, 1, ctr);
 
             IList<ParameterBag> differencesList = new List<ParameterBag>();
+            bool halted = false;
             for (int i = 1; i <= ctr; i++)
             {
                 ParameterBag differencesParameters = new ParameterBag();
@@ -1364,16 +1363,16 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("lci", host.RoundU(hold[i].Ll));
                 differencesParameters.AddOutput("uci", host.RoundU(hold[i].Ul));
                 differencesParameters.AddOutput("t", host.RoundU(hold[i].Absdelta));
-                string PP = host.pval(hold[i].P);
+                string pp = host.pval(hold[i].P);
                 if (!(halted) & hold[i].P >= dalpha)
                 {
-                    PP += " {stop}";
+                    pp += " {stop}";
                     halted = true;
                 }
-                differencesParameters.AddOutput("p", PP);
+                differencesParameters.AddOutput("p", pp);
             }
             outputParameters.AddOutput("*differences", differencesList);
-            outputParameters.AddOutput("*summary", ContrasterSummary(hold, 1, ctr, dalpha));
+            outputParameters.AddOutput("*summary", ContrasterSummary(host, hold, 1, ctr, dalpha));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -1382,9 +1381,9 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
-            int[] tnx = carrier.tnx;
-            double[] mean = carrier.mean;
-            double msx = carrier.msx;
+            int[] tnx = carrier.Tnx;
+            double[] mean = carrier.Mean;
+            double msx = carrier.Msx;
 
             int kn = frame.VariableCount;
             Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1 /* for VB to C# conversion */ ]; //  1-based
@@ -1396,7 +1395,7 @@ namespace StatsDirect.Builtins
             }
 
             double palpha = 1.0 - gamma;
-            if (palpha <= 0 | palpha >= 1)
+            if (palpha <= 0 || palpha >= 1)
             {
                 palpha = 0.05;
             }
@@ -1427,6 +1426,8 @@ namespace StatsDirect.Builtins
                                     {
                                         Lab1 = frame.Variables[i].Title,
                                         Lab2 = frame.Variables[j].Title,
+                                        Mean1 = mean[i],
+                                        Mean2 = mean[j],
                                         Delta = DELTA,
                                         Absdelta = Math.Abs(L),
                                         P = PDF.fvalp(L * L / dfn, dfn, dfd),
@@ -1461,19 +1462,20 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("p", PP);
             }
             outputParameters.AddOutput("*differences", differencesList);
-            outputParameters.AddOutput("*summary", ContrasterSummary(hold, 1, ctr, palpha));
+            outputParameters.AddOutput("*summary", ContrasterSummary(host, hold, 1, ctr, palpha));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
         /// <summary>
         /// Return a list suitable for inserting into an output ParameterBag of significant contrasts between variables.
         /// </summary>
+        /// <param name="host"> </param>
         /// <param name="contrasters">Contrasts between pairs</param>
         /// <param name="lowerBound">The lowest index in contrasters containing a valid value</param>
         /// <param name="upperBound">The highest index in contrasters containing a valid value</param>
         /// <param name="palpha">The value below which values are considered significant</param>
         /// <returns></returns>
-        private static List<ParameterBag> ContrasterSummary(Contraster[] contrasters, int lowerBound, int upperBound, double palpha)
+        private static List<ParameterBag> ContrasterSummary(ITemplateHost host, Contraster[] contrasters, int lowerBound, int upperBound, double palpha)
         {
             Dictionary<string, SignificantContrasts> contrasts = new Dictionary<string, SignificantContrasts>();
             for (int i = lowerBound; i <= upperBound; i++)
@@ -1483,13 +1485,13 @@ namespace StatsDirect.Builtins
                 SignificantContrasts contrast1;
                 if (!contrasts.TryGetValue(contraster.Lab1, out contrast1))
                 {
-                    contrast1 = new SignificantContrasts();
+                    contrast1 = new SignificantContrasts { Mean = contraster.Mean1 };
                     contrasts.Add(contraster.Lab1, contrast1);
                 }
                 SignificantContrasts contrast2;
                 if (!contrasts.TryGetValue(contraster.Lab2, out contrast2))
                 {
-                    contrast2 = new SignificantContrasts();
+                    contrast2 = new SignificantContrasts { Mean = contraster.Mean2 };
                     contrasts.Add(contraster.Lab2, contrast2);
                 }
                 if (contraster.P != Constant.MISSING && contraster.P < palpha)
@@ -1507,7 +1509,7 @@ namespace StatsDirect.Builtins
                 ParameterBag output = new ParameterBag();
                 outputList.Add(output);
                 output.AddOutput("cf1", pair.Key);
-                output.AddOutput("mean", "TODO:");
+                output.AddOutput("mean", host.RoundU(pair.Value.Mean));
                 output.AddOutput("sigs", (pair.Value.Significant.Count == 0) ? "none" : string.Join(", ", pair.Value.Significant.ToArray()));
             }
             return outputList;
@@ -1518,10 +1520,10 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
-            int[] tnx = carrier.tnx;
-            double[] mean = carrier.mean;
-            double msx = carrier.msx;
-            double dferr = carrier.dferr;
+            int[] tnx = carrier.Tnx;
+            double[] mean = carrier.Mean;
+            double msx = carrier.Msx;
+            double dferr = carrier.Dferr;
 
             int kn = frame.VariableCount;
             Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1 /* for VB to C# conversion */ ]; //  1-based
@@ -1556,6 +1558,8 @@ namespace StatsDirect.Builtins
                                     {
                                         Lab1 = frame.Variables[i].Title,
                                         Lab2 = frame.Variables[j].Title,
+                                        Mean1 = mean[i],
+                                        Mean2 = mean[j],
                                         Delta = delta,
                                         Absdelta = Math.Abs(delta),
                                         Q = q
@@ -1586,9 +1590,9 @@ namespace StatsDirect.Builtins
                             ibigger = ibigger + 1;
                         }
                     }
-                    hold[ctr].gps = kn - ismaller - ibigger;
+                    hold[ctr].Gps = kn - ismaller - ibigger;
                     // calculate P(q)
-                    double P = 1.0 - PDF.probsr(hold[ctr].Q, Convert.ToDouble(hold[ctr].gps), dferr);
+                    double P = 1.0 - PDF.probsr(hold[ctr].Q, Convert.ToDouble(hold[ctr].Gps), dferr);
                     hold[ctr].P = P;
                 }
             }
@@ -1606,7 +1610,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("cf1", hold[i].Lab1);
                 differencesParameters.AddOutput("cf2", hold[i].Lab2);
                 differencesParameters.AddOutput("delta", host.RoundU(hold[i].Delta));
-                differencesParameters.AddOutput("gps", hold[i].gps.ToString());
+                differencesParameters.AddOutput("gps", hold[i].Gps.ToString());
                 differencesParameters.AddOutput("t", host.RoundU(hold[i].Q));
                 string PP = host.pval(hold[i].P);
                 if (!(halted) & hold[i].P >= palpha)
@@ -1617,7 +1621,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("p", PP);
             }
             outputParameters.AddOutput("*differences", differencesList);
-            outputParameters.AddOutput("*summary", ContrasterSummary(hold, 1, ctr, palpha));
+            outputParameters.AddOutput("*summary", ContrasterSummary(host, hold, 1, ctr, palpha));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -1627,9 +1631,9 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
-            int[] tnx = carrier.tnx;
-            double[] mean = carrier.mean;
-            double mserr = carrier.msx;
+            int[] tnx = carrier.Tnx;
+            double[] mean = carrier.Mean;
+            double mserr = carrier.Msx;
 
             int kn = frame.VariableCount;
 
@@ -1683,7 +1687,7 @@ namespace StatsDirect.Builtins
                                     Delta = delta,
                                     Absdelta = Math.Abs(delta),
                                     Lab1 = frame.Variables[i].Title,
-                                    gps = tnx[i]
+                                    Gps = tnx[i]
                                 };
                 double lci = delta - d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[0]) + 1.0 / Convert.ToDouble(tnx[i]));
                 hold[ctr].Ll = lci;
@@ -1704,7 +1708,7 @@ namespace StatsDirect.Builtins
                 ParameterBag differencesParameters = new ParameterBag();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("level", hold[i].Lab1);
-                differencesParameters.AddOutput("cn", hold[i].gps.ToString());
+                differencesParameters.AddOutput("cn", hold[i].Gps.ToString());
                 differencesParameters.AddOutput("delta", host.RoundU(hold[i].Delta));
                 differencesParameters.AddOutput("lci", host.RoundU(hold[i].Ll));
                 differencesParameters.AddOutput("uci", host.RoundU(hold[i].Ul));
@@ -2267,10 +2271,10 @@ namespace StatsDirect.Builtins
             ParameterCarrier carrier = new ParameterCarrier();
             if (Parameters.ContainsKey("dfres") && Parameters.ContainsKey("msres") && Parameters.ContainsKey("mean") && Parameters.ContainsKey("tnx"))
             {
-                carrier.dferr = Parameters["dfres"].AsInt32;
-                carrier.mean = ((double[])(Parameters["mean"].Data));
-                carrier.msx = Parameters["msres"].AsDouble;
-                carrier.tnx = ((int[])(Parameters["tnx"].Data));
+                carrier.Dferr = Parameters["dfres"].AsInt32;
+                carrier.Mean = ((double[])(Parameters["mean"].Data));
+                carrier.Msx = Parameters["msres"].AsDouble;
+                carrier.Tnx = ((int[])(Parameters["tnx"].Data));
             }
             else
             {
@@ -2280,23 +2284,23 @@ namespace StatsDirect.Builtins
                 double[] mean = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
                 double sumtot = 0.0;
                 int ntot = 0;
-                for (int D = 0; D <= frame.VariableCount - 1; D++)
+                for (int d = 0; d < frame.VariableCount; d++)
                 {
-                    DoubleVariable v = frame.Variables[D].AsDoubleVariable;
+                    DoubleVariable v = frame.Variables[d].AsDoubleVariable;
                     int nx = 0;
                     double sum = 0;
                     foreach (double val in v.Data)
                     {
                         if (val != Constant.MISSING)
                         {
-                            nx += 1;
+                            nx++;
                             sum += val;
                         }
                     }
-                    tnx[D] = nx;
-                    ntot = ntot + nx;
-                    mean[D] = sum / nx;
-                    sumtot = sumtot + sum;
+                    tnx[d] = nx;
+                    ntot += nx;
+                    mean[d] = sum / nx;
+                    sumtot += sum;
                 }
 
                 double gm = sumtot / Convert.ToDouble(ntot);
@@ -2325,10 +2329,10 @@ namespace StatsDirect.Builtins
                 // double msgroup = ssgroup / dfgroup; Never used.  PJC 2012/04/09.
                 double mserr = sserror / Convert.ToDouble(dferr);
 
-                carrier.dferr = dferr;
-                carrier.mean = mean;
-                carrier.msx = mserr;
-                carrier.tnx = tnx;
+                carrier.Dferr = dferr;
+                carrier.Mean = mean;
+                carrier.Msx = mserr;
+                carrier.Tnx = tnx;
             }
             return carrier;
         }
@@ -2337,11 +2341,13 @@ namespace StatsDirect.Builtins
         {
             public double Absdelta;
             public double Delta;
+            public double Mean1;
+            public double Mean2;
             public double Ll;
             public double Ul;
             public double P;
             public double Q;
-            public long gps;
+            public long Gps;
             public string Lab1;
             public string Lab2;
 
@@ -2360,15 +2366,16 @@ namespace StatsDirect.Builtins
 
         private class ParameterCarrier
         {
-            public int[] tnx;
-            public double msx;
-            public double[] mean;
-            public int dferr;
+            public int[] Tnx;
+            public double Msx;
+            public double[] Mean;
+            public int Dferr;
         }
 
         private class SignificantContrasts
         {
             public readonly List<string> Significant;
+            public double Mean;
 
             public SignificantContrasts()
             {

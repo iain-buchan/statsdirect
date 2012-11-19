@@ -75,7 +75,7 @@
             this.cmdOK.TabIndex = 15;
             this.cmdOK.Text = "&OK";
             this.cmdOK.UseVisualStyleBackColor = true;
-            this.cmdOK.Click += new System.EventHandler(this.cmdOK_Click);
+            this.cmdOK.Click += new System.EventHandler(this.CmdOkClick);
             // 
             // cmdHelp
             // 
@@ -86,7 +86,7 @@
             this.cmdHelp.TabIndex = 16;
             this.cmdHelp.Text = "&Help";
             this.cmdHelp.UseVisualStyleBackColor = true;
-            this.cmdHelp.Click += new System.EventHandler(this.cmdHelp_Click);
+            this.cmdHelp.Click += new System.EventHandler(this.CmdHelpClick);
             // 
             // cmdCancel
             // 
@@ -98,7 +98,7 @@
             this.cmdCancel.TabIndex = 17;
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
-            this.cmdCancel.Click += new System.EventHandler(this.cmdCancel_Click);
+            this.cmdCancel.Click += new System.EventHandler(this.CmdCancelClick);
             // 
             // lblCutoff
             // 
@@ -107,7 +107,7 @@
             this.lblCutoff.Size = new System.Drawing.Size(280, 48);
             this.lblCutoff.TabIndex = 6;
             this.lblCutoff.Text = "A cut-off of x means that values up to and including x, but greater than any cut-" +
-                "off below, will be a category for grouping your data:";
+    "off below, will be a category for grouping your data:";
             // 
             // gridCutoffs
             // 
@@ -152,7 +152,7 @@
             this.cmdRecalculate.TabIndex = 2;
             this.cmdRecalculate.Text = "Re-Calculate";
             this.cmdRecalculate.UseVisualStyleBackColor = true;
-            this.cmdRecalculate.Click += new System.EventHandler(this.cmdRecalculate_Click);
+            this.cmdRecalculate.Click += new System.EventHandler(this.CmdRecalculateClick);
             // 
             // txtTitle
             // 
@@ -249,7 +249,7 @@
             this.txtIntervals.Size = new System.Drawing.Size(100, 20);
             this.txtIntervals.TabIndex = 13;
             this.txtIntervals.Text = "10";
-            this.txtIntervals.TextChanged += new System.EventHandler(this.txtIntervals_TextChanged);
+            this.txtIntervals.TextChanged += new System.EventHandler(this.TxtIntervalsTextChanged);
             // 
             // txtInterval
             // 
@@ -258,7 +258,7 @@
             this.txtInterval.Size = new System.Drawing.Size(100, 20);
             this.txtInterval.TabIndex = 12;
             this.txtInterval.Text = "0";
-            this.txtInterval.TextChanged += new System.EventHandler(this.txtInterval_TextChanged);
+            this.txtInterval.TextChanged += new System.EventHandler(this.TxtIntervalTextChanged);
             // 
             // txtMinimum
             // 
@@ -267,6 +267,7 @@
             this.txtMinimum.Size = new System.Drawing.Size(100, 20);
             this.txtMinimum.TabIndex = 11;
             this.txtMinimum.Text = "0";
+            this.txtMinimum.TextChanged += new System.EventHandler(this.TxtMinimumTextChanged);
             // 
             // lblIntervals
             // 
@@ -303,7 +304,7 @@
             this.cmdReGroup.TabIndex = 8;
             this.cmdReGroup.Text = "Re-Group";
             this.cmdReGroup.UseVisualStyleBackColor = true;
-            this.cmdReGroup.Click += new System.EventHandler(this.cmdReGroup_Click);
+            this.cmdReGroup.Click += new System.EventHandler(this.CmdReGroupClick);
             // 
             // rdoUserDefined
             // 
@@ -421,7 +422,7 @@
             this.Name = "frmCategorise";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Categorise data into groups";
-            this.Shown += new System.EventHandler(this.frmCategorise_Shown);
+            this.Shown += new System.EventHandler(this.FrmCategoriseShown);
             ((System.ComponentModel.ISupportInitialize)(this.gridCutoffs)).EndInit();
             this.grpAutomatic.ResumeLayout(false);
             this.grpAutomatic.PerformLayout();

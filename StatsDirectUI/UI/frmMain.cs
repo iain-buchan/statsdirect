@@ -1,5 +1,5 @@
-// #define RELEASE_EXCEPTIONS
-#define WATCH_EXCEPTIONS
+#define RELEASE_EXCEPTIONS
+// #define WATCH_EXCEPTIONS
 
 // If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
 // Current uses:
@@ -1245,7 +1245,7 @@ namespace StatsDirect.UI
                     break;
                 case PanelType.ModalMessage:
                     pnlModalMessage.BringToFront();
-                    pnlTop.Height = pnlModalMessage.Height;
+                    pnlTop.Height = Math.Max(pnlModalMessage.PreferredSize.Height, 58);
                     break;
                 case PanelType.Operations:
                     pnlOperations.BringToFront();
