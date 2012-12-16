@@ -11,7 +11,7 @@ namespace StatsDirect.Templates
         public BooleanParameter()
         {
             // By default, remember value per operation.  Deserialization can override this.
-            Lifetime = ParameterLifetime.SessionForThisOperation;
+            // Lifetime = ParameterLifetime.SessionForThisOperation;
         }
 
         [XmlElement(ElementName = "default-value")]

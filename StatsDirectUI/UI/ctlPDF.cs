@@ -7,10 +7,11 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlPDF
+    public partial class ctlPDF: IFillParameterBag
     {
-        enum Ed
+        private enum TouchedValue
         {
+            NotSet,
             Pdf,
             Df,
             Df2,
@@ -24,6 +25,7 @@ namespace StatsDirect.UI
         private bool inverseAvailable;
         private string lastCalculationAsString;
         private readonly ITemplateHost host;
+        private TouchedValue lastTouchedValue = TouchedValue.NotSet;
 
         public ctlPDF(DistributionOptions options, ITemplateHost host)
         {
@@ -31,12 +33,12 @@ namespace StatsDirect.UI
             this.host = host;
             InitializeComponent();
             SetVisibility();
-            edpdf.Tag = Ed.Pdf;
-            eddf.Tag = Ed.Df;
-            eddf2.Tag = Ed.Df2;
-            edlp.Tag = Ed.Lp;
-            edup.Tag = Ed.Up;
-            ed2p.Tag = Ed.P2;
+            txtPdf.Tag = TouchedValue.Pdf;
+            txtDf.Tag = TouchedValue.Df;
+            txtDf2.Tag = TouchedValue.Df2;
+            txtLp.Tag = TouchedValue.Lp;
+            txtUp.Tag = TouchedValue.Up;
+            txt2p.Tag = TouchedValue.P2;
         }
 
         private void Calc_Click(Object sender, EventArgs e)
@@ -47,20 +49,21 @@ namespace StatsDirect.UI
         private void DoubleClickTextbox(object sender, EventArgs e)
         {
             Control ctl = (Control)sender;
-            Calc.Tag = ctl.Tag;
-            Calculate();
+            lastTouchedValue = (TouchedValue)ctl.Tag;
+            CalculateOrInvert();
         }
 
         private void EnterTextbox(object sender, EventArgs e)
         {
-            Calc.Tag = ((Control)sender).Tag;
+            Control ctl = (Control)sender;
+            lastTouchedValue = (TouchedValue)ctl.Tag;
         }
 
         private void LeaveTextbox(object sender, EventArgs e)
         {
             Control ctl = (Control)sender;
-            Calc.Tag = ctl.Tag;
-            Calculate();
+            lastTouchedValue = (TouchedValue)ctl.Tag;
+            CalculateOrInvert();
             ctl.Enabled = true;
         }
 
@@ -69,8 +72,8 @@ namespace StatsDirect.UI
             if (e.KeyChar == 13)
             {
                 e.Handled = true;
-                if (eddf.Visible)
-                    SelectNextControl(edpdf, true, true, true, true);
+                if (pnlDf.Visible)
+                    SelectNextControl(txtPdf, true, true, true, true);
                 else
                     Calculate();
             }
@@ -81,8 +84,8 @@ namespace StatsDirect.UI
             if (e.KeyChar == 13)
             {
                 e.Handled = true;
-                if (eddf2.Visible)
-                    SelectNextControl(eddf, true, true, true, true);
+                if (pnlDf2.Visible)
+                    SelectNextControl(txtDf, true, true, true, true);
                 else
                     Calculate();
             }
@@ -97,23 +100,22 @@ namespace StatsDirect.UI
             }
             else
             {
-                DistributionType dt = (DistributionType)lbpdf.Tag;
-                if (dt == DistributionType.Rho || dt == DistributionType.Kendall)
-                    edpdf.Text = "";
+                if (selectedTest == DistributionType.Rho || selectedTest == DistributionType.Kendall)
+                    txtPdf.Text = "";
             }
         }
 
-        private void btn_lcl_Click(Object sender, EventArgs e)
+        private void BtnLclClick(Object sender, EventArgs e)
         {
             try
             {
-                if (CdblTxt(combo_cl.Text) >= 100.0)
-                    combo_cl.Text = 99.99.ToString();
-                if (CdblTxt(combo_cl.Text) <= 0.0)
-                    combo_cl.Text = 0.01.ToString();
-                double cl = CdblTxt(combo_cl.Text) / 100.0;
-                double P = (1.0 - cl) / 2.0;
-                edup.Text = P.ToString();
+                if (CdblTxt(cboCl.Text) >= 100.0)
+                    cboCl.Text = 99.99.ToString();
+                if (CdblTxt(cboCl.Text) <= 0.0)
+                    cboCl.Text = 0.01.ToString();
+                double cl = CdblTxt(cboCl.Text) / 100.0;
+                double p = (1.0 - cl) / 2.0;
+                txtUp.Text = p.ToString();
                 CalculateUp();
             }
             catch (Exception ex)
@@ -122,18 +124,18 @@ namespace StatsDirect.UI
             }
         }
 
-        private void btn_ucl_Click(Object sender, EventArgs e)
+        private void BtnUclClick(Object sender, EventArgs e)
         {
             try
             {
-                if (CdblTxt(combo_cl.Text) >= 100.0)
-                    combo_cl.Text = 99.99.ToString();
-                if (CdblTxt(combo_cl.Text) <= 0.0)
-                    combo_cl.Text = 0.01.ToString();
-                double cl = CdblTxt(combo_cl.Text) / 100.0;
+                if (CdblTxt(cboCl.Text) >= 100.0)
+                    cboCl.Text = 99.99.ToString();
+                if (CdblTxt(cboCl.Text) <= 0.0)
+                    cboCl.Text = 0.01.ToString();
+                double cl = CdblTxt(cboCl.Text) / 100.0;
                 double P = (1.0 - cl) / 2.0;
-                ed2p.Text = P.ToString();
-                Calculate2p();
+                txt2p.Text = P.ToString();
+                Calculate2P();
             }
             catch (Exception ex)
             {
@@ -141,53 +143,66 @@ namespace StatsDirect.UI
             }
         }
 
+        private void CalculateOrInvert()
+        {
+            // Each detects whether it should run
+            Calculate();
+            Invert();
+        }
+
         private void Calculate()
         {
-            switch ((Ed)Calc.Tag)
+            switch (lastTouchedValue)
             {
-                case Ed.Pdf:
+                case TouchedValue.Pdf:
                     CalculatePdf();
                     break;
-                case Ed.Df:
+                case TouchedValue.Df:
                     CalculateDf();
                     break;
-                case Ed.Df2:
+                case TouchedValue.Df2:
                     CalculateDf2();
-                    break;
-                case Ed.Lp:
-                    CalculateLp();
-                    break;
-                case Ed.Up:
-                    CalculateUp();
-                    break;
-                case Ed.P2:
-                    Calculate2p();
                     break;
             }
         }
 
-        private void Calculate2p()
+        private void Invert()
+        {
+            switch (lastTouchedValue)
+            {
+                case TouchedValue.Lp:
+                    CalculateLp();
+                    break;
+                case TouchedValue.Up:
+                    CalculateUp();
+                    break;
+                case TouchedValue.P2:
+                    Calculate2P();
+                    break;
+            }
+        }
+
+        private void Calculate2P()
         {
             try
             {
                 if (inverseAvailable)
                 {
-                    double P = CdblTxt(ed2p.Text);
-                    if (P < 0)
-                        P = 0.0;
-                    if (P > 1)
-                        P = 1.0;
-                    DistributionType dt = (DistributionType)lbpdf.Tag;
-                    pval15Into(ed2p, P, AllowsZeroP(dt));
-                    if (dt != DistributionType.Poisson)
+                    double p = CdblTxt(txt2p.Text);
+                    if (p < 0)
+                        p = 0.0;
+                    if (p > 1)
+                        p = 1.0;
+                    Pval15Into(txt2p, p, AllowsZeroP(selectedTest));
+                    if (selectedTest != DistributionType.Poisson)
                     {
-                        P = P / 2.0;
-                        if (P > 1.0 - P)
-                            P = 1.0 - P;
-                        pval15Into(edlp, 1.0 - P, AllowsZeroP(dt));
-                        pval15Into(edup, P, AllowsZeroP(dt));
+                        p = p / 2.0;
+                        if (p > 1.0 - p)
+                            p = 1.0 - p;
+                        Pval15Into(txtLp, 1.0 - p, AllowsZeroP(selectedTest));
+                        Pval15Into(txtUp, p, AllowsZeroP(selectedTest));
                     }
-                    xFromP(P, 3);
+                    XFromP(p, 3);
                 }
             }
             catch (Exception ex)
@@ -200,43 +215,42 @@ namespace StatsDirect.UI
         {
             try
             {
-                double df = CdblTxt(eddf.Text);
-                DistributionType dt = (DistributionType)lbpdf.Tag;
-                if ((dt == DistributionType.Rho || dt == DistributionType.Kendall) && edpdf.Text.Length > 0)
+                double df = CdblTxt(txtDf.Text);
+                if ((selectedTest == DistributionType.Rho || selectedTest == DistributionType.Kendall) && txtPdf.Text.Length > 0)
                 {
-                    int N;
-                    if (dt == DistributionType.Rho)
+                    int n;
+                    if (selectedTest == DistributionType.Rho)
                     {
-                        N = ((int)(Math.Floor(df)));
-                        double rh = CdblTxt(edpdf.Text);
-                        if (N < 4 || rh < 0.0 || rh > 1.0)
-                            eddf2.Text = Formatting.ERRR;
+                        n = ((int)(Math.Floor(df)));
+                        double rh = CdblTxt(txtPdf.Text);
+                        if (n < 4 || rh < 0.0 || rh > 1.0)
+                            txtDf2.Text = Formatting.ERRR;
                         else
-                            eddf2.Text = Convert.ToInt32(((1.0 - rh) * (N * (Math.Pow(N, 2) - 1))) / 6).ToString();
-                        pfromx();
+                            txtDf2.Text = Convert.ToInt32(((1.0 - rh) * (n * (Math.Pow(n, 2) - 1))) / 6).ToString();
+                        PFromX();
                     }
-                    else
+                    else // Kendall
                     {
-                        N = Convert.ToInt32(df);
-                        double tau = CdblTxt(edpdf.Text);
-                        if (N < 4 || tau < 0.0 || tau > 1.0)
-                            eddf2.Text = Formatting.ERRR;
+                        n = Convert.ToInt32(df);
+                        double tau = CdblTxt(txtPdf.Text);
+                        if (n < 4 || tau < 0.0 || tau > 1.0)
+                            txtDf2.Text = Formatting.ERRR;
                         else
-                            eddf2.Text = Convert.ToInt32(tau * (N * (N - 1) / 2.0)).ToString();
-                        pfromx();
+                            txtDf2.Text = Convert.ToInt32(tau * (n * (n - 1) / 2.0)).ToString();
+                        PFromX();
                     }
                 }
-                else
+                else // Not rho, not Kendall
                 {
                     if (df < 0)
                     {
                         df = 0;
                     }
-                    xval15Into(eddf, df);
-                    if (eddf2.Visible && eddf2.Text.Length == 0)
-                        eddf2.Focus();
+                    Xval15Into(txtDf, df);
+                    if (pnlDf2.Visible && txtDf2.Text.Length == 0)
+                        txtDf2.Focus();
                     else
-                        pfromx();
+                        PFromX();
                 }
             }
             catch (Exception ex)
@@ -249,20 +263,19 @@ namespace StatsDirect.UI
         {
             try
             {
-                DistributionType dt = (DistributionType)lbpdf.Tag;
-                if (dt != DistributionType.Poisson && dt != DistributionType.NonCentralT)
+                if (selectedTest != DistributionType.Poisson && selectedTest != DistributionType.NonCentralT)
                 {
-                    int df = Parsing.Cint_Txt(eddf2.Text);
-                    if (dt != DistributionType.Binomial)
+                    int df = Parsing.Cint_Txt(txtDf2.Text);
+                    if (selectedTest != DistributionType.Binomial)
                     {
                         if (df < 1)
                             df = 1;
                     }
-                    eddf2.Text = df.ToString();
+                    txtDf2.Text = df.ToString();
                 }
                 else
-                    xval15Tidy(eddf2);
-                pfromx();
+                    Xval15Tidy(txtDf2);
+                PFromX();
             }
             catch (Exception ex)
             {
@@ -276,22 +289,21 @@ namespace StatsDirect.UI
             {
                 if (inverseAvailable)
                 {
-                    double P = CdblTxt(edlp.Text);
-                    if (P < 0.0)
-                        P = 0.0;
-                    if (P > 1.0)
-                        P = 1.0;
-                    DistributionType dt = (DistributionType)lbpdf.Tag;
-                    pval15Into(edlp, P, AllowsZeroP(dt));
-                    pval15Into(edup, 1.0 - P, AllowsZeroP(dt));
+                    double p = CdblTxt(txtLp.Text);
+                    if (p < 0.0)
+                        p = 0.0;
+                    if (p > 1.0)
+                        p = 1.0;
+                    Pval15Into(txtLp, p, AllowsZeroP(selectedTest));
+                    Pval15Into(txtUp, 1.0 - p, AllowsZeroP(selectedTest));
                     double p2;
-                    if (P > 1.0 - P)
-                        p2 = 1.0 - P;
+                    if (p > 1.0 - p)
+                        p2 = 1.0 - p;
                     else
-                        p2 = P;
+                        p2 = p;
                     p2 = 2.0 * p2;
-                    pval15Into(ed2p, p2, AllowsZeroP(dt));
-                    xFromP(1.0 - P, 1);
+                    Pval15Into(txt2p, p2, AllowsZeroP(selectedTest));
+                    XFromP(1.0 - p, 1);
                 }
             }
             catch (Exception ex)
@@ -304,11 +316,11 @@ namespace StatsDirect.UI
         {
             try
             {
-                xval15Tidy(edpdf);
-                if (eddf.Visible && eddf.Text.Length == 0)
-                    eddf.Focus();
+                Xval15Tidy(txtPdf);
+                if (pnlDf.Visible && txtDf.Text.Length == 0)
+                    txtDf.Focus();
                 else
-                    pfromx();
+                    PFromX();
             }
             catch (Exception ex)
             {
@@ -320,23 +332,21 @@ namespace StatsDirect.UI
         {
             try
             {
-                if (inverseAvailable)
+                if (!inverseAvailable)
+                    return;
+                double p = CdblTxt(txtUp.Text);
+                if (p < 0.0)
+                    p = 0.0;
+                if (p > 1.0)
+                    p = 1.0;
+                Pval15Into(txtUp, p, AllowsZeroP(selectedTest));
+                if (selectedTest != DistributionType.Poisson)
                 {
-                    double P = CdblTxt(edup.Text);
-                    if (P < 0.0)
-                        P = 0.0;
-                    if (P > 1.0)
-                        P = 1.0;
-                    DistributionType dt = (DistributionType)lbpdf.Tag;
-                    pval15Into(edup, P, AllowsZeroP(dt));
-                    if (dt != DistributionType.Poisson)
-                    {
-                        pval15Into(edlp, 1.0 - P, AllowsZeroP(dt));
-                        double P2 = 2.0 * (P > 1.0 - P ? 1.0 - P : P);
-                        pval15Into(ed2p, P2, AllowsZeroP(dt));
-                    }
-                    xFromP(P, 2);
+                    Pval15Into(txtLp, 1.0 - p, AllowsZeroP(selectedTest));
+                    double p2 = 2.0 * (p > 1.0 - p ? 1.0 - p : p);
+                    Pval15Into(txt2p, p2, AllowsZeroP(selectedTest));
                 }
+                XFromP(p, 2);
             }
             catch (Exception ex)
             {
@@ -344,529 +354,493 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool AllowsZeroP(DistributionType dt)
+        private static bool AllowsZeroP(DistributionType dt)
         {
             return !(dt == DistributionType.Rho || dt == DistributionType.Kendall);
         }
 
-        private void pfromx()
+        private void PFromX()
         {
-            int fault;
-            int nx;
-            int ix = 0;
-            double pl;
-            double pu = 0;
-            double plo = 0;
-            double phi = 0;
-            double dterm = 0;
-            double term = 0;
-            double rh = 0;
-            double dplo = 0;
-            double dphi = 0;
-            string x1;
-
             switch (selectedTest)
             {
                 case DistributionType.Z:
-                    pl = PDF.alnorm(CdblTxt(edpdf.Text));
-                    pu = 1.0 - pl;
-                    pval15Into(edup, pu, true);
-                    pval15Into(edlp, pl, true);
-                    double p = double.Parse(pu < pl ? pval15(pu, true) : pval15(pl, true));
-                    pval15Into(ed2p, 2.0 * p, true);
-                    lastCalculationAsString = "P(z " + edpdf.Text.Trim() + ") = " + pval15(pu, true) + " upper,  " + pval15(pl, true) + " lower,  " + pval15(2.0 * p, true) + " two sided";
+                    PFromZ();
                     break;
                 case DistributionType.T:
-                    pu = PDF.tvalp(CdblTxt(edpdf.Text), CdblTxt(eddf.Text));
-                    pval15Into(edup, pu, true);
-                    pl = 1.0 - pu;
-                    pval15Into(edlp, pl, true);
-                    if (pu > pl)
-                        pu = pl;
-                    pu = 2.0 * double.Parse(pval15(pu, true));
-                    pval15Into(ed2p, pu, true);
-                    lastCalculationAsString = "P(t " + edpdf.Text.Trim() + ", df " + eddf.Text.Trim() + ") = " + edup.Text.Trim() + " upper, " + edlp.Text.Trim() + " lower, " + ed2p.Text.Trim() + " two sided";
+                    PFromT();
                     break;
                 case DistributionType.F:
-                    pu = PDF.fvalp(CdblTxt(edpdf.Text), CdblTxt(eddf.Text), CdblTxt(eddf2.Text));
-                    pval15Into(edup, pu, true);
-                    lastCalculationAsString = "P(F " + edpdf.Text.Trim() + ", dfn " + eddf.Text.Trim() + ", dfd " + eddf2.Text.Trim() + ") = " + edup.Text.Trim() + " upper";
+                    PFromF();
                     break;
                 case DistributionType.ChiSq:
-                    double xtmp = PDF.chivalp(CdblTxt(edpdf.Text), CdblTxt(eddf.Text));
-                    pval15Into(edup, xtmp, true);
-                    pval15Into(ed2p, 2.0 * CdblTxt(edup.Text), true);
-                    lastCalculationAsString = "P(chi-sq " + edpdf.Text.Trim() + ", df " + eddf.Text.Trim() + ") = " + edup.Text.Trim() + " upper tail";
+                    PFromChiSq();
                     break;
                 case DistributionType.Q:
-                    pu = PDF.probsr(CdblTxt(edpdf.Text), CdblTxt(eddf2.Text), CdblTxt(eddf.Text));
-                    if (pu == Constant.MISSING)
-                    {
-                        edup.Text = Formatting.ERRR;
-                        edlp.Text = Formatting.ERRR;
-                    }
-                    else
-                    {
-                        edlp.Text = Formatting.XRound(pu, 7);
-                        edup.Text = Formatting.XRound(1.0 - pu, 7);
-                    }
-                    lastCalculationAsString = "P(Q " + edpdf.Text.Trim() + ", df " + eddf.Text.Trim() + ", samples " + eddf2.Text.Trim() + ") = " + edup.Text.Trim() + " upper,  " + edlp.Text.Trim() + " lower";
+                    PFromQ();
                     break;
                 case DistributionType.Binomial:
-                    double pud = CdblTxt(edpdf.Text);
-                    int n = Parsing.Cint_Txt(eddf.Text);
-                    int r = Parsing.Cint_Txt(eddf2.Text);
-                    if (pud < 0 || pud > 1.0 || n < 1 || r > n)
-                        fault = -1;
-                    else
-                    {
-                        x1 = "Probability of observing ";
-                        string x2 = r.ToString() + " successes";
-                        lblp.Text = x1 + "=" + x2;
-                        lbup.Text = x1 + ">=" + x2;
-                        lb2p.Text = x1 + "<=" + x2;
-                        ExFortran.bino(n, pud, r, out dterm, out dplo, out dphi, out fault);
-                    }
-                    if (fault != 0)
-                    {
-                        edlp.Text = Formatting.ERRR;
-                        edup.Text = Formatting.ERRR;
-                        ed2p.Text = Formatting.ERRR;
-                    }
-                    else
-                    {
-                        pval15Into(edlp, dterm, true);
-                        pval15Into(edup, dphi, true);
-                        pval15Into(ed2p, dplo, true);
-                    }
-                    lastCalculationAsString = "P(binomial p " + edpdf.Text.Trim() + ", " + eddf.Text.Trim() + " trials) = " + edlp.Text.Trim() + " [" + eddf2.Text.Trim() + " successes], "
-                        + edup.Text.Trim() + " [>=" + eddf2.Text.Trim() + " successes], " + ed2p.Text.Trim() + " [<=" + eddf2.Text.Trim() + " successes]";
+                    PFromBinomial();
                     break;
                 case DistributionType.Poisson:
-                    int nl = Parsing.Cint_Txt(eddf.Text);
-                    double M = CdblTxt(eddf2.Text);
-                    if (nl < 0 || M < 0.0)
-                        fault = -1;
-                    else
-                    {
-                        x1 = "Probability of " + nl.ToString();
-                        lblp.Text = x1 + " events";
-                        lbup.Text = x1 + " or more events";
-                        lb2p.Text = x1 + " or fewer events";
-                        ExFortran.poisson(M, nl, out phi, out plo, out term, out fault);
-                    }
-                    if (fault != 0)
-                    {
-                        edlp.Text = Formatting.ERRR;
-                        edup.Text = Formatting.ERRR;
-                        ed2p.Text = Formatting.ERRR;
-                    }
-                    else
-                    {
-                        pval15Into(edlp, term, true);
-                        pval15Into(edup, phi, true);
-                        pval15Into(ed2p, plo, true);
-                    }
-                    lastCalculationAsString = "P(Poisson n " +
-                               eddf.Text.Trim() + ", µ " +
-                               eddf2.Text.Trim() +
-                               ") = " +
-                               edlp.Text.Trim() + " for n events,  " +
-                               edup.Text.Trim() +
-                               " for n or more events,  " +
-                               ed2p.Text.Trim()
-                               + " for n or fewer events";
-
+                    PFromPoisson();
                     break;
                 case DistributionType.Kendall:
-                    fault = 0;
-                    nx = Parsing.Cint_Txt(eddf.Text);
-                    double tau;
-                    if (edpdf.Text.Length > 0)
-                    {
-                        tau = CdblTxt(edpdf.Text);
-                        if (nx > 0 & rh <= 1)
-                        {
-                            ix = Convert.ToInt32(tau * (nx * (nx - 1) / 2.0));
-                            eddf2.Text = ix.ToString();
-                        }
-                        else
-                            eddf2.Text = Formatting.ERRR;
-                    }
-                    else
-                    {
-                        ix = Parsing.Cint_Txt(eddf2.Text);
-                        tau = ix / (nx * (nx - 1) / 2.0);
-                        xval15Into(edpdf, tau);
-                    }
-                    if (eddf2.Text == Formatting.ERRR | nx < 1)
-                        fault = -1;
-                    else
-                        pu = MathDbl.kendp(ix, nx, ref fault);
-                    pval15Into(edup, pu, false, fault != 0);
-                    lastCalculationAsString = "P(Kendall's T " + ix.ToString() + ", n " + nx.ToString() + ") = " +
-                               edup.Text.Trim() +
-                               " upper tail";
+                    PFromKendall();
                     break;
                 case DistributionType.Rho:
-                    nx = Parsing.Cint_Txt(eddf.Text);
-                    if (edpdf.Text.Length > 0)
-                    {
-                        rh = CdblTxt(edpdf.Text);
-                        if (nx >= 4 & rh <= 1)
-                        {
-                            ix = Convert.ToInt32(((1.0 - rh) * (nx * (nx * nx - 1))) / 6);
-                            eddf2.Text = ix.ToString();
-                        }
-                        else
-                            eddf2.Text = Formatting.ERRR;
-                    }
-                    else
-                    {
-                        ix = ((int)(CdblTxt(eddf2.Text)));
-                        rh = 1.0 - ix / ((nx * (nx * nx - 1)) / 6.0);
-                        xval15Into(edpdf, rh);
-                    }
-                    if (eddf2.Text == Formatting.ERRR | nx < 4)
-                        fault = -1;
-                    else
-                        pu = 1.0 - ExFortran.prho(nx, ix, out fault);
-                    pval15Into(edup, pu, false, fault != 0);
-                    lastCalculationAsString = "P(Hotelling T " + ix.ToString() + ", n " + nx.ToString() + ") = " +
-                               edup.Text.Trim() +
-                               " upper tail";
-
+                    PFromRho();
                     break;
                 case DistributionType.NonCentralT:
-                    int flt;
-                    p = ExFortran.pnct(CdblTxt(edpdf.Text), Parsing.Cint_Txt(eddf.Text),
-                                       CdblTxt(eddf2.Text), out flt);
-                    if (flt != 0)
-                    {
-                        edup.Text = Formatting.ERRR;
-                        edlp.Text = Formatting.ERRR;
-                    }
-                    else
-                    {
-                        pval15Into(edlp, p, true);
-                        pval15Into(edup, 1.0 - p, true);
-                    }
-                    lastCalculationAsString = "P(non-central t < " +
-                               edpdf.Text.Trim() +
-                               ", df " +
-                               eddf.Text.Trim() + ", delta " +
-                               eddf2.Text.Trim() +
-                               ") = " +
-                               edup.Text.Trim() + " upper, " +
-                                edlp.Text.Trim()
-                               + " lower";
-
+                    PFromNonCentralT();
                     break;
             }
         }
 
-        private void SaveClick(Object sender, EventArgs e)
+        private void PFromNonCentralT()
         {
-            try
+            int flt;
+            double p = ExFortran.pnct(CdblTxt(txtPdf.Text), Parsing.Cint_Txt(txtDf.Text),
+                                      CdblTxt(txtDf2.Text), out flt);
+            if (flt != 0)
             {
-                string toOutput = @"{\rtf1\ansi " + lastCalculationAsString.Trim() + @"\par}";
-                host.OutputReport(toOutput, null, null, null);
+                txtUp.Text = Formatting.ERRR;
+                txtLp.Text = Formatting.ERRR;
             }
-            catch (Exception ex)
+            else
             {
-                FriendlyError(ex);
+                Pval15Into(txtLp, p, true);
+                Pval15Into(txtUp, 1.0 - p, true);
             }
+            lastCalculationAsString = "P(non-central t < " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ", delta " +
+                                      txtDf2.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper, " + txtLp.Text.Trim() +
+                                      " lower";
+        }
+
+        private void PFromRho()
+        {
+            double rh;
+            int fault;
+            int nx = Parsing.Cint_Txt(txtDf.Text);
+            int ix = 0;
+            if (txtPdf.Text.Length > 0)
+            {
+                rh = CdblTxt(txtPdf.Text);
+                if (nx >= 4 & rh <= 1)
+                {
+                    ix = Convert.ToInt32(((1.0 - rh)*(nx*(nx*nx - 1)))/6);
+                    txtDf2.Text = ix.ToString();
+                }
+                else
+                    txtDf2.Text = Formatting.ERRR;
+            }
+            else
+            {
+                ix = ((int) (CdblTxt(txtDf2.Text)));
+                rh = 1.0 - ix/((nx*(nx*nx - 1))/6.0);
+                Xval15Into(txtPdf, rh);
+            }
+            double pu = 0;
+            if (txtDf2.Text == Formatting.ERRR || nx < 4)
+                fault = -1;
+            else
+                pu = 1.0 - ExFortran.prho(nx, ix, out fault);
+            Pval15Into(txtUp, pu, false, fault != 0);
+            lastCalculationAsString = "P(Hotelling T " + ix.ToString() + ", n " + nx.ToString() + ") = " + txtUp.Text.Trim() + " upper tail";
+        }
+
+        private void PFromKendall()
+        {
+            double rh = 0;
+            int ix = 0;
+            double pu = 0;
+            int fault = 0;
+            int nx = Parsing.Cint_Txt(txtDf.Text);
+            double tau;
+            if (txtPdf.Text.Length > 0)
+            {
+                tau = CdblTxt(txtPdf.Text);
+                if (nx > 0 & rh <= 1)
+                {
+                    ix = Convert.ToInt32(tau*(nx*(nx - 1)/2.0));
+                    txtDf2.Text = ix.ToString();
+                }
+                else
+                    txtDf2.Text = Formatting.ERRR;
+            }
+            else
+            {
+                ix = Parsing.Cint_Txt(txtDf2.Text);
+                tau = ix/(nx*(nx - 1)/2.0);
+                Xval15Into(txtPdf, tau);
+            }
+            if (txtDf2.Text == Formatting.ERRR | nx < 1)
+                fault = -1;
+            else
+                pu = MathDbl.kendp(ix, nx, ref fault);
+            Pval15Into(txtUp, pu, false, fault != 0);
+            lastCalculationAsString = "P(Kendall's T " + ix.ToString() + ", n " + nx.ToString() + ") = " + txtUp.Text.Trim() + " upper tail";
+        }
+
+        private void PFromPoisson()
+        {
+            double phi = 0;
+            double plo = 0;
+            double term = 0;
+            int fault;
+            int nl = Parsing.Cint_Txt(txtDf.Text);
+            double M = CdblTxt(txtDf2.Text);
+            if (nl < 0 || M < 0.0)
+                fault = -1;
+            else
+            {
+                string x1 = "Probability of " + nl.ToString();
+                lblLp.Text = x1 + " events";
+                lblUp.Text = x1 + " or more events";
+                lbl2p.Text = x1 + " or fewer events";
+                ExFortran.poisson(M, nl, out phi, out plo, out term, out fault);
+            }
+            if (fault != 0)
+            {
+                txtLp.Text = Formatting.ERRR;
+                txtUp.Text = Formatting.ERRR;
+                txt2p.Text = Formatting.ERRR;
+            }
+            else
+            {
+                Pval15Into(txtLp, term, true);
+                Pval15Into(txtUp, phi, true);
+                Pval15Into(txt2p, plo, true);
+            }
+            lastCalculationAsString = "P(Poisson n " +
+                                      txtDf.Text.Trim() + ", µ " +
+                                      txtDf2.Text.Trim() +
+                                      ") = " +
+                                      txtLp.Text.Trim() + " for n events,  " +
+                                      txtUp.Text.Trim() +
+                                      " for n or more events,  " +
+                                      txt2p.Text.Trim()
+                                      + " for n or fewer events";
+        }
+
+        private void PFromBinomial()
+        {
+            double dterm = 0;
+            double dplo = 0;
+            double dphi = 0;
+            int fault;
+            double pud = CdblTxt(txtPdf.Text);
+            int n = Parsing.Cint_Txt(txtDf.Text);
+            int r = Parsing.Cint_Txt(txtDf2.Text);
+            if (pud < 0 || pud > 1.0 || n < 1 || r > n)
+                fault = -1;
+            else
+            {
+                const string x1 = "Probability of observing ";
+                string x2 = r.ToString() + " successes";
+                lblLp.Text = x1 + "=" + x2;
+                lblUp.Text = x1 + ">=" + x2;
+                lbl2p.Text = x1 + "<=" + x2;
+                ExFortran.bino(n, pud, r, out dterm, out dplo, out dphi, out fault);
+            }
+            if (fault != 0)
+            {
+                txtLp.Text = Formatting.ERRR;
+                txtUp.Text = Formatting.ERRR;
+                txt2p.Text = Formatting.ERRR;
+            }
+            else
+            {
+                Pval15Into(txtLp, dterm, true);
+                Pval15Into(txtUp, dphi, true);
+                Pval15Into(txt2p, dplo, true);
+            }
+            lastCalculationAsString = "P(binomial p " + txtPdf.Text.Trim() + ", " + txtDf.Text.Trim() + " trials) = " +
+                                      txtLp.Text.Trim() + " [" + txtDf2.Text.Trim() + " successes], "
+                                      + txtUp.Text.Trim() + " [>=" + txtDf2.Text.Trim() + " successes], " + txt2p.Text.Trim() +
+                                      " [<=" + txtDf2.Text.Trim() + " successes]";
+        }
+
+        private void PFromQ()
+        {
+            double pu = PDF.probsr(CdblTxt(txtPdf.Text), CdblTxt(txtDf2.Text), CdblTxt(txtDf.Text));
+            if (pu == Constant.MISSING)
+            {
+                txtUp.Text = Formatting.ERRR;
+                txtLp.Text = Formatting.ERRR;
+            }
+            else
+            {
+                txtLp.Text = Formatting.XRound(pu, 7);
+                txtUp.Text = Formatting.XRound(1.0 - pu, 7);
+            }
+            lastCalculationAsString = "P(Q " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ", samples " +
+                                      txtDf2.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper,  " + txtLp.Text.Trim() +
+                                      " lower";
+        }
+
+        private void PFromChiSq()
+        {
+            double xtmp = PDF.chivalp(CdblTxt(txtPdf.Text), CdblTxt(txtDf.Text));
+            Pval15Into(txtUp, xtmp, true);
+            Pval15Into(txt2p, 2.0*CdblTxt(txtUp.Text), true);
+            lastCalculationAsString = "P(chi-sq " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " +
+                                      txtUp.Text.Trim() + " upper tail";
+        }
+
+        private void PFromF()
+        {
+            double pu = PDF.fvalp(CdblTxt(txtPdf.Text), CdblTxt(txtDf.Text), CdblTxt(txtDf2.Text));
+            Pval15Into(txtUp, pu, true);
+            lastCalculationAsString = "P(F " + txtPdf.Text.Trim() + ", dfn " + txtDf.Text.Trim() + ", dfd " + txtDf2.Text.Trim() +
+                                      ") = " + txtUp.Text.Trim() + " upper";
+        }
+
+        private void PFromT()
+        {
+            double pu = PDF.tvalp(CdblTxt(txtPdf.Text), CdblTxt(txtDf.Text));
+            Pval15Into(txtUp, pu, true);
+            double pl = 1.0 - pu;
+            Pval15Into(txtLp, pl, true);
+            if (pu > pl)
+                pu = pl;
+            pu = 2.0*double.Parse(pval15(pu, true));
+            Pval15Into(txt2p, pu, true);
+            lastCalculationAsString = "P(t " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim() +
+                                      " upper, " + txtLp.Text.Trim() + " lower, " + txt2p.Text.Trim() + " two sided";
+        }
+
+        private void PFromZ()
+        {
+            double pl = PDF.alnorm(CdblTxt(txtPdf.Text));
+            double pu = 1.0 - pl;
+            Pval15Into(txtUp, pu, true);
+            Pval15Into(txtLp, pl, true);
+            double p = double.Parse(pu < pl ? pval15(pu, true) : pval15(pl, true));
+            Pval15Into(txt2p, 2.0*p, true);
+            lastCalculationAsString = "P(z " + txtPdf.Text.Trim() + ") = " + pval15(pu, true) + " upper,  " + pval15(pl, true) +
+                                      " lower,  " + pval15(2.0*p, true) + " two sided";
         }
 
         private void SetVisibility()
         {
-            string ti;
-
-            lbpdf.Tag = selectedTest;
-            edpdf.Text = "";
-            eddf.Text = "";
-            eddf2.Text = "";
-            edlp.Text = "";
-            edup.Text = "";
-            ed2p.Text = "";
-            label_cl.Visible = false;
-            combo_cl.Visible = false;
-            btn_ucl.Visible = false;
-            btn_lcl.Visible = false;
-
-            lbdf.Text = "Degrees of freedom";
-            lblp.Text = "Lower tail P";
-            lbup.Text = "Upper tail P";
-            lb2p.Text = "Two tailed P";
-            eddf2.Visible = false;
-            lbdf2.Visible = false;
-            lbpdf.Visible = true;
-            edpdf.Visible = true;
-            const string d = " distribution";
-
             switch (selectedTest)
             {
                 case DistributionType.Z:
                     inverseAvailable = true;
-                    ti = "Standard normal (Gaussian)" + d;
-                    Text = ti;
-                    lblp.Visible = true;
-                    edlp.Visible = true;
-                    lbdf.Visible = false;
-                    eddf.Visible = false;
-                    lbpdf.Text = "Normal deviate (z)";
-                    lb2p.Visible = true;
-                    ed2p.Visible = true;
-
+                    pnlLp.Visible = true;
+                    pnlDf.Visible = false;
+                    lblPdf.Text = "Normal deviate (z)";
+                    pnl2p.Visible = true;
                     break;
                 case DistributionType.T:
                     inverseAvailable = true;
-                    ti = "Student's t" + d;
-                    Text = ti;
-                    lblp.Visible = true;
-                    edlp.Visible = true;
-                    lbdf.Visible = true;
-                    eddf.Visible = true;
-                    ed2p.Visible = true;
-                    lb2p.Visible = true;
-                    lbpdf.Text = "Student's t";
-
+                    lblPdf.Text = "Student's t";
                     break;
                 case DistributionType.F:
                     inverseAvailable = true;
-                    ti = "F (variance ratio)" + d;
-                    Text = ti;
-                    lbdf.Text = "Numerator degrees of freedom";
-                    lbdf2.Text = "Denominator degrees of freedom";
-                    lbup.Text = "Upper tail P";
-                    lbdf.Visible = true;
-                    eddf.Visible = true;
-                    lbdf2.Visible = true;
-                    eddf2.Visible = true;
-                    lblp.Visible = false;
-                    edlp.Visible = false;
-                    lb2p.Visible = false;
-                    ed2p.Visible = false;
-                    lbpdf.Text = "Variance ratio F";
-
+                    lblDf.Text = "Numerator degrees of freedom";
+                    lblDf2.Text = "Denominator degrees of freedom";
+                    lblUp.Text = "Upper tail P";
+                    pnlDf2.Visible = true;
+                    pnlLp.Visible = false;
+                    pnl2p.Visible = false;
+                    lblPdf.Text = "Variance ratio F";
                     break;
                 case DistributionType.ChiSq:
                     inverseAvailable = true;
-                    ti = "Chi-Square" + d;
-                    Text = ti;
-                    lblp.Visible = false;
-                    edlp.Visible = false;
-                    lbdf.Visible = true;
-                    eddf.Visible = true;
-                    lbpdf.Text = "Chi-square";
-                    lb2p.Visible = false;
-                    ed2p.Visible = false;
-
+                    pnlLp.Visible = false;
+                    pnlDf.Visible = true;
+                    lblPdf.Text = "Chi-square";
+                    pnl2p.Visible = false;
                     break;
                 case DistributionType.Q:
                     inverseAvailable = true;
-                    ti = "Studentized range" + d;
-                    Text = ti;
-                    lbpdf.Text = "Studentized range Q";
-                    lbdf2.Text = "Number of samples";
-                    lbdf.Visible = true;
-                    lblp.Visible = true;
-                    edlp.Visible = true;
-                    eddf.Visible = true;
-                    lbdf2.Visible = true;
-                    eddf2.Visible = true;
-                    lbdf.Visible = true;
-                    eddf.Visible = true;
-                    lb2p.Visible = false;
-                    ed2p.Visible = false;
-
+                    lblPdf.Text = "Studentized range Q";
+                    lblDf2.Text = "Number of samples";
+                    pnlDf2.Visible = true;
+                    pnl2p.Visible = false;
                     break;
                 case DistributionType.Binomial:
                     inverseAvailable = false;
-                    ti = "Binomial" + d;
-                    Text = ti;
-                    lbpdf.Text = "Probability of success per trial";
-                    lbdf.Text = "Number of trials";
-                    lbdf2.Text = "Number of successes";
-                    lblp.Text = "";
-                    lbup.Text = "";
-                    lb2p.Text = "";
-                    lbdf.Visible = true;
-                    eddf.Visible = true;
-                    lbdf2.Visible = true;
-                    eddf2.Visible = true;
-                    lblp.Visible = true;
-                    edlp.Visible = true;
-                    lb2p.Visible = true;
-                    ed2p.Visible = true;
-                    edpdf.Text = ".5";
-
+                    lblPdf.Text = "Probability of success per trial";
+                    lblDf.Text = "Number of trials";
+                    lblDf2.Text = "Number of successes";
+                    lblLp.Text = "";
+                    lblUp.Text = "";
+                    lbl2p.Text = "";
+                    pnlDf2.Visible = true;
+                    txtPdf.Text = ".5";
                     break;
                 case DistributionType.Poisson:
                     inverseAvailable = true;
-                    ti = "Poisson" + d;
-                    Text = ti;
-                    lbpdf.Visible = false;
-                    edpdf.Visible = false;
-                    lbdf.Text = "Number of random events";
-                    lbdf2.Text = "Mean";
-                    lblp.Text = "";
-                    lbup.Text = "";
-                    lb2p.Text = "";
-                    lbdf.Visible = true;
-                    eddf.Visible = true;
-                    lbdf2.Visible = true;
-                    eddf2.Visible = true;
-                    lblp.Visible = true;
-                    edlp.Visible = true;
-                    lb2p.Visible = true;
-                    ed2p.Visible = true;
-                    label_cl.Visible = true;
-                    combo_cl.Visible = true;
-                    btn_ucl.Visible = true;
-                    btn_lcl.Visible = true;
+                    pnlPdf.Visible = false;
+                    lblDf.Text = "Number of random events";
+                    lblDf2.Text = "Mean";
+                    lblLp.Text = "";
+                    lblUp.Text = "";
+                    lbl2p.Text = "";
+                    pnlDf2.Visible = true;
                     break;
                 case DistributionType.Kendall:
                     inverseAvailable = true;
-                    ti = "Kendall's tau";
-                    lbpdf.Text = ti;
-                    ti = ti + d;
-                    Text = ti;
-                    lbdf2.Text = "S (Nc - Nd)";
-                    lbdf.Text = "Sample size";
-                    lbdf.Visible = true;
-                    lbdf2.Visible = true;
-                    eddf2.Visible = true;
-                    eddf.Visible = true;
-                    lblp.Visible = false;
-                    lb2p.Visible = false;
-                    edlp.Visible = false;
-                    ed2p.Visible = false;
-                    lbup.Text = "Upper tail P";
-
+                    lblPdf.Text = "Kendall's tau";
+                    lblDf2.Text = "S (Nc - Nd)";
+                    lblDf.Text = "Sample size";
+                    pnlDf2.Visible = true;
+                    pnlLp.Visible = false;
+                    pnl2p.Visible = false;
+                    lblUp.Text = "Upper tail P";
                     break;
                 case DistributionType.Rho:
                     inverseAvailable = true;
-                    ti = "Spearman's rho";
-                    lbpdf.Text = ti;
-                    ti = ti + d;
-                    Text = ti;
-                    lbdf2.Text = "Hotelling-Pabst T";
-                    lbdf.Text = "Sample size";
-                    lbdf.Visible = true;
-                    lbdf2.Visible = true;
-                    eddf2.Visible = true;
-                    eddf.Visible = true;
-                    lblp.Visible = false;
-                    lb2p.Visible = false;
-                    edlp.Visible = false;
-                    ed2p.Visible = false;
-                    lbup.Text = "Upper tail P";
-
+                    lblPdf.Text = "Spearman's rho";
+                    lblDf2.Text = "Hotelling-Pabst T";
+                    lblDf.Text = "Sample size";
+                    pnlDf2.Visible = true;
+                    pnlLp.Visible = false;
+                    pnl2p.Visible = false;
+                    lblUp.Text = "Upper tail P";
                     break;
                 case DistributionType.NonCentralT:
                     inverseAvailable = true;
-                    ti = "Non-central t" + d;
-                    Text = ti;
-                    lbpdf.Text = "Non-central t";
-                    lbdf.Text = "Degrees of freedom";
-                    lbdf2.Text = "Non-centrality";
-                    lblp.Text = "P for t <= t";
-                    lbup.Text = "P for t > t";
-                    lbdf.Visible = true;
-                    lblp.Visible = true;
-                    edlp.Visible = true;
-                    eddf.Visible = true;
-                    lbdf2.Visible = true;
-                    eddf2.Visible = true;
-                    lbdf.Visible = true;
-                    eddf.Visible = true;
-                    lb2p.Visible = false;
-                    ed2p.Visible = false;
+                    lblPdf.Text = "Non-central t";
+                    lblDf.Text = "Degrees of freedom";
+                    lblDf2.Text = "Non-centrality";
+                    lblLp.Text = "P for t <= t";
+                    lblUp.Text = "P for t > t";
+                    pnlDf2.Visible = true;
+                    pnl2p.Visible = false;
                     break;
             }
-
-            edlp.Enabled = inverseAvailable && !(selectedTest == DistributionType.Poisson);
-            edup.Enabled = inverseAvailable;
-            ed2p.Enabled = inverseAvailable;
+            cmdInvert.Visible = inverseAvailable;
+            txtLp.ReadOnly = !(inverseAvailable && selectedTest != DistributionType.Poisson);
+            txtUp.ReadOnly = !inverseAvailable;
+            txt2p.ReadOnly = !inverseAvailable;
         }
 
-        private void xFromP(double P, int idx)
+        private void XFromP(double P, int idx)
         {
-            int nx;
-            int ix;
-            double x;
-            double pu;
-
-            int fault;
-            if (eddf.Visible && CdblTxt(eddf.Text) < 1)
-                eddf.Text = "1";
+            if (pnlDf.Visible && CdblTxt(txtDf.Text) < 1)
+                txtDf.Text = "1";
 
             switch (selectedTest)
             {
                 case DistributionType.Z:
-                    x = PDF.gauinv(CdblTxt(edlp.Text), out fault);
-                    xval15Into(edpdf, x, fault != 0);
-                    lastCalculationAsString = "z(upper P " + pval15(P, true) + ") = " + edpdf.Text.Trim();
+                    ZFromP(P);
                     break;
                 case DistributionType.T:
-                    x = PDF.tfromp(P, CdblTxt(eddf.Text));
-                    xval15Into(edpdf, x);
-                    lastCalculationAsString = "t(upper P " + pval15(P, true) + ", df " + eddf.Text.Trim() + ") = " + edpdf.Text.Trim();
+                    TFromP(P);
                     break;
                 case DistributionType.F:
-                    x = PDF.ffromp(CdblTxt(eddf2.Text), CdblTxt(eddf.Text), P);
-                    xval15Into(edpdf, x);
-                    lastCalculationAsString = "F(upper P " + pval15(P, true) + ", dfn " + eddf.Text.Trim() + ", dfd " + eddf2.Text.Trim() + ") = " + edpdf.Text.Trim();
+                    FFromP(P);
                     break;
                 case DistributionType.ChiSq:
-                    x = PDF.ppchi2(CdblTxt(edlp.Text), CdblTxt(eddf.Text), out fault);
-                    xval15Into(edpdf, x, fault != 0);
-                    lastCalculationAsString = "chi-sq(upper P " + pval15(P, true) + ", df " + eddf.Text.Trim() + ") = " + edpdf.Text.Trim();
+                    ChiSqFromP(P);
                     break;
                 case DistributionType.Q:
-                    x = PDF.quantsr(CdblTxt(edlp.Text), CdblTxt(eddf2.Text), CdblTxt(eddf.Text));
-                    edpdf.Text = x == Constant.MISSING ? Formatting.ERRR : Formatting.XRound(x, 7);
-                    lastCalculationAsString = "Q(upper P " + Formatting.XRound(P, 7) + ", df " + eddf.Text.Trim() + ", samples " + eddf2.Text.Trim() + ") = " + edpdf.Text.Trim();
+                    QFromP(P);
                     break;
                 case DistributionType.Poisson:
-                    InvPoisson(idx, P, Parsing.Cint_Txt(eddf.Text));
-                    lastCalculationAsString = "Poisson mean(P of " + eddf.Text.Trim() + " events " + pval15(CdblTxt(edlp.Text), true) + ", fewer " + pval15(CdblTxt(edup.Text), true) + ", more " + pval15(CdblTxt(ed2p.Text), true) + ") = " + eddf2.Text.Trim();
+                    InvPoisson(idx, P, Parsing.Cint_Txt(txtDf.Text));
+                    lastCalculationAsString = "Poisson mean(P of " + txtDf.Text.Trim() + " events " + pval15(CdblTxt(txtLp.Text), true) + ", fewer " + pval15(CdblTxt(txtUp.Text), true) + ", more " + pval15(CdblTxt(txt2p.Text), true) + ") = " + txtDf2.Text.Trim();
                     break;
                 case DistributionType.Kendall:
-                    nx = Parsing.Cint_Txt(eddf.Text);
-                    double tau = MathDbl.taufromp(P, out pu, out ix, ref nx, out fault);
-                    if (fault == 0)
-                    {
-                        eddf2.Text = ix.ToString();
-                        xval15Into(edpdf, tau);
-                        pval15Into(edup, pu, false);
-                    }
-                    else
-                        edup.Text = Formatting.ERRR;
-                    lastCalculationAsString = "Kendall's T (upper tail P " + pval15(P, false) + ", n " + eddf.Text.Trim() + ") = " + edup.Text.Trim();
+                    KendallFromP(P);
                     break;
                 case DistributionType.Rho:
-                    nx = Parsing.Cint_Txt(eddf.Text);
-                    double rh = MathDbl.rhofromp(P, out pu, out ix, nx, out fault);
-                    if (fault == 0)
-                    {
-                        eddf2.Text = ix.ToString();
-                        xval15Into(edpdf, rh);
-                        pval15Into(edup, pu, false);
-                    }
-                    else
-                        edup.Text = Formatting.ERRR;
-                    lastCalculationAsString = "Hotelling T (upper tail P " + pval15(P, false) + ", n " + eddf.Text.Trim() + ") = " + edup.Text.Trim();
+                    RhoFromP(P);
                     break;
                 case DistributionType.NonCentralT:
-                    int flt;
-                    x = ExFortran.tnct(CdblTxt(edlp.Text), Parsing.Cint_Txt(eddf.Text),
-                                       CdblTxt(eddf2.Text), out flt);
-                    xval15Into(edpdf, x, flt != 0);
-                    lastCalculationAsString = "non-central t(P " + pval15(P, true) + ", df " + eddf.Text.Trim() + ", delta " + eddf2.Text.Trim() + ") = " + edpdf.Text.Trim();
+                    NonCentralTFromP(P);
                     break;
             }
+        }
+
+        private void NonCentralTFromP(double P)
+        {
+            int flt;
+            double x = ExFortran.tnct(CdblTxt(txtLp.Text), Parsing.Cint_Txt(txtDf.Text), CdblTxt(txtDf2.Text), out flt);
+            Xval15Into(txtPdf, x, flt != 0);
+            lastCalculationAsString = "non-central t(P " + pval15(P, true) + ", df " + txtDf.Text.Trim() + ", delta " +
+                                      txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
+        }
+
+        private void RhoFromP(double P)
+        {
+            double pu;
+            int ix;
+            int fault;
+            int nx = Parsing.Cint_Txt(txtDf.Text);
+            double rh = MathDbl.rhofromp(P, out pu, out ix, nx, out fault);
+            if (fault == 0)
+            {
+                txtDf2.Text = ix.ToString();
+                Xval15Into(txtPdf, rh);
+                Pval15Into(txtUp, pu, false);
+            }
+            else
+                txtUp.Text = Formatting.ERRR;
+            lastCalculationAsString = "Hotelling T (upper tail P " + pval15(P, false) + ", n " + txtDf.Text.Trim() + ") = " +
+                                      txtUp.Text.Trim();
+        }
+
+        private void KendallFromP(double P)
+        {
+            double pu;
+            int ix;
+            int fault;
+            int nx = Parsing.Cint_Txt(txtDf.Text);
+            double tau = MathDbl.taufromp(P, out pu, out ix, ref nx, out fault);
+            if (fault == 0)
+            {
+                txtDf2.Text = ix.ToString();
+                Xval15Into(txtPdf, tau);
+                Pval15Into(txtUp, pu, false);
+            }
+            else
+                txtUp.Text = Formatting.ERRR;
+            lastCalculationAsString = "Kendall's T (upper tail P " + pval15(P, false) + ", n " + txtDf.Text.Trim() + ") = " +
+                                      txtUp.Text.Trim();
+        }
+
+        private void QFromP(double P)
+        {
+            double x = PDF.quantsr(CdblTxt(txtLp.Text), CdblTxt(txtDf2.Text), CdblTxt(txtDf.Text));
+            txtPdf.Text = x == Constant.MISSING ? Formatting.ERRR : Formatting.XRound(x, 7);
+            lastCalculationAsString = "Q(upper P " + Formatting.XRound(P, 7) + ", df " + txtDf.Text.Trim() + ", samples " +
+                                      txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
+        }
+
+        private void ChiSqFromP(double P)
+        {
+            int fault;
+            double x = PDF.ppchi2(CdblTxt(txtLp.Text), CdblTxt(txtDf.Text), out fault);
+            Xval15Into(txtPdf, x, fault != 0);
+            lastCalculationAsString = "chi-sq(upper P " + pval15(P, true) + ", df " + txtDf.Text.Trim() + ") = " +
+                                      txtPdf.Text.Trim();
+        }
+
+        private void FFromP(double P)
+        {
+            double x = PDF.ffromp(CdblTxt(txtDf2.Text), CdblTxt(txtDf.Text), P);
+            Xval15Into(txtPdf, x);
+            lastCalculationAsString = "F(upper P " + pval15(P, true) + ", dfn " + txtDf.Text.Trim() + ", dfd " +
+                                      txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
+        }
+
+        private void TFromP(double P)
+        {
+            double x = PDF.tfromp(P, CdblTxt(txtDf.Text));
+            Xval15Into(txtPdf, x);
+            lastCalculationAsString = "t(upper P " + pval15(P, true) + ", df " + txtDf.Text.Trim() + ") = " + txtPdf.Text.Trim();
+        }
+
+        private void ZFromP(double P)
+        {
+            int fault;
+            double x = PDF.gauinv(CdblTxt(txtLp.Text), out fault);
+            Xval15Into(txtPdf, x, fault != 0);
+            lastCalculationAsString = "z(upper P " + pval15(P, true) + ") = " + txtPdf.Text.Trim();
         }
 
         /* Utilities */
@@ -891,30 +865,30 @@ namespace StatsDirect.UI
 
             if (ifault == 0)
             {
-                pval15Into(edlp, trm, true);
-                pval15Into(edup, phi, true);
-                pval15Into(ed2p, plo, true);
-                eddf2.Text = Formatting.XRound(xmid, 15);
+                Pval15Into(txtLp, trm, true);
+                Pval15Into(txtUp, phi, true);
+                Pval15Into(txt2p, plo, true);
+                txtDf2.Text = Formatting.XRound(xmid, 15);
             }
             else
             {
-                edlp.Text = Formatting.ERRR;
-                edup.Text = Formatting.ERRR;
-                ed2p.Text = Formatting.ERRR;
-                eddf2.Text = Formatting.ERRR;
+                txtLp.Text = Formatting.ERRR;
+                txtUp.Text = Formatting.ERRR;
+                txt2p.Text = Formatting.ERRR;
+                txtDf2.Text = Formatting.ERRR;
             }
 
         }
 
-        private void xval15Into(TextBox txt, double x, bool isError)
+        private static void Xval15Into(TextBox txt, double x, bool isError)
         {
             if (isError)
                 txt.Text = Formatting.ERRR;
             else
-                xval15Into(txt, x);
+                Xval15Into(txt, x);
         }
 
-        private void xval15Into(TextBox txt, double x)
+        private static void Xval15Into(TextBox txt, double x)
         {
             bool shouldReplace = true;
             try
@@ -928,34 +902,34 @@ namespace StatsDirect.UI
                 shouldReplace = true;
             }
             if (shouldReplace)
-                txt.Text = xval15(x);
+                txt.Text = Xval15(x);
         }
 
-        private void xval15Tidy(TextBox txt)
+        private static void Xval15Tidy(TextBox txt)
         {
-            txt.Text = xval15(CdblTxt(txt.Text));
+            txt.Text = Xval15(CdblTxt(txt.Text));
         }
 
-        private string xval15(double x)
+        private static string Xval15(double x)
         {
             return Formatting.XRound(x, 15);
         }
 
-        private void pval15Into(TextBox txt, double P, bool allowZero, bool isError)
+        private static void Pval15Into(TextBox txt, double p, bool allowZero, bool isError)
         {
             if (isError)
                 txt.Text = Formatting.ERRR;
             else
-                pval15Into(txt, P, allowZero);
+                Pval15Into(txt, p, allowZero);
         }
 
-        private void pval15Into(TextBox txt, double P, bool allowZero)
+        private static void Pval15Into(TextBox txt, double p, bool allowZero)
         {
             bool shouldReplace = true;
             try
             {
                 double current = CdblTxt(txt.Text);
-                if (Math.Abs(P - current) < 1e-14)
+                if (Math.Abs(p - current) < 1e-14)
                     shouldReplace = false;
             }
             catch (Exception)
@@ -963,32 +937,41 @@ namespace StatsDirect.UI
                 shouldReplace = true;
             }
             if (shouldReplace)
-                txt.Text = pval15(P, allowZero);
+                txt.Text = pval15(p, allowZero);
         }
 
-        private string pval15(double P, bool allowZero)
+        private static string pval15(double p, bool allowZero)
         {
-            if (P == Constant.MISSING || double.IsNaN(P))
+            if (p == Constant.MISSING || double.IsNaN(p))
                 return Formatting.ERRR;
-            if (!allowZero && P < 1e-15)
+            if (!allowZero && p < 1e-15)
                 return MINIMAL;
-            if (P < Constant.EPSNEG)
-                return P.ToString();
-            if (P >= 0.999999999999999)
+            if (p < Constant.EPSNEG)
+                return p.ToString();
+            if (p >= 0.999999999999999)
                 return "1";
-            return Formatting.XRound(P, 15);
+            return Formatting.XRound(p, 15);
         }
 
-        private double CdblTxt(string value)
+        private static double CdblTxt(string value)
         {
-            if (MINIMAL.Equals(value))
-                return Constant.EPSILON;
-            return Parsing.Cdbl_Txt(value);
+            return MINIMAL.Equals(value) ? Constant.EPSILON : Parsing.Cdbl_Txt(value);
         }
 
-        private void FriendlyError(Exception ex)
+        private static void FriendlyError(Exception ex)
         {
             SDApplication.SoleInstance.FriendlyError("StatsDirect couldn't calculate that function", ex, false);
+        }
+
+        public Control Fill(ParameterBag outputParameters, bool doValidation)
+        {
+            outputParameters.AddOutput("lastCalculation", lastCalculationAsString);
+            return null;
+        }
+
+        private void cmdInvert_Click(object sender, EventArgs e)
+        {
+            Invert();
         }
     }
 }

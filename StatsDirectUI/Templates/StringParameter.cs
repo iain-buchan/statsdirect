@@ -11,7 +11,7 @@ namespace StatsDirect.Templates
         public StringParameter()
         {
             // By default, remember value per operation.  Deserialization can override this.
-            Lifetime = ParameterLifetime.SessionForThisOperation;
+            // Lifetime = ParameterLifetime.SessionForThisOperation;
         }
 
         /// <summary>

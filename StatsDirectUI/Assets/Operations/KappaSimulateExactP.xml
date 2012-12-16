@@ -8,26 +8,6 @@
   <steps>
     <settings>
       <parameters>
-        <integer>
-          <name>iterations</name>
-          <prompt>Iterations</prompt>
-          <minimum-value>1</minimum-value>
-          <default-value>1000000</default-value>
-          <must-request>true</must-request>
-        </integer>
-        <integer>
-          <name>seed</name>
-          <prompt>Seed</prompt>
-          <default-value>=Base.DefaultSeed()</default-value>
-          <force-default>true</force-default>
-          <must-request>true</must-request>
-        </integer>
-        <confidence-interval>
-          <name>ci</name>
-          <default-value>0.99</default-value>
-          <must-request>true</must-request>
-          <can-default>false</can-default>
-        </confidence-interval>
       </parameters>
     </settings>
 		<builtin function-name="rptKappaSimulateExactP" />

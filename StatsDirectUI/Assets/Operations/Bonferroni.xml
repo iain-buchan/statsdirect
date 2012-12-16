@@ -22,19 +22,19 @@
         </confidence-interval>
         <pick-variables>
           <name>variables</name>
+          <must-request>true</must-request>
           <parameter-name>data</parameter-name>
           <minimum-variables>2</minimum-variables>
           <maximum-variables>2</maximum-variables>
           <preselect-variables>true</preselect-variables>
-          <must-request>true</must-request>
         </pick-variables>
         <integer>
           <name>comparisons</name>
           <prompt>Number of comparisons</prompt>
-          <minimum-value>1</minimum-value>
-          <default-value>1</default-value>
           <must-request>true</must-request>
           <lifetime>SessionForThisOperation</lifetime>
+          <minimum-value>1</minimum-value>
+          <default-value>1</default-value>
         </integer>
       </parameters>
     </settings>

@@ -6,10 +6,6 @@
   <steps>
     <settings>
       <parameters>
-        <!-- CI added for cronbach-->
-        <confidence-interval>
-          <name>ci</name>
-        </confidence-interval>
         <frame>
           <name>data</name>
           <prompt>Select DATA</prompt>
@@ -19,6 +15,10 @@
           <min-columns>2</min-columns>
           <max-columns>200</max-columns>
         </frame>
+        <!-- CI added for cronbach-->
+        <confidence-interval>
+          <name>ci</name>
+        </confidence-interval>
       </parameters>
     </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />

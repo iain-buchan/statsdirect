@@ -13,7 +13,7 @@ namespace StatsDirect.Templates
         public DoubleParameter()
         {
             // By default, remember value per operation.  Deserialization can override this.
-            Lifetime = ParameterLifetime.SessionForThisOperation;
+            // Lifetime = ParameterLifetime.SessionForThisOperation;
         }
 
         public double? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)

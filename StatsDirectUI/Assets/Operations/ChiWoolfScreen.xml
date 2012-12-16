@@ -22,6 +22,7 @@
         </confidence-interval>
         <options>
           <must-request>true</must-request>
+          <column>2</column>
           <options>
             <option name="show_intermediates">Show intermediates</option>
           </options>

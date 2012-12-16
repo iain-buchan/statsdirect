@@ -9,7 +9,7 @@
         <double>
           <name>n</name>
           <prompt>TOTAL number in study</prompt>
-          <minimum-value>0</minimum-value>
+          <minimum-value>1</minimum-value>
           <must-request>true</must-request>
         </double>
         <double>

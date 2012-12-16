@@ -24,11 +24,13 @@
           <name>plot_forest</name>
           <prompt>Forest plot</prompt>
           <must-request>true</must-request>
+          <column>2</column>
         </boolean>
         <boolean>
           <name>try_exact</name>
           <prompt>Try exact methods? (this occasionally takes a long time)</prompt>
           <must-request>true</must-request>
+          <column>2</column>
         </boolean>
       </parameters>
     </settings>

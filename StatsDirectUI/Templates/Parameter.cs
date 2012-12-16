@@ -3,68 +3,6 @@ using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
 {
-    public enum ValidationMode
-    {
-        NotSet = 0,
-        Pooling = 1,
-        Square = 2,
-        SquareBins = 3,
-        CheckForNonDummiedCategories = 4,
-        Boolean = 5,
-        Positive = 6,
-        ZeroToOneExclusive = 7,
-        TwoBinsAndNoMissingData = 8
-    }
-
-    /// <summary>
-    /// The kind of parameter stored here, to avoid typeof() checks.
-    /// </summary>
-    public enum ParameterType
-    {
-        Boolean,
-        ConfidenceInterval,
-        /// <summary>
-        /// Extension point for projects that wish to use Parameters for custom purposes.
-        /// Those projects will have to find some other way of disambiguating the custom parameter!
-        /// </summary>
-        Custom,
-        Date,
-        Double,
-        Double2By2,
-        Double2By2ByK,
-        EditGrid,
-        Grid,
-        Grid2D,
-        GroupedCovariance,
-        Integer,
-        MultipleOptions,
-        Option,
-        Options,
-        PickFromList,
-        PickVariables,
-        Special,
-        String
-    }
-
-    /// <summary>
-    /// For how long should the value of a parameter be preserved?
-    /// </summary>
-    public enum ParameterLifetime
-    {
-        /// <summary>
-        /// The parameter is not preserved past the end of this operation
-        /// </summary>
-        Operation,
-        /// <summary>
-        /// The parameter is preserved for the session, but only for use within this operation
-        /// </summary>
-        SessionForThisOperation,
-        /// <summary>
-        /// The parameter is preserved for the session, for all operations that use the same named parameter.  Beware - the type is not checked!
-        /// </summary>
-        SessionForAllOperations
-    }
-
     [Serializable,
        XmlInclude(typeof(BooleanParameter)),
        XmlInclude(typeof(ConfidenceIntervalParameter)),
@@ -86,38 +24,34 @@ namespace StatsDirect.Templates
        XmlInclude(typeof(StringParameter))]
     public abstract class Parameter
     {
-        private Expression prompt;
-        private Operation operation;
-        private Expression acquireIfTrue;
-        private Expression rubric;
+        protected Parameter()
+        {
+            Column = 1;
+        }
 
         public bool AcquireIfTrue(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == acquireIfTrue || null == acquireIfTrue.Body)
+            if (null == AcquireIfTrueExpression || null == AcquireIfTrueExpression.Body)
                 return true;
-            return (bool)processor.Evaluate(acquireIfTrue, parameters);
+            return (bool)processor.Evaluate(AcquireIfTrueExpression, parameters);
         }
 
         public string Prompt(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == prompt || null == prompt.Body)
+            if (null == PromptExpression || null == PromptExpression.Body)
                 return null;
-            return (string)processor.Evaluate(prompt, parameters);
+            return (string)processor.Evaluate(PromptExpression, parameters);
         }
 
         public string Rubric(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == rubric || null == rubric.Body)
+            if (null == RubricExpression || null == RubricExpression.Body)
                 return null;
-            return (string)processor.Evaluate(rubric, parameters);
+            return (string)processor.Evaluate(RubricExpression, parameters);
         }
 
         [XmlIgnore]
-        public Operation Operation
-        {
-            get { return operation; }
-            set { operation = value; }
-        }
+        public Operation Operation { get; set; }
 
         [XmlElement(ElementName = "lifetime")]
         public ParameterLifetime Lifetime { get; set; }
@@ -136,35 +70,23 @@ namespace StatsDirect.Templates
         [XmlIgnore]
         public bool HasPrompt
         {
-            get { return null != prompt && null != prompt.Body; }
+            get { return null != PromptExpression && null != PromptExpression.Body; }
         }
 
         [XmlIgnore]
         public bool HasAcquireIfTrue
         {
-            get { return null != acquireIfTrue && null != acquireIfTrue.Body; }
+            get { return null != AcquireIfTrueExpression && null != AcquireIfTrueExpression.Body; }
         }
 
         [XmlElement(ElementName = "prompt")]
-        public Expression PromptExpression
-        {
-            get { return prompt; }
-            set { prompt = value; }
-        }
+        public Expression PromptExpression { get; set; }
 
         [XmlElement(ElementName = "rubric")]
-        public Expression RubricExpression
-        {
-            get { return rubric; }
-            set { rubric = value; }
-        }
+        public Expression RubricExpression { get; set; }
 
         [XmlElement(ElementName = "acquire-if-true")]
-        public Expression AcquireIfTrueExpression
-        {
-            get { return acquireIfTrue; }
-            set { acquireIfTrue = value; }
-        }
+        public Expression AcquireIfTrueExpression { get; set; }
 
         /// <summary>
         /// The name of another parameter which must be present and non-blank in the parameters collection for this parameter to be requested.
@@ -205,14 +127,14 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "prompt-precedes-parameter")]
         public bool PromptPrecedesParameter { get; set; }
 
-        private HelpTip _help;
+        /// <summary>
+        /// The column in which the UI should render the element.  Defaults to 1.
+        /// </summary>
+        [XmlElement(ElementName = "column")]
+        public int Column { get; set; }
 
         [XmlElement(ElementName = "help")]
-        public HelpTip Help
-        {
-            get { return _help; }
-            set { _help = value; }
-        }
+        public HelpTip Help { get; set; }
 
         public virtual bool RequiresGrid
         {

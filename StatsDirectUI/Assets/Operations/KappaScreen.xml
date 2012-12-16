@@ -18,18 +18,59 @@
         <option>
           <name>method</name>
           <prompt>Select method for weighted kappa</prompt>
+          <column>2</column>
+          <must-request>true</must-request>
           <default-value>1</default-value>
           <options>
             <option value="1">linear: 1-abs(i-j)/(1-k)</option>
             <option value="2">quadratic: 1-[(i-j)/(1-k)]&#178;</option>
           </options>
         </option>
+        <boolean>
+          <name>doExactP</name>
+          <prompt>Simulate exact P?</prompt>
+          <column>2</column>
+          <must-request>true</must-request>
+        </boolean>
+        <integer>
+          <name>iterations</name>
+          <prompt>Iterations</prompt>
+          <must-request>true</must-request>
+          <column>2</column>
+          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <minimum-value>1</minimum-value>
+          <default-value>1000000</default-value>
+        </integer>
+        <integer>
+          <name>seed</name>
+          <prompt>Seed</prompt>
+          <force-default>true</force-default>
+          <must-request>true</must-request>
+          <column>2</column>
+          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <default-value>=Base.DefaultSeed()</default-value>
+        </integer>
+        <confidence-interval>
+          <name>ci</name>
+          <must-request>true</must-request>
+          <can-default>false</can-default>
+          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <column>2</column>
+          <default-value>0.99</default-value>
+        </confidence-interval>
       </parameters>
     </settings>
   	<builtin function-name="rptKappaScreen" />
 		<report filename="kappa.rtf" />
+    <test>
+      <condition>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</condition>
+      <iftrue>
+        <builtin function-name="rptKappaSimulateExactP" />
+        <report filename="kappaSimulatedExactP.rtf" />
+      </iftrue>
+    </test>
 	</steps>
   <suggested-operations>
-    <suggested-operation>KappaSimulateExactP</suggested-operation>
+    <suggested-operation>KappaScreen</suggested-operation>
   </suggested-operations>
 </operation>

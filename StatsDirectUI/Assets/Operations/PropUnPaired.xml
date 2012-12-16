@@ -9,26 +9,26 @@
         <double>
           <name>n1</name>
           <prompt>Total observations in SAMPLE 1</prompt>
-          <minimum-value>0</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>1</minimum-value>
         </double>
         <double>
           <name>r1</name>
           <prompt>Number responding in SAMPLE 1</prompt>
-          <minimum-value>0</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <double>
           <name>n2</name>
           <prompt>Total observations in SAMPLE 2</prompt>
-          <minimum-value>0</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>1</minimum-value>
         </double>
         <double>
           <name>r2</name>
           <prompt>Number responding in SAMPLE 2</prompt>
-          <minimum-value>0</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <confidence-interval>
           <name>cco</name>

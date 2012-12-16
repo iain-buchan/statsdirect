@@ -33,6 +33,7 @@ namespace StatsDirect.UI
     {
         private static readonly char[] BAR = { '|' };
         private static readonly char[] EQUALS = { '=' };
+        private const string USER_INPUT_TABLE_NAME = "table";
 
         /// <summary>
         /// The minimum amount of other decoration that must be preserved above and below the operations panel.  Forces large panels to scroll.
@@ -147,6 +148,7 @@ namespace StatsDirect.UI
             UpdateToolsMenu();
             cboActiveReport.Items.Add(new ComboFormAdapter(null));
             cboActiveReport.SelectedIndex = 0;
+            cboRecentOperations.SelectedIndex = 0;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -206,6 +208,9 @@ namespace StatsDirect.UI
                     string operationName;
                     if (tagDictionary.TryGetValue("operation", out operationName))
                     {
+                        if ("PCRCovarianceNoFollowOns".Equals(operationName))
+                        {
+                        }
                         Operation operation = TemplateFactory.Operations[operationName]; // TODO: User operations
                         enabledViaGrid = isGridVisible || !operation.RequiresGrid;
                     }
@@ -665,14 +670,19 @@ namespace StatsDirect.UI
 
             WindowInformation info = (WindowInformation)e.TabPage.Tag;
             // The tab may be asked to activate while it is still being set up, hence before it has an associated window.  Handle that case.
-            if (null != info && null != info.Window && !activatingViaWindow)
+            if (null != info && info.HasWindow && !activatingViaWindow)
             {
-                activatingViaTab = true;
-                // Defer activation until after the tab's processing finishes, as otherwise the tab forcibly grabs the focus back after we can't do anything about it.
-                mostRecentlySelectedWindow = info.Window;
-                postTabTimer.Enabled = true;
-                activatingViaTab = false;
+                ActivateWindowViaTab(info.Window);
             }
+        }
+
+        private void ActivateWindowViaTab(StatsDirectForm window)
+        {
+            activatingViaTab = true;
+            // Defer activation until after the tab's processing finishes, as otherwise the tab forcibly grabs the focus back after we can't do anything about it.
+            mostRecentlySelectedWindow = window;
+            postTabTimer.Enabled = true;
+            activatingViaTab = false;
         }
 
         internal void RemoveWindow(StatsDirectForm window)
@@ -1103,16 +1113,19 @@ namespace StatsDirect.UI
         private IEnumerable<Parameter> GetAllOutstandingParameters()
         {
             List<Parameter> parameters = new List<Parameter>();
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTable();
             if (null != tlp)
             {
-                foreach (Control control in tlp.Controls)
+                foreach (Control column in tlp.Controls)
                 {
-                    if (null != control.Tag)
+                    foreach (Control control in column.Controls)
                     {
-                        Parameter parameter = (Parameter)control.Tag;
-                        if (!parameters.Contains(parameter))
-                            parameters.Add(parameter);
+                        if (null != control.Tag)
+                        {
+                            Parameter parameter = (Parameter) control.Tag;
+                            if (!parameters.Contains(parameter))
+                                parameters.Add(parameter);
+                        }
                     }
                 }
             }
@@ -1269,9 +1282,9 @@ namespace StatsDirect.UI
         private void ResizeContainer(bool enforceHeightOnOperations)
         {
             int tableHeight = 0;
-            if (pnlUser.Controls.ContainsKey("table"))
+            if (HasUserInputTable())
             {
-                TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+                TableLayoutPanel tlp = GetUserInputTable();
                 tableHeight = tlp.PreferredSize.Height + tlp.Margin.Top;
                 tlp.Width = pnlUser.Width;
             }
@@ -1294,11 +1307,16 @@ namespace StatsDirect.UI
             // bool shouldScrollHorizontally = false;
             // tlpOperations.AutoScroll = shouldScrollVertically | shouldScrollHorizontally;
             // The following is a workaround for the TableLayoutPanel apparently not following its own wishes for height, even when the preferred height is reported correctly.  No idea why!
-            if (pnlUser.Controls.ContainsKey("table"))
+            if (HasUserInputTable())
             {
-                TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+                TableLayoutPanel tlp = GetUserInputTable();
                 tlp.Height = contentHeight;
             }
+        }
+
+        private bool HasUserInputTable()
+        {
+            return pnlUser.Controls.ContainsKey(USER_INPUT_TABLE_NAME);
         }
 
         private void PushPanel(PanelType panelType, bool enforceHeightOnOperations)
@@ -1690,7 +1708,7 @@ namespace StatsDirect.UI
                 }
                 if (cboOperation.Items.Count > 0)
                 {
-                    cboOperation.Enabled = cboOperation.Items.Count > 1;
+                    // cboOperation.Enabled = cboOperation.Items.Count > 1; Removed in #699
                     ShowPanel(PanelType.Operations, false);
                     knownParameters = inputParameters;
 // ReSharper disable RedundantCheckBeforeAssignment
@@ -1972,7 +1990,7 @@ namespace StatsDirect.UI
                         string rubric = parameter.Rubric(processor, context);
                         if (null != rubric)
                         {
-                            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+                            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
 
                             Label lbl = new Label
                                             {
@@ -2126,6 +2144,22 @@ namespace StatsDirect.UI
             }
         }
 
+        private TableLayoutPanel GetUserInputTableForColumn(int column)
+        {
+            TableLayoutPanel tlp = GetUserInputTable();
+            while (tlp.ColumnCount < column)
+            {
+                TableLayoutPanel colTlp = CreateUserInputColumn();
+                colTlp.SuspendLayout();
+                tlp.ColumnCount++;
+                tlp.Controls.Add(colTlp);
+                tlp.SetCellPosition(colTlp, new TableLayoutPanelCellPosition(tlp.ColumnCount - 1, 0));
+                tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            }
+            // Make use of the fact that we always create columns in the order 1..n, so controls[i-1] is the control that was created i'th in sequence and hence the control in column i.
+            return (TableLayoutPanel)tlp.Controls[column - 1];
+        }
+
         /// <summary>
         /// We're about to display a data input screen.  If there are any variables that we already know about, allow the user to examine them.  If not, hide the button!
         /// </summary>
@@ -2209,7 +2243,7 @@ namespace StatsDirect.UI
                                 // If there's a title, use it as the title of the parameter
                                 return p.Title;
                             }
-                            return null != p.PromptExpression ? p.Prompt(new TemplateProcessor(SDApplication.SoleInstance), context) : null;
+                            return p.HasPrompt ? p.Prompt(new TemplateProcessor(SDApplication.SoleInstance), context) : null;
                         }
                     }
                 }
@@ -2223,10 +2257,10 @@ namespace StatsDirect.UI
             if (pnlConfidenceInterval.Visible)
                 pnlConfidenceInterval.Visible = false;
             cboConfidenceInterval.Tag = null;
-            if (pnlUser.Controls.ContainsKey("table"))
+            if (HasUserInputTable())
             {
-                Control table = pnlUser.Controls["table"];
-                pnlUser.Controls.RemoveByKey("table");
+                Control table = GetUserInputTable();
+                pnlUser.Controls.RemoveByKey(USER_INPUT_TABLE_NAME);
                 table.Dispose();
             }
             cmdCalculate.Text = "&OK";
@@ -2237,47 +2271,76 @@ namespace StatsDirect.UI
         {
             pnlUser.SuspendLayout();
             ClearCombinedParameters();
-            TableLayoutPanel tlp = new TableLayoutPanel
-                                       {
-                                           Name = "table",
-                                           ColumnCount = 2,
-                                           GrowStyle = TableLayoutPanelGrowStyle.AddRows,
-                                           Width = pnlUser.Width,
-                                           Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                                           Tag = "TopLevelUserTable"
-                                       };
-            tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            tlp.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            tlp.Location = new Point(0, 0);
-            tlp.Margin = new Padding(0, 0, 0, 0);
+            TableLayoutPanel tlp = CreateUserInputTable();
             tlp.SuspendLayout();
             pnlUser.Controls.Add(tlp);
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, BooleanParameter booleanParameter, ParameterBag context)
+        private TableLayoutPanel CreateUserInputColumn()
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = new TableLayoutPanel
+            {
+                ColumnCount = 2,
+                GrowStyle = TableLayoutPanelGrowStyle.AddRows,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                AutoSize = true,
+                Location = new Point(0, 0),
+                Margin = new Padding(6, 0, 6, 6)
+            };
+            tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            tlp.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            return tlp;
+        }
+
+        private TableLayoutPanel CreateUserInputTable()
+        {
+            TableLayoutPanel tlp = new TableLayoutPanel
+            {
+                Name = USER_INPUT_TABLE_NAME,
+                ColumnCount = 1,
+                GrowStyle = TableLayoutPanelGrowStyle.AddColumns,
+                Width = pnlUser.Width,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Tag = "TopLevelUserTable"
+            };
+            tlp.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            tlp.Location = new Point(0, 0);
+            tlp.Margin = new Padding(0, 0, 0, 0);
+
+            // Expect to use at least one column if we're being created at all
+            TableLayoutPanel col0 = CreateUserInputColumn();
+            tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            // col0.SuspendLayout();
+            tlp.Controls.Add(col0);
+            tlp.SetCellPosition(col0, new TableLayoutPanelCellPosition(tlp.ColumnCount - 1, 0));
+
+            return tlp;
+        }
+
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, BooleanParameter parameter, ParameterBag context)
+        {
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             CheckBox cb = new CheckBox
                               {
                                   Padding = new Padding(3, 3, 3, 3),
                                   AutoSize = true,
-                                  Tag = booleanParameter
+                                  Tag = parameter
                               };
             AddAppropriateEventHandlersTo(cb);
-            if (context.ContainsKey(booleanParameter.Name) && null != context[booleanParameter.Name] && context[booleanParameter.Name].IsInputParameter && context[booleanParameter.Name].IsBoolean)
+            if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsBoolean)
             {
-                cb.Checked = context[booleanParameter.Name].AsBoolean;
+                cb.Checked = context[parameter.Name].AsBoolean;
             }
             else
             {
-                if (null != booleanParameter.DefaultValue)
-                    cb.Checked = (bool)processor.Evaluate(booleanParameter.DefaultValue, context);
+                if (null != parameter.DefaultValue)
+                    cb.Checked = (bool)processor.Evaluate(parameter.DefaultValue, context);
                 else
                     cb.Checked = false;
             }
-            cb.Text = booleanParameter.HasPrompt ? booleanParameter.Prompt(processor, context) : "";
-            MaybeAddHelpTip(cb, booleanParameter);
+            cb.Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : "";
+            MaybeAddHelpTip(cb, parameter);
             tlp.Controls.Add(cb);
             tlp.SetColumnSpan(cb, 2);
 
@@ -2351,11 +2414,11 @@ namespace StatsDirect.UI
             }
         }
 
-        private FilledParameter PrepareCombinedParameter(ChartOptionsParameter chartOptionsParameter)
+        private FilledParameter PrepareCombinedParameter(ChartOptionsParameter parameter)
         {
-            Charting.ChartDefinition chartDefinition = chartOptionsParameter.ChartDefinition;
+            Charting.ChartDefinition chartDefinition = parameter.ChartDefinition;
             Charting.ChartOptions chartOptions = chartDefinition.ChartOptions;
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             Control ctl;
             switch (chartOptions.OptionType)
             {
@@ -2378,25 +2441,25 @@ namespace StatsDirect.UI
                 case Charting.ChartOptions.OptionTypes.Gini:
                 case Charting.ChartOptions.OptionTypes.LinearRegression:
                     // Do nothing - there are no options to fill
-                    return new FilledParameter(true, chartOptionsParameter.ChartDefinition);
+                    return new FilledParameter(true, parameter.ChartDefinition);
                 default:
-                    throw new ArgumentOutOfRangeException("chartOptionsParameter", chartOptions.OptionType.ToString(), "ChartOptions.OptionType: Don't know how to ask the user for options for the specified chart type");
+                    throw new ArgumentOutOfRangeException("parameter", chartOptions.OptionType.ToString(), "ChartOptions.OptionType: Don't know how to ask the user for options for the specified chart type");
             }
             // At this point, ctl is always assigned.
-            ctl.Tag = chartOptionsParameter;
+            ctl.Tag = parameter;
             tlp.Controls.Add(ctl);
             tlp.SetColumnSpan(ctl, 2);
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, ConfidenceIntervalParameter confidenceIntervalParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, ConfidenceIntervalParameter parameter, ParameterBag context)
         {
-            if (confidenceIntervalParameter.CanDefault && SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
+            if (parameter.CanDefault && SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
                 return new FilledParameter(true, SDApplication.SoleInstance.Preferences.DefaultConfidenceInterval);
 
             // If this is a "standard" CI and the dedicated CI combo isn't in use, use it.  Otherwise, create one in the flow.
             ComboBox cbo;
-            bool useSingle = null == cboConfidenceInterval.Tag && confidenceIntervalParameter.MinimumSuggestedValue == 0.9 && confidenceIntervalParameter.MaximumSuggestedValue == 0.99;
+            bool useSingle = null == cboConfidenceInterval.Tag && parameter.MinimumSuggestedValue == 0.9 && parameter.MaximumSuggestedValue == 0.99;
             if (useSingle)
             {
                 cbo = cboConfidenceInterval;
@@ -2404,44 +2467,44 @@ namespace StatsDirect.UI
             }
             else
             {
-                TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+                TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
                 cbo = new ComboBox {Size = new Size(55, 18), FormattingEnabled = true};
                 AddAppropriateEventHandlersTo(cbo);
                 tlp.Controls.Add(cbo);
-                MaybeAddHelpTip(cbo, confidenceIntervalParameter);
+                MaybeAddHelpTip(cbo, parameter);
 
                 Label lbl = new Label
                                 {
-                                    Tag = confidenceIntervalParameter,
+                                    Tag = parameter,
                                     Padding = new Padding(0, 6, 0, 3),
                                     AutoSize = true,
                                     Text =
-                                        confidenceIntervalParameter.HasPrompt
-                                            ? confidenceIntervalParameter.Prompt(processor, context)
+                                        parameter.HasPrompt
+                                            ? parameter.Prompt(processor, context)
                                             : "Confidence (%)"
                                 };
                 tlp.Controls.Add(lbl);
-                MaybeAddHelpTip(lbl, confidenceIntervalParameter);
+                MaybeAddHelpTip(lbl, parameter);
             }
 
-            cbo.Tag = confidenceIntervalParameter;
+            cbo.Tag = parameter;
             cbo.Items.Clear();
             for (int multiplier = 0; multiplier < 500; multiplier++)
             {
-                double suggestedValue = confidenceIntervalParameter.MinimumSuggestedValue + (multiplier * confidenceIntervalParameter.SuggestedStep);
-                if (suggestedValue > confidenceIntervalParameter.MaximumSuggestedValue)
+                double suggestedValue = parameter.MinimumSuggestedValue + (multiplier * parameter.SuggestedStep);
+                if (suggestedValue > parameter.MaximumSuggestedValue)
                     break;
                 cbo.Items.Add((suggestedValue * 100.0).ToString("##0.0"));
             }
 
             // If there's a specific default CI, force it.  If not, don't overwrite the CI combo's value, so that a user can persist CI values between operations.
-            if (context.ContainsKey(confidenceIntervalParameter.Name) && null != context[confidenceIntervalParameter.Name] && context[confidenceIntervalParameter.Name].IsInputParameter && context[confidenceIntervalParameter.Name].IsDouble)
+            if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsDouble)
             {
-                cbo.Text = (context[confidenceIntervalParameter.Name].AsDouble * 100.0).ToString("##0.0");
+                cbo.Text = (context[parameter.Name].AsDouble * 100.0).ToString("##0.0");
             }
-            else if (0.0 != confidenceIntervalParameter.DefaultValue)
+            else if (0.0 != parameter.DefaultValue)
             {
-                cbo.Text = (confidenceIntervalParameter.DefaultValue * 100.0).ToString("##0.0");
+                cbo.Text = (parameter.DefaultValue * 100.0).ToString("##0.0");
             }
             else
             {
@@ -2455,50 +2518,50 @@ namespace StatsDirect.UI
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, DateParameter dateParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, DateParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
-            TextBox txt = new TextBox {Size = new Size(80, 18), Tag = dateParameter};
-            if ((!dateParameter.ForceDefault) && context.ContainsKey(dateParameter.Name) && null != context[dateParameter.Name] && context[dateParameter.Name].IsInputParameter && context[dateParameter.Name].IsInt32)
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
+            TextBox txt = new TextBox {Size = new Size(80, 18), Tag = parameter};
+            if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsInt32)
             {
-                txt.Text = context[dateParameter.Name].AsInt32.ToString();
+                txt.Text = context[parameter.Name].AsInt32.ToString();
             }
             else
             {
-                if (dateParameter.HasDefaultValue)
+                if (parameter.HasDefaultValue)
                 {
-                    txt.Text = dateParameter.DefaultValue(processor, context).ToString("d");
+                    txt.Text = parameter.DefaultValue(processor, context).ToString("d");
                 }
             }
             AddAppropriateEventHandlersTo(txt);
-            MaybeAddHelpTip(txt, dateParameter);
+            MaybeAddHelpTip(txt, parameter);
             tlp.Controls.Add(txt);
 
             Label lbl = new Label
                             {
-                                Tag = dateParameter,
+                                Tag = parameter,
                                 Padding = new Padding(0, 6, 0, 3),
                                 AutoSize = true,
-                                Text = dateParameter.HasPrompt ? dateParameter.Prompt(processor, context) : ""
+                                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
                             };
             tlp.Controls.Add(lbl);
-            MaybeAddHelpTip(lbl, dateParameter);
+            MaybeAddHelpTip(lbl, parameter);
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, DoubleParameter doubleParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, DoubleParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
-            TextBox txt = new TextBox {Size = new Size(70, 18), Tag = doubleParameter};
-            if ((!doubleParameter.ForceDefault) && context.ContainsKey(doubleParameter.Name) && null != context[doubleParameter.Name] && context[doubleParameter.Name].IsInputParameter && context[doubleParameter.Name].IsDouble)
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
+            TextBox txt = new TextBox {Size = new Size(70, 18), Tag = parameter};
+            if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsDouble)
             {
-                double defaultValue = context[doubleParameter.Name].AsDouble;
+                double defaultValue = context[parameter.Name].AsDouble;
                 if ((!double.IsNaN(defaultValue)) && defaultValue != Constant.MISSING)
-                    txt.Text = context[doubleParameter.Name].AsDouble.ToString();
+                    txt.Text = context[parameter.Name].AsDouble.ToString();
             }
             else
             {
-                double? defaultValue = doubleParameter.DefaultValue(processor, context);
+                double? defaultValue = parameter.DefaultValue(processor, context);
                 string defaultValueString = "";
                 if (defaultValue.HasValue && (!double.IsNaN(defaultValue.Value)) && defaultValue.Value != Constant.MISSING)
                     defaultValueString = defaultValue.Value.ToString();
@@ -2507,36 +2570,33 @@ namespace StatsDirect.UI
             AddAppropriateEventHandlersTo(txt);
 
             string suffix = "";
-            if (doubleParameter.ShowLimits)
+            if (parameter.ShowLimits)
             {
-                double minimumValue = doubleParameter.MinimumValue(processor, context);
-                double maximumValue = doubleParameter.MaximumValue(processor, context);
-                if (minimumValue > double.MinValue || maximumValue < double.MaxValue)
+                double minimumValue = parameter.MinimumValue(processor, context);
+                double maximumValue = parameter.MaximumValue(processor, context);
+                if (minimumValue > double.MinValue)
                 {
-                    suffix = " (";
-                    if (minimumValue > double.MinValue)
-                        suffix += minimumValue.ToString();
-                    else
-                        suffix += "-\u221E";
-                    suffix += " to ";
                     if (maximumValue < double.MaxValue)
-                        suffix += maximumValue.ToString();
+                        suffix = " (" + minimumValue.ToString() + " to " + maximumValue.ToString() + ")";
                     else
-                        suffix += "\u221E";
-                    suffix += ")";
+                        suffix = " (>= " + minimumValue.ToString() + ")";
+                }
+                else if (maximumValue < double.MaxValue)
+                {
+                    suffix = " (<= " + maximumValue.ToString() + ")";
                 }
             }
 
-            Label lbl = new Label {Tag = doubleParameter, Padding = new Padding(0, 6, 0, 3), AutoSize = true};
-            if (doubleParameter.HasPrompt)
-                lbl.Text = doubleParameter.Prompt(processor, context) + suffix;
+            Label lbl = new Label {Tag = parameter, Padding = new Padding(0, 6, 0, 3), AutoSize = true};
+            if (parameter.HasPrompt)
+                lbl.Text = parameter.Prompt(processor, context) + suffix;
             else
                 lbl.Text = suffix;
 
-            MaybeAddHelpTip(lbl, doubleParameter);
-            MaybeAddHelpTip(txt, doubleParameter);
+            MaybeAddHelpTip(lbl, parameter);
+            MaybeAddHelpTip(txt, parameter);
 
-            if (doubleParameter.PromptPrecedesParameter)
+            if (parameter.PromptPrecedesParameter)
             {
                 tlp.Controls.Add(lbl);
                 tlp.Controls.Add(txt);
@@ -2549,11 +2609,11 @@ namespace StatsDirect.UI
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, Double2By2Parameter double2By2Parameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, Double2By2Parameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             TableLayoutPanel panel2By2 = new TableLayoutPanel
-                                             {Tag = double2By2Parameter, RowCount = 4, ColumnCount = 3, AutoSize = true};
+                                             {Tag = parameter, RowCount = 4, ColumnCount = 3, AutoSize = true};
             panel2By2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel2By2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel2By2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -2562,7 +2622,7 @@ namespace StatsDirect.UI
                                          {
                                              Padding = new Padding(3, 3, 3, 3),
                                              AutoSize = true,
-                                             Text = double2By2Parameter.ColumnsPrompt
+                                             Text = parameter.ColumnsPrompt
                                          };
             panel2By2.Controls.Add(lblColumnsPrompt, 0, 0);
             panel2By2.SetColumnSpan(lblColumnsPrompt, 3);
@@ -2571,7 +2631,7 @@ namespace StatsDirect.UI
                                             {
                                                 Padding = new Padding(3, 6, 3, 3),
                                                 AutoSize = true,
-                                                Text = double2By2Parameter.LeftColumnPrompt
+                                                Text = parameter.LeftColumnPrompt
                                             };
             panel2By2.Controls.Add(lblLeftColumnPrompt, 0, 1);
 
@@ -2579,7 +2639,7 @@ namespace StatsDirect.UI
                                              {
                                                  Padding = new Padding(3, 6, 3, 3),
                                                  AutoSize = true,
-                                                 Text = double2By2Parameter.RightColumnPrompt
+                                                 Text = parameter.RightColumnPrompt
                                              };
             panel2By2.Controls.Add(lblRightColumnPrompt, 1, 1);
 
@@ -2587,19 +2647,19 @@ namespace StatsDirect.UI
                                       {
                                           Padding = new Padding(3, 6, 3, 3),
                                           AutoSize = true,
-                                          Text = double2By2Parameter.RowsPrompt
+                                          Text = parameter.RowsPrompt
                                       };
             panel2By2.Controls.Add(lblRowsPrompt, 2, 1);
 
             TextBox txtTL = new TextBox {Name = "txtTL", Size = new Size(100, 18)};
-            if (context.ContainsKey(double2By2Parameter.TopLeftName) && null != context[double2By2Parameter.TopLeftName] && context[double2By2Parameter.TopLeftName].IsInputParameter && context[double2By2Parameter.TopLeftName].IsDouble)
-                txtTL.Text = context[double2By2Parameter.TopLeftName].AsDouble.ToString();
+            if (context.ContainsKey(parameter.TopLeftName) && null != context[parameter.TopLeftName] && context[parameter.TopLeftName].IsInputParameter && context[parameter.TopLeftName].IsDouble)
+                txtTL.Text = context[parameter.TopLeftName].AsDouble.ToString();
             AddAppropriateEventHandlersTo(txtTL);
             panel2By2.Controls.Add(txtTL, 0, 2);
 
             TextBox txtTR = new TextBox {Name = "txtTR", Size = new Size(100, 18)};
-            if (context.ContainsKey(double2By2Parameter.TopRightName) && null != context[double2By2Parameter.TopRightName] && context[double2By2Parameter.TopRightName].IsInputParameter && context[double2By2Parameter.TopRightName].IsDouble)
-                txtTR.Text = context[double2By2Parameter.TopRightName].AsDouble.ToString();
+            if (context.ContainsKey(parameter.TopRightName) && null != context[parameter.TopRightName] && context[parameter.TopRightName].IsInputParameter && context[parameter.TopRightName].IsDouble)
+                txtTR.Text = context[parameter.TopRightName].AsDouble.ToString();
             AddAppropriateEventHandlersTo(txtTR);
             panel2By2.Controls.Add(txtTR, 1, 2);
 
@@ -2607,19 +2667,19 @@ namespace StatsDirect.UI
                                         {
                                             Padding = new Padding(3, 6, 3, 3),
                                             AutoSize = true,
-                                            Text = double2By2Parameter.TopRowPrompt
+                                            Text = parameter.TopRowPrompt
                                         };
             panel2By2.Controls.Add(lblTopRowPrompt, 2, 2);
 
             TextBox txtBL = new TextBox {Name = "txtBL", Size = new Size(100, 18)};
-            if (context.ContainsKey(double2By2Parameter.BottomLeftName) && null != context[double2By2Parameter.BottomLeftName] && context[double2By2Parameter.BottomLeftName].IsInputParameter && context[double2By2Parameter.BottomLeftName].IsDouble)
-                txtBL.Text = context[double2By2Parameter.BottomLeftName].AsDouble.ToString();
+            if (context.ContainsKey(parameter.BottomLeftName) && null != context[parameter.BottomLeftName] && context[parameter.BottomLeftName].IsInputParameter && context[parameter.BottomLeftName].IsDouble)
+                txtBL.Text = context[parameter.BottomLeftName].AsDouble.ToString();
             AddAppropriateEventHandlersTo(txtBL);
             panel2By2.Controls.Add(txtBL, 0, 3);
 
             TextBox txtBR = new TextBox {Name = "txtBR", Size = new Size(100, 18)};
-            if (context.ContainsKey(double2By2Parameter.BottomRightName) && null != context[double2By2Parameter.BottomRightName] && context[double2By2Parameter.BottomRightName].IsInputParameter && context[double2By2Parameter.BottomRightName].IsDouble)
-                txtBR.Text = context[double2By2Parameter.BottomRightName].AsDouble.ToString();
+            if (context.ContainsKey(parameter.BottomRightName) && null != context[parameter.BottomRightName] && context[parameter.BottomRightName].IsInputParameter && context[parameter.BottomRightName].IsDouble)
+                txtBR.Text = context[parameter.BottomRightName].AsDouble.ToString();
             AddAppropriateEventHandlersTo(txtBR);
             panel2By2.Controls.Add(txtBR, 1, 3);
 
@@ -2627,7 +2687,7 @@ namespace StatsDirect.UI
                                            {
                                                Padding = new Padding(3, 6, 3, 3),
                                                AutoSize = true,
-                                               Text = double2By2Parameter.BottomRowPrompt
+                                               Text = parameter.BottomRowPrompt
                                            };
             panel2By2.Controls.Add(lblBottomRowPrompt, 2, 3);
 
@@ -2637,12 +2697,12 @@ namespace StatsDirect.UI
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, Double2By2ByKParameter double2By2ByKParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, Double2By2ByKParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             TableLayoutPanel panel2By2ByK = new TableLayoutPanel
                                                 {
-                                                    Tag = double2By2ByKParameter,
+                                                    Tag = parameter,
                                                     RowCount = 5,
                                                     ColumnCount = 3,
                                                     AutoSize = true
@@ -2710,9 +2770,9 @@ namespace StatsDirect.UI
             panel2By2ByK.Controls.Add(lblBottomRowPrompt, 2, 3);
 
             // Fill in data for stratum 1 if present; set number of strata if present
-            if (context.ContainsKey(double2By2ByKParameter.Name) && null != context[double2By2ByKParameter.Name] && context[double2By2ByKParameter.Name].IsInputParameter && context[double2By2ByKParameter.Name].IsDataFrame)
+            if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsDataFrame)
             {
-                DataFrame sourceFrame = context[double2By2ByKParameter.Name].AsDataFrame;
+                DataFrame sourceFrame = context[parameter.Name].AsDataFrame;
                 int tableCount = sourceFrame.MinRows / 2;
                 if (sourceFrame.VariableCount == 2 && sourceFrame.Variables[0].IsDoubleVariable && sourceFrame.Variables[1].IsDoubleVariable)
                 {
@@ -2735,7 +2795,7 @@ namespace StatsDirect.UI
 
             return null;
             /* Old version
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTable();
             DataGridView gridEditGrid = new DataGridView();
             ((ISupportInitialize)gridEditGrid).BeginInit();
             DataGridViewTextBoxColumn col1 = new DataGridViewTextBoxColumn();
@@ -2924,14 +2984,14 @@ namespace StatsDirect.UI
             cmdNext.Enabled = true; // Can always Next to create another stratum
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, EditGridParameter editGridParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, EditGridParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             DataGridView gridEditGrid = new DataGridView();
             ((ISupportInitialize)gridEditGrid).BeginInit();
             DataGridViewTextBoxColumn colKey = new DataGridViewTextBoxColumn();
             DataGridViewTextBoxColumn colValue = new DataGridViewTextBoxColumn();
-            gridEditGrid.Tag = editGridParameter;
+            gridEditGrid.Tag = parameter;
             gridEditGrid.AllowUserToAddRows = false;
             gridEditGrid.AllowUserToDeleteRows = false;
             gridEditGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -2955,7 +3015,7 @@ namespace StatsDirect.UI
             colValue.SortMode = DataGridViewColumnSortMode.NotSortable;
             tlp.Controls.Add(gridEditGrid);
             ((ISupportInitialize)gridEditGrid).EndInit();
-            EditGridParameter egp = editGridParameter;
+            EditGridParameter egp = parameter;
             DataFrame sourceFrame = context[egp.Source].AsDataFrame;
             StringVariable keyVariable = sourceFrame.FindVariable(egp.KeyVariable).AsStringVariable;
             StringVariable valueVariable = sourceFrame.FindVariable(egp.ValueVariable).AsStringVariable;
@@ -2968,20 +3028,20 @@ namespace StatsDirect.UI
 
             Label lbl = new Label
                             {
-                                Tag = editGridParameter,
+                                Tag = parameter,
                                 Padding = new Padding(0, 6, 0, 3),
                                 AutoSize = true,
-                                Text = editGridParameter.HasPrompt ? editGridParameter.Prompt(processor, context) : ""
+                                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
                             };
             tlp.Controls.Add(lbl);
             return null;
         }
 
-        private FilledParameter PrepareCombinedParameter(ITemplateHost host, FillableParameter fillableParameter)
+        private FilledParameter PrepareCombinedParameter(ITemplateHost host, FillableParameter parameter)
         {
-            IFillable fillable = fillableParameter.Fillable;
+            IFillable fillable = parameter.Fillable;
             string fillerToUse = fillable.FillerToUse;
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             Control ctl;
             if ("ChiSquareGoodnessOfFit".Equals(fillerToUse))
                 ctl = new ctlChiGFOptions((Builtins.ChiSquareGoodnessOfFitOptions)fillable);
@@ -3013,8 +3073,8 @@ namespace StatsDirect.UI
                 return Amend((StatsDirect.Builtins.SummaryStatisticsOptions)fillable);
              **/
             else
-                throw new ArgumentOutOfRangeException("fillableParameter", fillable.FillerToUse, "fillableParameter.Fillable.FillerToUse: Unknown option");
-            ctl.Tag = fillableParameter;
+                throw new ArgumentOutOfRangeException("parameter", fillable.FillerToUse, "fillableParameter.Fillable.FillerToUse: Unknown option");
+            ctl.Tag = parameter;
             tlp.Controls.Add(ctl);
             tlp.SetColumnSpan(ctl, 2);
             return null;
@@ -3026,34 +3086,37 @@ namespace StatsDirect.UI
         /// <returns></returns>
         private WorkbookView FindGridOrNull()
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
-            // Make use of the fact that grids are always added directly to the panel
-            foreach (Control c in tlp.Controls)
-                if (c is WorkbookView)
-                    return (WorkbookView) c;
+            TableLayoutPanel tlp = GetUserInputTable();
+            foreach (Control column in tlp.Controls)
+            {
+                // Make use of the fact that grids are always added directly to the panel
+                foreach (Control c in column.Controls)
+                    if (c is WorkbookView)
+                        return (WorkbookView) c;
+            }
             // If we get here, there's no grid
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, GridParameter gridParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, GridParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             try
             {
                 new FileIOPermission(PermissionState.Unrestricted).Assert(); // TODO: Can this be refined, or does SSG really need everything?
                 WorkbookView grid = new WorkbookView
                                         {
-                                            Tag = gridParameter,
+                                            Tag = parameter,
                                             Name = "grid",
                                             Size = new Size(500 - 2*3, 305),
                                             ContextMenuStrip = contextMenuStrip
                                         };
                 grid.ActiveWorkbookSet.GetLock();
-                if (context.ContainsKey(gridParameter.Name) && null != context[gridParameter.Name] && context[gridParameter.Name].IsInputParameter && context[gridParameter.Name].IsDataFrame)
+                if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsDataFrame)
                 {
                     IWorksheet sheet = grid.ActiveWorksheet;
                     IRange usedRange = sheet.UsedRange;
-                    DataFrame frame = context[gridParameter.Name].AsDataFrame;
+                    DataFrame frame = context[parameter.Name].AsDataFrame;
                     for (int col = 0; col < frame.VariableCount; col++)
                     {
                         DoubleVariable v = frame.Variables[col].AsDoubleVariable;
@@ -3080,67 +3143,63 @@ namespace StatsDirect.UI
 
             Label lbl = new Label
                             {
-                                Tag = gridParameter,
+                                Tag = parameter,
                                 Padding = new Padding(0, 6, 0, 3),
                                 AutoSize = true,
-                                Text = gridParameter.HasPrompt ? gridParameter.Prompt(processor, context) : ""
+                                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
                             };
             tlp.Controls.Add(lbl);
 
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, IntegerParameter integerParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, IntegerParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
-            TextBox txt = new TextBox {Size = new Size(70, 18), Tag = integerParameter};
-            if ((!integerParameter.ForceDefault) && context.ContainsKey(integerParameter.Name) && null != context[integerParameter.Name] && context[integerParameter.Name].IsInputParameter && context[integerParameter.Name].IsInt32)
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
+            TextBox txt = new TextBox {Size = new Size(70, 18), Tag = parameter};
+            if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsInt32)
             {
-                txt.Text = context[integerParameter.Name].AsInt32.ToString();
+                txt.Text = context[parameter.Name].AsInt32.ToString();
             }
             else
             {
-                if (integerParameter.HasDefaultValue)
+                if (parameter.HasDefaultValue)
                 {
-                    txt.Text = integerParameter.DefaultValue(processor, context).ToString();
+                    txt.Text = parameter.DefaultValue(processor, context).ToString();
                 }
             }
             AddAppropriateEventHandlersTo(txt);
 
             string suffix = "";
-            if (integerParameter.ShowLimits)
+            if (parameter.ShowLimits)
             {
-                if (integerParameter.MinimumValue > Int32.MinValue || integerParameter.MaximumValue < Int32.MaxValue)
+                int minimumValue = parameter.MinimumValue;
+                int maximumValue = parameter.MaximumValue;
+                if (minimumValue > int.MinValue)
                 {
-                    suffix = " (";
-                    if (integerParameter.MinimumValue > Int32.MinValue)
-                        suffix += integerParameter.MinimumValue.ToString();
+                    if (maximumValue < int.MaxValue)
+                        suffix = " (" + minimumValue.ToString() + " to " + maximumValue.ToString() + ")";
                     else
-                        suffix += "-\u221E";
-                    suffix += " to ";
-                    if (integerParameter.MaximumValue < Int32.MaxValue)
-                        suffix += integerParameter.MaximumValue.ToString();
-                    else
-                        suffix += "\u221E";
-                    suffix += ")";
+                        suffix = " (>= " + minimumValue.ToString() + ")";
+                }
+                else if (maximumValue < int.MaxValue)
+                {
+                    suffix = " (<= " + maximumValue.ToString() + ")";
                 }
             }
 
             Label lbl = new Label
-                            {
-                                Tag = integerParameter,
-                                Padding = new Padding(0, 6, 0, 3),
-                                AutoSize = true,
-                                Text =
-                                    integerParameter.HasPrompt
-                                        ? integerParameter.Prompt(processor, context) + suffix
-                                        : suffix
-                            };
+            {
+                Tag = parameter,
+                Padding = new Padding(0, 6, 0, 3),
+                AutoSize = true,
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) + suffix : suffix
+            };
 
-            MaybeAddHelpTip(lbl, integerParameter);
-            MaybeAddHelpTip(txt, integerParameter);
+            MaybeAddHelpTip(lbl, parameter);
+            MaybeAddHelpTip(txt, parameter);
 
-            if (integerParameter.PromptPrecedesParameter)
+            if (parameter.PromptPrecedesParameter)
             {
                 tlp.Controls.Add(lbl);
                 tlp.Controls.Add(txt);
@@ -3172,28 +3231,28 @@ namespace StatsDirect.UI
             cbo.Size = new Size(width, cbo.PreferredHeight);
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, OptionParameter optionParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, OptionParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
 
-            switch (optionParameter.OptionFormatType)
+            switch (parameter.OptionFormatType)
             {
                 case OptionFormatType.Dropdown:
                     {
                         string defaultValue = null;
-                        if (context.ContainsKey(optionParameter.Name) && null != context[optionParameter.Name] && context[optionParameter.Name].IsInputParameter)
+                        if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter)
                         {
-                            defaultValue = context[optionParameter.Name].AsString;
+                            defaultValue = context[parameter.Name].AsString;
                         }
                         else
                         {
-                            if (null != optionParameter.DefaultValue)
-                                defaultValue = processor.Evaluate(optionParameter.DefaultValue, context).ToString();
+                            if (null != parameter.DefaultValue)
+                                defaultValue = processor.Evaluate(parameter.DefaultValue, context).ToString();
                         }
 
-                        ComboBox cbo = new ComboBox {Tag = optionParameter, MaximumSize = new Size(250, 21)};
-                        OptionOption defaultOption = optionParameter.Options[0];
-                        foreach (OptionOption optionOption in optionParameter.Options)
+                        ComboBox cbo = new ComboBox {Tag = parameter, MaximumSize = new Size(250, 21)};
+                        OptionOption defaultOption = parameter.Options[0];
+                        foreach (OptionOption optionOption in parameter.Options)
                         {
                             cbo.Items.Add(optionOption);
                             if (optionOption.Value.Equals(defaultValue))
@@ -3208,39 +3267,41 @@ namespace StatsDirect.UI
 
                         Label lbl = new Label
                                         {
-                                            Tag = optionParameter,
+                                            Tag = parameter,
                                             Padding = new Padding(0, 6, 0, 3),
                                             AutoSize = true,
                                             MaximumSize = new Size(500, 500),
                                             Text =
-                                                optionParameter.HasPrompt
-                                                    ? optionParameter.Prompt(processor, context)
+                                                parameter.HasPrompt
+                                                    ? parameter.Prompt(processor, context)
                                                     : ""
                                         };
 
-                        if (optionParameter.PromptPrecedesParameter)
+                        tlp.Controls.Add(cbo);
+                        tlp.Controls.Add(lbl);
+                        if (parameter.PromptPrecedesParameter)
                         {
-                            tlp.Controls.Add(lbl);
-                            tlp.Controls.Add(cbo);
+                            tlp.SetColumn(lbl, 0);
+                            tlp.SetColumn(cbo, 1);
                         }
                         else
                         {
-                            tlp.Controls.Add(cbo);
-                            tlp.Controls.Add(lbl);
+                            tlp.SetColumn(cbo, 0);
+                            tlp.SetColumn(lbl, 1);
                         }
                     }
                     break;
                 case OptionFormatType.Radio:
                     {
                         GroupBox groupBox = null;
-                        if (optionParameter.HasPrompt)
+                        if (parameter.HasPrompt)
                         {
-                            string prompt = optionParameter.Prompt(processor, context);
+                            string prompt = parameter.Prompt(processor, context);
                             if (!string.IsNullOrEmpty(prompt))
                             {
                                 groupBox = new SDGroupBox
                                                {
-                                                   Tag = optionParameter,
+                                                   Tag = parameter,
                                                    Padding = new Padding(3, 0, 3, 3),
                                                    AutoSize = true,
                                                    Text = prompt
@@ -3252,28 +3313,28 @@ namespace StatsDirect.UI
 
                         TableLayoutPanel panelOptions = new TableLayoutPanel
                                                             {
-                                                                Tag = optionParameter,
-                                                                RowCount = (optionParameter.Options.Count + 1)/2,
-                                                                ColumnCount = optionParameter.Columns,
+                                                                Tag = parameter,
+                                                                RowCount = (parameter.Options.Count + 1)/2,
+                                                                ColumnCount = parameter.Columns,
                                                                 AutoSize = true
                                                             };
-                        for (int column = 0; column < optionParameter.Columns; column++)
+                        for (int column = 0; column < parameter.Columns; column++)
                         {
                             panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
                         }
 
                         string defaultValue = null;
-                        if (context.ContainsKey(optionParameter.Name) && null != context[optionParameter.Name] && context[optionParameter.Name].IsInputParameter)
+                        if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter)
                         {
-                            defaultValue = context[optionParameter.Name].AsString;
+                            defaultValue = context[parameter.Name].AsString;
                         }
                         else
                         {
-                            if (null != optionParameter.DefaultValue)
-                                defaultValue = processor.Evaluate(optionParameter.DefaultValue, context).ToString();
+                            if (null != parameter.DefaultValue)
+                                defaultValue = processor.Evaluate(parameter.DefaultValue, context).ToString();
                         }
 
-                        foreach (OptionOption optionOption in optionParameter.Options)
+                        foreach (OptionOption optionOption in parameter.Options)
                         {
                             RadioButton rad = new RadioButton
                                                   {
@@ -3302,7 +3363,7 @@ namespace StatsDirect.UI
                     }
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("optionParameter", optionParameter.OptionFormatType, "optionParameter.OptionFormatType: Only Dropdown and Radio are known");
+                    throw new ArgumentOutOfRangeException("parameter", parameter.OptionFormatType, "optionParameter.OptionFormatType: Only Dropdown and Radio are known");
             }
 
             return null;
@@ -3310,7 +3371,7 @@ namespace StatsDirect.UI
 
         private FilledParameter PrepareCombinedParameter(MultipleOptionsParameter parameter)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             Control ctl;
             if ("effectOptions".Equals(parameter.FormatHint))
                 ctl = new ctlEffectOptions(parameter);
@@ -3346,18 +3407,18 @@ namespace StatsDirect.UI
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, OptionsParameter optionsParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, OptionsParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
 
-            if (optionsParameter.HasPrompt)
+            if (parameter.HasPrompt)
             {
-                string prompt = optionsParameter.Prompt(processor, context);
+                string prompt = parameter.Prompt(processor, context);
                 if (!string.IsNullOrEmpty(prompt))
                 {
                     Label lbl = new Label
                                     {
-                                        Tag = optionsParameter,
+                                        Tag = parameter,
                                         Padding = new Padding(0, 6, 0, 3),
                                         AutoSize = true,
                                         MaximumSize = new Size(500, 500),
@@ -3370,17 +3431,17 @@ namespace StatsDirect.UI
 
             TableLayoutPanel panelOptions = new TableLayoutPanel
                                                 {
-                                                    Tag = optionsParameter,
-                                                    RowCount = (optionsParameter.Options.Count + 1)/2,
-                                                    ColumnCount = optionsParameter.Columns,
+                                                    Tag = parameter,
+                                                    RowCount = (parameter.Options.Count + 1)/2,
+                                                    ColumnCount = parameter.Columns,
                                                     AutoSize = true
                                                 };
-            for (int column = 0; column < optionsParameter.Columns; column++)
+            for (int column = 0; column < parameter.Columns; column++)
             {
                 panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             }
 
-            foreach (OptionsOption optionsOption in optionsParameter.Options)
+            foreach (OptionsOption optionsOption in parameter.Options)
             {
                 bool isChecked = optionsOption.Selected;
                 if (context.ContainsKey(optionsOption.Name) && null != context[optionsOption.Name] && context[optionsOption.Name].IsInputParameter)
@@ -3449,7 +3510,6 @@ namespace StatsDirect.UI
             }
             if (null != sender)
             {
-                TableLayoutPanel tlp = (TableLayoutPanel)sender;
                 ParameterBag ambientParameters = new ParameterBag();
                 ParameterBag context = fillCombinedParametersContext;
                 ExtractCurrentValues(new TemplateProcessor(SDApplication.SoleInstance), ambientParameters, context, false);
@@ -3470,74 +3530,82 @@ namespace StatsDirect.UI
                 foreach (string keyToRemove in keysToRemove)
                     ambientParameters.Remove(keyToRemove);
 
-                if (CheckCombinedParameterVisibility(tlp, ambientParameters))
+                if (CheckCombinedParameterVisibility(ambientParameters))
                     ResizeContainer(true);
             }
         }
 
         /// <returns>true if at least one control's visibility was changed (and hence the container might need to resize)</returns>
-        private bool CheckCombinedParameterVisibility(TableLayoutPanel tlp, ParameterBag ambientParameters)
+        private bool CheckCombinedParameterVisibility(ParameterBag ambientParameters)
         {
+            TableLayoutPanel tlp = GetUserInputTable();
             TemplateProcessor processor = null;
             bool layoutSuspended = false;
             bool atLeastOneVisibilityChange = false;
 
-            foreach (Control control in tlp.Controls)
+            foreach (Control column in tlp.Controls)
             {
-                if (null != control.Tag)
+                foreach (Control control in column.Controls)
                 {
-                    Parameter parameter = (Parameter)control.Tag;
-                    if (parameter.HasAcquireIfTrue)
+                    if (null != control.Tag)
                     {
-                        if (null == processor)
-                            processor = new TemplateProcessor(SDApplication.SoleInstance);
-                        bool shouldAcquire = parameter.AcquireIfTrue(processor, ambientParameters);
-                        if (control.Visible != shouldAcquire)
-                            atLeastOneVisibilityChange = true;
-                        if (!layoutSuspended)
+                        Parameter parameter = (Parameter) control.Tag;
+                        if (parameter.HasAcquireIfTrue)
                         {
-                            tlp.SuspendLayout();
-                            layoutSuspended = true;
+                            if (null == processor)
+                                processor = new TemplateProcessor(SDApplication.SoleInstance);
+                            bool shouldAcquire = parameter.AcquireIfTrue(processor, ambientParameters);
+                            if (control.Visible != shouldAcquire)
+                                atLeastOneVisibilityChange = true;
+                            if (!layoutSuspended)
+                            {
+                                tlp.SuspendLayout();
+                                foreach (Control col in tlp.Controls)
+                                    col.SuspendLayout();
+                                layoutSuspended = true;
+                            }
+                            control.Visible = shouldAcquire;
                         }
-                        control.Visible = shouldAcquire;
                     }
                 }
             }
             if (layoutSuspended)
             {
                 tlp.ResumeLayout(true);
+                foreach (Control col in tlp.Controls)
+                    col.ResumeLayout();
             }
             return atLeastOneVisibilityChange;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, PickVariablesParameter pickVariablesParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, PickVariablesParameter parameter, ParameterBag context)
         {
-            DataFrame frame = context[pickVariablesParameter.ParameterName].AsDataFrame;
+            DataFrame frame = context[parameter.ParameterName].AsDataFrame;
             int[] initialState = null;
-            if (pickVariablesParameter.PreSelectVariables)
+            if (parameter.PreSelectVariables)
             {
                 // Set up at least the minimum variables
-                int variableCount = Math.Min(frame.VariableCount, pickVariablesParameter.MinimumVariables);
+                int variableCount = Math.Min(frame.VariableCount, parameter.MinimumVariables);
                 initialState = new int[variableCount];
                 for (int i = 0; i < initialState.Length; i++)
                     initialState[i] = i;
             }
-            if (pickVariablesParameter.MinimumVariables < 1)
-                throw new ArgumentOutOfRangeException("pickVariablesParameter", pickVariablesParameter.MinimumVariables, "pickVariablesParameter.MinimumVariables: Must obtain values for at least one variable");
-            if (pickVariablesParameter.MinimumVariables > pickVariablesParameter.MaximumVariables)
+            if (parameter.MinimumVariables < 1)
+                throw new ArgumentOutOfRangeException("parameter", parameter.MinimumVariables, "pickVariablesParameter.MinimumVariables: Must obtain values for at least one variable");
+            if (parameter.MinimumVariables > parameter.MaximumVariables)
                 throw new ArgumentException("minimumVariables must not be larger than maximumVariables");
 
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
 
             // Label the parameter above it if required
-            if (pickVariablesParameter.HasPrompt)
+            if (parameter.HasPrompt)
             {
                 Label lbl = new Label
                                 {
-                                    Tag = pickVariablesParameter,
+                                    Tag = parameter,
                                     Padding = new Padding(0, 6, 0, 3),
                                     AutoSize = true,
-                                    Text = pickVariablesParameter.Prompt(processor, context)
+                                    Text = parameter.Prompt(processor, context)
                                 };
                 tlp.Controls.Add(lbl);
                 tlp.SetColumnSpan(lbl, 2);
@@ -3547,10 +3615,10 @@ namespace StatsDirect.UI
                                           {
                                               AutoSize = true,
                                               ColumnCount = 2,
-                                              RowCount = pickVariablesParameter.MaximumVariables,
-                                              Tag = pickVariablesParameter
+                                              RowCount = parameter.MaximumVariables,
+                                              Tag = parameter
                                           };
-            for (int v = 0; v < pickVariablesParameter.MaximumVariables; v++)
+            for (int v = 0; v < parameter.MaximumVariables; v++)
             {
                 ComboBox cbo = new ComboBox {FormattingEnabled = true};
                 for (int i = 0; i < frame.VariableCount; i++)
@@ -3579,9 +3647,9 @@ namespace StatsDirect.UI
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, PickFromListParameter pickFromListParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, PickFromListParameter parameter, ParameterBag context)
         {
-            DataFrame sourceFrame = context[pickFromListParameter.Source].AsDataFrame;
+            DataFrame sourceFrame = context[parameter.Source].AsDataFrame;
             string[] values;
             if (sourceFrame.Variables[0].IsStringVariable)
                 values = sourceFrame.Variables[0].AsStringVariable.Data;
@@ -3590,25 +3658,25 @@ namespace StatsDirect.UI
             else
                 throw new ArgumentException("A PickFromListParameter can only pick from string or classifier variables");
 
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
-            if (pickFromListParameter.AllowMultiple)
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
+            if (parameter.AllowMultiple)
             {
                 ListBox lstPickFromList = new ListBox
                                               {
-                                                  Tag = pickFromListParameter,
+                                                  Tag = parameter,
                                                   FormattingEnabled = true,
                                                   Name = "lstPickFromList",
                                                   Size = new Size(250, 48)
                                               };
                 foreach (string value in values)
                     lstPickFromList.Items.Add(value);
-                lstPickFromList.SelectionMode = pickFromListParameter.AllowMultiple ? SelectionMode.MultiSimple : SelectionMode.One;
+                lstPickFromList.SelectionMode = parameter.AllowMultiple ? SelectionMode.MultiSimple : SelectionMode.One;
                 tlp.Controls.Add(lstPickFromList);
             }
             else
             {
-                ComboBox cbo = new ComboBox {Tag = pickFromListParameter, MaximumSize = new Size(250, 21)};
-                if (pickFromListParameter.IncludeNoneEntry)
+                ComboBox cbo = new ComboBox {Tag = parameter, MaximumSize = new Size(250, 21)};
+                if (parameter.IncludeNoneEntry)
                     cbo.Items.Add("(none)");
                 foreach (string value in values)
                     cbo.Items.Add(value);
@@ -3622,86 +3690,86 @@ namespace StatsDirect.UI
 
             Label lbl = new Label
                             {
-                                Tag = pickFromListParameter,
+                                Tag = parameter,
                                 Padding = new Padding(0, 6, 0, 3),
                                 AutoSize = true,
                                 Text =
-                                    pickFromListParameter.HasPrompt
-                                        ? pickFromListParameter.Prompt(processor, context)
+                                    parameter.HasPrompt
+                                        ? parameter.Prompt(processor, context)
                                         : ""
                             };
             tlp.Controls.Add(lbl);
             return null;
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, SpecialParameter specialParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, SpecialParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
 
-            if (("chi-2-column".Equals(specialParameter.SpecialType))
-                || ("chi-3-column".Equals(specialParameter.SpecialType))
-                || ("rr-index".Equals(specialParameter.SpecialType))
-                || ("person-time-size".Equals(specialParameter.SpecialType))
-                || ("likelihood".Equals(specialParameter.SpecialType)))
+            if (("chi-2-column".Equals(parameter.SpecialType))
+                || ("chi-3-column".Equals(parameter.SpecialType))
+                || ("rr-index".Equals(parameter.SpecialType))
+                || ("person-time-size".Equals(parameter.SpecialType))
+                || ("likelihood".Equals(parameter.SpecialType)))
             {
-                bool isLikelihood = "likelihood".Equals(specialParameter.SpecialType);
-                bool isRrIndex = "rr-index".Equals(specialParameter.SpecialType);
-                bool isPersonTimeSize = "person-time-size".Equals(specialParameter.SpecialType);
-                bool has3Columns = "chi-3-column".Equals(specialParameter.SpecialType) || isPersonTimeSize;
+                bool isLikelihood = "likelihood".Equals(parameter.SpecialType);
+                bool isRrIndex = "rr-index".Equals(parameter.SpecialType);
+                bool isPersonTimeSize = "person-time-size".Equals(parameter.SpecialType);
+                bool has3Columns = "chi-3-column".Equals(parameter.SpecialType) || isPersonTimeSize;
 
                 TableLayoutPanel ssgContainer = new TableLayoutPanel
-                                                    {
-                                                        Tag = specialParameter,
-                                                        RowCount = 2,
-                                                        ColumnCount = 2,
-                                                        AutoSize = true
-                                                    };
+                {
+                    Tag = parameter,
+                    RowCount = 2,
+                    ColumnCount = 2,
+                    AutoSize = true
+                };
 
                 Panel colsPanel = new Panel {Padding = new Padding(0, 0, 0, 0), Margin = new Padding(0,0,0,0), Size = new Size(300, 16)};
                 ssgContainer.Controls.Add(colsPanel, 1, 0);
 
                 Label col1Label = new Label
-                                      {
-                                          Text =
-                                              isPersonTimeSize
-                                                  ? "Index events"
-                                                  : isRrIndex
-                                                        ? "Reference rate"
-                                                        : isLikelihood ? "+ feature" : "+ success",
-                                          AutoSize = true,
-                                          Location = new Point(30, 0)
-                                      };
+                {
+                    Text =
+                        isPersonTimeSize
+                            ? "Index events"
+                            : isRrIndex
+                                ? "Reference rate"
+                                : isLikelihood ? "+ feature" : "+ success",
+                    AutoSize = true,
+                    Location = new Point(30, 0)
+                };
                 colsPanel.Controls.Add(col1Label);
 
                 Label col2Label = new Label
-                                      {
-                                          Text =
-                                              (isPersonTimeSize || isRrIndex)
-                                                  ? "Index PT"
-                                                  : isLikelihood ? "- feature" : "- failure",
-                                          AutoSize = true,
-                                          Location = new Point(120, 0)
-                                      };
+                {
+                    Text =
+                        (isPersonTimeSize || isRrIndex)
+                            ? "Index Person-time"
+                            : isLikelihood ? "- feature" : "- failure",
+                    AutoSize = true,
+                    Location = new Point(120, 0)
+                };
                 colsPanel.Controls.Add(col2Label);
 
                 if (has3Columns)
                 {
                     Label col3Label = new Label
-                                          {
-                                              Text = isPersonTimeSize ? "Reference size" : "score",
-                                              AutoSize = true,
-                                              Location = new Point(210, 0)
-                                          };
+                    {
+                        Text = isPersonTimeSize ? "Reference size" : "score",
+                        AutoSize = true,
+                        Location = new Point(210, 0)
+                    };
                     colsPanel.Controls.Add(col3Label);
                 }
 
                 if (isLikelihood)
                 {
                     VerticalLabel rowsLabel = new VerticalLabel
-                                                  {
-                                                      Text = "Level",
-                                                      AutoSize = true
-                                                  };
+                    {
+                        Text = "Level",
+                        AutoSize = true
+                    };
                     ssgContainer.Controls.Add(rowsLabel, 0, 1);
                 }
 
@@ -3715,9 +3783,9 @@ namespace StatsDirect.UI
                 grid.GetLock();
                 try
                 {
-                    if (context.ContainsKey(specialParameter.Name) && null != context[specialParameter.Name] && context[specialParameter.Name].IsInputParameter && context[specialParameter.Name].IsDataFrame)
+                    if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsDataFrame)
                     {
-                        DataFrame sourceFrame = context[specialParameter.Name].AsDataFrame;
+                        DataFrame sourceFrame = context[parameter.Name].AsDataFrame;
                         if (sourceFrame.VariableCount >= 2 && sourceFrame.Variables[0].IsDoubleVariable && sourceFrame.Variables[1].IsDoubleVariable)
                         {
                             DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0].AsDoubleVariable);
@@ -3732,6 +3800,7 @@ namespace StatsDirect.UI
                     grid.ActiveWorksheet.Cells[0, has3Columns ? 3 : 2, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
                     grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.ColumnWidth = 11; // characters
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
+                    grid.ActiveWorkbook.WindowInfo.DisplayHorizontalScrollBar = false;
                 }
                 finally
                 {
@@ -3746,11 +3815,11 @@ namespace StatsDirect.UI
 
                 return null;
             }
-            if ("raters-2d".Equals(specialParameter.SpecialType))
+            if ("raters-2d".Equals(parameter.SpecialType))
             {
                 TableLayoutPanel ssgContainer = new TableLayoutPanel
                                                     {
-                                                        Tag = specialParameter,
+                                                        Tag = parameter,
                                                         RowCount = 2,
                                                         ColumnCount = 2,
                                                         AutoSize = true
@@ -3766,9 +3835,9 @@ namespace StatsDirect.UI
                 grid.GetLock();
                 try
                 {
-                    if (context.ContainsKey(specialParameter.Name) && null != context[specialParameter.Name] && context[specialParameter.Name].IsInputParameter && context[specialParameter.Name].IsDataFrame)
+                    if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsDataFrame)
                     {
-                        DataFrame sourceFrame = context[specialParameter.Name].AsDataFrame;
+                        DataFrame sourceFrame = context[parameter.Name].AsDataFrame;
                         for (int col = 0; col < sourceFrame.VariableCount; col++)
                             if (sourceFrame.Variables[col].IsDoubleVariable)
                                 DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, col, sourceFrame.Variables[col].AsDoubleVariable);
@@ -3789,7 +3858,7 @@ namespace StatsDirect.UI
 
                 return null;
             }
-            if ("addedConstant".Equals(specialParameter.SpecialType))
+            if ("addedConstant".Equals(parameter.SpecialType))
             {
                 double minimumC;
                 double suggestedC;
@@ -3802,8 +3871,8 @@ namespace StatsDirect.UI
                 {
                     DoubleParameter dp = new DoubleParameter
                                              {
-                                                 Name = specialParameter.Name,
-                                                 PromptExpression = specialParameter.PromptExpression,
+                                                 Name = parameter.Name,
+                                                 PromptExpression = parameter.PromptExpression,
                                                  MinimumValueExpression = new Expression(minimumC.ToString()),
                                                  DefaultValueExpression = new Expression(suggestedC.ToString()),
                                                  CancelSkipsParameter = "Skip"
@@ -3812,49 +3881,49 @@ namespace StatsDirect.UI
                 }
                 return null;
             }
-            if ("frame".Equals(specialParameter.SpecialType))
+            if ("frame".Equals(parameter.SpecialType))
             {
-                ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Frame, specialParameter) {Tag = specialParameter};
+                ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Frame, parameter) {Tag = parameter};
                 AddAppropriateEventHandlersTo(ctl);
                 tlp.Controls.Add(ctl);
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
             }
-            if ("report".Equals(specialParameter.SpecialType))
+            if ("report".Equals(parameter.SpecialType))
             {
-                ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Report, specialParameter) {Tag = specialParameter};
+                ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Report, parameter) {Tag = parameter};
                 AddAppropriateEventHandlersTo(ctl);
                 tlp.Controls.Add(ctl);
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
             }
-            if ("rubric".Equals(specialParameter.SpecialType))
+            if ("rubric".Equals(parameter.SpecialType))
             {
                 Label ctl = new Label
                                 {
                                     AutoSize = true,
-                                    Tag = specialParameter,
-                                    Text = specialParameter.Prompt(processor, context)
+                                    Tag = parameter,
+                                    Text = parameter.Prompt(processor, context)
                                 };
                 tlp.Controls.Add(ctl);
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
             }
-            if ("textToNumbers".Equals(specialParameter.SpecialType))
+            if ("textToNumbers".Equals(parameter.SpecialType))
             {
-                ctlTextToNumbers ctl = new ctlTextToNumbers(context) {Tag = specialParameter};
+                ctlTextToNumbers ctl = new ctlTextToNumbers(context) {Tag = parameter};
                 tlp.Controls.Add(ctl);
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
             }
-            if ("scores".Equals(specialParameter.SpecialType))
+            if ("scores".Equals(parameter.SpecialType))
             {
-                ctlScores ctl = new ctlScores(context) { Tag = specialParameter };
+                ctlScores ctl = new ctlScores(context) { Tag = parameter };
                 tlp.Controls.Add(ctl);
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
             }
-            throw new ArgumentOutOfRangeException("specialParameter", specialParameter.SpecialType, "specialParameter.SpecialType: Unknown option");
+            throw new ArgumentOutOfRangeException("parameter", parameter.SpecialType, "parameter.SpecialType: Unknown option");
         }
 
         static void DumpIntoSsg(SpreadsheetGear.Advanced.Cells.IValues values, int column, DoubleVariable variable)
@@ -3870,44 +3939,44 @@ namespace StatsDirect.UI
             }
         }
 
-        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, StringParameter stringParameter, ParameterBag context)
+        internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, StringParameter parameter, ParameterBag context)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             TextBox txt = new TextBox();
-            if (stringParameter.MaxLength <= 0)
+            if (parameter.MaxLength <= 0)
                 txt.Size = new Size(250, 18);
             else
             {
                 // TODO: Measure length in the face of multiple fonts and sizes.
-                txt.MaxLength = stringParameter.MaxLength;
-                txt.Size = new Size(6 + CHARWIDTH * stringParameter.MaxLength, 18);
+                txt.MaxLength = parameter.MaxLength;
+                txt.Size = new Size(6 + CHARWIDTH * parameter.MaxLength, 18);
             }
-            txt.Tag = stringParameter;
-            if ((!stringParameter.ForceDefault) && context.ContainsKey(stringParameter.Name) && null != context[stringParameter.Name] && context[stringParameter.Name].IsInputParameter && context[stringParameter.Name].IsInt32)
+            txt.Tag = parameter;
+            if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsInt32)
             {
-                txt.Text = context[stringParameter.Name].AsInt32.ToString();
+                txt.Text = context[parameter.Name].AsInt32.ToString();
             }
             else
             {
-                if (stringParameter.HasDefaultValue)
+                if (parameter.HasDefaultValue)
                 {
-                    txt.Text = stringParameter.DefaultValue(processor, context);
+                    txt.Text = parameter.DefaultValue(processor, context);
                 }
             }
             AddAppropriateEventHandlersTo(txt);
 
             Label lbl = new Label
                             {
-                                Tag = stringParameter,
+                                Tag = parameter,
                                 Padding = new Padding(0, 6, 0, 3),
                                 AutoSize = true,
-                                Text = stringParameter.HasPrompt ? stringParameter.Prompt(processor, context) : ""
+                                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
                             };
 
-            MaybeAddHelpTip(lbl, stringParameter);
-            MaybeAddHelpTip(txt, stringParameter);
+            MaybeAddHelpTip(lbl, parameter);
+            MaybeAddHelpTip(txt, parameter);
 
-            if (stringParameter.PromptPrecedesParameter)
+            if (parameter.PromptPrecedesParameter)
             {
                 tlp.Controls.Add(lbl);
                 tlp.Controls.Add(txt);
@@ -3983,10 +4052,12 @@ namespace StatsDirect.UI
         /// <remarks>This may return key->null in outputParameters for optional empty parameters.  It is up to the caller to deal with this.</remarks>
         internal void FillCombinedParameters(ITemplateProcessor processor, ParameterBag context, bool shouldShow, string cancelSkipsParameterString, ref ParameterBag outputParameters)
         {
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTable();
             pnlUser.ResumeLayout();
             tlp.ResumeLayout(true);
-            CheckCombinedParameterVisibility(tlp, context);
+            foreach (Control col in tlp.Controls)
+                col.ResumeLayout();
+            CheckCombinedParameterVisibility(context);
 
             if (!shouldShow)
             {
@@ -4082,15 +4153,19 @@ namespace StatsDirect.UI
         {
             bool allValid = true;
             Control firstInvalidControl = null;
-            TableLayoutPanel tlp = (TableLayoutPanel)pnlUser.Controls["table"];
+            TableLayoutPanel tlp = GetUserInputTable();
             if (null != tlp)
             {
-                foreach (Control control in tlp.Controls)
+                foreach (Control column in tlp.Controls)
                 {
-                    Control invalidControlOrNull = ExtractCurrentValue(processor, control, outputParameters, context, doValidation);
-                    if (null != invalidControlOrNull && null == firstInvalidControl)
-                        firstInvalidControl = invalidControlOrNull;
-                    allValid &= (null == invalidControlOrNull);
+                    foreach (Control control in column.Controls)
+                    {
+                        Control invalidControlOrNull = ExtractCurrentValue(processor, control, outputParameters, context,
+                                                                           doValidation);
+                        if (null != invalidControlOrNull && null == firstInvalidControl)
+                            firstInvalidControl = invalidControlOrNull;
+                        allValid &= (null == invalidControlOrNull);
+                    }
                 }
             }
             // The CI combo may also be in use
@@ -4106,6 +4181,11 @@ namespace StatsDirect.UI
                 // System.Media.SystemSounds.Exclamation.Play(); 
             }
             return allValid;
+        }
+
+        private TableLayoutPanel GetUserInputTable()
+        {
+            return (TableLayoutPanel)pnlUser.Controls[USER_INPUT_TABLE_NAME];
         }
 
         /// <returns>true if no parameters shown or all skippable, false if there are any required parameters</returns>
@@ -5030,12 +5110,6 @@ namespace StatsDirect.UI
             }
         }
 
-        public enum SuggestionTime
-        {
-            BeforeOperation,
-            AfterOperation
-        }
-
         public MdiClient GetMDIClient()
         {
             foreach (Control c in Controls)
@@ -5681,8 +5755,22 @@ namespace StatsDirect.UI
                 if (settingUpRecentOperations)
                     return;
 
+                // If we've just selected the topmost item on the list - a (none) or (select) item - give up now
+                if (0 == cboRecentOperations.SelectedIndex)
+                    return;
+
                 SDListItem selectedItem = (SDListItem)cboRecentOperations.SelectedItem;
                 Operation operation = TemplateFactory.Operations[selectedItem.Operation];
+                // If it's a grid operation, ensure the most recently used one is visible (#696)
+                if (operation.RequiresGrid)
+                {
+                    if (null != SDApplication.SoleInstance && null != SDApplication.SoleInstance.ActiveGrid && SDApplication.SoleInstance.ActiveGrid.HasWindow)
+                    {
+                        ((IGrid)SDApplication.SoleInstance.ActiveGrid.Window).ClearSelection();
+                        ActivateMdiChild(SDApplication.SoleInstance.ActiveGrid.Window);
+                        Application.DoEvents();
+                    }
+                }
                 DoOperationOnceOrUntilCancelled(operation, new ParameterBag());
             }
             catch (Exception ex)
@@ -5700,166 +5788,27 @@ namespace StatsDirect.UI
             // Prevent rogue calls from modifying the list
             settingUpRecentOperations = true;
 
+            // If we previously had no operations, we now have some and can select from them
+            if (cboRecentOperations.Items.Count <= 1)
+            {
+                cboRecentOperations.Items.Clear();
+                cboRecentOperations.Items.Add("(select)");
+            }
+
             // Insert the new candidate at the top, removing it if it was further down the list.
             SDListItem candidate = new SDListItem(operation.FriendlyName, operation.Name);
             if (cboRecentOperations.Items.Contains(candidate))
                 cboRecentOperations.Items.Remove(candidate);
-            cboRecentOperations.Items.Insert(0, candidate);
+            cboRecentOperations.Items.Insert(1, candidate);
 
             // Trim the recent operation list by removing least recently used
             while (cboRecentOperations.Items.Count > MAX_RECENT_OPERATIONS)
                 cboRecentOperations.Items.RemoveAt(cboRecentOperations.Items.Count - 1);
 
+            // Ensure the (select) is visible
+            cboRecentOperations.SelectedIndex = 0;
+
             settingUpRecentOperations = false;
-        }
-    }
-
-    class DrawingControl
-    {
-        private const int WM_SETREDRAW = 11;
-
-        private static int suspendCounter;
-
-        public static void SuspendDrawing(Control parent)
-        {
-            if (0 == suspendCounter)
-            {
-                Message msgSuspendUpdate = Message.Create(parent.Handle, WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
-                NativeWindow window = NativeWindow.FromHandle(parent.Handle);
-                window.DefWndProc(ref msgSuspendUpdate);
-            }
-            suspendCounter++;
-        }
-
-        public static void ResumeDrawing(Control parent)
-        {
-            if (suspendCounter > 0)
-                suspendCounter--;
-            if (0 == suspendCounter)
-            {
-                IntPtr wparam = new IntPtr(1);
-                Message msgResumeUpdate = Message.Create(parent.Handle, WM_SETREDRAW, wparam, IntPtr.Zero);
-                NativeWindow window = NativeWindow.FromHandle(parent.Handle);
-                window.DefWndProc(ref msgResumeUpdate);
-
-                parent.Refresh();
-            }
-        }
-    }
-
-    [Serializable]
-    public class CancelCurrentOperationAndDoException : Exception
-    {
-        private readonly Operation operation;
-        private readonly ParameterBag inputParameters;
-
-        public CancelCurrentOperationAndDoException(Operation operation, ParameterBag inputParameters)
-        {
-            this.operation = operation;
-            this.inputParameters = inputParameters;
-        }
-
-        public Operation Operation
-        {
-            get { return operation; }
-        }
-
-        public ParameterBag InputParameters
-        {
-            get { return inputParameters; }
-        }
-    }
-
-    [Serializable]
-    public class CloseCurrentOperationException : Exception
-    {
-    }
-
-    internal sealed class CallerHandlesChangedOperationAttribute : Attribute
-    {
-    }
-
-    internal sealed class ComboFormAdapter
-    {
-        private readonly StatsDirectForm statsDirectForm;
-
-        public ComboFormAdapter(StatsDirectForm statsDirectForm)
-        {
-            this.statsDirectForm = statsDirectForm;
-        }
-
-        public StatsDirectForm StatsDirectForm
-        {
-            get { return statsDirectForm; }
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (!(obj is ComboFormAdapter))
-                return false;
-            ComboFormAdapter rhs = (ComboFormAdapter)obj;
-            // Check for null forms on either side.  If both are null, we're OK...
-            if (null == statsDirectForm && null == rhs.statsDirectForm)
-                return true;
-            // ... otherwise if either is null, the other isn't...
-            if (null == statsDirectForm || null == rhs.statsDirectForm)
-                return false;
-            // ... otherwise both are non-null.
-            return rhs.statsDirectForm.Equals(statsDirectForm);
-        }
-
-        public override int GetHashCode()
-        {
-            return null == statsDirectForm ? 0 : statsDirectForm.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return null == statsDirectForm ? "New report" : statsDirectForm.Text;
-        }
-    }
-
-    public class WaitCursor : IDisposable
-    {
-        private readonly Cursor m_cursorOld;
-
-        public WaitCursor()
-        {
-            m_cursorOld = Cursor.Current;
-            Cursor.Current = Cursors.WaitCursor;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposeManaged)
-        {
-            Cursor.Current = m_cursorOld;
-        }
-    }
-
-    public class DefaultCursor : IDisposable
-    {
-        private readonly Cursor m_cursorOld;
-
-        public DefaultCursor()
-        {
-            m_cursorOld = Cursor.Current;
-            Cursor.Current = Cursors.Default;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposeManaged)
-        {
-            Cursor.Current = m_cursorOld;
         }
     }
 }

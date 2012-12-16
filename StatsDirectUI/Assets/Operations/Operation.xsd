@@ -91,6 +91,7 @@
     <xs:choice maxOccurs="unbounded">
       <xs:element minOccurs="1" maxOccurs="1" name="acquire-if-true" type="xs:string" />
       <xs:element minOccurs="1" maxOccurs="1" name="cancel-skips-parameter" type="xs:string" />
+      <xs:element minOccurs="1" maxOccurs="1" name="column" type="xs:integer" />
       <xs:element minOccurs="1" maxOccurs="1" name="force-default" type="xs:boolean" />
       <xs:element minOccurs="1" maxOccurs="1" name="help" type="sdop:HelpTip" />
       <xs:element minOccurs="1" maxOccurs="1" name="lifetime" type="sdop:Lifetime" />

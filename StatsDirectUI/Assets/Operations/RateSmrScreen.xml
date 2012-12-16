@@ -8,15 +8,16 @@
       <parameters>
         <special>
           <name>data</name>
-          <type>rr-index</type>
           <must-request>true</must-request>
+          <type>rr-index</type>
         </special>
         <option>
           <name>nunit</name>
           <prompt>Multiplier for reference population rates</prompt>
+          <must-request>true</must-request>
+          <column>2</column>
           <default-value>1</default-value>
           <format-type>Dropdown</format-type>
-          <must-request>true</must-request>
           <options>
             <option value="1">1 (rate)</option>
             <option value="10">per 10</option>
@@ -33,6 +34,7 @@
           <name>dead</name>
           <prompt>Number of deaths observed in index population or sample</prompt>
           <must-request>true</must-request>
+          <column>2</column>
         </double>
         <confidence-interval>
           <name>cco</name>

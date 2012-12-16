@@ -13,7 +13,7 @@ namespace StatsDirect.Templates
         public IntegerParameter()
         {
             // By default, remember value per operation.  Deserialization can override this.
-            Lifetime = ParameterLifetime.SessionForThisOperation;
+            // Lifetime = ParameterLifetime.SessionForThisOperation;
         }
 
         /// <summary>

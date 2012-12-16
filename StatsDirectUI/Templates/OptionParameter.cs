@@ -51,7 +51,7 @@ namespace StatsDirect.Templates
         public OptionParameter()
         {
             // By default, remember value per operation.  Deserialization can override this.
-            Lifetime = ParameterLifetime.SessionForThisOperation;
+            // Lifetime = ParameterLifetime.SessionForThisOperation;
             options = new List<OptionOption>();
         }
 
