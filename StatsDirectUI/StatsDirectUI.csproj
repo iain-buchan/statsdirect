@@ -609,12 +609,6 @@
     <Compile Include="UI\frmCategorise.Designer.cs">
       <DependentUpon>frmCategorise.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmDummyOptions.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmDummyOptions.Designer.cs">
-      <DependentUpon>frmDummyOptions.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\frmInputBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -654,12 +648,6 @@
     </Compile>
     <Compile Include="UI\frmScript.designer.cs">
       <DependentUpon>frmScript.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\frmPickAWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmPickAWindow.Designer.cs">
-      <DependentUpon>frmPickAWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\IForm.cs" />
     <Compile Include="UI\IGrid.cs" />
@@ -940,10 +928,6 @@
       <DependentUpon>frmCategorise.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmDummyOptions.resx">
-      <DependentUpon>frmDummyOptions.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInputBox.resx">
       <DependentUpon>frmInputBox.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -963,10 +947,6 @@
     <EmbeddedResource Include="UI\frmScript.resx">
       <DependentUpon>frmScript.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmPickAWindow.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>frmPickAWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmSpreadsheetGear.resx">
       <SubType>Designer</SubType>
@@ -1611,21 +1591,6 @@
     <Content Include="Assets\Operations\Wilcoxon.xml" />
     <Content Include="Assets\Operations\Xxi.xml" />
     <None Include="Properties\app.manifest" />
-    <None Include="Resources\sdbutton1.bmp" />
-    <None Include="Resources\Open.gif" />
-    <None Include="Resources\print.ico" />
-    <None Include="Resources\save.ico" />
-    <None Include="Resources\cut.ico" />
-    <None Include="Resources\paste.ico" />
-    <None Include="Resources\undo.ico" />
-    <None Include="Resources\copy.ico" />
-    <None Include="Resources\sdabout1.jpg" />
-    <None Include="Resources\RULERS.ICO" />
-    <None Include="Resources\ruler.ico" />
-    <None Include="Resources\l_indent_pos_lower.png" />
-    <None Include="Resources\l_indet_pos_upper.png" />
-    <None Include="Resources\r_indent_pos.png" />
-    <None Include="Resources\tab_pos.png" />
     <None Include="Assets\Template\groupedtwoway.rtf" />
     <None Include="Assets\Template\groupedoneway.rtf" />
     <Content Include="UI\sd3.ico" />
@@ -1670,7 +1635,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>
