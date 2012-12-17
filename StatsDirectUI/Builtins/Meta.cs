@@ -4220,7 +4220,7 @@ namespace StatsDirect.Builtins
                 cit = PDF.gauinv(0.975, out scrap);
             }
 
-            double fudge = double.Parse(parameters["fudge"].AsString);
+            double fudge = Parsing.Cdbl_Txt(parameters["fudge"].AsString);
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
             DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;

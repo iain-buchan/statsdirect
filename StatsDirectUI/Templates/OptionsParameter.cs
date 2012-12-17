@@ -59,13 +59,6 @@ namespace StatsDirect.Templates
             set { columns = value; }
         }
 
-        [XmlElement(ElementName = "format-hint")]
-        public string FormatHint
-        {
-            get { return formatHint; }
-            set { formatHint = value; }
-        }
-
         [XmlArray(ElementName = "options"),
             XmlArrayItem(ElementName = "option")]
         public OptionsOption[] OptionsForXML

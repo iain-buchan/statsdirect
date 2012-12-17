@@ -9,19 +9,24 @@
         <integer>
           <name>nx</name>
           <prompt>Sample size</prompt>
-          <minimum-value>1</minimum-value>
+          <must-request>true</must-request>
+          <minimum-value>2</minimum-value>
         </integer>
         <double>
           <name>mu</name>
           <prompt>Sample mean</prompt>
+          <must-request>true</must-request>
         </double>
         <double>
           <name>sd1</name>
           <prompt>Sample standard deviation</prompt>
+          <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <double>
           <name>mu0</name>
           <prompt>Population mean</prompt>
+          <must-request>true</must-request>
         </double>
         <confidence-interval>
           <name>gamma</name>
@@ -31,4 +36,7 @@
 	<builtin function-name="rptTSingleSummary" />
 	<report filename="m_single.rtf" />
 	</steps>
+  <suggested-operations>
+    <suggested-operation>TSingleSummary</suggested-operation>
+  </suggested-operations>
 </operation>

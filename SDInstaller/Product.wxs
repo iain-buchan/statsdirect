@@ -365,6 +365,9 @@
             <Component Id="ConvertUnits.xml">
               <File Id="ConvertUnits.xml" Name="ConvertUnits.xml" KeyPath="yes" />
             </Component>
+            <Component Id="ConvertUnitsScreen.xml">
+              <File Id="ConvertUnitsScreen.xml" Name="ConvertUnitsScreen.xml" KeyPath="yes" />
+            </Component>
             <Component Id="CoxBaselineToReport.xml">
               <File Id="CoxBaselineToReport.xml" Name="CoxBaselineToReport.xml" KeyPath="yes" />
             </Component>
@@ -946,6 +949,9 @@
             </Component>
             <Component Id="Scheffe.xml">
               <File Id="Scheffe.xml" Name="Scheffe.xml" KeyPath="yes" />
+            </Component>
+            <Component Id="SearchAndReplace.xml">
+              <File Id="SearchAndReplace.xml" Name="SearchAndReplace.xml" KeyPath="yes" />
             </Component>
             <Component Id="normality.xml">
               <File Id="normality.xml" Name="normality.xml" KeyPath="yes" />
@@ -1686,6 +1692,7 @@
       <ComponentRef Id="ConditionalLogisticRegression.xml" />
       <ComponentRef Id="ControlPlot.xml" />
       <ComponentRef Id="ConvertUnits.xml" />
+      <ComponentRef Id="ConvertUnitsScreen.xml" />
       <ComponentRef Id="CoxBaselineToReport.xml" />
       <ComponentRef Id="CoxBaselineToWorksheet.xml" />
       <ComponentRef Id="CoxHazardPlots.xml" />
@@ -1880,6 +1887,7 @@
       <ComponentRef Id="ScatterPlot.xml" />
       <ComponentRef Id="ScatterPlotText.xml" />
       <ComponentRef Id="Scheffe.xml" />
+      <ComponentRef Id="SearchAndReplace.xml" />
       <ComponentRef Id="normality.xml" />
       <ComponentRef Id="SimpleLinearRegression.xml" />
       <ComponentRef Id="SimpleLinearRegressionCI.xml" />

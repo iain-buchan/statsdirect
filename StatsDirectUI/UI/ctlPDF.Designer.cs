@@ -59,6 +59,7 @@ namespace StatsDirect.UI
             this.pnlLp = new System.Windows.Forms.Panel();
             this.pnlUp = new System.Windows.Forms.Panel();
             this.pnl2p = new System.Windows.Forms.Panel();
+            this.lblError = new System.Windows.Forms.Label();
             this.tlpOuter.SuspendLayout();
             this.tlpLeft.SuspendLayout();
             this.pnlPdf.SuspendLayout();
@@ -255,12 +256,14 @@ namespace StatsDirect.UI
             this.tlpOuter.Controls.Add(this.pnlCl, 3, 0);
             this.tlpOuter.Controls.Add(this.pnlCalculate, 1, 0);
             this.tlpOuter.Controls.Add(this.tlpProbabilities, 2, 0);
+            this.tlpOuter.Controls.Add(this.lblError, 0, 1);
             this.tlpOuter.Location = new System.Drawing.Point(0, 0);
             this.tlpOuter.Margin = new System.Windows.Forms.Padding(0);
             this.tlpOuter.Name = "tlpOuter";
-            this.tlpOuter.RowCount = 1;
+            this.tlpOuter.RowCount = 2;
             this.tlpOuter.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpOuter.Size = new System.Drawing.Size(778, 84);
+            this.tlpOuter.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tlpOuter.Size = new System.Drawing.Size(778, 104);
             this.tlpOuter.TabIndex = 23;
             // 
             // tlpLeft
@@ -412,6 +415,16 @@ namespace StatsDirect.UI
             this.pnl2p.Size = new System.Drawing.Size(253, 26);
             this.pnl2p.TabIndex = 5;
             // 
+            // lblError
+            // 
+            this.lblError.AutoSize = true;
+            this.tlpOuter.SetColumnSpan(this.lblError, 4);
+            this.lblError.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblError.Location = new System.Drawing.Point(3, 84);
+            this.lblError.Name = "lblError";
+            this.lblError.Size = new System.Drawing.Size(772, 20);
+            this.lblError.TabIndex = 5;
+            // 
             // ctlPDF
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -420,7 +433,7 @@ namespace StatsDirect.UI
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tlpOuter);
             this.Name = "ctlPDF";
-            this.Size = new System.Drawing.Size(778, 84);
+            this.Size = new System.Drawing.Size(778, 104);
             this.tlpOuter.ResumeLayout(false);
             this.tlpOuter.PerformLayout();
             this.tlpLeft.ResumeLayout(false);
@@ -475,7 +488,8 @@ namespace StatsDirect.UI
         private System.Windows.Forms.Panel pnl2p;
         private System.Windows.Forms.Panel pnlCalculate;
         private System.Windows.Forms.TableLayoutPanel tlpProbabilities;
-        private System.Windows.Forms.Button cmdInvert; 
+        private System.Windows.Forms.Button cmdInvert;
+        private System.Windows.Forms.Label lblError; 
     } 
     
     

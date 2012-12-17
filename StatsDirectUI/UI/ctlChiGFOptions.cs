@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
@@ -48,7 +49,7 @@ namespace StatsDirect.UI
             if (lstFrequencies.SelectedIndices.Count >= 1)
             {
                 int index = lstFrequencies.SelectedIndices[0];
-                double rawValue = Double.Parse(lstFrequencies.Items[index].SubItems[2].Text);
+                double rawValue = Parsing.Cdbl_Txt(lstFrequencies.Items[index].SubItems[2].Text);
                 if (useProportionOfN)
                     rawValue /= options.N;
                 txtValue.Text = rawValue.ToString();

@@ -9,8 +9,8 @@
         <integer>
           <name>nx1</name>
           <prompt>Sample 1 size</prompt>
-          <minimum-value>1</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>1</minimum-value>
         </integer>
         <double>
           <name>um1</name>
@@ -25,8 +25,8 @@
         <integer>
           <name>nx2</name>
           <prompt>Sample 2 size</prompt>
-          <minimum-value>1</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>1</minimum-value>
         </integer>
         <double>
           <name>um2</name>
@@ -43,7 +43,10 @@
         </confidence-interval>
       </parameters>
     </settings>
-	<builtin function-name="rptTUnpairedSummary" />
-	<report filename="m_unpair.rtf" />
+  	<builtin function-name="rptTUnpairedSummary" />
+	  <report filename="m_unpair.rtf" />
 	</steps>
+  <suggested-operations>
+    <suggested-operation>TUnpairedSummary</suggested-operation>
+  </suggested-operations>
 </operation>

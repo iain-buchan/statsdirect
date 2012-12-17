@@ -22,13 +22,12 @@
         </option>
         <boolean>
           <name>meta-plot-ci</name>
-          <prompt>Include CI if relevant</prompt>
+          <prompt>Include confidence interval if relevant</prompt>
           <default-value>=Host.Preferences.MetaPlotCI</default-value>
         </boolean>
       </parameters>
     </settings>
-    <script language="CSharp">
-  <![CDATA[
+    <script language="CSharp"><![CDATA[
 SDPreferences preferences = Host.Preferences;
 preferences.MetaPlotCI = Parameters["meta-plot-ci"].AsBoolean;
 preferences.MetaPlotMethod = Parsing.Cint_Txt(Parameters["meta-plot-method"].AsString);

@@ -65,7 +65,7 @@ namespace StatsDirect.Templates
     }
 
     /// <summary>
-    /// A parameter allowing complex selections.  TODO: Implement this - at present, the complex stuff uses the format hint!
+    /// A parameter allowing complex selections.  TODO: Remove me
     /// </summary>
     [Serializable]
     public sealed class MultipleOptionsParameter: Parameter
@@ -78,13 +78,6 @@ namespace StatsDirect.Templates
         {
             options = new List<OptionsOption>();
             selects = new List<OptionsSelect>();
-        }
-
-        [XmlElement(ElementName = "format-hint")]
-        public string FormatHint
-        {
-            get { return formatHint; }
-            set { formatHint = value; }
         }
 
         [XmlArray(ElementName = "options"),

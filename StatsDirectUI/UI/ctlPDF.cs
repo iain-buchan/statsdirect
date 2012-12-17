@@ -7,7 +7,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlPDF: IFillParameterBag
+    public partial class ctlPDF : IFillParameterBag
     {
         private enum TouchedValue
         {
@@ -61,10 +61,14 @@ namespace StatsDirect.UI
 
         private void LeaveTextbox(object sender, EventArgs e)
         {
+            return;
+            // TODO: Put back textbox leaves as command triggers
+            /*
             Control ctl = (Control)sender;
             lastTouchedValue = (TouchedValue)ctl.Tag;
             CalculateOrInvert();
             ctl.Enabled = true;
+             */
         }
 
         private void edpdf_KeyPress(object sender, KeyPressEventArgs e)
@@ -155,12 +159,15 @@ namespace StatsDirect.UI
             switch (lastTouchedValue)
             {
                 case TouchedValue.Pdf:
+                    lblError.Text = "";
                     CalculatePdf();
                     break;
                 case TouchedValue.Df:
+                    lblError.Text = "";
                     CalculateDf();
                     break;
                 case TouchedValue.Df2:
+                    lblError.Text = "";
                     CalculateDf2();
                     break;
             }
@@ -171,12 +178,15 @@ namespace StatsDirect.UI
             switch (lastTouchedValue)
             {
                 case TouchedValue.Lp:
+                    lblError.Text = "";
                     CalculateLp();
                     break;
                 case TouchedValue.Up:
+                    lblError.Text = "";
                     CalculateUp();
                     break;
                 case TouchedValue.P2:
+                    lblError.Text = "";
                     Calculate2P();
                     break;
             }
@@ -218,12 +228,14 @@ namespace StatsDirect.UI
                 double df = CdblTxt(txtDf.Text);
                 if ((selectedTest == DistributionType.Rho || selectedTest == DistributionType.Kendall) && txtPdf.Text.Length > 0)
                 {
+                    bool bewareOfDf = (Constant.MISSING == df || df < int.MinValue || df > int.MaxValue);
+
                     int n;
                     if (selectedTest == DistributionType.Rho)
                     {
                         n = ((int)(Math.Floor(df)));
                         double rh = CdblTxt(txtPdf.Text);
-                        if (n < 4 || rh < 0.0 || rh > 1.0)
+                        if (bewareOfDf || n < 4 || rh < 0.0 || rh > 1.0)
                             txtDf2.Text = Formatting.ERRR;
                         else
                             txtDf2.Text = Convert.ToInt32(((1.0 - rh) * (n * (Math.Pow(n, 2) - 1))) / 6).ToString();
@@ -427,7 +439,7 @@ namespace StatsDirect.UI
                 rh = CdblTxt(txtPdf.Text);
                 if (nx >= 4 & rh <= 1)
                 {
-                    ix = Convert.ToInt32(((1.0 - rh)*(nx*(nx*nx - 1)))/6);
+                    ix = Convert.ToInt32(((1.0 - rh) * (nx * (nx * nx - 1))) / 6);
                     txtDf2.Text = ix.ToString();
                 }
                 else
@@ -435,8 +447,8 @@ namespace StatsDirect.UI
             }
             else
             {
-                ix = ((int) (CdblTxt(txtDf2.Text)));
-                rh = 1.0 - ix/((nx*(nx*nx - 1))/6.0);
+                ix = ((int)(CdblTxt(txtDf2.Text)));
+                rh = 1.0 - ix / ((nx * (nx * nx - 1)) / 6.0);
                 Xval15Into(txtPdf, rh);
             }
             double pu = 0;
@@ -461,7 +473,7 @@ namespace StatsDirect.UI
                 tau = CdblTxt(txtPdf.Text);
                 if (nx > 0 & rh <= 1)
                 {
-                    ix = Convert.ToInt32(tau*(nx*(nx - 1)/2.0));
+                    ix = Convert.ToInt32(tau * (nx * (nx - 1) / 2.0));
                     txtDf2.Text = ix.ToString();
                 }
                 else
@@ -470,10 +482,10 @@ namespace StatsDirect.UI
             else
             {
                 ix = Parsing.Cint_Txt(txtDf2.Text);
-                tau = ix/(nx*(nx - 1)/2.0);
+                tau = ix / (nx * (nx - 1) / 2.0);
                 Xval15Into(txtPdf, tau);
             }
-            if (txtDf2.Text == Formatting.ERRR | nx < 1)
+            if (txtDf2.Text == Formatting.ERRR || nx < 1)
                 fault = -1;
             else
                 pu = MathDbl.kendp(ix, nx, ref fault);
@@ -511,15 +523,7 @@ namespace StatsDirect.UI
                 Pval15Into(txtUp, phi, true);
                 Pval15Into(txt2p, plo, true);
             }
-            lastCalculationAsString = "P(Poisson n " +
-                                      txtDf.Text.Trim() + ", µ " +
-                                      txtDf2.Text.Trim() +
-                                      ") = " +
-                                      txtLp.Text.Trim() + " for n events,  " +
-                                      txtUp.Text.Trim() +
-                                      " for n or more events,  " +
-                                      txt2p.Text.Trim()
-                                      + " for n or fewer events";
+            lastCalculationAsString = "P(Poisson n " + txtDf.Text.Trim() + ", µ " + txtDf2.Text.Trim() + ") = " + txtLp.Text.Trim() + " for n events,  " + txtUp.Text.Trim() + " for n or more events,  " + txt2p.Text.Trim() + " for n or fewer events";
         }
 
         private void PFromBinomial()
@@ -554,10 +558,7 @@ namespace StatsDirect.UI
                 Pval15Into(txtUp, dphi, true);
                 Pval15Into(txt2p, dplo, true);
             }
-            lastCalculationAsString = "P(binomial p " + txtPdf.Text.Trim() + ", " + txtDf.Text.Trim() + " trials) = " +
-                                      txtLp.Text.Trim() + " [" + txtDf2.Text.Trim() + " successes], "
-                                      + txtUp.Text.Trim() + " [>=" + txtDf2.Text.Trim() + " successes], " + txt2p.Text.Trim() +
-                                      " [<=" + txtDf2.Text.Trim() + " successes]";
+            lastCalculationAsString = "P(binomial p " + txtPdf.Text.Trim() + ", " + txtDf.Text.Trim() + " trials) = " + txtLp.Text.Trim() + " [" + txtDf2.Text.Trim() + " successes], " + txtUp.Text.Trim() + " [>=" + txtDf2.Text.Trim() + " successes], " + txt2p.Text.Trim() + " [<=" + txtDf2.Text.Trim() + " successes]";
         }
 
         private void PFromQ()
@@ -573,26 +574,22 @@ namespace StatsDirect.UI
                 txtLp.Text = Formatting.XRound(pu, 7);
                 txtUp.Text = Formatting.XRound(1.0 - pu, 7);
             }
-            lastCalculationAsString = "P(Q " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ", samples " +
-                                      txtDf2.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper,  " + txtLp.Text.Trim() +
-                                      " lower";
+            lastCalculationAsString = "P(Q " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ", samples " + txtDf2.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper,  " + txtLp.Text.Trim() + " lower";
         }
 
         private void PFromChiSq()
         {
             double xtmp = PDF.chivalp(CdblTxt(txtPdf.Text), CdblTxt(txtDf.Text));
             Pval15Into(txtUp, xtmp, true);
-            Pval15Into(txt2p, 2.0*CdblTxt(txtUp.Text), true);
-            lastCalculationAsString = "P(chi-sq " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " +
-                                      txtUp.Text.Trim() + " upper tail";
+            Pval15Into(txt2p, 2.0 * CdblTxt(txtUp.Text), true);
+            lastCalculationAsString = "P(chi-sq " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper tail";
         }
 
         private void PFromF()
         {
             double pu = PDF.fvalp(CdblTxt(txtPdf.Text), CdblTxt(txtDf.Text), CdblTxt(txtDf2.Text));
             Pval15Into(txtUp, pu, true);
-            lastCalculationAsString = "P(F " + txtPdf.Text.Trim() + ", dfn " + txtDf.Text.Trim() + ", dfd " + txtDf2.Text.Trim() +
-                                      ") = " + txtUp.Text.Trim() + " upper";
+            lastCalculationAsString = "P(F " + txtPdf.Text.Trim() + ", dfn " + txtDf.Text.Trim() + ", dfd " + txtDf2.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper";
         }
 
         private void PFromT()
@@ -603,10 +600,9 @@ namespace StatsDirect.UI
             Pval15Into(txtLp, pl, true);
             if (pu > pl)
                 pu = pl;
-            pu = 2.0*double.Parse(pval15(pu, true));
+            pu = 2.0 * CdblTxt(pval15(pu, true));
             Pval15Into(txt2p, pu, true);
-            lastCalculationAsString = "P(t " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim() +
-                                      " upper, " + txtLp.Text.Trim() + " lower, " + txt2p.Text.Trim() + " two sided";
+            lastCalculationAsString = "P(t " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper, " + txtLp.Text.Trim() + " lower, " + txt2p.Text.Trim() + " two sided";
         }
 
         private void PFromZ()
@@ -615,10 +611,9 @@ namespace StatsDirect.UI
             double pu = 1.0 - pl;
             Pval15Into(txtUp, pu, true);
             Pval15Into(txtLp, pl, true);
-            double p = double.Parse(pu < pl ? pval15(pu, true) : pval15(pl, true));
-            Pval15Into(txt2p, 2.0*p, true);
-            lastCalculationAsString = "P(z " + txtPdf.Text.Trim() + ") = " + pval15(pu, true) + " upper,  " + pval15(pl, true) +
-                                      " lower,  " + pval15(2.0*p, true) + " two sided";
+            double p = CdblTxt(pu < pl ? pval15(pu, true) : pval15(pl, true));
+            Pval15Into(txt2p, 2.0 * p, true);
+            lastCalculationAsString = "P(z " + txtPdf.Text.Trim() + ") = " + pval15(pu, true) + " upper,  " + pval15(pl, true) + " lower,  " + pval15(2.0 * p, true) + " two sided";
         }
 
         private void SetVisibility()
@@ -761,8 +756,7 @@ namespace StatsDirect.UI
             int flt;
             double x = ExFortran.tnct(CdblTxt(txtLp.Text), Parsing.Cint_Txt(txtDf.Text), CdblTxt(txtDf2.Text), out flt);
             Xval15Into(txtPdf, x, flt != 0);
-            lastCalculationAsString = "non-central t(P " + pval15(P, true) + ", df " + txtDf.Text.Trim() + ", delta " +
-                                      txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
+            lastCalculationAsString = "non-central t(P " + pval15(P, true) + ", df " + txtDf.Text.Trim() + ", delta " + txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
 
         private void RhoFromP(double P)
@@ -780,8 +774,7 @@ namespace StatsDirect.UI
             }
             else
                 txtUp.Text = Formatting.ERRR;
-            lastCalculationAsString = "Hotelling T (upper tail P " + pval15(P, false) + ", n " + txtDf.Text.Trim() + ") = " +
-                                      txtUp.Text.Trim();
+            lastCalculationAsString = "Hotelling T (upper tail P " + pval15(P, false) + ", n " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim();
         }
 
         private void KendallFromP(double P)
@@ -799,16 +792,14 @@ namespace StatsDirect.UI
             }
             else
                 txtUp.Text = Formatting.ERRR;
-            lastCalculationAsString = "Kendall's T (upper tail P " + pval15(P, false) + ", n " + txtDf.Text.Trim() + ") = " +
-                                      txtUp.Text.Trim();
+            lastCalculationAsString = "Kendall's T (upper tail P " + pval15(P, false) + ", n " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim();
         }
 
         private void QFromP(double P)
         {
             double x = PDF.quantsr(CdblTxt(txtLp.Text), CdblTxt(txtDf2.Text), CdblTxt(txtDf.Text));
             txtPdf.Text = x == Constant.MISSING ? Formatting.ERRR : Formatting.XRound(x, 7);
-            lastCalculationAsString = "Q(upper P " + Formatting.XRound(P, 7) + ", df " + txtDf.Text.Trim() + ", samples " +
-                                      txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
+            lastCalculationAsString = "Q(upper P " + Formatting.XRound(P, 7) + ", df " + txtDf.Text.Trim() + ", samples " + txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
 
         private void ChiSqFromP(double P)
@@ -958,14 +949,14 @@ namespace StatsDirect.UI
             return MINIMAL.Equals(value) ? Constant.EPSILON : Parsing.Cdbl_Txt(value);
         }
 
-        private static void FriendlyError(Exception ex)
+        private void FriendlyError(Exception ex)
         {
-            SDApplication.SoleInstance.FriendlyError("StatsDirect couldn't calculate that function", ex, false);
+            lblError.Text = "StatsDirect couldn't calculate that function: " + ex.Message;
         }
 
         public Control Fill(ParameterBag outputParameters, bool doValidation)
         {
-            outputParameters.AddOutput("lastCalculation", lastCalculationAsString);
+            outputParameters.AddOutput("gr", lastCalculationAsString);
             return null;
         }
 

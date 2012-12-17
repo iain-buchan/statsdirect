@@ -2,7 +2,7 @@
 <operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
 	<name>RandomBlock</name>
   <friendly-name lang="en-GB">Block randomization</friendly-name>
-  <help chm-id="1257" />
+  <help chm-id="1252" />
   <steps>
     <settings>
       <parameters>

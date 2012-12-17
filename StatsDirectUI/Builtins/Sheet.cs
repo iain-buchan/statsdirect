@@ -1430,7 +1430,7 @@ namespace StatsDirect.Builtins
 
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
-            int q = Int32.Parse(parameters["tie-correction"].AsString);
+            int q = Parsing.Cint_Txt(parameters["tie-correction"].AsString);
             int rows = inputVariable.Length;
             double[] prk = new double[rows + 1 /* for VB to C# conversion */ ];
             foreach (double value in inputVariable.Data)
@@ -1499,7 +1499,7 @@ namespace StatsDirect.Builtins
 
         private class DoubleAscending : IComparer<double>
         {
-            private int Compare(double x, double y)
+            private static int Compare(double x, double y)
             {
                 if (x > y)
                 {
@@ -1523,7 +1523,7 @@ namespace StatsDirect.Builtins
 
         private class DoubleDescending : IComparer<double>
         {
-            private int Compare(double x, double y)
+            private static int Compare(double x, double y)
             {
                 if (x < y)
                     return 1;
@@ -2031,88 +2031,21 @@ namespace StatsDirect.Builtins
             }
 
             ExtractionOptions options = new ExtractionOptions
-                                            {
-                                                Title = dtitle,
-                                                IdentifierNames = l,
-                                                Data = dataVariable,
-                                                IdentifiersFrame = identifiersFrame
-                                            };
+            {
+                Title = dtitle,
+                IdentifierNames = l,
+                Data = dataVariable,
+                IdentifiersFrame = identifiersFrame
+            };
             ParameterBag outputParameters = host.Amend(options, parameters);
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-    }
-
-    public class DummyOptions : IFillable
-    {
-        public string MaxCatTi { get; set; }
-        public List<string> Names { get; set; }
-
-        ///  <summary>
-        ///  The name that the user selected, or Nothing if no &lt;none> was selected.
-        ///  </summary>
-        public int JDrop { get; set; }
-
-        public string FillerToUse
+        public static StepResult ConvertUnits(ITemplateHost host, ParameterBag parameters)
         {
-            get
-            {
-                return "Dummy";
-            }
-        }
-
-        // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
-            }
-        }
-
-    }
-
-    public class CategoriseOptions : IFillable
-    {
-        public string Title { get; set; }
-        public double[] PassX { get; set; }
-        public string[] Categories { get; set; }
-        public int[] Counts { get; set; }
-        public DoubleVariable Data { get; set; }
-
-        public string FillerToUse
-        {
-            get
-            {
-                return "Categorise";
-            }
-        }
-    }
-
-    public class ExtractionOptions : IFillable
-    {
-        public string Title { get; set; }
-        public DoubleVariable Data { get; set; }
-        public DataFrame IdentifiersFrame { get; set; }
-        public string IdentifierNames { get; set; }
-
-        public string FillerToUse
-        {
-            get
-            {
-                return "Extraction";
-            }
-        }
-    }
-
-    public class SortInPlaceOptions : IFillable
-    {
-        public string FillerToUse
-        {
-            get
-            {
-                return "SortInPlace";
-            }
+            ConvertUnitsOptions convertUnitsOptions = new ConvertUnitsOptions();
+            ParameterBag outputParameters = host.Amend(convertUnitsOptions, parameters);
+            return new StepResult(StepSuccess.Success, outputParameters);
         }
     }
 }

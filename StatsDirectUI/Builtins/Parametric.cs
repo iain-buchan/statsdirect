@@ -417,7 +417,6 @@ namespace StatsDirect.Builtins
                 x_poisson(x, nobs, percent2, out that, out tlower2, out tupper2, ref fault);
                 if (fault != 0)
                 {
-                    that = Constant.MISSING;
                     tlower2 = Constant.MISSING;
                     tupper2 = Constant.MISSING;
                 }
@@ -762,13 +761,11 @@ namespace StatsDirect.Builtins
         public static void normality_sk(double[] x, int lowerBound, int n, out double mean, out double sd, out double skewness, out double kurtosis, out double sqrtb1, out double p_b1, out double b2, out double p_b2, out double k2, out double p_k2)
         {
             // set on error exit values first
-            mean = Constant.MISSING;
             sd = Constant.MISSING;
             skewness = Constant.MISSING;
             kurtosis = Constant.MISSING;
             sqrtb1 = Constant.MISSING;
             b2 = Constant.MISSING;
-            k2 = Constant.MISSING;
             p_b1 = Constant.MISSING;
             p_b2 = Constant.MISSING;
             k2 = Constant.MISSING;
@@ -1217,7 +1214,7 @@ namespace StatsDirect.Builtins
             double mu0 = parameters["mu0"].AsDouble;
 
             int degf = nx - 1;
-            if (nx < 2 | sd == 0)
+            if (nx < 2 || sd == 0)
             {
                 throw new Exception("Insufficient data (must be at least two members in the sample with non-zero standard deviation)");
             }

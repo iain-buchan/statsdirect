@@ -5,7 +5,6 @@ using StatsDirect.Builtins;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
@@ -30,20 +29,20 @@ namespace StatsDirect.UI
             int cols = options.IdentifiersFrame.VariableCount;
             string dtitle = options.Title;
 
-            string Q = txtExpression.Text.Trim().ToUpper();
-            if (0 == Q.Length)
+            string expression = txtExpression.Text.Trim().ToUpper();
+            if (0 == expression.Length)
                 return txtExpression;
   
-            bool OK = false;
+            bool ok = false;
             for (int k = 0; k < cols; k++)
             {
-                if (Q.Contains("X" + (k + 1).ToString()))
+                if (expression.Contains("X" + (k + 1).ToString()))
                 {
-                    OK = true;
+                    ok = true;
                     break;
                 }
             }
-            if (!OK || "X1=".Equals(Q))
+            if (!ok || "X1=".Equals(expression))
             {
                 host.Error("Invalid expression, you must enter an expression such as X1>0 or X1=1 etc.", "Extract variable");
                 return txtExpression;
@@ -51,44 +50,37 @@ namespace StatsDirect.UI
 
             int rows = options.Data.Length;
   
-            string qx = Q;
+            string expressionWithOriginalNames = expression;
             for (int k = 0; k < options.IdentifiersFrame.VariableCount; k++)
             {
-                qx = qx.Replace("X" + (k + 1).ToString(), options.IdentifiersFrame.Variables[k].Title);
+                expressionWithOriginalNames = expressionWithOriginalNames.Replace("X" + (k + 1).ToString(), options.IdentifiersFrame.Variables[k].Title);
             }
     
-            qx = dtitle + " [" + qx + "]";
+            expressionWithOriginalNames = dtitle + " {" + expressionWithOriginalNames + "}";
             if (!count)
             {
-                /*
-                string t = host.GetString("Name for new variable", "Extract variables from " + dtitle, qx);
-                if (null == t)
-                    return;
-                 */
-                string t = "Extract variables from " + dtitle;
-  
                 DataFrame outputFrame = new DataFrame();
-                StringVariable outputVariable = new StringVariable(rows, t);
+                StringVariable outputVariable = new StringVariable(rows, expressionWithOriginalNames);
                 outputFrame.Variables.Add(outputVariable);
                 int cnt = 0;
-                Calcit calcit = new Calcit(Q);
+                Calcit calcit = new Calcit(expression);
                 double[] x = new double[cols];
-                for (int N = 0; N < rows; N++)
+                for (int n = 0; n < rows; n++)
                 {
-                    if (options.Data.Data[N] != Constant.MISSING)
+                    if (options.Data.Data[n] != Constant.MISSING)
                     {
    
                         // Put row into working array
                         for (int j = 0; j < cols; j++)
                         {
-                            x[j] = options.IdentifiersFrame.Variables[j].AsDoubleVariable.Data[N];
+                            x[j] = options.IdentifiersFrame.Variables[j].AsDoubleVariable.Data[n];
                         }
   
                         // See if expression is true
                         if (1 == calcit.Evaluate(x))
                         {
-                            int rw = chkKeepRowPositions.Checked ? N : cnt;
-                            outputVariable.Data[rw] = options.Data.Data[N].ToString();
+                            int rw = chkKeepRowPositions.Checked ? n : cnt;
+                            outputVariable.Data[rw] = options.Data.Data[n].ToString();
                             cnt++;
                         }
       
@@ -98,14 +90,12 @@ namespace StatsDirect.UI
                     outputVariable.TruncateDataToLength(cnt);
 
                 outputParameters.AddOutput("extracted", outputFrame);
-
-                // host.OutputFrame(outputFrame, false, false, Formatting.ASTERISK, windowPicker.SelectedPaneAndPosition());
             }
  
             else
             {
                 int cnt = 0;
-                Calcit calcit = new Calcit(Q);
+                Calcit calcit = new Calcit(expression);
                 double[] x = new double[cols];
                 for (int N = 0; N < rows; N++)
                 {

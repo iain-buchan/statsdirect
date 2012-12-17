@@ -69,12 +69,6 @@
           <can-default>false</can-default>
           <default-value>0.95</default-value>
         </confidence-interval>
-        <boolean>
-          <name>output-to-frame</name>
-          <prompt>Also save to worksheet?</prompt>
-          <acquire-if-true>false</acquire-if-true>
-          <default-value>true</default-value>
-        </boolean>
         <special>
           <name>solo</name>
           <prompt>Pick the sheet in which you want the output to appear</prompt>

@@ -16,10 +16,9 @@
         </frame>
         <option>
           <name>row-or-cell</name>
-          <columns>1</columns>
           <prompt>Row Matching</prompt>
+          <columns>1</columns>
           <default-value>cell</default-value>
-          <acquire-if-true language="c#">=Parameters["data"].AsDataFrame.VariableCount > 1</acquire-if-true>
           <options>
             <option value="row">If a row in your selection contains any missing data, treat the entire row as missing (incomplete record)</option>
             <option value="cell">Do not match rows, just delete all individual missing values</option>

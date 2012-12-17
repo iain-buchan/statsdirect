@@ -35,7 +35,7 @@
         <menu-item label="&amp;Cleaning and Encoding">
           <help chm-id="1377" />
           <sub-items>
-            <menu-item label="&amp;Search and Replace" operation="" />
+            <menu-item label="&amp;Search and Replace" operation="SearchAndReplace" />
             <menu-item label="Clear &amp;Missing Data" operation="ClearMissing" />
             <menu-item label="&amp;Text to Numbers" operation="TextCode" />
             <menu-item label="&amp;Date and Time Intervals" operation="Dates" />
@@ -73,7 +73,12 @@
             <menu-item label="&amp;Standardization" operation="Standardize" />
             <menu-item label="&amp;Ranks" operation="Rank" />
             <menu-item label="S&amp;ummary" operation="UnivariateSummaryToWorksheetOnly" />
-            <menu-item label="&amp;Convert Units" operation="ConvertUnits" />
+            <menu-item label="&amp;Convert Units">
+              <sub-items>
+                <menu-item label="&amp;Worksheet Data" operation="ConvertUnits"/>
+                <menu-item label="&amp;Screen Data" operation="ConvertUnitsScreen"/>
+              </sub-items>
+            </menu-item>
           </sub-items>
         </menu-item>
         <menu-item label="&amp;Organizing">

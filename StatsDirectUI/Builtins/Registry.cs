@@ -16,6 +16,7 @@ namespace StatsDirect.Builtins
                 new Builtin("chartCompareSeveralContinuousVariables", ChartExplorer.CompareSeveralContinuousVariables, InputDuringStep.Always),
                 new Builtin("chartExploreContinuousDistributions", ChartExplorer.ExploreContinuousDistributions, InputDuringStep.Always),
                 new Builtin("calcSimpleLinearRegressionCI", Regress.CalcSimpleLinearRegressionCi, InputDuringStep.Never),
+                new Builtin("convertUnits", Sheet.ConvertUnits, InputDuringStep.Always),
                 new Builtin("distBinomial", Distribution.DistBinomial, InputDuringStep.Always),
                 new Builtin("distChiSquare", Distribution.DistChiSquare, InputDuringStep.Always),
                 new Builtin("distF", Distribution.DistF, InputDuringStep.Always),

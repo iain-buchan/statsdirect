@@ -1,4 +1,5 @@
 ﻿using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
@@ -19,10 +20,10 @@ namespace StatsDirect.Builtins
         {
             SDPreferences preferences = host.Preferences;
             preferences.CanDefaultConfidenceInterval = parameters["use-default-ci"].AsBoolean;
-            preferences.DefaultConfidenceInterval = double.Parse(parameters["default-ci"].AsString) / 100.0;
+            preferences.DefaultConfidenceInterval = Parsing.Cdbl_Txt(parameters["default-ci"].AsString) / 100.0;
             preferences.GIDV = parameters["gidv"].AsBoolean;
-            preferences.DisplayDecimalPlaces = int.Parse(parameters["decp"].AsString);
-            preferences.PDecimalPlaces = int.Parse(parameters["pdecp"].AsString);
+            preferences.DisplayDecimalPlaces = Parsing.Cint_Txt(parameters["decp"].AsString);
+            preferences.PDecimalPlaces = Parsing.Cint_Txt(parameters["pdecp"].AsString);
             preferences.ShouldKeepData = parameters["should-keep-data"].AsBoolean;
             return new StepResult(StepSuccess.Success, new ParameterBag());
         }

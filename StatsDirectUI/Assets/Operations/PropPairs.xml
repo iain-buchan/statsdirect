@@ -9,26 +9,26 @@
         <double>
           <name>n</name>
           <prompt>TOTAL number in study</prompt>
-          <minimum-value>1</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>1</minimum-value>
         </double>
         <double>
           <name>r</name>
           <prompt>Number responding in BOTH categories</prompt>
-          <minimum-value>0</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <double>
           <name>s</name>
           <prompt>Number responding in FIRST category only</prompt>
-          <minimum-value>0</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <double>
           <name>t</name>
           <prompt>Number responding in SECOND category only</prompt>
-          <minimum-value>0</minimum-value>
           <must-request>true</must-request>
+          <minimum-value>0</minimum-value>
         </double>
         <confidence-interval>
           <name>cco</name>

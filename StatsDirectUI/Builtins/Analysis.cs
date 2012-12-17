@@ -1177,8 +1177,8 @@ namespace StatsDirect.Builtins
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
             int rows = datFrame.MaxRows;
 
-            double[] c1 = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] c2 = new double[rows + 1 /* VB to C# conversion */ ];
+            double[] c1 = new double[rows + 1];
+            double[] c2 = new double[rows + 1];
 
             for (i = 1; i <= rows; i++)
             {
@@ -1188,6 +1188,7 @@ namespace StatsDirect.Builtins
                 rtd = datV1.Data[i - 1];
                 c2[i] = rtd;
 
+                // TODO: What if c1[i] or c2[i] are missing?
                 c1Tot = c1Tot + c1[i];
                 c2Tot = c2Tot + c2[i];
             }
@@ -1802,10 +1803,10 @@ namespace StatsDirect.Builtins
 
             //  RTF_LoadTemplate("p_pair.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("n", Formatting.XRound(n, 1));
-            outputParameters.AddOutput("r", Formatting.XRound(r, 1));
-            outputParameters.AddOutput("s", Formatting.XRound(s, 1));
-            outputParameters.AddOutput("t", Formatting.XRound(t, 1));
+            outputParameters.AddOutput("n_out", Formatting.XRound(n, 1));
+            outputParameters.AddOutput("r_out", Formatting.XRound(r, 1));
+            outputParameters.AddOutput("s_out", Formatting.XRound(s, 1));
+            outputParameters.AddOutput("t_out", Formatting.XRound(t, 1));
             outputParameters.AddOutput("prop_1", host.RoundU(p1));
             outputParameters.AddOutput("prop_2", host.RoundU(p2));
             outputParameters.AddOutput("prop_diff", host.RoundU(p3));

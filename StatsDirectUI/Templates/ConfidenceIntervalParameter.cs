@@ -6,46 +6,36 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class ConfidenceIntervalParameter: Parameter
     {
-        private double defaultValue;
-        private bool canDefault = true;
-        private double minimumSuggestedValue = 0.9;
-        private double maximumSuggestedValue = 0.99;
-        private double suggestedStep = 0.01;
+        public ConfidenceIntervalParameter()
+        {
+            MinimumSuggestedValue = 0.9;
+            MaximumSuggestedValue = 0.99;
+            SuggestedStep = 0.01;
+            CanDefault = true;
+            CanUseStandard = true;
+        }
 
         [XmlElement(ElementName = "default-value")]
-        public double DefaultValue
-        {
-            get { return defaultValue; }
-            set { defaultValue = value; }
-        }
+        public double DefaultValue { get; set; }
 
         [XmlElement(ElementName = "minimum-suggested-value")]
-        public double MinimumSuggestedValue
-        {
-            get { return minimumSuggestedValue; }
-            set { minimumSuggestedValue = value; }
-        }
+        public double MinimumSuggestedValue { get; set; }
 
         [XmlElement(ElementName = "maximum-suggested-value")]
-        public double MaximumSuggestedValue
-        {
-            get { return maximumSuggestedValue; }
-            set { maximumSuggestedValue = value; }
-        }
+        public double MaximumSuggestedValue { get; set; }
 
         [XmlElement(ElementName = "suggested-step")]
-        public double SuggestedStep
-        {
-            get { return suggestedStep; }
-            set { suggestedStep = value; }
-        }
+        public double SuggestedStep { get; set; }
 
         [XmlElement(ElementName = "can-default")]
-        public bool CanDefault
-        {
-            get { return canDefault; }
-            set { canDefault = value; }
-        }
+        public bool CanDefault { get; set; }
+
+        /// <summary>
+        /// If true, the CI parameter can use the standard input area below the buttons.
+        /// If false, it should be in the parameter flow.
+        /// </summary>
+        [XmlElement(ElementName = "can-use-standard")]
+        public bool CanUseStandard { get; set; }
 
         public override ParameterType Type
         {

@@ -17,14 +17,12 @@ namespace StatsDirect.UI
         public ctlOptions(OptionDescriptor descriptor)
         {
             optionDescriptor = descriptor;
-            Text = optionDescriptor.Title;
+            // Text = optionDescriptor.Title;
             checkBoxes = new List<Control>();
             InitializeComponent();
 
             SuspendLayout();
             pnlCheck.SuspendLayout();
-
-            Text = descriptor.Title;
 
             // Set up check boxes
             if (optionDescriptor.CheckBoxes.Count > 0)
@@ -37,16 +35,16 @@ namespace StatsDirect.UI
                     if (d.IsRadio)
                     {
                         RadioButton rad = new RadioButton
-                                              {
-                                                  Location =
-                                                      new System.Drawing.Point(
-                                                      MARGIN + (col*(CHECKBOX_WIDTH + MARGIN)),
-                                                      MARGIN + (row*(CHECKBOX_HEIGHT + MARGIN))),
-                                                  Size = new System.Drawing.Size(CHECKBOX_WIDTH, CHECKBOX_HEIGHT),
-                                                  Text = d.Text,
-                                                  Checked = d.Checked,
-                                                  UseVisualStyleBackColor = true
-                                              };
+                        {
+                            Location =
+                                new System.Drawing.Point(
+                                MARGIN + (col*(CHECKBOX_WIDTH + MARGIN)),
+                                MARGIN + (row*(CHECKBOX_HEIGHT + MARGIN))),
+                            Size = new System.Drawing.Size(CHECKBOX_WIDTH, CHECKBOX_HEIGHT),
+                            Text = d.Text,
+                            Checked = d.Checked,
+                            UseVisualStyleBackColor = true
+                        };
                         checkBoxes.Add(rad);
                     }
                     else
@@ -76,7 +74,7 @@ namespace StatsDirect.UI
             if (optionDescriptor.SelectionBoxes.Count > 0)
             {
                 if (optionDescriptor.SelectionBoxes.Count > 2)
-                    throw new ArgumentOutOfRangeException("optionDescriptor.SelectionBoxes.Count", optionDescriptor.SelectionBoxes.Count, "Can only handle up to 2 combo boxes");
+                    throw new ArgumentOutOfRangeException("descriptor", optionDescriptor.SelectionBoxes.Count, "optionDescriptor.SelectionBoxes.Count: Can only handle up to 2 combo boxes");
                 lbl1.Visible = optionDescriptor.SelectionBoxes.Count > 1;
                 cbo1.Visible = optionDescriptor.SelectionBoxes.Count > 1;
                 lbl0.Text = optionDescriptor.SelectionBoxes[0].Title;
@@ -123,16 +121,10 @@ namespace StatsDirect.UI
             }
         }
 
-        #region IOkable Members
-
         void IOkable.OkClicked()
         {
             FillDescriptorFromForm();
         }
-
-        #endregion
-
-        #region IFillParameterBag Members
 
         Control IFillParameterBag.Fill(ParameterBag outputParameters, bool doValidation)
         {
@@ -150,7 +142,5 @@ namespace StatsDirect.UI
             }
             return null;
         }
-
-        #endregion
     }
 }

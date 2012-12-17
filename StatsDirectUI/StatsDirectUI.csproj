@@ -43,7 +43,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -162,13 +162,19 @@
     <Compile Include="Builtins\Analysis.cs" />
     <Compile Include="Builtins\Anova.cs" />
     <Compile Include="Builtins\Calcit.cs" />
+    <Compile Include="Builtins\CategoriseOptions.cs" />
     <Compile Include="Builtins\ChartExplorer.cs" />
     <Compile Include="Builtins\Chi.cs" />
+    <Compile Include="Builtins\ConvertUnitsOptions.cs" />
     <Compile Include="Builtins\Coxreg.cs" />
     <Compile Include="Builtins\Describe.cs" />
     <Compile Include="Builtins\Distribution.cs" />
+    <Compile Include="Builtins\DistributionOptions.cs" />
+    <Compile Include="Builtins\DistributionType.cs" />
+    <Compile Include="Builtins\DummyOptions.cs" />
     <Compile Include="Builtins\Exact.cs" />
     <Compile Include="Builtins\ExactBB.cs" />
+    <Compile Include="Builtins\ExtractionOptions.cs" />
     <Compile Include="Builtins\Formula.cs" />
     <Compile Include="Builtins\ImportExport.cs" />
     <Compile Include="Builtins\Matrix.cs" />
@@ -184,6 +190,8 @@
     <Compile Include="Builtins\Regress1.cs" />
     <Compile Include="Builtins\RegressRpt.cs" />
     <Compile Include="Builtins\Sheet.cs" />
+    <Compile Include="Builtins\SortInPlaceOptions.cs" />
+    <Compile Include="Builtins\SummaryStatisticsOptions.cs" />
     <Compile Include="Builtins\Survival.cs" />
     <Compile Include="Builtins\Tables.cs" />
     <Compile Include="Calculator\Calculator.Designer.cs">
@@ -337,6 +345,19 @@
     <Compile Include="UI\CancelCurrentOperationAndDoException.cs" />
     <Compile Include="UI\CloseCurrentOperationException.cs" />
     <Compile Include="UI\ComboFormAdapter.cs" />
+    <Compile Include="UI\Conversion.cs" />
+    <Compile Include="UI\ctlConvertUnits.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlConvertUnits.Designer.cs">
+      <DependentUpon>ctlConvertUnits.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlGraphicsOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlGraphicsOptions.Designer.cs">
+      <DependentUpon>ctlGraphicsOptions.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\ctlScores.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -492,12 +513,6 @@
     <Compile Include="UI\ctlPickAWindow.Designer.cs">
       <DependentUpon>ctlPickAWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlEffectOptions.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\ctlEffectOptions.Designer.cs">
-      <DependentUpon>ctlEffectOptions.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\ctlOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -570,12 +585,6 @@
     <Compile Include="UI\frmInsertCells.Designer.cs">
       <DependentUpon>frmInsertCells.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmGraphicsOptions.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmGraphicsOptions.Designer.cs">
-      <DependentUpon>frmGraphicsOptions.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\frmLoading.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -606,29 +615,11 @@
     <Compile Include="UI\frmDummyOptions.Designer.cs">
       <DependentUpon>frmDummyOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmEffectOptions.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmEffectOptions.Designer.cs">
-      <DependentUpon>frmEffectOptions.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\frmCoxRegressionOptions.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmCoxRegressionOptions.Designer.cs">
-      <DependentUpon>frmCoxRegressionOptions.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\frmInputBox.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\frmInputBox.Designer.cs">
       <DependentUpon>frmInputBox.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\frmROCCutoff.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmROCCutoff.Designer.cs">
-      <DependentUpon>frmROCCutoff.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\frmScores.cs">
       <SubType>Form</SubType>
@@ -793,6 +784,13 @@
     <EmbeddedResource Include="Calculator\frmStatsDirectCalculator.resx">
       <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlConvertUnits.resx">
+      <DependentUpon>ctlConvertUnits.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlGraphicsOptions.resx">
+      <DependentUpon>ctlGraphicsOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlScores.resx">
       <DependentUpon>ctlScores.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -878,10 +876,6 @@
       <DependentUpon>ctlPickAWindow.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlEffectOptions.resx">
-      <DependentUpon>ctlEffectOptions.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlOptions.resx">
       <DependentUpon>ctlOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -930,10 +924,6 @@
       <DependentUpon>frmInsertCells.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmGraphicsOptions.resx">
-      <DependentUpon>frmGraphicsOptions.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\frmLoading.resx">
       <DependentUpon>frmLoading.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -954,21 +944,9 @@
       <DependentUpon>frmDummyOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmEffectOptions.resx">
-      <DependentUpon>frmEffectOptions.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmCoxRegressionOptions.resx">
-      <DependentUpon>frmCoxRegressionOptions.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInputBox.resx">
       <DependentUpon>frmInputBox.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmROCCutoff.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>frmROCCutoff.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmScores.resx">
       <DependentUpon>frmScores.cs</DependentUpon>
@@ -1255,6 +1233,8 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Assets\Operations\ConvertUnits.xml" />
+    <Content Include="Assets\Operations\ConvertUnitsScreen.xml" />
+    <Content Include="Assets\Operations\SearchAndReplace.xml" />
     <Content Include="Assets\Operations\UnivariateSummaryToWorksheetOnly.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1690,7 +1670,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

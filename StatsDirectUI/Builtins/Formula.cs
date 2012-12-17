@@ -185,17 +185,17 @@ namespace StatsDirect.Builtins
 
             //  RTF_LoadTemplate("r_block.rtf")
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("seed", seed.ToString());
-            outputParameters.AddOutput("n", N.ToString());
+            outputParameters.AddOutput("seed_out", seed.ToString());
+            outputParameters.AddOutput("n_out", N.ToString());
             if (rb == false)
             {
-                outputParameters.AddOutput("b", b.ToString());
+                outputParameters.AddOutput("b_out", b.ToString());
             }
             else
             {
                 outputParameters.AddOutput("b", "random between " + (minBlockMult * t).ToString() + " and " + (maxBlockMult * t).ToString());
             }
-            outputParameters.AddOutput("t", t.ToString());
+            outputParameters.AddOutput("t_out", t.ToString());
             List<ParameterBag> subjectsList = new List<ParameterBag>();
             outputParameters.AddOutput("*subjects", subjectsList);
             for (i = 1; i <= N; i++)

@@ -39,26 +39,28 @@
           <max-columns>200</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
-        <multiple-options>
-          <prompt>Conditional logistic regression</prompt>
+        <boolean>
+          <name>show-counts</name>
+          <prompt>Display case-control counts</prompt>
+          <default-value>false</default-value>
+        </boolean>
+        <option>
+          <name>accuracy</name>
+          <prompt>Precision of estimates</prompt>
+          <default-value>0.0000001</default-value>
           <options>
-            <option name="show-counts" selected="false">Display case-control counts</option>
+            <option value="0.000000000001">0.000000000001</option>
+            <option value="0.00000000001">0.00000000001</option>
+            <option value="0.0000000001">0.0000000001</option>
+            <option value="0.000000001">0.000000001</option>
+            <option value="0.00000001">0.00000001</option>
+            <option value="0.0000001">0.0000001</option>
+            <option value="0.000001">0.000001</option>
+            <option value="0.00001">0.00001</option>
+            <option value="0.0001">0.0001</option>
+            <option value="0.001">0.001</option>
           </options>
-          <selects>
-            <combo name="accuracy" prompt="Precision of estimates" default-value="0.0000001">
-              <option value="0.000000000001">0.000000000001</option>
-              <option value="0.00000000001">0.00000000001</option>
-              <option value="0.0000000001">0.0000000001</option>
-              <option value="0.000000001">0.000000001</option>
-              <option value="0.00000001">0.00000001</option>
-              <option value="0.0000001">0.0000001</option>
-              <option value="0.000001">0.000001</option>
-              <option value="0.00001">0.00001</option>
-              <option value="0.0001">0.0001</option>
-              <option value="0.001">0.001</option>
-            </combo>
-          </selects>
-        </multiple-options>
+        </option>
       </parameters>
     </settings>
 		<builtin function-name="rptConditionalLogisticRegression" />

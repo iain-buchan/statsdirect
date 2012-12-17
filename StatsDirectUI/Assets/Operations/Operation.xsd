@@ -189,7 +189,6 @@
     <xs:complexContent mixed="false">
       <xs:extension base="sdop:Parameter">
         <xs:choice maxOccurs="unbounded">
-          <xs:element minOccurs="1" maxOccurs="1" name="format-hint" type="xs:string" />
           <xs:element minOccurs="1" maxOccurs="1" name="options" type="sdop:ArrayOfOptionsOption" />
         </xs:choice>
       </xs:extension>
@@ -212,7 +211,6 @@
     <xs:complexContent mixed="false">
       <xs:extension base="sdop:Parameter">
         <xs:choice maxOccurs="unbounded">
-          <xs:element minOccurs="1" maxOccurs="1" name="format-hint" type="xs:string" />
           <xs:element minOccurs="1" maxOccurs="1" name="options" type="sdop:ArrayOfOptionOption" />
           <xs:element minOccurs="1" maxOccurs="1" name="default-value" type="xs:string" />
           <xs:element minOccurs="1" maxOccurs="1" name="format-type" type="sdop:OptionFormatType" />
@@ -236,7 +234,6 @@
     <xs:complexContent mixed="false">
       <xs:extension base="sdop:Parameter">
         <xs:choice maxOccurs="unbounded">
-          <xs:element minOccurs="1" maxOccurs="1" name="format-hint" type="xs:string" />
           <xs:element minOccurs="1" maxOccurs="1" name="options" type="sdop:ArrayOfOptionsOption" />
           <xs:element minOccurs="1" maxOccurs="1" name="selects" type="sdop:ArrayOfOptionsSelect" />
         </xs:choice>
@@ -342,6 +339,7 @@
         <xs:choice maxOccurs="unbounded">
           <xs:element minOccurs="0" maxOccurs="1" name="default-value" type="xs:double" />
           <xs:element minOccurs="0" maxOccurs="1" name="can-default" type="xs:boolean" />
+          <xs:element minOccurs="0" maxOccurs="1" name="can-use-standard" type="xs:boolean" />
         </xs:choice>
       </xs:extension>
     </xs:complexContent>

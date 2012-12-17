@@ -8,8 +8,8 @@
       <parameters>
         <special>
           <name>responsesCrosstab</name>
-          <type>raters-2d</type>
           <must-request>true</must-request>
+          <type>raters-2d</type>
         </special>
         <confidence-interval>
           <name>ci</name>
@@ -53,10 +53,11 @@
         <confidence-interval>
           <name>ci</name>
           <must-request>true</must-request>
-          <can-default>false</can-default>
           <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
           <column>2</column>
+          <can-default>false</can-default>
           <default-value>0.99</default-value>
+          <can-use-standard>false</can-use-standard>
         </confidence-interval>
       </parameters>
     </settings>

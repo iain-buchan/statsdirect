@@ -1,4 +1,3 @@
-using System.IO;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -610,6 +609,7 @@ namespace StatsDirect.Builtins
         ///  <param name="N">Set to the number of columns in the input</param>
         ///  <param name="nx">Set to the number of rows in the input</param>
         /// <param name="host"></param>
+        /// <param name="correctForReversal"></param>
         /// <remarks></remarks>
         private static StepResult CalcPrincipal(ITemplateHost host, DataFrame frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, int irv, out int N, out int nx, bool correctForReversal)
         {
@@ -1339,10 +1339,10 @@ namespace StatsDirect.Builtins
             int i;
             double wt;
 
-            SEB = new double[P + 1 /* for VB to C# conversion */ ];
-            bd = new double[P + 1 /* for VB to C# conversion */ ];
-            xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-            er = new double[nx + 1 /* for VB to C# conversion */ ];
+            // SEB = new double[P + 1 /* for VB to C# conversion */ ];
+            // bd = new double[P + 1 /* for VB to C# conversion */ ];
+            // xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
+            // er = new double[nx + 1 /* for VB to C# conversion */ ];
             yfit = new double[nx + 1 /* for VB to C# conversion */ ];
             double[,] ud = new double[nx + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
             double[,] vd = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
@@ -2512,7 +2512,7 @@ namespace StatsDirect.Builtins
             int model = 0;
             if (parameters.ContainsKey("model"))
             {
-                model = int.Parse(parameters["model"].AsString);
+                model = Parsing.Cint_Txt(parameters["model"].AsString);
             }
 
             int nx = vY.Length;
@@ -2587,7 +2587,7 @@ namespace StatsDirect.Builtins
             int model = 0;
             if (parameters.ContainsKey("model"))
             {
-                model = int.Parse(parameters["model"].AsString);
+                model = Parsing.Cint_Txt(parameters["model"].AsString);
             }
             double newx = parameters["newx"].AsDouble;
             double newy = 0;
@@ -2628,7 +2628,7 @@ namespace StatsDirect.Builtins
             int model = 0;
             if (parameters.ContainsKey("model"))
             {
-                model = int.Parse(parameters["model"].AsString);
+                model = Parsing.Cint_Txt(parameters["model"].AsString);
             }
             ChartDefinition cd = new ChartDefinition();
             cd.AddYSeries(vY.Data, vY.Title);
@@ -2651,7 +2651,7 @@ namespace StatsDirect.Builtins
             DoubleVariable vY = fY.Variables[0].AsDoubleVariable;
             // DataFrame fX = parameters[ "x" ].AsDataFrame; unused
             // DoubleVariable vX = fX.Variables[ 0 ].AsDoubleVariable; unused
-            int P = int.Parse(parameters["degree"].AsString) + 1;
+            int P = Parsing.Cint_Txt(parameters["degree"].AsString) + 1;
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { N = vY.Length, P = P, DoC = true };
             CalcPoly(parameters, context);
             bool DoC = true;
@@ -4017,7 +4017,7 @@ namespace StatsDirect.Builtins
 
         private class TriByDAscending : IComparer<Tri>
         {
-            private int Compare(Tri x, Tri y)
+            private static int Compare(Tri x, Tri y)
             {
                 if (x.D > y.D)
                     return 1;
@@ -5212,9 +5212,9 @@ namespace StatsDirect.Builtins
             DataFrame responseFrame = parameters["response"].AsDataFrame;
             DoubleVariable responseVariable = responseFrame.Variables[0].AsDoubleVariable;
             int rows = responseVariable.Length;
-            double[] y = new double[rows + 1 /* for VB to C# conversion */];
-            double[] t = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] wt = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] y = new double[rows + 1];
+            double[] t = new double[rows + 1];
+            double[] wt = new double[rows + 1];
             for (C = 1; C <= rows; C++)
             {
                 y[C] = responseVariable.Data[C - 1];

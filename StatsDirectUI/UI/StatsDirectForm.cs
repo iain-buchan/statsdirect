@@ -32,6 +32,13 @@ namespace StatsDirect.UI
         protected StatsDirectForm()
         {
             id = "StatsDirectForm:" + (nextId++).ToString();
+            // Add this in the StatsDirectForm constructor so that it's earlier in the call chain than the subclass' close, and can therefore set variables before the subclass does anything.
+            Closing += StatsDirectForm_Closing;
+        }
+
+        void StatsDirectForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            SDApplication.SoleInstance.MainWindow.NoteASubformCloseIsStarting();
         }
 
         /// <summary>
@@ -67,7 +74,10 @@ namespace StatsDirect.UI
 
             DialogResult result = SDApplication.SoleInstance.msgbox_x(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
             if (DialogResult.Cancel == result)
+            {
+                SDApplication.SoleInstance.MainWindow.NoteASubformCloseIsCancelled();
                 return false;
+            }
             if (DialogResult.No == result)
             {
                 dirtyButSafeToClose = true;

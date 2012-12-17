@@ -95,8 +95,8 @@ namespace StatsDirect.UI
                     BinaryFormatter fmt = new BinaryFormatter();
                     using (Stream ws = new FileStream(loadPath, FileMode.Open, FileAccess.Read))
                     {
-                        sessionParametersAcrossOperations = (ParameterBag) fmt.Deserialize(ws);
-                        sessionParametersPerOperation = (Dictionary<string, ParameterBag>) fmt.Deserialize(ws);
+                        sessionParametersAcrossOperations = (ParameterBag)fmt.Deserialize(ws);
+                        sessionParametersPerOperation = (Dictionary<string, ParameterBag>)fmt.Deserialize(ws);
                     }
                 }
                 catch (Exception)
@@ -665,7 +665,7 @@ namespace StatsDirect.UI
                 throw new TemplateOperationCancelledException();
         }
         */
-        private void InitialiseFunctionRegistry()
+        private static void InitialiseFunctionRegistry()
         {
             BuiltinRegistry.SoleInstance.AddAll(Builtins.Registry.GetFunctionRegistry());
         }
@@ -787,7 +787,7 @@ namespace StatsDirect.UI
                     throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "Double2By2ByK should always be filled inline");
                 case ParameterType.EditGrid:
                     throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "EditGrid should always be filled inline");
-                    /* return FillParameter(processor, (EditGridParameter)Parameter, context); */
+                /* return FillParameter(processor, (EditGridParameter)Parameter, context); */
                 case ParameterType.Grid:
                     {
                         frmSpreadsheetGear gearWindow = (frmSpreadsheetGear)ActiveGrid.Window;
@@ -856,7 +856,7 @@ namespace StatsDirect.UI
             }
         }
 
-        void PrepareParameter(ITemplateProcessor processor, PickFromListParameter Parameter, ParameterBag context)
+        static void PrepareParameter(ITemplateProcessor processor, PickFromListParameter parameter, ParameterBag context)
         {
             // TODO: Move logic out of SetOperation() into here
         }
@@ -900,7 +900,7 @@ namespace StatsDirect.UI
                     }
                     throw new TemplateOperationCancelledException();
                 }
-                int result = Int32.Parse(response);
+                int result = Parsing.Cint_Txt(response);
                 if (result >= Parameter.MinimumValue && result <= Parameter.MaximumValue)
                     return new ParameterBag(Parameter.Name, new FilledParameter(true, result));
                 // else go round and prompt again
@@ -952,7 +952,7 @@ namespace StatsDirect.UI
                     }
                     throw new TemplateOperationCancelledException();
                 }
-                double result = double.Parse(response);
+                double result = Parsing.Cdbl_Txt(response);
                 if (result >= minimumValue && result <= maximumValue)
                     return new ParameterBag(Parameter.Name, new FilledParameter(true, result));
                 // else go round and prompt again
@@ -961,10 +961,10 @@ namespace StatsDirect.UI
 
         ParameterBag FillParameter(ITemplateProcessor processor, OptionParameter Parameter, ParameterBag context)
         {
-            OptionDescriptor descriptor = new OptionDescriptor {Title = Parameter.Prompt(processor, context)};
+            OptionDescriptor descriptor = new OptionDescriptor { Title = Parameter.Prompt(processor, context) };
             foreach (OptionOption opt in Parameter.Options)
             {
-                CheckBoxDescriptor cd = new CheckBoxDescriptor {IsExclusive = true, IsRadio = true, Text = opt.Label};
+                CheckBoxDescriptor cd = new CheckBoxDescriptor { IsExclusive = true, IsRadio = true, Text = opt.Label };
                 descriptor.CheckBoxes.Add(cd);
             }
             if (descriptor.CheckBoxes.Count > 0)
@@ -986,12 +986,10 @@ namespace StatsDirect.UI
             return null;
         }
 
-        ParameterBag FillParameter(MultipleOptionsParameter Parameter)
+        ParameterBag FillParameter(MultipleOptionsParameter parameter)
         {
-            if ("effectOptions".Equals(Parameter.FormatHint))
-                return FillEffectOptions(Parameter);
             OptionDescriptor descriptor = new OptionDescriptor();
-            foreach (OptionsOption option in Parameter.Options)
+            foreach (OptionsOption option in parameter.Options)
             {
                 CheckBoxDescriptor cb = new CheckBoxDescriptor
                                             {
@@ -1002,9 +1000,9 @@ namespace StatsDirect.UI
                                             };
                 descriptor.CheckBoxes.Add(cb);
             }
-            foreach (OptionsSelect option in Parameter.Selects)
+            foreach (OptionsSelect option in parameter.Selects)
             {
-                SelectionBoxDescriptor sb = new SelectionBoxDescriptor {Title = option.Prompt, Name = option.Name};
+                SelectionBoxDescriptor sb = new SelectionBoxDescriptor { Title = option.Prompt, Name = option.Name };
                 foreach (OptionOption o in option.Options)
                 {
                     sb.Labels.Add(o.Label);
@@ -1014,7 +1012,7 @@ namespace StatsDirect.UI
             }
             if (null == DisplayOptions(descriptor))
             {
-                if (null != Parameter.CancelSkipsParameter)
+                if (null != parameter.CancelSkipsParameter)
                 {
                     return new ParameterBag();
                 }
@@ -1035,26 +1033,9 @@ namespace StatsDirect.UI
             return outputParameters;
         }
 
-        private ParameterBag FillEffectOptions(MultipleOptionsParameter parameter)
-        {
-            using (frmEffectOptions frm = new frmEffectOptions())
-            {
-                frm.ShowDialog(mainWindow);
-                if (frm.UserCancelled)
-                {
-                    if (null != parameter.CancelSkipsParameter)
-                    {
-                        return new ParameterBag();
-                    }
-                    throw new TemplateOperationCancelledException();
-                }
-                return frm.ParameterBag;
-            }
-        }
-
         ParameterBag FillParameter(ITemplateProcessor processor, OptionsParameter parameter, ParameterBag context)
         {
-            OptionDescriptor descriptor = new OptionDescriptor {Title = parameter.Prompt(processor, context)};
+            OptionDescriptor descriptor = new OptionDescriptor { Title = parameter.Prompt(processor, context) };
             foreach (OptionsOption opt in parameter.Options)
             {
                 CheckBoxDescriptor cd = new CheckBoxDescriptor
@@ -1119,7 +1100,7 @@ namespace StatsDirect.UI
         /// <param name="showHelpButton"></param>
         internal void FriendlyError(string explanation, Exception ex, bool showHelpButton)
         {
-            msgbox_x(explanation + "\r\n" + ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
+            msgbox_x(explanation + (null == ex ? "" : ("\r\n" + ex.Message)), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
         }
 
         public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon)
@@ -1138,16 +1119,12 @@ namespace StatsDirect.UI
             return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
         }
 
-        /// <summary>
-        /// Detect whether we
-        /// </summary>
-        /// <returns></returns>
         private bool ModalDialogShowing()
         {
             return null != mainWindow && ModalDialogShowing(mainWindow);
         }
 
-        private bool ModalDialogShowing(Form f)
+        private static bool ModalDialogShowing(Form f)
         {
             // Approximate by detecting child forms of the main window and any MDI children.  Most are modal; this will therefore fail safe and occasionally show a dialog box when it could have presented in the main window.
             if (f.OwnedForms.Length > 0)
@@ -1289,31 +1266,29 @@ namespace StatsDirect.UI
 
         public ParameterBag Amend(IFillable fillable, ParameterBag context)
         {
-            if ("Categorise".Equals(fillable.FillerToUse))
-                return Amend((Builtins.CategoriseOptions)fillable);
-            if ("ChartExplorer".Equals(fillable.FillerToUse))
-                return Amend((Builtins.ChartExplorerOptions)fillable);
-            if ("ChartOptions".Equals(fillable.FillerToUse))
-                return FillChartOptions((Charting.ChartDefinition)fillable, context);
-            if ("ChiSquareGoodnessOfFit".Equals(fillable.FillerToUse))
-                return AmendUsingControl(fillable);
-            if ("Distribution".Equals(fillable.FillerToUse))
-                return AmendUsingControl(fillable);
-            if ("Dummy".Equals(fillable.FillerToUse))
-                return AmendUsingControl(fillable);
-            if ("Extraction".Equals(fillable.FillerToUse))
-                return AmendUsingControl(fillable);
-            if ("GraphicsOptions".Equals(fillable.FillerToUse))
-                return Amend((Builtins.GraphicsOptions)fillable);
-            if ("ROCCutoff".Equals(fillable.FillerToUse))
-                return Amend((Charting.ROCCutoff)fillable);
-            if ("Scores".Equals(fillable.FillerToUse))
-                return AmendUsingControl(fillable);
-            if ("SortInPlace".Equals(fillable.FillerToUse))
-                return AmendUsingControl(fillable);
-            if ("SummaryStatistics".Equals(fillable.FillerToUse))
-                return Amend((Builtins.SummaryStatisticsOptions)fillable);
-            throw new ArgumentOutOfRangeException("fillable", fillable, "fillable.FillerToUse: Unknown option");
+            switch (fillable.FillerToUse)
+            {
+                case "ChiSquareGoodnessOfFit":
+                case "ConvertUnits":
+                case "Distribution":
+                case "Dummy":
+                case "Extraction":
+                case "GraphicsOptions":
+                case "Scores":
+                case "SortInPlace":
+                    return AmendUsingControl(fillable);
+                case "Categorise":
+                    return Amend((Builtins.CategoriseOptions)fillable);
+                case "ChartExplorer":
+                    throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0");
+                    // return Amend((Builtins.ChartExplorerOptions)fillable);
+                case "ChartOptions":
+                    return FillChartOptions((Charting.ChartDefinition)fillable, context);
+                case "SummaryStatistics":
+                    return Amend((Builtins.SummaryStatisticsOptions)fillable);
+                default:
+                    throw new ArgumentOutOfRangeException("fillable", fillable, "fillable.FillerToUse: Unknown option");
+            }
         }
 
         private ParameterBag AmendUsingControl(IFillable fillable)
@@ -1339,43 +1314,17 @@ namespace StatsDirect.UI
             }
         }
 
-        private ParameterBag Amend(Builtins.ChartExplorerOptions options)
+        /*
+    private ParameterBag Amend(Builtins.ChartExplorerOptions options)
+    {
+        using (frmChartExplorer f = new frmChartExplorer(options))
         {
-            throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0");
-            /*
-            using (frmChartExplorer f = new frmChartExplorer(options))
-            {
-            f.ShowDialog(mainWindow);
-            bool userCancelled = f.UserCancelled;
-            }
-            return !userCancelled;
-             */
+        f.ShowDialog(mainWindow);
+        bool userCancelled = f.UserCancelled;
         }
-
-        private ParameterBag Amend(Builtins.GraphicsOptions options)
-        {
-            using (frmGraphicsOptions f = new frmGraphicsOptions())
-            {
-                using (new DefaultCursor())
-                {
-                    f.ShowDialog(mainWindow);
-                }
-                return new ParameterBag();
-            }
-        }
-
-        private ParameterBag Amend(Charting.ROCCutoff options)
-        {
-            using (frmROCCutoff f = new frmROCCutoff(options.SeriesRecord, options.Weight, options.Title))
-            {
-                using (new DefaultCursor())
-                {
-                    f.ShowDialog(mainWindow);
-                }
-                options.SeriesRecord = f.CurrentRecord;
-                return new ParameterBag();
-            }
-        }
+        return !userCancelled;
+    }
+         */
 
         private ParameterBag Amend(Builtins.SummaryStatisticsOptions summaryStatisticsOptions)
         {
@@ -1560,7 +1509,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private SDPreferences LoadPreferences()
+        private static SDPreferences LoadPreferences()
         {
             return new SDPreferencesImpl();
         }
@@ -1735,7 +1684,7 @@ namespace StatsDirect.UI
             get { return sessionParametersPerOperation ?? (sessionParametersPerOperation = new Dictionary<string, ParameterBag>()); }
         }
 
-        public ParameterBag SessionParametersAcrossOperations 
+        public ParameterBag SessionParametersAcrossOperations
         {
             get { return sessionParametersAcrossOperations ?? (sessionParametersAcrossOperations = new ParameterBag()); }
         }
@@ -1782,7 +1731,7 @@ namespace StatsDirect.UI
 
         public bool ClosingForUpgrade
         {
-            get { return closingForUpgrade;  }
+            get { return closingForUpgrade; }
         }
     }
 

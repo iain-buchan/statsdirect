@@ -12,6 +12,7 @@ namespace StatsDirect.UI
         public frmUpdateCheck()
         {
             InitializeComponent();
+            Application.UseWaitCursor = true;
         }
 
         private void cmdClose_Click(object sender, EventArgs e)
@@ -39,7 +40,6 @@ namespace StatsDirect.UI
             Application.UseWaitCursor = true;
             // Just using DownloadStringAsync can block on DNS resolution; so perform async DNS resolution for www.statsdirect.com
             Dns.BeginGetHostAddresses("www.statsdirect.com", DnsCompleted, null);
-            // Application.DoEvents(); // HACK: Horrible bodge because buttons aren't drawn otherwise
         }
 
         private void DnsCompleted(IAsyncResult ar)

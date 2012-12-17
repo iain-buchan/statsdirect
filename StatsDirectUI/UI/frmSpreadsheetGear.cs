@@ -13,6 +13,8 @@ using StatsDirect.Utilities;
 using SpreadsheetGear.Advanced.Cells;
 using SpreadsheetGear;
 using SpreadsheetGear.Windows.Forms;
+using Color = System.Drawing.Color;
+using SystemColors = System.Drawing.SystemColors;
 
 namespace StatsDirect.UI
 {
@@ -452,7 +454,7 @@ namespace StatsDirect.UI
                                 if (null != data)
                                 {
                                     for (int i = 0; i < data.Length; i++)
-                                        if (Constant.MISSING == data[i])
+                                        if (Constant.MISSING == data[i] || double.IsNaN(data[i]))
                                         {
                                             values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
                                         }
@@ -478,7 +480,7 @@ namespace StatsDirect.UI
                             }
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException("Unknown variable type");
+                            throw new ArgumentOutOfRangeException("frame", frame.Variables[v].VariableType, "Unknown variable type");
                     }
                 }
                 IRange insertedRange = range[0, 0, frame.MaxRows + offsetForTitles - 1, range.ColumnCount - 1];
@@ -566,7 +568,7 @@ namespace StatsDirect.UI
 
         #endregion
 
-        private Area IRangeToArea(IGrid grid, IRange range)
+        private static Area IRangeToArea(IGrid grid, IRange range)
         {
             return new Area(grid, range.Row, range.Column, range.Row + range.RowCount - 1, range.Column + range.ColumnCount - 1);
         }
@@ -826,11 +828,20 @@ namespace StatsDirect.UI
                 SDApplication.SoleInstance.MainWindow.CanSelectGroupMethod = askGid;
                 if (askGid)
                     SDApplication.SoleInstance.MainWindow.GroupsByIdentifier = SDApplication.SoleInstance.Preferences.GIDV;
-                if (!SDApplication.SoleInstance.MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out wasPivoted))
+                Color oldBackColor = BackColor;
+                BackColor = SystemColors.Info;
+                try
                 {
-                    // The user either cancelled or pivoted
-                    userCancelled = !wasPivoted;
-                    return null;
+                    if (!SDApplication.SoleInstance.MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out wasPivoted))
+                    {
+                        // The user either cancelled or pivoted
+                        userCancelled = !wasPivoted;
+                        return null;
+                    }
+                }
+                finally
+                {
+                    BackColor = oldBackColor;
                 }
 
                 // Clear this inappropriate selection (and go round the loop again)
@@ -1364,16 +1375,18 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode.TextWithFormulae:
                         for (int c = 0; c < cellSelection.TotalColumns; c++)
                         {
-                            StringVariable variable = new StringVariable(GetCellFormulae(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null);
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false);
+                            StringVariable variable = new StringVariable(GetCellFormulae(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null)
+                            {Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false)};
                             frame.Variables.Add(variable);
                         }
                         break;
                     case DataAcquisitionMode.TextNoTitles:
                         for (int c = 0; c < cellSelection.TotalColumns; c++)
                         {
-                            StringVariable variable = new StringVariable(GetCellTexts(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null);
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false);
+                            StringVariable variable = new StringVariable(GetCellTexts(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null)
+                            {
+                                Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false)
+                            };
                             frame.Variables.Add(variable);
                         }
                         break;
@@ -1905,7 +1918,7 @@ namespace StatsDirect.UI
                     if (sumwt != 0)
                         sumwt = rows / sumwt;
                     DataFrame outputFrame = null;
-                    // TODO: Complete me
+                    // Complete me
                     return outputFrame;
                 }
             } while (true);
@@ -1916,13 +1929,13 @@ namespace StatsDirect.UI
         /// <summary>
         /// Ensure the cursor is reset to normal from whatever it may presently be.
         /// </summary>
-        private void PointNormal()
+        private static void PointNormal()
         {
             if (Application.UseWaitCursor)
                 Application.UseWaitCursor = false;
         }
 
-        private void SelNumWarn(int Min, int Max, int totcols, string msg_ti)
+        private static void SelNumWarn(int Min, int Max, int totcols, string msg_ti)
         {
             PointNormal();
             if (Min == Max)
@@ -2051,8 +2064,8 @@ namespace StatsDirect.UI
                 //    return Constant.MISSING;
                 return Constant.MISSING; // If we can't parse it as a number, and we want numbers, it's MISSING.
             }
-            string typeName = val.GetType().FullName;
-            throw new NotImplementedException("Don't know how to handle type " + typeName);
+            // throw new NotImplementedException("Don't know how to handle type " + val.GetType().FullName);
+            return Constant.MISSING;
         }
 
         /// <summary>
@@ -2073,19 +2086,11 @@ namespace StatsDirect.UI
                 return DateTime.FromOADate((int)val);
             if (val is string)
             {
-                string buf = (string)val;
-                try
-                {
-                    return DateTime.Parse(buf);
-                }
-                catch (FormatException)
-                {
-                    // Do nothing
-                }
-                return DateTime.MinValue;
+                DateTime dt;
+                return DateTime.TryParse((string)val, out dt) ? dt : DateTime.MinValue;
             }
-            string typeName = val.GetType().FullName;
-            throw new NotImplementedException("Don't know how to handle type " + typeName);
+            // throw new NotImplementedException("Don't know how to handle type " + val.GetType().FullName);
+            return DateTime.MinValue;
         }
 
         /// <summary>
@@ -2236,7 +2241,7 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="col"></param>
         /// <returns></returns>
-        private string GetGridColumnTitle(int col)
+        private static string GetGridColumnTitle(int col)
         {
             const int A = 65;
             int prefixValue = (col / 26) - 1;
@@ -2251,7 +2256,7 @@ namespace StatsDirect.UI
             get { return true; }
         }
 
-        private bool gidxyr(ref double[,] x, ref double[, ,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref Builtins.MinMax minMax)
+        private bool gidxyr(out double[,] x, ref double[, ,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref MinMax minMax)
         {
             const string msg_ti = "StatsDirect Data Selection";
             const string labd = "Select DATA";
@@ -2271,7 +2276,7 @@ namespace StatsDirect.UI
                 if (wasPivoted)
                     continue;
 
-                minMax = new Builtins.MinMax();
+                minMax = new MinMax();
                 ClassifierVariable groupIdentifierVariable = groupIdentifiers.Variables[0].AsClassifierVariable;
                 int rows = groupIdentifierVariable.Length;
                 int cats = groupIdentifierVariable.GroupCount;
@@ -2421,29 +2426,28 @@ namespace StatsDirect.UI
             }
 
             // If we get here, the user cancelled
+            x = null;
             return false;
         }
 
-        public Builtins.GroupedCovarianceData FillGroupedCovarianceParameter()
+        public GroupedCovarianceData FillGroupedCovarianceParameter()
         {
-            double[,] xt = null;
             double[, ,] y = null;
             int k = 0;
             int maxr = 0;
             int maxreps = 0;
             ColumnData[] cx = null;
             string xlab = "";
-            Builtins.MinMax minMax = null;
+            MinMax minMax = null;
 
             ((IGrid)this).ClearSelection();
-            bool wasPivoted = true;
-            while (wasPivoted)
+            while (true)
             {
-                bool yrep;
                 double GAMMA;
+                double[,] xt;
                 if (SDApplication.SoleInstance.Preferences.GIDV)
                 {
-                    bool ok = gidxyr(ref xt, ref y, ref k, ref maxr, ref maxreps, ref cx, ref xlab, ref minMax);
+                    bool ok = gidxyr(out xt, ref y, ref k, ref maxr, ref maxreps, ref cx, ref xlab, ref minMax);
                     if (ok)
                     {
                         double[] b = new double[k + 1];
@@ -2466,10 +2470,9 @@ namespace StatsDirect.UI
                         ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter { CanDefault = true, Name = "ci" };
                         ParameterBag filledCi = host.FillParameter(new TemplateProcessor(host), ciParam, new ParameterBag(), false);
                         GAMMA = filledCi["ci"].AsDouble;
-                        yrep = maxreps > 1;
 
                         // If we get here, the operation acquired all its parameters successfully
-                        Builtins.GroupedCovarianceData gcd = new Builtins.GroupedCovarianceData
+                        GroupedCovarianceData gcd = new GroupedCovarianceData
                         {
                             a = a,
                             b = b,
@@ -2494,7 +2497,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    minMax = new Builtins.MinMax
+                    minMax = new MinMax
                     {
                         MinX = Double.MaxValue,
                         MaxX = Double.MinValue,
@@ -2502,6 +2505,7 @@ namespace StatsDirect.UI
                         MaxY = Double.MinValue
                     };
                     bool cancelled;
+                    bool wasPivoted;
                     DataFrame predictorsFrame = GetCellArray(0, DataAcquisitionMode.NumericSkipMissing, 2, 200, "Select data for PREDICTOR (x axis) SERIES", null, true, false, out cancelled, out wasPivoted);
                     if (cancelled)
                         break;
@@ -2542,11 +2546,11 @@ namespace StatsDirect.UI
                         ciDescriptor.SetAsConfidence();
                         descriptor.SelectionBoxes.Add(ciDescriptor);
                     }
-                    if (null == ((ITemplateHost)SDApplication.SoleInstance).DisplayOptions(descriptor))
+                    if (null == SDApplication.SoleInstance.DisplayOptions(descriptor))
                         break;
 
-                    yrep = useYReplicatesDescriptor.Checked;
-                    if (!SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
+                    bool yrep = useYReplicatesDescriptor.Checked;
+                    if (!SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval && null != ciDescriptor)
                     {
                         GAMMA = Parsing.Cdbl_Txt(ciDescriptor.Value) / 100.0;
                     }
@@ -2632,7 +2636,7 @@ namespace StatsDirect.UI
                     }
 
                     // If we get here, the operation acquired all its parameters successfully
-                    Builtins.GroupedCovarianceData gcd = new Builtins.GroupedCovarianceData
+                    GroupedCovarianceData gcd = new GroupedCovarianceData
                                                              {
                                                                  a = a,
                                                                  b = b,
@@ -2827,7 +2831,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool EqGpWarn(int neq, int[] gin, int ng, string msg_ti)
+        private static bool EqGpWarn(int neq, int[] gin, int ng, string msg_ti)
         {
             if (0 == neq)
                 return true;
@@ -3011,7 +3015,7 @@ namespace StatsDirect.UI
                         }
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("DataAcquisitionMode", gridParameter.DataAcquisitionMode, "Only Mode1 and Mode2 are known");
+                        throw new ArgumentOutOfRangeException("parameter", gridParameter.DataAcquisitionMode, "Only Mode1 and Mode2 are known");
                 }
             }
         }
@@ -3163,12 +3167,12 @@ namespace StatsDirect.UI
             }
         }
 
-        private double HundredthsToPoints(int hundredths)
+        private static double HundredthsToPoints(int hundredths)
         {
             return hundredths / 100.0 * 72.0;
         }
 
-        private int PointsToHundredths(double points)
+        private static int PointsToHundredths(double points)
         {
             return (int)(points / 72.0 * 100.0);
         }
@@ -3309,7 +3313,7 @@ namespace StatsDirect.UI
 
         private void findToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO: Fix this rather nasty workaround once SpreadsheetGear has API support for its find dialog
+            // Fix this rather nasty workaround once SpreadsheetGear has API support for its find dialog
             workbookView.Focus();
             SendKeys.Send("^f");
             Application.DoEvents(); // Force processing of events, in this case showing the find dialog
@@ -3317,7 +3321,7 @@ namespace StatsDirect.UI
 
         private void replaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO: Fix this rather nasty workaround once SpreadsheetGear has API support for its replace dialog
+            // Fix this rather nasty workaround once SpreadsheetGear has API support for its replace dialog
             workbookView.Focus();
             SendKeys.Send("^h");
             Application.DoEvents(); // Force processing of events, in this case showing the replace dialog
@@ -3439,7 +3443,7 @@ namespace StatsDirect.UI
 
         private void deleteSheetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            bool shouldDelete = SDApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.\nAre \nyou \nsure \nyou \nwant \nto \ndelete this sheet?", "Delete sheet");
+            bool shouldDelete = SDApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.  Are you sure you want to delete this sheet?", "Delete sheet");
             if (shouldDelete)
             {
                 workbookView.GetLock();
@@ -3661,7 +3665,7 @@ namespace StatsDirect.UI
             DoOperation("ImportWorksheet");
         }
 
-        private void DoOperation(string operationName)
+        private static void DoOperation(string operationName)
         {
             SDApplication.SoleInstance.MainWindow.DoOperation(operationName);
         }
@@ -3758,7 +3762,7 @@ namespace StatsDirect.UI
 
         private void findAndReplaceContextMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO: Fix this rather nasty workaround once SpreadsheetGear has API support for its replace dialog
+            // Fix this rather nasty workaround once SpreadsheetGear has API support for its replace dialog
             workbookView.Focus();
             SendKeys.Send("^h");
             Application.DoEvents(); // Force processing of events, in this case showing the replace dialog

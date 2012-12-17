@@ -516,7 +516,7 @@ namespace StatsDirect.Charting
         {
             string[] fontStrings = descriptor.Split(';');
             string fontString = fontStrings[0];
-            FontStyle style = ((FontStyle)(int.Parse(fontStrings[1])));
+            FontStyle style = ((FontStyle)(Parsing.Cint_Txt(fontStrings[1])));
             float sz = float.Parse(fontStrings[2]);
             return new Font(fontString, sz, style);
         }

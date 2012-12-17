@@ -540,7 +540,7 @@ namespace StatsDirect.Templates
                                                          ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
                                                          Method = parameters.ContainsKey("ScoreMethod")
                                                                       ? (NormalOptions.ScoreMethod)
-                                                                        Int32.Parse(parameters["ScoreMethod"].AsString)
+                                                                        Parsing.Cint_Txt(parameters["ScoreMethod"].AsString)
                                                                       : NormalOptions.ScoreMethod.VanDerWaerden,
                                                          Title =
                                                              null == dataName
@@ -568,7 +568,7 @@ namespace StatsDirect.Templates
                         /**
                         if (parameters.ContainsKey("Shading"))
                         {
-                            pOptions.Shading = (SDChart.FillStyle)int.Parse(parameters["Shading"].AsString);
+                            pOptions.Shading = (SDChart.FillStyle)Parsing.Cint_Txt(parameters["Shading"].AsString);
                         }
                          */
                         pOptions.Title = null == dataName ? "Population pyramid" : "Population pyramid from " + dataName;

@@ -982,7 +982,7 @@ namespace StatsDirect.UI
             this.pnlTop.Location = new System.Drawing.Point(0, 24);
             this.pnlTop.MinimumSize = new System.Drawing.Size(0, 58);
             this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Size = new System.Drawing.Size(692, 410);
+            this.pnlTop.Size = new System.Drawing.Size(692, 328);
             this.pnlTop.TabIndex = 8;
             // 
             // pnlModalMessage

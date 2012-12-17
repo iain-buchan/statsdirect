@@ -20,36 +20,29 @@
         <string>
           <name>accuracy</name>
           <prompt>Precision of estimates:</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <prompt-precedes-parameter>true</prompt-precedes-parameter>
           <maximum-length>12</maximum-length>
           <default-value>="0.0000001"</default-value>
-          <lifetime>SessionForThisOperation</lifetime>
         </string>
         <boolean>
           <name>intercept</name>
           <prompt>Calculate intercepts</prompt>
-          <default-value>true</default-value>
           <lifetime>SessionForThisOperation</lifetime>
+          <default-value>true</default-value>
         </boolean>
         <boolean>
           <name>weights</name>
           <prompt>Use weights for responses</prompt>
-          <default-value>false</default-value>
           <lifetime>SessionForThisOperation</lifetime>
+          <default-value>false</default-value>
         </boolean>
 <!--
         <multiple-options>
-          <format-hint>poissonRegressionOptions</format-hint>
-          <prompt>Poisson regression options</prompt>
           <options>
             <option name="has-exposure" value="false">Counts of events only</option>
             <option name="has-exposure" value="true">Counts of events and exposure (person-time)</option>
-            <option name="intercept" selected="true">Calculate intercept</option>
-            <option name="weights" selected="false">Use weights for responses</option>
           </options>
-          <strings>
-            <string name="accuracy" default="0.0000001">Precision of estimates</string>
-          </strings>
         </multiple-options>
         -->
         <frame>

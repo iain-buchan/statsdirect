@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using StatsDirect.Charting;
 using System.Media;
 using System.ComponentModel;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
@@ -173,7 +174,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                int bins = Int32.Parse(txtBins.Text);
+                int bins = Parsing.Cint_Txt(txtBins.Text);
                 options.PoolVariablesForBins = chkPoolVariables.Checked;
                 List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 options.Reset(false, bins, chkPoolVariables.Checked, currentSeriesIndex, series);

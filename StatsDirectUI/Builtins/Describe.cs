@@ -8,43 +8,11 @@ using System;
 using System.Collections.Generic;
 namespace StatsDirect.Builtins
 {
-    public class SummaryStatisticsOptions : IFillable
-    {
-        public string Text;
-
-        public string FillerToUse
-        {
-            get
-            {
-                return "SummaryStatistics";
-            }
-        } // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
-            }
-        }
-
-    }
-
-
     public class Describe
     {
-        // private static bool prevchk1;
-        // private static bool prevchk2; 
-        private static readonly bool[] checked1 = new bool[22];
-        private static readonly bool[] checked2 = new bool[22];
-        private static int PrevCentileType;
-        private static int UserCentileA1;
-        private static int UserCentileB1;
-        private static int UserCentileA2;
-        private static int UserCentileB2;
-
         private class GroupByTitle : IComparer<Group>
         {
-            private int Compare(Group x, Group y)
+            private static int Compare(Group x, Group y)
             {
                 if (x.Label.Equals(y.Label))
                 {
@@ -73,7 +41,6 @@ namespace StatsDirect.Builtins
             }
 
         }
-
 
         public static StepResult RptPreferences(ITemplateHost host, ParameterBag parameters)
         {
@@ -352,9 +319,33 @@ namespace StatsDirect.Builtins
             return RptDescriptive(host, parameters, true);
         }
 
+        private enum SummaryType
+        {
+            ValidData = 0,
+            MissingData = 1,
+            Sum = 2,
+            Mean = 3,
+            Variance = 4,
+            Sd = 5,
+            VarianceCoefficient = 6,
+            Sem = 7,
+            MeanUcl = 8,
+            MeanLcl = 9,
+            GeometricMean = 10,
+            Skewness = 11,
+            Kurtosis = 12,
+            Maximum = 13,
+            UpperQuartile = 14,
+            Median = 15,
+            LowerQuartile = 16,
+            Minimum = 17,
+            Range = 18,
+            Udc1 = 19,
+            Udc2 = 20
+        };
+
         private static StepResult RptDescriptive(ITemplateHost host, ParameterBag parameters, bool isWeighted)
         {
-            int i; int j;
             int maxrows; int cols;
             double nsumwt = 0;
             string wti = null;
@@ -368,16 +359,16 @@ namespace StatsDirect.Builtins
                 // store the data
                 DataFrame data = parameters["data"].AsDataFrame;
                 maxrows = data.MaxRows;
-                cols = data.VariableCount - 1;
-                x = new double[cols + 1, maxrows + 1];
-                cdx = new ColumnData[cols + 1];
-                for (i = 0; i <= cols; i++)
+                cols = data.VariableCount;
+                x = new double[cols, maxrows + 1];
+                cdx = new ColumnData[cols];
+                for (int i = 0; i < cols; i++)
                 {
                     DoubleVariable vi = data.Variables[i].AsDoubleVariable;
                     cdx[i] = new ColumnData { Title = vi.Title, Rows = vi.Length };
                 }
 
-                w = new double[cols + 1, maxrows + 1];
+                w = new double[cols, maxrows + 1];
                 DataFrame weightsFrame = parameters["weights"].AsDataFrame;
                 DoubleVariable weightsVariable = weightsFrame.Variables[0].AsDoubleVariable;
                 wti = weightsVariable.Title;
@@ -391,7 +382,7 @@ namespace StatsDirect.Builtins
                     if (weight == Constant.MISSING || weight == 0)
                     {
                         // Remove the row from any variables that are at least this long
-                        for (int col = 0; col <= cols; col++)
+                        for (int col = 0; col < cols; col++)
                         {
                             if (row < cdx[col].Rows + removed)
                                 cdx[col].Rows--;
@@ -406,7 +397,7 @@ namespace StatsDirect.Builtins
                         throw new TemplateOperationCancelledException();
                     }
 
-                    for (int col = 0; col <= cols; col++)
+                    for (int col = 0; col < cols; col++)
                     {
                         w[col, targetRow] = weight;
                         DoubleVariable vi = data.Variables[col].AsDoubleVariable;
@@ -426,14 +417,14 @@ namespace StatsDirect.Builtins
                 // store the data
                 DataFrame data = parameters["data"].AsDataFrame;
                 maxrows = data.MaxRows;
-                cols = data.VariableCount - 1;
-                x = new double[cols + 1, maxrows + 1];
-                cdx = new ColumnData[cols + 1];
-                for (i = 0; i <= cols; i++)
+                cols = data.VariableCount;
+                x = new double[cols, maxrows + 1];
+                cdx = new ColumnData[cols];
+                for (int i = 0; i < cols; i++)
                 {
                     DoubleVariable vi = data.Variables[i].AsDoubleVariable;
                     cdx[i] = new ColumnData { Title = vi.Title, Rows = vi.Length };
-                    for (j = 1; j <= vi.Length; j++)
+                    for (int j = 1; j <= vi.Length; j++)
                         x[i, j] = vi.Data[j - 1];
                 }
             }
@@ -444,43 +435,47 @@ namespace StatsDirect.Builtins
             string sumTitle = isWeighted ? "Sum of weights" : "Sum";
             string[] titles = { "Valid data", "Missing data", sumTitle, "Mean", "Variance", "Standard deviation", "Variance coefficient", "Standard error of mean", "Upper" + qxcl, "Lower" + qxcl, "Geometric mean", "Skewness", "Kurtosis", "Maximum", "Upper quartile", "Median", "Lower quartile", "Minimum", "Range", "User defined centiles", null };
 
-            checked1[0] = parameters["report-valid-data"].AsBoolean;
-            checked1[1] = parameters["report-missing-data"].AsBoolean;
-            checked1[2] = parameters["report-sum"].AsBoolean;
-            checked1[3] = parameters["report-mean"].AsBoolean;
-            checked1[4] = parameters["report-variance"].AsBoolean;
-            checked1[5] = parameters["report-sd"].AsBoolean;
-            checked1[6] = parameters["report-variance-coeff"].AsBoolean;
-            checked1[7] = parameters["report-sem"].AsBoolean;
-            checked1[8] = parameters["report-u95cl"].AsBoolean;
-            checked1[9] = parameters["report-l95cl"].AsBoolean;
-            checked1[10] = parameters["report-geometric-mean"].AsBoolean;
-            checked1[11] = parameters["report-skewness"].AsBoolean;
-            checked1[12] = parameters["report-kurtosis"].AsBoolean;
-            checked1[13] = parameters["report-maximum"].AsBoolean;
-            checked1[14] = parameters["report-uq"].AsBoolean;
-            checked1[15] = parameters["report-median"].AsBoolean;
-            checked1[16] = parameters["report-lq"].AsBoolean;
-            checked1[17] = parameters["report-minimum"].AsBoolean;
-            checked1[18] = parameters["report-range"].AsBoolean;
-            checked1[19] = parameters["report-udc"].AsBoolean;
-            UserCentileA1 = Convert.ToInt32(parameters["report-udca"].AsDouble);
-            UserCentileB1 = Convert.ToInt32(parameters["report-udcb"].AsDouble);
-            PrevCentileType = int.Parse(parameters["report-centile-type"].AsString);
-            double centxl = UserCentileA1;
-            double centxu = UserCentileB1;
+            Dictionary<SummaryType, bool> shouldOutput = new Dictionary<SummaryType, bool>();
+            shouldOutput[SummaryType.ValidData] = parameters["report-valid-data"].AsBoolean;
+            shouldOutput[SummaryType.MissingData] = parameters["report-missing-data"].AsBoolean;
+            shouldOutput[SummaryType.Sum] = parameters["report-sum"].AsBoolean;
+            shouldOutput[SummaryType.Mean] = parameters["report-mean"].AsBoolean;
+            shouldOutput[SummaryType.Variance] = parameters["report-variance"].AsBoolean;
+            shouldOutput[SummaryType.Sd] = parameters["report-sd"].AsBoolean;
+            shouldOutput[SummaryType.VarianceCoefficient] = parameters["report-variance-coeff"].AsBoolean;
+            shouldOutput[SummaryType.Sem] = parameters["report-sem"].AsBoolean;
+            shouldOutput[SummaryType.MeanUcl] = parameters["report-u95cl"].AsBoolean;
+            shouldOutput[SummaryType.MeanLcl] = parameters["report-l95cl"].AsBoolean;
+            shouldOutput[SummaryType.GeometricMean] = parameters["report-geometric-mean"].AsBoolean;
+            shouldOutput[SummaryType.Skewness] = parameters["report-skewness"].AsBoolean;
+            shouldOutput[SummaryType.Kurtosis] = parameters["report-kurtosis"].AsBoolean;
+            shouldOutput[SummaryType.Maximum] = parameters["report-maximum"].AsBoolean;
+            shouldOutput[SummaryType.UpperQuartile] = parameters["report-uq"].AsBoolean;
+            shouldOutput[SummaryType.Median] = parameters["report-median"].AsBoolean;
+            shouldOutput[SummaryType.LowerQuartile] = parameters["report-lq"].AsBoolean;
+            shouldOutput[SummaryType.Minimum] = parameters["report-minimum"].AsBoolean;
+            shouldOutput[SummaryType.Range] = parameters["report-range"].AsBoolean;
+            shouldOutput[SummaryType.Udc1] = parameters["report-udc"].AsBoolean;
+            shouldOutput[SummaryType.Udc2] = parameters["report-udc"].AsBoolean;
+
+            int userCentileA1 = Convert.ToInt32(parameters["report-udca"].AsDouble);
+            int userCentileB1 = Convert.ToInt32(parameters["report-udcb"].AsDouble);
+            int prevCentileType = Parsing.Cint_Txt(parameters["report-centile-type"].AsString);
+            double centxl = userCentileA1;
+            double centxu = userCentileB1;
             // prevchk1 = true; 
-            bool shouldSave = parameters["output-to-frame"].AsBoolean;
+            // If there's no output-to-frame, we're being called from the summary - which always wants this.
+            bool shouldSave = !parameters.ContainsKey("output-to-frame") || parameters["output-to-frame"].AsBoolean;
 
             // get a result object for each column of data
-            Summary[] sx = new Summary[cols + 1 /* VB to C# conversion */ ];
-            for (i = 0; i <= cols; i++)
+            Summary[] sx = new Summary[cols];
+            for (int i = 0; i < cols; i++)
             {
                 sx[i] = new Summary();
                 if (isWeighted)
                     sx[i].WeightedSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, w, wti, nsumwt);
                 else
-                    sx[i].FullSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, PrevCentileType);
+                    sx[i].FullSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, prevCentileType);
             }
 
             // Fill the report
@@ -489,61 +484,57 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> titlesList = new List<ParameterBag>();
             outputParameters.AddOutput("*titles", titlesList);
-            for (i = 0; i <= cols; i++)
+            for (int i = 0; i < cols; i++)
             { // Title
 
                 ParameterBag titlesParameters = new ParameterBag();
                 titlesList.Add(titlesParameters);
                 string val = sx[i].Title;
-                if ((i + 1) % 3 == 0 & cols > 2)
+                if ((i + 1) % 3 == 0 && cols > 3)
                     val += Formatting.RTFCRLF;
                 titlesParameters.AddOutput("title", val);
             }
             List<ParameterBag> fieldsList = new List<ParameterBag>();
             outputParameters.AddOutput("*fields", fieldsList);
-            for (j = 0; j <= 20; j++)
+            foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
             {
-                fieldsList.Add(FillField(host, j, sx, cols, checked1[j], titles[j], checked1[19], isWeighted));
+                fieldsList.Add(FillField(host, s, sx, cols, shouldOutput[s], titles[(int)s], isWeighted));
             }
 
             // Fill the worksheet if required
             if (shouldSave)
             {
-                //  descriptor = DescriptorForUnivariateDescription("Which results to paste to worksheet", GAMMA, False, True, False, False)
-                //  If Host.DisplayOptions(descriptor) Then
                 // Find how many columns have been selected
                 int lc = 1;
-                for (i = 0; i <= 19; i++)
+                foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
                 {
-                    //  checked2(i) = descriptor.CheckBoxes(i).Checked
-                    checked2[i] = checked1[i];
-                    if (checked2[i])
+                    if (shouldOutput[s])
                     {
                         lc += 1;
                     }
                 }
-                UserCentileA2 = UserCentileA1;
-                UserCentileB2 = UserCentileB1;
-                centxl = UserCentileA2;
-                centxu = UserCentileB2;
+                int userCentileA2 = userCentileA1;
+                int userCentileB2 = userCentileB1;
+                centxl = userCentileA2;
+                centxu = userCentileB2;
 
                 // recalculate if centiles selected have changed
-                if ((UserCentileA2 > 0 & UserCentileA2 != UserCentileA1) | (UserCentileB2 > 0 & UserCentileB2 != UserCentileB1))
+                if ((userCentileA2 > 0 && userCentileA2 != userCentileA1) || (userCentileB2 > 0 && userCentileB2 != userCentileB1))
                 {
-                    for (i = 0; i <= cols; i++)
+                    for (int i = 0; i < cols; i++)
                     {
                         if (isWeighted)
                             sx[i].WeightedSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, w, wti, nsumwt);
                         else
-                            sx[i].FullSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, PrevCentileType);
+                            sx[i].FullSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, prevCentileType);
                     }
                 }
 
-                if (UserCentileA2 > 0)
+                if (userCentileA2 > 0)
                 {
                     lc += 1;
                 }
-                if (UserCentileB2 > 0)
+                if (userCentileB2 > 0)
                 {
                     lc += 1;
                 }
@@ -552,25 +543,36 @@ namespace StatsDirect.Builtins
                 {
                     DataFrame outputFrame = new DataFrame();
                     outputParameters.AddOutput("output", outputFrame);
-                    // If the worksheet is loaded then fill it
-                    StringVariable totalsVariable = new StringVariable { Title = "Title" };
-                    totalsVariable.EnsureLength(cols + 1);
-                    for (i = 0; i <= cols; i++)
+                    if (false)
                     {
-                        totalsVariable.set_Data(i, sx[i].Title);
+                        // TODO: #741
                     }
-                    outputFrame.Variables.Add(totalsVariable);
-                    for (i = 0; i <= 18; i++)
+                    else
                     {
-                        if (checked2[i])
+                        // If the worksheet is loaded then fill it
+                        StringVariable totalsVariable = new StringVariable { Title = "Title" };
+                        totalsVariable.EnsureLength(cols);
+                        for (int i = 0; i < cols; i++)
                         {
-                            outputFrame.Variables.Add(FillCell(i, sx, cols, titles[i], checked2[19]));
+                            totalsVariable.set_Data(i, sx[i].Title);
                         }
-                    }
-                    if (checked2[19])
-                    {
-                        outputFrame.Variables.Add(FillCell(19, sx, cols, null, checked2[19]));
-                        outputFrame.Variables.Add(FillCell(20, sx, cols, null, checked2[19]));
+                        outputFrame.Variables.Add(totalsVariable);
+                        foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
+                        {
+                            if (shouldOutput[s])
+                            switch (s)
+                            {
+                                case SummaryType.Udc1:
+                                    outputFrame.Variables.Add(FillCell(SummaryType.Udc1, sx, cols, null));
+                                    break;
+                                case SummaryType.Udc2:
+                                    outputFrame.Variables.Add(FillCell(SummaryType.Udc2, sx, cols, null));
+                                    break;
+                                default:
+                                    outputFrame.Variables.Add(FillCell(s, sx, cols, titles[(int)s]));
+                                    break;
+                            }
+                        }
                     }
                 }
             }
@@ -627,329 +629,204 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static DoubleVariable FillCell(int opt, Summary[] sx, int cols, string title, bool shouldOutputCentiles)
+        private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string title)
         {
             int i = 0;
             DoubleVariable v = new DoubleVariable();
-            v.EnsureLength(cols + 1);
-            if (opt > 18)
+            v.EnsureLength(cols);
+            switch (summaryType)
             {
-                if (shouldOutputCentiles)
-                {
-                    switch (opt)
-                    {
-                        case 19:
-                            v.Title = sx[i].UserCentileUCaption;
-                            break;
-                        case 20:
-                            v.Title = sx[i].UserCentileLCaption;
-                            break;
-                    }
-
-                    for (i = 0; i <= cols; i++)
-                    {
-                        switch (opt)
-                        {
-                            case 19:
-                                v.set_Data(i, sx[i].UserCentileU);
-                                break;
-                            case 20:
-                                v.set_Data(i, sx[i].UserCentileL);
-                                break;
-                        }
-
-                    }
-                }
+                case SummaryType.Udc1:
+                    v.Title = sx[i].UserCentileUCaption;
+                    break;
+                case SummaryType.Udc2:
+                    v.Title = sx[i].UserCentileLCaption;
+                    break;
+                default:
+                    v.Title = title;
+                    break;
             }
-            else
+            for (i = 0; i < cols; i++)
             {
-                v.Title = title;
-                for (i = 0; i <= cols; i++)
+                double res;
+                switch (summaryType)
                 {
-                    double res;
-                    switch (opt)
-                    {
-                        case 0:
-                            res = sx[i].ValidData;
-                            break;
-                        case 1:
-                            res = sx[i].MissingData;
-                            break;
-                        case 2:
-                            res = sx[i].Sum;
-                            break;
-                        case 3:
-                            res = sx[i].Mean;
-                            break;
-                        case 4:
-                            res = sx[i].Variance;
-                            break;
-                        case 5:
-                            res = sx[i].Sd;
-                            break;
-                        case 6:
-                            res = sx[i].VarianceCoefficient;
-                            break;
-                        case 7:
-                            res = sx[i].Sem;
-                            break;
-                        case 8:
-                            res = sx[i].MeanUCL;
-                            break;
-                        case 9:
-                            res = sx[i].MeanLCL;
-                            break;
-                        case 10:
-                            res = sx[i].GeometricMean;
-                            break;
-                        case 11:
-                            res = sx[i].Skewness;
-                            break;
-                        case 12:
-                            res = sx[i].Kurtosis;
-                            break;
-                        case 13:
-                            res = sx[i].Maximum;
-                            break;
-                        case 14:
-                            res = sx[i].UpperQuartile;
-                            break;
-                        case 15:
-                            res = sx[i].Median;
-                            break;
-                        case 16:
-                            res = sx[i].LowerQuartile;
-                            break;
-                        case 17:
-                            res = sx[i].Minimum;
-                            break;
-                        case 18:
-                            res = sx[i].Range;
-                            break;
-                        default:
-                            throw new ArgumentException("Unknown option", "opt");
-                    }
-
-                    v.set_Data(i, res);
+                    case SummaryType.ValidData:
+                        res = sx[i].ValidData;
+                        break;
+                    case SummaryType.MissingData:
+                        res = sx[i].MissingData;
+                        break;
+                    case SummaryType.Sum:
+                        res = sx[i].Sum;
+                        break;
+                    case SummaryType.Mean:
+                        res = sx[i].Mean;
+                        break;
+                    case SummaryType.Variance:
+                        res = sx[i].Variance;
+                        break;
+                    case SummaryType.Sd:
+                        res = sx[i].Sd;
+                        break;
+                    case SummaryType.VarianceCoefficient:
+                        res = sx[i].VarianceCoefficient;
+                        break;
+                    case SummaryType.Sem:
+                        res = sx[i].Sem;
+                        break;
+                    case SummaryType.MeanUcl:
+                        res = sx[i].MeanUCL;
+                        break;
+                    case SummaryType.MeanLcl:
+                        res = sx[i].MeanLCL;
+                        break;
+                    case SummaryType.GeometricMean:
+                        res = sx[i].GeometricMean;
+                        break;
+                    case SummaryType.Skewness:
+                        res = sx[i].Skewness;
+                        break;
+                    case SummaryType.Kurtosis:
+                        res = sx[i].Kurtosis;
+                        break;
+                    case SummaryType.Maximum:
+                        res = sx[i].Maximum;
+                        break;
+                    case SummaryType.UpperQuartile:
+                        res = sx[i].UpperQuartile;
+                        break;
+                    case SummaryType.Median:
+                        res = sx[i].Median;
+                        break;
+                    case SummaryType.LowerQuartile:
+                        res = sx[i].LowerQuartile;
+                        break;
+                    case SummaryType.Minimum:
+                        res = sx[i].Minimum;
+                        break;
+                    case SummaryType.Range:
+                        res = sx[i].Range;
+                        break;
+                    case SummaryType.Udc1:
+                        res = sx[i].UserCentileU;
+                        break;
+                    case SummaryType.Udc2:
+                        res = sx[i].UserCentileL;
+                        break;
+                    default:
+                        throw new ArgumentException("Unknown option", "opt");
                 }
+
+                v.set_Data(i, res);
             }
             return v;
         }
 
 
-        private static ParameterBag FillField(ITemplateHost host, int opt, Summary[] sx, int cols, bool optChecked, string optTitle, bool checked19, bool isWeighted)
+        private static ParameterBag FillField(ITemplateHost host, SummaryType opt, Summary[] sx, int cols, bool optChecked, string optTitle, bool isWeighted)
         {
             ParameterBag fieldParameters = new ParameterBag();
             List<ParameterBag> resultsList = new List<ParameterBag>();
             fieldParameters.AddOutput("*results", resultsList);
-            if (opt > 18)
+            if (optChecked)
             {
-                if (checked19)
+                switch (opt)
                 {
+                    case SummaryType.Udc1:
+                        fieldParameters.AddOutput("title", sx[0].UserCentileUCaption);
+                        break;
+                    case SummaryType.Udc2:
+                        fieldParameters.AddOutput("title", sx[0].UserCentileLCaption);
+                        break;
+                    default:
+                        fieldParameters.AddOutput("title", optTitle);
+                        break;
+                }
+                for (int i = 0; i < cols; i++)
+                {
+                    ParameterBag resultsParameters = new ParameterBag();
+                    resultsList.Add(resultsParameters);
+                    string res;
                     switch (opt)
                     {
-                        case 19:
-                            fieldParameters.AddOutput("title", sx[0].UserCentileUCaption);
+                        case SummaryType.ValidData:
+                            res = sx[i].ValidData.ToString();
                             break;
-                        case 20:
-                            fieldParameters.AddOutput("title", sx[0].UserCentileLCaption);
+                        case SummaryType.MissingData:
+                            res = sx[i].MissingData.ToString();
                             break;
+                        case SummaryType.Sum:
+                            res = host.RoundU(isWeighted ? sx[i].SumOfWeights : sx[i].Sum);
+                            break;
+                        case SummaryType.Mean:
+                            res = host.RoundU(sx[i].Mean);
+                            break;
+                        case SummaryType.Variance:
+                            res = host.RoundU(sx[i].Variance);
+                            break;
+                        case SummaryType.Sd:
+                            res = host.RoundU(sx[i].Sd);
+                            break;
+                        case SummaryType.VarianceCoefficient:
+                            res = host.RoundU(sx[i].VarianceCoefficient);
+                            break;
+                        case SummaryType.Sem:
+                            res = host.RoundU(sx[i].Sem);
+                            break;
+                        case SummaryType.MeanUcl:
+                            res = host.RoundU(sx[i].MeanUCL);
+                            break;
+                        case SummaryType.MeanLcl:
+                            res = host.RoundU(sx[i].MeanLCL);
+                            break;
+                        case SummaryType.GeometricMean:
+                            res = host.RoundU(sx[i].GeometricMean);
+                            break;
+                        case SummaryType.Skewness:
+                            res = host.RoundU(sx[i].Skewness);
+                            break;
+                        case SummaryType.Kurtosis:
+                            res = host.RoundU(sx[i].Kurtosis);
+                            break;
+                        case SummaryType.Maximum:
+                            res = host.RoundU(sx[i].Maximum);
+                            break;
+                        case SummaryType.UpperQuartile:
+                            res = host.RoundU(sx[i].UpperQuartile);
+                            break;
+                        case SummaryType.Median:
+                            res = host.RoundU(sx[i].Median);
+                            break;
+                        case SummaryType.LowerQuartile:
+                            res = host.RoundU(sx[i].LowerQuartile);
+                            break;
+                        case SummaryType.Minimum:
+                            res = host.RoundU(sx[i].Minimum);
+                            break;
+                        case SummaryType.Range:
+                            res = host.RoundU(sx[i].Range);
+                            break;
+                        case SummaryType.Udc1:
+                            res = host.RoundU(sx[i].UserCentileU);
+                            break;
+                        case SummaryType.Udc2:
+                            res = host.RoundU(sx[i].UserCentileL);
+                            break;
+                        default:
+                            throw new ArgumentException("Unknown opt", "opt");
                     }
 
-                    for (int i = 0; i <= cols; i++)
+                    if ((i + 1) % 3 == 0 && cols > 3)
                     {
-                        ParameterBag resultsParameters = new ParameterBag();
-                        resultsList.Add(resultsParameters);
-                        string res;
-                        switch (opt)
-                        {
-                            case 19:
-                                res = host.RoundU(sx[i].UserCentileU);
-                                break;
-                            case 20:
-                                res = host.RoundU(sx[i].UserCentileL);
-                                break;
-                            default:
-                                throw new ArgumentException("Unknown opt", "opt");
-                        }
-
-                        if ((i + 1) % 3 == 0 & cols > 2)
-                        {
-                            res += Formatting.RTFCRLF;
-                        }
-                        resultsParameters.AddOutput("result", res);
+                        res += Formatting.RTFCRLF;
                     }
-                    if (cols > 2 & (cols + 1) % 3 != 0)
-                    {
-                        //  Hack a LF on the end of the last string
-                        string s = resultsList[resultsList.Count - 1]["result"].AsString;
-                        s += Formatting.RTFCRLF;
-                        resultsList[resultsList.Count - 1]["result"] = new FilledParameter(false, s);
-                    }
-
+                    resultsParameters.AddOutput("result", res);
                 }
-            }
-            else
-            {
-                if (optChecked)
-                {
-                    fieldParameters.AddOutput("title", optTitle);
-                    for (int i = 0; i <= cols; i++)
-                    {
-                        ParameterBag resultsParameters = new ParameterBag();
-                        resultsList.Add(resultsParameters);
-                        string res;
-                        switch (opt)
-                        {
-                            case 0:
-                                res = sx[i].ValidData.ToString();
-                                break;
-                            case 1:
-                                res = sx[i].MissingData.ToString();
-                                break;
-                            case 2:
-                                res = host.RoundU(isWeighted ? sx[i].SumOfWeights : sx[i].Sum);
-                                break;
-                            case 3:
-                                res = host.RoundU(sx[i].Mean);
-                                break;
-                            case 4:
-                                res = host.RoundU(sx[i].Variance);
-                                break;
-                            case 5:
-                                res = host.RoundU(sx[i].Sd);
-                                break;
-                            case 6:
-                                res = host.RoundU(sx[i].VarianceCoefficient);
-                                break;
-                            case 7:
-                                res = host.RoundU(sx[i].Sem);
-                                break;
-                            case 8:
-                                res = host.RoundU(sx[i].MeanUCL);
-                                break;
-                            case 9:
-                                res = host.RoundU(sx[i].MeanLCL);
-                                break;
-                            case 10:
-                                res = host.RoundU(sx[i].GeometricMean);
-                                break;
-                            case 11:
-                                res = host.RoundU(sx[i].Skewness);
-                                break;
-                            case 12:
-                                res = host.RoundU(sx[i].Kurtosis);
-                                break;
-                            case 13:
-                                res = host.RoundU(sx[i].Maximum);
-                                break;
-                            case 14:
-                                res = host.RoundU(sx[i].UpperQuartile);
-                                break;
-                            case 15:
-                                res = host.RoundU(sx[i].Median);
-                                break;
-                            case 16:
-                                res = host.RoundU(sx[i].LowerQuartile);
-                                break;
-                            case 17:
-                                res = host.RoundU(sx[i].Minimum);
-                                break;
-                            case 18:
-                                res = host.RoundU(sx[i].Range);
-                                break;
-                            default:
-                                throw new ArgumentException("Unknown opt", "opt");
-                        }
-
-                        if ((i + 1) % 3 == 0 & cols > 2)
-                        {
-                            res += Formatting.RTFCRLF;
-                        }
-                        resultsParameters.AddOutput("result", res);
-                    }
-                    string s = resultsList[resultsList.Count - 1]["result"].AsString;
-                    resultsList[resultsList.Count - 1]["result"] = new FilledParameter(false, s);
-                }
+                string s = resultsList[resultsList.Count - 1]["result"].AsString;
+                resultsList[resultsList.Count - 1]["result"] = new FilledParameter(false, s);
             }
             return fieldParameters;
         }
-
-
-        // Private Shared Function DescriptorForUnivariateDescription(ByVal Title As String, ByVal GAMMA As Double, ByVal UseCheck1 As Boolean, ByVal UseCheck2 As Boolean, ByVal UseCentileTypes As Boolean, ByVal ShowOutputSelection As Boolean) As OptionDescriptor
-        //     Dim qxcl As String = " " & Formatting.XRound(GAMMA * 100, 1) & "% CL of mean"
-        //     Dim descriptor As OptionDescriptor = New OptionDescriptor()
-        //     descriptor.SelectionBoxes.Add(New SelectionBoxDescriptor())
-        //     descriptor.SelectionBoxes.Add(New SelectionBoxDescriptor())
-        //     descriptor.SelectionBoxes(0).Title = "User Centile A"
-        //     descriptor.SelectionBoxes(1).Title = "User Centile B"
-        //     descriptor.SelectionBoxes(0).FillFactor(1, 20, 1, vbNullString, 4)
-        //     descriptor.SelectionBoxes(1).FillFactor(99, 80, -1, vbNullString, 4)
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk0", "Valid data", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk1", "Missing data", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk2", "Sum", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk3", "Mean", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk4", "Variance", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk5", "Standard deviation", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk6", "Variance coefficient", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk7", "Standard error of mean", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk8", "Upper" & qxcl, False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk9", "Lower" & qxcl, False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk10", "Geometric mean", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk11", "Skewness", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk12", "Kurtosis", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk13", "Maximum", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk14", "Upper quartile", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk15", "Median", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk16", "Lower quartile", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk17", "Minimum", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk18", "Range", False, False))
-        //     descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk19", "User defined centiles", False, False))
-        //     If UseCentileTypes Then
-        //         descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk20", "Centile type 1", PrevCentileType = 1, True))
-        //         descriptor.CheckBoxes.Add(New CheckBoxDescriptor("chk21", "Centile type 2", PrevCentileType = 2, True))
-        //     End If
-        //     If UseCheck1 Then
-        //         If prevchk1 Then
-        //             For i As Integer = 0 To 19
-        //                 descriptor.CheckBoxes(i).Checked = checked1(i)
-        //             Next
-        //             descriptor.SelectionBoxes(0).SelectedValue = Format(UserCentileA1)
-        //             descriptor.SelectionBoxes(1).SelectedValue = Format(UserCentileB1)
-        //             If descriptor.SelectionBoxes(0).Value = "0" Then descriptor.SelectionBoxes(0).SelectedValue = vbNullString
-        //             If descriptor.SelectionBoxes(1).Value = "0" Then descriptor.SelectionBoxes(1).SelectedValue = vbNullString
-        //         Else
-        //             For i As Integer = 0 To 19
-        //                 descriptor.CheckBoxes(i).Checked = True
-        //             Next
-        //             descriptor.SelectionBoxes(0).SelectedValue = "5"
-        //             descriptor.SelectionBoxes(1).SelectedValue = "95"
-        //         End If
-        //     End If
-        //     If UseCheck2 Then
-        //         If prevchk2 Then
-        //             For i As Integer = 0 To 19
-        //                 descriptor.CheckBoxes(i).Checked = checked2(i)
-        //             Next
-        //             descriptor.SelectionBoxes(0).SelectedValue = Format(UserCentileA2)
-        //             descriptor.SelectionBoxes(1).SelectedValue = Format(UserCentileB2)
-        //             If descriptor.SelectionBoxes(0).Value = "0" Then descriptor.SelectionBoxes(0).SelectedValue = vbNullString
-        //             If descriptor.SelectionBoxes(1).Value = "0" Then descriptor.SelectionBoxes(1).SelectedValue = vbNullString
-        //         Else
-        //             For i As Integer = 0 To 19
-        //                 descriptor.CheckBoxes(i).Checked = checked1(i)
-        //             Next
-        //             descriptor.SelectionBoxes(0).SelectedValue = Format(UserCentileA1)
-        //             descriptor.SelectionBoxes(1).SelectedValue = Format(UserCentileB1)
-        //             If descriptor.SelectionBoxes(0).Value = "0" Then descriptor.SelectionBoxes(0).SelectedValue = vbNullString
-        //             If descriptor.SelectionBoxes(1).Value = "0" Then descriptor.SelectionBoxes(1).SelectedValue = vbNullString
-        //         End If
-        //     End If
-        //     descriptor.Title = Title
-        //     Return descriptor
-        // End Function
-
     }
-
-
 }

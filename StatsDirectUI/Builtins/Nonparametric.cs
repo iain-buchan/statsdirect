@@ -976,39 +976,39 @@ namespace StatsDirect.Builtins
         public static StepResult RptCuzick(ITemplateHost host, ParameterBag parameters)
         {
             double varz = 0; double ez = 0; double st = 0; double tie;
-            int N = 0; int count = 0;
+            int n = 0; int count = 0;
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            double[] t = new double[1 + 1 /* for VB to C# conversion */ ];
-            int[] gn = new int[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
-            for (int j = 0; j <= frame.VariableCount - 1; j++)
+            double[] t = new double[2];
+            int[] gn = new int[frame.VariableCount];
+            for (int j = 0; j < frame.VariableCount; j++)
             {
                 int chuck = 0;
                 DoubleVariable v = frame.Variables[j].AsDoubleVariable;
-                for (int k = 0; k <= v.Length - 1; k++)
+                for (int k = 0; k < v.Length; k++)
                 {
                     if (v.Data[k] != Constant.MISSING)
                     {
-                        N = N + 1;
+                        n++;
                         // create temp variable for copying values 
-                        double[] transTemp2 = new double[N + 1 /* for VB to C# conversion */ ];
+                        double[] transTemp2 = new double[n + 1];
                         Array.Copy(t, transTemp2, Math.Min(t.Length, transTemp2.Length));
-                        t = transTemp2; //  This could be sped up by allocating t in larger blocks and trimming after the loop.
-                        t[N] = v.Data[k];
+                        t = transTemp2; // TODO: This could be sped up by allocating t in larger blocks and trimming after the loop.
+                        t[n] = v.Data[k];
                     }
                     else
                     {
-                        chuck = chuck + 1;
+                        chuck++;
                     }
                 }
                 gn[j] = v.Length - chuck;
             }
-            double[] score = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
+            double[] score = new double[frame.VariableCount];
             bool specifyGroupScores = parameters["specify_group_scores"].AsBoolean;
 
             if (specifyGroupScores)
             {
-                for (int j = 0; j <= frame.VariableCount - 1; j++)
+                for (int j = 0; j < frame.VariableCount; j++)
                 {
                     bool wasCancelled;
                     score[j] = host.GetDouble("Enter SCORE for GROUP:" + j + 1.ToString() + " (" + frame.Variables[j].Title + ")", "Cuzick's trend test", j + 1, out wasCancelled);
@@ -1025,8 +1025,8 @@ namespace StatsDirect.Builtins
                     score[j] = Convert.ToDouble(j + 1);
                 }
             }
-            double[] r = new double[N + 1 /* for VB to C# conversion */ ];
-            ExFortran.Rank(t, r, 1, N, 1, out tie);
+            double[] r = new double[n + 1];
+            ExFortran.Rank(t, r, 1, n, 1, out tie);
             for (int j = 0; j <= frame.VariableCount - 1; j++)
             {
                 for (int k = 1; k <= gn[j]; k++)
@@ -1034,19 +1034,19 @@ namespace StatsDirect.Builtins
                     count++;
                     st += r[count] * score[j];
                 }
-                ez += score[j] * Convert.ToDouble(gn[j]) / Convert.ToDouble(N);
-                varz += score[j] * score[j] * Convert.ToDouble(gn[j]) / Convert.ToDouble(N);
+                ez += score[j] * Convert.ToDouble(gn[j]) / Convert.ToDouble(n);
+                varz += score[j] * score[j] * Convert.ToDouble(gn[j]) / Convert.ToDouble(n);
             }
-            varz = varz - (ez * ez);
-            double et = Convert.ToDouble(N) / 2.0 * Convert.ToDouble(N + 1) * ez;
-            double vart = (Convert.ToDouble(N) * Convert.ToDouble(N) * Convert.ToDouble(N + 1)) / 12.0 * varz;
+            varz -= ez * ez;
+            double et = Convert.ToDouble(n) / 2.0 * Convert.ToDouble(n + 1) * ez;
+            double vart = (Convert.ToDouble(n) * Convert.ToDouble(n) * Convert.ToDouble(n + 1)) / 12.0 * varz;
             double stat = (st - et) / Math.Sqrt(vart);
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("groups", frame.VariableCount.ToString());
-            outputParameters.AddOutput("obs", N.ToString());
+            outputParameters.AddOutput("obs", n.ToString());
             string qtq = "";
-            for (int j = 0; j <= frame.VariableCount - 1; j++)
+            for (int j = 0; j < frame.VariableCount; j++)
             {
                 qtq += frame.Variables[j].Title;
                 if (j != frame.VariableCount - 1)
@@ -1072,15 +1072,13 @@ namespace StatsDirect.Builtins
                 IList<ParameterBag> tiesList = new List<ParameterBag>();
                 tiesList.Add(tiesParameters);
                 outputParameters.AddOutput("*ties", tiesList);
-                vart = vart * (1.0 - ((tie * 12.0) / (Convert.ToDouble(N) * ((Convert.ToDouble(N) * Convert.ToDouble(N)) - 1.0))));
+                vart = vart * (1.0 - ((tie * 12.0) / (Convert.ToDouble(n) * ((Convert.ToDouble(n) * Convert.ToDouble(n)) - 1.0))));
                 stat = (st - et) / Math.Sqrt(vart);
                 tiesParameters.AddOutput("varttie", host.RoundU(vart));
                 tiesParameters.AddOutput("ztie", host.RoundU(stat));
                 P = 1.0 - PDF.alnorm(Math.Abs(stat));
                 if (P > 1.0 - P)
-                {
                     P = 1.0 - P;
-                }
                 tiesParameters.AddOutput("p_1tie", host.pval(P));
                 tiesParameters.AddOutput("p_2tie", host.pval(P * 2.0));
             }

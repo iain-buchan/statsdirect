@@ -29,8 +29,7 @@ namespace StatsDirect.Expressions
                     {
                         // Positional parameter
                         if (foundNamedParameter)
-                            throw new Exception(
-                                "Once you start using named parameters, all parameters afterwards must also be named.");
+                            throw new Exception("Once you start using named parameters, all parameters afterwards must also be named.");
                     }
                     else
                     {

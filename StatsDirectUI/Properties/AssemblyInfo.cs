@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("StatsDirect Limited")]
 [assembly: AssemblyProduct("StatsDirect")]
-[assembly: AssemblyCopyright("Copyright © 1997-2012 StatsDirect Limited")]
+[assembly: AssemblyCopyright("Copyright © 1997-2013 StatsDirect Limited")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -30,22 +30,6 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.0.73.0")]
-[assembly: AssemblyFileVersion("3.0.73.0")]
-
-/*
-[assembly: Dependency("DevExpress.Data.v11.2", LoadHint.Always)]
-[assembly: Dependency("DevExpress.Printing.v11.2.Core", LoadHint.Always)]
-[assembly: Dependency("DevExpress.RichEdit.v11.2.Core", LoadHint.Always)]
-[assembly: Dependency("DevExpress.Utils.v11.2", LoadHint.Always)]
-[assembly: Dependency("DevExpress.XtraBars.v11.2", LoadHint.Always)]
-[assembly: Dependency("DevExpress.XtraEditors.v11.2", LoadHint.Always)]
-[assembly: Dependency("DevExpress.XtraPrinting.v11.2", LoadHint.Always)]
-[assembly: Dependency("DevExpress.XtraRichEdit.v11.2", LoadHint.Always)]
-[assembly: Dependency("DevExpress.XtraRichEdit.v11.2", LoadHint.Always)]
-[assembly: Dependency("DevExpress.XtraRichEdit.v11.2.Extensions", LoadHint.Always)]
-[assembly: Dependency("DevExpress.XtraTreeList.v11.2.Printing", LoadHint.Always)]
-[assembly: Dependency("SpreadsheetGear", LoadHint.Always)]
-*/
-
+[assembly: AssemblyVersion("3.0.75.0")]
+[assembly: AssemblyFileVersion("3.0.75.0")]
 [assembly: CLSCompliant(false)]

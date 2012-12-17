@@ -2305,7 +2305,7 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             }
 
-            int wtMethod = int.Parse(parameters["wt_method"].AsString);
+            int wtMethod = Parsing.Cint_Txt(parameters["wt_method"].AsString);
             //  RTF_LoadTemplate("logrank.rtf")
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> outerList = new List<ParameterBag>();

@@ -847,7 +847,7 @@ namespace StatsDirect.Builtins
                 //  xt, o and w are now zero-based, were 1-based.
 
                 // weights --->
-                int wtype = int.Parse(parameters["method"].AsString);
+                int wtype = Parsing.Cint_Txt(parameters["method"].AsString);
                 if (wtype == 3)
                 {
                     DataFrame weights = parameters["weights"].AsDataFrame;
@@ -1406,7 +1406,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            int wtype = int.Parse(parameters["method"].AsString);
+            int wtype = Parsing.Cint_Txt(parameters["method"].AsString);
             if (wtype == 3)
             {
                 DataFrame weights = parameters["weights"].AsDataFrame;
