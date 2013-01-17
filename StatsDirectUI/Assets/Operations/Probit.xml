@@ -43,6 +43,7 @@
           <prompt>How many control subjects do you have?</prompt>
           <acquire-if-true>=!(Parameters.ContainsKey("dataHasControls") &amp;&amp; Parameters["dataHasControls"].AsBoolean)</acquire-if-true>
           <minimum-value>0</minimum-value>
+          <default-value>0</default-value>
         </integer>
         <integer>
           <name>nrc</name>

@@ -1291,28 +1291,23 @@ namespace StatsDirect.Builtins
                     colParameters.AddOutput("t", Host.RoundU(t));
                     colParameters.AddOutput("p", Host.pval(prob));
                 }
-                string transTemp4 = context.weightTitle;
-                if (transTemp4.Length > 0)
-                {
+                if (!string.IsNullOrEmpty(context.weightTitle))
                     rowParameters.AddOutput("y", context.outcomeTitle + " (weighted by " + context.weightTitle + ")");
-                }
                 else
-                {
                     rowParameters.AddOutput("y", context.outcomeTitle);
-                }
                 IList<ParameterBag> zList = new List<ParameterBag>();
                 rowParameters.AddOutput("*z", zList);
                 int j;
                 for (j = 1; j <= P; j++)
                 {
                     string z;
-                    if (j > 1 & bd[j] >= 0.0)
+                    if (j > 1 && bd[j] >= 0.0)
                     {
                         z = " +";
                     }
                     else { z = " "; }
                     z = z + Host.RoundU(bd[j]);
-                    if (j > 1 | !(DoC))
+                    if (j > 1 || !(DoC))
                     {
                         z = z + " " + context.Titles[j];
                     }

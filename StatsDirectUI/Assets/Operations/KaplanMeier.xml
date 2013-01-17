@@ -6,13 +6,18 @@
   <steps>
     <settings>
       <parameters>
-        <multiple-options>
-          <prompt>Select survival plot options</prompt>
-          <options>
-            <option name="use-tics" selected="true">Show censorship tics</option>
-            <option name="use-markers" selected="false">Show event markers</option>
-          </options>
-        </multiple-options>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
+        <boolean>
+          <name>use-tics</name>
+          <prompt>Show censorship tics</prompt>
+          <default-value>true</default-value>
+        </boolean>
+        <boolean>
+          <name>use-markers</name>
+          <prompt>Show event markers</prompt>
+        </boolean>
         <boolean>
           <name>save</name>
           <prompt>Save estimates and CIs to worksheet?</prompt>
@@ -45,9 +50,6 @@
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
-        <confidence-interval>
-          <name>gamma</name>
-        </confidence-interval>
       </parameters>
     </settings>
 		<builtin function-name="rptKaplanMeier" />

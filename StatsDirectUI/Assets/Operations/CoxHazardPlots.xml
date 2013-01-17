@@ -6,13 +6,16 @@
   <steps>
     <settings>
       <parameters>
-        <multiple-options>
-          <prompt>Cox baseline options</prompt>
-          <options>
-            <option name="use-tics" selected="true">Use tics for censored times</option>
-            <option name="use-markers" selected="true">Use markers for all observed times</option>
-          </options>
-        </multiple-options>
+        <boolean>
+          <name>use-tics</name>
+          <prompt>Use tics for censored times</prompt>
+          <default-value>true</default-value>
+        </boolean>
+        <boolean>
+          <name>use-markers</name>
+          <prompt>Use markers for all observed times</prompt>
+          <default-value>true</default-value>
+        </boolean>
         <pick-from-list>
           <name>group</name>
           <prompt>Split by</prompt>

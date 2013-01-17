@@ -1962,8 +1962,8 @@ namespace StatsDirect.Builtins
             double p = r / n;
             //  RTF_LoadTemplate("p_sng.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("n", Formatting.XRound(n, 1));
-            outputParameters.AddOutput("r", Formatting.XRound(r, 1));
+            outputParameters.AddOutput("n_out", Formatting.XRound(n, 1));
+            outputParameters.AddOutput("r_out", Formatting.XRound(r, 1));
             outputParameters.AddOutput("prop", host.RoundU(p));
 
             // Clopper Pearson by F distribution

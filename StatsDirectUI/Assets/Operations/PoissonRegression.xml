@@ -37,14 +37,13 @@
           <lifetime>SessionForThisOperation</lifetime>
           <default-value>false</default-value>
         </boolean>
-<!--
-        <multiple-options>
+        <option>
+          <name>has-exposure</name>
           <options>
-            <option name="has-exposure" value="false">Counts of events only</option>
-            <option name="has-exposure" value="true">Counts of events and exposure (person-time)</option>
+            <option value="false">Counts of events only</option>
+            <option value="true">Counts of events and exposure (person-time)</option>
           </options>
-        </multiple-options>
-        -->
+        </option>
         <frame>
           <name>response</name>
           <prompt>Select data for RESPONSE/number of EVENTS</prompt>

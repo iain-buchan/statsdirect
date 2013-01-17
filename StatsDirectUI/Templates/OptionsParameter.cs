@@ -40,7 +40,6 @@ namespace StatsDirect.Templates
     public sealed class OptionsParameter: Parameter
     {
         private readonly IList<OptionsOption> options;
-        private string formatHint;
         private int columns = 2;
 
         public OptionsParameter()

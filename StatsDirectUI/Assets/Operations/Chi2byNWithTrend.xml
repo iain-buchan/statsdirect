@@ -11,12 +11,52 @@
           <must-request>true</must-request>
           <type>chi-3-column</type>
         </special>
+        <boolean>
+          <name>doExactP</name>
+          <prompt>Simulate exact P?</prompt>
+          <column>2</column>
+          <must-request>true</must-request>
+        </boolean>
+        <integer>
+          <name>iterations</name>
+          <prompt>Iterations</prompt>
+          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <column>2</column>
+          <must-request>true</must-request>
+          <minimum-value>1</minimum-value>
+          <default-value>1000000</default-value>
+        </integer>
+        <integer>
+          <name>seed</name>
+          <prompt>Seed</prompt>
+          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <column>2</column>
+          <must-request>true</must-request>
+          <force-default>true</force-default>
+          <default-value>=Base.DefaultSeed()</default-value>
+        </integer>
+        <confidence-interval>
+          <name>ci</name>
+          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <column>2</column>
+          <must-request>true</must-request>
+          <default-value>0.99</default-value>
+          <can-default>false</can-default>
+          <can-use-standard>false</can-use-standard>
+        </confidence-interval>
       </parameters>
     </settings>
   	<builtin function-name="rptChi2byNWithTrend" />
 	  <report filename="chi2xc.rtf" />
-	</steps>
+    <test>
+      <condition>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</condition>
+      <iftrue>
+        <builtin function-name="rptChi2byNWithTrendSimulateExactP" />
+        <report filename="chiTwoByKSimulatedExactP.rtf" />
+      </iftrue>
+    </test>
+  </steps>
   <suggested-operations>
-    <suggested-operation>Chi2byNWithTrendSimulateExactP</suggested-operation>
+    <suggested-operation>Chi2byNWithTrend</suggested-operation>
   </suggested-operations>
 </operation>

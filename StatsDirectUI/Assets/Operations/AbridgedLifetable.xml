@@ -58,21 +58,22 @@
         <confidence-interval>
           <name>gamma</name>
         </confidence-interval>
-        <multiple-options>
-          <prompt>Life table</prompt>
+        <boolean>
+          <name>save</name>
+          <prompt>Save details to worksheet</prompt>
+        </boolean>
+        <option>
+          <name>iterations</name>
+          <prompt>Iterations in simulation</prompt>
+          <default-value>20000</default-value>
           <options>
-            <option name="save" selected="false">Save details to worksheet</option>
+            <option value="10000">10000</option>
+            <option value="20000">20000</option>
+            <option value="50000">50000</option>
+            <option value="100000">100000</option>
+            <option value="300000">300000</option>
           </options>
-          <selects>
-            <combo name="iterations" prompt="Iterations in simulation" default-value="20000">
-              <option value="10000">10000</option>
-              <option value="20000">20000</option>
-              <option value="50000">50000</option>
-              <option value="100000">100000</option>
-              <option value="300000">300000</option>
-            </combo>
-          </selects>
-        </multiple-options>
+        </option>
       </parameters>
     </settings>
 		<builtin function-name="rptAbridgedLifetable" />

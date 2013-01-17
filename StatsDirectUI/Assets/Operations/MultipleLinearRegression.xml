@@ -9,14 +9,15 @@
 				<confidence-interval>
 					<name>ci</name>
 				</confidence-interval>
-				<options>
-					<name>options</name>
-					<prompt>Multiple Linear Regression Options</prompt>
-					<options>
-						<option name="calculateIntercept" selected="true">Calculate intercept</option>
-						<option name="useWeights">Use weights</option>
-					</options>
-				</options>
+        <boolean>
+          <name>calculateIntercept</name>
+          <prompt>Calculate intercept</prompt>
+          <default-value>true</default-value>
+        </boolean>
+        <boolean>
+          <name>useWeights</name>
+          <prompt>Use weights</prompt>
+        </boolean>
 				<frame>
 					<name>outcome</name>
 					<prompt>Select data for OUTCOME (Y axis)</prompt>

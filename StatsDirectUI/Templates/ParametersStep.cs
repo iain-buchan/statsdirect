@@ -35,7 +35,6 @@ namespace StatsDirect.Templates
           XmlArrayItem(ElementName = "frame2d", Type = typeof(GridParameter2D)),
           XmlArrayItem(ElementName = "grouped-covariance", Type = typeof(GroupedCovarianceParameter)),
           XmlArrayItem(ElementName = "integer", Type = typeof(IntegerParameter)),
-          XmlArrayItem(ElementName = "multiple-options", Type = typeof(MultipleOptionsParameter)),
           XmlArrayItem(ElementName = "option", Type = typeof(OptionParameter)),
           XmlArrayItem(ElementName = "options", Type = typeof(OptionsParameter)),
           XmlArrayItem(ElementName = "pick-from-list", Type = typeof(PickFromListParameter)),

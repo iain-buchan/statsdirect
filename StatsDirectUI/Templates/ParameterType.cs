@@ -21,7 +21,6 @@ namespace StatsDirect.Templates
         Grid2D,
         GroupedCovariance,
         Integer,
-        MultipleOptions,
         Option,
         Options,
         PickFromList,

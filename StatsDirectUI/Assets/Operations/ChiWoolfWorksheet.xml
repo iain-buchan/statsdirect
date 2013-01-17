@@ -44,11 +44,12 @@
           <mode>NumericReplaceMissing</mode>
           <clear-selection-first>true</clear-selection-first>
         </frame>
-        <options>
-          <options>
-            <option name="show_intermediates">Show intermediates</option>
-          </options>
-        </options>
+        <boolean>
+          <name>show_intermediates</name>
+          <prompt>Show intermediates</prompt>
+          <must-request>true</must-request>
+          <column>2</column>
+        </boolean>
       </parameters>
     </settings>
   	<builtin function-name="rptChiWoolfWorksheet" />

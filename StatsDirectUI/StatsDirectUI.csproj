@@ -311,7 +311,6 @@
     <Compile Include="Templates\ITemplateHost.cs" />
     <Compile Include="Templates\ITemplateProcessor.cs" />
     <Compile Include="Templates\IterationStep.cs" />
-    <Compile Include="Templates\MultipleOptionsParameter.cs" />
     <Compile Include="Templates\Operation.cs" />
     <Compile Include="Templates\OptionDescriptor.cs" />
     <Compile Include="Templates\OptionParameter.cs" />

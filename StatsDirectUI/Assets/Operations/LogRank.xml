@@ -6,9 +6,6 @@
   <steps>
     <settings>
       <parameters>
-        <confidence-interval>
-          <name>gamma</name>
-        </confidence-interval>
         <frame>
           <name>gid</name>
           <prompt>Select data for GROUP IDENTIFIER</prompt>
@@ -46,6 +43,9 @@
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
         <option>
           <name>wt_method</name>
           <prompt>Select weighting method</prompt>
@@ -61,6 +61,7 @@
           <name>use123</name>
           <prompt>Use 1, 2, 3... etc. for group scores in trend test?</prompt>
           <must-request>true</must-request>
+          <default-value>true</default-value>
         </boolean>
       </parameters>
     </settings>

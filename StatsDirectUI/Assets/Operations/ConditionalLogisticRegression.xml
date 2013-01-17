@@ -6,9 +6,6 @@
   <steps>
     <settings>
       <parameters>
-        <confidence-interval>
-          <name>gamma</name>
-        </confidence-interval>
         <frame>
           <name>stratum</name>
           <prompt>select data for STRATUM (MATCH GROUP) indicator</prompt>
@@ -39,6 +36,9 @@
           <max-columns>200</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
         <boolean>
           <name>show-counts</name>
           <prompt>Display case-control counts</prompt>
@@ -48,6 +48,7 @@
           <name>accuracy</name>
           <prompt>Precision of estimates</prompt>
           <default-value>0.0000001</default-value>
+          <format-type>Dropdown</format-type>
           <options>
             <option value="0.000000000001">0.000000000001</option>
             <option value="0.00000000001">0.00000000001</option>

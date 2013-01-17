@@ -1334,11 +1334,13 @@ namespace StatsDirect.UI
 
         private void PopPanel(bool enforceHeightOnOperations)
         {
+            /** Removed functionality for now - we'll put up with the slight flicker on close in exchange for not having to work out all the ways this might go wrong!
             if (InsideSubformClose)
             {
                 pendingPanelPops++;
                 return;
             }
+             **/
             PanelType pt = PanelType.Default;
             if (panelTypeStack.Count > 0)
                 pt = panelTypeStack.Pop();
@@ -2077,11 +2079,6 @@ namespace StatsDirect.UI
                         case ParameterType.Integer:
                             {
                                 fp = PrepareCombinedParameter(processor, (IntegerParameter)parameter, context);
-                                break;
-                            }
-                        case ParameterType.MultipleOptions:
-                            {
-                                fp = PrepareCombinedParameter((MultipleOptionsParameter)parameter);
                                 break;
                             }
                         case ParameterType.Option:
@@ -2890,10 +2887,10 @@ namespace StatsDirect.UI
             Label lblStratum = (Label)pnlNavigation.Controls[1];
             Button cmdNext = (Button)pnlNavigation.Controls[2];
             TableLayoutPanel panel2By2ByK = (TableLayoutPanel)pnlNavigation.Parent;
-            TextBox txtTL = (TextBox)panel2By2ByK.GetControlFromPosition(0, 2);
-            TextBox txtTR = (TextBox)panel2By2ByK.GetControlFromPosition(1, 2);
-            TextBox txtBL = (TextBox)panel2By2ByK.GetControlFromPosition(0, 3);
-            TextBox txtBR = (TextBox)panel2By2ByK.GetControlFromPosition(1, 3);
+            TextBox txtTl = (TextBox)panel2By2ByK.GetControlFromPosition(0, 2);
+            TextBox txtTr = (TextBox)panel2By2ByK.GetControlFromPosition(1, 2);
+            TextBox txtBl = (TextBox)panel2By2ByK.GetControlFromPosition(0, 3);
+            TextBox txtBr = (TextBox)panel2By2ByK.GetControlFromPosition(1, 3);
 
             int stratum = (int)lblStratum.Tag;
             List<double>[] newData = (List<double>[])pnlNavigation.Tag;
@@ -2902,11 +2899,10 @@ namespace StatsDirect.UI
 
             // Fill the stored data from the text boxes
             int offset = (stratum - 1) * 2;
-            int strata = newData[0].Count / 2;
-            double tl = Parsing.Cdbl_Txt(txtTL.Text);
-            double tr = Parsing.Cdbl_Txt(txtTR.Text);
-            double bl = Parsing.Cdbl_Txt(txtBL.Text);
-            double br = Parsing.Cdbl_Txt(txtBR.Text);
+            double tl = Parsing.Cdbl_Txt(txtTl.Text);
+            double tr = Parsing.Cdbl_Txt(txtTr.Text);
+            double bl = Parsing.Cdbl_Txt(txtBl.Text);
+            double br = Parsing.Cdbl_Txt(txtBr.Text);
             while (var1Data.Count < stratum * 2)
             {
                 var1Data.Add(Constant.MISSING);
@@ -2917,17 +2913,30 @@ namespace StatsDirect.UI
             var1Data[offset + 1] = bl;
             var2Data[offset + 1] = br;
 
+            // #744: Test for all-missing in the end stratum; delete it if so
+            int strata = newData[0].Count / 2;
+            int lastOffset = (strata - 1) * 2;
+            if (var1Data[lastOffset] == Constant.MISSING && var2Data[lastOffset] == Constant.MISSING && var1Data[lastOffset + 1] == Constant.MISSING && var2Data[lastOffset + 1] == Constant.MISSING)
+            {
+                --strata;
+                var1Data.RemoveAt(lastOffset + 1);
+                var1Data.RemoveAt(lastOffset);
+                var2Data.RemoveAt(lastOffset + 1);
+                var2Data.RemoveAt(lastOffset);
+            }
+
+
             if (stratum > 1)
                 --stratum;
             lblStratum.Tag = stratum;
 
             // Fill the text boxes from the stored data
             offset = (stratum - 1) * 2;
-            txtTL.Text = Formatting.XUnrounded(var1Data[offset]);
-            txtTR.Text = Formatting.XUnrounded(var2Data[offset]);
-            txtBL.Text = Formatting.XUnrounded(var1Data[offset + 1]);
-            txtBR.Text = Formatting.XUnrounded(var2Data[offset + 1]);
-            lblStratum.Text = "Stratum " + stratum.ToString() + " of " + strata.ToString();
+            txtTl.Text = Formatting.XUnrounded(var1Data[offset]);
+            txtTr.Text = Formatting.XUnrounded(var2Data[offset]);
+            txtBl.Text = Formatting.XUnrounded(var1Data[offset + 1]);
+            txtBr.Text = Formatting.XUnrounded(var2Data[offset + 1]);
+            lblStratum.Text = "Stratum " + stratum + " of " + strata;
 
             cmdPrevious.Enabled = stratum > 1;
             cmdNext.Enabled = true;
@@ -2988,7 +2997,7 @@ namespace StatsDirect.UI
                 txtBL.Clear();
                 txtBR.Clear();
             }
-            lblStratum.Text = "Stratum " + stratum.ToString() + " of " + (Math.Max(strata, stratum)).ToString();
+            lblStratum.Text = "Stratum " + stratum + " of " + (Math.Max(strata, stratum));
 
             cmdPrevious.Enabled = true;
             cmdNext.Enabled = true; // Can always Next to create another stratum
@@ -3382,38 +3391,6 @@ namespace StatsDirect.UI
                     throw new ArgumentOutOfRangeException("parameter", parameter.OptionFormatType, "optionParameter.OptionFormatType: Only Dropdown and Radio are known");
             }
 
-            return null;
-        }
-
-        private FilledParameter PrepareCombinedParameter(MultipleOptionsParameter parameter)
-        {
-            TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
-            OptionDescriptor descriptor = new OptionDescriptor();
-            foreach (OptionsOption option in parameter.Options)
-            {
-                CheckBoxDescriptor cb = new CheckBoxDescriptor
-                                            {
-                                                Checked = option.Selected,
-                                                IsExclusive = true,
-                                                Text = option.Label,
-                                                Name = option.Name
-                                            };
-                descriptor.CheckBoxes.Add(cb);
-            }
-            foreach (OptionsSelect option in parameter.Selects)
-            {
-                SelectionBoxDescriptor sb = new SelectionBoxDescriptor { Title = option.Prompt, Name = option.Name };
-                foreach (OptionOption o in option.Options)
-                {
-                    sb.Labels.Add(o.Label);
-                }
-                sb.SelectedValue = option.DefaultValue;
-                descriptor.SelectionBoxes.Add(sb);
-            }
-            Control ctl = new ctlOptions(descriptor);
-            ctl.Tag = parameter;
-            tlp.Controls.Add(ctl);
-            tlp.SetColumnSpan(ctl, 2);
             return null;
         }
 
@@ -4407,14 +4384,14 @@ namespace StatsDirect.UI
                         }
                     case ParameterType.Double2By2ByK:
                         {
-                            TableLayoutPanel panel2By2ByK = (TableLayoutPanel)control;
-                            FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)panel2By2ByK.GetControlFromPosition(0, 4);
+                            TableLayoutPanel pnl2By2ByK = (TableLayoutPanel)control;
+                            FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)pnl2By2ByK.GetControlFromPosition(0, 4);
                             Label lblStratum = (Label)pnlNavigation.Controls[1];
 
-                            TextBox txtTL = (TextBox)panel2By2ByK.GetControlFromPosition(0, 2);
-                            TextBox txtTR = (TextBox)panel2By2ByK.GetControlFromPosition(1, 2);
-                            TextBox txtBL = (TextBox)panel2By2ByK.GetControlFromPosition(0, 3);
-                            TextBox txtBR = (TextBox)panel2By2ByK.GetControlFromPosition(1, 3);
+                            TextBox txtTl = (TextBox)pnl2By2ByK.GetControlFromPosition(0, 2);
+                            TextBox txtTr = (TextBox)pnl2By2ByK.GetControlFromPosition(1, 2);
+                            TextBox txtBl = (TextBox)pnl2By2ByK.GetControlFromPosition(0, 3);
+                            TextBox txtBr = (TextBox)pnl2By2ByK.GetControlFromPosition(1, 3);
 
                             int stratum = (int)lblStratum.Tag;
                             List<double>[] newData = (List<double>[])pnlNavigation.Tag;
@@ -4423,41 +4400,41 @@ namespace StatsDirect.UI
 
                             // Fill the stored data from the text boxes
                             int offset = (stratum - 1) * 2;
-                            double tl = Parsing.Cdbl_Txt(txtTL.Text);
-                            double tr = Parsing.Cdbl_Txt(txtTR.Text);
-                            double bl = Parsing.Cdbl_Txt(txtBL.Text);
-                            double br = Parsing.Cdbl_Txt(txtBR.Text);
+                            double tl = Parsing.Cdbl_Txt(txtTl.Text);
+                            double tr = Parsing.Cdbl_Txt(txtTr.Text);
+                            double bl = Parsing.Cdbl_Txt(txtBl.Text);
+                            double br = Parsing.Cdbl_Txt(txtBr.Text);
 
                             if (doValidation)
                             {
-                                txtTL.BackColor = SystemColors.Window;
-                                txtTR.BackColor = SystemColors.Window;
-                                txtBL.BackColor = SystemColors.Window;
-                                txtBR.BackColor = SystemColors.Window;
+                                txtTl.BackColor = SystemColors.Window;
+                                txtTr.BackColor = SystemColors.Window;
+                                txtBl.BackColor = SystemColors.Window;
+                                txtBr.BackColor = SystemColors.Window;
                                 // Validate
                                 if (tl == Constant.MISSING)
                                 {
-                                    txtTL.SelectAll();
-                                    txtTL.Focus();
-                                    return txtTL;
+                                    txtTl.SelectAll();
+                                    txtTl.Focus();
+                                    return txtTl;
                                 }
                                 if (tr == Constant.MISSING)
                                 {
-                                    txtTR.SelectAll();
-                                    txtTR.Focus();
-                                    return txtTR;
+                                    txtTr.SelectAll();
+                                    txtTr.Focus();
+                                    return txtTr;
                                 }
                                 if (bl == Constant.MISSING)
                                 {
-                                    txtBL.SelectAll();
-                                    txtBL.Focus();
-                                    return txtBL;
+                                    txtBl.SelectAll();
+                                    txtBl.Focus();
+                                    return txtBl;
                                 }
                                 if (br == Constant.MISSING)
                                 {
-                                    txtBR.SelectAll();
-                                    txtBR.Focus();
-                                    return txtBR;
+                                    txtBr.SelectAll();
+                                    txtBr.Focus();
+                                    return txtBr;
                                 }
                             }
                             while (var1Data.Count < stratum * 2)
@@ -4553,11 +4530,6 @@ namespace StatsDirect.UI
                             // If we get here, it's OK.
                             outputParameters[parameter.Name] = new FilledParameter(true, value);
                             return null;
-                        }
-                    case ParameterType.MultipleOptions:
-                        {
-                            IFillParameterBag fpb = (IFillParameterBag)control;
-                            return fpb.Fill(outputParameters, doValidation);
                         }
                     case ParameterType.Option:
                         {

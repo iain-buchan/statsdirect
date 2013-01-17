@@ -136,6 +136,8 @@ namespace StatsDirect.UI
                     if (null == sessionParametersPerOperation)
                         sessionParametersPerOperation = new Dictionary<string, ParameterBag>();
                     fmt.Serialize(ws, sessionParametersPerOperation);
+                    // #760
+                    Application.DoEvents();
                 }
             }
             catch (IOException)
@@ -203,7 +205,7 @@ namespace StatsDirect.UI
                             // We don't want to load Report 1.rtf and create Report 1 again (#673).  Strip any suffix before comparison.
                             if (Path.HasExtension(windowName))
                                 windowName = Path.GetFileNameWithoutExtension(windowName);
-                            string windowNumberAsString = windowName.Substring(7).Trim();
+                            string windowNumberAsString = (null == windowName) ? "" : windowName.Substring(7).Trim();
                             int windowNumber;
                             if (int.TryParse(windowNumberAsString, out windowNumber))
                             {
@@ -691,7 +693,6 @@ namespace StatsDirect.UI
                 case ParameterType.Grid2D:
                 case ParameterType.GroupedCovariance:
                 case ParameterType.Integer:
-                case ParameterType.MultipleOptions:
                 case ParameterType.Option:
                 case ParameterType.Options:
                 case ParameterType.PickVariables:
@@ -719,7 +720,6 @@ namespace StatsDirect.UI
                 case ParameterType.Double2By2ByK:
                 case ParameterType.EditGrid:
                 case ParameterType.Integer:
-                case ParameterType.MultipleOptions:
                 case ParameterType.Option:
                 case ParameterType.Options:
                 case ParameterType.PickVariables:
@@ -803,8 +803,6 @@ namespace StatsDirect.UI
                     return FillParameter((GroupedCovarianceParameter)Parameter);
                 case ParameterType.Integer:
                     return FillParameter(processor, (IntegerParameter)Parameter, context);
-                case ParameterType.MultipleOptions:
-                    return FillParameter((MultipleOptionsParameter)Parameter);
                 case ParameterType.Option:
                     return FillParameter(processor, (OptionParameter)Parameter, context);
                 case ParameterType.Options:
@@ -984,53 +982,6 @@ namespace StatsDirect.UI
                         if (cd.Text.Equals(opt.Label))
                             return new ParameterBag(Parameter.Name, new FilledParameter(true, opt.Value));
             return null;
-        }
-
-        ParameterBag FillParameter(MultipleOptionsParameter parameter)
-        {
-            OptionDescriptor descriptor = new OptionDescriptor();
-            foreach (OptionsOption option in parameter.Options)
-            {
-                CheckBoxDescriptor cb = new CheckBoxDescriptor
-                                            {
-                                                Checked = option.Selected,
-                                                IsExclusive = true,
-                                                Text = option.Label,
-                                                Name = option.Name
-                                            };
-                descriptor.CheckBoxes.Add(cb);
-            }
-            foreach (OptionsSelect option in parameter.Selects)
-            {
-                SelectionBoxDescriptor sb = new SelectionBoxDescriptor { Title = option.Prompt, Name = option.Name };
-                foreach (OptionOption o in option.Options)
-                {
-                    sb.Labels.Add(o.Label);
-                }
-                sb.SelectedValue = option.DefaultValue;
-                descriptor.SelectionBoxes.Add(sb);
-            }
-            if (null == DisplayOptions(descriptor))
-            {
-                if (null != parameter.CancelSkipsParameter)
-                {
-                    return new ParameterBag();
-                }
-                throw new TemplateOperationCancelledException();
-            }
-            ParameterBag outputParameters = new ParameterBag();
-            foreach (CheckBoxDescriptor cb in descriptor.CheckBoxes)
-            {
-                if (cb.IsExclusive)
-                {
-                    outputParameters.Add(cb.Name, new FilledParameter(true, cb.Checked));
-                }
-            }
-            foreach (SelectionBoxDescriptor sb in descriptor.SelectionBoxes)
-            {
-                outputParameters.Add(sb.Name, new FilledParameter(true, sb.Value));
-            }
-            return outputParameters;
         }
 
         ParameterBag FillParameter(ITemplateProcessor processor, OptionsParameter parameter, ParameterBag context)

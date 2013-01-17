@@ -10,8 +10,8 @@ namespace StatsDirect.UI
     static class Program
     {
         // private const string sd_ini = "StatsDirect.ini";
-        private const string sd_xls = "StatsDirect.xls";
-        private const string test_xlsx = "test.xlsx";
+        private const string SD_XLS = "StatsDirect.xls";
+        private const string TEST_XLSX = "test.xlsx";
         private const string STATSDIRECT_FOLDER_NAME = "StatsDirect";
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace StatsDirect.UI
 
         private static void StartStatsDirect(string[] args)
         {
-            frmMain mainWindow = null;
+            frmMain mainWindow;
             // As soon as possible, put up a loader
             using (frmLoading loader = new frmLoading())
             {
@@ -179,15 +179,28 @@ namespace StatsDirect.UI
             // first ini override of userdir - copy over test.xlsx and statsdirect.xls
             if (!mySDFolder.Equals(appPath))
             {
-                if (!File.Exists(Path.Combine(mySDFolder, sd_xls)))
+                string mySdXls = Path.Combine(mySDFolder, SD_XLS);
+                if (!File.Exists(mySdXls))
                 {
-                    if (File.Exists(Path.Combine(appPath, sd_xls)))
-                        File.Copy(Path.Combine(appPath, sd_xls), Path.Combine(mySDFolder, sd_xls), false);
+                    string distSdXls = Path.Combine(appPath, SD_XLS);
+                    if (File.Exists(distSdXls))
+                    {
+                        File.Copy(distSdXls, mySdXls, false);
+                        // Set the copied file read-only
+                        new FileInfo(mySdXls).IsReadOnly = true;
+                    }
                 }
-                if (!File.Exists(Path.Combine(mySDFolder, test_xlsx)))
+
+                string myTestXlsx = Path.Combine(mySDFolder, TEST_XLSX);
+                if (!File.Exists(myTestXlsx))
                 {
-                    if (File.Exists(Path.Combine(Path.Combine(appPath, "Data"), test_xlsx)))
-                        File.Copy(Path.Combine(Path.Combine(appPath, "Data"), test_xlsx), Path.Combine(mySDFolder, test_xlsx), false);
+                    string distTestXlsx = Path.Combine(Path.Combine(appPath, "Data"), TEST_XLSX);
+                    if (File.Exists(distTestXlsx))
+                    {
+                        File.Copy(distTestXlsx, myTestXlsx, false);
+                        // Set the copied file read-only
+                        new FileInfo(myTestXlsx).IsReadOnly = true;
+                    }
                 }
             }
         }

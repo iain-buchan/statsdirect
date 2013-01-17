@@ -19,6 +19,11 @@
         <confidence-interval>
           <name>ci</name>
         </confidence-interval>
+        <boolean>
+          <name>correctForReversal</name>
+          <prompt>Correct for possible scale reversal?</prompt>
+          <default-value>true</default-value>
+        </boolean>
       </parameters>
     </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />

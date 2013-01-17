@@ -20,13 +20,12 @@
           <name>cco</name>
           <must-request>true</must-request>
         </confidence-interval>
-        <options>
+        <boolean>
+          <name>show_intermediates</name>
+          <prompt>Show intermediates</prompt>
           <must-request>true</must-request>
           <column>2</column>
-          <options>
-            <option name="show_intermediates">Show intermediates</option>
-          </options>
-        </options>
+        </boolean>
       </parameters>
     </settings>
   	<builtin function-name="rptChiWoolf" />

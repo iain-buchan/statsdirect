@@ -15,7 +15,6 @@ namespace StatsDirect.Templates
        XmlInclude(typeof(GridParameter2D)),
        XmlInclude(typeof(GroupedCovarianceParameter)),
        XmlInclude(typeof(IntegerParameter)),
-       XmlInclude(typeof(MultipleOptionsParameter)),
        XmlInclude(typeof(OptionParameter)),
        XmlInclude(typeof(OptionsParameter)),
        XmlInclude(typeof(PickFromListParameter)),

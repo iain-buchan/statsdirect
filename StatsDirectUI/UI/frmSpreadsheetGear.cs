@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using SpreadsheetGear.Commands;
@@ -75,10 +76,12 @@ namespace StatsDirect.UI
         /// <returns>true if the save went OK, false if the save was cancelled</returns>
         internal override bool SaveContents()
         {
-            if (null == path)
-            {
+            if (string.IsNullOrEmpty(path))
                 return SaveAsContents();
-            }
+
+            if (new FileInfo(path).IsReadOnly)
+                return SaveAsContents();
+
             // Known path, overwrite
             workbookView.GetLock();
             try
@@ -575,17 +578,38 @@ namespace StatsDirect.UI
 
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Close();
+            try
+            {
+                Close();
+            }
+            catch (Exception ex)
+            {
+                SDApplication.SoleInstance.FriendlyError("Couldn't close workbook", ex, false);
+            }
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveContents();
+            try
+            {
+                SaveContents();
+            }
+            catch (Exception ex)
+            {
+                SDApplication.SoleInstance.FriendlyError("Couldn't save workbook", ex, false);
+            }
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveAsContents();
+            try
+            {
+                SaveAsContents();
+            }
+            catch (Exception ex)
+            {
+                SDApplication.SoleInstance.FriendlyError("Couldn't save workbook", ex, false);
+            }
         }
 
         internal ParameterBag FillGridParameter(Parameter parameter, ITemplateProcessor processor, ITemplateHost host, ParameterBag parameters)

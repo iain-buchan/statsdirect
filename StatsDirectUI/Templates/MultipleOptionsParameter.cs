@@ -72,7 +72,6 @@ namespace StatsDirect.Templates
     {
         private readonly IList<OptionsOption> options;
         private readonly IList<OptionsSelect> selects;
-        private string formatHint;
 
         public MultipleOptionsParameter()
         {

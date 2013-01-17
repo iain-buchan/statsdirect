@@ -43,7 +43,6 @@ namespace StatsDirect.Templates
     public sealed class OptionParameter: Parameter
     {
         private readonly IList<OptionOption> options;
-        private string formatHint;
         private Expression defaultValue;
         private int columns = 2;
         private OptionFormatType optionFormatType = OptionFormatType.Radio;
