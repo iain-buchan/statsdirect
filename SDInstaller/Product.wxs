@@ -277,7 +277,7 @@
           <!-- Sample data files -->
           <Directory Id="data" Name="data">
             <Component Id="test.xlsx">
-              <File Id="test.xlsx" KeyPath="yes" Name="test.xlsx" Checksum="yes" />
+              <File Id="test.xlsx" KeyPath="yes" Name="test.xlsx" Checksum="yes" ReadOnly="yes" />
             </Component>
           </Directory>
 
