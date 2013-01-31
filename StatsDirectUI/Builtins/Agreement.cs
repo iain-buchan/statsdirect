@@ -475,7 +475,7 @@ namespace StatsDirect.Builtins
 
 
         ///  <summary>
-        ///  calculates the probability of a value of t being less than or equal to the observed value of t.
+        ///  Calculates the probability of a value of t being less than or equal to the observed value of t.
         ///  </summary>
         ///  <param name="t">standardized test statistic</param>
         ///  <param name="gam">skewness of the delta distribution</param>

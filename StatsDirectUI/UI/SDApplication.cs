@@ -743,7 +743,7 @@ namespace StatsDirect.UI
             outstandingParameters = null;
         }
 
-        ParameterBag ITemplateHost.FillCombinedParameters(ITemplateProcessor processor, ParameterBag context)
+        ParameterBag ITemplateHost.FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context)
         {
             if (null == mainWindow)
                 throw new Exception("Attempt to fill combined parameters with no main window open");
@@ -753,7 +753,7 @@ namespace StatsDirect.UI
             try
             {
                 p.Assert();
-                return mainWindow.FillCombinedParameters(this, processor, context, outstandingParameters);
+                return mainWindow.FillAndValidateCombinedParameters(this, processor, context, outstandingParameters);
             }
             finally
             {
@@ -761,62 +761,90 @@ namespace StatsDirect.UI
             }
         }
 
-        ParameterBag ITemplateHost.FillParameter(ITemplateProcessor processor, Parameter Parameter, ParameterBag context, bool shouldCombine)
+        ParameterBag ITemplateHost.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
         {
             if (shouldCombine)
             {
                 if (null == outstandingParameters)
                     outstandingParameters = new List<Parameter>();
-                outstandingParameters.Add(Parameter);
+                outstandingParameters.Add(parameter);
                 return null;
             }
 
-            switch (Parameter.Type)
+            while (true)
             {
-                case ParameterType.Boolean:
-                    return FillParameter(processor, (BooleanParameter)Parameter, context);
-                case ParameterType.ConfidenceInterval:
-                    return FillParameter(processor, (ConfidenceIntervalParameter)Parameter, context);
-                case ParameterType.Date:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "Date should always be filled inline");
-                case ParameterType.Double:
-                    return FillParameter(processor, (DoubleParameter)Parameter, context);
-                case ParameterType.Double2By2:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "Double2By2 should always be filled inline");
-                case ParameterType.Double2By2ByK:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "Double2By2ByK should always be filled inline");
-                case ParameterType.EditGrid:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "EditGrid should always be filled inline");
-                /* return FillParameter(processor, (EditGridParameter)Parameter, context); */
-                case ParameterType.Grid:
+                ParameterBag outputParameters;
+                switch (parameter.Type)
+                {
+                    case ParameterType.Boolean:
+                        outputParameters = FillParameter(processor, (BooleanParameter) parameter, context);
+                        break;
+                    case ParameterType.ConfidenceInterval:
+                        outputParameters = FillParameter(processor, (ConfidenceIntervalParameter) parameter, context);
+                        break;
+                    case ParameterType.Date:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Date should always be filled inline");
+                    case ParameterType.Double:
+                        outputParameters = FillParameter(processor, (DoubleParameter) parameter, context);
+                        break;
+                    case ParameterType.Double2By2:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Double2By2 should always be filled inline");
+                    case ParameterType.Double2By2ByK:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Double2By2ByK should always be filled inline");
+                    case ParameterType.EditGrid:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "EditGrid should always be filled inline");
+                    case ParameterType.Grid:
+                        {
+                            frmSpreadsheetGear gearWindow = (frmSpreadsheetGear) ActiveGrid.Window;
+                            outputParameters = gearWindow.FillGridParameter(parameter, processor, this, context);
+                        }
+                        break;
+                    case ParameterType.Grid2D:
+                        {
+                            frmSpreadsheetGear gearWindow = (frmSpreadsheetGear) ActiveGrid.Window;
+                            DataFrame2D frame = gearWindow.FillGridParameter2D(parameter, processor, this, context);
+                            outputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(true, frame));
+                        }
+                        break;
+                    case ParameterType.GroupedCovariance:
+                        outputParameters = FillParameter((GroupedCovarianceParameter) parameter);
+                        break;
+                    case ParameterType.Integer:
+                        outputParameters = FillParameter(processor, (IntegerParameter) parameter, context);
+                        break;
+                    case ParameterType.Option:
+                        outputParameters = FillParameter(processor, (OptionParameter) parameter, context);
+                        break;
+                    case ParameterType.Options:
+                        outputParameters = FillParameter(processor, (OptionsParameter) parameter, context);
+                        break;
+                    case ParameterType.PickFromList:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "PickFromList should always be filled inline");
+                    case ParameterType.PickVariables:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "PickVariables should always be filled inline");
+                    case ParameterType.Special:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Special should always be filled inline");
+                    case ParameterType.String:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "String should always be filled inline");
+                    default:
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Only ConfidenceInterval, Grid, Integer, Option and PickVariables known");
+                }
+
+                // Validate; if no errors, stop.  If there are errors, show them and go round again.
+                string validationResult = null;
+                if (null != parameter.Validators)
+                {
+                    foreach (Validator validator in parameter.Validators)
                     {
-                        frmSpreadsheetGear gearWindow = (frmSpreadsheetGear)ActiveGrid.Window;
-                        return gearWindow.FillGridParameter(Parameter, processor, this, context);
+                        validationResult = TemplateProcessor.Validate(this, validator.ValidationMode, parameter, outputParameters, parameter.ValidationFailMessage);
+                        if (null != validationResult)
+                            break;
                     }
-                case ParameterType.Grid2D:
-                    {
-                        frmSpreadsheetGear gearWindow = (frmSpreadsheetGear)ActiveGrid.Window;
-                        DataFrame2D frame = gearWindow.FillGridParameter2D(Parameter, processor, this, context);
-                        return null == frame ? null : new ParameterBag(Parameter.Name, new FilledParameter(true, frame));
-                    }
-                case ParameterType.GroupedCovariance:
-                    return FillParameter((GroupedCovarianceParameter)Parameter);
-                case ParameterType.Integer:
-                    return FillParameter(processor, (IntegerParameter)Parameter, context);
-                case ParameterType.Option:
-                    return FillParameter(processor, (OptionParameter)Parameter, context);
-                case ParameterType.Options:
-                    return FillParameter(processor, (OptionsParameter)Parameter, context);
-                case ParameterType.PickFromList:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "PickFromList should always be filled inline");
-                case ParameterType.PickVariables:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "PickVariables should always be filled inline");
-                case ParameterType.Special:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "Special should always be filled inline");
-                case ParameterType.String:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "String should always be filled inline");
-                default:
-                    throw new ArgumentOutOfRangeException("Parameter", Parameter.Type, "Only ConfidenceInterval, Grid, Integer, Option and PickVariables known");
+                }
+                if (null == validationResult)
+                    return outputParameters;
+
+                MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
@@ -907,7 +935,7 @@ namespace StatsDirect.UI
 
         ParameterBag FillParameter(ITemplateProcessor processor, BooleanParameter Parameter, ParameterBag context)
         {
-            DialogResult result = msgbox_x(Parameter.Prompt(processor, context), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, "StatsDirect", true);
+            DialogResult result = MsgboxX(Parameter.Prompt(processor, context), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, "StatsDirect", true);
             if (DialogResult.Cancel == result)
             {
                 if (null != Parameter.CancelSkipsParameter)
@@ -1021,7 +1049,7 @@ namespace StatsDirect.UI
             TemplateProcessor processor = new TemplateProcessor(ith);
             ChartOptionsParameter chartOptionsParameter = new ChartOptionsParameter("dummy", ChartDefinition);
             ith.FillParameter(processor, chartOptionsParameter, context, true);
-            return ith.FillCombinedParameters(processor, context);
+            return ith.FillAndValidateCombinedParameters(processor, context);
         }
 
         /// <summary>
@@ -1051,18 +1079,18 @@ namespace StatsDirect.UI
         /// <param name="showHelpButton"></param>
         internal void FriendlyError(string explanation, Exception ex, bool showHelpButton)
         {
-            msgbox_x(explanation + (null == ex ? "" : ("\r\n" + ex.Message)), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
+            MsgboxX(explanation + (null == ex ? "" : ("\r\n" + ex.Message)), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
         }
 
-        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon)
+        public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon)
         {
-            return msgbox_x(text, buttons, icon, "StatsDirect", false);
+            return MsgboxX(text, buttons, icon, "StatsDirect", false);
         }
 
-        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, bool showHelpButton, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
+        public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, bool showHelpButton, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
             if (showHelpButton)
-                return msgbox_x(text, buttons, icon, caption, SoleInstance.ActiveHelpTopic, defaultButton);
+                return MsgboxX(text, buttons, icon, caption, SoleInstance.ActiveHelpTopic, defaultButton);
 
             // Use a Windows message box if our own interface isn't visible; use our own if it is.
             if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
@@ -1086,7 +1114,7 @@ namespace StatsDirect.UI
             return false;
         }
 
-        public DialogResult msgbox_x(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
+        public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
             if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
                 return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
@@ -1111,13 +1139,13 @@ namespace StatsDirect.UI
         public bool GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
         {
             cancelled = false;
-            return msgbox_x(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, true) == DialogResult.Yes;
+            return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, true) == DialogResult.Yes;
         }
 
         public bool GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
         {
             Cancelled = false;
-            return msgbox_x(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, helpTopic) == DialogResult.Yes;
+            return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, helpTopic) == DialogResult.Yes;
         }
 
         /// <summary>
@@ -1132,37 +1160,37 @@ namespace StatsDirect.UI
             TemplateProcessor processor = new TemplateProcessor(host);
             ParameterBag context = new ParameterBag();
             host.FillParameter(processor, parameter, context, true);
-            return host.FillCombinedParameters(processor, context);
+            return host.FillAndValidateCombinedParameters(processor, context);
         }
 
         public double GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)
         {
-            const string KEY = "solo";
+            const string key = "solo";
             DoubleParameter parameter = new DoubleParameter
                                             {
-                                                Name = KEY,
+                                                Name = key,
                                                 PromptExpression = new Expression(Prompt),
                                                 DefaultValueExpression = new Expression(defaultValue.ToString()),
                                                 CancelSkipsParameter = "Skip"
                                             };
             ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(KEY) || null == results[KEY]);
-            return cancelled ? 0.0 : results[KEY].AsDouble;
+            cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
+            return cancelled ? 0.0 : results[key].AsDouble;
         }
 
         public int GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
         {
-            const string KEY = "solo";
+            const string key = "solo";
             IntegerParameter parameter = new IntegerParameter
                                              {
-                                                 Name = KEY,
+                                                 Name = key,
                                                  PromptExpression = new Expression(prompt),
                                                  DefaultValueExpression = new Expression(defaultValue.ToString()),
                                                  CancelSkipsParameter = "Skip"
                                              };
             ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(KEY) || null == results[KEY]);
-            return cancelled ? 0 : results[KEY].AsInt32;
+            cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
+            return cancelled ? 0 : results[key].AsInt32;
         }
 
         public string GetString(string Prompt, string Caption, string DefaultValue)
@@ -1172,7 +1200,7 @@ namespace StatsDirect.UI
 
         public void Error(string Message, string Caption)
         {
-            msgbox_x(Message, MessageBoxButtons.OK, MessageBoxIcon.Error, Caption, true);
+            MsgboxX(Message, MessageBoxButtons.OK, MessageBoxIcon.Error, Caption, true);
         }
 
         public void StartProgress(string operationDescription)
@@ -1201,17 +1229,17 @@ namespace StatsDirect.UI
 
         public void NoteError(Exception ex)
         {
-            msgbox_x("Error in calculation, report invalid.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", true);
+            MsgboxX("Error in calculation, report invalid.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", true);
         }
 
         public void Warning(string message, string caption)
         {
-            msgbox_x(message, MessageBoxButtons.OK, MessageBoxIcon.Warning, caption, true);
+            MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Warning, caption, true);
         }
 
         public bool Query(string message, string caption)
         {
-            DialogResult result = msgbox_x(message, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, caption, true);
+            DialogResult result = MsgboxX(message, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, caption, true);
             return DialogResult.OK == result;
         }
 
@@ -1249,7 +1277,7 @@ namespace StatsDirect.UI
             ParameterBag context = new ParameterBag();
             FillableParameter fillableParameter = new FillableParameter("dummy", fillable);
             ith.FillParameter(processor, fillableParameter, context, true);
-            ParameterBag filledParameters = ith.FillCombinedParameters(processor, context);
+            ParameterBag filledParameters = ith.FillAndValidateCombinedParameters(processor, context);
             return filledParameters;
         }
 
@@ -1330,15 +1358,15 @@ namespace StatsDirect.UI
                 }
             }
 
-            public bool GIDV
+            public bool SelectGroupsByIdentifier
             {
                 get
                 {
-                    return Properties.Settings.Default.GIDV;
+                    return Properties.Settings.Default.SelectGroupsByIdentifier;
                 }
                 set
                 {
-                    Properties.Settings.Default.GIDV = value;
+                    Properties.Settings.Default.SelectGroupsByIdentifier = value;
                 }
             }
 
@@ -1565,11 +1593,12 @@ namespace StatsDirect.UI
                     }
                 }
 
+                // If this is the first time we've been started, so there are no recently used files, add the centrally-maintained test.xlsx for this version.
                 if (0 == output.Count)
                 {
-                    string mySDPath = SDConfiguration.MyStatsDirectFolder;
+                    string mySdPath = SDConfiguration.InstallationDirectory;
                     string defaultRecentlyUsedFile = Properties.Settings.Default.DefaultRecentlyUsedFile;
-                    string defaultRecentlyUsedPath = Path.Combine(mySDPath, defaultRecentlyUsedFile);
+                    string defaultRecentlyUsedPath = Path.Combine(mySdPath, defaultRecentlyUsedFile);
                     output.Add(defaultRecentlyUsedPath);
                 }
                 return output;

@@ -140,13 +140,13 @@ namespace StatsDirect.Templates
         bool CanCombine(Parameter parameter);
 
         /// <summary>
-        /// Present and allow the user to fill any outstanding parameters.
+        /// Present and allow the user to fill any outstanding parameters.  Keep going until they validate or the user cancels.
         /// </summary>
         /// <param name="processor"></param>
         /// <param name="context">The already filled-in parameters - some parameters require these</param>
         /// <returns>The filled-in parameters</returns>
         /// <exception cref="TemplateOperationCancelledException">if the user cancels the acquisition of the parameter</exception>
-        ParameterBag FillCombinedParameters(ITemplateProcessor processor, ParameterBag context);
+        ParameterBag FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context);
 
         /// <summary>
         /// Get the value(s) of the user-entered parameter(s) and return them in a new ParameterBag to be merged with the other parameters.

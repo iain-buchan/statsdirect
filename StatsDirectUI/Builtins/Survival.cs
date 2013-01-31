@@ -2484,7 +2484,7 @@ namespace StatsDirect.Builtins
                         }
                         j = n;
                         // survivor function - needed for Peto-Prentice weights
-                        sv = sv * (risktot - Convert.ToDouble(totd) + 1.0) / risktot + 1;
+                        sv = sv * (risktot - Convert.ToDouble(totd) + 1.0) / (risktot + 1);
                     }
                     // invert the first groups-1 elements of the v matrix
                     double[,] vtemp = new double[groups - 1 + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];

@@ -23,9 +23,9 @@
           </options>
         </option>
         <boolean>
-          <name>gidv</name>
+          <name>selectGroupsByIdentifier</name>
           <prompt>Select data by group identifier</prompt>
-          <default-value>=Host.Preferences.GIDV</default-value>
+          <default-value>=Host.Preferences.SelectGroupsByIdentifier</default-value>
         </boolean>
         <option>
           <name>decp</name>

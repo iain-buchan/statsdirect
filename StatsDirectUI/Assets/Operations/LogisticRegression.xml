@@ -10,7 +10,7 @@
           <name>grouping</name>
           <prompt>Response data</prompt>
           <columns>1</columns>
-          <default-value>individual</default-value>
+          <default-value>grouped</default-value>
           <lifetime>SessionForThisOperation</lifetime>
           <options>
             <option value="grouped">Grouped (i.e. r out of n responded with covariates in row i)</option>

@@ -2,8 +2,8 @@ using System;
 
 namespace StatsDirect.Numerics
 {
-    public partial class ExFortran  
-    { 
+    public partial class ExFortran
+    {
         ///  <summary>
         ///  Ranks the input values in a, returning the ranks in r.  r need not be initialised; it will be blanked.
         ///  </summary>
@@ -20,92 +20,92 @@ namespace StatsDirect.Numerics
         ///           where ntie is the number of observations tied for a given rank</param>
         ///  <param name="xf">correction factor</param>
         ///  <remarks></remarks>
-        public static void Rank( double[] a, double[] r, int lowerBound, int n, int qt, out double xf ) 
+        public static void Rank(double[] a, double[] r, int lowerBound, int n, int qt, out double xf)
         {
             int i;
-            int upperBound = n + lowerBound - 1; 
-            for ( i=lowerBound; i <= upperBound; i++ ) 
-            { 
-                r[ i ] = 0.0; 
-            } 
-            xf = 0.0; 
+            int upperBound = n + lowerBound - 1;
+            for (i = lowerBound; i <= upperBound; i++)
+            {
+                r[i] = 0.0;
+            }
+            xf = 0.0;
             //      find ranks 
-            for ( i=lowerBound; i <= upperBound; i++ ) 
-            { 
+            for (i = lowerBound; i <= upperBound; i++)
+            {
                 //         test whether point already ranked
-                if ( r[ i ] <= 0.0 ) 
-                { 
+                if (r[i] <= 0.0)
+                {
                     //            data point to be ranked
-                    int nxlt = 0; 
-                    int ntie = 0; 
-                    double x = a[ i ];
+                    int nxlt = 0;
+                    int ntie = 0;
+                    double x = a[i];
                     int j;
-                    for ( j=lowerBound; j <= upperBound; j++ ) 
-                    { 
-                        if ( a[ j ] < x ) 
-                        { 
+                    for (j = lowerBound; j <= upperBound; j++)
+                    {
+                        if (a[j] < x)
+                        {
                             //                  count number of data points which are smaller
-                            nxlt = nxlt + 1; 
-                        } 
-                        else if ( a[ j ] == x ) 
-                        { 
+                            nxlt = nxlt + 1;
+                        }
+                        else if (a[j] == x)
+                        {
                             //                  count number of data points which are equal.
                             //                  mark these by setting their ranks to -1.
-                            ntie = ntie + 1; 
-                            r[ j ] = -1.0; 
-                        } 
-                    } 
+                            ntie = ntie + 1;
+                            r[j] = -1.0;
+                        }
+                    }
                     //            test for tie
-                    if ( ntie <= 1 ) 
-                    { 
+                    if (ntie <= 1)
+                    {
                         //               store rank of untied data points
-                        r[ i ] = Convert.ToDouble( nxlt ) + 1.0; 
+                        r[i] = Convert.ToDouble(nxlt) + 1.0;
                         //               store rank of tied data points
-                    } 
-                    else if ( ntie > 1 ) 
+                    }
+                    else if (ntie > 1)
                     {
                         double p;
-                        if ( ntie % 2 == 0 ) 
-                        { 
-                            p = Convert.ToDouble( nxlt ) + Convert.ToDouble( ntie / 2 ) + 0.5; 
-                        } 
-                        else 
-                        { 
-                            p = Convert.ToDouble( nxlt ) + Convert.ToDouble( ( ntie + 1 ) / 2 ); 
-                        } 
-                        for ( j=i; j <= upperBound; j++ ) 
-                        { 
-                            if ( r[ j ] == -1.0 )
-                            { 
-                                r[ j ] = p; 
-                            } 
-                        } 
-                        if ( qt == 1 ) 
-                        { 
-                            xf = xf + Math.Pow( ntie, 3 ) - ntie / 12.0; 
-                        } 
-                        else if ( qt == 2 ) 
-                        { 
-                            xf = xf + ntie * ( ntie - 1.0 ) / 2.0; 
-                        } 
-                        else if ( qt == 3 ) 
-                        { 
-                            xf = xf + Convert.ToDouble( ntie * ( ntie - 1 ) * ( 2 * ntie + 5 ) ); 
-                        } 
-                        else if ( qt == 4 ) 
-                        { 
-                            xf = xf + Convert.ToDouble( ntie * ( ntie - 1 ) * ( ntie - 2 ) ); 
-                        } 
-                        else if ( qt == 5 ) 
-                        { 
-                            xf = xf + Convert.ToDouble( ntie * ( ntie - 1 ) * ( ntie + 1 ) ); 
-                        } 
-                    } 
-                } 
-            } 
-        } 
-        
-        
+                        if (ntie % 2 == 0)
+                        {
+                            p = Convert.ToDouble(nxlt) + Convert.ToDouble(ntie / 2) + 0.5;
+                        }
+                        else
+                        {
+                            p = Convert.ToDouble(nxlt) + Convert.ToDouble((ntie + 1) / 2);
+                        }
+                        for (j = i; j <= upperBound; j++)
+                        {
+                            if (r[j] == -1.0)
+                            {
+                                r[j] = p;
+                            }
+                        }
+                        if (qt == 1)
+                        {
+                            xf = xf + Math.Pow(ntie, 3) - ntie / 12.0;
+                        }
+                        else if (qt == 2)
+                        {
+                            xf = xf + ntie * (ntie - 1.0) / 2.0;
+                        }
+                        else if (qt == 3)
+                        {
+                            xf = xf + Convert.ToDouble(ntie * (ntie - 1) * (2 * ntie + 5));
+                        }
+                        else if (qt == 4)
+                        {
+                            xf = xf + Convert.ToDouble(ntie * (ntie - 1) * (ntie - 2));
+                        }
+                        else if (qt == 5)
+                        {
+                            xf = xf + Convert.ToDouble(ntie * (ntie - 1) * (ntie + 1));
+                        }
+                    }
+                }
+            }
+        }
+
+
         ///  <summary>
         ///  this routine calculates the lower tail probability p for
         ///  the wilcoxon-mann-whiney statistic u for sample sizes
@@ -120,205 +120,205 @@ namespace StatsDirect.Numerics
         ///  <param name="p"></param>
         ///  <param name="ifault">0 if no errors, set to non-zero if there was an error</param>
         ///  <remarks></remarks>
-        public static void wmwpx( int n1, int n2, ref int[] iwrk, int iv, ref double p, out int ifault ) 
+        public static void wmwpx(int n1, int n2, ref int[] iwrk, int iv, ref double p, out int ifault)
         {
             int dummy;
             int i; int ir1;
             int m; int m1; int m2; int mwmax; int n;
             int i1 = 0;
-            bool change; 
-            ifault = 0; 
-            int nn = Math.Min( n1, n2 ); 
-            int nsum = n1 + n2; 
-            int nwrk = nn + nn * ( nn + 1 ) * nsum - ( ( int )( Math.Floor((double) ( nn * ( nn + 1 ) * ( 2 * nn + 1 ) ) / 3) ) ) + 1; 
-            double[] wrk = new double[ nwrk + 1 ]; 
-            if ( i1 != 0 ) 
-            { 
-                ifault = 10; 
-                return ; 
-            } 
-            if ( n1 < n2 ) 
-            { 
-                m1 = n1; 
-                m2 = n2; 
-                change = false; 
-            } 
-            else 
-            { 
-                m1 = n2; 
-                m2 = n1; 
-                change = true; 
-            } 
-            int l1 = nsum; 
-            int l2 = nsum + m1 + 1; 
-            int low = 0; 
-            int high = 0; 
-            int space = 0; 
-            iwrk[ l1 + 1 ] = 0; 
-            iwrk[ l2 + 1 ] = 0; 
-            for ( m=1; m <= m1; m++ ) 
-            { 
-                iwrk[ l1 + m + 1 ] = 0; 
-                iwrk[ l2 + m + 1 ] = space + 1; 
-                low = low + iwrk[ m ]; 
-                high = high + iwrk[ nsum + 1 - m ]; 
-                dummy = high - low + 1; 
-                space = space + dummy; 
-            } 
-            if ( ( change ) ) 
-            { 
-                mwmax = nsum * ( nsum + 1 ) - low; 
-            } 
-            else 
-            { 
-                mwmax = high; 
-            } 
-            if ( iv == mwmax - n1 * ( n1 + 1 ) ) 
-            { 
-                p = 1.0; 
-                return ; 
-            } 
-            for ( i=0; i <= space; i++ ) 
-            { 
-                wrk[ i + 1 ] = 1.0; 
-            } 
-            for ( n=1; n <= nsum; n++ ) 
-            { 
-                dummy = Math.Min( n, m1 ); 
-                for ( m=dummy; m >= 1; m-- ) 
-                { 
-                    int shift = iwrk[ n ] - iwrk[ m ]; 
-                    iwrk[ l1 + m + 1 ] = iwrk[ l1 + m ] + shift; 
-                    double lambda = Convert.ToDouble( m ) / Convert.ToDouble( n );
+            bool change;
+            ifault = 0;
+            int nn = Math.Min(n1, n2);
+            int nsum = n1 + n2;
+            int nwrk = nn + nn * (nn + 1) * nsum - ((int)(Math.Floor((double)(nn * (nn + 1) * (2 * nn + 1)) / 3))) + 1;
+            double[] wrk = new double[nwrk + 1];
+            if (i1 != 0)
+            {
+                ifault = 10;
+                return;
+            }
+            if (n1 < n2)
+            {
+                m1 = n1;
+                m2 = n2;
+                change = false;
+            }
+            else
+            {
+                m1 = n2;
+                m2 = n1;
+                change = true;
+            }
+            int l1 = nsum;
+            int l2 = nsum + m1 + 1;
+            int low = 0;
+            int high = 0;
+            int space = 0;
+            iwrk[l1 + 1] = 0;
+            iwrk[l2 + 1] = 0;
+            for (m = 1; m <= m1; m++)
+            {
+                iwrk[l1 + m + 1] = 0;
+                iwrk[l2 + m + 1] = space + 1;
+                low = low + iwrk[m];
+                high = high + iwrk[nsum + 1 - m];
+                dummy = high - low + 1;
+                space = space + dummy;
+            }
+            if ((change))
+            {
+                mwmax = nsum * (nsum + 1) - low;
+            }
+            else
+            {
+                mwmax = high;
+            }
+            if (iv == mwmax - n1 * (n1 + 1))
+            {
+                p = 1.0;
+                return;
+            }
+            for (i = 0; i <= space; i++)
+            {
+                wrk[i + 1] = 1.0;
+            }
+            for (n = 1; n <= nsum; n++)
+            {
+                dummy = Math.Min(n, m1);
+                for (m = dummy; m >= 1; m--)
+                {
+                    int shift = iwrk[n] - iwrk[m];
+                    iwrk[l1 + m + 1] = iwrk[l1 + m] + shift;
+                    double lambda = Convert.ToDouble(m) / Convert.ToDouble(n);
                     int j;
-                    for ( j=0; j <= iwrk[ l1 + m + 1 ]; j++ ) 
-                    { 
-                        int k = iwrk[ l2 + m + 1 ] + j; 
-                        wrk[ k + 1 ] = ( 1.0 - lambda ) * wrk[ k + 1 ]; 
-                        if ( shift <= j ) 
-                        { 
-                            wrk[ k + 1 ] = wrk[ k + 1 ] + lambda * wrk[ iwrk[ l2 + m ] + j - shift + 1 ]; 
-                        } 
-                    } 
-                } 
-            } 
-            if ( !( change ) ) 
-            { 
-                ir1 = low - m1 * ( m1 + 1 ); 
-                p = wrk[ iwrk[ l2 + m1 + 1 ] + iv - ir1 + 1 ]; 
-            } 
-            else 
-            { 
-                ir1 = ( nsum * ( nsum + 1 ) - high ) - m2 * ( m2 + 1 ); 
-                p = 1.0 - wrk[ iwrk[ l2 + m1 + 1 ] + iwrk[ l1 + m1 + 1 ] - iv + ir1 ]; 
-            } 
-        } 
-        
-        public static int findnext( out int occ, int c, int[] x, int lenx, int[] y, int leny ) 
-        { 
-            int yii = 1; 
-            int xii = 1; 
-            int xki = lenx; 
-            int yki = 1; 
-            const int ymini = 1; 
-            int xmaxi = lenx; 
-            int ymaxi = leny; 
-            occ = 1; 
-            while ( x[ xii ] - c <= y[ ymini ] && xii != xmaxi ) 
-            { 
-                xii = xii + 1; 
-            } 
-            if ( xii == xmaxi ) 
-            { 
-                return x[ xki ] - y[ yki ]; 
-            } 
-            do 
-            { 
-                while ( x[ xii ] - y[ yii ] > c ) 
-                { 
-                    if ( x[ xii ] - y[ yii ] == x[ xki ] - y[ yki ] )
-                    { 
-                        occ = occ + 1; 
-                    } 
-                    if ( x[ xki ] - y[ yki ] > x[ xii ] - y[ yii ] && x[ xii ] - y[ yii ] != c ) 
-                    { 
-                        occ = 1; 
-                        yki = yii; 
-                        xki = xii; 
-                    } 
+                    for (j = 0; j <= iwrk[l1 + m + 1]; j++)
+                    {
+                        int k = iwrk[l2 + m + 1] + j;
+                        wrk[k + 1] = (1.0 - lambda) * wrk[k + 1];
+                        if (shift <= j)
+                        {
+                            wrk[k + 1] = wrk[k + 1] + lambda * wrk[iwrk[l2 + m] + j - shift + 1];
+                        }
+                    }
+                }
+            }
+            if (!(change))
+            {
+                ir1 = low - m1 * (m1 + 1);
+                p = wrk[iwrk[l2 + m1 + 1] + iv - ir1 + 1];
+            }
+            else
+            {
+                ir1 = (nsum * (nsum + 1) - high) - m2 * (m2 + 1);
+                p = 1.0 - wrk[iwrk[l2 + m1 + 1] + iwrk[l1 + m1 + 1] - iv + ir1];
+            }
+        }
+
+        public static int findnext(out int occ, int c, int[] x, int lenx, int[] y, int leny)
+        {
+            int yii = 1;
+            int xii = 1;
+            int xki = lenx;
+            int yki = 1;
+            const int ymini = 1;
+            int xmaxi = lenx;
+            int ymaxi = leny;
+            occ = 1;
+            while (x[xii] - c <= y[ymini] && xii != xmaxi)
+            {
+                xii = xii + 1;
+            }
+            if (xii == xmaxi)
+            {
+                return x[xki] - y[yki];
+            }
+            do
+            {
+                while (x[xii] - y[yii] > c)
+                {
+                    if (x[xii] - y[yii] == x[xki] - y[yki])
+                    {
+                        occ = occ + 1;
+                    }
+                    if (x[xki] - y[yki] > x[xii] - y[yii] && x[xii] - y[yii] != c)
+                    {
+                        occ = 1;
+                        yki = yii;
+                        xki = xii;
+                    }
                     if (yii == ymaxi)
                         break;
-                    yii++; 
-                } 
-                if ( yii > ymini )
-                { 
-                    yii--; 
-                } 
-                while ( yii > ymini && y[ yii ] == y[ yii - 1 ] ) 
-                { 
-                    yii--; 
-                } 
-                if ( xii == xmaxi )
+                    yii++;
+                }
+                if (yii > ymini)
+                {
+                    yii--;
+                }
+                while (yii > ymini && y[yii] == y[yii - 1])
+                {
+                    yii--;
+                }
+                if (xii == xmaxi)
                     break;
-                xii++; 
-            } 
-            while ( true ); 
-            return x[ xki ] - y[ yki ]; 
-        } 
-        
-        public static int pairnext( out int occ, int c, int[] x, int lenx ) 
-        { 
-            occ = 1; 
-            int xii = 1; 
-            int yki = lenx; 
-            int yii = 1; 
-            int ymini = lenx; 
-            int xki = lenx; 
-            int xmaxi = lenx; 
-            const int ymaxi = 1; 
-            while ( x[ xii ] - c <= -x[ ymini ] && xii != xmaxi ) 
-            { 
-                xii = xii + 1; 
-                yii = xii; 
-            } 
-            if ( xii == xmaxi ) 
-            { 
-                return x[ xki ] + x[ yki ]; 
-            } 
-            do 
-            { 
-                while ( x[ xii ] + x[ yii ] > c ) 
-                { 
-                    if ( x[ xii ] + x[ yii ] == x[ xki ] + x[ yki ] )
-                    { 
-                        occ = occ + 1; 
-                    } 
-                    if ( x[ xki ] + x[ yki ] > x[ xii ] + x[ yii ] && x[ xii ] + x[ yii ] != c ) 
-                    { 
-                        occ = 1; 
-                        yki = yii; 
-                        xki = xii; 
-                    } 
-                    if ( yii == ymaxi )
+                xii++;
+            }
+            while (true);
+            return x[xki] - y[yki];
+        }
+
+        public static int pairnext(out int occ, int c, int[] x, int lenx)
+        {
+            occ = 1;
+            int xii = 1;
+            int yki = lenx;
+            int yii = 1;
+            int ymini = lenx;
+            int xki = lenx;
+            int xmaxi = lenx;
+            const int ymaxi = 1;
+            while (x[xii] - c <= -x[ymini] && xii != xmaxi)
+            {
+                xii = xii + 1;
+                yii = xii;
+            }
+            if (xii == xmaxi)
+            {
+                return x[xki] + x[yki];
+            }
+            do
+            {
+                while (x[xii] + x[yii] > c)
+                {
+                    if (x[xii] + x[yii] == x[xki] + x[yki])
+                    {
+                        occ = occ + 1;
+                    }
+                    if (x[xki] + x[yki] > x[xii] + x[yii] && x[xii] + x[yii] != c)
+                    {
+                        occ = 1;
+                        yki = yii;
+                        xki = xii;
+                    }
+                    if (yii == ymaxi)
                         break;
-                    yii = yii - 1; 
-                } 
-                if ( ymini > yii )
-                { 
-                    yii = yii + 1; 
-                } 
-                while ( xii >= yii && ymini > yii && x[ yii ] == x[ yii + 1 ] ) 
-                { 
-                    yii = yii + 1; 
-                } 
-                if ( xii == xmaxi )
+                    yii = yii - 1;
+                }
+                if (ymini > yii)
+                {
+                    yii = yii + 1;
+                }
+                while (xii >= yii && ymini > yii && x[yii] == x[yii + 1])
+                {
+                    yii = yii + 1;
+                }
+                if (xii == xmaxi)
                     break;
-                xii = xii + 1; 
-            } 
-            while ( true ); 
-            return x[ xki ] + x[ yki ]; 
-        } 
-        
+                xii = xii + 1;
+            }
+            while (true);
+            return x[xki] + x[yki];
+        }
+
         ///  <summary>
         ///  Modified Algorithm AS 89   Appl. Statist. (1975) Vol.24, No. 3, P377.
         /// 
@@ -340,236 +340,236 @@ namespace StatsDirect.Numerics
         ///  <param name="ifault"></param>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        public static double prho( int n, int ix, out int ifault ) 
+        public static double prho(int n, int ix, out int ifault)
         {
-            double prhoReturn = 1.0; 
-            ifault = 1; 
-            if ( ( n <= 1 ) )
-            { 
-                return prhoReturn; 
-            } 
-            ifault = 0; 
-            if ( ( ix < 0 ) )
-            { 
-                return prhoReturn; 
-            } 
-            prhoReturn = 0.0; 
-            if ( ( ix > Math.Floor((double) n * ( n * n - 1 ) / 3) ) )
-            { 
-                return prhoReturn; 
-            } 
-            int js = ix; 
-            if ( ( js != 2 * Math.Floor((double) js / 2) ) )
-            { 
-                js = js + 1; 
-            } 
-            if ( ( n <= 10 ) ) 
-            { 
+            double prhoReturn = 1.0;
+            ifault = 1;
+            if ((n <= 1))
+            {
+                return prhoReturn;
+            }
+            ifault = 0;
+            if ((ix < 0))
+            {
+                return prhoReturn;
+            }
+            prhoReturn = 0.0;
+            if ((ix > Math.Floor((double)n * (n * n - 1) / 3)))
+            {
+                return prhoReturn;
+            }
+            int js = ix;
+            if ((js != 2 * Math.Floor((double)js / 2)))
+            {
+                js = js + 1;
+            }
+            if ((n <= 10))
+            {
                 //  Exact evaluation for 10 or fewer pairs of observations
-                int[] l = new int[ 11 ]; 
-                int nfac = 1; 
-                for ( int i=1; i <= n; i++ ) 
-                { 
-                    nfac = nfac * i; 
-                    l[ i ] = i; 
-                } 
-                prhoReturn = 1.0 / Convert.ToDouble( nfac ); 
-                if ( ( js == Math.Floor((double) n * ( n * n - 1 ) / 3) ) )
-                { 
-                    return prhoReturn; 
-                } 
-                int ifr = 0; 
-                for ( int m=1; m <= nfac; m++ ) 
-                { 
-                    int ise = 0; 
-                    for ( int i=1; i <= n; i++ ) 
-                    { 
-                        ise = ise + ( i - l[ i ] ) * ( i - l[ i ] ); 
-                    } 
-                    if ( ( js < ise ) )
-                    { 
+                int[] l = new int[11];
+                int nfac = 1;
+                for (int i = 1; i <= n; i++)
+                {
+                    nfac = nfac * i;
+                    l[i] = i;
+                }
+                prhoReturn = 1.0 / Convert.ToDouble(nfac);
+                if ((js == Math.Floor((double)n * (n * n - 1) / 3)))
+                {
+                    return prhoReturn;
+                }
+                int ifr = 0;
+                for (int m = 1; m <= nfac; m++)
+                {
+                    int ise = 0;
+                    for (int i = 1; i <= n; i++)
+                    {
+                        ise = ise + (i - l[i]) * (i - l[i]);
+                    }
+                    if ((js < ise))
+                    {
                         ifr++;
-                    } 
-                    int n1 = n; 
-                    do 
-                    { 
-                        int mt = l[ 1 ]; 
-                        int nn = n1 - 1; 
-                        for ( int i=1; i <= nn; i++ ) 
-                        { 
-                            l[ i ] = l[ i + 1 ]; 
-                        } 
-                        l[ n1 ] = mt; 
-                        if ( ( l[ n1 ] != n1 || n1 == 2 ) ) 
+                    }
+                    int n1 = n;
+                    do
+                    {
+                        int mt = l[1];
+                        int nn = n1 - 1;
+                        for (int i = 1; i <= nn; i++)
+                        {
+                            l[i] = l[i + 1];
+                        }
+                        l[n1] = mt;
+                        if ((l[n1] != n1 || n1 == 2))
                             break;
                         n1--;
-                        if ( ( m == nfac ) )
+                        if ((m == nfac))
                             break;
                     }
-                    while ( true );
+                    while (true);
                 }
-                prhoReturn = Convert.ToDouble( ifr ) / Convert.ToDouble( nfac );
+                prhoReturn = Convert.ToDouble(ifr) / Convert.ToDouble(nfac);
             }
             else
-            { 
-                //  Evaluation by Edgeworth series expansion
-                double b = 1.0 / Convert.ToDouble( n ); 
-                double x = ( 6.0 * ( Convert.ToDouble( js ) - 1.0 ) * b / ( 1.0 / ( b * b ) - 1.0 ) - 1.0 ) * Math.Sqrt( 1.0 / b - 1.0 ); 
-                double y = x * x; 
-                double u = x * b * ( 0.2274 + b * ( 0.2531 + 0.1745 * b ) + y * ( -0.0758 + b * ( 0.1033 + 0.3932 * b ) - y * b * ( 0.0879 + 0.0151 * b - y * ( 0.0072 - 0.0831 * b + y * b * ( 0.0131 - 0.00046 * y ) ) ) ) ); 
-                prhoReturn = u / Math.Exp( y / 2.0 ) + 1.0 - PDF.alnorm( x ); 
-                if ( ( prhoReturn < 0.0 ) )
-                { 
-                    prhoReturn = 0.0; 
-                } 
-                if ( ( prhoReturn > 1.0 ) )
-                { 
-                    prhoReturn = 1.0; 
-                } 
-            } 
-            return prhoReturn;
-        } 
-        
-        public static double ksp2( int n1, int n2, ref double d, out int ifault ) 
-        { 
-            ifault = 0; 
-            double p; 
-            if ( ( d < Constant.DBL_MIN ) ) 
-            { 
-                return 1.0; 
-            } 
-            int m = Math.Min( n1, n2 ); 
-            int n = Math.Max( n1, n2 ); 
-            if ( ( m * n <= 10000 ) ) 
             {
-                double[] u = new double[n + 1 + 1 /* for VB to C# conversion */ ]; 
-                double x = Convert.ToDouble( m * n ) * d - 0.5; 
-                u[ 1 ] = 1.0; 
-                for ( int j=1; j <= n; j++ ) 
-                { 
-                    u[ j + 1 ] = 1.0; 
-                    if ( ( Convert.ToDouble( m * j ) > x ) )
-                    { 
-                        u[ j + 1 ] = 0.0; 
-                    } 
-                } 
-                for ( int i=1; i <= m; i++ ) 
-                { 
-                    double w = Convert.ToDouble( i ) / Convert.ToDouble( i + n ); 
-                    u[ 1 ] = w * u[ 1 ]; 
-                    if ( ( Convert.ToDouble( n * i ) > x ) )
-                    { 
-                        u[ 1 ] = 0.0; 
-                    } 
-                    for ( int j=1; j <= n; j++ ) 
-                    { 
-                        u[ j + 1 ] = u[ j ] + u[ j + 1 ] * w; 
-                        if ( ( Convert.ToDouble( Math.Abs( n * i - m * j ) ) > x ) )
-                        { 
-                            u[ j + 1 ] = 0.0; 
-                        } 
-                    } 
-                } 
-                p = u[ n + 1 ]; 
-                p = 1.0 - p; 
-                p = Math.Min( 1.0, p ); 
-                p = Math.Max( 0.0, p ); 
-            } 
-            else if ( ( m < Math.Floor((double) n / 10) && m < 80 ) ) 
-            { 
-                double z = d; 
-                if ( ( m != 1 ) )
-                { 
-                    z = z - 0.5 / Convert.ToDouble( n ); 
-                } 
-                z = Math.Max( 0.0, z ); 
-                double tp = 2.0 * kspx( m, z ); 
-                p = Math.Min( 1.0, tp ); 
-            } 
-            else 
-            { 
-                double z = Math.Sqrt( Convert.ToDouble( m * n ) / Convert.ToDouble( m + n ) ) * d + 0.5 / Math.Sqrt( Convert.ToDouble( n ) ); 
-                double a = -2.0 * z * z; 
-                if ( ( -a < Constant.DBL_MIN ) ) 
-                { 
-                    return 1.0; 
-                } 
-                double sr = Math.Sqrt( Math.Log( Constant.DBL_MIN ) / a ); 
-                double fac = 2.0; 
-                p = 0.0; 
-                const double eps1 = 0.000005; 
-                for ( int j=1; j <= 500; j++ ) 
-                { 
-                    double xj = Convert.ToDouble( j ); 
-                    if ( ( xj < sr ) ) 
-                    { 
-                        double term = fac * Math.Exp( a * xj * xj ); 
-                        p = p + term; 
-                        double aterm = Math.Abs( term ); 
-                        if ( ( aterm < eps1 * p ) ) 
-                        { 
-                            p = Math.Min( 1.0, p ); 
-                            return p; 
+                //  Evaluation by Edgeworth series expansion
+                double b = 1.0 / Convert.ToDouble(n);
+                double x = (6.0 * (Convert.ToDouble(js) - 1.0) * b / (1.0 / (b * b) - 1.0) - 1.0) * Math.Sqrt(1.0 / b - 1.0);
+                double y = x * x;
+                double u = x * b * (0.2274 + b * (0.2531 + 0.1745 * b) + y * (-0.0758 + b * (0.1033 + 0.3932 * b) - y * b * (0.0879 + 0.0151 * b - y * (0.0072 - 0.0831 * b + y * b * (0.0131 - 0.00046 * y)))));
+                prhoReturn = u / Math.Exp(y / 2.0) + 1.0 - PDF.alnorm(x);
+                if ((prhoReturn < 0.0))
+                {
+                    prhoReturn = 0.0;
+                }
+                if ((prhoReturn > 1.0))
+                {
+                    prhoReturn = 1.0;
+                }
+            }
+            return prhoReturn;
+        }
+
+        public static double ksp2(int n1, int n2, ref double d, out int ifault)
+        {
+            ifault = 0;
+            double p;
+            if ((d < Constant.DBL_MIN))
+            {
+                return 1.0;
+            }
+            int m = Math.Min(n1, n2);
+            int n = Math.Max(n1, n2);
+            if ((m * n <= 10000))
+            {
+                double[] u = new double[n + 1 + 1 /* for VB to C# conversion */ ];
+                double x = Convert.ToDouble(m * n) * d - 0.5;
+                u[1] = 1.0;
+                for (int j = 1; j <= n; j++)
+                {
+                    u[j + 1] = 1.0;
+                    if ((Convert.ToDouble(m * j) > x))
+                    {
+                        u[j + 1] = 0.0;
+                    }
+                }
+                for (int i = 1; i <= m; i++)
+                {
+                    double w = Convert.ToDouble(i) / Convert.ToDouble(i + n);
+                    u[1] = w * u[1];
+                    if ((Convert.ToDouble(n * i) > x))
+                    {
+                        u[1] = 0.0;
+                    }
+                    for (int j = 1; j <= n; j++)
+                    {
+                        u[j + 1] = u[j] + u[j + 1] * w;
+                        if ((Convert.ToDouble(Math.Abs(n * i - m * j)) > x))
+                        {
+                            u[j + 1] = 0.0;
+                        }
+                    }
+                }
+                p = u[n + 1];
+                p = 1.0 - p;
+                p = Math.Min(1.0, p);
+                p = Math.Max(0.0, p);
+            }
+            else if ((m < Math.Floor((double)n / 10) && m < 80))
+            {
+                double z = d;
+                if ((m != 1))
+                {
+                    z = z - 0.5 / Convert.ToDouble(n);
+                }
+                z = Math.Max(0.0, z);
+                double tp = 2.0 * kspx(m, z);
+                p = Math.Min(1.0, tp);
+            }
+            else
+            {
+                double z = Math.Sqrt(Convert.ToDouble(m * n) / Convert.ToDouble(m + n)) * d + 0.5 / Math.Sqrt(Convert.ToDouble(n));
+                double a = -2.0 * z * z;
+                if ((-a < Constant.DBL_MIN))
+                {
+                    return 1.0;
+                }
+                double sr = Math.Sqrt(Math.Log(Constant.DBL_MIN) / a);
+                double fac = 2.0;
+                p = 0.0;
+                const double eps1 = 0.000005;
+                for (int j = 1; j <= 500; j++)
+                {
+                    double xj = Convert.ToDouble(j);
+                    if ((xj < sr))
+                    {
+                        double term = fac * Math.Exp(a * xj * xj);
+                        p = p + term;
+                        double aterm = Math.Abs(term);
+                        if ((aterm < eps1 * p))
+                        {
+                            p = Math.Min(1.0, p);
+                            return p;
                         }
                         fac = -fac;
-                    } 
-                    else 
-                    { 
-                        p = Math.Min( 1.0, p ); 
-                        return p; 
-                    } 
-                } 
+                    }
+                    else
+                    {
+                        p = Math.Min(1.0, p);
+                        return p;
+                    }
+                }
                 //  fails to converge, P set to 1.0
-                ifault = 3; 
-                return 1.0; 
-            } 
-            return p; 
-        } 
-        
-        private static double kspx( int n, double d ) 
-        { 
-            double p; 
-            if ( ( d < Constant.DBL_MIN ) ) 
-            { 
-                p = 1.0; 
-            } 
-            else if ( ( ( 1.0 - d ) < Constant.DBL_MIN ) ) 
-            { 
-                p = 0.0; 
-            } 
-            else if ( ( n == 1 ) ) 
-            { 
-                p = 1.0 - d; 
-            } 
-            else if ( ( n <= 100 ) ) 
-            { 
-                double xn = Convert.ToDouble( n ); 
-                double vj = 1.0 / xn; 
-                double v1 = d; 
-                double z = 1.0 - d; 
-                double v2 = z; 
-                double y = xn * z; 
-                int lim1 = ( ( int )( Math.Floor((1.0 - Constant.EPSILON) * y) ) ); 
-                p = 0.0; 
-                double cc = 1.0; 
-                for ( int j=1; j <= lim1; j++ ) 
-                { 
-                    double xj = Convert.ToDouble( j ); 
-                    cc = cc * ( ( xn - xj + 1.0 ) / xj ); 
-                    v1 = v1 + vj; 
-                    v2 = v2 - vj; 
-                    p = p + cc * Math.Pow( v1, j - 1 ) * Math.Pow( v2, n - j ); 
-                } 
-                p = p * d + Math.Pow( z, n ); 
-            } 
+                ifault = 3;
+                return 1.0;
+            }
+            return p;
+        }
+
+        private static double kspx(int n, double d)
+        {
+            double p;
+            if ((d < Constant.DBL_MIN))
+            {
+                p = 1.0;
+            }
+            else if (((1.0 - d) < Constant.DBL_MIN))
+            {
+                p = 0.0;
+            }
+            else if ((n == 1))
+            {
+                p = 1.0 - d;
+            }
+            else if ((n <= 100))
+            {
+                double xn = Convert.ToDouble(n);
+                double vj = 1.0 / xn;
+                double v1 = d;
+                double z = 1.0 - d;
+                double v2 = z;
+                double y = xn * z;
+                int lim1 = ((int)(Math.Floor((1.0 - Constant.EPSILON) * y)));
+                p = 0.0;
+                double cc = 1.0;
+                for (int j = 1; j <= lim1; j++)
+                {
+                    double xj = Convert.ToDouble(j);
+                    cc = cc * ((xn - xj + 1.0) / xj);
+                    v1 = v1 + vj;
+                    v2 = v2 - vj;
+                    p = p + cc * Math.Pow(v1, j - 1) * Math.Pow(v2, n - j);
+                }
+                p = p * d + Math.Pow(z, n);
+            }
             else
             {
-                double a = -2.0 * ( Convert.ToDouble( n ) + 2.0 ) * d * d;
-                p = ( a < Math.Log( Constant.DBL_MIN ) ) ? 0.0 : Math.Exp( a );
+                double a = -2.0 * (Convert.ToDouble(n) + 2.0) * d * d;
+                p = (a < Math.Log(Constant.DBL_MIN)) ? 0.0 : Math.Exp(a);
             }
-            return Math.Min( p, 1.0 ); 
-        } 
-        
+            return Math.Min(p, 1.0);
+        }
+
         // 
         //       SUBROUTINE GSMIRN (NX, NY, KIND, M, DSTAT, P, Q, IFAULT)
         // 	!dec$attributes dllexport :: gsmirn
@@ -750,7 +750,7 @@ namespace StatsDirect.Numerics
         //  c
         //       IF (Q .LE. ZERO) IFAULT = 3
         //       END
-        
+
         ///  <summary>
         ///  cumulative and point binomial distribution
         ///  </summary>
@@ -762,50 +762,50 @@ namespace StatsDirect.Numerics
         ///  <param name="phi"></param>
         ///  <param name="ifault"></param>
         ///  <remarks></remarks>
-        public static void bino( int n, double p, int k, out double term, out double plo, out double phi, out int ifault ) 
+        public static void bino(int n, double p, int k, out double term, out double plo, out double phi, out int ifault)
         {
             term = Constant.MISSING;
-            if ((p < 0.0 || p > 1.0)) 
-            { 
+            if ((p < 0.0 || p > 1.0))
+            {
                 ifault = 1;
                 plo = Constant.MISSING;
                 phi = Constant.MISSING;
-                return; 
+                return;
             }
-            if ( ( n < k ) ) 
-            { 
+            if ((n < k))
+            {
                 ifault = 2;
                 plo = Constant.MISSING;
                 phi = Constant.MISSING;
-                return; 
+                return;
             }
             ifault = 0;
-            double sml = Math.Log( Constant.DBL_MIN ); 
-            double xn = Convert.ToDouble( n ); 
+            double sml = Math.Log(Constant.DBL_MIN);
+            double xn = Convert.ToDouble(n);
             // double xk = Convert.ToDouble( k ); 
-            plo = 0.0; 
-            double xn1 = xn + 1.0; 
-            for ( int i=0; i <= k; i++ ) 
-            { 
-                double xi = Convert.ToDouble( i ); 
-                term = PDF.alogam( xn1 ) - PDF.alogam( xi + 1.0 ) - PDF.alogam( xn1 - xi ) + xi * Math.Log( p ) + ( xn - xi ) * Math.Log( 1.0 - p ); 
-                if ( ( term > sml ) )
-                { 
-                    plo = plo + Math.Exp( term ); 
-                } 
-            } 
-            if ( ( term > sml ) )
-            { 
-                term = Math.Exp( term ); 
-            } 
-            if ( ( term < 0.0 ) )
-            { 
-                term = 0.0; 
-            } 
-            phi = 1.0 - plo + term; 
-        } 
-        
-        
+            plo = 0.0;
+            double xn1 = xn + 1.0;
+            for (int i = 0; i <= k; i++)
+            {
+                double xi = Convert.ToDouble(i);
+                term = PDF.alogam(xn1) - PDF.alogam(xi + 1.0) - PDF.alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                if ((term > sml))
+                {
+                    plo = plo + Math.Exp(term);
+                }
+            }
+            if ((term > sml))
+            {
+                term = Math.Exp(term);
+            }
+            if ((term < 0.0))
+            {
+                term = 0.0;
+            }
+            phi = 1.0 - plo + term;
+        }
+
+
         // Public Shared Sub bino2(ByRef n As Integer, ByRef p As Double, ByRef k As Integer, ByRef p1 As Double, ByRef p2 As Double, ByRef ifault As Double)
         //     If (p < 0.0 OrElse p > 1.0) Then
         //         ifault = 1
@@ -875,7 +875,7 @@ namespace StatsDirect.Numerics
         //         Next
         //     End If
         // End Sub
-        
+
         // /// ' <summary>
         // /// ' cumulative binomial distribution for mid-point inference
         // /// ' </summary>
@@ -934,6 +934,6 @@ namespace StatsDirect.Numerics
         //     p2 = 2.0 * p1
         //     Return
         // End Sub
-    } 
-    
-} 
+    }
+
+}

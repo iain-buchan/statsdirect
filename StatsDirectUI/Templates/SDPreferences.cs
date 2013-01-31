@@ -81,7 +81,7 @@
         /// If false, group selectors are by variable.
         /// If true, group selectors are by indicator.
         /// </summary>
-        bool GIDV
+        bool SelectGroupsByIdentifier
         {
             get;
             set;

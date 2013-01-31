@@ -2827,8 +2827,10 @@ namespace StatsDirect.Builtins
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
             if (grouped)
             {
-                double[] xp = new double[iobs + 1 /* for VB to C# conversion */ ];
-                double[] yp = new double[iobs + 1 /* for VB to C# conversion */ ];
+                double[] xp = new double[iobs + 1];
+                double[] yp = new double[iobs + 1];
+                xp[0] = Constant.MISSING;
+                yp[0] = Constant.MISSING;
                 for (i = 1; i <= iobs; i++)
                 {
                     double surv = Math.Pow(z[i].s, Math.Exp(Convert.ToDouble(z[i].id) * ARR3[1, groupid, 1]));

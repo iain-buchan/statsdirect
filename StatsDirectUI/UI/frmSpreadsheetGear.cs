@@ -646,20 +646,29 @@ namespace StatsDirect.UI
                         gridParameter.Prompt(processor, parameters),
                         gridParameter.CancelSkipsParameter,
                         gridParameter.ShouldAskForGroupId,
+                        DataAcquisitionWidth.RespectPivotSetting,
                         false,
                         out userCancelled);
                 }
                 else
                 {
-                    frame = GetCellArray(0,
-                        gridParameter.DataAcquisitionMode,
-                        gridParameter.MinimumColumns(processor, parameters),
-                        gridParameter.MaximumColumns(processor, parameters),
-                        gridParameter.Prompt(processor, parameters),
-                        gridParameter.CancelSkipsParameter,
-                        gridParameter.ShouldAskForGroupId,
-                        false,
-                        out userCancelled);
+                    int minimumColumns = gridParameter.MinimumColumns(processor, parameters);
+                    int maximumColumns = gridParameter.MaximumColumns(processor, parameters);
+                    string selectionMessage = gridParameter.Prompt(processor, parameters);
+                    while (true)
+                    {
+                        bool wasPivoted;
+                        if (gridParameter.ShouldAskForGroupId && SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
+                        {
+                            frame = Gidx(gridParameter.DataAcquisitionMode, minimumColumns, maximumColumns, -1, null, out userCancelled, out wasPivoted);
+                        }
+                        else
+                        {
+                            frame = GetCellArray(0, gridParameter.DataAcquisitionMode, minimumColumns, maximumColumns, selectionMessage, gridParameter.CancelSkipsParameter, gridParameter.ShouldAskForGroupId, false, out userCancelled, out wasPivoted);
+                        }
+                        if (!wasPivoted)
+                            break;
+                    }
                 }
                 if (null != frame)
                 {
@@ -755,12 +764,12 @@ namespace StatsDirect.UI
         /// <param name="maximumColumns">The largest acceptable number of columns</param>
         /// <param name="selectionMessage">The prompt for the user (column numbers will be appended if required)</param>
         /// <param name="cancelButtonLabel">If non-null, the cancel button will take this label</param>
-        /// <param name="askGid">If true, the user is prompted for groups by column / groups by identifier.  If false, the user is not prompted.</param>
+        /// <param name="allowUserToPivot">If true, the user is prompted for groups by column / groups by identifier.  If false, the user is not prompted.</param>
         /// <param name="selectionWasDefaulted">If true, there's already a selection on the sheet but the user *must* interact to confirm it.  If false, if there's a selection we'll take it.</param>
         /// <param name="userCancelled">If true, the user cancelled the selection</param>
         /// <param name="wasPivoted">If true, the user changed from selecting groups by column to by identifier, or vice versa</param>
         /// <returns>the user's cell selections within the active worksheet, or null if the user declined to select anything</returns>
-        private CellSelection GetSelection(int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool selectionWasDefaulted, out bool userCancelled, out bool wasPivoted)
+        private CellSelection GetSelection(int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool selectionWasDefaulted, out bool userCancelled, out bool wasPivoted)
         {
             // Handle default selections: we may need to come in with a pre-selected area and force the user to confirm it.  However, if the user gives an illegal selection, we need to give errors.  So we keep a state of whether the selection presently on the grid is the default or is user-selected.
             bool selectionIsDefault = selectionWasDefaulted;
@@ -791,13 +800,13 @@ namespace StatsDirect.UI
                             for (int c = usedFrom.Left; c <= usedFrom.Right; c++)
                             {
                                 CellColumnSelection ccs = new CellColumnSelection
-                                                              {
-                                                                  WorkbookPath = grid.WorkbookPath,
-                                                                  WorksheetName = grid.ActiveWorksheetName,
-                                                                  ColumnIndex = c,
-                                                                  RowIndex = usedFrom.Top,
-                                                                  RowCount = rows
-                                                              };
+                                {
+                                    WorkbookPath = grid.WorkbookPath,
+                                    WorksheetName = grid.ActiveWorksheetName,
+                                    ColumnIndex = c,
+                                    RowIndex = usedFrom.Top,
+                                    RowCount = rows
+                                };
                                 sel.ColumnSelections.Add(ccs);
                                 rowtotal += rows;
                             }
@@ -849,9 +858,9 @@ namespace StatsDirect.UI
                     fullSelectionMessage += " (Min " + minimumColumns.ToString() + ": Max " + maximumColumns.ToString() + ")";
                 }
                 SDApplication.SoleInstance.MainWindow.CanSelectMultipleRows = maximumColumns > 1;
-                SDApplication.SoleInstance.MainWindow.CanSelectGroupMethod = askGid;
-                if (askGid)
-                    SDApplication.SoleInstance.MainWindow.GroupsByIdentifier = SDApplication.SoleInstance.Preferences.GIDV;
+                SDApplication.SoleInstance.MainWindow.CanSelectGroupMethod = allowUserToPivot;
+                if (allowUserToPivot)
+                    SDApplication.SoleInstance.MainWindow.GroupsByIdentifier = SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
                 Color oldBackColor = BackColor;
                 BackColor = SystemColors.Info;
                 try
@@ -882,46 +891,13 @@ namespace StatsDirect.UI
         /// <param name="minimumColumns">The minimum acceptable number of columns</param>
         /// <param name="maximumColumns">The maximum acceptable number of columns</param>
         /// <param name="selectionMessage">The prompt for the user</param>
-        /// <param name="cancelButtonLabel">if non-null, the cancel button is labelled with this</param>
-        /// <param name="askGid">If true, the user is asked about grouping by identifier</param>
-        /// <param name="mightBeBatching">If true, we might be selecting data in a batch.  If batching, GetCellEqual should remember where its data came from and should re-select if such memory is present.  If not batching, GetCellEqual should clear memory and not pre-select.</param>
-        /// <param name="userCancelled">If true, the user cancelled the selection</param>
-        /// <returns></returns>
-        private DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled)
-        {
-            while (true)
-            {
-                bool wasPivoted;
-                DataFrame frame;
-                if (askGid && SDApplication.SoleInstance.Preferences.GIDV)
-                {
-                    frame = GIDX(mode, minimumColumns, maximumColumns, -1, null, out userCancelled, out wasPivoted);
-                }
-                else
-                {
-                    frame = GetCellArray(rowLengthHint, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
-                }
-                if (wasPivoted)
-                    continue;
-                return frame;
-            }
-        }
-
-        /// <summary>
-        /// Returns a DataFrame containing the selected data, or null if there was an error or selection was cancelled.
-        /// </summary>
-        /// <param name="rowLengthHint"> </param>
-        /// <param name="mode">The way in which the acquired data will be placed into the data structure</param>
-        /// <param name="minimumColumns">The minimum acceptable number of columns</param>
-        /// <param name="maximumColumns">The maximum acceptable number of columns</param>
-        /// <param name="selectionMessage">The prompt for the user</param>
         /// <param name="cancelButtonLabel">If non-null, the cancel button will take this label</param>
-        /// <param name="askGid">If true, the user is asked about grouping by identifier</param>
+        /// <param name="allowUserToPivot">If true, the user is asked about grouping by identifier</param>
         /// <param name="mightBeBatching">If true, we might be selecting data in a batch.  If batching, GetCellEqual should remember where its data came from and should re-select if such memory is present.  If not batching, GetCellEqual should clear memory and not pre-select.</param>
         /// <param name="userCancelled">If true, the user cancelled the selection</param>
         /// <param name="wasPivoted">If true, the user changed from selecting groups by column to by identifier, or vice versa</param>
         /// <returns></returns>
-        private DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
+        private DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
         {
             bool shouldDefaultSelection = null != mostRecentCellSelectionDuringBatch && mightBeBatching;
             if (shouldDefaultSelection)
@@ -932,7 +908,7 @@ namespace StatsDirect.UI
                 grid.Selection = new Range(new[] { new Area(grid, col.RowIndex, col.ColumnIndex, col.RowIndex + col.RowCount - 1, col.ColumnIndex) });
             }
 
-            CellSelection cellSelection = GetSelection(minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, shouldDefaultSelection, out userCancelled, out wasPivoted);
+            CellSelection cellSelection = GetSelection(minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, shouldDefaultSelection, out userCancelled, out wasPivoted);
 
             if (mightBeBatching)
                 mostRecentCellSelectionDuringBatch = cellSelection;
@@ -988,7 +964,7 @@ namespace StatsDirect.UI
                             if (size < 1)
                             {
                                 PointNormal();
-                                SDApplication.SoleInstance.msgbox_x("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                                SDApplication.SoleInstance.MsgboxX("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                                 return null;
                             }
                             variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
@@ -1089,7 +1065,7 @@ namespace StatsDirect.UI
                             {
                                 PointNormal();
                                 switch (
-                                    SDApplication.SoleInstance.msgbox_x(
+                                    SDApplication.SoleInstance.MsgboxX(
                                         "Does the top row of your selection contain titles?",
                                         MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question,
                                         "Worksheet Categorical Data Selection", true))
@@ -1610,17 +1586,18 @@ namespace StatsDirect.UI
         /// <param name="maximumColumns">The largest acceptable number of columns</param>
         /// <param name="selectionMessage">The prompt for the user</param>
         /// <param name="cancelButtonLabel">If non-null, the cancel button will take this label</param>
-        /// <param name="askGid">If true, the user is asked about grouping by identifier</param>
+        /// <param name="allowUserToPivot">If true, the user is asked about grouping by identifier</param>
+        /// <param name="width">If wide, always select columns.  If long, always select group IDs and values.  If RespectPivotSetting, use the user's current setting.</param>
         /// <param name="mightBeBatching"></param>
         /// <param name="userCancelled">Output. If true, the user explicitly cancelled the operation; if false, the data is valid or the user selected no data but did not explicitly cancel.</param>
         /// <returns></returns>
         /// <remarks>This version doesn't care about the user pivoting - it will always just go round again.</remarks>
-        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled)
+        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled)
         {
             while (true)
             {
                 bool wasPivoted;
-                DataFrame frame = GetCellEqual(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
+                DataFrame frame = GetCellEqual(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, width, mightBeBatching, out userCancelled, out wasPivoted);
                 if (wasPivoted)
                     continue;
                 return frame;
@@ -1637,24 +1614,34 @@ namespace StatsDirect.UI
         /// <param name="maximumColumns">The largest acceptable number of columns</param>
         /// <param name="selectionMessage">The prompt for the user</param>
         /// <param name="cancelButtonLabel">If non-null, the cancel button will take this label</param>
-        /// <param name="askGid">If true, the user is asked about grouping by identifier</param>
+        /// <param name="allowUserToPivot">If true, the user is asked about grouping by identifier</param>
+        /// <param name="width">If wide, always select columns.  If long, always select group IDs and values.  If RespectPivotSetting, use the user's current setting.</param>
         /// <param name="mightBeBatching">If true, we might be selecting data in a batch.  If batching, GetCellEqual should remember where its data came from and should re-select if such memory is present.  If not batching, GetCellEqual should clear memory and not pre-select.</param>
         /// <param name="userCancelled">Output. If true, the user explicitly cancelled the operation; if false, the data is valid or the user selected no data but did not explicitly cancel.</param>
         /// <param name="wasPivoted">If true, the user switched from selecting groups by column to by identifier or vice versa.</param>
         /// <returns></returns>
-        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool askGid, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
+        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
         {
             while (true)
             {
-                DataFrame frame;
-                if (askGid && SDApplication.SoleInstance.Preferences.GIDV)
+                bool isLong;
+                switch (width)
                 {
-                    frame = GIDX(mode, minimumColumns, maximumColumns, -1, null, out userCancelled, out wasPivoted);
+                    case DataAcquisitionWidth.RespectPivotSetting:
+                        isLong = allowUserToPivot && SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
+                        break;
+                    case DataAcquisitionWidth.Wide:
+                        isLong = false;
+                        break;
+                    case DataAcquisitionWidth.Long:
+                        isLong = true;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("width");
                 }
-                else
-                {
-                    frame = GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, askGid, mightBeBatching, out userCancelled, out wasPivoted);
-                }
+                DataFrame frame = isLong
+                                      ? Gidx(mode, minimumColumns, maximumColumns, -1, null, out userCancelled, out wasPivoted)
+                                      : GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, mightBeBatching, out userCancelled, out wasPivoted);
                 if (wasPivoted)
                     return null;
 
@@ -1679,7 +1666,7 @@ namespace StatsDirect.UI
                         return frame;
                     }
                     // Unequal - ask the user, if they accept then force all the data to maximum length, missing-padded
-                    if (SDApplication.SoleInstance.msgbox_x("Warning: unequal length columns. If you select OK then the jagged ends of columns will be padded with missing data.", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true) == DialogResult.OK)
+                    if (SDApplication.SoleInstance.MsgboxX("Warning: unequal length columns. If you select OK then the jagged ends of columns will be padded with missing data.", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true) == DialogResult.OK)
                     {
                         foreach (Variable v in frame.Variables)
                             v.EnsureLength(maxRows, true);
@@ -1698,7 +1685,7 @@ namespace StatsDirect.UI
                     {
                         xtra = "\r\n\r\nThe rows must contain numeric data not text.";
                     }
-                    SDApplication.SoleInstance.msgbox_x(Formatting.ERRCOLON + "all columns selected must be " + requiredRows.ToString() + " rows long." + xtra, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all columns selected must be " + requiredRows.ToString() + " rows long." + xtra, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                 }
                 ((IGrid)this).ClearSelection();
             }
@@ -1708,14 +1695,14 @@ namespace StatsDirect.UI
         /// 
         /// </summary>
         /// <param name="mode">NumericSkipMissing: Skip missing.  Anything else: include missing (but don't sum)</param>
-        /// <param name="MinimumColumns">Minimum number of variables</param>
-        /// <param name="MaximumColumns">Maximum number of variables</param>
+        /// <param name="minimumColumns">Minimum number of variables</param>
+        /// <param name="maximumColumns">Maximum number of variables</param>
         /// <param name="neq"></param>
         /// <param name="lab">Extra label for this variable</param>
         /// <param name="userCancelled"></param>
         /// <param name="wasPivoted"></param>
         /// <returns></returns>
-        private DataFrame GIDX(DataAcquisitionMode mode, int MinimumColumns, int MaximumColumns, int neq, string lab, out bool userCancelled, out bool wasPivoted)
+        private DataFrame Gidx(DataAcquisitionMode mode, int minimumColumns, int maximumColumns, int neq, string lab, out bool userCancelled, out bool wasPivoted)
         {
             string labd = "Select DATA";
             string labg = "Select GROUP IDENTIFIERS";
@@ -1735,9 +1722,9 @@ namespace StatsDirect.UI
 
                 ClassifierVariable groupIdVariable = groupIdFrame.Variables[0].AsClassifierVariable;
 
-                if (groupIdVariable.GroupCount < MinimumColumns || groupIdVariable.GroupCount > MaximumColumns)
+                if (groupIdVariable.GroupCount < minimumColumns || groupIdVariable.GroupCount > maximumColumns)
                 {
-                    SelNumWarn(MinimumColumns, MaximumColumns, groupIdVariable.GroupCount, "StatsDirect Data Selection");
+                    SelNumWarn(minimumColumns, maximumColumns, groupIdVariable.GroupCount, "StatsDirect Data Selection");
                     continue;
                 }
 
@@ -1753,7 +1740,7 @@ namespace StatsDirect.UI
 
                 // call for data
                 ClearSelection();
-                DataFrame dataFrame = GetCellEqual(groupIdVariable.Length, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd, null, false, true, out userCancelled, out wasPivoted);
+                DataFrame dataFrame = GetCellEqual(groupIdVariable.Length, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd, null, true, DataAcquisitionWidth.Wide, true, out userCancelled, out wasPivoted);
                 if (userCancelled || wasPivoted)
                     return null;
 
@@ -1964,17 +1951,17 @@ namespace StatsDirect.UI
             PointNormal();
             if (Min == Max)
             {
-                SDApplication.SoleInstance.msgbox_x(Formatting.ERRCOLON + "you must select " + Min.ToString() + " column" + (Min > 1 ? "s" : "") + " but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Min.ToString() + " column" + (Min > 1 ? "s" : "") + " but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
             }
             else
             {
                 if (totcols < Min)
                 {
-                    SDApplication.SoleInstance.msgbox_x(Formatting.ERRCOLON + "you must select " + Min.ToString() + " column" + (Min > 1 ? "s" : "") + " or more but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                    SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Min.ToString() + " column" + (Min > 1 ? "s" : "") + " or more but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
                 }
                 else if (totcols > Max)
                 {
-                    SDApplication.SoleInstance.msgbox_x(Formatting.ERRCOLON + "you must select " + Max.ToString() + " column" + (Max > 1 ? "s" : "") + " or fewer but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                    SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Max.ToString() + " column" + (Max > 1 ? "s" : "") + " or fewer but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
                 }
             }
         }
@@ -2280,9 +2267,9 @@ namespace StatsDirect.UI
             get { return true; }
         }
 
-        private bool gidxyr(out double[,] x, ref double[, ,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref MinMax minMax)
+        private bool Gidxyr(out double[,] x, ref double[, ,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref MinMax minMax)
         {
-            const string msg_ti = "StatsDirect Data Selection";
+            const string msgTi = "StatsDirect Data Selection";
             const string labd = "Select DATA";
 
             const int min = 2;
@@ -2358,7 +2345,7 @@ namespace StatsDirect.UI
 
                 if (ng < min || ng > max)
                 {
-                    SelNumWarn(min, max, ng, msg_ti);
+                    SelNumWarn(min, max, ng, msgTi);
                     continue;
                 }
 
@@ -2373,7 +2360,7 @@ namespace StatsDirect.UI
                 minMax.MinY = double.MaxValue;
                 minMax.MaxY = double.MinValue;
                 ((IGrid)this).ClearSelection();
-                DataFrame replicatesFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 200, labd + " for Y (VERTICAL AXIS) REPLICATES", null, true, false, out cancelled, out wasPivoted);
+                DataFrame replicatesFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 200, labd + " for Y (VERTICAL AXIS) REPLICATES", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
                 if (cancelled || wasPivoted)
                     break;
 
@@ -2408,7 +2395,7 @@ namespace StatsDirect.UI
                 minMax.MinX = double.MaxValue;
                 minMax.MaxX = double.MinValue;
                 ((IGrid)this).ClearSelection();
-                DataFrame xFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd + " for X (HORIZONTAL AXIS)", null, true, false, out cancelled, out wasPivoted);
+                DataFrame xFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd + " for X (HORIZONTAL AXIS)", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
                 if (cancelled || wasPivoted)
                     break;
                 DoubleVariable xVariable = xFrame.Variables[0].AsDoubleVariable;
@@ -2469,9 +2456,9 @@ namespace StatsDirect.UI
             {
                 double GAMMA;
                 double[,] xt;
-                if (SDApplication.SoleInstance.Preferences.GIDV)
+                if (SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
-                    bool ok = gidxyr(out xt, ref y, ref k, ref maxr, ref maxreps, ref cx, ref xlab, ref minMax);
+                    bool ok = Gidxyr(out xt, ref y, ref k, ref maxr, ref maxreps, ref cx, ref xlab, ref minMax);
                     if (ok)
                     {
                         double[] b = new double[k + 1];
@@ -2640,7 +2627,7 @@ namespace StatsDirect.UI
                                         yNew[i0, i1, i2] = y[i0, i1, i2];
                             y = yNew;
                             ((IGrid)this).ClearSelection();
-                            DataFrame outcomeFrame = GetCellEqual(nx, DataAcquisitionMode.NumericSkipMissing, 1, 1, "Select Data for OUTCOME (Y) for PREDICTOR " + g.ToString() + " {" + cx[g].Title.Substring(0, Math.Min(20, cx[g].Title.Length)) + "}", null, false, false, out cancelled, out wasPivoted);
+                            DataFrame outcomeFrame = GetCellEqual(nx, DataAcquisitionMode.NumericSkipMissing, 1, 1, "Select Data for OUTCOME (Y) for PREDICTOR " + g + " {" + cx[g].Title.Substring(0, Math.Min(20, cx[g].Title.Length)) + "}", null, false, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
                             if (cancelled || wasPivoted)
                                 break; // Failed selection, go round again
                             DoubleVariable outcomeVariable = outcomeFrame.Variables[0].AsDoubleVariable;
@@ -2688,17 +2675,14 @@ namespace StatsDirect.UI
         }
 
 
-        private DataFrame2D gidx3(int min, int max, int neq, string labsg, DataAcquisitionMode2D mode, out bool wasPivoted)
+        private DataFrame2D Gidx3(int min, int max, int neq, string subGroupSelectionLabel, DataAcquisitionMode2D mode, out bool wasPivoted)
         {
-            const string msg_ti = "StatsDirect Data Selection";
-            const string labd = "Select DATA column";
-            const string labg = "Select GROUP IDENTIFIER";
-            if (null == labsg)
-                labsg = "Select SUB-GROUP IDENTIFIER";
+            if (null == subGroupSelectionLabel)
+                subGroupSelectionLabel = "Select SUB-GROUP IDENTIFIER";
             ((IGrid)this).ClearSelection();
 
             bool userCancelled;
-            DataFrame groupFrame = GetCellArray(0, DataAcquisitionMode.MODE3, 1, 1, labg, null, true, false, out userCancelled, out wasPivoted);
+            DataFrame groupFrame = GetCellArray(0, DataAcquisitionMode.MODE3, 1, 1, "Select GROUP IDENTIFIER", null, true, false, out userCancelled, out wasPivoted);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
             if (wasPivoted)
@@ -2730,7 +2714,7 @@ namespace StatsDirect.UI
             bool proceed = true;
             if (numberOfGroups < min || numberOfGroups > max)
             {
-                SelNumWarn(min, max, numberOfGroups, msg_ti);
+                SelNumWarn(min, max, numberOfGroups, "StatsDirect Data Selection");
                 proceed = false;
             }
             int mingn = int.MaxValue;
@@ -2741,13 +2725,13 @@ namespace StatsDirect.UI
                 if (gin[i] < mingn) mingn = gin[i];
             }
 
-            proceed &= EqGpWarn(neq, gin, numberOfGroups, msg_ti);
+            proceed &= EqGpWarn(neq, gin, numberOfGroups, "StatsDirect Data Selection");
             if (!proceed)
                 return null;
 
             ((IGrid)this).ClearSelection();
 
-            DataFrame subGroupFrame = GetCellEqual(rows, DataAcquisitionMode.MODE3, 1, 1, labsg, null, true, false, out userCancelled);
+            DataFrame subGroupFrame = GetCellEqual(rows, DataAcquisitionMode.MODE3, 1, 1, subGroupSelectionLabel, null, true, DataAcquisitionWidth.Wide, false, out userCancelled);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
             ClassifierVariable subGroupVariable = subGroupFrame.Variables[0].AsClassifierVariable;
@@ -2778,7 +2762,7 @@ namespace StatsDirect.UI
             }
 
             ((IGrid)this).ClearSelection();
-            DataFrame dataFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd, null, true, false, out userCancelled);
+            DataFrame dataFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 1, "Select DATA column", null, true, DataAcquisitionWidth.Wide, false, out userCancelled);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
             DoubleVariable dataVariable = dataFrame.Variables[0].AsDoubleVariable;
@@ -2867,7 +2851,7 @@ namespace StatsDirect.UI
             {
                 if (gin[i] != neq)
                 {
-                    SDApplication.SoleInstance.msgbox_x(Formatting.ERRCOLON + "all groups must be the same size.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                    SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all groups must be the same size.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
                     return false;
                 }
             }
@@ -2879,13 +2863,12 @@ namespace StatsDirect.UI
             GridParameter2D gridParameter = (GridParameter2D)parameter;
             if (gridParameter.ShouldClearSelectionFirst)
                 ((IGrid)this).ClearSelection();
-
             while (true)
             {
-                if (SDApplication.SoleInstance.Preferences.GIDV)
+                if (SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
                     bool wasPivoted;
-                    DataFrame2D frame = gidx3(gridParameter.MinimumColumns(processor, parameters),
+                    DataFrame2D frame = Gidx3(gridParameter.MinimumColumns(processor, parameters),
                         gridParameter.MaximumColumns(processor, parameters),
                         0,
                         gridParameter.SubPrompt(processor, parameters),
@@ -2904,24 +2887,24 @@ namespace StatsDirect.UI
                             int groups = SDApplication.SoleInstance.GetInteger("Number of groups", gridParameter.Operation.ToString(), 1, out userCancelled);
                             if (userCancelled || groups < 1 || groups > 10)
                             {
-                                if (null != gridParameter.CancelSkipsParameter)
-                                    return null;
-                                throw new TemplateOperationCancelledException();
+                                // Cancelling the number of groups probably implies that the user wants to select by group
+                                SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = true;
+                                continue;
                             }
 
                             // If we get here, we have some groups
-                            bool OK = true;
+                            bool ok = true;
                             for (int g = 0; g < groups; g++)
                             {
                                 ((IGrid)this).ClearSelection();
                                 bool wasPivoted;
-                                DataFrame subFrame = GetCellArray(0, DataAcquisitionMode.NumericReplaceMissing, 1, 90, "Select subgroups for group " + (g + 1).ToString(), parameter.CancelSkipsParameter, true, false, out userCancelled, out wasPivoted);
+                                DataFrame subFrame = GetCellArray(0, DataAcquisitionMode.NumericReplaceMissing, 1, 90, "Select subgroups for group " + (g + 1), parameter.CancelSkipsParameter, true, false, out userCancelled, out wasPivoted);
                                 if (userCancelled)
                                     throw new TemplateOperationCancelledException();
                                 if (wasPivoted)
                                 {
                                     // Go round again
-                                    OK = false;
+                                    ok = false;
                                     break;
                                 }
 
@@ -2932,7 +2915,7 @@ namespace StatsDirect.UI
                                     subFrame.Variables[s] = null; // Paranoia, to ensure any future destructors don't operate on the copied variable.
                                 }
                             }
-                            if (OK)
+                            if (ok)
                             {
                                 if (gridParameter.ShouldSquare)
                                 {
@@ -2954,22 +2937,22 @@ namespace StatsDirect.UI
                             int repeats = SDApplication.SoleInstance.GetInteger("Number of repeats", gridParameter.Operation.ToString(), 2, out userCancelled);
                             if (userCancelled || repeats <= 1)
                             {
-                                if (null != gridParameter.CancelSkipsParameter)
-                                    return null;
-                                throw new TemplateOperationCancelledException();
+                                // Cancelling the number of groups probably implies that the user wants to select by group
+                                SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = true;
+                                continue;
                             }
 
                             // If we get here, we have some repeats
                             int cols = 0;
                             int rows = 0;
-                            bool start_again = false;
+                            bool startAgain = false;
                             frame.Name = "";
                             for (int rpt = 1; rpt <= repeats; rpt++)
                             {
                                 frame.Name += " (";
                                 ((IGrid)this).ClearSelection();
                                 bool wasPivoted;
-                                DataFrame repeatFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 2, 200, "Select subject (row) by treatment (column) data for repeat " + rpt.ToString(), parameter.CancelSkipsParameter, true, false, out userCancelled, out wasPivoted);
+                                DataFrame repeatFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 2, 200, "Select subject (row) by treatment (column) data for repeat " + rpt, parameter.CancelSkipsParameter, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted);
                                 // No frame was returned, either because the user cancelled or because of an error.  Distinguish the two cases!
                                 if (userCancelled)
                                 {
@@ -2980,11 +2963,11 @@ namespace StatsDirect.UI
                                 if (null == repeatFrame)
                                 {
                                     if (wasPivoted)
-                                        start_again = true;
+                                        startAgain = true;
                                     break;
                                 }
 
-                                bool OK = true;
+                                bool ok = true;
                                 if (1 == rpt)
                                 {
                                     // Wait for a selection then dim the array
@@ -3005,12 +2988,12 @@ namespace StatsDirect.UI
                                 {
                                     if (repeatFrame.MinRows != rows || repeatFrame.VariableCount != cols)
                                     {
-                                        SDApplication.SoleInstance.msgbox_x("You must have the same number of subjects and treatments for each repeat, mark missing data with an asterisk if they are at the end of a column", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, gridParameter.Operation.ToString(), true);
+                                        SDApplication.SoleInstance.MsgboxX("You must have the same number of subjects and treatments for each repeat, mark missing data with an asterisk if they are at the end of a column", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, gridParameter.Operation.ToString(), true);
                                         rpt--; // Try again
-                                        OK = false;
+                                        ok = false;
                                     }
                                 }
-                                if (OK)
+                                if (ok)
                                 {
                                     for (int C = 0; C < cols; C++)
                                     {
@@ -3032,7 +3015,7 @@ namespace StatsDirect.UI
                                 }
                                 frame.Name += ")";
                             }
-                            if (!start_again)
+                            if (!startAgain)
                             {
                                 return frame;
                             }
@@ -3234,7 +3217,7 @@ namespace StatsDirect.UI
                 IRange currentRange = workbookView.RangeSelection;
                 if (currentRange.IsEntireColumns)
                 {
-                    SDApplication.SoleInstance.msgbox_x("You cannot insert an entire worksheet's height of blank rows.  Please select fewer rows.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert rows", false);
+                    SDApplication.SoleInstance.MsgboxX("You cannot insert an entire worksheet's height of blank rows.  Please select fewer rows.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert rows", false);
                     return;
                 }
 
@@ -3255,7 +3238,7 @@ namespace StatsDirect.UI
                 IRange currentRange = workbookView.RangeSelection;
                 if (currentRange.IsEntireRows)
                 {
-                    SDApplication.SoleInstance.msgbox_x("You cannot insert an entire worksheet's width of blank columns.  Please select fewer columns.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert columns", false);
+                    SDApplication.SoleInstance.MsgboxX("You cannot insert an entire worksheet's width of blank columns.  Please select fewer columns.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert columns", false);
                     return;
                 }
 

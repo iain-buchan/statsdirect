@@ -47,7 +47,7 @@
     <Setting Name="RecentFileList" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="GIDV" Provider="StatsDirect.UI.PortableSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
+    <Setting Name="SelectGroupsByIdentifier" Provider="StatsDirect.UI.PortableSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ToolsNames" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Collections.Specialized.StringCollection" Scope="User">
@@ -70,7 +70,7 @@
       <Value Profile="(Default)">Data</Value>
     </Setting>
     <Setting Name="DefaultRecentlyUsedFile" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">test.xlsx</Value>
+      <Value Profile="(Default)">data\test.xlsx</Value>
     </Setting>
     <Setting Name="ShouldKeepData" Provider="StatsDirect.UI.PortableSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

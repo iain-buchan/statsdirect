@@ -50,7 +50,9 @@
           <name>pg</name>
           <prompt>Select POOLING INDICATOR [skip for none]</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
-          <validator>Pooling</validator>
+          <validators>
+            <validator>Pooling</validator>
+          </validators>
           <same-length>true</same-length>
           <mode>NumericReplaceMissing</mode>
           <same-length-as>odds</same-length-as>

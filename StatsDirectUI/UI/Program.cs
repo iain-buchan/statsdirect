@@ -10,8 +10,8 @@ namespace StatsDirect.UI
     static class Program
     {
         // private const string sd_ini = "StatsDirect.ini";
-        private const string SD_XLS = "StatsDirect.xls";
-        private const string TEST_XLSX = "test.xlsx";
+        // private const string SD_XLS = "StatsDirect.xls";
+        // private const string TEST_XLSX = "test.xlsx";
         private const string STATSDIRECT_FOLDER_NAME = "StatsDirect";
 
         /// <summary>
@@ -176,6 +176,7 @@ namespace StatsDirect.UI
             {
                 mySDFolder = appPath;
             }
+            /**
             // first ini override of userdir - copy over test.xlsx and statsdirect.xls
             if (!mySDFolder.Equals(appPath))
             {
@@ -203,6 +204,7 @@ namespace StatsDirect.UI
                     }
                 }
             }
+             **/
         }
 
         static void CheckExcelAddIn()

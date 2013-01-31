@@ -1340,10 +1340,11 @@ namespace StatsDirect.Builtins
                     else
                     {
                         ExFortran.ppq2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[j]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
-                        px = 1.0 - Math.Abs(px);
+                        if (ifault == 0)
+                            px = 1.0 - Math.Abs(px);
+                        else
+                            px = Constant.MISSING;
                     }
-                    if (ifault != 0)
-                        px = Constant.MISSING;
                     hold[ctr].P = px;
                 }
             }
@@ -1364,7 +1365,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("uci", host.RoundU(hold[i].Ul));
                 differencesParameters.AddOutput("t", host.RoundU(hold[i].Absdelta));
                 string pp = host.pval(hold[i].P);
-                if (!(halted) & hold[i].P >= dalpha)
+                if (!(halted) && hold[i].P >= dalpha)
                 {
                     pp += " {stop}";
                     halted = true;
@@ -1526,7 +1527,7 @@ namespace StatsDirect.Builtins
             double dferr = carrier.Dferr;
 
             int kn = frame.VariableCount;
-            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1 /* for VB to C# conversion */ ]; //  1-based
+            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1]; //  1-based
 
             double palpha = 1.0 - gamma;
             if (palpha <= 0 | palpha >= 1)

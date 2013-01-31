@@ -9,18 +9,10 @@ namespace StatsDirect.Templates
     public class ParametersStep: Step
     {
         private readonly IList<Parameter> parameters;
-        private bool combineWherePossible = true;
 
         public ParametersStep()
         {
             parameters = new List<Parameter>();
-        }
-
-        [XmlAttribute(AttributeName = "combine-where-possible")]
-        public bool CombineWherePossible
-        {
-            get { return combineWherePossible; }
-            set { combineWherePossible = true; }
         }
 
         [XmlArray(ElementName="parameters"),

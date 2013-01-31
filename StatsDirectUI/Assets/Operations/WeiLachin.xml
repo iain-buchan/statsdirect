@@ -14,7 +14,9 @@
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
-          <validator>TwoBinsAndNoMissingData</validator>
+          <validators>
+            <validator>TwoBinsAndNoMissingData</validator>
+          </validators>
         </frame>
         <integer>
           <name>nr</name>
@@ -50,7 +52,9 @@
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
-              <validator>Boolean</validator>
+              <validators>
+                <validator>Boolean</validator>
+              </validators>
               <validation-fail-message>Censorship value must be 0 or 1 only</validation-fail-message>
               <append-to-grid>censor</append-to-grid>
               <clear-selection-first>true</clear-selection-first>

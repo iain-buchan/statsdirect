@@ -16,11 +16,36 @@
           <ask-for-group-id>true</ask-for-group-id>
           <clear-selection-first>false</clear-selection-first>
         </frame>
-        <boolean>
-          <name>specify_group_scores</name>
-          <prompt>Specify group scores?</prompt>
-          <default-value>false</default-value>
-        </boolean>
+      </parameters>
+    </settings>
+    <script language="CSharp">
+  <![CDATA[
+DataFrame data = Parameters["data"].AsDataFrame;
+int l = data.VariableCount;
+DataFrame scoresFrame = new DataFrame();
+DoubleVariable scores = new DoubleVariable(l, "Scores");
+scoresFrame.Variables.Add(scores);
+for (int i = 0; i < l; i++)
+    scores.Data[i] = i + 1;
+ParameterBag outputParameters = new ParameterBag();
+outputParameters.AddInput("scores", scoresFrame);
+return outputParameters;
+    ]]></script>
+    <settings>
+      <parameters>
+        <frame>
+          <name>scores</name>
+          <prompt>Enter scores</prompt>
+          <must-request>true</must-request>
+          <validators>
+            <validator>NoMissingData</validator>
+            <validator>Positive</validator>
+          </validators>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <can-select>false</can-select>
+        </frame>
       </parameters>
     </settings>
 		<builtin function-name="rptCuzick" />

@@ -977,7 +977,7 @@ namespace StatsDirect.Builtins
             }
             if (r <= 1.0)
                 return numer / denom - value;
-            return (numer / (Math.Pow(r, Convert.ToDouble(degD - degN)))) / denom - value;
+            return (numer / (Math.Pow(r, degD - degN))) / denom - value;
         }
 
         /// <summary>

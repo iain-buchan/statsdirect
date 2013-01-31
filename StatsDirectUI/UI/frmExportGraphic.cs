@@ -74,7 +74,7 @@ namespace StatsDirect.UI
                     || width < 1
                     || height < 1)
                 {
-                    SDApplication.SoleInstance.msgbox_x("Please enter a width and height in pixels for the exported image.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Graphical image export", false);
+                    SDApplication.SoleInstance.MsgboxX("Please enter a width and height in pixels for the exported image.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Graphical image export", false);
                     return;
                 }
             }
@@ -177,7 +177,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                SDApplication.SoleInstance.msgbox_x("Unknown image format '" + extension + "'.  Please save as a recognised format.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", false);
+                SDApplication.SoleInstance.MsgboxX("Unknown image format '" + extension + "'.  Please save as a recognised format.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", false);
                 return false;
             }
             return true;

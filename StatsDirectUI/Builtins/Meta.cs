@@ -1914,9 +1914,8 @@ namespace StatsDirect.Builtins
                 }
                 //  rd across strata
                 if (n <= 0)
-                {
                     throw new Templates.InvalidDataException();
-                }
+
                 // standard weights - do this before continuity correction
                 double nmn = (a + c) * (b + d) / n;
                 rkw[i] = nmn;

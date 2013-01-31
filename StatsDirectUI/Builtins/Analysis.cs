@@ -12,20 +12,16 @@ namespace StatsDirect.Builtins
     {
         public static StepResult RptRateDirectStd(ITemplateHost host, ParameterBag parameters)
         {
-            double xu;
-            double xl;
-            int fault;
-
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
             DoubleVariable datV2 = datFrame.Variables[2].AsDoubleVariable;
             int rows = datFrame.MaxRows;
-            double[] idxy = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] idxn = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] idxr = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] refn = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] refw = new double[rows + 1 /* VB to C# conversion */ ];
+            double[] idxy = new double[rows + 1];
+            double[] idxn = new double[rows + 1];
+            double[] idxr = new double[rows + 1];
+            double[] refn = new double[rows + 1];
+            double[] refw = new double[rows + 1];
 
             double cco = parameters["cco"].AsDouble;
             if (cco > 1.0 || cco < 0.0)
@@ -36,35 +32,31 @@ namespace StatsDirect.Builtins
 
             double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
             if (nunit <= 0.0)
-            {
                 nunit = 1.0;
-            }
 
             double refntot = 0.0;
             double revents = 0.0;
             double ntot = 0.0;
             for (int j = 1; j <= rows; j++)
             {
-                double x = datV0.Data[j - 1];
-                idxy[j] = x;
-                revents = revents + x;
-                x = datV1.Data[j - 1];
-                idxn[j] = x;
-                ntot = ntot + x;
-                if (x <= 0.0)
-                {
+                double xy = datV0.Data[j - 1];
+                idxy[j] = xy;
+                revents += xy;
+                double xn = datV1.Data[j - 1];
+                if (xn <= 0.0)
                     throw new InvalidDataException();
-                }
-                x = datV2.Data[j - 1];
-                refn[j] = x;
-                refntot += x;
-                if (idxy[j] > idxn[j])
+                idxn[j] = xn;
+                ntot += xn;
+                double rf = datV2.Data[j - 1];
+                refn[j] = rf;
+                refntot += rf;
+                if (xy > xn)
                     throw new InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
             }
 
             if (refntot <= 0.0)
             {
-                throw new InvalidDataException();
+                throw new InvalidDataException("Total reference group size must be greater than zero");
             }
 
             for (int j = 1; j <= rows; j++)
@@ -114,6 +106,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
             List<ParameterBag> cisList = new List<ParameterBag>();
             outputParameters.AddOutput("*cis", cisList);
+            double xu;
+            double xl;
             for (int j = 1; j <= rows; j++)
             {
                 ParameterBag cisParameters = new ParameterBag();
@@ -131,11 +125,13 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("crude", host.RoundU(revents * nunit / ntot));
             outputParameters.AddOutput("stdr", host.RoundU(stdr * nunit));
+            int fault;
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
 
             // Binomial approx CI - see Armitage
             double ser = binoVar > 0.0 ? Math.Sqrt(binoVar) : Constant.MISSING;
             outputParameters.AddOutput("ser_any", host.RoundU(ser * nunit));
+
             if (fault != 0)
             {
                 xl = Constant.MISSING;
@@ -982,47 +978,43 @@ namespace StatsDirect.Builtins
         public static StepResult RptKappaScreen(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
-            if (cco <= 0.0 | cco >= 1.0)
-            {
+            if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
-            }
 
             string wtypeString = parameters["method"].AsString;
             int wtype = "1".Equals(wtypeString) ? 1 : 2;
             int fault;
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
             if (fault != 0)
-            {
                 return null;
-            }
             DataFrame datFrame = parameters["responsesCrosstab"].AsDataFrame;
             int rows = datFrame.MaxRows;
             int cols = datFrame.VariableCount;
             int g = Math.Max(rows, cols);
-            double[,] o = new double[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */];
-            double[,] w = new double[g - 1 + 1 /* for VB to C# conversion */, g - 1 + 1 /* for VB to C# conversion */];
+            double[,] o = new double[g, g];
+            double[,] w = new double[g, g];
 
-            for (int i = 0; i <= g - 1; i++)
+            for (int i = 0; i < g; i++)
             {
-                for (int j = 0; j <= g - 1; j++)
+                for (int j = 0; j < g; j++)
                 {
                     o[i, j] = 0.0;
                     w[i, j] = 0.0;
                 }
             }
 
-            for (int i = 0; i <= rows - 1; i++)
+            for (int i = 0; i < rows; i++)
             {
-                for (int j = 0; j <= cols - 1; j++)
+                for (int j = 0; j < cols; j++)
                 {
                     o[i, j] = datFrame.Variables[j].AsDoubleVariable.Data[i];
                 }
             }
 
 
-            for (int i = 0; i <= g - 1; i++)
+            for (int i = 0; i < g; i++)
             {
-                for (int j = 0; j <= g - 1; j++)
+                for (int j = 0; j < g; j++)
                 {
                     switch (wtype)
                     {
@@ -1166,12 +1158,8 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptMiscLikely(ITemplateHost host, ParameterBag parameters)
         {
-            double c2Tot = 0; double c1Tot = 0;
-            int i;
-
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
@@ -1180,29 +1168,25 @@ namespace StatsDirect.Builtins
             double[] c1 = new double[rows + 1];
             double[] c2 = new double[rows + 1];
 
-            for (i = 1; i <= rows; i++)
+            double c1Tot = 0;
+            double c2Tot = 0;
+            for (int i = 1; i <= rows; i++)
             {
-                double rtd = datV0.Data[i - 1];
-                c1[i] = rtd;
+                if (c1[i] < 0 || c2[i] < 0 || c1[i] == Constant.MISSING || c2[i] == Constant.MISSING)
+                    throw new InvalidDataException("All values must be >= 0");
 
-                rtd = datV1.Data[i - 1];
-                c2[i] = rtd;
-
-                // TODO: What if c1[i] or c2[i] are missing?
-                c1Tot = c1Tot + c1[i];
-                c2Tot = c2Tot + c2[i];
+                c1[i] = datV0.Data[i - 1];
+                c2[i] = datV1.Data[i - 1];
+                c1Tot += c1[i];
+                c2Tot += c2[i];
             }
 
             if (c1Tot <= 0 || c2Tot <= 0)
-            {
-                throw new InvalidDataException();
-            }
+                throw new InvalidDataException("Total of -feature and total of +feature must both be > 0");
 
             double zl = parameters["z1"].AsDouble;
             if (zl <= 0.0 || zl >= 1.0)
-            {
                 zl = 0.95;
-            }
             double zc = 1.0 - ((1.0 - zl) / 2.0);
             int fault;
             zc = PDF.gauinv(zc, out fault);
@@ -1213,7 +1197,7 @@ namespace StatsDirect.Builtins
 
             List<ParameterBag> rowList = new List<ParameterBag>();
             outputParameters.AddOutput("*row", rowList);
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 ParameterBag rowParameters = new ParameterBag();
                 rowList.Add(rowParameters);
@@ -1222,14 +1206,10 @@ namespace StatsDirect.Builtins
                 rowParameters.AddOutput("-feature", c2[i].ToString());
 
                 double li;
-                if (c1Tot <= 0.0 | c2[i] <= 0.0 | c2Tot <= 0.0)
-                {
+                if (c2[i] <= 0.0)
                     li = Constant.MISSING;
-                }
                 else
-                {
                     li = (c1[i] / c1Tot) / (c2[i] / c2Tot);
-                }
 
                 rowParameters.AddOutput("likely", host.RoundU(li));
 
@@ -1351,13 +1331,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("rrne_from", host.RoundU(rrnel));
             outputParameters.AddOutput("rrne_to", host.RoundU(rrneu));
 
-            ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* VB to C# conversion */];
+            ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[2];
             tabl[1].Freq = 1;
             tabl[1].A = t1;
             tabl[1].M1 = t1 + t2;
             tabl[1].N1 = t1 + t3;
             tabl[1].N0 = t2 + t4;
-            tabl[1].Informative = (t1 * t4 != 0) | (t2 * t3 != 0);
+            tabl[1].Informative = (t1 * t4 != 0) || (t2 * t3 != 0);
             bool useLogScale = false;
             new ExactBB().Exact22K(host, 1, 1, tabl, zl, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
             if (ierr != 0)

@@ -18,7 +18,9 @@
         <frame>
           <name>case-control</name>
           <prompt>select data for CASE {1} or CONTROL {0} INDICATOR</prompt>
-          <validator>Boolean</validator>
+          <validators>
+            <validator>Boolean</validator>
+          </validators>
           <same-length>true</same-length>
           <same-length-as>stratum</same-length-as>
           <mode>NumericReplaceMissing</mode>
@@ -47,7 +49,7 @@
         <option>
           <name>accuracy</name>
           <prompt>Precision of estimates</prompt>
-          <default-value>0.0000001</default-value>
+          <default-value>="0.0000001"</default-value>
           <format-type>Dropdown</format-type>
           <options>
             <option value="0.000000000001">0.000000000001</option>

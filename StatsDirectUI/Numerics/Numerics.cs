@@ -1493,7 +1493,8 @@ namespace StatsDirect.Numerics
                 double s5 = (84.0 + 264.0 * a + c * (175.0 + 606.0 * a)) / 2520.0;
                 double s6 = (120.0 + c * (346.0 + 127.0 * c)) / 5040.0;
                 ch = ch + t * (1.0 + 0.5 * t * s1 - b * c * (s1 - b * (s2 - b * (s3 - b * (s4 - b * (s5 - b * s6))))));
-                if (Math.Abs(q / ch - 1.0) <= e) break;
+                if (Math.Abs(q / ch - 1.0) <= e)
+                    break;
             }
             ret = ch;
             return ret;

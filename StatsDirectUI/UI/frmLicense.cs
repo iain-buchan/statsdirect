@@ -66,13 +66,13 @@ namespace StatsDirect.UI
             if (count >= 4)
             {
                 // four wrong attempts with key
-                SDApplication.SoleInstance.msgbox_x("You have entered an invalid licence key four times\n\r\n\rIt is illegal to use this software without a valid licence.\n\r\n\rFor trial use, do not enter a licence key.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect licence unlock attempts", false);
+                SDApplication.SoleInstance.MsgboxX("You have entered an invalid licence key four times\n\r\n\rIt is illegal to use this software without a valid licence.\n\r\n\rFor trial use, do not enter a licence key.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect licence unlock attempts", false);
                 return true;
             }
             if (txtEmail.Text.Trim().Length < 5)
             {
                 // no name
-                SDApplication.SoleInstance.msgbox_x("You must enter a valid email address of at least five characters.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect User Email Address", false);
+                SDApplication.SoleInstance.MsgboxX("You must enter a valid email address of at least five characters.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect User Email Address", false);
                 return false;
             }
             // email/username present
@@ -84,7 +84,7 @@ namespace StatsDirect.UI
                     if (expiry < DateTime.Today)
                     {
 
-                        SDApplication.SoleInstance.msgbox_x("The licence key used has expired.\n\r\n\rSee www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
+                        SDApplication.SoleInstance.MsgboxX("The licence key used has expired.\n\r\n\rSee www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
                     }
                     else
                     {
@@ -119,16 +119,16 @@ namespace StatsDirect.UI
                 case 3:
                     if (DateTime.Parse(ui.Expires) < DateTime.Today)
                     {
-                        SDApplication.SoleInstance.msgbox_x("Your StatsDirect licence has expired.\n\r\n\rSee www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
+                        SDApplication.SoleInstance.MsgboxX("Your StatsDirect licence has expired.\n\r\n\rSee www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
                     }
                     else
                     {
-                        SDApplication.SoleInstance.msgbox_x("Your StatsDirect licence expires on " + ui.Expires + ".\n\r\n\rSee http://www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
+                        SDApplication.SoleInstance.MsgboxX("Your StatsDirect licence expires on " + ui.Expires + ".\n\r\n\rSee http://www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
                     }
                     break;
                 default:
                     // wrong key and/or name, or no key and expired trial
-                    SDApplication.SoleInstance.msgbox_x("You must enter the email address and key exactly as specified in your licence.\n\r\n\rPlease try to copy from your confirmation of purchase email and paste into the relevant boxes here.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect licence key", false);
+                    SDApplication.SoleInstance.MsgboxX("You must enter the email address and key exactly as specified in your licence.\n\r\n\rPlease try to copy from your confirmation of purchase email and paste into the relevant boxes here.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect licence key", false);
                     break;
             }
             // If we get here, there was an error of some kind

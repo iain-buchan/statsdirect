@@ -2008,37 +2008,48 @@ namespace StatsDirect.Builtins
         public static StepResult ShtGroupExtract(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
-            string dtitle = dataVariable.Title;
+            bool isFindAndReplace = data.VariableCount > 1;
 
-            DataFrame identifiersFrame = parameters["identifiers"].AsDataFrame;
-
-            int cols = identifiersFrame.VariableCount;
-            string l = "";
-            /* #537: Always use X1, X2 etc.
-            if (cols == 1)
+            if (isFindAndReplace)
             {
-                l += "X: " + identifiersFrame.Variables[0].Title + "\r\n";
+                ExtractionOptions options = new ExtractionOptions { DataFrame = data };
+                ParameterBag outputParameters = host.Amend(options, parameters);
+                return new StepResult(StepSuccess.Success, outputParameters);
             }
             else
-             */
             {
-                int j;
-                for (j = 1; j <= cols; j++)
-                {
-                    l += "X" + j.ToString() + ": " + identifiersFrame.Variables[j - 1].Title + "\r\n";
-                }
-            }
+                DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
+                string dtitle = dataVariable.Title;
 
-            ExtractionOptions options = new ExtractionOptions
-            {
-                Title = dtitle,
-                IdentifierNames = l,
-                Data = dataVariable,
-                IdentifiersFrame = identifiersFrame
-            };
-            ParameterBag outputParameters = host.Amend(options, parameters);
-            return new StepResult(StepSuccess.Success, outputParameters);
+                DataFrame identifiersFrame = parameters["identifiers"].AsDataFrame;
+
+                int cols = identifiersFrame.VariableCount;
+                string l = "";
+                /* #537: Always use X1, X2 etc.
+                if (cols == 1)
+                {
+                    l += "X: " + identifiersFrame.Variables[0].Title + "\r\n";
+                }
+                else
+                 */
+                {
+                    int j;
+                    for (j = 1; j <= cols; j++)
+                    {
+                        l += "X" + j + ": " + identifiersFrame.Variables[j - 1].Title + "\r\n";
+                    }
+                }
+
+                ExtractionOptions options = new ExtractionOptions
+                {
+                    Title = dtitle,
+                    IdentifierNames = l,
+                    DataFrame = data,
+                    IdentifiersFrame = identifiersFrame
+                };
+                ParameterBag outputParameters = host.Amend(options, parameters);
+                return new StepResult(StepSuccess.Success, outputParameters);
+            }
         }
 
         public static StepResult ConvertUnits(ITemplateHost host, ParameterBag parameters)

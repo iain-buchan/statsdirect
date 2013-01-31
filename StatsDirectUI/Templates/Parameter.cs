@@ -100,10 +100,10 @@ namespace StatsDirect.Templates
         public string Name { get; set; }
 
         /// <summary>
-        /// The mode in which the data should be loaded into the frame
+        /// Ways by which the parameter should be validated
         /// </summary>
-        [XmlElement(ElementName = "validator")]
-        public ValidationMode ValidationMode { get; set; }
+        [XmlArray(ElementName = "validators"), XmlArrayItem(ElementName = "validator", Type = typeof (Validator))]
+        public Validator[] Validators { get; set; }
 
         /// <summary>
         /// The error message that should be shown if there is a validator and it fails.

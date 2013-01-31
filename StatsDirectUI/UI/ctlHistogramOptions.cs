@@ -182,7 +182,7 @@ namespace StatsDirect.UI
             }
             catch (FormatException)
             {
-                SDApplication.SoleInstance.msgbox_x("Please enter the number of bins", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Histogram", true);
+                SDApplication.SoleInstance.MsgboxX("Please enter the number of bins", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Histogram", true);
             }
             catch (Exception)
             {

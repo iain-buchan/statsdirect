@@ -24,7 +24,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.msgbox_x("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -36,7 +36,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.msgbox_x("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -48,7 +48,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.msgbox_x("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -60,7 +60,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.msgbox_x("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

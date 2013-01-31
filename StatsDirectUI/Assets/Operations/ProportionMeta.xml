@@ -12,7 +12,9 @@
         <frame>
           <name>sn</name>
           <prompt>Select TOTAL number of subjects (n) studied</prompt>
-          <validator>Positive</validator>
+          <validators>
+            <validator>Positive</validator>
+          </validators>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

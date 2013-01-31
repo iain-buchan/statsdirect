@@ -9,6 +9,10 @@
         <special>
           <name>data</name>
           <must-request>true</must-request>
+          <validators>
+            <validator>NoMissingData</validator>
+            <validator>NonNegative</validator>
+          </validators>
           <type>likelihood</type>
         </special>
         <confidence-interval>

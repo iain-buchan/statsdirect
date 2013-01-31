@@ -10,6 +10,11 @@
           <name>data</name>
           <must-request>true</must-request>
           <type>person-time-size</type>
+          <validators>
+            <validator>NoMissingData</validator>
+            <validator>NonNegative</validator>
+            <validator>PersonTimeSize</validator>
+          </validators>
         </special>
         <option>
           <name>nunit</name>

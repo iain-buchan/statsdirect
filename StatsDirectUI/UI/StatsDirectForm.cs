@@ -72,7 +72,7 @@ namespace StatsDirect.UI
             if (!dirty)
                 return true;
 
-            DialogResult result = SDApplication.SoleInstance.msgbox_x(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
+            DialogResult result = SDApplication.SoleInstance.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
             if (DialogResult.Cancel == result)
             {
                 SDApplication.SoleInstance.MainWindow.NoteASubformCloseIsCancelled();

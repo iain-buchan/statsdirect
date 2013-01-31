@@ -21,7 +21,7 @@ namespace StatsDirect.Builtins
             SDPreferences preferences = host.Preferences;
             preferences.CanDefaultConfidenceInterval = parameters["use-default-ci"].AsBoolean;
             preferences.DefaultConfidenceInterval = Parsing.Cdbl_Txt(parameters["default-ci"].AsString) / 100.0;
-            preferences.GIDV = parameters["gidv"].AsBoolean;
+            preferences.SelectGroupsByIdentifier = parameters["selectGroupsByIdentifier"].AsBoolean;
             preferences.DisplayDecimalPlaces = Parsing.Cint_Txt(parameters["decp"].AsString);
             preferences.PDecimalPlaces = Parsing.Cint_Txt(parameters["pdecp"].AsString);
             preferences.ShouldKeepData = parameters["should-keep-data"].AsBoolean;

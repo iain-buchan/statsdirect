@@ -18,7 +18,9 @@
         <frame>
           <name>population</name>
           <prompt>Select data for mid-year POPULATION</prompt>
-          <validator>Positive</validator>
+          <validators>
+            <validator>Positive</validator>
+          </validators>
           <length>=Parameters["intervals"].AsDataFrame.Variables[0].AsDoubleVariable.Length + 1</length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
@@ -37,7 +39,9 @@
         <frame>
           <name>fractions</name>
           <prompt>Select data for FRACTION of last age interval of life (skip if unknown)</prompt>
-          <validator>ZeroToOneExclusive</validator>
+          <validators>
+            <validator>ZeroToOneExclusive</validator>
+          </validators>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <same-length-as>intervals</same-length-as>
           <mode>NumericReplaceMissing</mode>

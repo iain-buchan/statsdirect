@@ -363,7 +363,12 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
+        /// <summary>
+        /// Plot Standard Error and 95% confidence interval for simple linear regression
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         public static StepResult PlotSeCi(ITemplateHost host, ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -383,7 +388,7 @@ namespace StatsDirect.Builtins
 
             using (ChartRenderer ch = new ChartRenderer(cd))
             {
-
+                // Ensure lines will fit on chart scale
                 double maxpcon = double.MinValue;
                 double minpcon = double.MaxValue;
                 if (context.PERT != 0)
@@ -396,25 +401,17 @@ namespace StatsDirect.Builtins
                         double pconu = calcy + (sey * context.PERT);
                         double pconl = calcy - (sey * context.PERT);
                         if (pconu > maxpcon)
-                        {
                             maxpcon = pconu;
-                        }
                         if (pconl < minpcon)
-                        {
                             minpcon = pconl;
-                        }
                     }
                 }
                 if (maxpcon > ch.DataMaxY)
-                {
                     ch.DataMaxY = maxpcon;
-                }
                 if (minpcon < ch.DataMinY)
-                {
                     ch.DataMinY = minpcon;
-                }
 
-                string rtf = ch.PlotLinearRegressionAndMaybePertAndReturnRtf(host, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YInt, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SUMX, context.SSX, true);
+                string rtf = ch.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(host, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YInt, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SUMX, context.SSX, false);
                 outputParameters.AddOutput("chart", rtf);
             }
             return new StepResult(StepSuccess.Success, outputParameters);
@@ -470,7 +467,7 @@ namespace StatsDirect.Builtins
                     ch.DataMinY = minpcon;
                 }
 
-                string rtf = ch.PlotLinearRegressionAndMaybePertAndReturnRtf(host, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YInt, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SUMX, context.SSX, false);
+                string rtf = ch.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(host, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YInt, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SUMX, context.SSX, true);
 
                 outputParameters.AddOutput("chart", rtf);
             }
@@ -6667,20 +6664,20 @@ namespace StatsDirect.Builtins
                     double pf3 = gi / sw + varb * vx * vx;
                     if (het == 2)
                     {
-                        pf3 = (gi * C) / (sw * Convert.ToDouble(i)) + varb * vx * vx;
+                        pf3 = (gi * C) / (sw * i) + varb * vx * vx;
                     }
                     if (C2 > 0.0)
                     {
                         if (het == 2)
                         {
-                            vardcb = vardcb * C / Convert.ToDouble(i);
-                            covar = covar * C / Convert.ToDouble(i);
+                            vardcb = vardcb * C / i;
+                            covar = covar * C / i;
                         }
                         pf1 = pf1 - g * TM * covar / (varb * gi);
                         double pf3a = 1.0 / sw + TM * TM * vardcb;
                         if (het == 2)
                         {
-                            pf3a = C / (sw * Convert.ToDouble(i)) + TM * TM * vardcb;
+                            pf3a = C / (sw * i) + TM * TM * vardcb;
                         }
                         pf3 = pf3a - 2 * vx * TM * covar + vx * vx * varb - g * (pf3a - TM * TM * covar * covar / varb);
                     }
@@ -6763,7 +6760,7 @@ namespace StatsDirect.Builtins
             double sw = context.ARG[5];
             double S1 = context.ARG[6];
             double ici = context.ARG[16];
-            bool clog = context.DoC;
+            bool clog = false; // TODO: context.DoC;
             if (context.ARG[13] < 0.05)
             {
                 t = PDF.tfromp(ici + ((1.0 - ici) / 2.0), context.ARG[14]);
@@ -6781,7 +6778,7 @@ namespace StatsDirect.Builtins
             ChartDefinition cd = new ChartDefinition();
             cd.AddYSeries(y, YAxisTitle);
             cd.AddXSeries(x, XAxisTitle);
-            cd.ScaleParameters.X.ScaleType = clog ? ScaleType.LogNatural : ScaleType.Linear;
+            cd.ScaleParameters.X.ScaleType = clog ? ScaleType.Log10 : ScaleType.Linear;
 
             ParameterBag outputParameters = new ParameterBag();
 

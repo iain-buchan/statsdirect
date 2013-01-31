@@ -1003,28 +1003,21 @@ namespace StatsDirect.Builtins
                 }
                 gn[j] = v.Length - chuck;
             }
-            double[] score = new double[frame.VariableCount];
-            bool specifyGroupScores = parameters["specify_group_scores"].AsBoolean;
 
-            if (specifyGroupScores)
+            // Fill in scores
+            double[] score = new double[frame.VariableCount];
+            for (int j = 0; j < frame.VariableCount; j++)
+                score[j] = j + 1;
+
+            // If non-default scores exist, fill them in
+            if (parameters.ContainsKey("scores") && null != parameters["scores"].Data)
             {
-                for (int j = 0; j < frame.VariableCount; j++)
-                {
-                    bool wasCancelled;
-                    score[j] = host.GetDouble("Enter SCORE for GROUP:" + j + 1.ToString() + " (" + frame.Variables[j].Title + ")", "Cuzick's trend test", j + 1, out wasCancelled);
-                    if (wasCancelled)
-                    {
-                        throw new TemplateOperationCancelledException();
-                    }
-                }
+                DataFrame scoreFrame = parameters["scores"].AsDataFrame;
+                DoubleVariable scoreVariable = scoreFrame.Variables[0].AsDoubleVariable;
+                for (int j = 0; j < Math.Min(frame.VariableCount, scoreVariable.Length); j++)
+                    score[j] = scoreVariable.Data[j];
             }
-            else
-            {
-                for (int j = 0; j <= frame.VariableCount - 1; j++)
-                {
-                    score[j] = Convert.ToDouble(j + 1);
-                }
-            }
+
             double[] r = new double[n + 1];
             ExFortran.Rank(t, r, 1, n, 1, out tie);
             for (int j = 0; j <= frame.VariableCount - 1; j++)
@@ -1048,7 +1041,7 @@ namespace StatsDirect.Builtins
             string qtq = "";
             for (int j = 0; j < frame.VariableCount; j++)
             {
-                qtq += frame.Variables[j].Title;
+                qtq += frame.Variables[j].Title + " (" + score[j] + ")";
                 if (j != frame.VariableCount - 1)
                     qtq += ", ";
             }

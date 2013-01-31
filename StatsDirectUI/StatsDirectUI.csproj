@@ -72,64 +72,64 @@
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Data.v12.2, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Data.v12.2, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Data.v12.2.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Office.v12.2.Core, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Office.v12.2.Core, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Office.v12.2.Core.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Printing.v12.2.Core, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Printing.v12.2.Core, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Printing.v12.2.Core.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.RichEdit.v12.2.Core, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.RichEdit.v12.2.Core, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.RichEdit.v12.2.Core.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Utils.v12.2, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Utils.v12.2, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Utils.v12.2.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraBars.v12.2, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraBars.v12.2, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraBars.v12.2.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraEditors.v12.2, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraEditors.v12.2, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraEditors.v12.2.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraPrinting.v12.2, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraPrinting.v12.2, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraPrinting.v12.2.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v12.2, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v12.2, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraRichEdit.v12.2.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v12.2.Extensions, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v12.2.Extensions, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraRichEdit.v12.2.Extensions.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v12.2.Printing, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v12.2.Printing, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraRichEdit.v12.2.Printing.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraTreeList.v12.2, Version=12.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraTreeList.v12.2, Version=12.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraTreeList.v12.2.dll</HintPath>
+      
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
@@ -337,6 +337,7 @@
     <Compile Include="Templates\TemplateFactory.cs" />
     <Compile Include="Templates\TestStep.cs" />
     <Compile Include="Templates\ValidationMode.cs" />
+    <Compile Include="Templates\Validator.cs" />
     <Compile Include="TextProcessing\ActiveRtfLexer.cs" />
     <Compile Include="TextProcessing\ActiveRtfParser.cs" />
     <Compile Include="TextProcessing\ActiveRtfParserPartial.cs" />
@@ -345,6 +346,12 @@
     <Compile Include="UI\CloseCurrentOperationException.cs" />
     <Compile Include="UI\ComboFormAdapter.cs" />
     <Compile Include="UI\Conversion.cs" />
+    <Compile Include="UI\ctlFindAndReplaceData.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlFindAndReplaceData.Designer.cs">
+      <DependentUpon>ctlFindAndReplaceData.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\ctlConvertUnits.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -718,6 +725,7 @@
     <Compile Include="Rserve.NET\Rserve\test\StartRse.cs" />
     <Compile Include="Rserve.NET\Rserve\test\test.cs" />
     <Compile Include="Rserve.NET\SupportClass.cs" />
+    <Compile Include="UI\DataAcquisitionWidth.cs" />
     <Compile Include="UI\SDGroupBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -767,9 +775,12 @@
     <Compile Include="Utilities\Set.cs" />
     <Compile Include="Utilities\TemplateOperationCancelledException.cs" />
     <Compile Include="Utilities\Utilities.cs" />
-    <Compile Include="Utilities\ValidationException.cs" />
     <EmbeddedResource Include="Calculator\frmStatsDirectCalculator.resx">
       <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlFindAndReplaceData.resx">
+      <DependentUpon>ctlFindAndReplaceData.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlConvertUnits.resx">
       <DependentUpon>ctlConvertUnits.cs</DependentUpon>
@@ -1634,7 +1645,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

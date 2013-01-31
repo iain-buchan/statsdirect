@@ -412,16 +412,9 @@ namespace StatsDirect.UI
             {
                 do
                 {
-                    try
-                    {
-                        bool succeeded = DoOperationOnceOrUntilCancelled(operation, null);
-                        if (!succeeded)
-                            break;
-                    }
-                    catch (ValidationException ex)
-                    {
-                        SDApplication.SoleInstance.FriendlyError("Validation error", ex, true);
-                    }
+                    bool succeeded = DoOperationOnceOrUntilCancelled(operation, null);
+                    if (!succeeded)
+                        break;
                     if (chkBatchMode.Checked)
                     {
                         // Ensure the next loop doesn't start with the data that's currently highlighted.
@@ -469,16 +462,14 @@ namespace StatsDirect.UI
 
         public void DoOperation(string operationName)
         {
+#if RELEASE_EXCEPTIONS
             try
             {
+#endif
                 Operation operation = TemplateFactory.Operations[operationName];
                 SDApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
-            }
-            catch (ValidationException ex)
-            {
-                SDApplication.SoleInstance.FriendlyError("Validation error", ex, true);
-            }
 #if RELEASE_EXCEPTIONS
+            }
             catch (Exception ex)
             {
                 SDApplication.SoleInstance.EraseAnyOutstandingParameters();
@@ -935,12 +926,12 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="selectionMessage">The message to be shown to the user as what they're selecting</param>
         /// <param name="cancelButtonLabel">If null, the cancel button shows its standard message.  If non-null, the cancel button shows this.</param>
-        /// <param name="wasPivoted">true if the user changed GIDV, false if not</param>
+        /// <param name="wasPivoted">true if the user changed SelectGroupsByIdentifier, false if not</param>
         /// <returns>true if the user clicked OK, false if the user clicked Cancel</returns>
         public bool SelectCells(string selectionMessage, string cancelButtonLabel, out bool wasPivoted)
         {
             bool status;
-            bool oldGidv = SDApplication.SoleInstance.Preferences.GIDV;
+            bool oldSelectGroupsByIdentifier = SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
             bool wasWaiting = Application.UseWaitCursor;
             if (wasWaiting)
                 Application.UseWaitCursor = false;
@@ -972,7 +963,7 @@ namespace StatsDirect.UI
             else
             {
                 status = false;
-                wasPivoted = (oldGidv != SDApplication.SoleInstance.Preferences.GIDV);
+                wasPivoted = (oldSelectGroupsByIdentifier != SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier);
             }
             if (!wasPivoted)
                 ShowPanel(PanelType.Default, false);
@@ -1012,8 +1003,8 @@ namespace StatsDirect.UI
                 NoteEndOfSelection(false);
                 if (wasInputting)
                 {
-                    // IEnumerable<Parameter> parametersBeingCollected = GetAllOutstandingParameters();
-                    MaybeCloseOperationOnCancel(/* parametersBeingCollected */);
+                    IEnumerable<Parameter> parametersBeingCollected = GetAllOutstandingParameters();
+                    MaybeCloseOperationOnCancel(parametersBeingCollected);
                 }
             }
             catch (Exception ex)
@@ -1028,9 +1019,9 @@ namespace StatsDirect.UI
         /// Under other circumstances, this closes the operation completely.
         /// Depending on which, we either throw a CloseCurrentOperationException (which closes the operation completely) or merely return, which allows the menu of follow-on operations to be shown if required.
         /// </summary>
-        private static void MaybeCloseOperationOnCancel(/* IEnumerable<Parameter> parametersBeingCollected */)
+        private static void MaybeCloseOperationOnCancel(IEnumerable<Parameter> parametersBeingCollected)
         {
-            if (ShouldCloseOperationOnCancel(/* parametersBeingCollected */))
+            if (ShouldCloseOperationOnCancel(parametersBeingCollected))
                 throw new CloseCurrentOperationException();
         }
 
@@ -1038,11 +1029,9 @@ namespace StatsDirect.UI
         /// Returns true iff the current operation is one that should close the entire set of operations if it is cancelled while it's processing.
         /// </summary>
         /// <returns></returns>
-        private static bool ShouldCloseOperationOnCancel(/* IEnumerable<Parameter> parametersBeingCollected */)
+        private static bool ShouldCloseOperationOnCancel(IEnumerable<Parameter> parametersBeingCollected)
         {
             // #573: Always close operations on cancel.
-            return true;
-
             /*
             // If the operation is unknown, back out of it as soon as possible.  This case should never occur in theory.
             if (null == mostRecentOperation)
@@ -1073,6 +1062,7 @@ namespace StatsDirect.UI
             }
 
             // If we get here, it's not a follow-on
+             */
 
             bool atLeastOneCancel = false;
             bool atLeastOneNonCancel = false;
@@ -1087,7 +1077,6 @@ namespace StatsDirect.UI
 
             // Otherwise, operations that are not follow-ons should always close completely
             return true;
-             */
         }
 
         /// <summary>
@@ -1115,29 +1104,27 @@ namespace StatsDirect.UI
             return true;
         }
 
-        /*
-                private IEnumerable<Parameter> GetAllOutstandingParameters()
+        private IEnumerable<Parameter> GetAllOutstandingParameters()
+        {
+            List<Parameter> parameters = new List<Parameter>();
+            TableLayoutPanel tlp = GetUserInputTable();
+            if (null != tlp)
+            {
+                foreach (Control column in tlp.Controls)
                 {
-                    List<Parameter> parameters = new List<Parameter>();
-                    TableLayoutPanel tlp = GetUserInputTable();
-                    if (null != tlp)
+                    foreach (Control control in column.Controls)
                     {
-                        foreach (Control column in tlp.Controls)
+                        if (null != control.Tag)
                         {
-                            foreach (Control control in column.Controls)
-                            {
-                                if (null != control.Tag)
-                                {
-                                    Parameter parameter = (Parameter) control.Tag;
-                                    if (!parameters.Contains(parameter))
-                                        parameters.Add(parameter);
-                                }
-                            }
+                            Parameter parameter = (Parameter)control.Tag;
+                            if (!parameters.Contains(parameter))
+                                parameters.Add(parameter);
                         }
                     }
-                    return parameters;
                 }
-        */
+            }
+            return parameters;
+        }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -1187,10 +1174,10 @@ namespace StatsDirect.UI
                 }
                 if (".sdw".Equals(extension))
                 {
-                    SDApplication.SoleInstance.msgbox_x("StatsDirect 3 cannot open .sdw files. Please use StatsDirect 2 to save the file in Excel format.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                    SDApplication.SoleInstance.MsgboxX("StatsDirect 3 cannot open .sdw files. Please use StatsDirect 2 to save the file in Excel format.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                     return false;
                 }
-                SDApplication.SoleInstance.msgbox_x("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                SDApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                 SDApplication.SoleInstance.NoteRecentFile(path, false);
                 UpdateFileList();
                 return false;
@@ -1211,11 +1198,11 @@ namespace StatsDirect.UI
                 {
                     cancelPressed = true;
                     bool wasInputting = inputtingData;
-                    // IEnumerable<Parameter> parametersBeingCollected = GetAllOutstandingParameters();
+                    IEnumerable<Parameter> parametersBeingCollected = GetAllOutstandingParameters();
                     CancelCurrentOperation();
 
                     if (wasInputting)
-                        MaybeCloseOperationOnCancel(/* parametersBeingCollected */);
+                        MaybeCloseOperationOnCancel(parametersBeingCollected);
                 }
                 else
                 {
@@ -1448,7 +1435,7 @@ namespace StatsDirect.UI
                 catch (Templates.InvalidDataException ex)
                 {
                     string errorMessage = ex.Message;
-                    SDApplication.SoleInstance.msgbox_x(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                    SDApplication.SoleInstance.MsgboxX(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                     // Treat this as a restart of the operation, without keeping any data - we don't know which data is bad, and if we keep it we risk getting stuck in a loop
                     /*
                     // That one failed due to invalid data - keep the same data and try it again, which should prompt the user to fix it!
@@ -1755,31 +1742,28 @@ namespace StatsDirect.UI
                 if (firstStep.Type == Step.StepType.Parameters)
                 {
                     ParametersStep pStep = (ParametersStep)firstStep;
-                    if (pStep.CombineWherePossible)
+                    foreach (Parameter p in pStep.Parameters)
                     {
-                        foreach (Parameter p in pStep.Parameters)
+                        if (p.MustRequest || (null != inputParameters && (null == p.Name || !inputParameters.ContainsKey(p.Name))))
                         {
-                            if (p.MustRequest || (null != inputParameters && (null == p.Name || !inputParameters.ContainsKey(p.Name))))
+                            // The parameter will probably be requested, unless it will be defaulted.
+                            // CI parameters can be defaulted
+                            if (p is ConfidenceIntervalParameter)
                             {
-                                // The parameter will probably be requested, unless it will be defaulted.
-                                // CI parameters can be defaulted
-                                if (p is ConfidenceIntervalParameter)
+                                ConfidenceIntervalParameter cip = (ConfidenceIntervalParameter)p;
+                                if (cip.CanDefault && SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
                                 {
-                                    ConfidenceIntervalParameter cip = (ConfidenceIntervalParameter)p;
-                                    if (cip.CanDefault && SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
-                                    {
-                                        // The CI can be defaulted; no decision!
-                                    }
-                                    else
-                                    {
-                                        // The CI cannot be defaulted; use our standard decision
-                                        return ((ITemplateHost)SDApplication.SoleInstance).CanCombine(p);
-                                    }
+                                    // The CI can be defaulted; no decision!
                                 }
                                 else
                                 {
+                                    // The CI cannot be defaulted; use our standard decision
                                     return ((ITemplateHost)SDApplication.SoleInstance).CanCombine(p);
                                 }
+                            }
+                            else
+                            {
+                                return ((ITemplateHost)SDApplication.SoleInstance).CanCombine(p);
                             }
                         }
                     }
@@ -1855,13 +1839,13 @@ namespace StatsDirect.UI
 
         private void optGroupsByColumn_CheckedChanged(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.Preferences.GIDV = !optGroupsByColumn.Checked;
+            SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = !optGroupsByColumn.Checked;
             selectingData = false;
         }
 
         private void optGroupsByIdentifier_CheckedChanged(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.Preferences.GIDV = optGroupsByIdentifier.Checked;
+            SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = optGroupsByIdentifier.Checked;
             selectingData = false;
         }
 
@@ -1987,7 +1971,7 @@ namespace StatsDirect.UI
         /// <param name="outstandingParameters"></param>
         /// <returns></returns>
         /// <remarks>The return value may contain key->null for optional blank parameters.  It is up to the caller to handle this.</remarks>
-        internal ParameterBag FillCombinedParameters(ITemplateHost host, ITemplateProcessor processor, ParameterBag context, IList<Parameter> outstandingParameters)
+        internal ParameterBag FillAndValidateCombinedParameters(ITemplateHost host, ITemplateProcessor processor, ParameterBag context, IList<Parameter> outstandingParameters)
         {
             try
             {
@@ -2134,13 +2118,14 @@ namespace StatsDirect.UI
                         outputParameters.Add(parameter.Name, fp);
                     }
                 }
+                IList<Parameter> parametersToValidate = new List<Parameter>(outstandingParameters);
                 outstandingParameters.Clear();
 
                 MaybeShowVariables(context);
 
                 // Some parameters (notably CI parameters) may be defaulted - none will be shown.  If that's the case, don't show; just default them all!
                 DrawingControl.ResumeDrawing(this);
-                FillCombinedParameters(processor, context, willDisplayAtLeastOneParameter, atLeastOneNonCancel ? null : cancelSkipsParameterString, ref outputParameters);
+                FillCombinedParameters(host, processor, context, willDisplayAtLeastOneParameter, atLeastOneNonCancel ? null : cancelSkipsParameterString, parametersToValidate, ref outputParameters);
                 return outputParameters;
             }
             finally
@@ -2932,6 +2917,10 @@ namespace StatsDirect.UI
 
             // Fill the text boxes from the stored data
             offset = (stratum - 1) * 2;
+            txtTl.BackColor = SystemColors.Window;
+            txtTr.BackColor = SystemColors.Window;
+            txtBl.BackColor = SystemColors.Window;
+            txtBr.BackColor = SystemColors.Window;
             txtTl.Text = Formatting.XUnrounded(var1Data[offset]);
             txtTr.Text = Formatting.XUnrounded(var2Data[offset]);
             txtBl.Text = Formatting.XUnrounded(var1Data[offset + 1]);
@@ -2998,6 +2987,10 @@ namespace StatsDirect.UI
                 txtBR.Clear();
             }
             lblStratum.Text = "Stratum " + stratum + " of " + (Math.Max(strata, stratum));
+            txtTL.BackColor = SystemColors.Window;
+            txtTR.BackColor = SystemColors.Window;
+            txtBL.BackColor = SystemColors.Window;
+            txtBR.BackColor = SystemColors.Window;
 
             cmdPrevious.Enabled = true;
             cmdNext.Enabled = true; // Can always Next to create another stratum
@@ -3077,7 +3070,11 @@ namespace StatsDirect.UI
                     ctl = new ctlDummyOptions((Builtins.DummyOptions)fillable);
                     break;
                 case "Extraction":
-                    ctl = new ctlExtraction((Builtins.ExtractionOptions)fillable);
+                    Builtins.ExtractionOptions f = (Builtins.ExtractionOptions) fillable;
+                    if (null == f.IdentifiersFrame)
+                        ctl = new ctlFindAndReplaceData(f);
+                    else
+                        ctl = new ctlExtraction(f);
                     break;
                 case "GraphicsOptions":
                     ctl = new ctlGraphicsOptions();
@@ -3130,12 +3127,12 @@ namespace StatsDirect.UI
             {
                 new FileIOPermission(PermissionState.Unrestricted).Assert(); // TODO: Can this be refined, or does SSG really need everything?
                 WorkbookView grid = new WorkbookView
-                                        {
-                                            Tag = parameter,
-                                            Name = "grid",
-                                            Size = new Size(500 - 2 * 3, 305),
-                                            ContextMenuStrip = contextMenuStrip
-                                        };
+                {
+                    Tag = parameter,
+                    Name = "grid",
+                    Size = new Size(500 - 2 * 3, 305),
+                    ContextMenuStrip = contextMenuStrip
+                };
                 grid.ActiveWorkbookSet.GetLock();
                 if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsDataFrame)
                 {
@@ -3152,6 +3149,9 @@ namespace StatsDirect.UI
                     }
                 }
                 grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
+                int maximumColumns = parameter.MaximumColumns(processor, context);
+                if (maximumColumns > 0)
+                    grid.ActiveWorksheet.Cells[0, maximumColumns, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
                 grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
                 grid.ActiveWorkbookSet.ReleaseLock();
                 grid.AllowChartExplorer = false;
@@ -3291,16 +3291,13 @@ namespace StatsDirect.UI
                         AutoSizeCombo(cbo);
 
                         Label lbl = new Label
-                                        {
-                                            Tag = parameter,
-                                            Padding = new Padding(0, 6, 0, 3),
-                                            AutoSize = true,
-                                            MaximumSize = new Size(500, 500),
-                                            Text =
-                                                parameter.HasPrompt
-                                                    ? parameter.Prompt(processor, context)
-                                                    : ""
-                                        };
+                        {
+                            Tag = parameter,
+                            Padding = new Padding(0, 6, 0, 3),
+                            AutoSize = true,
+                            MaximumSize = new Size(500, 500),
+                            Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+                        };
 
                         tlp.Controls.Add(cbo);
                         tlp.Controls.Add(lbl);
@@ -3325,24 +3322,24 @@ namespace StatsDirect.UI
                             if (!string.IsNullOrEmpty(prompt))
                             {
                                 groupBox = new SDGroupBox
-                                               {
-                                                   Tag = parameter,
-                                                   Padding = new Padding(3, 0, 3, 3),
-                                                   AutoSize = true,
-                                                   Text = prompt
-                                               };
+                                {
+                                    Tag = parameter,
+                                    Padding = new Padding(3, 0, 3, 3),
+                                    AutoSize = true,
+                                    Text = prompt
+                                };
                                 tlp.Controls.Add(groupBox);
                                 tlp.SetColumnSpan(groupBox, 2);
                             }
                         }
 
                         TableLayoutPanel panelOptions = new TableLayoutPanel
-                                                            {
-                                                                Tag = parameter,
-                                                                RowCount = (parameter.Options.Count + 1) / 2,
-                                                                ColumnCount = parameter.Columns,
-                                                                AutoSize = true
-                                                            };
+                        {
+                            Tag = parameter,
+                            RowCount = (parameter.Options.Count + 1) / 2,
+                            ColumnCount = parameter.Columns,
+                            AutoSize = true
+                        };
                         for (int column = 0; column < parameter.Columns; column++)
                         {
                             panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -4031,13 +4028,15 @@ namespace StatsDirect.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="host"></param>
         /// <param name="processor"></param>
         /// <param name="context"></param>
         /// <param name="shouldShow"></param>
         /// <param name="cancelSkipsParameterString"></param>
+        /// <param name="parametersToValidate"></param>
         /// <param name="outputParameters"></param>
         /// <remarks>This may return key->null in outputParameters for optional empty parameters.  It is up to the caller to deal with this.</remarks>
-        internal void FillCombinedParameters(ITemplateProcessor processor, ParameterBag context, bool shouldShow, string cancelSkipsParameterString, ref ParameterBag outputParameters)
+        internal void FillCombinedParameters(ITemplateHost host, ITemplateProcessor processor, ParameterBag context, bool shouldShow, string cancelSkipsParameterString, ICollection<Parameter> parametersToValidate, ref ParameterBag outputParameters)
         {
             TableLayoutPanel tlp = GetUserInputTable();
             pnlUser.ResumeLayout();
@@ -4099,11 +4098,29 @@ namespace StatsDirect.UI
                         bool allValid = ExtractCurrentValues(processor, outputParameters, context, true);
                         if (allValid)
                         {
+                            string validationResult = null;
+                            foreach (Parameter outstandingParameter in parametersToValidate)
+                            {
+                                if (null != outstandingParameter.Validators)
+                                    foreach (Validator validator in outstandingParameter.Validators)
+                                    {
+                                        validationResult = TemplateProcessor.Validate(host, validator.ValidationMode, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
+                                        if (null != validationResult)
+                                            break;
+                                    }
+                                if (null != validationResult)
+                                    break;
+                            }
+                            allValid &= (null == validationResult);
+                            if (!allValid)
+                                SDApplication.SoleInstance.MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
+                        }
+                        if (allValid)
+                        {
                             break;
                         }
 
                         // Otherwise, at least one parameter's invalid and focus should already have been set to it.  Go round again.
-                        // SDApplication.SoleInstance.msgbox_x("Invalid data. Please correct it and try the operation again.", MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
                     }
                 }
             }
@@ -4386,7 +4403,9 @@ namespace StatsDirect.UI
                         {
                             TableLayoutPanel pnl2By2ByK = (TableLayoutPanel)control;
                             FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)pnl2By2ByK.GetControlFromPosition(0, 4);
+                            Button cmdPrevious = (Button)pnlNavigation.Controls[0];
                             Label lblStratum = (Label)pnlNavigation.Controls[1];
+                            Button cmdNext = (Button)pnlNavigation.Controls[2];
 
                             TextBox txtTl = (TextBox)pnl2By2ByK.GetControlFromPosition(0, 2);
                             TextBox txtTr = (TextBox)pnl2By2ByK.GetControlFromPosition(1, 2);
@@ -4411,7 +4430,7 @@ namespace StatsDirect.UI
                                 txtTr.BackColor = SystemColors.Window;
                                 txtBl.BackColor = SystemColors.Window;
                                 txtBr.BackColor = SystemColors.Window;
-                                // Validate
+                                // Validate - find the first missing value in the current stratum
                                 if (tl == Constant.MISSING)
                                 {
                                     txtTl.SelectAll();
@@ -4446,6 +4465,54 @@ namespace StatsDirect.UI
                             var2Data[offset] = tr;
                             var1Data[offset + 1] = bl;
                             var2Data[offset + 1] = br;
+
+                            if (doValidation)
+                            {
+                                // Validate - find the first missing value in *any* stratum, set up and highlight
+                                for (int i = 0; i < var1Data.Count; i++)
+                                {
+                                    if (var1Data[i] == Constant.MISSING || var2Data[i] == Constant.MISSING)
+                                    {
+                                        int failedStratum = i/2; // Deliberately truncate - if i = 3, it's stratum (3/2) = 1.
+                                        tl = var1Data[failedStratum * 2];
+                                        tr = var2Data[failedStratum * 2];
+                                        bl = var1Data[failedStratum * 2 + 1];
+                                        br = var2Data[failedStratum * 2 + 1];
+                                        txtTl.Text = Formatting.XUnrounded(tl);
+                                        txtTr.Text = Formatting.XUnrounded(tr);
+                                        txtBl.Text = Formatting.XUnrounded(bl);
+                                        txtBr.Text = Formatting.XUnrounded(br);
+                                        lblStratum.Text = "Stratum " + (failedStratum + 1) + " of " + (var1Data.Count / 2);
+                                        lblStratum.Tag = failedStratum + 1;
+                                        cmdPrevious.Enabled = failedStratum > 0;
+                                        cmdNext.Enabled = true;
+                                        if (tl == Constant.MISSING)
+                                        {
+                                            txtTl.SelectAll();
+                                            txtTl.Focus();
+                                            return txtTl;
+                                        }
+                                        if (tr == Constant.MISSING)
+                                        {
+                                            txtTr.SelectAll();
+                                            txtTr.Focus();
+                                            return txtTr;
+                                        }
+                                        if (bl == Constant.MISSING)
+                                        {
+                                            txtBl.SelectAll();
+                                            txtBl.Focus();
+                                            return txtBl;
+                                        }
+                                        if (br == Constant.MISSING)
+                                        {
+                                            txtBr.SelectAll();
+                                            txtBr.Focus();
+                                            return txtBr;
+                                        }
+                                    }
+                                }
+                            }
 
                             DataFrame frame = new DataFrame();
                             DoubleVariable var1 = new DoubleVariable(var1Data.ToArray());

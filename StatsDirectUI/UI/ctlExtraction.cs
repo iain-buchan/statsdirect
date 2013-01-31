@@ -48,7 +48,7 @@ namespace StatsDirect.UI
                 return txtExpression;
             }
 
-            int rows = options.Data.Length;
+            int rows = options.DataFrame.Variables[0].Length;
   
             string expressionWithOriginalNames = expression;
             for (int k = 0; k < options.IdentifiersFrame.VariableCount; k++)
@@ -67,7 +67,7 @@ namespace StatsDirect.UI
                 double[] x = new double[cols];
                 for (int n = 0; n < rows; n++)
                 {
-                    if (options.Data.Data[n] != Constant.MISSING)
+                    if (options.DataFrame.Variables[0].AsDoubleVariable.Data[n] != Constant.MISSING)
                     {
    
                         // Put row into working array
@@ -80,7 +80,7 @@ namespace StatsDirect.UI
                         if (1 == calcit.Evaluate(x))
                         {
                             int rw = chkKeepRowPositions.Checked ? n : cnt;
-                            outputVariable.Data[rw] = options.Data.Data[n].ToString();
+                            outputVariable.Data[rw] = options.DataFrame.Variables[0].AsDoubleVariable.Data[n].ToString();
                             cnt++;
                         }
       
@@ -99,7 +99,7 @@ namespace StatsDirect.UI
                 double[] x = new double[cols];
                 for (int N = 0; N < rows; N++)
                 {
-                    if (options.Data.Data[N] != Constant.MISSING)
+                    if (options.DataFrame.Variables[0].AsDoubleVariable.Data[N] != Constant.MISSING)
                     {
                         // Put row into working array
                         for (int j = 0; j < cols; j++)
@@ -112,7 +112,7 @@ namespace StatsDirect.UI
                             cnt++;
                     }
                 }
-                lblMessage.Text = cnt.ToString() + " data points out of " + rows.ToString() + " match your expression.";
+                lblMessage.Text = cnt + " data points out of " + rows + " match your expression.";
             }
             return null;
         }

@@ -85,7 +85,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.msgbox_x("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -97,7 +97,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.msgbox_x("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -109,7 +109,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.msgbox_x("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -121,7 +121,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.msgbox_x("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SDApplication.SoleInstance.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -558,7 +558,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                SDApplication.SoleInstance.msgbox_x("No chart is selected. Please select a chart to export.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Export graphic", true);
+                SDApplication.SoleInstance.MsgboxX("No chart is selected. Please select a chart to export.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Export graphic", true);
             }
         }
 

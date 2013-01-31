@@ -281,8 +281,8 @@ namespace StatsDirect.Builtins
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Title: " + v0.Title);
             sb.AppendLine("");
-            sb.AppendLine(Formatting.PadTo("Valid data", k) + sx.ValidData.ToString());
-            sb.AppendLine(Formatting.PadTo("Missing", k) + sx.MissingData.ToString());
+            sb.AppendLine(Formatting.PadTo("Valid data", k) + sx.ValidData);
+            sb.AppendLine(Formatting.PadTo("Missing", k) + sx.MissingData);
             sb.AppendLine(Formatting.PadTo("Sum", k) + Formatting.RoundOut(sx.Sum, flt));
             sb.AppendLine(Formatting.PadTo("Mean", k) + Formatting.RoundOut(sx.Mean, flt));
             sb.AppendLine(Formatting.PadTo("Variance", k) + Formatting.RoundOut(sx.Variance, flt));
@@ -543,9 +543,23 @@ namespace StatsDirect.Builtins
                 {
                     DataFrame outputFrame = new DataFrame();
                     outputParameters.AddOutput("output", outputFrame);
-                    if (false)
+                    if (cdx.Length == 1)
                     {
-                        // TODO: #741
+                        // Short form, single column
+                        StringVariable labels = new StringVariable(lc, "Measure");
+                        outputFrame.Variables.Add(labels);
+                        DoubleVariable values = new DoubleVariable(lc, "Value");
+                        outputFrame.Variables.Add(values);
+                        int row = 0;
+                        foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
+                        {
+                            if (shouldOutput[s])
+                            {
+                                labels.Data[row] = Caption(s, sx[0], titles);
+                                values.Data[row] = Value(s, sx[0]);
+                                row++;
+                            }
+                        }
                     }
                     else
                     {
@@ -560,18 +574,7 @@ namespace StatsDirect.Builtins
                         foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
                         {
                             if (shouldOutput[s])
-                            switch (s)
-                            {
-                                case SummaryType.Udc1:
-                                    outputFrame.Variables.Add(FillCell(SummaryType.Udc1, sx, cols, null));
-                                    break;
-                                case SummaryType.Udc2:
-                                    outputFrame.Variables.Add(FillCell(SummaryType.Udc2, sx, cols, null));
-                                    break;
-                                default:
-                                    outputFrame.Variables.Add(FillCell(s, sx, cols, titles[(int)s]));
-                                    break;
-                            }
+                            outputFrame.Variables.Add(FillCell(s, sx, cols, titles));
                         }
                     }
                 }
@@ -629,97 +632,101 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string title)
+        private static string Caption(SummaryType summaryType, Summary sx, string[] titles)
         {
-            int i = 0;
-            DoubleVariable v = new DoubleVariable();
-            v.EnsureLength(cols);
             switch (summaryType)
             {
                 case SummaryType.Udc1:
-                    v.Title = sx[i].UserCentileUCaption;
+                    return sx.UserCentileUCaption;
+                case SummaryType.Udc2:
+                    return sx.UserCentileLCaption;
+                default:
+                    return titles[(int)summaryType];
+            }
+
+        }
+
+        private static double Value(SummaryType summaryType, Summary sx)
+        {
+            double res;
+            switch (summaryType)
+            {
+                case SummaryType.ValidData:
+                    res = sx.ValidData;
+                    break;
+                case SummaryType.MissingData:
+                    res = sx.MissingData;
+                    break;
+                case SummaryType.Sum:
+                    res = sx.Sum;
+                    break;
+                case SummaryType.Mean:
+                    res = sx.Mean;
+                    break;
+                case SummaryType.Variance:
+                    res = sx.Variance;
+                    break;
+                case SummaryType.Sd:
+                    res = sx.Sd;
+                    break;
+                case SummaryType.VarianceCoefficient:
+                    res = sx.VarianceCoefficient;
+                    break;
+                case SummaryType.Sem:
+                    res = sx.Sem;
+                    break;
+                case SummaryType.MeanUcl:
+                    res = sx.MeanUCL;
+                    break;
+                case SummaryType.MeanLcl:
+                    res = sx.MeanLCL;
+                    break;
+                case SummaryType.GeometricMean:
+                    res = sx.GeometricMean;
+                    break;
+                case SummaryType.Skewness:
+                    res = sx.Skewness;
+                    break;
+                case SummaryType.Kurtosis:
+                    res = sx.Kurtosis;
+                    break;
+                case SummaryType.Maximum:
+                    res = sx.Maximum;
+                    break;
+                case SummaryType.UpperQuartile:
+                    res = sx.UpperQuartile;
+                    break;
+                case SummaryType.Median:
+                    res = sx.Median;
+                    break;
+                case SummaryType.LowerQuartile:
+                    res = sx.LowerQuartile;
+                    break;
+                case SummaryType.Minimum:
+                    res = sx.Minimum;
+                    break;
+                case SummaryType.Range:
+                    res = sx.Range;
+                    break;
+                case SummaryType.Udc1:
+                    res = sx.UserCentileU;
                     break;
                 case SummaryType.Udc2:
-                    v.Title = sx[i].UserCentileLCaption;
+                    res = sx.UserCentileL;
                     break;
                 default:
-                    v.Title = title;
-                    break;
+                    throw new ArgumentException("Unknown option", "summaryType");
             }
-            for (i = 0; i < cols; i++)
-            {
-                double res;
-                switch (summaryType)
-                {
-                    case SummaryType.ValidData:
-                        res = sx[i].ValidData;
-                        break;
-                    case SummaryType.MissingData:
-                        res = sx[i].MissingData;
-                        break;
-                    case SummaryType.Sum:
-                        res = sx[i].Sum;
-                        break;
-                    case SummaryType.Mean:
-                        res = sx[i].Mean;
-                        break;
-                    case SummaryType.Variance:
-                        res = sx[i].Variance;
-                        break;
-                    case SummaryType.Sd:
-                        res = sx[i].Sd;
-                        break;
-                    case SummaryType.VarianceCoefficient:
-                        res = sx[i].VarianceCoefficient;
-                        break;
-                    case SummaryType.Sem:
-                        res = sx[i].Sem;
-                        break;
-                    case SummaryType.MeanUcl:
-                        res = sx[i].MeanUCL;
-                        break;
-                    case SummaryType.MeanLcl:
-                        res = sx[i].MeanLCL;
-                        break;
-                    case SummaryType.GeometricMean:
-                        res = sx[i].GeometricMean;
-                        break;
-                    case SummaryType.Skewness:
-                        res = sx[i].Skewness;
-                        break;
-                    case SummaryType.Kurtosis:
-                        res = sx[i].Kurtosis;
-                        break;
-                    case SummaryType.Maximum:
-                        res = sx[i].Maximum;
-                        break;
-                    case SummaryType.UpperQuartile:
-                        res = sx[i].UpperQuartile;
-                        break;
-                    case SummaryType.Median:
-                        res = sx[i].Median;
-                        break;
-                    case SummaryType.LowerQuartile:
-                        res = sx[i].LowerQuartile;
-                        break;
-                    case SummaryType.Minimum:
-                        res = sx[i].Minimum;
-                        break;
-                    case SummaryType.Range:
-                        res = sx[i].Range;
-                        break;
-                    case SummaryType.Udc1:
-                        res = sx[i].UserCentileU;
-                        break;
-                    case SummaryType.Udc2:
-                        res = sx[i].UserCentileL;
-                        break;
-                    default:
-                        throw new ArgumentException("Unknown option", "opt");
-                }
+            return res;
+        }
 
-                v.set_Data(i, res);
-            }
+        private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string[] titles)
+        {
+            DoubleVariable v = new DoubleVariable();
+            v.EnsureLength(cols);
+            v.Title = Caption(summaryType, sx[0], titles);
+            for (int i = 0; i < cols; i++)
+                v.set_Data(i, Value(summaryType, sx[i]));
             return v;
         }
 

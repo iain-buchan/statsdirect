@@ -3,9 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -1036,25 +1033,19 @@ namespace StatsDirect.Templates
                     }
 
                     // Try to combine requests for parameters where possible.  The host can always refuse a request.
-                    bool shouldCombine = step.CombineWherePossible;
-                    if (shouldCombine)
-                        shouldCombine &= host.CanCombine(parameter);
+                    bool shouldCombine = host.CanCombine(parameter);
                     if (!shouldCombine)
                     {
                         // We've hit a parameter we should not or cannot combine.  Ensure any grouped parameters are handled at this point.
                         // We also know that we definitely cannot request an output window at this point - so don't!
                         if (outstandingParameters.Count > 0)
                         {
-                            // Handle previous parameter fill-in, validation and combination
-                            ParameterBag outstandingFilledParameters = host.FillCombinedParameters(this, parmsAndFilledParameters);
+                            // Fill in and validate previous parameters
+                            ParameterBag outstandingFilledParameters = host.FillAndValidateCombinedParameters(this, parmsAndFilledParameters);
                             if (null == outstandingFilledParameters)
                                 throw new TemplateOperationCancelledException();
                             foreach (Parameter outstandingParameter in outstandingParameters)
-                            {
-                                if (ValidationMode.NotSet != outstandingParameter.ValidationMode)
-                                    Validate(outstandingParameter.ValidationMode, outstandingParameter, outstandingFilledParameters, outstandingParameter.ValidationFailMessage);
                                 MaybeRemember(outstandingParameter, outstandingFilledParameters);
-                            }
                             foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
                             {
                                 // Handle removal of explicit blanks
@@ -1077,10 +1068,6 @@ namespace StatsDirect.Templates
                     }
                     else
                     {
-                        if (ValidationMode.NotSet != parameter.ValidationMode)
-                        {
-                            Validate(parameter.ValidationMode, parameter, newFilledParameters, parameter.ValidationFailMessage);
-                        }
                         MaybeRemember(parameter, newFilledParameters);
                         if (null != newFilledParameters)
                         {
@@ -1120,15 +1107,11 @@ namespace StatsDirect.Templates
                     }
 
                     // Handle previous parameter fill-in, validation and combination
-                    ParameterBag outstandingFilledParameters = host.FillCombinedParameters(this, parmsAndFilledParameters);
+                    ParameterBag outstandingFilledParameters = host.FillAndValidateCombinedParameters(this, parmsAndFilledParameters);
                     if (null == outstandingFilledParameters)
                         throw new TemplateOperationCancelledException();
                     foreach (Parameter outstandingParameter in outstandingParameters)
                     {
-                        if (ValidationMode.NotSet != outstandingParameter.ValidationMode)
-                        {
-                            Validate(outstandingParameter.ValidationMode, outstandingParameter, outstandingFilledParameters, outstandingParameter.ValidationFailMessage);
-                        }
                         MaybeRemember(outstandingParameter, outstandingFilledParameters);
                     }
                     foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
@@ -1138,10 +1121,6 @@ namespace StatsDirect.Templates
                 return new StepResult(StepSuccess.Success, filledParameters);
             }
             catch (Utilities.TemplateOperationCancelledException)
-            {
-                throw;
-            }
-            catch (Utilities.ValidationException)
             {
                 throw;
             }
@@ -1196,220 +1175,6 @@ namespace StatsDirect.Templates
                         savedParameterBag[parameter.Name] = filledParameterToSave;
                     }
                     break;
-            }
-        }
-
-        private void Validate(ValidationMode validationMode, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
-        {
-            switch (validationMode)
-            {
-                case ValidationMode.NotSet:
-                    // Do nothing
-                    break;
-                case ValidationMode.Pooling:
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        GridParameter gridParameter = (GridParameter)parameter;
-                        if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
-                            return;
-
-                        // Otherwise ensure all values are in {-1, 0, 1}
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
-                        foreach (double value in variable.Data)
-                        {
-                            if (0D != value && -1D != value && 1D != value)
-                            {
-                                if (null == failedValidationMessage)
-                                    failedValidationMessage = "Pooling indicator must be 0 (not pooled), 1 (subgroup) or -1 (pooled) only";
-                                throw new ValidationException(failedValidationMessage);
-                            }
-                        }
-                    }
-                    break;
-                case ValidationMode.Square:
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        GridParameter gridParameter = (GridParameter)parameter;
-                        if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
-                            return;
-
-                        // Otherwise ensure the number of values is a square number
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
-                        if (Math.Sqrt(variable.Length) != Math.Floor(Math.Sqrt(variable.Length)))
-                        {
-                            if (null == failedValidationMessage)
-                                failedValidationMessage = "Number of observations can not be arranged as a square (i.e. integer square root)";
-                            throw new ValidationException(failedValidationMessage);
-                        }
-                    }
-                    break;
-                case ValidationMode.SquareBins:
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        GridParameter gridParameter = (GridParameter)parameter;
-                        if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
-                            return;
-
-                        // Otherwise ensure the number of bins is the square root of the number of values
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
-                        ClassifierVariable cv = gidx_bins(variable);
-                        if (Math.Sqrt(variable.Length) != cv.GroupCount)
-                        {
-                            if (null == failedValidationMessage)
-                                failedValidationMessage = "There should be " + Math.Sqrt(variable.Length).ToString("N0") + " classes";
-                            throw new ValidationException(failedValidationMessage);
-                        }
-                    }
-                    break;
-                case ValidationMode.CheckForNonDummiedCategories:
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        GridParameter gridParameter = (GridParameter)parameter;
-                        if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
-                            return;
-
-                        // Otherwise ensure the number of bins, if >2, is at least 12 (or they're all distinct)
-                        DataFrame frame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (DoubleVariable v in frame.Variables)
-                        {
-                            double[] data = v.Data;
-                            bool skip = false;
-                            // skip if all not integers
-                            foreach (double t in data)
-                            {
-                                if (t != Math.Floor(t))
-                                {
-                                    skip = true;
-                                    break;
-                                }
-                            }
-                            if (!skip)
-                            {
-                                // get number of categories if all integers
-                                int ng = 1;
-                                int[] g = new int[data.Length];
-                                foreach (double t in data)
-                                {
-                                    if (t != Constant.MISSING)
-                                    {
-                                        g[0] = (int)t;
-                                        break;
-                                    }
-                                }
-                                for (int j = 1; j < data.Length; j++)
-                                {
-                                    bool newa = true;
-                                    for (int i = 0; i < ng; i++)
-                                    {
-                                        if (data[j] == g[i] || data[j] == Constant.MISSING)
-                                        {
-                                            newa = false;
-                                            break;
-                                        }
-                                    }
-                                    if (newa)
-                                    {
-                                        g[ng++] = (int)data[j];
-                                    }
-                                }
-                                if (ng > 2 && ng < Math.Min(data.Length - 2, 12))
-                                {
-                                    bool wasCancelled;
-                                    bool sortOutData = host.GetBoolean("The variable named '" + v.Title + "' seems to contain categorical data.\r\n\r\nIf you want to use categorical data containing more than two categories,\r\nthen please use the 'Data_Dummy Variables' menu item to convert this variable\r\nto dummy variables before running the regression again.\r\n\r\nDo you want to quit this regression and sort out your data?", "Regression Predictor Scan", false, 140766, out wasCancelled);
-                                    if (wasCancelled || sortOutData)
-                                        throw new TemplateOperationCancelledException();
-                                }
-                            }
-                        }
-                        // If we get here, we're fine
-                    }
-                    break;
-                case ValidationMode.Boolean:
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        GridParameter gridParameter = (GridParameter)parameter;
-                        if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
-                            return;
-
-                        // Otherwise ensure all values are in {0, 1}
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
-                        foreach (double value in variable.Data)
-                        {
-                            if (0D != value && 1D != value)
-                            {
-                                if (null == failedValidationMessage)
-                                    failedValidationMessage = "Case-control indicator must be 1 for case or 0 for control only";
-                                throw new ValidationException(failedValidationMessage);
-                            }
-                        }
-                    }
-                    break;
-                case ValidationMode.Positive:
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        GridParameter gridParameter = (GridParameter)parameter;
-                        if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
-                            return;
-
-                        // Otherwise ensure all values are > 0
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
-                        foreach (double value in variable.Data)
-                        {
-                            if (value <= 0)
-                            {
-                                if (null == failedValidationMessage)
-                                    failedValidationMessage = "Data must be positive non-zero numbers";
-                                throw new ValidationException(failedValidationMessage);
-                            }
-                        }
-                    }
-                    break;
-                case ValidationMode.ZeroToOneExclusive:
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        GridParameter gridParameter = (GridParameter)parameter;
-                        if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
-                            return;
-
-                        // Otherwise ensure all values are in the range (0, 1)
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
-                        foreach (double value in variable.Data)
-                        {
-                            if (value <= 0 || value >= 1)
-                            {
-                                if (null == failedValidationMessage)
-                                    failedValidationMessage = "Data must lie between 0 and 1";
-                                throw new ValidationException(failedValidationMessage);
-                            }
-                        }
-                    }
-                    break;
-                case ValidationMode.TwoBinsAndNoMissingData:
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        GridParameter gridParameter = (GridParameter)parameter;
-                        if ((null != gridParameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
-                            return;
-
-                        // Otherwise ensure there are exactly two bins in the classifier variable
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        ClassifierVariable variable = dataFrame.Variables[0].AsClassifierVariable;
-                        if (variable.GroupCount != 2)
-                        {
-                            if (null == failedValidationMessage)
-                                failedValidationMessage = "Group identifier must contain two groups and no missing data";
-                            throw new ValidationException(failedValidationMessage);
-                        }
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("validationMode", validationMode, "I don't know how to validate that mode");
             }
         }
 
@@ -1554,6 +1319,297 @@ namespace StatsDirect.Templates
                 cv.Groups.Add(grp);
             }
             return cv;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="validationMode"></param>
+        /// <param name="parameter"></param>
+        /// <param name="filledParameters"></param>
+        /// <param name="failedValidationMessage"></param>
+        /// <returns>A string containing at least one validation error, or none if there are no validation errors detected.</returns>
+        public static string Validate(ITemplateHost host, ValidationMode validationMode, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
+        {
+            switch (validationMode)
+            {
+                case ValidationMode.NotSet:
+                    // Do nothing
+                    return null;
+                case ValidationMode.Pooling:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure all values are in {-1, 0, 1}
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
+                        foreach (double value in variable.Data)
+                        {
+                            if (0 != value && -1 != value && 1 != value)
+                                return failedValidationMessage ?? "Pooling indicator must be 0 (not pooled), 1 (subgroup) or -1 (pooled) only";
+                        }
+                    }
+                    return null;
+                case ValidationMode.Square:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure the number of values is a square number
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
+                        if (Math.Sqrt(variable.Length) != Math.Floor(Math.Sqrt(variable.Length)))
+                        {
+                            return failedValidationMessage ?? "Number of observations can not be arranged as a square (i.e. integer square root)";
+                        }
+                    }
+                    return null;
+                case ValidationMode.SquareBins:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure the number of bins is the square root of the number of values
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
+                        ClassifierVariable cv = TemplateProcessor.gidx_bins(variable);
+                        if (Math.Sqrt(variable.Length) != cv.GroupCount)
+                        {
+                            return failedValidationMessage ?? "There should be " + Math.Sqrt(variable.Length).ToString("N0") + " classes";
+                        }
+                    }
+                    return null;
+                case ValidationMode.CheckForNonDummiedCategories:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure the number of bins, if >2, is at least 12 (or they're all distinct)
+                        DataFrame frame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (DoubleVariable v in frame.Variables)
+                        {
+                            double[] data = v.Data;
+                            bool skip = false;
+                            // skip if all not integers
+                            foreach (double t in data)
+                            {
+                                if (t != Math.Floor(t))
+                                {
+                                    skip = true;
+                                    break;
+                                }
+                            }
+                            if (!skip)
+                            {
+                                // get number of categories if all integers
+                                int ng = 1;
+                                int[] g = new int[data.Length];
+                                foreach (double t in data)
+                                {
+                                    if (t != Constant.MISSING)
+                                    {
+                                        g[0] = (int)t;
+                                        break;
+                                    }
+                                }
+                                for (int j = 1; j < data.Length; j++)
+                                {
+                                    bool newa = true;
+                                    for (int i = 0; i < ng; i++)
+                                    {
+                                        if (data[j] == g[i] || data[j] == Constant.MISSING)
+                                        {
+                                            newa = false;
+                                            break;
+                                        }
+                                    }
+                                    if (newa)
+                                    {
+                                        g[ng++] = (int)data[j];
+                                    }
+                                }
+                                if (ng > 2 && ng < Math.Min(data.Length - 2, 12))
+                                {
+                                    bool wasCancelled;
+                                    bool sortOutData = host.GetBoolean("The variable named '" + v.Title + "' seems to contain categorical data.\r\n\r\nIf you want to use categorical data containing more than two categories,\r\nthen please use the 'Data_Dummy Variables' menu item to convert this variable\r\nto dummy variables before running the regression again.\r\n\r\nDo you want to quit this regression and sort out your data?", "Regression Predictor Scan", false, 140766, out wasCancelled);
+                                    if (wasCancelled || sortOutData)
+                                        throw new TemplateOperationCancelledException();
+                                }
+                            }
+                        }
+                        // If we get here, we're fine
+                    }
+                    return null;
+                case ValidationMode.Boolean:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure all values are in {0, 1}
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (Variable variable in dataFrame.Variables)
+                        {
+                            if (variable is DoubleVariable)
+                            {
+                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                foreach (double value in doubleVariable.Data)
+                                {
+                                    if (0.0 != value && 1.0 != value)
+                                    {
+                                        return failedValidationMessage ?? "Case-control indicator must be 1 for case or 0 for control only";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                case ValidationMode.Positive:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure all values are > 0
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (Variable variable in dataFrame.Variables)
+                        {
+                            if (variable is DoubleVariable)
+                            {
+                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                foreach (double value in doubleVariable.Data)
+                                {
+                                    if (value <= 0)
+                                    {
+                                        return failedValidationMessage ?? "Data must be positive non-zero numbers";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                case ValidationMode.NonNegative:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure all values are >= 0
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (Variable variable in dataFrame.Variables)
+                        {
+                            if (variable is DoubleVariable)
+                            {
+                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                foreach (double value in doubleVariable.Data)
+                                {
+                                    if (value < 0)
+                                    {
+                                        return failedValidationMessage ?? "Data must be positive or zero numbers";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                case ValidationMode.ZeroToOneExclusive:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure all values are in the range (0, 1)
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (Variable variable in dataFrame.Variables)
+                        {
+                            if (variable is DoubleVariable)
+                            {
+                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                foreach (double value in doubleVariable.Data)
+                                {
+                                    if (value <= 0 || value >= 1)
+                                    {
+                                        return failedValidationMessage ?? "Data must lie between 0 and 1";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                case ValidationMode.TwoBinsAndNoMissingData:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure there are exactly two bins in the classifier variable
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        ClassifierVariable variable = dataFrame.Variables[0].AsClassifierVariable;
+                        if (variable.GroupCount != 2)
+                        {
+                            return failedValidationMessage ?? "Group identifier must contain two groups and no missing data";
+                        }
+                    }
+                    return null;
+                case ValidationMode.NoMissingData:
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure there's no missing data in any of the numeric variables in the frame
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (Variable variable in dataFrame.Variables)
+                        {
+                            if (variable is DoubleVariable)
+                            {
+                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                foreach (double value in doubleVariable.Data)
+                                {
+                                    if (value == Constant.MISSING)
+                                    {
+                                        return failedValidationMessage ?? "Operation cannot take missing data";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                case ValidationMode.PersonTimeSize:
+                    {
+                        // Assumes no missing data, no data < 0
+                        DataFrame datFrame = filledParameters["data"].AsDataFrame;
+                        DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
+                        DoubleVariable datV2 = datFrame.Variables[2].AsDoubleVariable;
+                        int rows = datFrame.MaxRows;
+
+                        double refntot = 0.0;
+                        for (int j = 1; j <= rows; j++)
+                        {
+                            double xy = datV0.Data[j - 1];
+                            double xn = datV1.Data[j - 1];
+                            double rf = datV2.Data[j - 1];
+                            refntot += rf;
+                            if (xn <= 0)
+                                return "Person-time must be greater than zero";
+                            if (xy > xn)
+                                return "Number of events must be greater then person-time, do not scale person-time";
+                        }
+
+                        if (refntot <= 0.0)
+                            return "Total reference group size must be greater than zero";
+                    }
+                    return null;
+                default:
+                    throw new ArgumentOutOfRangeException("validationMode", validationMode, "I don't know how to validate that mode");
+            }
         }
 
     }
