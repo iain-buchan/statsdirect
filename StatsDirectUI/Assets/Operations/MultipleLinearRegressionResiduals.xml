@@ -21,32 +21,32 @@
 		</settings>
 		<builtin function-name="rptMultipleLinearRegressionResiduals" />
 		<test>
-			<condition>=Parameters.ContainsKey("yfit") || Parameters.ContainsKey("studentised") || Parameters.ContainsKey("jackknife") </condition>
+			<condition>=parameters.ContainsKey("yfit") || parameters.ContainsKey("studentised") || parameters.ContainsKey("jackknife") </condition>
 			<iftrue>
         <settings>
           <parameters>
             <special>
               <name>solo</name>
               <prompt>Pick the sheet in which you want the output to appear</prompt>
-              <acquire-if-true>=Parameters.ContainsKey("output-to-frame") &amp;&amp; Parameters["output-to-frame"].AsBoolean</acquire-if-true>
+              <acquire-if-true>=parameters.ContainsKey("output-to-frame") &amp;&amp; parameters["output-to-frame"].AsBoolean</acquire-if-true>
               <type>frame</type>
             </special>
         </parameters>
         </settings>
         <test>
-					<condition>=Parameters.ContainsKey("yfit")</condition>
+					<condition>=parameters.ContainsKey("yfit")</condition>
 					<iftrue>
 						<output-frame frame-name="yfit" keep-selection="true" />
 					</iftrue>
 				</test>
 				<test>
-					<condition>=Parameters.ContainsKey("studentised")</condition>
+					<condition>=parameters.ContainsKey("studentised")</condition>
 					<iftrue>
 						<output-frame frame-name="studentised" keep-selection="true" />
 					</iftrue>
 				</test>
 				<test>
-					<condition>=Parameters.ContainsKey("jackknife")</condition>
+					<condition>=parameters.ContainsKey("jackknife")</condition>
 					<iftrue>
 						<output-frame frame-name="jackknife" keep-selection="true" />
 					</iftrue>

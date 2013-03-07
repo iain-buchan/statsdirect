@@ -47,7 +47,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult FileImportReport(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult FileImportReport(ITemplateHost host, ParameterBag parameters)
         {
             // import text to the active report
             using (OpenFileDialog C_FD = new OpenFileDialog())
@@ -121,7 +121,7 @@ namespace StatsDirect.Builtins
                         currentLine += delimiter;
                     }
                     row += 1;
-                    //  TODO: If Host.UpdateProgress(Loc(ff) / LOF(ff) * 128) Then Exit Do
+                    //  TODO: If host.UpdateProgress(Loc(ff) / LOF(ff) * 128) Then Exit Do
                 } while (true);
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("output", outputFrame);

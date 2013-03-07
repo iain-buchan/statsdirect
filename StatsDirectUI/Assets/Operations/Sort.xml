@@ -29,7 +29,7 @@
       </parameters>
     </settings>
     <test>
-      <condition>=Parameters["link"].AsBoolean</condition>
+      <condition>=parameters["link"].AsBoolean</condition>
       <iftrue>
         <settings>
           <parameters>

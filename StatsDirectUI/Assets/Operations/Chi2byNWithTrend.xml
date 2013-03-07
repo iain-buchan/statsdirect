@@ -9,6 +9,10 @@
         <special>
           <name>data</name>
           <must-request>true</must-request>
+          <validators>
+            <validator>NoMissingData</validator>
+            <validator>ThreeColumns</validator>
+          </validators>
           <type>chi-3-column</type>
         </special>
         <boolean>
@@ -20,7 +24,7 @@
         <integer>
           <name>iterations</name>
           <prompt>Iterations</prompt>
-          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
           <column>2</column>
           <must-request>true</must-request>
           <minimum-value>1</minimum-value>
@@ -29,7 +33,7 @@
         <integer>
           <name>seed</name>
           <prompt>Seed</prompt>
-          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
           <column>2</column>
           <must-request>true</must-request>
           <force-default>true</force-default>
@@ -37,7 +41,7 @@
         </integer>
         <confidence-interval>
           <name>ci</name>
-          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
           <column>2</column>
           <must-request>true</must-request>
           <default-value>0.99</default-value>
@@ -49,13 +53,18 @@
   	<builtin function-name="rptChi2byNWithTrend" />
 	  <report filename="chi2xc.rtf" />
     <test>
-      <condition>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</condition>
+      <condition>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</condition>
       <iftrue>
         <builtin function-name="rptChi2byNWithTrendSimulateExactP" />
         <report filename="chiTwoByKSimulatedExactP.rtf" />
       </iftrue>
     </test>
   </steps>
+  <custom-validators>
+    <validator name="ThreeColumns" language="CSharp">
+      return (parameters[parameter.Name].IsDataFrame &amp;&amp; parameters[parameter.Name].AsDataFrame.VariableCount == 3) ? null : "Values should be entered in all columns";
+    </validator>
+  </custom-validators>
   <suggested-operations>
     <suggested-operation>Chi2byNWithTrend</suggested-operation>
   </suggested-operations>

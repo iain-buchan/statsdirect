@@ -9,6 +9,10 @@
         <special>
           <name>data</name>
           <must-request>true</must-request>
+          <validators>
+            <validator>NoMissingData</validator>
+            <validator>TwoColumns</validator>
+          </validators>
           <type>chi-2-column</type>
         </special>
       </parameters>
@@ -16,6 +20,11 @@
   	<builtin function-name="rptChi2byNWithoutTrend" />
 	  <report filename="chi2xc.rtf" />
 	</steps>
+  <custom-validators>
+    <validator name="TwoColumns" language="CSharp">
+      return (parameters[parameter.Name].IsDataFrame &amp;&amp; parameters[parameter.Name].AsDataFrame.VariableCount == 2) ? null : "Values should be entered in both columns";
+    </validator>
+  </custom-validators>
   <suggested-operations>
     <suggested-operation>Chi2byNWithoutTrend</suggested-operation>
   </suggested-operations>

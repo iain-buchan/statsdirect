@@ -16,7 +16,7 @@
     </settings>
 		<builtin function-name="rptXxi" />
 		<test>
-			<condition>=Parameters["outputToGrid"].AsBoolean</condition>
+			<condition>=parameters["outputToGrid"].AsBoolean</condition>
 			<iftrue>
 				<output-frame frame-name="data" />
 			</iftrue>

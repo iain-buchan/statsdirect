@@ -9,7 +9,7 @@
         <option>
           <name>meta-plot-method</name>
           <prompt>Vertical Axis in Meta-Analysis Bias Plot</prompt>
-          <default-value>=Host.Preferences.MetaPlotMethod.ToString()</default-value>
+          <default-value>=host.Preferences.MetaPlotMethod.ToString()</default-value>
           <options>
             <option value="1">standard error</option>
             <option value="2">precision</option>
@@ -23,14 +23,14 @@
         <boolean>
           <name>meta-plot-ci</name>
           <prompt>Include confidence interval if relevant</prompt>
-          <default-value>=Host.Preferences.MetaPlotCI</default-value>
+          <default-value>=host.Preferences.MetaPlotCI</default-value>
         </boolean>
       </parameters>
     </settings>
     <script language="CSharp"><![CDATA[
-SDPreferences preferences = Host.Preferences;
-preferences.MetaPlotCI = Parameters["meta-plot-ci"].AsBoolean;
-preferences.MetaPlotMethod = Parsing.Cint_Txt(Parameters["meta-plot-method"].AsString);
+SDPreferences preferences = host.Preferences;
+preferences.MetaPlotCI = parameters["meta-plot-ci"].AsBoolean;
+preferences.MetaPlotMethod = Parsing.Cint_Txt(parameters["meta-plot-method"].AsString);
 return new ParameterBag();
     ]]></script>
 	</steps>

@@ -9,6 +9,7 @@
         <double>
           <name>cutoff</name>
           <prompt>Rounding cut off</prompt>
+          <must-request>true</must-request>
           <default-value>0.5</default-value>
           <minimum-value>0</minimum-value>
           <maximum-value>1</maximum-value>

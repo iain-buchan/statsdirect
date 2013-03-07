@@ -26,7 +26,7 @@
       </parameters>
     </settings>
     <test>
-      <condition>=Parameters["c2"].AsDataFrame.VariableCount == 1</condition>
+      <condition>=parameters["c2"].AsDataFrame.VariableCount == 1</condition>
       <iftrue>
         <settings>
           <parameters>
@@ -95,10 +95,10 @@
     </settings>
     <builtin function-name="rptCrosstabsPreprocess" />
     <test>
-      <condition>=Parameters["strat"].AsBoolean</condition>
+      <condition>=parameters["strat"].AsBoolean</condition>
       <iftrue>
         <test>
-          <condition>=Parameters["xcats"].AsInt32 == 2 &amp;&amp; Parameters["ycats"].AsInt32 == 2</condition>
+          <condition>=parameters["xcats"].AsInt32 == 2 &amp;&amp; parameters["ycats"].AsInt32 == 2</condition>
           <iftrue>
             <settings>
               <parameters>

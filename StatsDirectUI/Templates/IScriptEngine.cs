@@ -21,7 +21,11 @@
         /// Arbitrary code that may be contained in multiple functions.
         /// One should be the entry point that accepts an ITemplateHost as the first parameter, a ParameterBag as the second, and returns a ParameterBag.
         /// </summary>
-        MultipleMethods
+        MultipleMethods,
+        /// <summary>
+        /// A multiple-statement code fragment that takes a host, parameter bag and parameter and returns a bool
+        /// </summary>
+        Validator
     }
 
     public interface IScriptEngine
@@ -30,12 +34,6 @@
         /// Runs the script's step entry point.  If it doesn't have one, throws an exception.
         /// </summary>
         /// <returns>Whatever the script returned</returns>
-        object Run(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, string entryPoint);
-
-        /// <summary>
-        /// Runs the script's step entry point.  If it doesn't have one, throws an exception.
-        /// </summary>
-        /// <returns></returns>
-        object RunDotNet(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, string entryPoint);
+        object Run(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, Parameter parameter, string entryPoint);
     }
 }

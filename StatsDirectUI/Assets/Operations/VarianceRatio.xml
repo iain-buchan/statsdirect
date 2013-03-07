@@ -19,14 +19,14 @@
     </settings>
     <script language="VB" entry-point="rptVarianceRatio">
       <![CDATA[
-    Public Function rptVarianceRatio(ByVal Host As ITemplateHost, ByVal Parameters As ParameterBag) As ParameterBag
+    Public Function rptVarianceRatio(ByVal host As ITemplateHost, ByVal parameters As ParameterBag) As ParameterBag
         Dim P As Double, f As Double
         Dim bot As Integer, top As Integer
         Dim mean() As Double, ss() As Double, var() As Double, sd() As Double, sem() As Double
         Dim tnx() As Integer
 
         ReDim mean(1), ss(1), var(1), sd(1), sem(1), tnx(1)
-        Dim data As DataFrame = Parameters("data").AsDataFrame
+        Dim data As DataFrame = parameters("data").AsDataFrame
         para(data, mean, ss, var, sd, sem, tnx)
         If Math.Abs(var(0)) > Math.Abs(var(1)) Then
             top = 0
@@ -39,16 +39,16 @@
         Dim outputParameters As ParameterBag = New ParameterBag()
         outputParameters.AddOutput("title_0", data.Variables(top).Title)
         outputParameters.AddOutput("df_0", Format(tnx(top) - 1))
-        outputParameters.AddOutput("var_0", Host.RoundU(var(top)))
+        outputParameters.AddOutput("var_0", host.RoundU(var(top)))
         outputParameters.AddOutput("title_1", data.Variables(bot).Title)
         outputParameters.AddOutput("df_1", Format(tnx(bot) - 1))
-        outputParameters.AddOutput("var_1", Host.RoundU(var(bot)))
-        outputParameters.AddOutput("f", Host.RoundU(f))
+        outputParameters.AddOutput("var_1", host.RoundU(var(bot)))
+        outputParameters.AddOutput("f", host.RoundU(f))
         P = PDF.fvalp(f, CDbl(tnx(top) - 1), CDbl(tnx(bot) - 1))
-        outputParameters.AddOutput("p_1", Host.pval(P))
+        outputParameters.AddOutput("p_1", host.pval(P))
         If P > 0.5 Then P = 0.5
-        outputParameters.AddOutput("p_2", Host.pval(P * 2))
-        If Err.Number <> 0 Then Host.Error(Formatting.ERRCOLON & Err.Description, "Variance")
+        outputParameters.AddOutput("p_2", host.pval(P * 2))
+        If Err.Number <> 0 Then host.Error(Formatting.ERRCOLON & Err.Description, "Variance")
         Return outputParameters
     End Function
 

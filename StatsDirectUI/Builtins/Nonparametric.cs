@@ -801,7 +801,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static ParameterBag x_mwcon(ITemplateHost Host, ref double[] x, int k, int n1, int n2)
+        private static ParameterBag x_mwcon(ITemplateHost host, ref double[] x, int k, int n1, int n2)
         {
             double median = 0; double kl = 0;
             int occurrences;
@@ -811,7 +811,7 @@ namespace StatsDirect.Builtins
 
             if (k > Int32.MaxValue | k == -99)
             {
-                Host.Error("Sample is too large for exact confidence interval calculation.", "Mann-Whitney"); // , ACTIVE_HELP_ID
+                host.Error("Sample is too large for exact confidence interval calculation.", "Mann-Whitney"); // , ACTIVE_HELP_ID
                 outputParameters.AddOutput("median", Formatting.ASTERISK);
                 outputParameters.AddOutput("from", Formatting.ASTERISK);
                 outputParameters.AddOutput("to", Formatting.ASTERISK);
@@ -828,7 +828,7 @@ namespace StatsDirect.Builtins
                 midu = ((int)(Math.Floor((double)(limit + 1) / 2)));
                 midl = midu;
             }
-            Host.StartProgress("Calculating Confidence Interval");
+            host.StartProgress("Calculating Confidence Interval");
             int[] xx = new int[n1 + 1 /* VB to C# conversion */ ];
             int[] yy = new int[n2 + 1 /* VB to C# conversion */ ];
             Array.Sort(x, n1 + 1, n2);
@@ -868,7 +868,7 @@ namespace StatsDirect.Builtins
             {
                 C = ExFortran.findnext(out occurrences, C, xx, n1, yy, n2);
                 i = i + occurrences;
-                if (Host.UpdateProgress(i / (double)goal))
+                if (host.UpdateProgress(i / (double)goal))
                 {
                     outputParameters.AddOutput("median", Formatting.ASTERISK);
                     outputParameters.AddOutput("from", Formatting.ASTERISK);
@@ -919,7 +919,7 @@ namespace StatsDirect.Builtins
             {
                 C = ExFortran.findnext(out occurrences, C, xx, n1, yy, n2);
                 i = i + occurrences;
-                if (Host.UpdateProgress((midu + i) / (double)goal))
+                if (host.UpdateProgress((midu + i) / (double)goal))
                 {
                     outputParameters.AddOutput("median", Formatting.ASTERISK);
                     outputParameters.AddOutput("from", Formatting.ASTERISK);
@@ -928,10 +928,10 @@ namespace StatsDirect.Builtins
                 }
             }
             double ku = -C / (double)scaler;
-            Host.FinishProgress();
-            outputParameters.AddOutput("median", Host.RoundU(median));
-            outputParameters.AddOutput("from", Host.RoundU(kl));
-            outputParameters.AddOutput("to", Host.RoundU(ku));
+            host.FinishProgress();
+            outputParameters.AddOutput("median", host.RoundU(median));
+            outputParameters.AddOutput("from", host.RoundU(kl));
+            outputParameters.AddOutput("to", host.RoundU(ku));
             return outputParameters;
         }
 

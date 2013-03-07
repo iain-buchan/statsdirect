@@ -22,7 +22,7 @@
       </parameters>
     </settings>
     <test>
-      <condition>=Parameters["data"].AsDataFrame.VariableCount > 1</condition>
+      <condition>=parameters["data"].AsDataFrame.VariableCount > 1</condition>
       <iftrue>
         <settings>
           <parameters>

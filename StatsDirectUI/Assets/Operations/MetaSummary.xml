@@ -32,7 +32,7 @@
     </settings>
 		<script language="CSharp">
           <![CDATA[
-				string t = Parameters["type"].AsString;
+				string t = parameters["type"].AsString;
 				ParameterBag outputParameters = new ParameterBag();
 				if ("oddsRatio".Equals(t))
 				{
@@ -72,7 +72,7 @@
       <parameters>
         <frame>
           <name>y</name>
-          <prompt>="Select SUMMARY STATISTIC (" + Parameters["stat_in"].AsString.ToLower() + ")"</prompt>
+          <prompt>="Select SUMMARY STATISTIC (" + parameters["stat_in"].AsString.ToLower() + ")"</prompt>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -81,13 +81,13 @@
       </parameters>
     </settings>
 		<test>
-			<condition>="true".Equals(Parameters["use_ci"].AsString)</condition>
+			<condition>="true".Equals(parameters["use_ci"].AsString)</condition>
 			<iftrue>
         <settings>
           <parameters>
             <frame>
               <name>ll_y</name>
-              <prompt>="Select LOWER CONFIDENCE LIMIT for " + Parameters["stat_in"].AsString.ToLower()</prompt>
+              <prompt>="Select LOWER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower()</prompt>
               <mode>NumericSkipMissing</mode>
               <same-length-as>y</same-length-as>
               <min-columns>1</min-columns>
@@ -96,7 +96,7 @@
             </frame>
             <frame>
               <name>ul_y</name>
-              <prompt>="Select UPPER CONFIDENCE LIMIT for " + Parameters["stat_in"].AsString.ToLower()</prompt>
+              <prompt>="Select UPPER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower()</prompt>
               <mode>NumericSkipMissing</mode>
               <same-length-as>y</same-length-as>
               <min-columns>1</min-columns>
@@ -111,7 +111,7 @@
 					<parameters>
 						<frame>
 							<name>se_y</name>
-							<prompt>="Select STANDARD ERROR for " + (Parameters["use_ratio"].AsBoolean ? "LOG " : "") + Parameters["stat_in"].AsString.ToLower()</prompt>
+							<prompt>="Select STANDARD ERROR for " + (parameters["use_ratio"].AsBoolean ? "LOG " : "") + parameters["stat_in"].AsString.ToLower()</prompt>
 							<mode>NumericSkipMissing</mode>
 							<same-length-as>y</same-length-as>
 							<min-columns>1</min-columns>

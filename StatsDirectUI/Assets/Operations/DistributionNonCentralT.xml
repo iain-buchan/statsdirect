@@ -6,7 +6,7 @@
   <steps>
     <builtin function-name="distNonCentralT"/>
     <test>
-      <condition>=Parameters.ContainsKey("gr")</condition>
+      <condition>=parameters.ContainsKey("gr")</condition>
       <iftrue>
         <report filename="probcal.rtf" />
       </iftrue>

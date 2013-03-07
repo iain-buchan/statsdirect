@@ -176,12 +176,12 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptRateDirect(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult rptRateDirect(ITemplateHost host, ParameterBag parameters)
         {
             double xu; double XL;
             int j; int fault; int i;
 
-            double cco = Parameters["cco"].AsDouble;
+            double cco = parameters["cco"].AsDouble;
             if (cco > 1.0 | cco < 0.0)
             {
                 cco = 0.95;
@@ -190,7 +190,7 @@ namespace StatsDirect.Builtins
             double refntot = 0.0;
             double events = 0.0;
             double ntot = 0.0;
-            DataFrame eventsFrame = Parameters["events"].AsDataFrame;
+            DataFrame eventsFrame = parameters["events"].AsDataFrame;
             DoubleVariable eventsVariable = eventsFrame.Variables[0].AsDoubleVariable;
             int rows = eventsVariable.Length;
             double[] idxy = new double[rows + 1 /* for VB to C# conversion */ ];
@@ -204,7 +204,7 @@ namespace StatsDirect.Builtins
                 idxy[i] = eventsVariable.Data[i - 1];
                 events += idxy[i];
             }
-            DataFrame timesFrame = Parameters["times"].AsDataFrame;
+            DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
             for (i = 1; i <= rows; i++)
             {
@@ -215,16 +215,16 @@ namespace StatsDirect.Builtins
                     throw new Templates.InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
                 }
             }
-            DataFrame refnFrame = Parameters["refn"].AsDataFrame;
+            DataFrame refnFrame = parameters["refn"].AsDataFrame;
             DoubleVariable refnVariable = refnFrame.Variables[0].AsDoubleVariable;
             for (i = 1; i <= rows; i++)
             {
                 refn[i] = refnVariable.Data[i - 1];
                 refntot += refn[i];
             }
-            if (Parameters.ContainsKey("strata") && Parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
             {
-                DataFrame strataFrame = Parameters["strata"].AsDataFrame;
+                DataFrame strataFrame = parameters["strata"].AsDataFrame;
                 StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
                 for (i = 1; i <= rows; i++)
                 {
@@ -250,7 +250,7 @@ namespace StatsDirect.Builtins
                     title[i] = "stratum " + i.ToString();
                 }
             }
-            double nunit = Parsing.Cdbl_Txt(Parameters["nunit"].AsString);
+            double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
             if (refntot <= 0.0 || ntot <= 0.0)
             {
                 throw new Templates.InvalidDataException();
@@ -288,11 +288,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("idxy", Host.RoundU(idxy[j]));
-                inputsParameters.AddOutput("idxn", Host.RoundU(idxn[j]));
-                inputsParameters.AddOutput("idxr", Host.RoundU(idxr[j] * nunit));
-                inputsParameters.AddOutput("refn", Host.RoundU(refn[j]));
-                inputsParameters.AddOutput("refw", Host.RoundU(refw[j]));
+                inputsParameters.AddOutput("idxy", host.RoundU(idxy[j]));
+                inputsParameters.AddOutput("idxn", host.RoundU(idxn[j]));
+                inputsParameters.AddOutput("idxr", host.RoundU(idxr[j] * nunit));
+                inputsParameters.AddOutput("refn", host.RoundU(refn[j]));
+                inputsParameters.AddOutput("refw", host.RoundU(refw[j]));
             }
             // CIs for the single Poisson parameter (stratum specific rate)
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
@@ -302,24 +302,24 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag cisParameters = new ParameterBag();
                 cisList.Add(cisParameters);
-                cisParameters.AddOutput("idxr", Host.RoundU(idxr[j] * nunit));
+                cisParameters.AddOutput("idxr", host.RoundU(idxr[j] * nunit));
                 poisson_ci(alpha, idxy[j], idxn[j], out XL, out xu);
-                cisParameters.AddOutput("from", Host.RoundU(XL * nunit));
-                cisParameters.AddOutput("to", Host.RoundU(xu * nunit));
+                cisParameters.AddOutput("from", host.RoundU(XL * nunit));
+                cisParameters.AddOutput("to", host.RoundU(xu * nunit));
                 cisParameters.AddOutput("label", title[j]);
             }
 
             // pooled
-            outputParameters.AddOutput("events", Host.RoundU(events));
-            outputParameters.AddOutput("stde", Host.RoundU(stdr * ntot));
+            outputParameters.AddOutput("events", host.RoundU(events));
+            outputParameters.AddOutput("stde", host.RoundU(stdr * ntot));
 
-            outputParameters.AddOutput("crude", Host.RoundU(nunit * events / ntot));
-            outputParameters.AddOutput("stdr", Host.RoundU(nunit * stdr));
+            outputParameters.AddOutput("crude", host.RoundU(nunit * events / ntot));
+            outputParameters.AddOutput("stdr", host.RoundU(nunit * stdr));
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
 
             // Binomial approx CI - see Armitage
             double ser = bino_var > 0.0 ? Math.Sqrt(bino_var) : Constant.MISSING;
-            outputParameters.AddOutput("ser_any", Host.RoundU(nunit * ser));
+            outputParameters.AddOutput("ser_any", host.RoundU(nunit * ser));
             if (fault != 0)
             {
                 XL = Constant.MISSING;
@@ -330,12 +330,12 @@ namespace StatsDirect.Builtins
                 XL = stdr - cit * ser;
                 xu = stdr + cit * ser;
             }
-            outputParameters.AddOutput("from_any", Host.RoundU(nunit * XL));
-            outputParameters.AddOutput("to_any", Host.RoundU(nunit * xu));
+            outputParameters.AddOutput("from_any", host.RoundU(nunit * XL));
+            outputParameters.AddOutput("to_any", host.RoundU(nunit * xu));
 
             // Poisson approx CI
             ser = pois_var > 0.0 ? Math.Sqrt(pois_var) : Constant.MISSING;
-            outputParameters.AddOutput("ser_small", Host.RoundU(nunit * ser));
+            outputParameters.AddOutput("ser_small", host.RoundU(nunit * ser));
 
             if (fault != 0)
             {
@@ -347,8 +347,8 @@ namespace StatsDirect.Builtins
                 XL = stdr - cit * ser;
                 xu = stdr + cit * ser;
             }
-            outputParameters.AddOutput("from_small", Host.RoundU(nunit * XL));
-            outputParameters.AddOutput("to_small", Host.RoundU(nunit * xu));
+            outputParameters.AddOutput("from_small", host.RoundU(nunit * XL));
+            outputParameters.AddOutput("to_small", host.RoundU(nunit * xu));
 
             // Dobson et al. improved approx Poisson CI - Stats in Medicine 1991 (10)457
             poisson_ci(alpha, events, 1.0, out XL, out xu);
@@ -368,8 +368,8 @@ namespace StatsDirect.Builtins
             {
                 xu = Constant.MISSING;
             }
-            outputParameters.AddOutput("from_dobson", Host.RoundU(nunit * XL));
-            outputParameters.AddOutput("to_dobson", Host.RoundU(nunit * xu));
+            outputParameters.AddOutput("from_dobson", host.RoundU(nunit * XL));
+            outputParameters.AddOutput("to_dobson", host.RoundU(nunit * xu));
 
             return new StepResult(StepSuccess.Success, outputParameters);
         }

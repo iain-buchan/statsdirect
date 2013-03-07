@@ -20,7 +20,7 @@
       </parameters>
     </settings>
 	<test>
-		<condition>=Parameters["responses"].AsDataFrame.VariableCount == 2</condition>
+		<condition>=parameters["responses"].AsDataFrame.VariableCount == 2</condition>
 		<iftrue>
       <!-- Two raters -->
 			<!-- Options -->
@@ -39,7 +39,7 @@
         </parameters>
       </settings>
 			<test>
-				<condition>="3".Equals(Parameters["method"].AsString)</condition>
+				<condition>="3".Equals(parameters["method"].AsString)</condition>
 				<iftrue>
 					<builtin function-name="rptKappaSizeWeights"/>
 					<!-- Weights -->
@@ -47,11 +47,11 @@
             <parameters>
               <frame>
                 <name>weights</name>
-                <prompt>="Select table of WEIGHTS (" + Parameters["ycats"] + " rows by " + Parameters["xcats"] + " columns)"</prompt>
-                <length>=Parameters["ycats"]</length>
+                <prompt>="Select table of WEIGHTS (" + parameters["ycats"] + " rows by " + parameters["xcats"] + " columns)"</prompt>
+                <length>=parameters["ycats"]</length>
                 <mode>NumericReplaceMissing</mode>
-                <min-columns>=Parameters["xcats"]</min-columns>
-                <max-columns>=Parameters["xcats"]</max-columns>
+                <min-columns>=parameters["xcats"]</min-columns>
+                <max-columns>=parameters["xcats"]</max-columns>
                 <clear-selection-first>true</clear-selection-first>
               </frame>
             </parameters>
@@ -66,7 +66,7 @@
       <!-- More than two raters -->
 			<builtin function-name="rptKappa" />
 			<test>
-				<condition>=2 == Parameters["categories"].AsInt32</condition>
+				<condition>=2 == parameters["categories"].AsInt32</condition>
 				<iftrue>
 					<report filename="kappa2.rtf" />
 				</iftrue>
@@ -78,6 +78,6 @@
 	</test>
 	</steps>
   <suggested-operations>
-    <suggested-operation suggest-if="=null != Parameters &amp;&amp; 2 == Parameters[&quot;responses&quot;].AsDataFrame.VariableCount">KappaSimulateExactP</suggested-operation>
+    <suggested-operation suggest-if="=null != parameters &amp;&amp; 2 == parameters[&quot;responses&quot;].AsDataFrame.VariableCount">KappaSimulateExactP</suggested-operation>
   </suggested-operations>
 </operation>

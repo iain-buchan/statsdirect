@@ -36,7 +36,7 @@
           <parameters>
             <frame>
               <name>scrapTimes</name>
-              <prompt>="Select data for TIMES (repeat " + Parameters["repeat"].Data.ToString() + ")"</prompt>
+              <prompt>="Select data for TIMES (repeat " + parameters["repeat"].Data.ToString() + ")"</prompt>
               <same-length-as>gid</same-length-as>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
@@ -47,7 +47,7 @@
             </frame>
             <frame>
               <name>scrapCensor</name>
-              <prompt>="Select data for CENSORSHIP (repeat " + Parameters["repeat"].Data.ToString() + ")"</prompt>
+              <prompt>="Select data for CENSORSHIP (repeat " + parameters["repeat"].Data.ToString() + ")"</prompt>
               <same-length-as>gid</same-length-as>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>

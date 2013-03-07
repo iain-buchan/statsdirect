@@ -366,7 +366,7 @@ namespace StatsDirect.UI
                 string script = rtbDoc.Text;
                 IScriptEngine engine = new ScriptEngine();
                 string Language = ScriptLanguageForScript();
-                object output = engine.Run(Language, script, ScriptType.Method, SDApplication.SoleInstance, null, null);
+                object output = engine.Run(Language, script, ScriptType.Method, SDApplication.SoleInstance, null, null, null);
                 if (null != output)
                 {
                     if (output is ParameterBag)

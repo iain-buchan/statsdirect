@@ -24,7 +24,7 @@
           <parameters>
             <frame>
               <name>ydatNew</name>
-              <prompt>="Select data for Y axis: SERIES " + Parameters["group-index"].AsInt32.ToString()</prompt>
+              <prompt>="Select data for Y axis: SERIES " + parameters["group-index"].AsInt32.ToString()</prompt>
               <same-length>false</same-length>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
@@ -35,7 +35,7 @@
             </frame>
             <frame>
               <name>xdatNew</name>
-              <prompt>="Select data for X axis: SERIES " + Parameters["group-index"].AsInt32.ToString()</prompt>
+              <prompt>="Select data for X axis: SERIES " + parameters["group-index"].AsInt32.ToString()</prompt>
               <same-length>true</same-length>
               <same-length-as>ydatNew</same-length-as>
               <mode>NumericReplaceMissing</mode>
@@ -47,7 +47,7 @@
             </frame>
             <frame>
               <name>ydatuNew</name>
-              <prompt>="Select data for UPPER error bar: SERIES " + Parameters["group-index"].AsInt32.ToString()</prompt>
+              <prompt>="Select data for UPPER error bar: SERIES " + parameters["group-index"].AsInt32.ToString()</prompt>
               <same-length>true</same-length>
               <same-length-as>ydatNew</same-length-as>
               <mode>NumericReplaceMissing</mode>
@@ -59,7 +59,7 @@
             </frame>
             <frame>
               <name>ydatlNew</name>
-              <prompt>="Select data for LOWER error bar: SERIES " + Parameters["group-index"].AsInt32.ToString()</prompt>
+              <prompt>="Select data for LOWER error bar: SERIES " + parameters["group-index"].AsInt32.ToString()</prompt>
               <same-length>true</same-length>
               <same-length-as>ydatNew</same-length-as>
               <mode>NumericReplaceMissing</mode>

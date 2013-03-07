@@ -24,7 +24,7 @@
           <name>pe</name>
           <must-request>true</must-request>
           <prompt>Population proportion exposed (optional)</prompt>
-          <acquire-if-true>=Parameters.ContainsKey("a") &amp;&amp; Parameters.ContainsKey("b") &amp;&amp; Parameters.ContainsKey("c") &amp;&amp; Parameters.ContainsKey("d") &amp;&amp; (((Parameters["a"].AsDouble) / (Parameters["a"].AsDouble + Parameters["c"].AsDouble)) / ((Parameters["b"].AsDouble) / (Parameters["b"].AsDouble + Parameters["d"].AsDouble))) &gt; 1.0</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("a") &amp;&amp; parameters.ContainsKey("b") &amp;&amp; parameters.ContainsKey("c") &amp;&amp; parameters.ContainsKey("d") &amp;&amp; (((parameters["a"].AsDouble) / (parameters["a"].AsDouble + parameters["c"].AsDouble)) / ((parameters["b"].AsDouble) / (parameters["b"].AsDouble + parameters["d"].AsDouble))) &gt; 1.0</acquire-if-true>
           <cancel-skips-parameter>true</cancel-skips-parameter>
           <minimum-value>0</minimum-value>
           <maximum-value>1</maximum-value>

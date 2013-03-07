@@ -1191,7 +1191,7 @@ namespace StatsDirect.Builtins
                         }
                         outputParameters.AddOutput("*", catList);
                         outputParameters.AddOutput("kc", host.RoundU(kbar));
-                        //  outputParameters.AddOutput("sec", Host.RoundU(sek))
+                        //  outputParameters.AddOutput("sec", host.RoundU(sek))
                         outputParameters.AddOutput("zc", host.RoundU(z));
                         outputParameters.AddOutput("p",
                                                    z != Constant.MISSING
@@ -1939,7 +1939,7 @@ namespace StatsDirect.Builtins
 
 
         //  Old version
-        // Public Shared Function rptChiGood(ByVal Host As ITemplateHost, ByVal Parameters As ParameterBag) As StepResult
+        // Public Shared Function rptChiGood(ByVal host As ITemplateHost, ByVal parameters As ParameterBag) As StepResult
         //     Dim x() As Double, xn() As Double, xe() As Double, totxe As Double, totob As Double, x2 As Double
         //     Dim i As Integer, N As Integer, nx As Integer, total As Integer, OK As Integer, df As Integer
         //     Dim gotx As Boolean
@@ -1947,8 +1947,8 @@ namespace StatsDirect.Builtins
         //     Dim warn As String = ""
         //     Dim cgft As String = "Chi-square goodness of fit test"
 
-        //     Dim frame As DataFrame = Parameters("data").AsDataFrame
-        //     Dim individualOrGrouped As String = Parameters("individualOrGrouped").AsString
+        //     Dim frame As DataFrame = parameters("data").AsDataFrame
+        //     Dim individualOrGrouped As String = parameters("individualOrGrouped").AsString
         //     Dim isIndividual As Boolean = "I".Equals(individualOrGrouped)
 
         //     Dim chiGFOptions As ChiSquareGoodnessOfFitOptions = New ChiSquareGoodnessOfFitOptions()
@@ -1991,8 +1991,8 @@ namespace StatsDirect.Builtins
         //         Dim soleData() As Double = frequenciesVariable.Data
 
         //         Dim namesVariable As StringVariable = Nothing
-        //         If Parameters.ContainsKey("names") Then
-        //             namesVariable = Parameters("names").AsDataFrame.Variables(0).AsStringVariable
+        //         If parameters.ContainsKey("names") Then
+        //             namesVariable = parameters("names").AsDataFrame.Variables(0).AsStringVariable
         //         End If
 
         //         nx = frequenciesVariable.Length
@@ -2015,11 +2015,11 @@ namespace StatsDirect.Builtins
         //         Next
         //     End If
         //     If nx < 2 Then
-        //         Host.Error("Too few categories; use at least three for the chi-square goodness of fit test.", cgft)
+        //         host.Error("Too few categories; use at least three for the chi-square goodness of fit test.", cgft)
         //         Throw New TemplateOperationCancelledException()
         //     End If
         //     If nx = 2 Then
-        //         Host.Error("Only two categories, use binomial methods such as the single proportion test.", cgft)
+        //         host.Error("Only two categories, use binomial methods such as the single proportion test.", cgft)
         //         Throw New TemplateOperationCancelledException()
         //     End If
 
@@ -2034,7 +2034,7 @@ namespace StatsDirect.Builtins
         //     chiGFOptions.total = total
         //     chiGFOptions.df = df
 
-        //     If Not Host.Amend(chiGFOptions, Parameters) Then
+        //     If Not host.Amend(chiGFOptions, parameters) Then
         //         Throw New TemplateOperationCancelledException()
         //     End If
         //     df = chiGFOptions.df
@@ -2048,7 +2048,7 @@ namespace StatsDirect.Builtins
         //     OK = 0
         //     For N = 1 To nx
         //         If xe(N) <= 0 Then
-        //             Host.Error("Can not have expected value < = 0.", cgft)
+        //             host.Error("Can not have expected value < = 0.", cgft)
         //             Throw New TemplateOperationCancelledException()
         //         End If
         //         If xe(N) < 5 Then OK = OK + 1
@@ -2057,7 +2057,7 @@ namespace StatsDirect.Builtins
         //     Next
         //     If CLng(totxe) <> CLng(totob) Then
         //         w2 = Formatting.WRNCOLON & "total expected not equal to total observed"
-        //         Host.Error(w2, cgft)
+        //         host.Error(w2, cgft)
         //     Else
         //         w2 = vbNullString
         //     End If
@@ -2080,14 +2080,14 @@ namespace StatsDirect.Builtins
         //         'If x(i) = Constant.MISSING Then tx = "missing or text" Else tx = Format(x(i))
         //         frequenciesParameters.AddOutput("x", tx)
         //         frequenciesParameters.AddOutput("o", Format(xn(i)))
-        //         frequenciesParameters.AddOutput("e", Host.RoundU(xe(i)))
+        //         frequenciesParameters.AddOutput("e", host.RoundU(xe(i)))
         //         x2 += ((xn(i) - xe(i)) * (xn(i) - xe(i))) / xe(i)
         //         frequenciesList.Add(frequenciesParameters)
         //     Next
         //     outputParameters.AddOutput("*frequencies", frequenciesList)
-        //     outputParameters.AddOutput("chi2", Host.RoundU(x2))
+        //     outputParameters.AddOutput("chi2", host.RoundU(x2))
         //     outputParameters.AddOutput("df", Format(df))
-        //     outputParameters.AddOutput("p", Host.pval(PDF.chivalp(x2, CDbl(df))))
+        //     outputParameters.AddOutput("p", host.pval(PDF.chivalp(x2, CDbl(df))))
         //     If Len(warn) > 0 Then
         //         Dim warnList As IList(Of ParameterBag) = New List(Of ParameterBag)
         //         Dim warnParameters As ParameterBag = New ParameterBag()
@@ -2097,7 +2097,7 @@ namespace StatsDirect.Builtins
         //     Else
         //         outputParameters.AddOutput("*warn", Nothing)
         //     End If
-        //     If Err.Number <> 0 Then Host.Error(Err.Description, "Chi-Square Goodness of Fit")
+        //     If Err.Number <> 0 Then host.Error(Err.Description, "Chi-Square Goodness of Fit")
 
         //     Return New StepResult(StepSuccess.Success, outputParameters)
         // End Function
@@ -3382,7 +3382,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("lltaub", host.RoundU(ll));
             outputParameters.AddOutput("ultaub", host.RoundU(ul));
 
-            //  outputParameters.AddOutput("taub", Host.RoundU(taub))
+            //  outputParameters.AddOutput("taub", host.RoundU(taub))
             if (setaubi != 0.0)
             {
                 p = 1.0 - PDF.alnorm(taub / setaubi);

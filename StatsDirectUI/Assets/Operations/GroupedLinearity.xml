@@ -18,8 +18,8 @@
           <name>outcomes</name>
           <prompt>Select data for OUTCOME (Y axis) replicates for x levels</prompt>
           <mode>NumericSkipMissing</mode>
-          <min-columns>=Parameters["predictor"].AsDataFrame.Variables[0].Length</min-columns>
-          <max-columns>=Parameters["predictor"].AsDataFrame.Variables[0].Length</max-columns>
+          <min-columns>=parameters["predictor"].AsDataFrame.Variables[0].Length</min-columns>
+          <max-columns>=parameters["predictor"].AsDataFrame.Variables[0].Length</max-columns>
           <clear-selection-first>true</clear-selection-first>
           <ask-for-group-id>true</ask-for-group-id>
         </frame>

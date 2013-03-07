@@ -148,7 +148,7 @@ namespace StatsDirect.Numerics
             double P = (1.0 - userCL) / 2.0;
             if (P > 1.0 - P)
                 P = 1.0 - P;
-            double cit = PDF.tfromp(P, Convert.ToDouble(ValidData - 1));
+            double cit = PDF.tfromp(P, ValidData - 1);
             CLCaption = " " + Formatting.XRound(userCL * 100, 1) + "% CL";
 
             if (ValidData > 1)
@@ -197,7 +197,7 @@ namespace StatsDirect.Numerics
                 if (sumsqdev == Constant.MISSING)
                     Variance = Constant.MISSING;
                 else
-                    Variance = sumsqdev / Convert.ToDouble(ValidData - 1);
+                    Variance = sumsqdev / (ValidData - 1);
                 Sd = Variance < 0.0 ? Constant.MISSING : Math.Sqrt(Variance);
                 if (ValidData <= 0 || Sd == Constant.MISSING)
                 {
@@ -336,8 +336,8 @@ namespace StatsDirect.Numerics
             }
             if (CentileType == 2)
             {
-                index = Math.Floor(centile * Convert.ToDouble(N + 1));
-                double h = centile * Convert.ToDouble(N + 1) - index;
+                index = Math.Floor(centile * (N + 1));
+                double h = centile * (N + 1) - index;
                 int bottom = index < 1 ? 1 : Convert.ToInt32(index);
                 int top;
                 if (index + 1 > N)

@@ -9,18 +9,18 @@
         <boolean>
           <name>meta-exact</name>
           <prompt>Try exact methods (can be slow)</prompt>
-          <default-value>=Host.Preferences.MetaExact</default-value>
+          <default-value>=host.Preferences.MetaExact</default-value>
         </boolean>
         <boolean>
           <name>meta-delay</name>
           <prompt>Delay continuity correction</prompt>
-          <default-value>=Host.Preferences.DelayContinuityCorrection</default-value>
+          <default-value>=host.Preferences.DelayContinuityCorrection</default-value>
         </boolean>
         <option>
           <name>meta-cc</name>
           <prompt>Continuity correction for sparse tables</prompt>
           <prompt-precedes-parameter>true</prompt-precedes-parameter>
-          <default-value>=Host.Preferences.MetaCC.ToString()</default-value>
+          <default-value>=host.Preferences.MetaCC.ToString()</default-value>
           <format-type>Dropdown</format-type>
           <options>
             <option value="-9">Treatment arm</option>
@@ -32,10 +32,10 @@
     </settings>
     <script language="CSharp">
   <![CDATA[
-SDPreferences preferences = Host.Preferences;
-preferences.MetaExact = Parameters["meta-exact"].AsBoolean;
-preferences.DelayContinuityCorrection = Parameters["meta-delay"].AsBoolean;
-preferences.MetaCC = Parsing.Cdbl_Txt(Parameters["meta-cc"].AsString);
+SDPreferences preferences = host.Preferences;
+preferences.MetaExact = parameters["meta-exact"].AsBoolean;
+preferences.DelayContinuityCorrection = parameters["meta-delay"].AsBoolean;
+preferences.MetaCC = Parsing.Cdbl_Txt(parameters["meta-cc"].AsString);
 return new ParameterBag();
     ]]></script>
 	</steps>

@@ -40,7 +40,7 @@
       </parameters>
     </settings>
 	<test>
-		<condition>="grouped".Equals(Parameters["grouping"].AsString)</condition>
+		<condition>="grouped".Equals(parameters["grouping"].AsString)</condition>
 		<iftrue>
 			<!-- grouped -->
       <settings>
@@ -86,7 +86,7 @@
 	</test>
 	<!-- Either - note that there will always be a response frame to be the same length as! -->
 	<test>
-		<condition>=Parameters["weights"].AsBoolean</condition>
+		<condition>=parameters["weights"].AsBoolean</condition>
 		<iftrue>
 			<!-- grouped -->
       <settings>

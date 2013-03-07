@@ -28,7 +28,7 @@
     <settings>
       <parameters>
         <special>
-          <prompt>="Number of groups = " + Parameters["ng"].AsInt32.ToString()</prompt>
+          <prompt>="Number of groups = " + parameters["ng"].AsInt32.ToString()</prompt>
           <type>rubric</type>
         </special>
       </parameters>

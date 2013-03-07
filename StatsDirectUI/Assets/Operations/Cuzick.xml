@@ -20,7 +20,7 @@
     </settings>
     <script language="CSharp">
   <![CDATA[
-DataFrame data = Parameters["data"].AsDataFrame;
+DataFrame data = parameters["data"].AsDataFrame;
 int l = data.VariableCount;
 DataFrame scoresFrame = new DataFrame();
 DoubleVariable scores = new DoubleVariable(l, "Scores");

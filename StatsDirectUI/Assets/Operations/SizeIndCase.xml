@@ -25,13 +25,13 @@
           <name>p1</name>
           <prompt>Probability of exposure in subjects</prompt>
           <must-request>true</must-request>
-          <acquire-if-true language="c#">=!(Parameters.ContainsKey("prop-or-or") &amp;&amp; "or".Equals(Parameters["prop-or-or"].AsString))</acquire-if-true>
+          <acquire-if-true language="c#">=!(parameters.ContainsKey("prop-or-or") &amp;&amp; "or".Equals(parameters["prop-or-or"].AsString))</acquire-if-true>
         </double>
         <double>
           <name>r</name>
           <prompt>Ratio of exposures between cases and controls</prompt>
           <must-request>true</must-request>
-          <acquire-if-true language="c#">=Parameters.ContainsKey("prop-or-or") &amp;&amp; "or".Equals(Parameters["prop-or-or"].AsString)</acquire-if-true>
+          <acquire-if-true language="c#">=parameters.ContainsKey("prop-or-or") &amp;&amp; "or".Equals(parameters["prop-or-or"].AsString)</acquire-if-true>
         </double>
         <double>
           <name>m</name>

@@ -150,6 +150,7 @@ namespace StatsDirect.UI
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.tipVariables = new System.Windows.Forms.ToolTip(this.components);
             this.postTabTimer = new System.Windows.Forms.Timer(this.components);
+            this.tipBatch = new System.Windows.Forms.ToolTip(this.components);
             this.mnuMain.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.tabContextMenuStrip.SuspendLayout();
@@ -1547,5 +1548,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.Label lblGroupsBy;
         private System.Windows.Forms.ToolStripComboBox cboRecentOperations;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolTip tipBatch;
     }
 }

@@ -87,7 +87,7 @@
         <special>
           <name>solo</name>
           <prompt>Pick the sheet in which you want the output to appear</prompt>
-          <acquire-if-true>=Parameters.ContainsKey("output-to-frame") &amp;&amp; Parameters["output-to-frame"].AsBoolean</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("output-to-frame") &amp;&amp; parameters["output-to-frame"].AsBoolean</acquire-if-true>
           <type>frame</type>
         </special>
       </parameters>
@@ -95,7 +95,7 @@
     <builtin function-name="rptWeightedUnivariateSummary" />
     <report filename="describe.rtf" />
     <test>
-      <condition>=Parameters.ContainsKey("output")</condition>
+      <condition>=parameters.ContainsKey("output")</condition>
       <iftrue>
         <output-frame frame-name="output" />
       </iftrue>

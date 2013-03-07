@@ -62,6 +62,6 @@
 	<report filename="universalAgreement.rtf" />
 	</steps>
   <suggested-operations>
-    <suggested-operation suggest-if='=null != Parameters &amp;&amp; !(Parameters.ContainsKey("reference") &amp;&amp; null != Parameters["reference"])'>UniversalAgreementSimulateExactP</suggested-operation>
+    <suggested-operation suggest-if='=null != parameters &amp;&amp; !(parameters.ContainsKey("reference") &amp;&amp; null != parameters["reference"])'>UniversalAgreementSimulateExactP</suggested-operation>
   </suggested-operations>
 </operation>

@@ -96,14 +96,14 @@ namespace StatsDirect.Templates
         /// Implementers <strong>must</strong> ensure that a new dictionary is used for the output.
         /// </summary>
         /// <param name="step"></param>
-        /// <param name="Parameters"></param>
+        /// <param name="parameters"></param>
         /// <param name="isRedo"></param>
         /// <returns></returns>
-        private StepResult Execute(Step step, ParameterBag Parameters, bool isRedo)
+        private StepResult Execute(Step step, ParameterBag parameters, bool isRedo)
         {
             StepResult result = null;
-            if (null != Parameters)
-                result = step.ExecuteInternal(this, Parameters, isRedo);
+            if (null != parameters)
+                result = step.ExecuteInternal(this, parameters, isRedo);
 
             // If required, transfer input parameters where the same name is not already present in the results.
             if (null != result)
@@ -113,7 +113,7 @@ namespace StatsDirect.Templates
                 {
                     if (step.ShouldCopyInputParameters)
                     {
-                        foreach (KeyValuePair<string, FilledParameter> inputParameter in Parameters.Pairs)
+                        foreach (KeyValuePair<string, FilledParameter> inputParameter in parameters.Pairs)
                             if (!results.ContainsKey(inputParameter.Key))
                                 results.Add(inputParameter.Key, inputParameter.Value);
                     }
@@ -132,7 +132,7 @@ namespace StatsDirect.Templates
         public StepResult ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo)
         {
             if (null == parameters)
-                throw new ArgumentOutOfRangeException("parameters", "Parameters must be a dictionary and cannot be null. Did a previous script step return null?");
+                throw new ArgumentOutOfRangeException("parameters", "parameters must be a dictionary and cannot be null. Did a previous script step return null?");
             Builtin builtin = BuiltinRegistry.SoleInstance.Builtin(step.FunctionName);
             if (null == builtin)
                 throw new Exception("No function '" + step.FunctionName + "' is supplied by the host.");
@@ -940,23 +940,23 @@ namespace StatsDirect.Templates
             return new StepResult(StepSuccess.Success, filledParameters);
         }
 
-        public StepResult ExecuteInternal(OutputFrameStep step, ParameterBag Parameters, bool isRedo)
+        public StepResult ExecuteInternal(OutputFrameStep step, ParameterBag parameters, bool isRedo)
         {
-            DataFrame frame = Parameters[step.ParameterName].AsDataFrame;
+            DataFrame frame = parameters[step.ParameterName].AsDataFrame;
             if (null != frame)
             {
                 PaneAndPosition preferredPaneAndPosition = null;
-                if (Parameters.ContainsKey(STATSDIRECT_FRAME_PANE)
-                    && null != Parameters[STATSDIRECT_FRAME_PANE])
-                    preferredPaneAndPosition = Parameters[STATSDIRECT_FRAME_PANE].AsPaneAndPosition;
+                if (parameters.ContainsKey(STATSDIRECT_FRAME_PANE)
+                    && null != parameters[STATSDIRECT_FRAME_PANE])
+                    preferredPaneAndPosition = parameters[STATSDIRECT_FRAME_PANE].AsPaneAndPosition;
                 host.OutputFrame(frame, step.KeepSelection, step.IsFormulae, step.MissingIndicator, preferredPaneAndPosition);
             }
             return new StepResult(StepSuccess.Success, new ParameterBag());
         }
         /*
-        public StepResult ExecuteInternal(SelectOutputForFrameStep step, ParameterBag Parameters, bool isRedo)
+        public StepResult ExecuteInternal(SelectOutputForFrameStep step, ParameterBag parameters, bool isRedo)
         {
-            if ((!Parameters.ContainsKey(STATSDIRECT_FRAME_PANE)) || null == Parameters[STATSDIRECT_FRAME_PANE])
+            if ((!parameters.ContainsKey(STATSDIRECT_FRAME_PANE)) || null == parameters[STATSDIRECT_FRAME_PANE])
                 host.SelectOutputForFrame();
             return new StepResult(StepSuccess.Success, new ParameterBag());
         }*/
@@ -1178,19 +1178,19 @@ namespace StatsDirect.Templates
             }
         }
 
-        public StepResult ExecuteInternal(ReportStep reportStep, ParameterBag Parameters, bool isRedo)
+        public StepResult ExecuteInternal(ReportStep reportStep, ParameterBag parameters, bool isRedo)
         {
-            string filledReport = reportStep.Substitute(Parameters);
+            string filledReport = reportStep.Substitute(parameters);
 
             object /* Pane */ preferredPane = null;
-            if (Parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
-                && null != Parameters[STATSDIRECT_REPORT_PANE])
-                preferredPane = Parameters[STATSDIRECT_REPORT_PANE].AsPane;
+            if (parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
+                && null != parameters[STATSDIRECT_REPORT_PANE])
+                preferredPane = parameters[STATSDIRECT_REPORT_PANE].AsPane;
             string xml = null;
             try
             {
                 bool shouldKeepData = host.Preferences.ShouldKeepData;
-                xml = Parameters.SerializeForRedo(shouldKeepData);
+                xml = parameters.SerializeForRedo(shouldKeepData);
             }
             catch (Exception ex)
             {
@@ -1201,7 +1201,7 @@ namespace StatsDirect.Templates
             // Log the ID of the report that was actually used
             ParameterBag outputParameters = new ParameterBag();
             // outputParameters.Add(REPORT_ID_NAME, new FilledParameter(true, reportId));
-            if (!Parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
+            if (!parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
                 outputParameters.Add(STATSDIRECT_REPORT_PANE, new FilledParameter(true, preferredPane));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -1211,7 +1211,7 @@ namespace StatsDirect.Templates
             IScriptEngine scriptEngine = host.GetScriptEngine(step.Language);
             string entryPoint = step.EntryPoint;
             ScriptType scriptType = null == entryPoint ? ScriptType.Function : ScriptType.MultipleMethods;
-            return new StepResult(StepSuccess.Success, (ParameterBag)scriptEngine.Run(step.Language, step.Body, scriptType, host, parameters, entryPoint));
+            return new StepResult(StepSuccess.Success, (ParameterBag)scriptEngine.Run(step.Language, step.Body, scriptType, host, parameters, null, entryPoint));
         }
 
         public StepResult ExecuteInternal(TestStep step, ParameterBag parms, bool isRedo)
@@ -1242,7 +1242,7 @@ namespace StatsDirect.Templates
             if (expression.Body.StartsWith("="))
             {
                 IScriptEngine scriptEngine = host.GetScriptEngine(expression.Language);
-                return scriptEngine.Run(expression.Language, expression.Body.Substring(1), ScriptType.Expression, host, parameters, null);
+                return scriptEngine.Run(expression.Language, expression.Body.Substring(1), ScriptType.Expression, host, parameters, null, null);
             }
             int candidateInt;
             if (Int32.TryParse(expression.Body, out candidateInt))
@@ -1330,14 +1330,28 @@ namespace StatsDirect.Templates
         /// <param name="filledParameters"></param>
         /// <param name="failedValidationMessage"></param>
         /// <returns>A string containing at least one validation error, or none if there are no validation errors detected.</returns>
-        public static string Validate(ITemplateHost host, ValidationMode validationMode, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
+        public static string Validate(ITemplateHost host, string validatorName, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
         {
-            switch (validationMode)
+            // Does the operation define a custom validator with that name?  If so, use it.
+            if (null != parameter.Operation.CustomValidators)
             {
-                case ValidationMode.NotSet:
-                    // Do nothing
-                    return null;
-                case ValidationMode.Pooling:
+                foreach (CustomValidator candidate in parameter.Operation.CustomValidators)
+                {
+                    if (candidate.Name.Equals(validatorName))
+                    {
+                        string language = candidate.Language ?? "CSharp";
+                        IScriptEngine scriptEngine = host.GetScriptEngine(language);
+                        object result = scriptEngine.Run(language, candidate.Script, ScriptType.Validator, host, filledParameters, parameter, null);
+                        if (null == result)
+                            return null;
+                        return result.ToString();
+                    }
+                }
+            }
+            // If there's no custom validator with that name, use a generic if we have one.
+            switch (validatorName)
+            {
+                case "Pooling":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1353,7 +1367,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.Square:
+                case "Square":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1368,7 +1382,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.SquareBins:
+                case "SquareBins":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1384,7 +1398,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.CheckForNonDummiedCategories:
+                case "CheckForNonDummiedCategories":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1446,7 +1460,7 @@ namespace StatsDirect.Templates
                         // If we get here, we're fine
                     }
                     return null;
-                case ValidationMode.Boolean:
+                case "Boolean":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1470,7 +1484,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.Positive:
+                case "Positive":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1494,7 +1508,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.NonNegative:
+                case "NonNegative":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1518,7 +1532,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.ZeroToOneExclusive:
+                case "ZeroToOneExclusive":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1542,7 +1556,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.TwoBinsAndNoMissingData:
+                case "TwoBinsAndNoMissingData":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1557,7 +1571,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.NoMissingData:
+                case "NoMissingData":
                     {
                         // If we're allowing blank parameters, accept a blank
                         if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
@@ -1581,7 +1595,7 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
-                case ValidationMode.PersonTimeSize:
+                case "PersonTimeSize":
                     {
                         // Assumes no missing data, no data < 0
                         DataFrame datFrame = filledParameters["data"].AsDataFrame;
@@ -1608,7 +1622,7 @@ namespace StatsDirect.Templates
                     }
                     return null;
                 default:
-                    throw new ArgumentOutOfRangeException("validationMode", validationMode, "I don't know how to validate that mode");
+                    throw new ArgumentOutOfRangeException("validatorName", validatorName, "No validator with the specified name");
             }
         }
 

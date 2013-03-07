@@ -41,16 +41,16 @@
         <integer>
           <name>nc</name>
           <prompt>How many control subjects do you have?</prompt>
-          <acquire-if-true>=!(Parameters.ContainsKey("dataHasControls") &amp;&amp; Parameters["dataHasControls"].AsBoolean)</acquire-if-true>
+          <acquire-if-true>=!(parameters.ContainsKey("dataHasControls") &amp;&amp; parameters["dataHasControls"].AsBoolean)</acquire-if-true>
           <minimum-value>0</minimum-value>
           <default-value>0</default-value>
         </integer>
         <integer>
           <name>nrc</name>
           <prompt>How many control subjects responded?</prompt>
-          <acquire-if-true>=(!(Parameters.ContainsKey("dataHasControls") &amp;&amp; Parameters["dataHasControls"].AsBoolean)) &amp;&amp; (Parameters.ContainsKey("nc") &amp;&amp; Parameters["nc"].AsInt32 > 0)</acquire-if-true>
+          <acquire-if-true>=(!(parameters.ContainsKey("dataHasControls") &amp;&amp; parameters["dataHasControls"].AsBoolean)) &amp;&amp; (parameters.ContainsKey("nc") &amp;&amp; parameters["nc"].AsInt32 > 0)</acquire-if-true>
           <minimum-value>0</minimum-value>
-          <!-- <maximum-value>=Parameters["nc"].AsInt32</maximum-value> -->
+          <!-- <maximum-value>=parameters["nc"].AsInt32</maximum-value> -->
         </integer>
         <boolean>
           <name>calc-log10-doses</name>

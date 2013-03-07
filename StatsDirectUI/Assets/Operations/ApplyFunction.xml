@@ -17,7 +17,7 @@
       </parameters>
     </settings>
     <script language="VB"><![CDATA[
-  Dim data as Data.DataFrame = Parameters("data").AsDataFrame
+  Dim data as Data.DataFrame = parameters("data").AsDataFrame
   Dim cols as Integer = data.VariableCount
   Dim L as String = ""
   For j as Integer = 1 To cols
@@ -31,18 +31,18 @@
       <parameters>
         <string>
           <name>expression</name>
-          <prompt language="VB">=Parameters("variable_list").AsString &amp; "Enter an expression using X1 etc."</prompt>
-          <default-value>=Host.Session.ContainsKey("LastFunction") ? Host.Session["LastFunction"] : "X1"</default-value>
+          <prompt language="VB">=parameters("variable_list").AsString &amp; "Enter an expression using X1 etc."</prompt>
+          <default-value>=host.Session.ContainsKey("LastFunction") ? host.Session["LastFunction"] : "X1"</default-value>
         </string>
       </parameters>
     </settings>
     <script language="VB">
       <![CDATA[
-Dim qx As String = Parameters("expression").AsString
+Dim qx As String = parameters("expression").AsString
 If 0 = qx.Length Then
   Throw New TemplateOperationCancelledException
 End If
-Dim data as Data.DataFrame = Parameters("data").AsDataFrame
+Dim data as Data.DataFrame = parameters("data").AsDataFrame
 Dim cols as Integer = data.VariableCount
 For k as Integer = 0 To cols - 1
     qx = qx.Replace("X" & (k + 1).ToString(), data.Variables(k).Title)
@@ -56,18 +56,18 @@ Return outputParameters
         <string>
           <name>new_column_name</name>
           <prompt>New column name</prompt>
-          <default-value language="VB">=Parameters("default_new_column_name").AsString</default-value>
+          <default-value language="VB">=parameters("default_new_column_name").AsString</default-value>
         </string>
       </parameters>
     </settings>
     <script language="VB">
       <![CDATA[
-        Dim data As DataFrame = Parameters("data").AsDataFrame
+        Dim data As DataFrame = parameters("data").AsDataFrame
         Dim cols as Integer = data.VariableCount
-        Dim Q as String = Parameters("expression").AsString.ToUpper()
-        Host.Session("LastFunction") = Q
+        Dim Q as String = parameters("expression").AsString.ToUpper()
+        host.Session("LastFunction") = Q
         Dim rows as Integer = data.MaxRows
-        Dim t as String = Parameters("new_column_name").AsString
+        Dim t as String = parameters("new_column_name").AsString
 
         Dim outputFrame As New DataFrame
         Dim outputVariable As New DoubleVariable(rows, t)

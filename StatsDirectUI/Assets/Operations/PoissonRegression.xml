@@ -56,7 +56,7 @@
       </parameters>
     </settings>
 		<test>
-			<condition>="true".Equals(Parameters["has-exposure"].AsString)</condition>
+			<condition>="true".Equals(parameters["has-exposure"].AsString)</condition>
 			<iftrue>
 				<!-- grouped -->
         <settings>
@@ -76,7 +76,7 @@
 			</iftrue>
 		</test>
 		<test>
-			<condition>=Parameters["weights"].AsBoolean</condition>
+			<condition>=parameters["weights"].AsBoolean</condition>
 			<iftrue>
         <settings>
           <parameters>

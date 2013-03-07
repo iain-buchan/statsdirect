@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
     { 
         private const string BADPARA = "The parameters are not acceptable."; 
         
-        public static DataFrame rndPoisson( ITemplateHost Host, int rows, int cols, double XM, int Seed ) 
+        public static DataFrame rndPoisson( ITemplateHost host, int rows, int cols, double XM, int Seed ) 
         { 
             PoissonRNG RNG = new PoissonRNG(); 
             RNG.Seed( Seed, null ); 
@@ -29,7 +29,7 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndUni( ITemplateHost Host, int rows, int cols, double a, double b, bool isCount, int Seed ) 
+        public static DataFrame rndUni( ITemplateHost host, int rows, int cols, double a, double b, bool isCount, int Seed ) 
         { 
             UniformXRNG RNG = new UniformXRNG(); 
             RNG.Seed( Seed, null ); 
@@ -64,7 +64,7 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndBino( ITemplateHost Host, int rows, int cols, int nn, double PP, int Seed ) 
+        public static DataFrame rndBino( ITemplateHost host, int rows, int cols, int nn, double PP, int Seed ) 
         { 
             BinomialRND RNG = new BinomialRND(); 
             RNG.Seed( Seed ); 
@@ -84,14 +84,14 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndExpo( ITemplateHost Host, int rows, int cols, double M, int Seed ) 
+        public static DataFrame rndExpo( ITemplateHost host, int rows, int cols, double M, int Seed ) 
         { 
             ExponentialRNG RNG = new ExponentialRNG();
 
             const string mx = "Exponential deviates"; 
             if ( M <= 0.0 | rows <= 0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -111,12 +111,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndF( ITemplateHost Host, int rows, int cols, double dfn, double dfd, int Seed ) 
+        public static DataFrame rndF( ITemplateHost host, int rows, int cols, double dfn, double dfd, int Seed ) 
         {
             const string mx = "F deviates"; 
             if ( dfn <= 0.0 | dfd <= 0.0 | rows <= 0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -137,12 +137,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndGeom( ITemplateHost Host, int rows, int cols, double a, int Seed ) 
+        public static DataFrame rndGeom( ITemplateHost host, int rows, int cols, double a, int Seed ) 
         { 
             const string mx = "Geometric deviates"; 
             if ( rows <= 0 | a <= 0.0 | a > 1.0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -163,12 +163,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndNegBin( ITemplateHost Host, int rows, int cols, double a, double b, int Seed ) 
+        public static DataFrame rndNegBin( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
         {
             const string mx = "Negative binomial deviates"; 
             if ( rows <= 0 | b <= 0.0 | b > 1.0 | a <= 0.0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -189,12 +189,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndBeta( ITemplateHost Host, int rows, int cols, double a, double b, int Seed ) 
+        public static DataFrame rndBeta( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
         {
             const string mx = "beta deviates"; 
             if ( rows <= 0 | b <= 0.0 | a <= 0.0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -215,12 +215,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndCauchy( ITemplateHost Host, int rows, int cols, double a, double b, int Seed ) 
+        public static DataFrame rndCauchy( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
         {
             const string mx = "Cauchy deviates"; 
             if ( rows <= 0 | b < 0.0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -241,12 +241,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndWeibull( ITemplateHost Host, int rows, int cols, double a, double b, int Seed ) 
+        public static DataFrame rndWeibull( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
         {
             const string mx = "Weibull deviates"; 
             if ( rows <= 0 | a <= 0.0 | b <= 0.0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -267,12 +267,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndLogit( ITemplateHost Host, int rows, int cols, double a, double b, int Seed ) 
+        public static DataFrame rndLogit( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
         {
             const string mx = "Logistic deviates"; 
             if ( rows <= 0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -293,12 +293,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndT( ITemplateHost Host, int rows, int cols, double df, int Seed ) 
+        public static DataFrame rndT( ITemplateHost host, int rows, int cols, double df, int Seed ) 
         {
             const string mx = "Student t deviates"; 
             if ( df <= 0.0 | rows <= 0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -319,12 +319,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndChi( ITemplateHost Host, int rows, int cols, double df, int Seed ) 
+        public static DataFrame rndChi( ITemplateHost host, int rows, int cols, double df, int Seed ) 
         {
             const string mx = "Chi-square deviates"; 
             if ( df <= 0.0 | rows <= 0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -341,7 +341,7 @@ namespace StatsDirect.Builtins
                     double e = RNG.GenChiSq( df ); 
                     if ( e == Constant.MISSING ) 
                     { 
-                        Host.Error( BADPARA, mx ); 
+                        host.Error( BADPARA, mx ); 
                         return null; 
                     } 
                     v.set_Data( N, e ); 
@@ -351,12 +351,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndGamma( ITemplateHost Host, int rows, int cols, double a, double b, int Seed ) 
+        public static DataFrame rndGamma( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
         {
             const string mx = "Gamma deviates"; 
             if ( a <= 0.0 | rows <= 0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -377,12 +377,12 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndLogNorm( ITemplateHost Host, int rows, int cols, double XM, double sd, int Seed ) 
+        public static DataFrame rndLogNorm( ITemplateHost host, int rows, int cols, double XM, double sd, int Seed ) 
         { 
             const string mx = "Lognormal deviates"; 
             if ( sd < 0 ) 
             { 
-                Host.Error( BADPARA, mx ); 
+                host.Error( BADPARA, mx ); 
                 return null; 
             } 
             
@@ -406,7 +406,7 @@ namespace StatsDirect.Builtins
         } 
         
         
-        public static DataFrame rndNorm( ITemplateHost Host, int rows, int cols, double XM, double sd, int Seed ) 
+        public static DataFrame rndNorm( ITemplateHost host, int rows, int cols, double XM, double sd, int Seed ) 
         { 
             NormalRNG RNG = new NormalRNG(); 
             RNG.Seed( Seed ); 

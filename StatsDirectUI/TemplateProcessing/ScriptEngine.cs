@@ -42,7 +42,7 @@ namespace StatsDirect.Templates
         /// Runs the script's step entry point.  If it doesn't have one, throws an exception.
         /// </summary>
         /// <returns>Whatever the script returned</returns>
-        object IScriptEngine.Run(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, string entryPoint)
+        object IScriptEngine.Run(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, Parameter parameter, string entryPoint)
         {
             switch (scriptLanguage)
             {
@@ -51,7 +51,7 @@ namespace StatsDirect.Templates
                 case CHASHLOWER:
                 case VISUALBASIC:
                 case VISUALBASICLOWER:
-                    return ((IScriptEngine)this).RunDotNet(scriptLanguage, code, scriptType, host, parameters, entryPoint);
+                    return RunDotNet(scriptLanguage, code, scriptType, host, parameters, parameter, entryPoint);
                 case R:
 #if USE_R
 
@@ -194,7 +194,7 @@ namespace StatsDirect.Templates
         /// Runs the script's step entry point.  If it doesn't have one, throws an exception.
         /// </summary>
         /// <returns></returns>
-        object IScriptEngine.RunDotNet(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, string entryPoint)
+        private object RunDotNet(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, Parameter parameter, string entryPoint)
         {
             CompiledScript compiledScript = null;
             // Look aside to the cache - do we already have this one?
@@ -209,26 +209,6 @@ namespace StatsDirect.Templates
 
             if (null == compiledScript)
             {
-                // If the code is an expression, set it up as a return statement
-                string modifiedCode = code;
-                if (ScriptType.Expression == scriptType)
-                {
-                    switch (scriptLanguage)
-                    {
-                        case CSHARP:
-                        case CHASH:
-                        case CHASHLOWER:
-                            modifiedCode = "return " + code + ";";
-                            break;
-                        case VISUALBASIC:
-                        case VISUALBASICLOWER:
-                            modifiedCode = "Return " + code;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException("scriptLanguage", scriptLanguage, "Only CSharp, R and VB are known");
-                    }
-                }
-
                 // Build up the source in sourceBuilder
                 StringBuilder sourceBuilder = new StringBuilder();
                 CodeDomProvider codeProvider;
@@ -248,17 +228,37 @@ namespace StatsDirect.Templates
                         sourceBuilder.AppendLine("using StatsDirect.Utilities;");
                         sourceBuilder.AppendLine("namespace StatsDirect.Templates {");
                         sourceBuilder.AppendLine("public class Temp1 {");
-                        if (ScriptType.MultipleMethods != scriptType)
+                        switch (scriptType)
                         {
-                            sourceBuilder.AppendLine(ScriptType.Method == scriptType
-                                                         ? "public void DoIt(ITemplateHost Host, ParameterBag Parameters) {"
-                                                         : "public object DoIt(ITemplateHost Host, ParameterBag Parameters) {");
-                            entryPoint = "DoIt";
-                        }
-                        sourceBuilder.AppendLine(modifiedCode);
-                        if (ScriptType.MultipleMethods != scriptType)
-                        {
-                            sourceBuilder.AppendLine("} // DoIt");
+                            case ScriptType.Expression:
+                                sourceBuilder.AppendLine("public object DoIt(ITemplateHost host, ParameterBag parameters) {");
+                                sourceBuilder.AppendLine("return " + code + ";");
+                                sourceBuilder.AppendLine("} // DoIt");
+                                entryPoint = "DoIt";
+                                break;
+                            case ScriptType.Function:
+                                sourceBuilder.AppendLine("public object DoIt(ITemplateHost host, ParameterBag parameters) {");
+                                sourceBuilder.AppendLine(code);
+                                sourceBuilder.AppendLine("} // DoIt");
+                                entryPoint = "DoIt";
+                                break;
+                            case ScriptType.Method:
+                                sourceBuilder.AppendLine("public void DoIt(ITemplateHost host, ParameterBag parameters) {");
+                                sourceBuilder.AppendLine(code);
+                                sourceBuilder.AppendLine("} // DoIt");
+                                entryPoint = "DoIt";
+                                break;
+                            case ScriptType.MultipleMethods:
+                                sourceBuilder.AppendLine(code);
+                                break;
+                            case ScriptType.Validator:
+                                sourceBuilder.AppendLine("public object DoIt(ITemplateHost host, ParameterBag parameters, Parameter parameter) {");
+                                sourceBuilder.AppendLine(code);
+                                sourceBuilder.AppendLine("} // DoIt");
+                                entryPoint = "DoIt";
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException("scriptType", scriptType, "Cannot construct code for that script type");
                         }
                         sourceBuilder.AppendLine("} // class");
                         sourceBuilder.AppendLine("} // namespace");
@@ -278,23 +278,37 @@ namespace StatsDirect.Templates
                         sourceBuilder.AppendLine("Imports StatsDirect.Utilities");
                         sourceBuilder.AppendLine("Namespace StatsDirect.Templates");
                         sourceBuilder.AppendLine("Public Class Temp1");
-                        if (ScriptType.Method == scriptType)
+                        switch (scriptType)
                         {
-                            sourceBuilder.AppendLine("Public Sub DoIt(ByVal Host As ITemplateHost, ByVal Parameters As ParameterBag)");
-                            sourceBuilder.AppendLine(modifiedCode);
-                            sourceBuilder.AppendLine("End Sub");
-                            entryPoint = "DoIt";
-                        }
-                        else if (ScriptType.MultipleMethods == scriptType)
-                        {
-                            sourceBuilder.AppendLine(modifiedCode);
-                        }
-                        else
-                        {
-                            sourceBuilder.AppendLine("Public Function DoIt(ByVal Host As ITemplateHost, ByVal Parameters As ParameterBag) As Object");
-                            sourceBuilder.AppendLine(modifiedCode);
-                            sourceBuilder.AppendLine("End Function");
-                            entryPoint = "DoIt";
+                            case ScriptType.Expression:
+                                sourceBuilder.AppendLine("Public Function DoIt(ByVal host As ITemplateHost, ByVal parameters As ParameterBag) As Object");
+                                sourceBuilder.AppendLine("Return " + code);
+                                sourceBuilder.AppendLine("End Function");
+                                entryPoint = "DoIt";
+                                break;
+                            case ScriptType.Function:
+                                sourceBuilder.AppendLine("Public Function DoIt(ByVal host As ITemplateHost, ByVal parameters As ParameterBag) As Object");
+                                sourceBuilder.AppendLine(code);
+                                sourceBuilder.AppendLine("End Function");
+                                entryPoint = "DoIt";
+                                break;
+                            case ScriptType.Method:
+                                sourceBuilder.AppendLine("Public Sub DoIt(ByVal host As ITemplateHost, ByVal parameters As ParameterBag)");
+                                sourceBuilder.AppendLine(code);
+                                sourceBuilder.AppendLine("End Sub");
+                                entryPoint = "DoIt";
+                                break;
+                            case ScriptType.MultipleMethods:
+                                sourceBuilder.AppendLine(code);
+                                break;
+                            case ScriptType.Validator:
+                                sourceBuilder.AppendLine("Public Sub DoIt(ByVal host As ITemplateHost, ByVal parameters As ParameterBag, ByVal parameter as Parameter)");
+                                sourceBuilder.AppendLine(code);
+                                sourceBuilder.AppendLine("End Sub");
+                                entryPoint = "DoIt";
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException("scriptType", scriptType, "Cannot construct code for that script type");
                         }
                         sourceBuilder.AppendLine("End Class");
                         sourceBuilder.AppendLine("End Namespace");
@@ -307,17 +321,6 @@ namespace StatsDirect.Templates
                 CompilerParameters compilerParameters = new CompilerParameters();
                 string mainModulePath = Process.GetCurrentProcess().MainModule.FileName;
                 string assemblyPath = Path.GetDirectoryName(mainModulePath);
-                /*
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.Utilities.dll"));
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.Data.dll"));
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.Charting.dll"));
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.Templates.dll"));
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.TemplateProcessing.dll"));
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.Numerics.dll"));
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.NumericsVB.dll"));
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.Builtins.dll"));
-                compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.BuiltinsVB.dll"));
-                 */
                 Debug.Assert(null != assemblyPath);
                 compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.exe"));
                 compilerParameters.ReferencedAssemblies.Add("System.Windows.Forms.dll");
@@ -358,7 +361,17 @@ namespace StatsDirect.Templates
             // By now, compiledScript is non-null or an exception has been thrown
             try
             {
-                return compiledScript.MethodInfo.Invoke(compiledScript.Instance, new object[] { host, parameters });
+                object[] invokeParameters;
+                switch (scriptType)
+                {
+                    case ScriptType.Validator:
+                        invokeParameters = new object[] { host, parameters, parameter };
+                        break;
+                    default:
+                        invokeParameters = new object[] { host, parameters };
+                        break;
+                }
+                return compiledScript.MethodInfo.Invoke(compiledScript.Instance, invokeParameters);
             }
             catch (TargetInvocationException tie)
             {

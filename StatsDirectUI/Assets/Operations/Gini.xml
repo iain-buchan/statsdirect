@@ -28,7 +28,7 @@
     </settings>
 		<builtin function-name="rptGini" />
 		<test>
-			<condition>=Parameters["data"].AsDataFrame.VariableCount == 1</condition>
+			<condition>=parameters["data"].AsDataFrame.VariableCount == 1</condition>
 			<iftrue>
 				<chart>
 					<x-series-data>X</x-series-data>

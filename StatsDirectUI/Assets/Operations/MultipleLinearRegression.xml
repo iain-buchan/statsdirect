@@ -29,7 +29,7 @@
 			</parameters>
 		</settings>
 		<test>
-			<condition>=Parameters["useWeights"].AsBoolean</condition>
+			<condition>=parameters["useWeights"].AsBoolean</condition>
 			<iftrue>
         <settings>
 					<parameters>
@@ -62,7 +62,7 @@
 		</settings>
 		<builtin function-name="rptMultipleLinearRegression" />
 		<test>
-			<condition>=Parameters["isPoly"].AsBoolean</condition>
+			<condition>=parameters["isPoly"].AsBoolean</condition>
 			<iftrue>
 				<report filename="poly.rtf" />
 			</iftrue>

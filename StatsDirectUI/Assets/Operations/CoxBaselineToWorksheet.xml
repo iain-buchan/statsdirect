@@ -6,7 +6,7 @@
 	<steps>
 		<builtin function-name="rptCoxBaselineToWorksheet" />
 		<test>
-			<condition>=Parameters.ContainsKey("results")</condition>
+			<condition>=parameters.ContainsKey("results")</condition>
 			<iftrue>
 				<output-frame frame-name="results" />
 			</iftrue>

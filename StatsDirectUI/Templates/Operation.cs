@@ -19,12 +19,14 @@ namespace StatsDirect.Templates
         private IList<Step> steps;
         private IList<string> prerequisiteOperationNames;
         private List<SuggestedOperation> suggestedOperations;
+        private List<CustomValidator> customValidators;
 
         public Operation()
         {
             steps = new List<Step>();
             prerequisiteOperationNames = new List<string>();
             suggestedOperations = new List<SuggestedOperation>();
+            customValidators = new List<CustomValidator>();
         }
 
         public void FixAfterLoading()
@@ -44,6 +46,30 @@ namespace StatsDirect.Templates
         /// </summary>
         [XmlElement(ElementName = "friendly-name")]
         public string FriendlyName { get; set; }
+
+        [XmlArray(ElementName = "custom-validators"),
+        XmlArrayItem(ElementName = "validator", Type = typeof(CustomValidator))]
+        public CustomValidator[] CustomValidatorsForXml
+        {
+            get
+            {
+                return customValidators.ToArray();
+            }
+            set
+            {
+                if (null != value)
+                {
+                    foreach (CustomValidator cv in value)
+                        customValidators.Add(cv);
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public IList<CustomValidator> CustomValidators
+        {
+            get { return customValidators; }
+        }
 
         [XmlArray(ElementName = "suggested-operations"),
         XmlArrayItem(ElementName="suggested-operation", Type=typeof(SuggestedOperation))]

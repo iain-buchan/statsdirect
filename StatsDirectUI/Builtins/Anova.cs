@@ -629,7 +629,7 @@ namespace StatsDirect.Builtins
             double p_inc = (p_finish - p_start) / Convert.ToDouble(rx - 1);
             double P = p_start;
             double df = cols - 1;
-            double[] pvalues = new double[rx - 1 + 1 /* for VB to C# conversion */ ];
+            double[] pvalues = new double[rx];
             for (int r = 0; r <= rx - 1; r++)
             {
                 int fault;
@@ -875,7 +875,7 @@ namespace StatsDirect.Builtins
             string wrn;
             if (skipped != 0)
             {
-                wrn = "   (" + Formatting.WRNCOLON + skipped.ToString() + " out of " + skipped + nr.ToString() + " rows were skipped due to missing values)";
+                wrn = "   (" + Formatting.WRNCOLON + skipped.ToString() + " out of " + (skipped + nr).ToString() + " rows were skipped due to missing values)";
             }
             else
             {
@@ -1003,7 +1003,7 @@ namespace StatsDirect.Builtins
                     }
                 }
                 tnx[D] = nr;
-                string title = "Treatment " + 1 + D.ToString();
+                string title = "Treatment " + (1 + D).ToString();
                 outputFrame.Variables[D] = new DoubleVariable(null, title);
             }
 
@@ -1903,8 +1903,8 @@ namespace StatsDirect.Builtins
                     {
                         ParameterBag subGroupParameters = new ParameterBag();
                         ii += 1;
-                        subGroupParameters.AddOutput("sggrp", j + 1.ToString());
-                        subGroupParameters.AddOutput("sgsub_grp", i + 1.ToString());
+                        subGroupParameters.AddOutput("sggrp", (j + 1).ToString());
+                        subGroupParameters.AddOutput("sgsub_grp", (i + 1).ToString());
                         subGroupParameters.AddOutput("sgtitle", frame.Variables[j][i].Title);
                         subGroupParameters.AddOutput("sgmean", host.RoundU(sgbar[ii]));
                         subGroupList.Add(subGroupParameters);
@@ -2188,8 +2188,8 @@ namespace StatsDirect.Builtins
                 dsum = dsum + x2d[j];
                 psum = psum + x2p[j];
             }
-            double totdifbar = tdsum / Convert.ToDouble(ng1 + ng2);
-            double totdifvar = (tdsum2 - (tdsum * tdsum / Convert.ToDouble(ng1 + ng2))) / Convert.ToDouble(ng1 + ng2 - 1L);
+            double totdifbar = tdsum / (ng1 + ng2);
+            double totdifvar = (tdsum2 - (tdsum * tdsum / (ng1 + ng2))) / Convert.ToDouble(ng1 + ng2 - 1);
             double difbar2 = difsum2 / Convert.ToDouble(ng2);
             double sumbar2 = sumsum2 / Convert.ToDouble(ng2);
             double dbar2 = dsum / Convert.ToDouble(ng2);
@@ -2267,19 +2267,19 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static ParameterCarrier FindOrCalculateParameters(ParameterBag Parameters)
+        private static ParameterCarrier FindOrCalculateParameters(ParameterBag parameters)
         {
             ParameterCarrier carrier = new ParameterCarrier();
-            if (Parameters.ContainsKey("dfres") && Parameters.ContainsKey("msres") && Parameters.ContainsKey("mean") && Parameters.ContainsKey("tnx"))
+            if (parameters.ContainsKey("dfres") && parameters.ContainsKey("msres") && parameters.ContainsKey("mean") && parameters.ContainsKey("tnx"))
             {
-                carrier.Dferr = Parameters["dfres"].AsInt32;
-                carrier.Mean = ((double[])(Parameters["mean"].Data));
-                carrier.Msx = Parameters["msres"].AsDouble;
-                carrier.Tnx = ((int[])(Parameters["tnx"].Data));
+                carrier.Dferr = parameters["dfres"].AsInt32;
+                carrier.Mean = ((double[])(parameters["mean"].Data));
+                carrier.Msx = parameters["msres"].AsDouble;
+                carrier.Tnx = ((int[])(parameters["tnx"].Data));
             }
             else
             {
-                DataFrame frame = Parameters["data"].AsDataFrame;
+                DataFrame frame = parameters["data"].AsDataFrame;
 
                 int[] tnx = new int[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
                 double[] mean = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];

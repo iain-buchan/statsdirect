@@ -29,7 +29,7 @@
 		<builtin function-name="rptMultipleLinearRegressionBestSubset" />
 		<report filename="subset.rtf" />
 		<test>
-			<condition>=Parameters.ContainsKey("subsetApplied") &amp;&amp; Parameters["subsetApplied"].AsBoolean</condition>
+			<condition>=parameters.ContainsKey("subsetApplied") &amp;&amp; parameters["subsetApplied"].AsBoolean</condition>
 			<iftrue>
 				<report filename="multi.rtf" />
 			</iftrue>

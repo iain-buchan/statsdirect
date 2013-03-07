@@ -45,8 +45,8 @@
           <name>natst</name>
           <prompt>Number alive at start</prompt>
           <must-request>true</must-request>
-          <minimum-value>=Parameters["natst-min"].AsDouble</minimum-value>
-          <default-value>=Parameters["natst-min"].AsDouble</default-value>
+          <minimum-value>=parameters["natst-min"].AsDouble</minimum-value>
+          <default-value>=parameters["natst-min"].AsDouble</default-value>
         </double>
       </parameters>
     </settings>

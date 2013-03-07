@@ -148,6 +148,7 @@ namespace StatsDirect.UI
         public frmMain()
         {
             InitializeComponent();
+            tipBatch.SetToolTip(chkBatchMode, "Run this function again automatically");
             panelTypeStack = new Stack<PanelType>();
             ShowPanel(PanelType.Default, false);
             UpdateFileList();
@@ -4104,7 +4105,7 @@ namespace StatsDirect.UI
                                 if (null != outstandingParameter.Validators)
                                     foreach (Validator validator in outstandingParameter.Validators)
                                     {
-                                        validationResult = TemplateProcessor.Validate(host, validator.ValidationMode, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
+                                        validationResult = TemplateProcessor.Validate(host, validator.ValidatorName, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
                                         if (null != validationResult)
                                             break;
                                     }
@@ -4209,7 +4210,7 @@ namespace StatsDirect.UI
         /// <returns>true if the parameter is skippable, false if required.</returns>
         static bool CheckParameterSkippable(Control control)
         {
-            // We're interested in non-label controls that have been tagged with Parameters.
+            // We're interested in non-label controls that have been tagged with parameters.
             // Labels are uninteresting as they'll never contain a useful user-entered value.
             if (control.Tag is Parameter && typeof(Label) != control.GetType())
             {
@@ -4224,7 +4225,7 @@ namespace StatsDirect.UI
         /// <returns>null if the parameter is valid (or has no validation or validation is disabled), the control to be selected if the parameter fails validation.</returns>
         static Control ExtractCurrentValue(ITemplateProcessor processor, Control control, ParameterBag outputParameters, ParameterBag context, bool doValidation)
         {
-            // We're interested in non-label controls that have been tagged with Parameters.
+            // We're interested in non-label controls that have been tagged with parameters.
             // Labels are uninteresting as they'll never contain a useful user-entered value.
             if (control.Tag is Parameter && typeof(Label) != control.GetType())
             {
@@ -4686,43 +4687,8 @@ namespace StatsDirect.UI
                             SpecialParameter specialParameter = (SpecialParameter)parameter;
                             if ("chi-2-column".Equals(specialParameter.SpecialType)
                                 || "likelihood".Equals(specialParameter.SpecialType)
-                                || "rr-index".Equals(specialParameter.SpecialType))
-                            {
-                                TableLayoutPanel ssgContainer = (TableLayoutPanel)control;
-                                WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
-                                IWorksheet worksheet = grid.ActiveWorksheet;
-                                grid.GetLock();
-                                object value;
-                                try
-                                {
-                                    value = worksheet.UsedRange.Value;
-                                    if (null != value && !value.GetType().IsArray)
-                                        value = new[,] { { value } };
-                                }
-                                finally
-                                {
-                                    grid.ReleaseLock();
-                                }
-
-                                if (null != value)
-                                {
-                                    object[,] ary = (object[,])value;
-
-                                    DataFrame frame = new DataFrame();
-                                    for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
-                                    {
-                                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
-                                        for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
-                                        {
-                                            dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
-                                        }
-                                        frame.Variables.Add(dv);
-                                    }
-                                    outputParameters[parameter.Name] = new FilledParameter(true, frame);
-                                }
-                                return null;
-                            }
-                            if ("chi-3-column".Equals(specialParameter.SpecialType)
+                                || "rr-index".Equals(specialParameter.SpecialType)
+                                || "chi-3-column".Equals(specialParameter.SpecialType)
                                 || "person-time-size".Equals(specialParameter.SpecialType))
                             {
                                 TableLayoutPanel ssgContainer = (TableLayoutPanel)control;
@@ -4748,7 +4714,7 @@ namespace StatsDirect.UI
                                     DataFrame frame = new DataFrame();
                                     for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
                                     {
-                                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
+                                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "Column " + (col + 1).ToString());
                                         for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
                                         {
                                             dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);

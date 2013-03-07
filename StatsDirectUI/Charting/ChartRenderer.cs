@@ -9413,8 +9413,6 @@ namespace StatsDirect.Charting
             return 0.0;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DeLongSE
         private double DeLongSE(double[] x, double[] y, double auc)
         {
 

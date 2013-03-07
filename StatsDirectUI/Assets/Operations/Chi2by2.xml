@@ -38,7 +38,7 @@
         <boolean>
           <name>doFisher</name>
           <prompt>Calculate Fisher exact test as well?</prompt>
-          <acquire-if-true>=Parameters.ContainsKey("study_type") &amp;&amp; !"casecontrol".Equals(Parameters["study_type"].AsString)</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("study_type") &amp;&amp; !"casecontrol".Equals(parameters["study_type"].AsString)</acquire-if-true>
           <default-value>false</default-value>
           <must-request>true</must-request>
         </boolean>

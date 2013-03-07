@@ -29,7 +29,7 @@
       </parameters>
     </settings>
 		<test>
-			<condition>=!("g".Equals(Parameters["type"].AsString))</condition>
+			<condition>=!("g".Equals(parameters["type"].AsString))</condition>
 			<iftrue>
         <settings>
           <parameters>
@@ -69,7 +69,7 @@
       </parameters>
     </settings>
 		<test>
-			<condition>="g".Equals(Parameters["type"].AsString)</condition>
+			<condition>="g".Equals(parameters["type"].AsString)</condition>
 			<iftrue>
         <settings>
           <parameters>
@@ -126,7 +126,7 @@
     </settings>
 		<builtin function-name="rptEffect" />
 		<test>
-			<condition>="m".Equals(Parameters["type"].AsString)</condition>
+			<condition>="m".Equals(parameters["type"].AsString)</condition>
 			<iftrue>
 				<report filename="effectwm.rtf" />
 			</iftrue>

@@ -19,7 +19,7 @@
     </settings>
 		<builtin function-name="rptFriedman" />
     <test>
-      <condition>="Friedman".Equals(Parameters["testName"].AsString)</condition>
+      <condition>="Friedman".Equals(parameters["testName"].AsString)</condition>
       <iftrue>
         <report filename="friedman.rtf" />
       </iftrue>

@@ -18,7 +18,7 @@
       </parameters>
     </settings>
     <test>
-      <condition>="formulae".Equals(Parameters["use-formulae"].AsString)</condition>
+      <condition>="formulae".Equals(parameters["use-formulae"].AsString)</condition>
       <iftrue>
         <settings>
           <parameters>

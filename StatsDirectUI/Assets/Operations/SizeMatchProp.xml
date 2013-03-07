@@ -25,13 +25,13 @@
           <name>p1</name>
           <prompt>Event rate in experimental group</prompt>
           <must-request>true</must-request>
-          <acquire-if-true language="c#">=!(Parameters.ContainsKey("er-or-rr") &amp;&amp; "rr".Equals(Parameters["er-or-rr"].AsString))</acquire-if-true>
+          <acquire-if-true language="c#">=!(parameters.ContainsKey("er-or-rr") &amp;&amp; "rr".Equals(parameters["er-or-rr"].AsString))</acquire-if-true>
         </double>
         <double>
           <name>rr</name>
           <prompt>Relative risk of failure for experimental subjects vs. controls</prompt>
           <must-request>true</must-request>
-          <acquire-if-true language="c#">=Parameters.ContainsKey("er-or-rr") &amp;&amp; "rr".Equals(Parameters["er-or-rr"].AsString)</acquire-if-true>
+          <acquire-if-true language="c#">=parameters.ContainsKey("er-or-rr") &amp;&amp; "rr".Equals(parameters["er-or-rr"].AsString)</acquire-if-true>
         </double>
         <double>
           <name>ph</name>

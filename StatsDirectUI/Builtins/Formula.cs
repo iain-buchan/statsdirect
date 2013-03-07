@@ -1215,15 +1215,15 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_tres(ITemplateHost Host, ParameterBag outputParameters, bool unpaired, double a, double b, double P, double M, double N, double D, double sd)
+        private static void x_tres(ITemplateHost host, ParameterBag outputParameters, bool unpaired, double a, double b, double P, double M, double N, double D, double sd)
         {
             int ierr = 0;
 
-            outputParameters.AddOutput("alpha", Host.RoundU(a));
-            outputParameters.AddOutput("power", Host.RoundU(P));
+            outputParameters.AddOutput("alpha", host.RoundU(a));
+            outputParameters.AddOutput("power", host.RoundU(P));
             outputParameters.AddOutput("mean", unpaired ? "between means" : "of mean from zero");
-            outputParameters.AddOutput("delta", Host.RoundU(D));
-            outputParameters.AddOutput("sd", Host.RoundU(sd));
+            outputParameters.AddOutput("delta", host.RoundU(D));
+            outputParameters.AddOutput("sd", host.RoundU(sd));
             double df = N - 1.0;
             List<ParameterBag> controlsList = new List<ParameterBag>();
             outputParameters.AddOutput("*controls", controlsList);

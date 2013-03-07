@@ -37,7 +37,7 @@
           <prompt>Iterations</prompt>
           <must-request>true</must-request>
           <column>2</column>
-          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
           <minimum-value>1</minimum-value>
           <default-value>1000000</default-value>
         </integer>
@@ -47,13 +47,13 @@
           <force-default>true</force-default>
           <must-request>true</must-request>
           <column>2</column>
-          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
           <default-value>=Base.DefaultSeed()</default-value>
         </integer>
         <confidence-interval>
           <name>ci</name>
           <must-request>true</must-request>
-          <acquire-if-true>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
           <column>2</column>
           <can-default>false</can-default>
           <default-value>0.99</default-value>
@@ -64,7 +64,7 @@
   	<builtin function-name="rptKappaScreen" />
 		<report filename="kappa.rtf" />
     <test>
-      <condition>=Parameters.ContainsKey("doExactP") &amp;&amp; Parameters["doExactP"].AsBoolean</condition>
+      <condition>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</condition>
       <iftrue>
         <builtin function-name="rptKappaSimulateExactP" />
         <report filename="kappaSimulatedExactP.rtf" />

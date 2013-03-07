@@ -25,13 +25,13 @@
           <name>et</name>
           <prompt>Median survival time in experimental group</prompt>
           <must-request>true</must-request>
-          <acquire-if-true language="c#">=!(Parameters.ContainsKey("time-or-hr") &amp;&amp; "hr".Equals(Parameters["time-or-hr"].AsString))</acquire-if-true>
+          <acquire-if-true language="c#">=!(parameters.ContainsKey("time-or-hr") &amp;&amp; "hr".Equals(parameters["time-or-hr"].AsString))</acquire-if-true>
         </double>
         <double>
           <name>hr</name>
           <prompt>Hazard ratio (relative risk) for experimental subjects vs. controls</prompt>
           <must-request>true</must-request>
-          <acquire-if-true language="c#">=Parameters.ContainsKey("time-or-hr") &amp;&amp; "hr".Equals(Parameters["time-or-hr"].AsString)</acquire-if-true>
+          <acquire-if-true language="c#">=parameters.ContainsKey("time-or-hr") &amp;&amp; "hr".Equals(parameters["time-or-hr"].AsString)</acquire-if-true>
         </double>
         <double>
           <name>at</name>

@@ -13,6 +13,6 @@ namespace StatsDirect.Templates
         /// A way in which the data should be validated
         /// </summary>
         [XmlText]
-        public ValidationMode ValidationMode { get; set; }
+        public string ValidatorName { get; set; }
     }
 }

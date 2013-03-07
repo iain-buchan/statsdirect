@@ -1205,7 +1205,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static StepResult x_showmr(ITemplateHost Host, MultipleLinearRegressionContext context, double[] SEB, double[] bd, bool DoC, int nx, int P, bool pol, int errcode)
+        private static StepResult x_showmr(ITemplateHost host, MultipleLinearRegressionContext context, double[] SEB, double[] bd, bool DoC, int nx, int P, bool pol, int errcode)
         {
             int i;
 
@@ -1264,7 +1264,7 @@ namespace StatsDirect.Builtins
                         colParameters.AddOutput("label", context.Titles[i]);
                         colParameters.AddOutput("b", i.ToString());
                     }
-                    colParameters.AddOutput("val_b", Host.RoundU(bd[i]));
+                    colParameters.AddOutput("val_b", host.RoundU(bd[i]));
                     double t;
                     double rp;
                     if (SEB[i] != 0.0)
@@ -1279,14 +1279,14 @@ namespace StatsDirect.Builtins
                     }
                     if (DoC == false || i > 1)
                     {
-                        colParameters.AddOutput("rp", "r = " + Host.RoundU(rp));
+                        colParameters.AddOutput("rp", "r = " + host.RoundU(rp));
                     }
                     else
                     {
                         colParameters.AddOutput("rp", "");
                     }
-                    colParameters.AddOutput("t", Host.RoundU(t));
-                    colParameters.AddOutput("p", Host.pval(prob));
+                    colParameters.AddOutput("t", host.RoundU(t));
+                    colParameters.AddOutput("p", host.pval(prob));
                 }
                 if (!string.IsNullOrEmpty(context.weightTitle))
                     rowParameters.AddOutput("y", context.outcomeTitle + " (weighted by " + context.weightTitle + ")");
@@ -1303,7 +1303,7 @@ namespace StatsDirect.Builtins
                         z = " +";
                     }
                     else { z = " "; }
-                    z = z + Host.RoundU(bd[j]);
+                    z = z + host.RoundU(bd[j]);
                     if (j > 1 || !(DoC))
                     {
                         z = z + " " + context.Titles[j];
@@ -3528,9 +3528,9 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_dropper(ITemplateHost Host, long Q, string Caption)
+        private static void x_dropper(ITemplateHost host, long Q, string Caption)
         {
-            Host.Warning(Q.ToString() + " observations dropped due to missing data." + "\r\n" + "Make sure that observations with missing data are not a subgroup.", Caption);
+            host.Warning(Q.ToString() + " observations dropped due to missing data." + "\r\n" + "Make sure that observations with missing data are not a subgroup.", Caption);
         }
 
 
@@ -4550,12 +4550,12 @@ namespace StatsDirect.Builtins
             x_lclass(t, fvl, y, N, out tp, out fp, out fn, out tn, co);
             outputParameters.AddOutput("tp", tp.ToString());
             outputParameters.AddOutput("fp", fp.ToString());
-            outputParameters.AddOutput("totc", tp + fp.ToString());
+            outputParameters.AddOutput("totc", (tp + fp).ToString());
             outputParameters.AddOutput("fn", fn.ToString());
             outputParameters.AddOutput("tn", tn.ToString());
-            outputParameters.AddOutput("totnoc", tn + fn.ToString());
-            outputParameters.AddOutput("tote", tp + fn.ToString());
-            outputParameters.AddOutput("totnoe", fp + tn.ToString());
+            outputParameters.AddOutput("totnoc", (tn + fn).ToString());
+            outputParameters.AddOutput("tote", (tp + fn).ToString());
+            outputParameters.AddOutput("totnoe", (fp + tn).ToString());
             outputParameters.AddOutput("co", Formatting.XRound(co, 2));
             double a = Convert.ToDouble(tp);
             double b = Convert.ToDouble(fp);
@@ -4683,8 +4683,8 @@ namespace StatsDirect.Builtins
 
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out cit, GAMMA, out P0);
-            int[] isx = new int[ip + 1 /* for VB to C# conversion */ ];
-            double[] ob = new double[ip + 1 /* for VB to C# conversion */ ];
+            int[] isx = new int[ip + 1];
+            double[] ob = new double[ip + 1];
             for (j = 1; j <= ip; j++)
             {
                 isx[j] = j;
@@ -4697,10 +4697,10 @@ namespace StatsDirect.Builtins
             }
             int boots = parameters["boots"].AsInt32;
             host.StartProgress("Bootstrapping " + boots.ToString() + " iterations");
-            double[,] qo = new double[ip + 1, boots + 1 /* for VB to C# conversion */];
-            double[] theta = new double[ip + 1 /* for VB to C# conversion */ ];
-            double[] ql = new double[ip + 1 /* for VB to C# conversion */];
-            double[] qu = new double[ip + 1 /* for VB to C# conversion */ ];
+            double[,] qo = new double[ip + 1, boots + 1];
+            double[] theta = new double[ip + 1];
+            double[] ql = new double[ip + 1];
+            double[] qu = new double[ip + 1];
             int booted = 0;
             MersenneTwister rng = new MersenneTwister();
             for (i = 1; i <= boots; i++)

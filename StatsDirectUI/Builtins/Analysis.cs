@@ -671,14 +671,14 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("aa", a.ToString());
             outputParameters.AddOutput("bb", b.ToString());
-            outputParameters.AddOutput("ab", a + b.ToString());
+            outputParameters.AddOutput("ab", (a + b).ToString());
 
             outputParameters.AddOutput("cc", c.ToString());
             outputParameters.AddOutput("dd", d.ToString());
-            outputParameters.AddOutput("cd", c + d.ToString());
+            outputParameters.AddOutput("cd", (c + d).ToString());
 
-            outputParameters.AddOutput("ac", a + c.ToString());
-            outputParameters.AddOutput("bd", b + d.ToString());
+            outputParameters.AddOutput("ac", (a + c).ToString());
+            outputParameters.AddOutput("bd", (b + d).ToString());
             outputParameters.AddOutput("tot", n.ToString());
 
             // CI level
@@ -1651,21 +1651,21 @@ namespace StatsDirect.Builtins
         }
 
         /**
-        public static StepResult rptRateSMR(ITemplateHost Host, ParameterBag Parameters)
+        public static StepResult rptRateSMR(ITemplateHost host, ParameterBag parameters)
         {
             double etot = 0;
             int j;
             int fault = 0;
 
-            DataFrame datFrame = Parameters["data"].AsDataFrame;
+            DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
             int rows = datFrame.MaxRows;
             double[] asm = new double[rows + 1];
             double[] spop = new double[rows + 1];
 
-            double nunit = Parsing.Cdbl_Txt(Parameters["nunit"].AsString);
-            double cco = Parameters["cco"].AsDouble;
+            double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
+            double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
 
@@ -1692,16 +1692,16 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag groupsParameters = new ParameterBag();
                 groupsList.Add(groupsParameters);
-                groupsParameters.AddOutput("group", Host.RoundU(asm[j] / nunit));
+                groupsParameters.AddOutput("group", host.RoundU(asm[j] / nunit));
                 groupsParameters.AddOutput("observed", spop[j].ToString());
-                groupsParameters.AddOutput("expected", Host.RoundU(spop[j] * (asm[j] / nunit)));
+                groupsParameters.AddOutput("expected", host.RoundU(spop[j] * (asm[j] / nunit)));
             }
             outputParameters.AddOutput("total", etot.ToString());
 
-            double dead = Parameters["dead"].AsDouble;
+            double dead = parameters["dead"].AsDouble;
             if (fault == 0)
             {
-                outputParameters.AddOutput("ratio", Host.RoundU(dead / etot));
+                outputParameters.AddOutput("ratio", host.RoundU(dead / etot));
                 outputParameters.AddOutput("smr", Formatting.XRound(Convert.ToInt64((dead / etot) * 100), 0));
 
                 double xu;
@@ -1717,10 +1717,10 @@ namespace StatsDirect.Builtins
                     xu = xu / etot;
                 }
                 outputParameters.AddOutput("pc", Formatting.XRound(100 * cco, 2));
-                outputParameters.AddOutput("from", Host.RoundU(xl));
-                outputParameters.AddOutput("to", Host.RoundU(xu));
+                outputParameters.AddOutput("from", host.RoundU(xl));
+                outputParameters.AddOutput("to", host.RoundU(xu));
                 outputParameters.AddOutput("from100", Formatting.XRound(Convert.ToInt64(100 * xl), 0));
-                outputParameters.AddOutput("to100", Host.RoundU(Convert.ToInt64(100 * xu)));
+                outputParameters.AddOutput("to100", host.RoundU(Convert.ToInt64(100 * xu)));
 
                 double term;
                 double plo;
@@ -1732,9 +1732,9 @@ namespace StatsDirect.Builtins
                 }
 
                 outputParameters.AddOutput("qty", Convert.ToInt64(dead).ToString());
-                outputParameters.AddOutput("p_hi", Host.pval(phi));
+                outputParameters.AddOutput("p_hi", host.pval(phi));
 
-                outputParameters.AddOutput("p_lo", Host.pval(plo));
+                outputParameters.AddOutput("p_lo", host.pval(plo));
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
