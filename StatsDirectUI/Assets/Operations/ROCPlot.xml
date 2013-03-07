@@ -47,6 +47,6 @@
 			<chart-name>chart</chart-name>
 			<chart-type>ROC</chart-type>
 		</chart>
-		<report filename="roc.rtf" />
+		<report type="text/rtf" filename="roc.rtf" />
 	</steps>
 </operation>

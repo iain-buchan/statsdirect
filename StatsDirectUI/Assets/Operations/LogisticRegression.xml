@@ -121,7 +121,7 @@
       </parameters>
     </settings>
 	<builtin function-name="rptLogisticRegression" />
-	<report filename="logreg.rtf" />
+	<report type="text/rtf" filename="logreg.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>LogisticRegressionFitToReport</suggested-operation>

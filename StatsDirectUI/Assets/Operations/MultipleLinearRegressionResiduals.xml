@@ -53,6 +53,6 @@
 				</test>
 			</iftrue>
 		</test>
-		<report filename="residm.rtf" />
+		<report type="text/rtf" filename="residm.rtf" />
 	</steps>
 </operation>

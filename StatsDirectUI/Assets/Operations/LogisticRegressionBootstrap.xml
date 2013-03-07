@@ -18,6 +18,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLogisticRegressionBootstrap" />
-		<report filename="lr_bootstrap.rtf" />
+		<report type="text/rtf" filename="lr_bootstrap.rtf" />
 	</steps>
 </operation>

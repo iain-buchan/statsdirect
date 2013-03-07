@@ -63,7 +63,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizeMatchProp" />
-	  <report filename="s_maprop.rtf" />
+	  <report type="text/rtf" filename="s_maprop.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeMatchProp</suggested-operation>

@@ -33,7 +33,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptRateCompareTwo" />
-	  <report filename="incid.rtf" />
+	  <report type="text/rtf" filename="incid.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RateCompareTwo</suggested-operation>

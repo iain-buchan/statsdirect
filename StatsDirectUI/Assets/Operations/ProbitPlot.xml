@@ -6,6 +6,6 @@
   <prerequisite-operation>Probit</prerequisite-operation>
   <steps>
 		<builtin function-name="plotProbit" />
-		<report filename="chartonly.rtf" />
+		<report type="text/rtf" filename="chartonly.rtf" />
 	</steps>
 </operation>

@@ -67,6 +67,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptConditionalLogisticRegression" />
-		<report filename="clogit.rtf" />
+		<report type="text/rtf" filename="clogit.rtf" />
 	</steps>
 </operation>

@@ -66,6 +66,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLogRank" />
-		<report filename="logrank.rtf" />
+		<report type="text/rtf" filename="logrank.rtf" />
 	</steps>
 </operation>

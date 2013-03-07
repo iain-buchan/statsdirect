@@ -44,7 +44,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizeCorrelation" />
-	  <report filename="s_corr.rtf" />
+	  <report type="text/rtf" filename="s_corr.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeCorrelation</suggested-operation>

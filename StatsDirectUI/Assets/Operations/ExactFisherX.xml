@@ -23,7 +23,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptExactFisherX" />
-	  <report filename="fisherx.rtf" />
+	  <report type="text/rtf" filename="fisherx.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactFisherX</suggested-operation>

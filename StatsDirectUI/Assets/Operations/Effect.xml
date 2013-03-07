@@ -128,12 +128,12 @@
 		<test>
 			<condition>="m".Equals(parameters["type"].AsString)</condition>
 			<iftrue>
-				<report filename="effectwm.rtf" />
+				<report type="text/rtf" filename="effectwm.rtf" />
 			</iftrue>
 			<iffalse>
-				<report filename="effect.rtf" />
+				<report type="text/rtf" filename="effect.rtf" />
 			</iffalse>
 		</test>
-		<report filename="charts.rtf" />
+		<report type="text/rtf" filename="charts.rtf" />
 	</steps>
 </operation>

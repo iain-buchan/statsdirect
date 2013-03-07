@@ -37,7 +37,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptPropUnPaired" />
-	  <report filename="p_unpair.rtf" />
+	  <report type="text/rtf" filename="p_unpair.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>PropUnPaired</suggested-operation>

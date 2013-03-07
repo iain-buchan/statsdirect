@@ -59,7 +59,7 @@
       </parameters>
     </settings>
 	<builtin function-name="rptUniversalAgreement" />
-	<report filename="universalAgreement.rtf" />
+	<report type="text/rtf" filename="universalAgreement.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation suggest-if='=null != parameters &amp;&amp; !(parameters.ContainsKey("reference") &amp;&amp; null != parameters["reference"])'>UniversalAgreementSimulateExactP</suggested-operation>

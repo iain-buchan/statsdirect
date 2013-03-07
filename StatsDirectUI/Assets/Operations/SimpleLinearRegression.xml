@@ -29,7 +29,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptSimpleLinearRegression" />
-		<report filename="simple.rtf" />
+		<report type="text/rtf" filename="simple.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>InterpolateXY</suggested-operation>

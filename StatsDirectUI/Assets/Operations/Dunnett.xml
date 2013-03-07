@@ -23,6 +23,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptDunnett" />
-		<report filename="dunnett.rtf" />
+		<report type="text/rtf" filename="dunnett.rtf" />
 	</steps>
 </operation>

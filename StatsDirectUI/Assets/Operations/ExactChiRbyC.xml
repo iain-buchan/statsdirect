@@ -57,6 +57,6 @@
       </parameters>
     </settings>
   	<builtin function-name="rptChiRbyC" />
-	  <report filename="chirxc.rtf" />
+	  <report type="text/rtf" filename="chirxc.rtf" />
 	</steps>
 </operation>

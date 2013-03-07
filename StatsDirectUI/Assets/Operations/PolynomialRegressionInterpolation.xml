@@ -33,6 +33,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPolynomialRegressionInterpolation" />
-		<report filename="pinterp.rtf" />
+		<report type="text/rtf" filename="pinterp.rtf" />
 	</steps>
 </operation>

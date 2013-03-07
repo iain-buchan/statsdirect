@@ -65,6 +65,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptRateDirect" />
-		<report filename="dstdr.rtf" />
+		<report type="text/rtf" filename="dstdr.rtf" />
 	</steps>
 </operation>

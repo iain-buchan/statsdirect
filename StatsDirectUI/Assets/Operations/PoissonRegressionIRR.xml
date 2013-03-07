@@ -12,6 +12,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPoissonRegressionIRR" />
-		<report filename="pr_irr.rtf" />
+		<report type="text/rtf" filename="pr_irr.rtf" />
 	</steps>
 </operation>

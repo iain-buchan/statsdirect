@@ -109,7 +109,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPoissonRegression" />
-		<report filename="poisreg.rtf" />
+		<report type="text/rtf" filename="poisreg.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>PoissonRegressionFitToReport</suggested-operation>

@@ -39,6 +39,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptBonferroni" />
-		<report filename="bonferr.rtf" />
+		<report type="text/rtf" filename="bonferr.rtf" />
 	</steps>
 </operation>

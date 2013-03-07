@@ -34,7 +34,7 @@
       </parameters>
     </settings>
 	<builtin function-name="rptTSingleSummary" />
-	<report filename="m_single.rtf" />
+	<report type="text/rtf" filename="m_single.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>TSingleSummary</suggested-operation>

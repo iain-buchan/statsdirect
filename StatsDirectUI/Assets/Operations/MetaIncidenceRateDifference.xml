@@ -57,7 +57,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptMetaIncidenceRateDifference" />
-		<report filename="irdmeta.rtf" />
-		<report filename="charts.rtf" />
+		<report type="text/rtf" filename="irdmeta.rtf" />
+		<report type="text/rtf" filename="charts.rtf" />
 	</steps>
 </operation>

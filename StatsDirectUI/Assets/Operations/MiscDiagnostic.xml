@@ -27,7 +27,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptMiscDiagnostic" />
-	  <report filename="diagnost.rtf" />
+	  <report type="text/rtf" filename="diagnost.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscDiagnostic</suggested-operation>

@@ -62,7 +62,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptCoxRegression" />
-		<report filename="coxreg.rtf" />
+		<report type="text/rtf" filename="coxreg.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>CoxBaselineToReport</suggested-operation>

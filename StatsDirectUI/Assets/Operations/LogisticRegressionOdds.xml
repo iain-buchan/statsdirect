@@ -12,6 +12,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLogisticRegressionOdds" />
-		<report filename="lr_odds.rtf" />
+		<report type="text/rtf" filename="lr_odds.rtf" />
 	</steps>
 </operation>

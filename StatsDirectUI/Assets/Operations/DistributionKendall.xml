@@ -8,7 +8,7 @@
     <test>
       <condition>=parameters.ContainsKey("gr")</condition>
       <iftrue>
-        <report filename="probcal.rtf" />
+        <report type="text/rtf" filename="probcal.rtf" />
       </iftrue>
     </test>
 	</steps>

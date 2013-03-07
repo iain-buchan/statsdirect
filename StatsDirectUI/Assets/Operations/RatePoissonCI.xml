@@ -25,7 +25,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptRatePoissonCI" />
-	  <report filename="prate.rtf" />
+	  <report type="text/rtf" filename="prate.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RatePoissonCI</suggested-operation>

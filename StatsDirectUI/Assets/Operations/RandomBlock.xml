@@ -32,7 +32,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptRandomBlock" />
-	  <report filename="r_block.rtf" />
+	  <report type="text/rtf" filename="r_block.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RandomBlock</suggested-operation>

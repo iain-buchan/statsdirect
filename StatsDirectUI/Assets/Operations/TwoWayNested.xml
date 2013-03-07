@@ -18,7 +18,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptTwoNest" />
-		<report filename="twonest.rtf" />
+		<report type="text/rtf" filename="twonest.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>TwoWayNestedMeans</suggested-operation>

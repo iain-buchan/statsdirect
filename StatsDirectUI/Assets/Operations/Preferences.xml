@@ -31,6 +31,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPreferences" />
-		<report filename="prefer.rtf" />
+		<report type="text/rtf" filename="prefer.rtf" />
 	</steps>
 </operation>

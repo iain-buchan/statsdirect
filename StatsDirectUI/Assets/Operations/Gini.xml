@@ -41,6 +41,6 @@
 				</chart>
 			</iftrue>
 		</test>
-		<report filename="gini.rtf" />
+		<report type="text/rtf" filename="gini.rtf" />
 	</steps>
 </operation>

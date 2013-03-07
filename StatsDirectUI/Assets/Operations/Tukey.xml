@@ -23,6 +23,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptTukey" />
-		<report filename="tukey.rtf" />
+		<report type="text/rtf" filename="tukey.rtf" />
 	</steps>
 </operation>

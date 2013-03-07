@@ -17,6 +17,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptInterpolateXY" />
-		<report filename="interp.rtf" />
+		<report type="text/rtf" filename="interp.rtf" />
 	</steps>
 </operation>

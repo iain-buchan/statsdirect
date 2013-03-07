@@ -61,6 +61,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptRateSMR" />
-		<report filename="stdmort.rtf" />
+		<report type="text/rtf" filename="stdmort.rtf" />
 	</steps>
 </operation>

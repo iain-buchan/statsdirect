@@ -58,7 +58,7 @@
       </parameters>
     </settings>
 	<builtin function-name="rptUniversalRCompare" />
-	<report filename="universal_r_compare.rtf" />
+	<report type="text/rtf" filename="universal_r_compare.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>UniversalRCompare</suggested-operation>

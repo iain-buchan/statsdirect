@@ -19,6 +19,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionScores" />
-		<report filename="prscores.rtf" />
+		<report type="text/rtf" filename="prscores.rtf" />
 	</steps>
 </operation>

@@ -38,6 +38,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptGroupedTwoWay" />
-		<report filename="groupedtwoway.rtf" />
+		<report type="text/rtf" filename="groupedtwoway.rtf" />
 	</steps>
 </operation>

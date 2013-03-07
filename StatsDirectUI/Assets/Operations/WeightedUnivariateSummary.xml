@@ -93,7 +93,7 @@
       </parameters>
     </settings>
     <builtin function-name="rptWeightedUnivariateSummary" />
-    <report filename="describe.rtf" />
+    <report type="text/rtf" filename="describe.rtf" />
     <test>
       <condition>=parameters.ContainsKey("output")</condition>
       <iftrue>

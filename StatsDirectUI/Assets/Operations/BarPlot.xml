@@ -33,6 +33,6 @@
 			<box-axes>false</box-axes>
       <y-series-data>values</y-series-data>
 		</chart>
-		<report filename="chartonly.rtf" />
+		<report type="text/rtf" filename="chartonly.rtf" />
 	</steps>
 </operation>

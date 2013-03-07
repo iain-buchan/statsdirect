@@ -59,8 +59,8 @@
 				<output-frame frame-name="results" />
 			</iftrue>
 		</test>
-		<report filename="kap_meir.rtf" />
+		<report type="text/rtf" filename="kap_meir.rtf" />
 		<builtin function-name="rptKaplanMeierPlots" />
-		<report filename="charts.rtf" />
+		<report type="text/rtf" filename="charts.rtf" />
 	</steps>
 </operation>

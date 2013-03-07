@@ -22,6 +22,6 @@
       </parameters>
     </settings>
 	<builtin function-name="rptTUnpaired" />
-	<report filename="m_unpair.rtf" />
+	<report type="text/rtf" filename="m_unpair.rtf" />
 	</steps>
 </operation>

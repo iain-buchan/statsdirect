@@ -21,7 +21,7 @@
 				<output-frame frame-name="data" />
 			</iftrue>
 		</test>
-		<report filename="xxi.rtf" />
-		<report filename="covarmx.rtf" />
+		<report type="text/rtf" filename="xxi.rtf" />
+		<report type="text/rtf" filename="covarmx.rtf" />
 	</steps>
 </operation>

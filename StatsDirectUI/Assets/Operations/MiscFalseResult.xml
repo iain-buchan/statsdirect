@@ -29,7 +29,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptMiscFalseResult" />
-	  <report filename="falser.rtf" />
+	  <report type="text/rtf" filename="falser.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscFalseResult</suggested-operation>

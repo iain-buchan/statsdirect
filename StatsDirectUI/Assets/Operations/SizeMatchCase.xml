@@ -52,7 +52,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizeMatchCase" />
-	  <report filename="s_macase.rtf" />
+	  <report type="text/rtf" filename="s_macase.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeMatchCase</suggested-operation>

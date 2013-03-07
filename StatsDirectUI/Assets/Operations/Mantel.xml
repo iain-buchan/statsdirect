@@ -57,7 +57,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptMantel" />
-		<report filename="mantel.rtf" />
-		<report filename="charts.rtf" />
+		<report type="text/rtf" filename="mantel.rtf" />
+		<report type="text/rtf" filename="charts.rtf" />
 	</steps>
 </operation>

@@ -27,7 +27,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptExactORCML" />
-	  <report filename="orci.rtf" />
+	  <report type="text/rtf" filename="orci.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactORCML</suggested-operation>

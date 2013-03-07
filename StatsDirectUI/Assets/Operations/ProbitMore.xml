@@ -6,6 +6,6 @@
   <prerequisite-operation>Probit</prerequisite-operation>
   <steps>
 		<builtin function-name="rptProbitMore" />
-		<report filename="probmore.rtf" />
+		<report type="text/rtf" filename="probmore.rtf" />
 	</steps>
 </operation>

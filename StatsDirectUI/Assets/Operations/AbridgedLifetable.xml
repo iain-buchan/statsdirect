@@ -87,6 +87,6 @@
 				<output-frame frame-name="results" />
 			</iftrue>
 		</test>
-		<report filename="abridged.rtf" />
+		<report type="text/rtf" filename="abridged.rtf" />
 	</steps>
 </operation>

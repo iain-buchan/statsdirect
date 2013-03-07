@@ -22,6 +22,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptCronbach" />
-		<report filename="cronbach.rtf" />
+		<report type="text/rtf" filename="cronbach.rtf" />
 	</steps>
 </operation>

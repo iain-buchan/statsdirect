@@ -19,6 +19,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionMatrix" />
-		<report filename="prmatrix.rtf" />
+		<report type="text/rtf" filename="prmatrix.rtf" />
 	</steps>
 </operation>

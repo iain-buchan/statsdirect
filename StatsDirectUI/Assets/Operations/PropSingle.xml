@@ -33,7 +33,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptPropSingle" />
-	  <report filename="p_sng.rtf" />
+	  <report type="text/rtf" filename="p_sng.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>PropSingle</suggested-operation>

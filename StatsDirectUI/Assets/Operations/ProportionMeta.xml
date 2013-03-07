@@ -53,7 +53,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptProportionMeta" />
-		<report filename="propmeta.rtf" />
-		<report filename="charts.rtf" />
+		<report type="text/rtf" filename="propmeta.rtf" />
+		<report type="text/rtf" filename="charts.rtf" />
 	</steps>
 </operation>

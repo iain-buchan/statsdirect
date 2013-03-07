@@ -21,6 +21,6 @@
       </parameters>
     </settings>
 	<builtin function-name="rptSpearman" />
-	<report filename="spearman.rtf" />
+	<report type="text/rtf" filename="spearman.rtf" />
 	</steps>
 </operation>

@@ -27,9 +27,9 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />
-		<report filename="princ.rtf" />
+		<report type="text/rtf" filename="princ.rtf" />
     <!-- Defect ID #217: Do Cronbach immediately after PCR and disable other follow-on functions -->
     <builtin function-name="rptCronbach" />
-    <report filename="cronbach.rtf" />
+    <report type="text/rtf" filename="cronbach.rtf" />
   </steps>
 </operation>

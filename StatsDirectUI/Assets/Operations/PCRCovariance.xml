@@ -27,7 +27,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />
-		<report filename="princ.rtf" />
+		<report type="text/rtf" filename="princ.rtf" />
   </steps>
   <suggested-operations>
 	  <suggested-operation>PCRCoefficients</suggested-operation>

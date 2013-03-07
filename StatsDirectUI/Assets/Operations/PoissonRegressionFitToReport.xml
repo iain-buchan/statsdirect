@@ -5,6 +5,6 @@
   <prerequisite-operation>PoissonRegression</prerequisite-operation>
   <steps>
 		<builtin function-name="rptPoissonRegressionFit" />
-		<report filename="pr_fit.rtf" />
+		<report type="text/rtf" filename="pr_fit.rtf" />
 	</steps>
 </operation>

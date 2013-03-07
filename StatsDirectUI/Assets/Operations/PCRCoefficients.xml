@@ -19,6 +19,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionCoefficients" />
-		<report filename="prcoeff.rtf" />
+		<report type="text/rtf" filename="prcoeff.rtf" />
 	</steps>
 </operation>

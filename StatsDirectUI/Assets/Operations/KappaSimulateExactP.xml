@@ -11,6 +11,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptKappaSimulateExactP" />
-    <report filename="kappaSimulatedExactP.rtf" />
+    <report type="text/rtf" filename="kappaSimulatedExactP.rtf" />
   </steps>
 </operation>

@@ -16,6 +16,6 @@
       </parameters>
     </settings>
 		<builtin function-name="chartExploreContinuousDistributions"/>
-		<report filename="chartonly.rtf" />
+		<report type="text/rtf" filename="chartonly.rtf" />
 	</steps>
 </operation>

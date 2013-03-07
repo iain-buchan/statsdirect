@@ -19,6 +19,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLogisticRegressionPrediction" />
-		<report filename="lpredict.rtf" />
+		<report type="text/rtf" filename="lpredict.rtf" />
 	</steps>
 </operation>

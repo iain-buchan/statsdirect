@@ -32,6 +32,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptRanv" />
-		<report filename="simanal.rtf" />
+		<report type="text/rtf" filename="simanal.rtf" />
 	</steps>
 </operation>

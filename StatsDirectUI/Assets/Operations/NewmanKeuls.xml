@@ -23,6 +23,6 @@
 		</parameters>
 		</settings>
 		<builtin function-name="rptNewmanKeuls" />
-		<report filename="nkeuls.rtf" />
+		<report type="text/rtf" filename="nkeuls.rtf" />
 	</steps>
 </operation>

@@ -96,7 +96,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptStdrr" />
-		<report filename="stdrr.rtf" />
-    <report filename="charts.rtf" />
+		<report type="text/rtf" filename="stdrr.rtf" />
+    <report type="text/rtf" filename="charts.rtf" />
   </steps>
 </operation>

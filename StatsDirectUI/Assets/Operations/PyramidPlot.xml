@@ -44,6 +44,6 @@
 			<chart-type>Pyramid</chart-type>
 			<box-axes>false</box-axes>
 		</chart>
-		<report filename="chartonly.rtf" />
+		<report type="text/rtf" filename="chartonly.rtf" />
 	</steps>
 </operation>

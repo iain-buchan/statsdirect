@@ -22,6 +22,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptFrMultiple" />
-		<report filename="frmulti.rtf" />
+		<report type="text/rtf" filename="frmulti.rtf" />
 	</steps>
 </operation>

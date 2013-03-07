@@ -18,7 +18,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptOneWay" />
-		<report filename="oneway.rtf" />
+		<report type="text/rtf" filename="oneway.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>Bonferroni</suggested-operation>

@@ -51,12 +51,12 @@
       </parameters>
     </settings>
   	<builtin function-name="rptChi2byNWithTrend" />
-	  <report filename="chi2xc.rtf" />
+	  <report type="text/rtf" filename="chi2xc.rtf" />
     <test>
       <condition>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</condition>
       <iftrue>
         <builtin function-name="rptChi2byNWithTrendSimulateExactP" />
-        <report filename="chiTwoByKSimulatedExactP.rtf" />
+        <report type="text/rtf" filename="chiTwoByKSimulatedExactP.rtf" />
       </iftrue>
     </test>
   </steps>

@@ -36,7 +36,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptMiscRelRisk" />
-	  <report filename="relrisk.rtf" />
+	  <report type="text/rtf" filename="relrisk.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscRelRisk</suggested-operation>

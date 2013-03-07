@@ -40,7 +40,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizePaired" />
-	  <report filename="s_t.rtf" />
+	  <report type="text/rtf" filename="s_t.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizePaired</suggested-operation>

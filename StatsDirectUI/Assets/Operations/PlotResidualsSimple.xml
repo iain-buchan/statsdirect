@@ -29,6 +29,6 @@
       </parameters>
     </settings>
 		<builtin function-name="plotResidualsSimple" />
-		<report filename="residuals.rtf" />
+		<report type="text/rtf" filename="residuals.rtf" />
 	</steps>
 </operation>

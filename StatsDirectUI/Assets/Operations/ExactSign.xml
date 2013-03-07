@@ -25,7 +25,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptExactSign" />
-	  <report filename="sign.rtf" />
+	  <report type="text/rtf" filename="sign.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactSign</suggested-operation>

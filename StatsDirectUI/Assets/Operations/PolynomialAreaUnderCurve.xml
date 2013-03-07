@@ -25,6 +25,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptAreaUnderCurve" />
-		<report filename="poly_auc.rtf" />
+		<report type="text/rtf" filename="poly_auc.rtf" />
 	</steps>
 </operation>

@@ -21,6 +21,6 @@
       </parameters>
     </settings>
 	<builtin function-name="rptWilcoxon" />
-	<report filename="wilco.rtf" />
+	<report type="text/rtf" filename="wilco.rtf" />
 	</steps>
 </operation>

@@ -37,7 +37,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptPropPairs" />
-	  <report filename="p_pair.rtf" />
+	  <report type="text/rtf" filename="p_pair.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>PropPairs</suggested-operation>

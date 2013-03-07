@@ -36,7 +36,7 @@
       </iftrue>
     </test>
 	  <builtin function-name="rptTPaired" />
-	  <report filename="m_paired.rtf" />
-    <report filename="charts.rtf" />
+	  <report type="text/rtf" filename="m_paired.rtf" />
+    <report type="text/rtf" filename="charts.rtf" />
   </steps>
 </operation>

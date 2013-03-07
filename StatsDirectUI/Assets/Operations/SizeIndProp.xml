@@ -63,7 +63,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizeIndProp" />
-	  <report filename="s_ind.rtf" />
+	  <report type="text/rtf" filename="s_ind.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeIndProp</suggested-operation>

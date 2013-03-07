@@ -31,6 +31,6 @@
       </parameters>
     </settings>
 	<builtin function-name="rptZSingle" />
-	<report filename="z_norm1.rtf" />
+	<report type="text/rtf" filename="z_norm1.rtf" />
 	</steps>
 </operation>

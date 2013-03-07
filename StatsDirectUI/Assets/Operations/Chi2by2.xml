@@ -45,7 +45,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptChi2by2" />
-	  <report filename="chi2x2.rtf" />
+	  <report type="text/rtf" filename="chi2x2.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>Chi2by2</suggested-operation>

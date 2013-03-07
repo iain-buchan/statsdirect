@@ -17,7 +17,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptTwoMulti" />
-		<report filename="twomulti.rtf" />
+		<report type="text/rtf" filename="twomulti.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>Bonferroni</suggested-operation>

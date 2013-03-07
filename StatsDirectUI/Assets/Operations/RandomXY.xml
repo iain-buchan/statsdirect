@@ -25,7 +25,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptRandomXY" />
-	  <report filename="r_xy.rtf" />
+	  <report type="text/rtf" filename="r_xy.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RandomXY</suggested-operation>

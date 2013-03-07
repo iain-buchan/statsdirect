@@ -5,6 +5,6 @@
   <prerequisite-operation>CoxRegression</prerequisite-operation>
   <steps>
 		<builtin function-name="rptCoxModelAnalysis" />
-		<report filename="cox_dev.rtf" />
+		<report type="text/rtf" filename="cox_dev.rtf" />
 	</steps>
 </operation>

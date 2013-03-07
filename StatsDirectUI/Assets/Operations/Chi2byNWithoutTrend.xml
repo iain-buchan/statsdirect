@@ -18,7 +18,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptChi2byNWithoutTrend" />
-	  <report filename="chi2xc.rtf" />
+	  <report type="text/rtf" filename="chi2xc.rtf" />
 	</steps>
   <custom-validators>
     <validator name="TwoColumns" language="CSharp">

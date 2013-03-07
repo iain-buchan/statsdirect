@@ -12,6 +12,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptGroupedCovariance" />
-		<report filename="grpcov.rtf" />
+		<report type="text/rtf" filename="grpcov.rtf" />
 	</steps>
 </operation>

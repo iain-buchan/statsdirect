@@ -36,7 +36,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptMiscRetroRisk" />
-	  <report filename="retro_r.rtf" />
+	  <report type="text/rtf" filename="retro_r.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscRetroRisk</suggested-operation>

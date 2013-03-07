@@ -49,6 +49,6 @@ return outputParameters;
       </parameters>
     </settings>
 		<builtin function-name="rptCuzick" />
-		<report filename="cuzick.rtf" />
+		<report type="text/rtf" filename="cuzick.rtf" />
 	</steps>
 </operation>

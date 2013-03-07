@@ -59,8 +59,8 @@
 				</iftrue>
 			</test>
 			<builtin function-name="rptKappa" />
-			<report filename="xtab.rtf"/>
-			<report filename="kappa.rtf" />
+			<report type="text/rtf" filename="xtab.rtf"/>
+			<report type="text/rtf" filename="kappa.rtf" />
 		</iftrue>
 		<iffalse>
       <!-- More than two raters -->
@@ -68,10 +68,10 @@
 			<test>
 				<condition>=2 == parameters["categories"].AsInt32</condition>
 				<iftrue>
-					<report filename="kappa2.rtf" />
+					<report type="text/rtf" filename="kappa2.rtf" />
 				</iftrue>
 				<iffalse>
-					<report filename="kappam.rtf" />
+					<report type="text/rtf" filename="kappam.rtf" />
 				</iffalse>
 			</test>
 		</iffalse>

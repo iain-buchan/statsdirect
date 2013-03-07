@@ -30,7 +30,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizePopSurvey" />
-	  <report filename="s_survey.rtf" />
+	  <report type="text/rtf" filename="s_survey.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizePopSurvey</suggested-operation>

@@ -30,6 +30,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptUniversalAgreementSimulateExactP" />
-    <report filename="simulatedExactP.rtf" />
+    <report type="text/rtf" filename="simulatedExactP.rtf" />
   </steps>
 </operation>

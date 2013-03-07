@@ -64,10 +64,10 @@
 		<test>
 			<condition>=parameters["isPoly"].AsBoolean</condition>
 			<iftrue>
-				<report filename="poly.rtf" />
+				<report type="text/rtf" filename="poly.rtf" />
 			</iftrue>
 			<iffalse>
-				<report filename="multi.rtf" />
+				<report type="text/rtf" filename="multi.rtf" />
 			</iffalse>
 		</test>
 	</steps>

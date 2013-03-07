@@ -31,6 +31,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLinearizedEstimateInterpolation" />
-		<report filename="interlin.rtf" />
+		<report type="text/rtf" filename="interlin.rtf" />
 	</steps>
 </operation>

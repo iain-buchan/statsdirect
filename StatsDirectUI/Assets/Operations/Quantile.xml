@@ -32,6 +32,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptQuantile" />
-		<report filename="quantile.rtf" />
+		<report type="text/rtf" filename="quantile.rtf" />
 	</steps>
 </operation>

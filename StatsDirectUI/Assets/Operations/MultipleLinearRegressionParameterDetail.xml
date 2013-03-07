@@ -6,6 +6,6 @@
   <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
   <steps>
 		<builtin function-name="rptMultipleLinearRegressionParameterDetail" />
-		<report filename="pardet.rtf" />
+		<report type="text/rtf" filename="pardet.rtf" />
 	</steps>
 </operation>

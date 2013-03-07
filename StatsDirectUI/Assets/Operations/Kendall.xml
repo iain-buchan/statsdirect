@@ -21,6 +21,6 @@
       </parameters>
     </settings>
 	<builtin function-name="rptKendall" />
-	<report filename="kendall.rtf" />
+	<report type="text/rtf" filename="kendall.rtf" />
 	</steps>
 </operation>

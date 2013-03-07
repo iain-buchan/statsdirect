@@ -18,7 +18,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptTwoWay" />
-		<report filename="twoway.rtf" />
+		<report type="text/rtf" filename="twoway.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>Bonferroni</suggested-operation>

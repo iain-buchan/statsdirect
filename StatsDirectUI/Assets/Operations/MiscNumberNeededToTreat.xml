@@ -43,7 +43,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptMiscNumberNeededToTreat" />
-	  <report filename="treat.rtf" />
+	  <report type="text/rtf" filename="treat.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscNumberNeededToTreat</suggested-operation>

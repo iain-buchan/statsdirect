@@ -51,6 +51,6 @@
       </parameters>
     </settings>
     <builtin function-name="rptFollowUpLifetable" />
-		<report filename="lifetab.rtf" />
+		<report type="text/rtf" filename="lifetab.rtf" />
 	</steps>
 </operation>

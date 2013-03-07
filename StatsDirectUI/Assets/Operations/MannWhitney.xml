@@ -21,6 +21,6 @@
       </parameters>
     </settings>
 	<builtin function-name="rptMannWhitney" />
-	<report filename="mannwhit.rtf" />
+	<report type="text/rtf" filename="mannwhit.rtf" />
 	</steps>
 </operation>

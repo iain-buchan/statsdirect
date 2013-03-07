@@ -41,7 +41,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPolynomialRegression" />
-		<report filename="poly.rtf" />
+		<report type="text/rtf" filename="poly.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>PolynomialRegressionChangeDegree</suggested-operation>

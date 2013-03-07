@@ -67,6 +67,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptCrossover" />
-		<report filename="xover.rtf" />
+		<report type="text/rtf" filename="xover.rtf" />
 	</steps>
 </operation>

@@ -23,6 +23,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptScheffe" />
-		<report filename="scheffe.rtf" />
+		<report type="text/rtf" filename="scheffe.rtf" />
 	</steps>
 </operation>

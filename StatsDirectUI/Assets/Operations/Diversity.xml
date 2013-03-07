@@ -27,6 +27,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptDiversity" />
-		<report filename="diversity.rtf" />
+		<report type="text/rtf" filename="diversity.rtf" />
 	</steps>
 </operation>

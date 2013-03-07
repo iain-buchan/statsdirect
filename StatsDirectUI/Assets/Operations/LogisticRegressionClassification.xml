@@ -20,6 +20,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLogisticRegressionClassification" />
-		<report filename="lr_class.rtf" />
+		<report type="text/rtf" filename="lr_class.rtf" />
 	</steps>
 </operation>

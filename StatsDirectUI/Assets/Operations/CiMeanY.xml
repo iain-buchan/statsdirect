@@ -16,6 +16,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptCiMeanY" />
-		<report filename="cimeany.rtf" />
+		<report type="text/rtf" filename="cimeany.rtf" />
 	</steps>
 </operation>

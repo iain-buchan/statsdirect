@@ -30,6 +30,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPolynomialRegressionBackInterpolation" />
-		<report filename="backint.rtf" />
+		<report type="text/rtf" filename="backint.rtf" />
 	</steps>
 </operation>

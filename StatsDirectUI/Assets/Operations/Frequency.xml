@@ -17,6 +17,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptFrequency" />
-		<report filename="freq.rtf" />
+		<report type="text/rtf" filename="freq.rtf" />
 	</steps>
 </operation>

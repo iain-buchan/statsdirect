@@ -73,7 +73,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizeSurvival" />
-	  <report filename="s_survival.rtf" />
+	  <report type="text/rtf" filename="s_survival.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeSurvival</suggested-operation>

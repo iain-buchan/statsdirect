@@ -14,6 +14,6 @@
 			</parameters>
 		</settings>
 		<builtin function-name="rptMultipleLinearRegressionAnova" />
-		<report filename="glranova.rtf" />
+		<report type="text/rtf" filename="glranova.rtf" />
 	</steps>
 </operation>

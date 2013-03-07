@@ -17,6 +17,6 @@
 			</parameters>
 		</settings>
 		<builtin function-name="rptMultipleLinearRegressionPrediction" />
-		<report filename="interpmr.rtf" />
+		<report type="text/rtf" filename="interpmr.rtf" />
 	</steps>
 </operation>

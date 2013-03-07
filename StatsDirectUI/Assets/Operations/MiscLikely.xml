@@ -22,7 +22,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptMiscLikely" />
-	  <report filename="likely.rtf" />
+	  <report type="text/rtf" filename="likely.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscLikely</suggested-operation>

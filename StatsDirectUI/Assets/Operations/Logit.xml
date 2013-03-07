@@ -70,7 +70,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLogit" />
-		<report filename="probit.rtf" />
+		<report type="text/rtf" filename="probit.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ProbitPlot</suggested-operation>

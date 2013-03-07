@@ -47,7 +47,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizeUnPaired" />
-	  <report filename="s_t.rtf" />
+	  <report type="text/rtf" filename="s_t.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeUnPaired</suggested-operation>

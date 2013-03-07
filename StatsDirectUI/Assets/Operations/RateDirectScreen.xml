@@ -42,7 +42,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptRateDirectStd" />
-	  <report filename="dstdr.rtf" />
+	  <report type="text/rtf" filename="dstdr.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RateDirectScreen</suggested-operation>

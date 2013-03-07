@@ -65,6 +65,6 @@
 			</steps>
 		</iteration>
 		<builtin function-name="rptWeiLachin" />
-		<report filename="wei.rtf" />
+		<report type="text/rtf" filename="wei.rtf" />
 	</steps>
 </operation>

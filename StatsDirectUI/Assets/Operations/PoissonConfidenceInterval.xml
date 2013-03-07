@@ -21,6 +21,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPoissonConfidenceInterval" />
-		<report filename="poisson.rtf" />
+		<report type="text/rtf" filename="poisson.rtf" />
 	</steps>
 </operation>

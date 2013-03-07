@@ -26,6 +26,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptGroupedLinearity" />
-		<report filename="grprep.rtf" />
+		<report type="text/rtf" filename="grprep.rtf" />
 	</steps>
 </operation>

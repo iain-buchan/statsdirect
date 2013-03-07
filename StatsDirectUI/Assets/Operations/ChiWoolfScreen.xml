@@ -29,7 +29,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptChiWoolf" />
-	  <report filename="woolf.rtf" />
+	  <report type="text/rtf" filename="woolf.rtf" />
   </steps>
   <suggested-operations>
     <suggested-operation>ChiWoolfScreen</suggested-operation>

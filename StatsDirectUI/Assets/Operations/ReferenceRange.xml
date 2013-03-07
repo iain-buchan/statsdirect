@@ -17,6 +17,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptReferenceRange" />
-		<report filename="refrange.rtf" />
+		<report type="text/rtf" filename="refrange.rtf" />
 	</steps>
 </operation>

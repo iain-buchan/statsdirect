@@ -22,6 +22,6 @@
       </parameters>
     </settings>
 	<builtin function-name="rptTSingle" />
-	<report filename="m_single.rtf" />
+	<report type="text/rtf" filename="m_single.rtf" />
 	</steps>
 </operation>

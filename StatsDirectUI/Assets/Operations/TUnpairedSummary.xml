@@ -44,7 +44,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptTUnpairedSummary" />
-	  <report filename="m_unpair.rtf" />
+	  <report type="text/rtf" filename="m_unpair.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>TUnpairedSummary</suggested-operation>

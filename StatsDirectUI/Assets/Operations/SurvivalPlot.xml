@@ -92,6 +92,6 @@
 			<chart-name>chart</chart-name>
 			<chart-type>Survival</chart-type>
 		</chart>
-		<report filename="chartonly.rtf" />
+		<report type="text/rtf" filename="chartonly.rtf" />
 	</steps>
 </operation>

@@ -20,7 +20,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptRandomUnPaired" />
-	  <report filename="r_unpair.rtf" />
+	  <report type="text/rtf" filename="r_unpair.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RandomUnPaired</suggested-operation>

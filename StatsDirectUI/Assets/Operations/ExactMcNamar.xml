@@ -27,7 +27,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptExactMcNamar" />
-	  <report filename="mcnamar.rtf" />
+	  <report type="text/rtf" filename="mcnamar.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactMcNamar</suggested-operation>

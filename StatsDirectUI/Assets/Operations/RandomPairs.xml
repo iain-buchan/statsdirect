@@ -25,7 +25,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptRandomPairs" />
-	  <report filename="r_pair.rtf" />
+	  <report type="text/rtf" filename="r_pair.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RandomPairs</suggested-operation>

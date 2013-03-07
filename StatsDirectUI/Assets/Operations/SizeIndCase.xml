@@ -63,7 +63,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptSizeIndCase" />
-	  <report filename="s_incase.rtf" />
+	  <report type="text/rtf" filename="s_incase.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeIndCase</suggested-operation>

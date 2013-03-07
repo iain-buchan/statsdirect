@@ -12,6 +12,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptCoxHazardRatios" />
-		<report filename="cox_det.rtf" />
+		<report type="text/rtf" filename="cox_det.rtf" />
 	</steps>
 </operation>

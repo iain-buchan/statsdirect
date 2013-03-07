@@ -53,6 +53,6 @@
       </parameters>
     </settings>
   	<builtin function-name="rptChiWoolfWorksheet" />
-	  <report filename="woolf.rtf" />
+	  <report type="text/rtf" filename="woolf.rtf" />
   </steps>
 </operation>

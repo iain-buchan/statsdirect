@@ -18,7 +18,7 @@
       </parameters>
     </settings>
 		<builtin function-name="rptKruskal" />
-		<report filename="kruskal.rtf" />
+		<report type="text/rtf" filename="kruskal.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>KruskalWallisMulti</suggested-operation>

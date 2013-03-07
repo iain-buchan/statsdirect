@@ -24,6 +24,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptCoxHazardPlots" />
-		<report filename="charts.rtf" />
+		<report type="text/rtf" filename="charts.rtf" />
 	</steps>
 </operation>

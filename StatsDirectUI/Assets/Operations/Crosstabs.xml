@@ -128,6 +128,6 @@
       </iftrue>
     </test>
     <builtin function-name="rptCrosstabs" />
-		<report filename="xtabouter.rtf" />
+		<report type="text/rtf" filename="xtabouter.rtf" />
 	</steps>
 </operation>

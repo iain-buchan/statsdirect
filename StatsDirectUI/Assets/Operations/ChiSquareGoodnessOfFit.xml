@@ -42,7 +42,7 @@
       </parameters>
     </settings>
     <builtin function-name="rptChiSquareGoodnessOfFit" />
-  	<report filename="chigood.rtf"/>
+  	<report type="text/rtf" filename="chigood.rtf"/>
 	</steps>
   <suggested-operations>
     <suggested-operation>ChiGFSimulateExactP</suggested-operation>

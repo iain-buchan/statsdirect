@@ -16,6 +16,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptProbitInterpolateX" />
-		<report filename="intprobx.rtf" />
+		<report type="text/rtf" filename="intprobx.rtf" />
 	</steps>
 </operation>

@@ -21,6 +21,6 @@
 				<output-frame frame-name="results" />
 			</iftrue>
 		</test>
-		<report filename="charts.rtf" />
+		<report type="text/rtf" filename="charts.rtf" />
 	</steps>
 </operation>

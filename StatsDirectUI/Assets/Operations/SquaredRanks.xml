@@ -23,10 +23,10 @@
 		<test>
 			<condition>=((StatsDirect.Data.DataFrame)parameters["data"].Data).VariableCount > 2</condition>
 			<iftrue>
-				<report filename="sqrank.rtf" />
+				<report type="text/rtf" filename="sqrank.rtf" />
 			</iftrue>
 			<iffalse>
-				<report filename="sqrank2.rtf" />
+				<report type="text/rtf" filename="sqrank2.rtf" />
 			</iffalse>
 		</test>
 	</steps>

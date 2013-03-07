@@ -5,6 +5,6 @@
   <prerequisite-operation>LogisticRegression</prerequisite-operation>
   <steps>
 		<builtin function-name="rptLogisticRegressionModel" />
-		<report filename="lr_det.rtf" />
+		<report type="text/rtf" filename="lr_det.rtf" />
 	</steps>
 </operation>

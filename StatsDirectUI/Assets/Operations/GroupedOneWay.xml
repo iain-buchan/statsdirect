@@ -28,6 +28,6 @@
       </parameters>
     </settings>
 		<builtin function-name="rptGroupedOneWay" />
-		<report filename="groupedoneway.rtf" />
+		<report type="text/rtf" filename="groupedoneway.rtf" />
 	</steps>
 </operation>
