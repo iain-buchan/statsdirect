@@ -1,7 +1,6 @@
 using System;
 using System.Windows.Forms;
 using StatsDirect.Builtins;
-using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;

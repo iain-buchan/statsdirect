@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
 using System.Drawing;
@@ -11,7 +10,6 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using System.Windows.Forms;
 
 namespace StatsDirect.Charting
 {
@@ -6229,28 +6227,27 @@ namespace StatsDirect.Charting
 
                     }
                     c = thisData.pdata.Length - a;
-                    for (int j = 0; j < thisData.adata.Length; j++)
+                    foreach (double t in thisData.adata)
                     {
                         switch (showopt)
                         {
                             case ComparisonValue.LT:
-                                if (thisData.adata[j] < cutoff)
+                                if (t < cutoff)
                                     b++;
                                 break;
                             case ComparisonValue.LE:
-                                if (thisData.adata[j] <= cutoff)
+                                if (t <= cutoff)
                                     b++;
                                 break;
                             case ComparisonValue.GT:
-                                if (thisData.adata[j] > cutoff)
+                                if (t > cutoff)
                                     b++;
                                 break;
                             default:
-                                if (thisData.adata[j] >= cutoff)
+                                if (t >= cutoff)
                                     b++;
                                 break;
                         }
-
                     }
                     d = thisData.adata.Length - b;
                     sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);

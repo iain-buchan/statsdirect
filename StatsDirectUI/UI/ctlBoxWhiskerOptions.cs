@@ -80,7 +80,7 @@ namespace StatsDirect.UI
             chkMarkMeanAndMedian.Checked = options.MarkMeanAndMedian;
             FillFencesFromOptions();
             settingValues = true;
-            cboCco.Text = (SDApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("N0");
+            cboCco.Text = (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("N0");
             FillTypeFromOptions();
             SetFenceAvailability();
             if (null != XAxisTitleChanged)

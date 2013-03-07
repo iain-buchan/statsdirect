@@ -24,7 +24,7 @@ namespace StatsDirect.UI
 
         private Control Extract(bool count, ParameterBag outputParameters)
         {
-            ITemplateHost host = SDApplication.SoleInstance;
+            ITemplateHost host = SdApplication.SoleInstance;
 
             int cols = options.IdentifiersFrame.VariableCount;
             string dtitle = options.Title;

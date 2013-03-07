@@ -34,13 +34,13 @@ namespace StatsDirect.UI
             txtB.Text = record.b.ToString();
             txtC.Text = record.c.ToString();
             txtD.Text = record.d.ToString();
-            txtSensitivity.Text = SDApplication.SoleInstance.RoundU(record.sens);
-            txtSpecificity.Text = SDApplication.SoleInstance.RoundU(record.spec);
-            txtCutoff.Text = SDApplication.SoleInstance.RoundU(record.cutoff);
+            txtSensitivity.Text = SdApplication.SoleInstance.RoundU(record.sens);
+            txtSpecificity.Text = SdApplication.SoleInstance.RoundU(record.spec);
+            txtCutoff.Text = SdApplication.SoleInstance.RoundU(record.cutoff);
             double ppv = record.a / ((double)record.a + record.b);
             double npv = record.d / ((double)record.d + record.c);
-            txtPositive.Text = Numerics.Constant.MISSING == ppv ? "*" : SDApplication.SoleInstance.RoundU(ppv);
-            txtNegative.Text = Numerics.Constant.MISSING == npv ? "*" : SDApplication.SoleInstance.RoundU(npv);
+            txtPositive.Text = Numerics.Constant.MISSING == ppv ? "*" : SdApplication.SoleInstance.RoundU(ppv);
+            txtNegative.Text = Numerics.Constant.MISSING == npv ? "*" : SdApplication.SoleInstance.RoundU(npv);
             lastcut = record.cutoff;
         }
 

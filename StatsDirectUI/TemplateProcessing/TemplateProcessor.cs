@@ -631,16 +631,15 @@ namespace StatsDirect.Templates
                         }
 
                         ROCOptions rocOptions = new ROCOptions(host.Preferences.ShouldUseColour, definition.XSeries)
-                                                    {
-                                                        ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
-                                                        Title =
-                                                            null == dataName ? "ROC plot" : "ROC plot from " + dataName,
-                                                        ShowCutOffCalculator = true,
-                                                        ShowOptimumCutOff = true,
-                                                        Weight = 1.0,
-                                                        GAMMA = host.Preferences.DefaultConfidenceInterval
-                                                    };
-                        rocOptions.Showopts = (pmn > amn)  ? ComparisonValue.GE : ComparisonValue.LE;
+                                                {
+                                                    ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                                                    Title =
+                                                        null == dataName ? "ROC plot" : "ROC plot from " + dataName,
+                                                    ShowCutOffCalculator = true,
+                                                    ShowOptimumCutOff = true,
+                                                    Weight = 1.0,
+                                                    GAMMA = host.Preferences.DefaultConfidenceInterval, Showopts = (pmn > amn) ? ComparisonValue.GE : ComparisonValue.LE
+                                                };
 
                         if (parameters.ContainsKey("GAMMA"))
                             rocOptions.GAMMA = parameters["GAMMA"].AsDouble;
@@ -1325,7 +1324,7 @@ namespace StatsDirect.Templates
         /// 
         /// </summary>
         /// <param name="host"></param>
-        /// <param name="validationMode"></param>
+        /// <param name="validatorName"> </param>
         /// <param name="parameter"></param>
         /// <param name="filledParameters"></param>
         /// <param name="failedValidationMessage"></param>
@@ -1391,7 +1390,7 @@ namespace StatsDirect.Templates
                         // Otherwise ensure the number of bins is the square root of the number of values
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
                         DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
-                        ClassifierVariable cv = TemplateProcessor.gidx_bins(variable);
+                        ClassifierVariable cv = gidx_bins(variable);
                         if (Math.Sqrt(variable.Length) != cv.GroupCount)
                         {
                             return failedValidationMessage ?? "There should be " + Math.Sqrt(variable.Length).ToString("N0") + " classes";

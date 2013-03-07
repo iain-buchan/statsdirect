@@ -66,7 +66,6 @@ namespace StatsDirect.Numerics
 
         }
 
-
         ///  <summary>
         ///  Univariate summary statistics with optional analytical weights
         ///  </summary>
@@ -78,7 +77,8 @@ namespace StatsDirect.Numerics
         ///  <param name="userCentL"></param>
         ///  <param name="userCentU"></param>
         ///  <param name="nvSum"></param>
-        ///  <returns></returns>
+        /// <param name="xs"> </param>
+        /// <returns></returns>
         ///  <remarks>see Gleason JR. Univariate summaries with boxplots. Stata Technical Bulletin sg67, 1997 and sg67.1, 1999.</remarks>
         private bool FullSummary(double[] x, double[] v, int start, int finish, double userCL, double userCentL, double userCentU, double nvSum, out VarAndWt[] xs)
         {
@@ -264,7 +264,7 @@ namespace StatsDirect.Numerics
                 return true;
 
             }
-            else if (ValidData == 1)
+            if (ValidData == 1)
             {
                 Skewness = Constant.MISSING;
                 Kurtosis = Constant.MISSING;
@@ -284,29 +284,26 @@ namespace StatsDirect.Numerics
                 MeanUCL = Constant.MISSING;
                 return true;
             }
-            else
-            {
-                Skewness = Constant.MISSING;
-                Kurtosis = Constant.MISSING;
-                LowerQuartile = Constant.MISSING;
-                UpperQuartile = Constant.MISSING;
-                UserCentileL = Constant.MISSING;
-                UserCentileU = Constant.MISSING;
-                GeometricMean = Constant.MISSING;
-                Median = Constant.MISSING;
-                Mean = Constant.MISSING;
-                Variance = Constant.MISSING;
-                Maximum = Constant.MISSING;
-                Minimum = Constant.MISSING;
-                Sum = Constant.MISSING;
-                Sd = Constant.MISSING;
-                Sem = Constant.MISSING;
-                VarianceCoefficient = Constant.MISSING;
-                MeanLCL = Constant.MISSING;
-                MeanUCL = Constant.MISSING;
-                Range = Constant.MISSING;
-                return false;
-            }
+            Skewness = Constant.MISSING;
+            Kurtosis = Constant.MISSING;
+            LowerQuartile = Constant.MISSING;
+            UpperQuartile = Constant.MISSING;
+            UserCentileL = Constant.MISSING;
+            UserCentileU = Constant.MISSING;
+            GeometricMean = Constant.MISSING;
+            Median = Constant.MISSING;
+            Mean = Constant.MISSING;
+            Variance = Constant.MISSING;
+            Maximum = Constant.MISSING;
+            Minimum = Constant.MISSING;
+            Sum = Constant.MISSING;
+            Sd = Constant.MISSING;
+            Sem = Constant.MISSING;
+            VarianceCoefficient = Constant.MISSING;
+            MeanLCL = Constant.MISSING;
+            MeanUCL = Constant.MISSING;
+            Range = Constant.MISSING;
+            return false;
         }
 
         ///  <summary>

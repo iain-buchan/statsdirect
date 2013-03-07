@@ -19,7 +19,7 @@ namespace Lambda.Collections.Generic
     public sealed class Set<T> : ICollection<T>, ICollection
     {
         private struct Dummy { }
-        private static readonly Dummy dummy = new Dummy();
+        private static readonly Dummy dummy;
         private readonly Dictionary<T, Dummy> data;
         public Set()
         {

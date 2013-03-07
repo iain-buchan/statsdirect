@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using StatsDirect.Data;
 using StatsDirect.UI;
 using StatsDirect.Utilities;

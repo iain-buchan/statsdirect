@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Templates;
@@ -139,7 +138,7 @@ namespace StatsDirect.Builtins
             int[] indef;
             int r; int c;
             int ifrq;
-            double algl = 0; double ratio;
+            double algl = 0;
             double xbar = 0;
 
             int ic = 0;
@@ -352,7 +351,7 @@ namespace StatsDirect.Builtins
             int ifix = 0;
             int itie = 0;
             int maxit = 30;
-            ratio = parameters["splitting-ratio"].AsDouble;
+            double ratio = parameters["splitting-ratio"].AsDouble;
             if (ratio <= 0)
                 ratio = -1.0;
             bool centre = parameters["centre-continuous-covariates"].AsBoolean;
@@ -2838,12 +2837,12 @@ namespace StatsDirect.Builtins
                     yp[i] = -Math.Log(-Math.Log(surv));
                 }
                 // Plot a metafile version
-                Charting.ChartDefinition cd = new Charting.ChartDefinition();
+                ChartDefinition cd = new ChartDefinition();
                 cd.AddXSeries(xp, null);
                 cd.AddYSeries(yp, null);
                 ParameterBag cox2Parameters = new ParameterBag();
                 chartList.Add(cox2Parameters);
-                using (Charting.ChartRenderer ch = new Charting.ChartRenderer(cd))
+                using (ChartRenderer ch = new ChartRenderer(cd))
                 {
                     string rtf = ch.PlotCox2AndReturnRtf(host, gn, igroups, xp, yp, CDAT1, groupid);
                     cox2Parameters.AddOutput("chart", rtf);

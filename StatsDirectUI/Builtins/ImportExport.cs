@@ -20,7 +20,7 @@ namespace StatsDirect.Builtins
                 C_FD.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab|Text file (*.txt)|*.txt|All files (*.*)|*.*";
                 C_FD.CheckFileExists = true;
 
-                DialogResult result = C_FD.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                DialogResult result = C_FD.ShowDialog(SdApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK != result)
                 {
                     return null;
@@ -56,7 +56,7 @@ namespace StatsDirect.Builtins
                 C_FD.Filter = "ASCII Text (*.txt)|*.txt|All files (*.*)|*.*";
                 C_FD.CheckFileExists = true;
 
-                DialogResult result = C_FD.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                DialogResult result = C_FD.ShowDialog(SdApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK != result)
                 {
                     return null;
@@ -94,7 +94,7 @@ namespace StatsDirect.Builtins
                     int lastSplitPosition = 0;
                     for (int col = 0; col <= 256; col++)
                     {
-                        int splitPosition = currentLine.IndexOf(delimiter, lastSplitPosition, System.StringComparison.Ordinal);
+                        int splitPosition = currentLine.IndexOf(delimiter, lastSplitPosition, StringComparison.Ordinal);
                         if (splitPosition < 0)
                             break;
                         int splitLength = splitPosition - lastSplitPosition;
@@ -144,7 +144,7 @@ namespace StatsDirect.Builtins
                 string source = data.Name;
                 C_FD.FileName = source.Contains(".") ? source.Substring(0, source.Length - 4) + ".csv" : source + ".csv";
                 C_FD.OverwritePrompt = true;
-                DialogResult result = C_FD.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                DialogResult result = C_FD.ShowDialog(SdApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK == result)
                 {
                     bool tabout = C_FD.FileName.Substring(C_FD.FileName.Length - 3).ToLower() == "tab";

@@ -27,7 +27,7 @@ namespace StatsDirect.UI
             if (null != client)
                 client.CancelAsync();
             Close();
-            SDApplication.SoleInstance.CloseAndUpdate();
+            SdApplication.SoleInstance.CloseAndUpdate();
         }
 
         private void frmUpdateCheck_Shown(object sender, EventArgs e)

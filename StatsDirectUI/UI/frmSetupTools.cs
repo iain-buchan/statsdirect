@@ -111,7 +111,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't reset tool list to defaults", ex, false);
+                SdApplication.SoleInstance.FriendlyError("Couldn't reset tool list to defaults", ex, false);
             }
         }
     }

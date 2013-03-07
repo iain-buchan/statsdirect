@@ -48,6 +48,7 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="frame"></param>
         /// <param name="isFormulae"> </param>
+        /// <param name="missingIndicator"> </param>
         /// <param name="writePosition"> </param>
         void WriteDataFrame(DataFrame frame, bool isFormulae, string missingIndicator, RelativePosition writePosition);
 

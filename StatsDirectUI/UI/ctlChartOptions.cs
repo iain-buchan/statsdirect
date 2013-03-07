@@ -631,9 +631,9 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SDApplication.SoleInstance.MainWindow.InOperation)
+                if (SdApplication.SoleInstance.MainWindow.InOperation)
                 {
-                    SDApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
                 }
                 else
                 {
@@ -666,9 +666,9 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SDApplication.SoleInstance.MainWindow.InOperation)
+                if (SdApplication.SoleInstance.MainWindow.InOperation)
                 {
-                    SDApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
                 }
                 else
                 {
@@ -699,9 +699,9 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SDApplication.SoleInstance.MainWindow.InOperation)
+                if (SdApplication.SoleInstance.MainWindow.InOperation)
                 {
-                    SDApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
                 }
                 else
                 {
@@ -732,13 +732,13 @@ namespace StatsDirect.UI
                 if (PreviewAsAscii)
                 {
                     renderer.IsAscii = true;
-                    renderer.Plot(null, SDApplication.SoleInstance);
+                    renderer.Plot(null, SdApplication.SoleInstance);
                     frmTextPreview textPreview = new frmTextPreview();
                     try
                     {
                         string rtf = "{\\rtf1\\ansi " + renderer.AsAsciiRTF + "}";
                         textPreview.Rtf = rtf;
-                        textPreview.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                        textPreview.ShowDialog(SdApplication.SoleInstance.MainWindow);
                     }
                     finally
                     {
@@ -749,14 +749,14 @@ namespace StatsDirect.UI
                 {
                     using (System.IO.MemoryStream metaStream = new System.IO.MemoryStream())
                     {
-                        renderer.Plot(metaStream, SDApplication.SoleInstance);
+                        renderer.Plot(metaStream, SdApplication.SoleInstance);
                         metaStream.Position = 0;
                         Image metaImage = Image.FromStream(metaStream);
                         frmImagePreview imagePreview = new frmImagePreview();
                         try
                         {
                             imagePreview.Image = metaImage;
-                            imagePreview.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                            imagePreview.ShowDialog(SdApplication.SoleInstance.MainWindow);
                         }
                         finally
                         {

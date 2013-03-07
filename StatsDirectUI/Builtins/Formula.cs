@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {

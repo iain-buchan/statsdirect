@@ -66,7 +66,7 @@ namespace StatsDirect.UI
 
                 // Get ready to show the main window...
                 mainWindow = new frmMain();
-                SDApplication.SoleInstance.MainWindow = mainWindow;
+                SdApplication.SoleInstance.MainWindow = mainWindow;
 
                 // ... and go!
                 loader.Hide();
@@ -74,7 +74,7 @@ namespace StatsDirect.UI
 
             if (args.Length >= 2)
                 if ("FileOpen".Equals(args[0]) && null != args[1])
-                    SDApplication.SoleInstance.MainWindow.OpenFile(args[1], true);
+                    SdApplication.SoleInstance.MainWindow.OpenFile(args[1], true);
             Application.Run(mainWindow);
         }
 
@@ -172,11 +172,11 @@ namespace StatsDirect.UI
             {
                 Directory.CreateDirectory(mySDFolder);
             }
+            /**
             if (!Directory.Exists(mySDFolder))
             {
                 mySDFolder = appPath;
             }
-            /**
             // first ini override of userdir - copy over test.xlsx and statsdirect.xls
             if (!mySDFolder.Equals(appPath))
             {
@@ -283,7 +283,7 @@ namespace StatsDirect.UI
                             lk = License.XorString(lk, License.REG_KEY_KEY);
                             SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_EXPIRES, License.StrToNum(lk));
                         }
-                        SDApplication.SoleInstance.UserInfo = ui;
+                        SdApplication.SoleInstance.UserInfo = ui;
                         break;
                     }
                 }

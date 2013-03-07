@@ -154,7 +154,7 @@ namespace StatsDirect.Calculator
 
         private void cmdHelp_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ShowHelp(this, "1020");
+            SdApplication.SoleInstance.ShowHelp(this, "1020");
         }
 
         private void lstSavedExpressions_Enter(object sender, EventArgs e)
@@ -165,7 +165,7 @@ namespace StatsDirect.Calculator
 
         private void HandleException(Exception ex)
         {
-            SDApplication.SoleInstance.FriendlyError("Couldn't evaluate expression", ex, false);
+            SdApplication.SoleInstance.FriendlyError("Couldn't evaluate expression", ex, false);
         }
 
         private void frmStatsDirectCalculator_FormClosing(object sender, FormClosingEventArgs e)

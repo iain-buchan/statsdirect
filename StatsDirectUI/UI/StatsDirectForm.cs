@@ -38,7 +38,7 @@ namespace StatsDirect.UI
 
         void StatsDirectForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            SDApplication.SoleInstance.MainWindow.NoteASubformCloseIsStarting();
+            SdApplication.SoleInstance.MainWindow.NoteASubformCloseIsStarting();
         }
 
         /// <summary>
@@ -72,10 +72,10 @@ namespace StatsDirect.UI
             if (!dirty)
                 return true;
 
-            DialogResult result = SDApplication.SoleInstance.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
+            DialogResult result = SdApplication.SoleInstance.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
             if (DialogResult.Cancel == result)
             {
-                SDApplication.SoleInstance.MainWindow.NoteASubformCloseIsCancelled();
+                SdApplication.SoleInstance.MainWindow.NoteASubformCloseIsCancelled();
                 return false;
             }
             if (DialogResult.No == result)
@@ -117,7 +117,7 @@ namespace StatsDirect.UI
         internal virtual void ShowHelp()
         {
             // By default, show the ambient help.  Subclasses may override this.
-            SDApplication.SoleInstance.ShowCurrentHelp();
+            SdApplication.SoleInstance.ShowCurrentHelp();
         }
 
         public virtual bool ImplementsIReport
@@ -150,7 +150,7 @@ namespace StatsDirect.UI
         /// </summary>
         public void EnsureActive()
         {
-            if (this != SDApplication.SoleInstance.MainWindow.ActiveMdiChild)
+            if (this != SdApplication.SoleInstance.MainWindow.ActiveMdiChild)
                 Activate();
         }
 

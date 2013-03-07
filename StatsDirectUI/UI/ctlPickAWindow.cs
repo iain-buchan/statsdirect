@@ -71,16 +71,16 @@ namespace StatsDirect.UI
             switch (outputType)
             {
                 case OutputType.Frame:
-                    panesAndPositions = SDApplication.SoleInstance.AvailableFramePanesAndPositions();
+                    panesAndPositions = SdApplication.SoleInstance.AvailableFramePanesAndPositions();
                     newName = "New workbook";
-                    if (null != SDApplication.SoleInstance.ActiveGrid)
-                        defaultSelection = SDApplication.SoleInstance.ActiveGrid.Window.SelectedPane;
+                    if (null != SdApplication.SoleInstance.ActiveGrid)
+                        defaultSelection = SdApplication.SoleInstance.ActiveGrid.Window.SelectedPane;
                     break;
                 case OutputType.Report:
-                    panesAndPositions = SDApplication.SoleInstance.AvailableReportPanesAndPositions();
+                    panesAndPositions = SdApplication.SoleInstance.AvailableReportPanesAndPositions();
                     newName = "New report";
-                    if (null != SDApplication.SoleInstance.MostRecentlySelectedReport)
-                        defaultSelection = SDApplication.SoleInstance.MostRecentlySelectedReport.Pane;
+                    if (null != SdApplication.SoleInstance.MostRecentlySelectedReport)
+                        defaultSelection = SdApplication.SoleInstance.MostRecentlySelectedReport.Pane;
                     rdoAfterSelection.Visible = false;
                     rdoBeforeSelection.Visible = false;
                     rdoFirstColumn.Visible = false;
@@ -166,7 +166,7 @@ namespace StatsDirect.UI
                     // SDApplication.SoleInstance.MostRecentlySelectedGrid = selectedPane;
                     break;
                 case OutputType.Report:
-                    SDApplication.SoleInstance.MostRecentlySelectedReport = selectedPaneAndPosition;
+                    SdApplication.SoleInstance.MostRecentlySelectedReport = selectedPaneAndPosition;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("outputType", outputType, "Only Frame and Report known");

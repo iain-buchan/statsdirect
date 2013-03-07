@@ -21,7 +21,7 @@ namespace StatsDirect.UI
         {
             InitializeComponent();
             LoadTemplateFile();
-            SDApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(MenuStrip1);
+            SdApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(MenuStrip1);
         }
 
         private string currentFile;
@@ -34,7 +34,7 @@ namespace StatsDirect.UI
                 return;
             }
             UnmergeToolStrip();
-            SDApplication.SoleInstance.NoteFormClosing(this, e);
+            SdApplication.SoleInstance.NoteFormClosing(this, e);
         }
 
         private void frmReport_TextChanged(object sender, EventArgs e)
@@ -85,7 +85,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.SoleInstance.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -97,7 +97,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.SoleInstance.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -109,7 +109,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.SoleInstance.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -121,7 +121,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.SoleInstance.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -357,11 +357,11 @@ namespace StatsDirect.UI
             int helpId;
             if (int.TryParse(helpString, out helpId))
             {
-                SDApplication.SoleInstance.ShowHelp(SDApplication.SoleInstance.MainWindow, helpId.ToString());
+                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.MainWindow, helpId.ToString());
             }
             else
             {
-                SDApplication.SoleInstance.ShowHelp(SDApplication.SoleInstance.MainWindow);
+                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.MainWindow);
             }
         }
 
@@ -373,7 +373,7 @@ namespace StatsDirect.UI
 
         private void LoadTemplateFile()
         {
-            string pathName = SDApplication.SoleInstance.TemplateFileForNewReports;
+            string pathName = SdApplication.SoleInstance.TemplateFileForNewReports;
             if (null != pathName)
                 richEditControl1.LoadDocument(pathName, DocumentFormat.Rtf);
         }
@@ -387,7 +387,7 @@ namespace StatsDirect.UI
         {
             MergeToolStrip();
             if (null != Tag)
-                SDApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
+                SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
             richEditControl1.Visible = true;
             richEditControl1.Focus();
         }
@@ -445,7 +445,7 @@ namespace StatsDirect.UI
                 SaveFileDialog1.InitialDirectory = System.IO.Path.GetDirectoryName(currentFile);
                 SaveFileDialog1.FileName = System.IO.Path.GetFileName(currentFile);
             }
-            DialogResult res = SaveFileDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow);
+            DialogResult res = SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.MainWindow);
             if (res != DialogResult.OK)
                 return false;
             if (string.IsNullOrEmpty(SaveFileDialog1.FileName))
@@ -469,7 +469,7 @@ namespace StatsDirect.UI
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.PlainText);
             }
             currentFile = SaveFileDialog1.FileName;
-            SDApplication.SoleInstance.NoteRecentFile(currentFile, true);
+            SdApplication.SoleInstance.NoteRecentFile(currentFile, true);
             Text = currentFile;
             ((WindowInformation)Tag).Path = currentFile;
             richEditControl1.Modified = false;
@@ -553,12 +553,12 @@ namespace StatsDirect.UI
             {
                 using (frmExportGraphic f = new frmExportGraphic(img, bytes))
                 {
-                    f.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                    f.ShowDialog(SdApplication.SoleInstance.MainWindow);
                 }
             }
             else
             {
-                SDApplication.SoleInstance.MsgboxX("No chart is selected. Please select a chart to export.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Export graphic", true);
+                SdApplication.SoleInstance.MsgboxX("No chart is selected. Please select a chart to export.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Export graphic", true);
             }
         }
 
@@ -757,14 +757,14 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SDApplication.SoleInstance.MainWindow.InOperation)
+                if (SdApplication.SoleInstance.MainWindow.InOperation)
                 {
-                    SDApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
                 }
                 else
                 {
                     // Normally we'd just throw the exception; in this case, we're the top of the stack and that would bring the application down.  So we report instead.
-                    SDApplication.SoleInstance.FriendlyError("An internal error occurred while replaying the operation", ex, true);
+                    SdApplication.SoleInstance.FriendlyError("An internal error occurred while replaying the operation", ex, true);
                 }
             }
 #endif
@@ -780,7 +780,7 @@ namespace StatsDirect.UI
                 int secondQuote = freezeDriedData.IndexOf('"', firstQuote + 1);
                 string operationName = freezeDriedData.Substring(firstQuote + 1, secondQuote - (firstQuote + 1));
                 string freezeDriedParameters = freezeDriedData.Substring(secondQuote + 1).Trim();
-                SDApplication.SoleInstance.ReplayWithCurrentData(operationName, freezeDriedParameters);
+                SdApplication.SoleInstance.ReplayWithCurrentData(operationName, freezeDriedParameters);
             }
         }
 
@@ -815,14 +815,14 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SDApplication.SoleInstance.MainWindow.InOperation)
+                if (SdApplication.SoleInstance.MainWindow.InOperation)
                 {
-                    SDApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
                 }
                 else
                 {
                     // Normally we'd just throw the exception; in this case, we're the top of the stack and that would bring the application down.  So we report instead.
-                    SDApplication.SoleInstance.FriendlyError("An internal error occurred while exporting the graphic", ex, true);
+                    SdApplication.SoleInstance.FriendlyError("An internal error occurred while exporting the graphic", ex, true);
                 }
             }
 #endif

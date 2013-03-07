@@ -7,7 +7,6 @@ using System.IO;
 #if USE_R
 using org.rosuda.REngine;
 #endif
-using StatsDirect.Data;
 using System.Reflection;
 
 namespace StatsDirect.Templates

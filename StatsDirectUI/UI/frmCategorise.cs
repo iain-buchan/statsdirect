@@ -542,7 +542,7 @@ namespace StatsDirect.UI
 
         private void CmdHelpClick(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ShowHelp(this, "1059");
+            SdApplication.SoleInstance.ShowHelp(this, "1059");
         }
     }
 

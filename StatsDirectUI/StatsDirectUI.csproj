@@ -760,7 +760,6 @@
     <Compile Include="Utilities\Formatting.cs" />
     <Compile Include="Utilities\Parsing.cs" />
     <Compile Include="Utilities\SDRegistry.cs" />
-    <Compile Include="Utilities\Set.cs" />
     <Compile Include="Utilities\TemplateOperationCancelledException.cs" />
     <Compile Include="Utilities\Utilities.cs" />
     <EmbeddedResource Include="Calculator\frmStatsDirectCalculator.resx">
@@ -1633,7 +1632,7 @@ $(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

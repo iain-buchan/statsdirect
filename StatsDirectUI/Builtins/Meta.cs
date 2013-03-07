@@ -1,4 +1,3 @@
-using System.IO;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;

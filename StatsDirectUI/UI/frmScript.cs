@@ -56,7 +56,7 @@ namespace StatsDirect.UI
                 e.Cancel = true;
                 return;
             }
-            SDApplication.SoleInstance.NoteFormClosing(this, e);
+            SdApplication.SoleInstance.NoteFormClosing(this, e);
         }
 
         private void frmScript_TextChanged(object sender, EventArgs e)
@@ -162,7 +162,7 @@ namespace StatsDirect.UI
             SaveFileDialog1.DefaultExt = "rtf";
             SaveFileDialog1.Filter = "Script Files|*.cs;*.vb|All Files|*.*";
             SaveFileDialog1.FilterIndex = 1;
-            SaveFileDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow);
+            SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.MainWindow);
             if (SaveFileDialog1.FileName.Length == 0)
                 return;
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName);
@@ -184,7 +184,7 @@ namespace StatsDirect.UI
             currentFile = SaveFileDialog1.FileName;
             rtbDoc.Modified = false;
             Path = currentFile;
-            SDApplication.SoleInstance.NoteRecentFile(currentFile, true);
+            SdApplication.SoleInstance.NoteRecentFile(currentFile, true);
         }
 
         private void SelectAllToolStripMenuItem_Click(object sender, EventArgs e)
@@ -195,7 +195,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.SoleInstance.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -207,7 +207,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.SoleInstance.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -219,7 +219,7 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.SoleInstance.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -231,14 +231,14 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SDApplication.SoleInstance.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.SoleInstance.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void PageColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ColorDialog1.Color = rtbDoc.BackColor;
-            if (ColorDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow) == DialogResult.OK)
+            if (ColorDialog1.ShowDialog(SdApplication.SoleInstance.MainWindow) == DialogResult.OK)
             {
                 rtbDoc.BackColor = ColorDialog1.Color;
             }
@@ -273,7 +273,7 @@ namespace StatsDirect.UI
             try
             {
                 PrintPreviewDialog1.Document = PrintDocument1;
-                PrintPreviewDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                PrintPreviewDialog1.ShowDialog(SdApplication.SoleInstance.MainWindow);
             }
             catch
             {
@@ -284,14 +284,14 @@ namespace StatsDirect.UI
         private void PrintToolStripMenuItem_Click(object sender, EventArgs e)
         {
             PrintDialog1.Document = PrintDocument1;
-            if (PrintDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow) == DialogResult.OK)
+            if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.MainWindow) == DialogResult.OK)
                 PrintDocument1.Print();
         }
 
         private void mnuPageSetup_Click(object sender, EventArgs e)
         {
             PageSetupDialog1.Document = PrintDocument1;
-            PageSetupDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow);
+            PageSetupDialog1.ShowDialog(SdApplication.SoleInstance.MainWindow);
         }
 
         #endregion
@@ -340,7 +340,7 @@ namespace StatsDirect.UI
         private void frmScript_Activated(object sender, EventArgs e)
         {
             if (null != Tag)
-                SDApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
+                SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
         }
 
         private string ScriptLanguageForScript()
@@ -366,7 +366,7 @@ namespace StatsDirect.UI
                 string script = rtbDoc.Text;
                 IScriptEngine engine = new ScriptEngine();
                 string Language = ScriptLanguageForScript();
-                object output = engine.Run(Language, script, ScriptType.Method, SDApplication.SoleInstance, null, null, null);
+                object output = engine.Run(Language, script, ScriptType.Method, SdApplication.SoleInstance, null, null, null);
                 if (null != output)
                 {
                     if (output is ParameterBag)
@@ -468,7 +468,7 @@ namespace StatsDirect.UI
         internal override void Print()
         {
             PrintDialog1.Document = PrintDocument1;
-            if (PrintDialog1.ShowDialog(SDApplication.SoleInstance.MainWindow) == DialogResult.OK)
+            if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.MainWindow) == DialogResult.OK)
                 PrintDocument1.Print();
         }
 

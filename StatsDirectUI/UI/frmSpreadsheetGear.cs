@@ -29,7 +29,7 @@ namespace StatsDirect.UI
         public frmSpreadsheetGear()
         {
             InitializeComponent();
-            SDApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
+            SdApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
             workbookView.GetLock();
             try
             {
@@ -49,13 +49,13 @@ namespace StatsDirect.UI
                 e.Cancel = true;
                 return;
             }
-            SDApplication.SoleInstance.NoteFormClosing(this, e);
+            SdApplication.SoleInstance.NoteFormClosing(this, e);
         }
 
         private void frmSpreadsheetGear_Activated(object sender, EventArgs e)
         {
             if (null != Tag)
-                SDApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
+                SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
             // SDApplication.SoleInstance.MostRecentlySelectedGrid = new PaneAndBoolean(this.SelectedPane, true); // By default, new grid data is inserted not appended
             tableLayoutPanel1.Visible = true;
         }
@@ -119,7 +119,7 @@ namespace StatsDirect.UI
                 saveFileDialog.InitialDirectory = System.IO.Path.GetDirectoryName(path);
                 saveFileDialog.FileName = System.IO.Path.GetFileName(path);
             }
-            DialogResult result = saveFileDialog.ShowDialog(SDApplication.SoleInstance.MainWindow);
+            DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
             if (DialogResult.Cancel == result)
             {
                 // User cancelled, failed save
@@ -136,7 +136,7 @@ namespace StatsDirect.UI
             {
                 workbookView.ActiveWorkbook.SaveAs(path, format);
                 dirty = false;
-                SDApplication.SoleInstance.NoteRecentFile(path, true);
+                SdApplication.SoleInstance.NoteRecentFile(path, true);
                 return true;
             }
             finally
@@ -584,7 +584,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't close workbook", ex, false);
+                SdApplication.SoleInstance.FriendlyError("Couldn't close workbook", ex, false);
             }
         }
 
@@ -596,7 +596,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't save workbook", ex, false);
+                SdApplication.SoleInstance.FriendlyError("Couldn't save workbook", ex, false);
             }
         }
 
@@ -608,7 +608,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't save workbook", ex, false);
+                SdApplication.SoleInstance.FriendlyError("Couldn't save workbook", ex, false);
             }
         }
 
@@ -658,7 +658,7 @@ namespace StatsDirect.UI
                     while (true)
                     {
                         bool wasPivoted;
-                        if (gridParameter.ShouldAskForGroupId && SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
+                        if (gridParameter.ShouldAskForGroupId && SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                         {
                             frame = Gidx(gridParameter.DataAcquisitionMode, minimumColumns, maximumColumns, -1, null, out userCancelled, out wasPivoted);
                         }
@@ -857,15 +857,15 @@ namespace StatsDirect.UI
                 {
                     fullSelectionMessage += " (Min " + minimumColumns.ToString() + ": Max " + maximumColumns.ToString() + ")";
                 }
-                SDApplication.SoleInstance.MainWindow.CanSelectMultipleRows = maximumColumns > 1;
-                SDApplication.SoleInstance.MainWindow.CanSelectGroupMethod = allowUserToPivot;
+                SdApplication.SoleInstance.MainWindow.CanSelectMultipleRows = maximumColumns > 1;
+                SdApplication.SoleInstance.MainWindow.CanSelectGroupMethod = allowUserToPivot;
                 if (allowUserToPivot)
-                    SDApplication.SoleInstance.MainWindow.GroupsByIdentifier = SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
+                    SdApplication.SoleInstance.MainWindow.GroupsByIdentifier = SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
                 Color oldBackColor = BackColor;
                 BackColor = SystemColors.Info;
                 try
                 {
-                    if (!SDApplication.SoleInstance.MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out wasPivoted))
+                    if (!SdApplication.SoleInstance.MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out wasPivoted))
                     {
                         // The user either cancelled or pivoted
                         userCancelled = !wasPivoted;
@@ -964,7 +964,7 @@ namespace StatsDirect.UI
                             if (size < 1)
                             {
                                 PointNormal();
-                                SDApplication.SoleInstance.MsgboxX("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                                SdApplication.SoleInstance.MsgboxX("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                                 return null;
                             }
                             variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
@@ -1065,7 +1065,7 @@ namespace StatsDirect.UI
                             {
                                 PointNormal();
                                 switch (
-                                    SDApplication.SoleInstance.MsgboxX(
+                                    SdApplication.SoleInstance.MsgboxX(
                                         "Does the top row of your selection contain titles?",
                                         MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question,
                                         "Worksheet Categorical Data Selection", true))
@@ -1473,7 +1473,7 @@ namespace StatsDirect.UI
                                 else
                                 {
                                     // Dummies
-                                    DataFrame dummyFrame = Sheet.ToDummyVariables(SDApplication.SoleInstance, variable);
+                                    DataFrame dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, variable);
                                     foreach (Variable v in dummyFrame.Variables)
                                         frame.Variables.Add(v);
                                 }
@@ -1543,7 +1543,7 @@ namespace StatsDirect.UI
                                         DataFrame dummyFrame;
                                         try
                                         {
-                                            dummyFrame = Sheet.ToDummyVariables(SDApplication.SoleInstance, cv);
+                                            dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, cv);
                                         }
                                         catch (TemplateOperationCancelledException)
                                         {
@@ -1571,7 +1571,7 @@ namespace StatsDirect.UI
             catch (ArithmeticException ex)
             {
                 PointNormal();
-                SDApplication.SoleInstance.FriendlyError("Internal error reading data from worksheet", ex, false);
+                SdApplication.SoleInstance.FriendlyError("Internal error reading data from worksheet", ex, false);
                 throw; // TODO: What is the correct behaviour here?  Merely returning null causes a infinite loop
             }
         }
@@ -1628,7 +1628,7 @@ namespace StatsDirect.UI
                 switch (width)
                 {
                     case DataAcquisitionWidth.RespectPivotSetting:
-                        isLong = allowUserToPivot && SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
+                        isLong = allowUserToPivot && SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
                         break;
                     case DataAcquisitionWidth.Wide:
                         isLong = false;
@@ -1666,7 +1666,7 @@ namespace StatsDirect.UI
                         return frame;
                     }
                     // Unequal - ask the user, if they accept then force all the data to maximum length, missing-padded
-                    if (SDApplication.SoleInstance.MsgboxX("Warning: unequal length columns. If you select OK then the jagged ends of columns will be padded with missing data.", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true) == DialogResult.OK)
+                    if (SdApplication.SoleInstance.MsgboxX("Warning: unequal length columns. If you select OK then the jagged ends of columns will be padded with missing data.", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true) == DialogResult.OK)
                     {
                         foreach (Variable v in frame.Variables)
                             v.EnsureLength(maxRows, true);
@@ -1685,7 +1685,7 @@ namespace StatsDirect.UI
                     {
                         xtra = "\r\n\r\nThe rows must contain numeric data not text.";
                     }
-                    SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all columns selected must be " + requiredRows.ToString() + " rows long." + xtra, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all columns selected must be " + requiredRows.ToString() + " rows long." + xtra, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                 }
                 ((IGrid)this).ClearSelection();
             }
@@ -1951,17 +1951,17 @@ namespace StatsDirect.UI
             PointNormal();
             if (Min == Max)
             {
-                SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Min.ToString() + " column" + (Min > 1 ? "s" : "") + " but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Min.ToString() + " column" + (Min > 1 ? "s" : "") + " but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
             }
             else
             {
                 if (totcols < Min)
                 {
-                    SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Min.ToString() + " column" + (Min > 1 ? "s" : "") + " or more but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Min.ToString() + " column" + (Min > 1 ? "s" : "") + " or more but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
                 }
                 else if (totcols > Max)
                 {
-                    SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Max.ToString() + " column" + (Max > 1 ? "s" : "") + " or fewer but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + Max.ToString() + " column" + (Max > 1 ? "s" : "") + " or fewer but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
                 }
             }
         }
@@ -2456,7 +2456,7 @@ namespace StatsDirect.UI
             {
                 double GAMMA;
                 double[,] xt;
-                if (SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
+                if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
                     bool ok = Gidxyr(out xt, ref y, ref k, ref maxr, ref maxreps, ref cx, ref xlab, ref minMax);
                     if (ok)
@@ -2477,7 +2477,7 @@ namespace StatsDirect.UI
                                 ny[g, i] = maxreps;
                             }
                         }
-                        ITemplateHost host = SDApplication.SoleInstance;
+                        ITemplateHost host = SdApplication.SoleInstance;
                         ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter { CanDefault = true, Name = "ci" };
                         ParameterBag filledCi = host.FillParameter(new TemplateProcessor(host), ciParam, new ParameterBag(), false);
                         GAMMA = filledCi["ci"].AsDouble;
@@ -2551,23 +2551,23 @@ namespace StatsDirect.UI
                     CheckBoxDescriptor useYReplicatesDescriptor = new CheckBoxDescriptor { Text = "Use Y replicates" };
                     descriptor.CheckBoxes.Add(useYReplicatesDescriptor);
                     SelectionBoxDescriptor ciDescriptor = null;
-                    if (!SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
+                    if (!SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
                     {
                         ciDescriptor = new SelectionBoxDescriptor { Title = "Confidence (%)" };
                         ciDescriptor.SetAsConfidence();
                         descriptor.SelectionBoxes.Add(ciDescriptor);
                     }
-                    if (null == SDApplication.SoleInstance.DisplayOptions(descriptor))
+                    if (null == SdApplication.SoleInstance.DisplayOptions(descriptor))
                         break;
 
                     bool yrep = useYReplicatesDescriptor.Checked;
-                    if (!SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval && null != ciDescriptor)
+                    if (!SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval && null != ciDescriptor)
                     {
                         GAMMA = Parsing.Cdbl_Txt(ciDescriptor.Value) / 100.0;
                     }
                     else
                     {
-                        GAMMA = SDApplication.SoleInstance.Preferences.DefaultConfidenceInterval;
+                        GAMMA = SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval;
                     }
                     double[] b = new double[k + 1];
                     double[] a = new double[k + 1];
@@ -2851,21 +2851,21 @@ namespace StatsDirect.UI
             {
                 if (gin[i] != neq)
                 {
-                    SDApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all groups must be the same size.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all groups must be the same size.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
                     return false;
                 }
             }
             return true;
         }
 
-        internal DataFrame2D FillGridParameter2D(Parameter parameter, ITemplateProcessor processor, SDApplication sDApplication, ParameterBag parameters)
+        internal DataFrame2D FillGridParameter2D(Parameter parameter, ITemplateProcessor processor, SdApplication sDApplication, ParameterBag parameters)
         {
             GridParameter2D gridParameter = (GridParameter2D)parameter;
             if (gridParameter.ShouldClearSelectionFirst)
                 ((IGrid)this).ClearSelection();
             while (true)
             {
-                if (SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
+                if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
                     bool wasPivoted;
                     DataFrame2D frame = Gidx3(gridParameter.MinimumColumns(processor, parameters),
@@ -2884,11 +2884,11 @@ namespace StatsDirect.UI
                         {
                             DataFrame2D frame = new DataFrame2D();
                             bool userCancelled;
-                            int groups = SDApplication.SoleInstance.GetInteger("Number of groups", gridParameter.Operation.ToString(), 1, out userCancelled);
+                            int groups = SdApplication.SoleInstance.GetInteger("Number of groups", gridParameter.Operation.ToString(), 1, out userCancelled);
                             if (userCancelled || groups < 1 || groups > 10)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
-                                SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = true;
+                                SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = true;
                                 continue;
                             }
 
@@ -2934,11 +2934,11 @@ namespace StatsDirect.UI
                         {
                             DataFrame2D frame = new DataFrame2D();
                             bool userCancelled;
-                            int repeats = SDApplication.SoleInstance.GetInteger("Number of repeats", gridParameter.Operation.ToString(), 2, out userCancelled);
+                            int repeats = SdApplication.SoleInstance.GetInteger("Number of repeats", gridParameter.Operation.ToString(), 2, out userCancelled);
                             if (userCancelled || repeats <= 1)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
-                                SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = true;
+                                SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = true;
                                 continue;
                             }
 
@@ -2988,7 +2988,7 @@ namespace StatsDirect.UI
                                 {
                                     if (repeatFrame.MinRows != rows || repeatFrame.VariableCount != cols)
                                     {
-                                        SDApplication.SoleInstance.MsgboxX("You must have the same number of subjects and treatments for each repeat, mark missing data with an asterisk if they are at the end of a column", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, gridParameter.Operation.ToString(), true);
+                                        SdApplication.SoleInstance.MsgboxX("You must have the same number of subjects and treatments for each repeat, mark missing data with an asterisk if they are at the end of a column", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, gridParameter.Operation.ToString(), true);
                                         rpt--; // Try again
                                         ok = false;
                                     }
@@ -3029,10 +3029,10 @@ namespace StatsDirect.UI
 
         private void workbookView_KeyDown(object sender, KeyEventArgs e)
         {
-            if (SDApplication.SoleInstance.IsSelecting && e.KeyCode == Keys.Enter)
+            if (SdApplication.SoleInstance.IsSelecting && e.KeyCode == Keys.Enter)
             {
                 // This changes the state both for selecting and for data input, but is OK because we only get here if we're selecting.
-                SDApplication.SoleInstance.NoteEndOfSelection(true);
+                SdApplication.SoleInstance.NoteEndOfSelection(true);
                 e.Handled = true;
             }
         }
@@ -3150,7 +3150,7 @@ namespace StatsDirect.UI
                     pageSetupDialog.AllowOrientation = true;
                     pageSetupDialog.AllowMargins = true;
                     // pageSetupDialog.AllowPaper = true;
-                    DialogResult res = pageSetupDialog.ShowDialog(SDApplication.SoleInstance.MainWindow);
+                    DialogResult res = pageSetupDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
                     if (res == DialogResult.OK)
                     {
                         // Save settings into SSG's sheet settings
@@ -3217,7 +3217,7 @@ namespace StatsDirect.UI
                 IRange currentRange = workbookView.RangeSelection;
                 if (currentRange.IsEntireColumns)
                 {
-                    SDApplication.SoleInstance.MsgboxX("You cannot insert an entire worksheet's height of blank rows.  Please select fewer rows.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert rows", false);
+                    SdApplication.SoleInstance.MsgboxX("You cannot insert an entire worksheet's height of blank rows.  Please select fewer rows.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert rows", false);
                     return;
                 }
 
@@ -3238,7 +3238,7 @@ namespace StatsDirect.UI
                 IRange currentRange = workbookView.RangeSelection;
                 if (currentRange.IsEntireRows)
                 {
-                    SDApplication.SoleInstance.MsgboxX("You cannot insert an entire worksheet's width of blank columns.  Please select fewer columns.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert columns", false);
+                    SdApplication.SoleInstance.MsgboxX("You cannot insert an entire worksheet's width of blank columns.  Please select fewer columns.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert columns", false);
                     return;
                 }
 
@@ -3343,7 +3343,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                string cell = SDApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", "");
+                string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", "");
                 workbookView.GetLock();
                 if (null != cell)
                 {
@@ -3352,7 +3352,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.Warning(ex.Message, "Go to cell");
+                SdApplication.SoleInstance.Warning(ex.Message, "Go to cell");
             }
             finally
             {
@@ -3450,7 +3450,7 @@ namespace StatsDirect.UI
 
         private void deleteSheetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            bool shouldDelete = SDApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.  Are you sure you want to delete this sheet?", "Delete sheet");
+            bool shouldDelete = SdApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.  Are you sure you want to delete this sheet?", "Delete sheet");
             if (shouldDelete)
             {
                 workbookView.GetLock();
@@ -3674,7 +3674,7 @@ namespace StatsDirect.UI
 
         private static void DoOperation(string operationName)
         {
-            SDApplication.SoleInstance.MainWindow.DoOperation(operationName);
+            SdApplication.SoleInstance.MainWindow.DoOperation(operationName);
         }
 
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3778,10 +3778,10 @@ namespace StatsDirect.UI
         private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
             // If we're selecting, this cancels the selection instead of showing the menu.
-            if (SDApplication.SoleInstance.SelectingData)
+            if (SdApplication.SoleInstance.SelectingData)
             {
                 // NoteEndOfSelection clears both selectingData and inputtingData.  However, that's safe here, as we only get here if we're SelectingData.
-                SDApplication.SoleInstance.NoteEndOfSelection(true);
+                SdApplication.SoleInstance.NoteEndOfSelection(true);
                 e.Cancel = true;
                 return;
             }

@@ -38,7 +38,7 @@ namespace StatsDirect.UI
 
         private void frmInputBox_HelpRequested(object sender, HelpEventArgs hlpevent)
         {
-            SDApplication.SoleInstance.ShowCurrentHelp();
+            SdApplication.SoleInstance.ShowCurrentHelp();
         }
     }
 }

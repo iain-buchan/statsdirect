@@ -32,10 +32,10 @@ namespace StatsDirect.UI
 
         private void SetOptionsFromForm()
         {
-            options.Df = Utilities.Parsing.Cint_Txt(txtDegreesOfFreedom.Text);
+            options.Df = Parsing.Cint_Txt(txtDegreesOfFreedom.Text);
             for (int i = 0; i < options.Xe.Count; i++)
             {
-                options.Xe[i] = Utilities.Parsing.Cdbl_Txt(lstFrequencies.Items[i].SubItems[2].Text);
+                options.Xe[i] = Parsing.Cdbl_Txt(lstFrequencies.Items[i].SubItems[2].Text);
             }
         }
 
@@ -86,7 +86,7 @@ namespace StatsDirect.UI
         {
             if (13 == e.KeyChar)
             {
-                double ex = Utilities.Parsing.Cdbl_Txt(txtValue.Text);
+                double ex = Parsing.Cdbl_Txt(txtValue.Text);
                 if (ex <= 0)
                 {
                     txtValue.Text = "";

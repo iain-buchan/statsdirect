@@ -74,7 +74,7 @@ namespace StatsDirect.UI
                     || width < 1
                     || height < 1)
                 {
-                    SDApplication.SoleInstance.MsgboxX("Please enter a width and height in pixels for the exported image.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Graphical image export", false);
+                    SdApplication.SoleInstance.MsgboxX("Please enter a width and height in pixels for the exported image.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Graphical image export", false);
                     return;
                 }
             }
@@ -138,7 +138,7 @@ namespace StatsDirect.UI
 
         private void saveFileDialog_HelpRequest(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ShowHelp(this, "220554");
+            SdApplication.SoleInstance.ShowHelp(this, "220554");
         }
 
         private bool SaveImage(string path, int width, int height)
@@ -177,7 +177,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                SDApplication.SoleInstance.MsgboxX("Unknown image format '" + extension + "'.  Please save as a recognised format.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", false);
+                SdApplication.SoleInstance.MsgboxX("Unknown image format '" + extension + "'.  Please save as a recognised format.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", false);
                 return false;
             }
             return true;

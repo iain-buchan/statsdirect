@@ -106,7 +106,7 @@ namespace StatsDirect.UI
 
         private void RefreshUserInfo()
         {
-            UserInfo ui = SDApplication.SoleInstance.UserInfo;
+            UserInfo ui = SdApplication.SoleInstance.UserInfo;
 
             int d = !DateTime.MinValue.Equals(ui.Expires) ? Math.Abs(DateTime.Parse(ui.Expires).Subtract(DateTime.Now).Days) : 0;
             if (ui.Trial || d < 60)
@@ -125,7 +125,7 @@ namespace StatsDirect.UI
         void lblEmail_DoubleClick(object sender, EventArgs e)
         {
             Close();
-            using (frmLicense f = new frmLicense(SDApplication.SoleInstance.UserInfo))
+            using (frmLicense f = new frmLicense(SdApplication.SoleInstance.UserInfo))
             {
                 f.ShowDialog(this);
             }

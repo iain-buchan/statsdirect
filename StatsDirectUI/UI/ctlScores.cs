@@ -50,7 +50,7 @@ namespace StatsDirect.UI
                 gridScores[1, i].Value = options.Values2[i].ToString();
         }
 
-        public Control Fill(Templates.ParameterBag outputParameters, bool doValidation)
+        public Control Fill(ParameterBag outputParameters, bool doValidation)
         {
             double[] values1 = new double[count1];
             double[] values2 = new double[count2];

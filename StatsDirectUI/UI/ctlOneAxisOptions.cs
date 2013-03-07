@@ -247,7 +247,7 @@ namespace StatsDirect.UI
 
         private void SetDataRangeLabel()
         {
-            lblDataRange.Text = string.Format("Data range: {0} to {1}", SDApplication.SoleInstance.RoundU(dataMin), SDApplication.SoleInstance.RoundU(dataMax));
+            lblDataRange.Text = string.Format("Data range: {0} to {1}", SdApplication.SoleInstance.RoundU(dataMin), SdApplication.SoleInstance.RoundU(dataMax));
         }
 
         private void SetCandidateScaleValues()

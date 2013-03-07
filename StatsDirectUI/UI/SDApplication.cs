@@ -8,8 +8,6 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Security.Permissions;
 
-using Lambda.Collections.Generic;
-
 using StatsDirect.Templates;
 using StatsDirect.Configuration;
 using StatsDirect.Data;
@@ -21,13 +19,13 @@ namespace StatsDirect.UI
     /// The central class for managing the state of StatsDirect.
     /// </summary>
     /// <remarks>This class is a Singleton (ref Gamma et al "Design Patterns")</remarks>
-    public sealed class SDApplication : ITemplateHost, IRefillSource
+    public sealed class SdApplication : ITemplateHost, IRefillSource
     {
         private const int MAX_RECENT_FILES = 4;
 
         private int sActiveHelpTopic;
         private string activeHelpUrl;
-        private static SDApplication soleInstance;
+        private static SdApplication soleInstance;
         private UserInfo userInfo;
 
         private bool closingForUpgrade;
@@ -36,7 +34,7 @@ namespace StatsDirect.UI
         /// The MDI window in which newly-created children are placed
         /// </summary>
         private frmMain mainWindow;
-        private readonly ICollection<WindowInformation> windows = new Set<WindowInformation>();
+        private readonly ICollection<WindowInformation> windows = new HashSet<WindowInformation>();
         private WindowInformation activeWindow;
         private WindowInformation activeGrid;
 
@@ -59,12 +57,12 @@ namespace StatsDirect.UI
         /// <summary>
         /// Returns the single instance of the application, creating it if necessary.
         /// </summary>
-        internal static SDApplication SoleInstance
+        internal static SdApplication SoleInstance
         {
             get
             {
-                Contract.Ensures(null != Contract.Result<SDApplication>());
-                return soleInstance ?? (soleInstance = new SDApplication());
+                Contract.Ensures(null != Contract.Result<SdApplication>());
+                return soleInstance ?? (soleInstance = new SdApplication());
             }
         }
 
@@ -79,7 +77,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// Sole constructor.  Because this follows the singleton pattern, the constructor is private.
         /// </summary>
-        private SDApplication()
+        private SdApplication()
         {
             InitialiseFunctionRegistry();
             LoadPersistentValues();

@@ -61,7 +61,6 @@ namespace StatsDirect.UI
 
         private void LeaveTextbox(object sender, EventArgs e)
         {
-            return;
             // TODO: Put back textbox leaves as command triggers
             /*
             Control ctl = (Control)sender;

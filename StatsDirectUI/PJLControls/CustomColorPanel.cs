@@ -321,15 +321,7 @@ namespace StatsDirect.PJLControls
 			set
 			{
 				Utils.CheckValidEnumValue( "BorderStyle", value, typeof(BorderStyle) );
-
-				if( borderStyle != value )
-				{
-					borderStyle = value;
-
-					// UpdateBorderSize();
-
-					// AutoSizePanel();
-				}
+        		borderStyle = value;
 			}
 		}
         /*

@@ -419,18 +419,18 @@ namespace StatsDirect.UI
                     if (chkBatchMode.Checked)
                     {
                         // Ensure the next loop doesn't start with the data that's currently highlighted.
-                        if (null != SDApplication.SoleInstance
-                            && null != SDApplication.SoleInstance.ActiveGrid
-                            && SDApplication.SoleInstance.ActiveGrid.HasWindow)
+                        if (null != SdApplication.SoleInstance
+                            && null != SdApplication.SoleInstance.ActiveGrid
+                            && SdApplication.SoleInstance.ActiveGrid.HasWindow)
                         {
-                            ((IGrid)SDApplication.SoleInstance.ActiveGrid.Window).ClearSelection();
+                            ((IGrid)SdApplication.SoleInstance.ActiveGrid.Window).ClearSelection();
                         }
                     }
                     // If we're batching, then we must be doing something with grid input.  So, if we're going round again, ensure our grid is visible.
                     if (chkBatchMode.Checked)
                     {
-                        if (SDApplication.SoleInstance.ActiveGrid != null)
-                            SDApplication.SoleInstance.ActiveGrid.Window.Activate();
+                        if (SdApplication.SoleInstance.ActiveGrid != null)
+                            SdApplication.SoleInstance.ActiveGrid.Window.Activate();
                     }
                 } while (chkBatchMode.Checked);
             }
@@ -448,8 +448,8 @@ namespace StatsDirect.UI
 #if RELEASE_EXCEPTIONS
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.EraseAnyOutstandingParameters();
-                SDApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
+                SdApplication.SoleInstance.EraseAnyOutstandingParameters();
+                SdApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
             }
 #endif
         }
@@ -458,7 +458,7 @@ namespace StatsDirect.UI
         {
             chkBatchMode.Checked = false;
             // Ensure there are no remembered batch details
-            SDApplication.SoleInstance.ClearBatchMode();
+            SdApplication.SoleInstance.ClearBatchMode();
         }
 
         public void DoOperation(string operationName)
@@ -468,13 +468,13 @@ namespace StatsDirect.UI
             {
 #endif
                 Operation operation = TemplateFactory.Operations[operationName];
-                SDApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
+                SdApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
 #if RELEASE_EXCEPTIONS
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.EraseAnyOutstandingParameters();
-                SDApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
+                SdApplication.SoleInstance.EraseAnyOutstandingParameters();
+                SdApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
             }
 #endif
         }
@@ -488,7 +488,7 @@ namespace StatsDirect.UI
             using (new WaitCursor())
             {
                 StatsDirectForm child = new frmSpreadsheetGear();
-                string childName = child.Text + " " + SDApplication.SoleInstance.GetGridNumber();
+                string childName = child.Text + " " + SdApplication.SoleInstance.GetGridNumber();
                 child.Text = childName;
                 SetUpForm(child);
                 return child;
@@ -497,7 +497,7 @@ namespace StatsDirect.UI
 
         internal StatsDirectForm FindOrOpenGrid(string filename)
         {
-            foreach (WindowInformation wi in SDApplication.SoleInstance.Windows)
+            foreach (WindowInformation wi in SdApplication.SoleInstance.Windows)
             {
                 if (wi.IsFile(filename))
                     return wi.Window;
@@ -516,16 +516,16 @@ namespace StatsDirect.UI
                 {
                     opened = newGrid.OpenFile(filename, isTempFile);
                     if (!isTempFile)
-                        SDApplication.SoleInstance.NoteRecentFile(filename, opened);
+                        SdApplication.SoleInstance.NoteRecentFile(filename, opened);
                 }
                 catch (IOException ex)
                 {
-                    SDApplication.SoleInstance.FriendlyError("Couldn't open spreadsheet", ex, true);
+                    SdApplication.SoleInstance.FriendlyError("Couldn't open spreadsheet", ex, true);
                 }
                 if (!opened)
                 {
                     newGrid.Close();
-                    SDApplication.SoleInstance.NoteFormClosing(newGrid, new FormClosingEventArgs(CloseReason.None, false));
+                    SdApplication.SoleInstance.NoteFormClosing(newGrid, new FormClosingEventArgs(CloseReason.None, false));
                 }
                 return opened ? newGrid : null;
             }
@@ -540,7 +540,7 @@ namespace StatsDirect.UI
             using (new WaitCursor())
             {
                 StatsDirectForm child = new frmReportRichEdit();
-                string childName = child.Text + " " + SDApplication.SoleInstance.GetReportNumber();
+                string childName = child.Text + " " + SdApplication.SoleInstance.GetReportNumber();
                 child.Text = childName;
                 SetUpForm(child);
                 return child;
@@ -555,16 +555,16 @@ namespace StatsDirect.UI
             {
                 opened = newReport.OpenFile(filename, isTempFile);
                 if (!isTempFile)
-                    SDApplication.SoleInstance.NoteRecentFile(filename, opened);
+                    SdApplication.SoleInstance.NoteRecentFile(filename, opened);
             }
             catch (IOException ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't open report", ex, true);
+                SdApplication.SoleInstance.FriendlyError("Couldn't open report", ex, true);
             }
             if (!opened)
             {
                 newReport.Close();
-                SDApplication.SoleInstance.NoteFormClosing(newReport, new FormClosingEventArgs(CloseReason.None, false));
+                SdApplication.SoleInstance.NoteFormClosing(newReport, new FormClosingEventArgs(CloseReason.None, false));
             }
             return opened ? newReport : null;
         }
@@ -578,7 +578,7 @@ namespace StatsDirect.UI
             using (new WaitCursor())
             {
                 frmScript child = new frmScript();
-                string childName = child.Text + " " + SDApplication.SoleInstance.GetScriptWindowNumber();
+                string childName = child.Text + " " + SdApplication.SoleInstance.GetScriptWindowNumber();
                 child.Text = childName;
                 SetUpForm(child);
                 return child;
@@ -593,16 +593,16 @@ namespace StatsDirect.UI
             {
                 opened = newScriptWindow.OpenFile(filename, isTempFile);
                 if (!isTempFile)
-                    SDApplication.SoleInstance.NoteRecentFile(filename, opened);
+                    SdApplication.SoleInstance.NoteRecentFile(filename, opened);
             }
             catch (IOException ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't open script", ex, true);
+                SdApplication.SoleInstance.FriendlyError("Couldn't open script", ex, true);
             }
             if (!opened)
             {
                 newScriptWindow.Close();
-                SDApplication.SoleInstance.NoteFormClosing(newScriptWindow, new FormClosingEventArgs(CloseReason.None, false));
+                SdApplication.SoleInstance.NoteFormClosing(newScriptWindow, new FormClosingEventArgs(CloseReason.None, false));
             }
             return opened ? newScriptWindow : null;
         }
@@ -634,7 +634,7 @@ namespace StatsDirect.UI
             WindowInformation info = new WindowInformation { TabPage = tabPage, Window = child };
             child.Tag = info;
             tabPage.Tag = info;
-            SDApplication.SoleInstance.AddWindow(info);
+            SdApplication.SoleInstance.AddWindow(info);
 
             // Update the display
             closeToolStripMenuItem.Enabled = (tabWindows.TabPages.Count > 0);
@@ -932,7 +932,7 @@ namespace StatsDirect.UI
         public bool SelectCells(string selectionMessage, string cancelButtonLabel, out bool wasPivoted)
         {
             bool status;
-            bool oldSelectGroupsByIdentifier = SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
+            bool oldSelectGroupsByIdentifier = SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
             bool wasWaiting = Application.UseWaitCursor;
             if (wasWaiting)
                 Application.UseWaitCursor = false;
@@ -964,7 +964,7 @@ namespace StatsDirect.UI
             else
             {
                 status = false;
-                wasPivoted = (oldSelectGroupsByIdentifier != SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier);
+                wasPivoted = (oldSelectGroupsByIdentifier != SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier);
             }
             if (!wasPivoted)
                 ShowPanel(PanelType.Default, false);
@@ -1175,11 +1175,11 @@ namespace StatsDirect.UI
                 }
                 if (".sdw".Equals(extension))
                 {
-                    SDApplication.SoleInstance.MsgboxX("StatsDirect 3 cannot open .sdw files. Please use StatsDirect 2 to save the file in Excel format.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                    SdApplication.SoleInstance.MsgboxX("StatsDirect 3 cannot open .sdw files. Please use StatsDirect 2 to save the file in Excel format.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                     return false;
                 }
-                SDApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
-                SDApplication.SoleInstance.NoteRecentFile(path, false);
+                SdApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                SdApplication.SoleInstance.NoteRecentFile(path, false);
                 UpdateFileList();
                 return false;
             }
@@ -1374,7 +1374,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
+                SdApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
             }
 #else
             DoCalculateInternal();
@@ -1436,7 +1436,7 @@ namespace StatsDirect.UI
                 catch (Templates.InvalidDataException ex)
                 {
                     string errorMessage = ex.Message;
-                    SDApplication.SoleInstance.MsgboxX(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                    SdApplication.SoleInstance.MsgboxX(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                     // Treat this as a restart of the operation, without keeping any data - we don't know which data is bad, and if we keep it we risk getting stuck in a loop
                     /*
                     // That one failed due to invalid data - keep the same data and try it again, which should prompt the user to fix it!
@@ -1489,8 +1489,8 @@ namespace StatsDirect.UI
 
         private static void ResetHelp()
         {
-            SDApplication.SoleInstance.ActiveHelpUrl = null;
-            SDApplication.SoleInstance.ActiveHelpTopic = 0; // ToC
+            SdApplication.SoleInstance.ActiveHelpUrl = null;
+            SdApplication.SoleInstance.ActiveHelpTopic = 0; // ToC
         }
 
         private void CloseCurrentOperation()
@@ -1512,7 +1512,7 @@ namespace StatsDirect.UI
             }
             // We may have had one or more parameters displayed
             ClearCombinedParameters();
-            SDApplication.SoleInstance.EraseAnyOutstandingParameters();
+            SdApplication.SoleInstance.EraseAnyOutstandingParameters();
             Application.UseWaitCursor = false;
         }
 
@@ -1537,13 +1537,13 @@ namespace StatsDirect.UI
                 // Set help
                 if (null != operation.HelpContext)
                 {
-                    SDApplication.SoleInstance.ActiveHelpTopic = operation.HelpContext.ChmId;
+                    SdApplication.SoleInstance.ActiveHelpTopic = operation.HelpContext.ChmId;
                     if (null != operation.HelpContext.Url)
-                        SDApplication.SoleInstance.ActiveHelpUrl = operation.HelpContext.Url;
+                        SdApplication.SoleInstance.ActiveHelpUrl = operation.HelpContext.Url;
                 }
 
                 // Self-referential operations are assumed to be instant and repeatable, so are set up immediately in the interface.  Others are run normally, and only then do they get any follow-on operations.
-                TemplateProcessor templateProcessor = new TemplateProcessor(SDApplication.SoleInstance);
+                TemplateProcessor templateProcessor = new TemplateProcessor(SdApplication.SoleInstance);
                 ParameterBag outputParameters;
                 SuggestFromOperation(operation, inputParameters, SuggestionTime.BeforeOperation);
                 if (operation.SuggestsSelf)
@@ -1612,7 +1612,7 @@ namespace StatsDirect.UI
             // 2. If a previous operation that has run with this set of parameters defines any, use the operations on the earliest such operation that ran.
             // 3. Otherwise, there are no follow-up operations.
             Operation suggestingOperation = operation;
-            bool hasSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SDApplication.SoleInstance), inputParameters).Count > 0;
+            bool hasSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SdApplication.SoleInstance), inputParameters).Count > 0;
             if (!hasSuggestedOperations)
             {
                 if (null != inputParameters)
@@ -1624,7 +1624,7 @@ namespace StatsDirect.UI
                             if (TemplateFactory.Operations.ContainsKey(operationName))
                             {
                                 suggestingOperation = TemplateFactory.Operations[operationName];
-                                hasSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SDApplication.SoleInstance), inputParameters).Count > 0;
+                                hasSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SdApplication.SoleInstance), inputParameters).Count > 0;
                                 if (hasSuggestedOperations)
                                     break;
                             }
@@ -1632,7 +1632,7 @@ namespace StatsDirect.UI
                     }
                 }
             }
-            IList<SuggestedOperation> availableSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SDApplication.SoleInstance), inputParameters);
+            IList<SuggestedOperation> availableSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SdApplication.SoleInstance), inputParameters);
             bool suggestsOthers = availableSuggestedOperations.Count > 1
                 || (availableSuggestedOperations.Count == 1 && TemplateFactory.Operations.ContainsKey(availableSuggestedOperations[0].Name) && suggestingOperation != TemplateFactory.Operations[availableSuggestedOperations[0].Name]);
             bool onlySuggestsFollowOns = (!operation.SuggestsSelf) && suggestingOperation == operation;
@@ -1752,19 +1752,19 @@ namespace StatsDirect.UI
                             if (p is ConfidenceIntervalParameter)
                             {
                                 ConfidenceIntervalParameter cip = (ConfidenceIntervalParameter)p;
-                                if (cip.CanDefault && SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
+                                if (cip.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
                                 {
                                     // The CI can be defaulted; no decision!
                                 }
                                 else
                                 {
                                     // The CI cannot be defaulted; use our standard decision
-                                    return ((ITemplateHost)SDApplication.SoleInstance).CanCombine(p);
+                                    return ((ITemplateHost)SdApplication.SoleInstance).CanCombine(p);
                                 }
                             }
                             else
                             {
-                                return ((ITemplateHost)SDApplication.SoleInstance).CanCombine(p);
+                                return ((ITemplateHost)SdApplication.SoleInstance).CanCombine(p);
                             }
                         }
                     }
@@ -1840,13 +1840,13 @@ namespace StatsDirect.UI
 
         private void optGroupsByColumn_CheckedChanged(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = !optGroupsByColumn.Checked;
+            SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = !optGroupsByColumn.Checked;
             selectingData = false;
         }
 
         private void optGroupsByIdentifier_CheckedChanged(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = optGroupsByIdentifier.Checked;
+            SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = optGroupsByIdentifier.Checked;
             selectingData = false;
         }
 
@@ -1857,7 +1857,7 @@ namespace StatsDirect.UI
 
         private void frmMain_HelpButtonClicked(object sender, CancelEventArgs e)
         {
-            SDApplication.SoleInstance.ShowHelp(this);
+            SdApplication.SoleInstance.ShowHelp(this);
         }
 
         private void frmMain_HelpRequested(object sender, HelpEventArgs hlpevent)
@@ -1874,7 +1874,7 @@ namespace StatsDirect.UI
                 string menuTopic;
                 if (tags.TryGetValue("help", out menuTopic))
                 {
-                    SDApplication.SoleInstance.ShowHelp(this, menuTopic);
+                    SdApplication.SoleInstance.ShowHelp(this, menuTopic);
                     return;
                 }
                 string operationName;
@@ -1886,7 +1886,7 @@ namespace StatsDirect.UI
                         if (null != operation.HelpContext)
                         {
                             string operationTopic = operation.HelpContext.Url ?? operation.HelpContext.ChmId.ToString();
-                            SDApplication.SoleInstance.ShowHelp(this, operationTopic);
+                            SdApplication.SoleInstance.ShowHelp(this, operationTopic);
                             return;
                         }
                     }
@@ -1894,22 +1894,22 @@ namespace StatsDirect.UI
             }
             if (null == ActiveMdiChild)
             {
-                SDApplication.SoleInstance.ShowHelp(this);
+                SdApplication.SoleInstance.ShowHelp(this);
                 return;
             }
-            SDApplication.SoleInstance.ActiveWindow.Window.ShowHelp();
+            SdApplication.SoleInstance.ActiveWindow.Window.ShowHelp();
         }
 
         private void contentsAndIndexToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ActiveHelpTopic = 0;
-            SDApplication.SoleInstance.ShowHelp(this);
+            SdApplication.SoleInstance.ActiveHelpTopic = 0;
+            SdApplication.SoleInstance.ShowHelp(this);
         }
 
         private void methodSelectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ActiveHelpTopic = 1213;
-            SDApplication.SoleInstance.ShowHelp(this);
+            SdApplication.SoleInstance.ActiveHelpTopic = 1213;
+            SdApplication.SoleInstance.ShowHelp(this);
         }
 
         private bool cancelProgressPressed;
@@ -2238,7 +2238,7 @@ namespace StatsDirect.UI
                                 // If there's a title, use it as the title of the parameter
                                 return p.Title;
                             }
-                            return p.HasPrompt ? p.Prompt(new TemplateProcessor(SDApplication.SoleInstance), context) : null;
+                            return p.HasPrompt ? p.Prompt(new TemplateProcessor(SdApplication.SoleInstance), context) : null;
                         }
                     }
                 }
@@ -2449,8 +2449,8 @@ namespace StatsDirect.UI
 
         internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, ConfidenceIntervalParameter parameter, ParameterBag context)
         {
-            if (parameter.CanDefault && SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
-                return new FilledParameter(true, SDApplication.SoleInstance.Preferences.DefaultConfidenceInterval);
+            if (parameter.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
+                return new FilledParameter(true, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval);
 
             // If this is a "standard" CI and the dedicated CI combo isn't in use, use it.  Otherwise, create one in the flow.
             ComboBox cbo;
@@ -2506,7 +2506,7 @@ namespace StatsDirect.UI
                 // Don't force a CI if there's already one set on the singleton
                 if (!useSingle || string.IsNullOrEmpty(cboConfidenceInterval.Text))
                 {
-                    cbo.Text = SDApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval ? (SDApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
+                    cbo.Text = SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval ? (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
                 }
             }
 
@@ -3497,7 +3497,7 @@ namespace StatsDirect.UI
             {
                 ParameterBag ambientParameters = new ParameterBag();
                 ParameterBag context = fillCombinedParametersContext;
-                ExtractCurrentValues(new TemplateProcessor(SDApplication.SoleInstance), ambientParameters, context, false);
+                ExtractCurrentValues(new TemplateProcessor(SdApplication.SoleInstance), ambientParameters, context, false);
                 if (null != context)
                 {
                     // Add in ambient parameters; do not overwrite current parameters (which will include key->null for empty optional parameters)
@@ -3538,7 +3538,7 @@ namespace StatsDirect.UI
                         if (parameter.HasAcquireIfTrue)
                         {
                             if (null == processor)
-                                processor = new TemplateProcessor(SDApplication.SoleInstance);
+                                processor = new TemplateProcessor(SdApplication.SoleInstance);
                             bool shouldAcquire = parameter.AcquireIfTrue(processor, ambientParameters);
                             if (control.Visible != shouldAcquire)
                                 atLeastOneVisibilityChange = true;
@@ -4114,7 +4114,7 @@ namespace StatsDirect.UI
                             }
                             allValid &= (null == validationResult);
                             if (!allValid)
-                                SDApplication.SoleInstance.MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
+                                SdApplication.SoleInstance.MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
                         }
                         if (allValid)
                         {
@@ -4798,8 +4798,8 @@ namespace StatsDirect.UI
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (SDApplication.HasInstance)
-                SDApplication.SoleInstance.Shutdown();
+            if (SdApplication.HasInstance)
+                SdApplication.SoleInstance.Shutdown();
 
             // HACK: There are occasions when the main window is closed when we're in a DoEvents loop many levels down the stack.  This deals with the problem that the process can stick around.
             Environment.Exit(0);
@@ -4868,7 +4868,7 @@ namespace StatsDirect.UI
                 }
                 recentFileEntries.Clear();
             }
-            IList<string> recentFiles = SDApplication.SoleInstance.RecentFiles;
+            IList<string> recentFiles = SdApplication.SoleInstance.RecentFiles;
             for (int i = 0; i < recentFiles.Count; i++)
             {
                 string recentFile = recentFiles[i];
@@ -4981,15 +4981,15 @@ namespace StatsDirect.UI
             }
             catch (Win32Exception ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
+                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
             }
             catch (IOException ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
+                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
+                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
             }
         }
 
@@ -5023,27 +5023,27 @@ namespace StatsDirect.UI
 
         private void cutToolStripButton_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ActiveWindow.EditCut();
+            SdApplication.SoleInstance.ActiveWindow.EditCut();
         }
 
         private void copyToolStripButton_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ActiveWindow.EditCopy();
+            SdApplication.SoleInstance.ActiveWindow.EditCopy();
         }
 
         private void pasteToolStripButton_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ActiveWindow.EditPaste();
+            SdApplication.SoleInstance.ActiveWindow.EditPaste();
         }
 
         private void printToolStripButton_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ActiveWindow.Print();
+            SdApplication.SoleInstance.ActiveWindow.Print();
         }
 
         private void cmdHelp_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ShowCurrentHelp();
+            SdApplication.SoleInstance.ShowCurrentHelp();
         }
 
         private void cascadeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -5145,7 +5145,7 @@ namespace StatsDirect.UI
 
         private void cmdSelectionHelp_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.ShowCurrentHelp();
+            SdApplication.SoleInstance.ShowCurrentHelp();
         }
 
         private void cmdCancelProgress_Click(object sender, EventArgs e)
@@ -5160,14 +5160,14 @@ namespace StatsDirect.UI
 
         private void CreateNewInstanceOfCurrentWindow()
         {
-            if (null == SDApplication.SoleInstance.ActiveWindow
-                || null == SDApplication.SoleInstance.ActiveWindow.Window)
+            if (null == SdApplication.SoleInstance.ActiveWindow
+                || null == SdApplication.SoleInstance.ActiveWindow.Window)
             {
                 CreateGrid();
             }
             else
             {
-                StatsDirectForm activeWindow = SDApplication.SoleInstance.ActiveWindow.Window;
+                StatsDirectForm activeWindow = SdApplication.SoleInstance.ActiveWindow.Window;
                 if (activeWindow.ImplementsIGrid)
                     CreateGrid();
                 else if (activeWindow.ImplementsIReport)
@@ -5429,7 +5429,7 @@ namespace StatsDirect.UI
                 return;
             try
             {
-                string cell = SDApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", "");
+                string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", "");
                 workbookView.GetLock();
                 if (null != cell)
                 {
@@ -5438,7 +5438,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SDApplication.SoleInstance.Warning(ex.Message, "Go to cell");
+                SdApplication.SoleInstance.Warning(ex.Message, "Go to cell");
             }
             finally
             {
@@ -5459,7 +5459,7 @@ namespace StatsDirect.UI
 
         private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SDApplication.SoleInstance.CheckForUpdates();
+            SdApplication.SoleInstance.CheckForUpdates();
         }
 
         private int mostRecentModalMessageButtonPressed;
@@ -5783,10 +5783,10 @@ namespace StatsDirect.UI
                 // If it's a grid operation, ensure the most recently used one is visible (#696)
                 if (operation.RequiresGrid)
                 {
-                    if (null != SDApplication.SoleInstance && null != SDApplication.SoleInstance.ActiveGrid && SDApplication.SoleInstance.ActiveGrid.HasWindow)
+                    if (null != SdApplication.SoleInstance && null != SdApplication.SoleInstance.ActiveGrid && SdApplication.SoleInstance.ActiveGrid.HasWindow)
                     {
-                        ((IGrid)SDApplication.SoleInstance.ActiveGrid.Window).ClearSelection();
-                        ActivateMdiChild(SDApplication.SoleInstance.ActiveGrid.Window);
+                        ((IGrid)SdApplication.SoleInstance.ActiveGrid.Window).ClearSelection();
+                        ActivateMdiChild(SdApplication.SoleInstance.ActiveGrid.Window);
                         Application.DoEvents();
                     }
                 }

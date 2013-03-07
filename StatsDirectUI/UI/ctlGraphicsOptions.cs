@@ -141,7 +141,7 @@ namespace StatsDirect.UI
 
         private void SaveOptions()
         {
-            SDApplication.SoleInstance.Preferences.ShouldUseColour = !chkAllBlack.Checked;
+            SdApplication.SoleInstance.Preferences.ShouldUseColour = !chkAllBlack.Checked;
             ChartRenderer.DefaultBoxAxes = chkBoxAxes.Checked;
             ChartRenderer.SaveFlags();
 
@@ -164,7 +164,7 @@ namespace StatsDirect.UI
             lblAxisLabelFont.Font = ChartRenderer.FontFromSaveString(ChartRenderer.DefaultLabelFont);
             lblTitleFont.Font = ChartRenderer.FontFromSaveString(ChartRenderer.DefaultTitleFont);
 
-            chkAllBlack.Checked = !SDApplication.SoleInstance.Preferences.ShouldUseColour;
+            chkAllBlack.Checked = !SdApplication.SoleInstance.Preferences.ShouldUseColour;
             chkBoxAxes.Checked = ChartRenderer.DefaultBoxAxes;
 
             workingMarkerTypes = new MarkerType[10];

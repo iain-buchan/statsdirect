@@ -85,7 +85,7 @@ namespace StatsDirect.UI
 
         private void LoadRecentFiles()
         {
-            IList<string> recentFiles = SDApplication.SoleInstance.RecentFiles;
+            IList<string> recentFiles = SdApplication.SoleInstance.RecentFiles;
             foreach (string path in recentFiles)
             {
                 lstRecent.Items.Add(path);
@@ -95,13 +95,13 @@ namespace StatsDirect.UI
         private void OpenFromList()
         {
             Close();
-            SDApplication.SoleInstance.MainWindow.OpenFile((string)lstRecent.SelectedItem, true);
+            SdApplication.SoleInstance.MainWindow.OpenFile((string)lstRecent.SelectedItem, true);
         }
 
         private void BrowseForFile()
         {
             Visible = false;
-            if (SDApplication.SoleInstance.MainWindow.OpenFile())
+            if (SdApplication.SoleInstance.MainWindow.OpenFile())
             {
                 Close();
             }
@@ -114,13 +114,13 @@ namespace StatsDirect.UI
         private void CreateNewReport()
         {
             Close();
-            SDApplication.SoleInstance.MainWindow.CreateReport();
+            SdApplication.SoleInstance.MainWindow.CreateReport();
         }
 
         private void CreateNewWorkbook()
         {
             Close();
-            SDApplication.SoleInstance.MainWindow.CreateGrid();
+            SdApplication.SoleInstance.MainWindow.CreateGrid();
         }
 
         private void rdoNewWorkbook_Click(object sender, EventArgs e)

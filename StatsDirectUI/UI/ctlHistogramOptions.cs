@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using StatsDirect.Charting;
 using System.Media;
-using System.ComponentModel;
 using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
@@ -148,9 +147,9 @@ namespace StatsDirect.UI
                 double ltpt = AxisScaler.Axis_Q0(zmin, zmin + (zint * i) - zint / 2.0);
                 double mdpt = AxisScaler.Axis_Q0(zmin, zmin + (zint * i));
                 double rtpt = AxisScaler.Axis_Q0(zmin, zmin + (zint * i) + zint / 2.0);
-                ListViewItem item = new ListViewItem {Text = Utilities.Formatting.XRound(ltpt, 9)};
-                item.SubItems.Add(Utilities.Formatting.XRound(mdpt, 9));
-                item.SubItems.Add(Utilities.Formatting.XRound(rtpt, 9));
+                ListViewItem item = new ListViewItem {Text = Formatting.XRound(ltpt, 9)};
+                item.SubItems.Add(Formatting.XRound(mdpt, 9));
+                item.SubItems.Add(Formatting.XRound(rtpt, 9));
                 lstBinValues.Items.Add(item);
             }
         }
@@ -182,7 +181,7 @@ namespace StatsDirect.UI
             }
             catch (FormatException)
             {
-                SDApplication.SoleInstance.MsgboxX("Please enter the number of bins", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Histogram", true);
+                SdApplication.SoleInstance.MsgboxX("Please enter the number of bins", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Histogram", true);
             }
             catch (Exception)
             {

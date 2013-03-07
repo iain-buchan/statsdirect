@@ -1,4 +1,3 @@
-using System;
 using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
@@ -6,13 +5,14 @@ namespace StatsDirect.Templates
     public sealed class StringParameter: RangeParameter
     {
         private Expression defaultValue;
-        private int maxLength;
 
+        /*
         public StringParameter()
         {
             // By default, remember value per operation.  Deserialization can override this.
             // Lifetime = ParameterLifetime.SessionForThisOperation;
         }
+         */
 
         /// <summary>
         /// The default value for this parameter, or null for no default.
@@ -44,11 +44,7 @@ namespace StatsDirect.Templates
         /// The maximum length for this parameter, or 0 for no maximum.
         /// </summary>
         [XmlElement(ElementName = "maximum-length")]
-        public int MaxLength
-        {
-            get { return maxLength; }
-            set { maxLength = value; }
-        }
+        public int MaxLength { get; set; }
 
         public override ParameterType Type
         {
