@@ -35,7 +35,7 @@ namespace StatsDirect.Templates
         /// <returns>The template including all substitutions this has made from the substitutions.</returns>
         public string Substitute(ParameterBag substitutions)
         {
-            string rawRtf = GetRtf();
+            string rawRtf = GetContent();
             string rtfWithInclusions = ResolveTemplates(rawRtf, new List<string>());
             string rtfWithPossibleDeadBlocks = SubstituteInternal(rtfWithInclusions, substitutions);
             return RemoveBlocks(rtfWithPossibleDeadBlocks);
@@ -46,7 +46,7 @@ namespace StatsDirect.Templates
         /// </summary>
         /// <param name="rtfWithPossibleDeadBlocks"></param>
         /// <returns></returns>
-        private string RemoveBlocks(string rtfWithPossibleDeadBlocks)
+        private static string RemoveBlocks(string rtfWithPossibleDeadBlocks)
         {
             StringBuilder sb = new StringBuilder();
             int sourcePosition = 0;
@@ -108,7 +108,7 @@ namespace StatsDirect.Templates
                 if (!knownInclusions.Contains(includedName))
                 {
                     knownInclusions.Add(includedName);
-                    string includedRtf = GetRtf(includedName);
+                    string includedRtf = GetContent(includedName);
                     sb.Append(ResolveTemplates(includedRtf, knownInclusions));
                     knownInclusions.Remove(includedName);
                 }
@@ -203,7 +203,7 @@ namespace StatsDirect.Templates
         /// <param name="template"></param>
         /// <param name="templateName">The name of the template to find.  This may be blank, in which case /bs/ is searched for; or null, in which case any template name will do.</param>
         /// <returns></returns>
-        private string FindNestedTemplate(string template, string templateName)
+        private static string FindNestedTemplate(string template, string templateName)
         {
             string searchSuffix = "";
             if (null != templateName)
@@ -230,14 +230,14 @@ namespace StatsDirect.Templates
             return null;
         }
 
-        private string GetRtf()
+        private string GetContent()
         {
             if (null != Text)
                 return Text;
-            return GetRtf(FileName);
+            return GetContent(FileName);
         }
 
-        private string GetRtf(string name)
+        private static string GetContent(string name)
         {
             string path = Path.Combine(TEMPLATE_PATH, name);
             try
@@ -246,8 +246,7 @@ namespace StatsDirect.Templates
                 new FileIOPermission(FileIOPermissionAccess.Read, TEMPLATE_PATH).Assert();
                 using (TextReader tr = new StreamReader(path, Encoding.ASCII))
                 {
-                    string rtf = tr.ReadToEnd();
-                    return rtf;
+                    return tr.ReadToEnd();
                 }
             }
             finally
