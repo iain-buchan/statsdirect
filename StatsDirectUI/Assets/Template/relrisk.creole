@@ -1,0 +1,22 @@
+<report>
+<line><title>Risk analysis (prospective)</title></line>
+<line></line>
+<table>
+<tr><td></td><th>Characteristic factor:</th><th></th></tr>
+<tr><th>Outcome:</th><td>Present</td><td>Absent</td></tr>
+<tr><td>Positive</td><td><in>a_out</in></td><td><in>b_out</in></td></tr>
+<tr><td>Negative</td><td><in>c_out</in></td><td><in>d_out</in></td></tr>
+</table>
+<line>Risk ratio (relative risk in incidence study) = <in>ratio</in></line>
+<line><ci>Approximate (Koopman) <in>pc</in>% confidence interval = <in>koopman_from</in> to <in>koopman_to</in></ci></line>
+<line>Approximate power <in>pwr</in></line>
+<line></line>
+<line>Risk difference = <in>dif</in></line>
+<line><ci>Approximate (Miettinen) <in>pc</in>% confidence interval = <in>miettinen_from</in> to <in>miettinen_to</in></ci></line>
+<block name="exposure">
+<line></line>
+<line>Population exposure % = <in>pe</in></line>
+<line>Population attributable risk % = <in>par</in></line>
+<line><ci>Approximate (Walter) <in>pc</in>% confidence interval = <in>walter_from</in> to <in>walter_to</in></ci></line>
+</block>
+</report>

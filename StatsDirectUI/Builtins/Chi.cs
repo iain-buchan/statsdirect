@@ -36,7 +36,6 @@ namespace StatsDirect.Builtins
             double s = b + d;
             double n = p + q;
             ParameterBag outputParameters = new ParameterBag();
-            //  RTF_LoadTemplate("chi2x2.rtf")
             if (!((fault == 0 && (p > 0 || q > 0 || r > 0 || s > 0) && (p * q * r * s > 0))))
             {
                 throw new InvalidDataException();

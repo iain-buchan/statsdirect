@@ -45,7 +45,39 @@
       </parameters>
     </settings>
   	<builtin function-name="rptChi2by2" />
-	  <report type="text/rtf" filename="chi2x2.rtf" />
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[
+<report>
+<line><title>Chi-square test (2 by 2)</title></line>
+<line></line>
+<line><subtitle>Observed values and totals:</subtitle></line>
+<table>
+<tr><td>{\cf8 <in>tab3_a1</in>}</td><td>{\cf8 <in>tab3_b1</in>}</td><td>{\cf7 <in>tab3_c1</in>}</td></tr>
+<tr><td>{\cf8 <in>tab3_a2</in>}</td><td>{\cf8 <in>tab3_b2</in>}</td><td>{\cf7 <in>tab3_c2</in>}</td></tr>
+<tr><td>{\cf7 <in>tab3_a3</in>}</td><td>{\cf7 <in>tab3_b3</in>}</td><td>{\cf6 <in>tab3_c3</in>}</td></tr>
+</table>
+<line></line>
+<line><subtitle>Expected values:</subtitle></line>
+<table>
+<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
+<tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
+</table>
+<line></line>
+<line>Uncorrected Chi\'b2 = <in>chi</in>  <pval><in>chi_p</in></pval></line>
+<line>Yates-corrected Chi\'b2 = <in>yates_chi</in>  <pval><in>yates_chi_p</in></pval></line>
+<line></line>
+<line>Measures of association:</line>
+<line>Pearson's contingency = <in>pearson</in></line>
+<line>Cram\'e9r's <i>V</i> (signed) = <in>vs</in></line>
+<block name="warn">
+<line></line>
+<line><warn><in>wrn</in> too small for chi-square, please use Fisher's exact test instead</warn></line>
+</block>
+</report>
+<block name="odds"><include src="odds.creole"/></block>
+<block name="relrisk"><include src="relrisk.creole"/></block>
+<block name="fisher"><include src="fisher.creole"/></block>
+]]></report>
 	</steps>
   <suggested-operations>
     <suggested-operation>Chi2by2</suggested-operation>

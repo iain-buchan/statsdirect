@@ -64,7 +64,7 @@
       </parameters>
     </settings>
   	<builtin function-name="rptChiRbyC" />
-	  <report type="text/rtf" filename="chirxc.rtf" />
+	  <report type="application/x-statsdirect-creole" filename="chirxc.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactChiRbyCScreen</suggested-operation>

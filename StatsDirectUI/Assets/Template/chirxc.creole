@@ -1,0 +1,59 @@
+<report>
+<line><title>Contingency table analysis</title></line>
+<line></line>
+<table>
+<block name="rows">
+<tr><td>Observed</td><block name="obs"><td><in>obs</in></td></block><td>{\cf3 <block name="rtot"><b><in>rtot</in></b></block>}</td><td>{\cf4 <block name="score"><in>score</in></block>}</td></tr>
+<block name="exps"><tr><td>{\cf5 Expected}</td><block name="exp"><td>{\cf5 <in>exp</in>}</td></block><td></td><td></td></tr></block>
+<block name="chis"><tr><td>DChi\'b2</td><block name="chi"><td><in>chi</in></td></block><td></td><td></td></tr></block>
+<block name="pcrs">
+<tr><td>% of row</td><block name="pcr"><td><in>pcr</in></td></block><td></td><td></td></tr>
+<tr><td>% of col</td><block name="pcc"><td><in>pcc</in></td></block><td></td></tr>
+</block>
+<tr></tr>
+</block>
+<tr><td>{\cf3<b>Total</b>}</td><block name="tot"><td>{\cf3 <b><in>tot</in></b>}</td></block><td></td></tr>
+<block name="pcgs"><tr><td>% of n</td><block name="pcg"><td><in>pcg</in></td></block><td></td><td></td></tr></block>
+<block name="scores"><tr><td>{\cf4 Score}</td><block name="score"><td>{\cf4 <in>score</in>}</td></block><td></td><td></td></tr></block>
+</table>
+<line></line>
+<line>TOTAL number of cells = <in>tot</in></line>
+<block name="warn">
+<line></line>
+<line><warn><in>warn</in></warn></line>
+</block>
+<line></line>
+<line><subtitle>NOMINAL INDEPENDENCE</subtitle></line>
+<table>
+<tr><td>Chi-square = <in>chio</in></td><td>DF = <in>dfo</in></td><td><pval><in>po</in></pval></td></tr>
+<tr><td>G-square = <in>g2</in></td><td>DF = <in>dfo</in></td><td><pval><in>pog2</in></pval></td></tr>
+<tr><td>Fisher-Freeman-Halton exact</td><td></td><td><pval><in>p2</in></pval>  <in>lb</in></td></tr>
+</table>
+<line></line>
+<line><subtitle>ANOVA</subtitle></line>
+<line>Chi-square for equality of mean column scores = <in>chie</in></line>
+<line>DF = <in>dfe</in> <pval><in>pe</in></pval></line>
+<line></line>
+<line><subtitle>LINEAR TREND</subtitle></line>
+<line>Sample correlation (r) = <in>r</in></line>
+<line>Chi-square for linear trend (M\'b2) = <in>chit</in></line>
+<line>DF = 1  <pval><in>pt</in></pval></line>
+<line></line>
+<line><subtitle>NOMINAL ASSOCIATION</subtitle></line>
+<line>Phi = <in>phi</in></line>
+<line>Pearson's contingency = <in>pearson</in></line>
+<line>Cram\'e9r's <i>V</i> = <in>cramer</in></line>
+<line></line>
+<line><subtitle>ORDINAL</subtitle></line>
+<line>Goodman-Kruskal gamma = <in>gamma</in></line>
+<table>
+<tr><td>Approximate test of gamma = 0:</td><td>SE = <in>seg</in></td><td><pval><in>pg</in></pval></td><td><ci><in>pc</in>% CI = <in>llg</in> to <in>ulg</in></ci></td></tr>
+<tr><td>Approximate test of independence:</td><td>SE = <in>segi</in></td><td><pval><in>pgi</in></pval></td><td><ci><in>pc</in>% CI = <in>llgi</in> to <in>ulgi</in></ci></td></tr>
+</table>
+<line></line>
+<line>Kendall tau-b = <in>taub</in></line>
+<table>
+<tr><td>Approximate test of tau-b = 0:</td><td>SE = <in>setaub</in></td><td><pval><in>ptaub</in></pval></td><td><ci><in>pc</in>% CI = <in>lltaub</in> to <in>ultaub</in></ci></td></tr>
+<tr><td>Approximate test of independence:</td><td>SE = <in>setaubi</in></td><td><pval><in>ptaubi</in></pval></td><ci><in>pc</in>% CI = <in>lltaubi</in> to <in>ultaubi</in></ci></td></tr>
+</table>
+</report>

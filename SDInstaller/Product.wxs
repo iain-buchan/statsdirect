@@ -1155,14 +1155,14 @@
             <Component Id="charts.rtf">
               <File Id="charts.rtf" Name="charts.rtf" KeyPath="yes" />
             </Component>
-            <Component Id="chi2x2.rtf">
-              <File Id="chi2x2.rtf" Name="chi2x2.rtf" KeyPath="yes" />
-            </Component>
             <Component Id="chi2xc.rtf">
               <File Id="chi2xc.rtf" Name="chi2xc.rtf" KeyPath="yes" />
             </Component>
             <Component Id="chigood.rtf">
               <File Id="chigood.rtf" Name="chigood.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="chirxc.creole">
+              <File Id="chirxc.creole" Name="chirxc.creole" KeyPath="yes" />
             </Component>
             <Component Id="chirxc.rtf">
               <File Id="chirxc.rtf" Name="chirxc.rtf" KeyPath="yes" />
@@ -1226,6 +1226,9 @@
             </Component>
             <Component Id="FALSER.rtf">
               <File Id="FALSER.rtf" Name="FALSER.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="fisher.creole">
+              <File Id="fisher.creole" Name="fisher.creole" KeyPath="yes" />
             </Component>
             <Component Id="fisher.rtf">
               <File Id="fisher.rtf" Name="fisher.rtf" KeyPath="yes" />
@@ -1383,6 +1386,9 @@
             <Component Id="nplinreg.rtf">
               <File Id="nplinreg.rtf" Name="nplinreg.rtf" KeyPath="yes" />
             </Component>
+            <Component Id="odds.creole">
+              <File Id="odds.creole" Name="odds.creole" KeyPath="yes" />
+            </Component>
             <Component Id="odds.rtf">
               <File Id="odds.rtf" Name="odds.rtf" KeyPath="yes" />
             </Component>
@@ -1455,9 +1461,6 @@
             <Component Id="p_pair.rtf">
               <File Id="p_pair.rtf" Name="p_pair.rtf" KeyPath="yes" />
             </Component>
-            <Component Id="p_sng.rtf">
-              <File Id="p_sng.rtf" Name="p_sng.rtf" KeyPath="yes" />
-            </Component>
             <Component Id="p_unpair.rtf">
               <File Id="p_unpair.rtf" Name="p_unpair.rtf" KeyPath="yes" />
             </Component>
@@ -1469,6 +1472,9 @@
             </Component>
             <Component Id="refrange.rtf">
               <File Id="refrange.rtf" Name="refrange.rtf" KeyPath="yes" />
+            </Component>
+            <Component Id="relrisk.creole">
+              <File Id="relrisk.creole" Name="relrisk.creole" KeyPath="yes" />
             </Component>
             <Component Id="relrisk.rtf">
               <File Id="relrisk.rtf" Name="relrisk.rtf" KeyPath="yes" />
@@ -1956,9 +1962,9 @@
       <ComponentRef Id="chartonly_ascii.rtf" />
       <ComponentRef Id="chartonly.rtf" />
       <ComponentRef Id="charts.rtf" />
-      <ComponentRef Id="chi2x2.rtf" />
       <ComponentRef Id="chi2xc.rtf" />
       <ComponentRef Id="chigood.rtf" />
+      <ComponentRef Id="chirxc.creole" />
       <ComponentRef Id="chirxc.rtf" />
       <ComponentRef Id="chiTwoByKSimulatedExactP.rtf" />
       <ComponentRef Id="cimeany.rtf" />
@@ -1980,6 +1986,7 @@
       <ComponentRef Id="effect.rtf" />
       <ComponentRef Id="effectwm.rtf" />
       <ComponentRef Id="FALSER.rtf" />
+      <ComponentRef Id="fisher.creole" />
       <ComponentRef Id="fisher.rtf" />
       <ComponentRef Id="fisherx.rtf" />
       <ComponentRef Id="freq.rtf" />
@@ -2032,6 +2039,7 @@
       <ComponentRef Id="nestmean.rtf" />
       <ComponentRef Id="nkeuls.rtf" />
       <ComponentRef Id="nplinreg.rtf" />
+      <ComponentRef Id="odds.creole" />
       <ComponentRef Id="odds.rtf" />
       <ComponentRef Id="ONEWAY.rtf" />
       <ComponentRef Id="orci.rtf" />
@@ -2056,11 +2064,11 @@
       <ComponentRef Id="pr_fit.rtf" />
       <ComponentRef Id="pr_irr.rtf" />
       <ComponentRef Id="p_pair.rtf" />
-      <ComponentRef Id="p_sng.rtf" />
       <ComponentRef Id="p_unpair.rtf" />
       <ComponentRef Id="quantile.rtf" />
       <ComponentRef Id="rdmeta.rtf" />
       <ComponentRef Id="refrange.rtf" />
+      <ComponentRef Id="relrisk.creole" />
       <ComponentRef Id="relrisk.rtf" />
       <ComponentRef Id="residm.rtf" />
       <ComponentRef Id="residuals.rtf" />

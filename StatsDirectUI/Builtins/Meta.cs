@@ -117,13 +117,13 @@ namespace StatsDirect.Builtins
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 | sn[i] < 0 | sn[i] < sr[i])
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
                 o[i, 2] = Math.Abs(xr[i]);
                 o[i, 4] = Math.Abs(xn[i] - xr[i]);
                 if (xr[i] < 0 | xn[i] < 0 | xn[i] < xr[i])
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
             }
 
@@ -183,7 +183,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                throw new Templates.InvalidDataException();
+                throw new InvalidDataException();
             }
 
             // combinability
@@ -665,20 +665,20 @@ namespace StatsDirect.Builtins
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 | sn[i] < 0 | sn[i] < sr[i])
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
                 o[i, 2] = Math.Abs(xr[i]);
                 o[i, 4] = Math.Abs(xn[i] - xr[i]);
                 if (xr[i] < 0 | xn[i] < 0 | xn[i] < xr[i])
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
             }
 
             Riskdifma(host, k, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrd, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, standardizedEffect, se, out ierr);
             if (ierr == -1)
             {
-                throw new Templates.InvalidDataException();
+                throw new InvalidDataException();
             }
 
             //  RTF_LoadTemplate("rdmeta.rtf")
@@ -907,20 +907,20 @@ namespace StatsDirect.Builtins
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 || sn[i] < 0 || sn[i] < sr[i])
                 {
-                    throw new Templates.InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
+                    throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
                 }
                 o[i, 2] = Math.Abs(xr[i]);
                 o[i, 4] = Math.Abs(xn[i] - xr[i]);
                 if (xr[i] < 0 || xn[i] < 0 || xn[i] < xr[i])
                 {
-                    throw new Templates.InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
+                    throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
                 }
             }
 
             Relriskma(host, ref k, out realk, ref o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
             if (ierr == -1)
             {
-                throw new Templates.InvalidDataException("relriskma() returned an error");
+                throw new InvalidDataException("relriskma() returned an error");
             }
 
             //  RTF_LoadTemplate("rrmeta.rtf")
@@ -1720,7 +1720,7 @@ namespace StatsDirect.Builtins
                 rkx[i] = n;
                 if (n <= 0)
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
 
                 if (IncludeTable(o, i))
@@ -1913,7 +1913,7 @@ namespace StatsDirect.Builtins
                 }
                 //  rd across strata
                 if (n <= 0)
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
 
                 // standard weights - do this before continuity correction
                 double nmn = (a + c) * (b + d) / n;
@@ -2155,7 +2155,7 @@ namespace StatsDirect.Builtins
             }
             if (ierr == -1)
             {
-                throw new Templates.InvalidDataException();
+                throw new InvalidDataException();
             }
 
             if (index == 2)
@@ -2489,13 +2489,13 @@ namespace StatsDirect.Builtins
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 | sn[i] < 0 | sn[i] < sr[i])
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
                 o[i, 2] = Math.Abs(xr[i]);
                 o[i, 4] = Math.Abs(xn[i] - xr[i]);
                 if (xr[i] < 0.0 | xn[i] < 0.0 | xn[i] < xr[i])
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
             }
 
@@ -2504,7 +2504,7 @@ namespace StatsDirect.Builtins
             {
                 if (ierr != 99)
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
                 throw new TemplateOperationCancelledException();
             }
@@ -2640,7 +2640,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", (realk - 1).ToString());
             outputParameters.AddOutput("xp_cochran", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
             outputParameters.AddOutput("tausq", host.RoundU(tausq));
-            // Call isquare(qc, realk, cit, isq, llisq, ulisq)
+
             IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
@@ -2753,7 +2753,7 @@ namespace StatsDirect.Builtins
                 odx[i] = n;
                 if (n <= 0)
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
 
                 if (host.Preferences.MetaExact)
@@ -3378,7 +3378,7 @@ namespace StatsDirect.Builtins
                 {
                     if (y[i] <= 0.0)
                     {
-                        throw new Templates.InvalidDataException();
+                        throw new InvalidDataException();
                     }
                 }
             }
@@ -3415,7 +3415,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            throw new Templates.InvalidDataException();
+                            throw new InvalidDataException();
                         }
                     }
                     if (llY[i] > ulY[i])
@@ -3495,7 +3495,7 @@ namespace StatsDirect.Builtins
             {
                 if (seY[i] == 0.0)
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
                 wt[i] = 1.0 / (seY[i] * seY[i]);
                 sumwt = sumwt + wt[i];
@@ -3796,7 +3796,7 @@ namespace StatsDirect.Builtins
             {
                 if (seY[i] == 0.0)
                 {
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 }
                 wt[i] = ss[i] - 3;
                 sumwt += wt[i];
@@ -4251,7 +4251,7 @@ namespace StatsDirect.Builtins
                     allREqualN = false;
                 if (sr[i] < 0.0 || sn[i] < sr[i])
                 {
-                    throw new Templates.InvalidDataException("Each value of r must be between 0 and its corresponding n");
+                    throw new InvalidDataException("Each value of r must be between 0 and its corresponding n");
                 }
             }
 
@@ -4294,7 +4294,7 @@ namespace StatsDirect.Builtins
                 y[i] = ArcsineP(sr[i], sn[i]);
                 seY[i] = ArcsineSe(sn[i], fudge);
                 if (seY[i] == 0.0)
-                    throw new Templates.InvalidDataException();
+                    throw new InvalidDataException();
                 wt[i] = 1.0 / (seY[i] * seY[i]);
                 sumwt += wt[i];
                 sumsqwt += wt[i] * wt[i];
@@ -4649,7 +4649,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", host.pval(p2));
         }
 
-
         public static void IsquareNcc(ITemplateHost host, double q, int k, double cco, double cit, out double i2, out double ll, out double ul)
         {
             double SElnH;
@@ -4665,24 +4664,22 @@ namespace StatsDirect.Builtins
             ul = Constant.MISSING;
 
             if (q < 0)
-            {
                 return;
-            }
+
+            // Calculate I-squared even with only one degree of freedom.
+            if (df < 1)
+                return;
+            i2 = Math.Max(0.0, (100.0 * (q - df) / q));
             if (df < 2)
-            {
                 return;
-            }
-            if (cco < 0.1 | cco > 0.99)
-            {
+            if (cco < 0.1 || cco > 0.99)
                 return;
-            }
 
             double level = 100.0 * cco;
             double levelci = level * 0.005 + 0.5;
             double clevelci = 1.0 - levelci;
 
             double h2 = q / df;
-            i2 = Math.Max(0.0, (100.0 * (q - df) / (q)));
             double i22 = Math.Max(0.0, (h2 - 1.0) / h2);
             if (Math.Sqrt(h2) < 1.0)
             {
@@ -4781,12 +4778,18 @@ namespace StatsDirect.Builtins
             {
                 ll = Constant.MISSING;
             }
-            else { ll = 100.0 * lbI2H; }
+            else
+            {
+                ll = 100.0 * lbI2H;
+            }
             if (ubI2H == Constant.MISSING)
             {
                 ul = Constant.MISSING;
             }
-            else { ul = 100.0 * ubI2H; }
+            else
+            {
+                ul = 100.0 * ubI2H;
+            }
 
         }
 

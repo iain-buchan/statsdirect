@@ -1934,13 +1934,12 @@ namespace StatsDirect.Builtins
                 return null;
             }
             double cco = parameters["cco"].AsDouble;
-            if (cco <= 0.0 | cco >= 1.0)
+            if (cco <= 0.0 || cco >= 1.0)
             {
                 cco = 0.95;
             }
             double cit = PDF.gauinv(cco + (1 - cco) / 2, out fault);
             double p = r / n;
-            //  RTF_LoadTemplate("p_sng.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("n_out", Formatting.XRound(n, 1));
             outputParameters.AddOutput("r_out", Formatting.XRound(r, 1));
@@ -1953,12 +1952,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("upper_exact", host.RoundU(piu) + warn);
 
             // binomial exact P
-            string aprx = "Binomial ";
+            string aprx = "Binomial";
             double qpix = qpi == 1.0E-28 ? 0 : qpi;
             outputParameters.AddOutput("null", host.RoundU(qpix));
             if (n > 1000000)
             {
-                aprx = "Normal ";
+                aprx = "Normal";
                 p = 1.0 - PDF.alnorm((Math.Abs(r - n * qpi) - 0.5) / Math.Sqrt(n * qpi * (1.0 - qpi)));
                 if (p > 1.0 - p)
                 {
