@@ -3677,9 +3677,9 @@ namespace StatsDirect.Builtins
             double P = confidence;
             if (P == 0)
             {
-                P = 0.05;
+                P = 0.95;
             }
-            double qval = PDF.quantsr(1.0 - P, Convert.ToDouble(k), 1000000.0);
+            double qval = PDF.quantsr(P, Convert.ToDouble(k), 1000000.0);
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("q", host.RoundU(qval));
@@ -3767,8 +3767,8 @@ namespace StatsDirect.Builtins
             {
                 prelx = prelx + varbl.Length;
             }
-            x = new double[prelx + 1 /* for VB to C# conversion */ ];
-            int[] L = new int[frame.VariableCount + 1 /* for VB to C# conversion */ ];
+            x = new double[prelx + 1];
+            int[] L = new int[frame.VariableCount + 1];
 
             int qty = 0;
             for (int D = 0; D < frame.VariableCount; D++)
@@ -3788,7 +3788,7 @@ namespace StatsDirect.Builtins
             }
             int lx = qty;
 
-            double[] w1 = new double[lx + 1 /* for VB to C# conversion */ ];
+            double[] w1 = new double[lx + 1];
             double h;
             double ha = 0;
             double t = 0;
@@ -3834,7 +3834,7 @@ namespace StatsDirect.Builtins
                 for (int j = i + 1; j <= k; j++)
                 {
                     double stata = Math.Abs(ri[i] / L[i] - ri[j] / L[j]);
-                    double statq = Math.Pow((s2x), 0.5) * Math.Pow((1 / L[i] + 1 / L[j]), 0.5);
+                    double statq = Math.Sqrt(s2x) * Math.Sqrt((1.0 / L[i]) + (1.0 / L[j]));
                     double statb = tval * statq;
 
                     ParameterBag inequalityParameters = new ParameterBag();

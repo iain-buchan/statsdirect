@@ -82,7 +82,7 @@ namespace StatsDirect.Numerics
                         }
                         if (qt == 1)
                         {
-                            xf = xf + Math.Pow(ntie, 3) - ntie / 12.0;
+                            xf = xf + (Math.Pow(ntie, 3) - ntie) / 12.0;
                         }
                         else if (qt == 2)
                         {
