@@ -384,7 +384,7 @@ namespace StatsDirect.Numerics
             int i;
 
             Title = ti;
-            double[] v = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] v = new double[rows + 1 ];
             for (i = 1; i <= rows; i++)
                 v[i] = 1.0;
             CentileType = centileDef;

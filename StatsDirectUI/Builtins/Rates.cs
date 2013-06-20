@@ -81,8 +81,8 @@ namespace StatsDirect.Builtins
             if (nunit <= 0.0)
                 nunit = 1.0;
             int rows = ratesVariable.Length;
-            double[] asm = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] spop = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] asm = new double[rows + 1 ];
+            double[] spop = new double[rows + 1 ];
             for (int i = 1; i <= rows; i++)
                 asm[i] = ratesVariable.Data[i - 1] / nunit;
 
@@ -192,12 +192,12 @@ namespace StatsDirect.Builtins
             DataFrame eventsFrame = parameters["events"].AsDataFrame;
             DoubleVariable eventsVariable = eventsFrame.Variables[0].AsDoubleVariable;
             int rows = eventsVariable.Length;
-            double[] idxy = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] idxn = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] idxr = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] refn = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] refw = new double[rows + 1 /* for VB to C# conversion */ ];
-            string[] title = new string[rows + 1 /* for VB to C# conversion */ ];
+            double[] idxy = new double[rows + 1 ];
+            double[] idxn = new double[rows + 1 ];
+            double[] idxr = new double[rows + 1 ];
+            double[] refn = new double[rows + 1 ];
+            double[] refw = new double[rows + 1 ];
+            string[] title = new string[rows + 1 ];
             for (i = 1; i <= rows; i++)
             {
                 idxy[i] = eventsVariable.Data[i - 1];

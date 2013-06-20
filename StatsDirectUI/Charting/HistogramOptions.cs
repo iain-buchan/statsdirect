@@ -220,7 +220,7 @@ namespace StatsDirect.Charting
             Debug.Assert(null != longestSoFar);
 
             //  Assume there's at least one column, and therefore longestSoFar is never Nothing
-            double[] xx = new double[maxRows + 1 /* for VB to C# conversion */ ];
+            double[] xx = new double[maxRows + 1 ];
             int actualRows = 0;
             for (int C = 0; C <= maxRows - 1; C++)
             {

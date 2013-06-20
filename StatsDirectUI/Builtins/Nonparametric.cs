@@ -395,9 +395,9 @@ namespace StatsDirect.Builtins
             int ytvn = 0; double sigat3 = 0; double sigat2 = 0; double sigat1 = 0;
             int xtvn = 0;
 
-            double[] xtv = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[] ytv = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[] C = new double[nx + 1 /* for VB to C# conversion */ ];
+            double[] xtv = new double[nx + 1 ];
+            double[] ytv = new double[nx + 1 ];
+            double[] C = new double[nx + 1 ];
             fault = true;
             siga = 0;
             sigb = 0;
@@ -766,7 +766,7 @@ namespace StatsDirect.Builtins
             double P = 0;
             bool fault; int ifault = 0;
 
-            int[] iwrk = new int[2 * (n1 + n2 + 1) + 1 /* for VB to C# conversion */ ]; //  1-based
+            int[] iwrk = new int[2 * (n1 + n2 + 1) + 1 ]; //  1-based
             if (n1 < 1 | n2 < 1)
             {
                 fault = true;
@@ -1108,7 +1108,7 @@ namespace StatsDirect.Builtins
             }
             MathDbl.civ(0, out cit, GAMMA, out P0);
             MersenneTwister rnd = new MersenneTwister(); //  Self-seeded
-            double[] r = new double[frame.MaxRows + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[frame.MaxRows + 1 ];
 
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> varList = new List<ParameterBag>();
@@ -1199,12 +1199,12 @@ namespace StatsDirect.Builtins
                 int gtot = Convert.ToInt32(sumn);
 
                 double sumnm1 = sumn - 1.0;
-                double[] rb = new double[rx + 1 /* for VB to C# conversion */ ];
-                int[] cx = new int[rx + 1 /* for VB to C# conversion */ ];
-                double[] simpsonb = new double[boots + 1 /* for VB to C# conversion */ ];
-                double[] shannonb = new double[boots + 1 /* for VB to C# conversion */ ];
-                double[] simpsonbz = new double[boots + 1 /* for VB to C# conversion */ ];
-                double[] shannonbz = new double[boots + 1 /* for VB to C# conversion */ ];
+                double[] rb = new double[rx + 1 ];
+                int[] cx = new int[rx + 1 ];
+                double[] simpsonb = new double[boots + 1 ];
+                double[] shannonb = new double[boots + 1 ];
+                double[] simpsonbz = new double[boots + 1 ];
+                double[] shannonbz = new double[boots + 1 ];
                 // get resample boots times
                 double theta = 0.0;
                 double thetax = 0.0;
@@ -1633,8 +1633,8 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
             DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
-            double[] x = new double[v0.Length + v1.Length + 1 /* for VB to C# conversion */ ];
-            double[] w1 = new double[v0.Length + v1.Length + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[v0.Length + v1.Length + 1 ];
+            double[] w1 = new double[v0.Length + v1.Length + 1 ];
 
             for (n = 0; n <= v0.Length - 1; n++)
             {
@@ -1871,8 +1871,8 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
             DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
-            double[] prk = new double[v0.Length + 1 /* for VB to C# conversion */ ];
-            double[] prk1 = new double[v0.Length + 1 /* for VB to C# conversion */ ];
+            double[] prk = new double[v0.Length + 1 ];
+            double[] prk1 = new double[v0.Length + 1 ];
             for (int N = 0; N <= v0.Length - 1; N++)
             {
                 if (v0.Data[N] != Constant.MISSING & v1.Data[N] != Constant.MISSING)
@@ -1887,8 +1887,8 @@ namespace StatsDirect.Builtins
                 return new StepResult(StepSuccess.Success, new ParameterBag());
             }
 
-            double[] rka = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[] rkb = new double[nx + 1 /* for VB to C# conversion */ ];
+            double[] rka = new double[nx + 1 ];
+            double[] rkb = new double[nx + 1 ];
 
             double scrap;
             ExFortran.Rank(prk, rka, 1, nx, 0, out scrap);
@@ -2017,8 +2017,8 @@ namespace StatsDirect.Builtins
             // Exit Function
             // End If
 
-            double[] x = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] y = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[rows + 1 ];
+            double[] y = new double[rows + 1 ];
             int ctr = 0;
             for (i = 1; i <= rows; i++)
             {
@@ -2049,8 +2049,8 @@ namespace StatsDirect.Builtins
             }
 
             // get x and y medians in order to calculate intercepts later
-            double[] axo = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] ayo = new double[rows + 1 /* for VB to C# conversion */];
+            double[] axo = new double[rows + 1 ];
+            double[] ayo = new double[rows + 1];
             for (i = 1; i <= rows; i++)
             {
                 axo[i] = x[i];
@@ -2130,7 +2130,7 @@ namespace StatsDirect.Builtins
             int cnt = Convert.ToInt32(rows * (rows - 1) / 2);
             if (cnt < 2000000)
             {
-                double[] pws = new double[cnt + 1 /* for VB to C# conversion */ ];
+                double[] pws = new double[cnt + 1 ];
                 if (ifault == 0)
                 {
                     cnt = 0;
@@ -2239,8 +2239,8 @@ namespace StatsDirect.Builtins
             }
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
-            double[] x = new double[v0.Length + 1 /* for VB to C# conversion */ ];
-            double[] y = new double[v0.Length + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[v0.Length + 1 ];
+            double[] y = new double[v0.Length + 1 ];
 
             if (frame.VariableCount == 1)
             {
@@ -2735,7 +2735,7 @@ namespace StatsDirect.Builtins
                 scaler = Convert.ToInt32(scaler / 10);
             }
             while (true);
-            int[] xx = new int[size + 1 /* for VB to C# conversion */ ];
+            int[] xx = new int[size + 1 ];
             for (j = 1; j <= size; j++)
             {
                 xx[j] = Convert.ToInt32((x[j] - y[j]) * scaler);
@@ -2832,8 +2832,8 @@ namespace StatsDirect.Builtins
             DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
             DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
 
-            double[] d1 = new double[v0.Length + 1 /* for VB to C# conversion */ ];
-            double[] d2 = new double[v1.Length + 1 /* for VB to C# conversion */ ];
+            double[] d1 = new double[v0.Length + 1 ];
+            double[] d2 = new double[v1.Length + 1 ];
             foreach (double v in v0.Data)
             {
                 if (v != Constant.MISSING)
@@ -2891,7 +2891,7 @@ namespace StatsDirect.Builtins
 
             DataFrame frame = parameters["data"].AsDataFrame;
 
-            double[] r = new double[frame.MaxRows + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[frame.MaxRows + 1 ];
 
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> variableList = new List<ParameterBag>();
@@ -2954,8 +2954,8 @@ namespace StatsDirect.Builtins
             DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
             DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
             int rx = v0.Length;
-            double[] x = new double[rx + 1 /* for VB to C# conversion */ ];
-            double[] y = new double[rx + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[rx + 1 ];
+            double[] y = new double[rx + 1 ];
             int nx = 0;
             for (N = 0; N <= rx - 1; N++)
             {
@@ -3105,7 +3105,7 @@ namespace StatsDirect.Builtins
             double t1 = 0;
             double t2 = 0;
             double nd = 0;
-            double[] w2 = new double[treatments + 1 /* for VB to C# conversion */ ];
+            double[] w2 = new double[treatments + 1 ];
             CalcFriedman(x, w2, N, treatments, ref A2, ref B2, ref t1, ref t2, ref nd);
             double actualT = allAreBinary ? t1 : t2;
 
@@ -3283,7 +3283,7 @@ namespace StatsDirect.Builtins
 
         private static void PreprocessFriedman(DataFrame frame, out double[,] x, out int N, out int treatments, out bool allAreBinary, out bool numbersAreSmall)
         {
-            x = new double[frame.VariableCount + 1 /* for VB to C# conversion */, frame.Variables[0].Length + 1 /* for VB to C# conversion */];
+            x = new double[frame.VariableCount + 1, frame.Variables[0].Length + 1];
             allAreBinary = true;
             int qty = 0;
             int positiveCellCount = 0;
@@ -3341,7 +3341,7 @@ namespace StatsDirect.Builtins
             double[,] x;
             int treatments;
             PreprocessFriedman(frame, out x, out N, out treatments, out allAreBinary, out numbersAreSmall);
-            w2 = new double[treatments + 1 /* for VB to C# conversion */ ];
+            w2 = new double[treatments + 1 ];
             CalcFriedman(x, w2, N, treatments, ref A2, ref B2, ref t1, ref t2, ref nd);
         }
 
@@ -3361,11 +3361,11 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         private static void CalcFriedman(double[,] x, double[] w2, int N, int treatments, ref double A2, ref double B2, ref double t1, ref double t2, ref double nd)
         {
-            double[] w1 = new double[treatments + 1 /* for VB to C# conversion */ ];
+            double[] w1 = new double[treatments + 1 ];
 
             if (N > 1)
             {
-                double[] x1d = new double[treatments + 1 /* for VB to C# conversion */ ];
+                double[] x1d = new double[treatments + 1 ];
                 for (int col = 1; col <= treatments; col++)
                 {
                     x1d[col] = x[col, 1];
@@ -3491,8 +3491,8 @@ namespace StatsDirect.Builtins
             {
                 prelx = prelx + v.Length;
             }
-            double[] x = new double[prelx + 1 /* for VB to C# conversion */ ];
-            int[] L = new int[frame.VariableCount + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[prelx + 1 ];
+            int[] L = new int[frame.VariableCount + 1 ];
 
             int qty = 0;
             for (int D = 0; D < frame.VariableCount; D++)
@@ -3512,7 +3512,7 @@ namespace StatsDirect.Builtins
             }
             int lx = qty;
 
-            double[] w1 = new double[lx + 1 /* for VB to C# conversion */ ];
+            double[] w1 = new double[lx + 1 ];
             double h;
             double ha = 0;
             double t = 0;
@@ -3589,8 +3589,8 @@ namespace StatsDirect.Builtins
             {
                 prelx = prelx + v.Length;
             }
-            double[] x = new double[prelx + 1 /* for VB to C# conversion */ ];
-            int[] l = new int[frame.VariableCount + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[prelx + 1 ];
+            int[] l = new int[frame.VariableCount + 1 ];
 
             int qty = 0;
             for (int D = 0; D <= frame.VariableCount - 1; D++)
@@ -3610,7 +3610,7 @@ namespace StatsDirect.Builtins
             }
             int lx = qty;
 
-            double[] w1 = new double[lx + 1 /* for VB to C# conversion */ ];
+            double[] w1 = new double[lx + 1 ];
             double t = 0;
             int ifault;
             int cols = frame.VariableCount;
@@ -3693,8 +3693,8 @@ namespace StatsDirect.Builtins
                     int i0 = i - 1;
                     int j0 = j - 1;
                     int kn = frame.Variables[i0].Length + frame.Variables[j0].Length;
-                    x = new double[kn + 1 /* for VB to C# conversion */ ];
-                    ri = new double[kn + 1 /* for VB to C# conversion */ ];
+                    x = new double[kn + 1 ];
+                    ri = new double[kn + 1 ];
 
                     int ki = 0;
                     foreach (double val in frame.Variables[i0].AsDoubleVariable.Data)
@@ -3813,7 +3813,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("t", host.RoundU(tval));
 
             // get rank sums for each group
-            ri = new double[k + 1 /* for VB to C# conversion */ ];
+            ri = new double[k + 1 ];
             qty = 0;
             for (int D = 1; D <= k; D++)
             {
@@ -3893,8 +3893,8 @@ namespace StatsDirect.Builtins
                 L[D] = cnt;
                 mean[D] = sum / Convert.ToDouble(cnt);
             }
-            double[] x = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[] r = new double[nx + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[nx + 1 ];
+            double[] r = new double[nx + 1 ];
 
             int qty = 0;
             for (D = 0; D <= frame.VariableCount - 1; D++)
@@ -4051,7 +4051,7 @@ namespace StatsDirect.Builtins
 
             MersenneTwister rng = new MersenneTwister(); //  Seeds itself
 
-            double[] r = new double[frame.MaxRows + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[frame.MaxRows + 1 ];
 
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> outputList = new List<ParameterBag>();
@@ -4089,8 +4089,8 @@ namespace StatsDirect.Builtins
                 double drxm1 = Convert.ToDouble(rx - 1);
                 double cv = Math.Sqrt(sumsqdev / drxm1) / vmean;
 
-                double[] rb = new double[rx + 1 /* for VB to C# conversion */ ];
-                double[] ginib = new double[boots + 1 /* for VB to C# conversion */ ];
+                double[] rb = new double[rx + 1 ];
+                double[] ginib = new double[boots + 1 ];
                 // get resample boots times
                 double theta = 0.0;
                 int ctr = 0;
@@ -4236,8 +4236,8 @@ namespace StatsDirect.Builtins
             //  In the single-variable case, plot as well
             if (frame.VariableCount == 1)
             {
-                double[] x = new double[rx - 1 + 1 /* for VB to C# conversion */ ];
-                double[] y = new double[rx - 1 + 1 /* for VB to C# conversion */ ];
+                double[] x = new double[rx - 1 + 1 ];
+                double[] y = new double[rx - 1 + 1 ];
                 double vtot = 0.0;
                 for (int j = 1; j <= rx; j++)
                 {

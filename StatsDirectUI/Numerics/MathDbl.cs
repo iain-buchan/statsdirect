@@ -148,8 +148,8 @@ namespace StatsDirect.Numerics
                 return Constant.MISSING; 
             } 
             double s = 0.0;
-            double[] xx = new double[N + 1 + 1 /* for VB to C# conversion */ ];
-            double[] yy = new double[N + 1 + 1 /* for VB to C# conversion */ ]; 
+            double[] xx = new double[N + 2];
+            double[] yy = new double[N + 2]; 
             for ( int i=0; i <= N - 1; i++ ) 
             { 
                 xx[ 1 + i ] = rx[ i + lowerBound ]; 
@@ -316,9 +316,9 @@ namespace StatsDirect.Numerics
         { 
             int icol = 0; int irow = 0;
 
-            int[] indxc = new int[lowerBound + N - 1 + 1 /* for VB to C# conversion */ ];
-            int[] indxr = new int[lowerBound + N - 1 + 1 /* for VB to C# conversion */ ];
-            long[] ipiv = new long[lowerBound + N - 1 + 1 /* for VB to C# conversion */ ]; 
+            int[] indxc = new int[lowerBound + N - 1 + 1 ];
+            int[] indxr = new int[lowerBound + N - 1 + 1 ];
+            long[] ipiv = new long[lowerBound + N - 1 + 1 ]; 
             if ( N > a.GetUpperBound(0) + 1 || N > a.GetUpperBound(1) + 1 || M > b.GetUpperBound(1) + 1 || N > b.GetUpperBound(0) + 1 ) 
             { 
                 ifault = 1; 
@@ -544,7 +544,7 @@ namespace StatsDirect.Numerics
         { 
             int cols = x.GetUpperBound(0); 
             int rows =  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ x.GetUpperBound(1);
-            z = new double[rows + 1 /* for VB to C# conversion */, cols + 1 /* for VB to C# conversion */]; 
+            z = new double[rows + 1, cols + 1]; 
             for ( int c=1; c <= cols; c++ ) 
             { 
                 for ( int r=1; r <= rows; r++ ) 
@@ -621,7 +621,7 @@ namespace StatsDirect.Numerics
                 //  In the following lines, CInt always works because one of N, N-1 or N-2 is always even, so the result is always integer.  PJC 21/11/2007
                 int nwk = Convert.ToInt32( ( N - 1 ) * ( N - 2 ) / 2 + 1 ); 
                 wksp = new double[ 2 * nwk ]; //  Originally (2 ^ ((4 / 2) -1 )) * nwk
-                freq = new double[Convert.ToInt32(N * (N - 1) / 2 + 1) + 1 /* for VB to C# conversion */ ]; 
+                freq = new double[Convert.ToInt32(N * (N - 1) / 2 + 1) + 1 ]; 
             } 
             catch ( Exception ) 
             { 
@@ -972,8 +972,8 @@ namespace StatsDirect.Numerics
             double ps = 0;
             bool fault = false; 
             
-            double[] thb = new double[ 2 + 1 /* for VB to C# conversion */ ];
-            double[] PP = new double[2 + 1 /* for VB to C# conversion */ ]; 
+            double[] thb = new double[ 2 + 1 ];
+            double[] PP = new double[2 + 1 ]; 
             thb[ 1 ] = -1.0; 
             thb[ 2 ] = 1.0;
             int ic = im - ia; 
@@ -994,8 +994,8 @@ namespace StatsDirect.Numerics
             double D = Convert.ToDouble( id ); 
             double thhat = a / M - b / N; 
             double psihat = 0.5 * ( a / M + b / N );
-            double[] x = new double[2 + 1 /* for VB to C# conversion */ ];
-            double[] e = new double[2 + 1 /* for VB to C# conversion */ ]; 
+            double[] x = new double[2 + 1 ];
+            double[] e = new double[2 + 1 ]; 
             for ( k=1; k <= 2; k++ ) 
             {
                 double th;
@@ -1466,9 +1466,9 @@ namespace StatsDirect.Numerics
                 return; 
             }
             err = 0;
-            int[] f = new int[n + 1 /* for VB to C# conversion */ ];
-            double[] xc = new double[n + 1 /* for VB to C# conversion */ ];
-            double[] z = new double[n + 1 /* for VB to C# conversion */ ]; 
+            int[] f = new int[n + 1 ];
+            double[] xc = new double[n + 1 ];
+            double[] z = new double[n + 1 ]; 
             int i, j; 
             int ii = 0; 
             for ( i=0; i <= n; i++ ) 
@@ -1507,7 +1507,7 @@ namespace StatsDirect.Numerics
                 ii += 1; 
             } 
             while ( true );
-            double[] pecdf = new double[ii + 1 /* for VB to C# conversion */ ]; 
+            double[] pecdf = new double[ii + 1 ]; 
             n += 1; 
             pecdf[ 0 ] = ( 10000.0 * ( f[ 0 ] / Convert.ToDouble( n ) ) ) / 10000.0; 
             for ( i=1; i <= ii; i++ ) 
@@ -1566,7 +1566,7 @@ namespace StatsDirect.Numerics
                 } 
                 sd /= Convert.ToDouble( nx - 1 ); 
                 sd = Math.Sqrt( sd ); 
-                z = new double[ n + 1 /* for VB to C# conversion */ ]; 
+                z = new double[ n + 1 ]; 
                 for ( i=0; i <= n; i++ ) 
                 { 
                     if ( x[ i ] == Constant.MISSING ) 
@@ -1582,7 +1582,7 @@ namespace StatsDirect.Numerics
             } 
             else 
             {
-                double[] fn = new double[n + 1 /* for VB to C# conversion */ ]; 
+                double[] fn = new double[n + 1 ]; 
                 ecdf( x, fn, out err ); 
                 if ( err != 0 ) 
                 { 

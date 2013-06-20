@@ -798,10 +798,10 @@ namespace StatsDirect.Builtins
             ierr = 0;
 
             int polydim = maxSumA - minSumA;
-            double[] poly1 = new double[polydim + 1 /* for VB to C# conversion */ ];
-            double[] poly2 = new double[polydim + 1 /* for VB to C# conversion */];
-            polyD = new double[polydim + 1 /* for VB to C# conversion */ ];
-            polyN = new double[polydim + 1 /* for VB to C# conversion */];
+            double[] poly1 = new double[polydim + 1 ];
+            double[] poly2 = new double[polydim + 1];
+            polyD = new double[polydim + 1 ];
+            polyN = new double[polydim + 1];
 
             switch (dataType)
             {

@@ -442,7 +442,7 @@ namespace StatsDirect.Numerics
             int n = Math.Max(n1, n2);
             if ((m * n <= 10000))
             {
-                double[] u = new double[n + 1 + 1 /* for VB to C# conversion */ ];
+                double[] u = new double[n + 2];
                 double x = Convert.ToDouble(m * n) * d - 0.5;
                 u[1] = 1.0;
                 for (int j = 1; j <= n; j++)

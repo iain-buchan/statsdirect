@@ -50,6 +50,8 @@ namespace StatsDirect.UI
                 return;
             }
             SdApplication.SoleInstance.NoteFormClosing(this, e);
+            Visible = false;
+            MdiParent = null;
         }
 
         private void frmSpreadsheetGear_Activated(object sender, EventArgs e)

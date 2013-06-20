@@ -20,10 +20,10 @@ namespace StatsDirect.Data
             _variables = new List<Variable> {v};
         } 
         
-        public DataFrame( Variable v, string Name ) 
+        public DataFrame( Variable v, string name ) 
         { 
             _variables = new List<Variable> {v};
-            _name = Name; 
+            _name = name; 
         } 
         
         ///  <summary>
@@ -91,7 +91,7 @@ namespace StatsDirect.Data
         { 
             get 
             {
-                Variable[] retval = new Variable[_variables.Count - 1 + 1 /* for VB to C# conversion */ ]; 
+                Variable[] retval = new Variable[_variables.Count - 1 + 1 ]; 
                 int i = 0; 
                 foreach ( Variable v in _variables ) 
                 { 

@@ -546,8 +546,8 @@ namespace StatsDirect.Builtins
             {
                 int dimit = Math.Abs(high - low) + 1;
                 int[] rand = new int[dimit + 1 /* VB to C# conversion */ ];
-                int[] arand = new int[((int)(Math.Floor((double)dimit / 2))) + 1 /* for VB to C# conversion */ ];
-                int[] brand = new int[((int)(Math.Floor((double)dimit / 2))) + 1 /* for VB to C# conversion */ ];
+                int[] arand = new int[((int)(Math.Floor((double)dimit / 2))) + 1 ];
+                int[] brand = new int[((int)(Math.Floor((double)dimit / 2))) + 1 ];
                 for (int N = low; N <= high; N++)
                 {
                     rand[N] = N;
@@ -600,7 +600,7 @@ namespace StatsDirect.Builtins
             }
             if (low >= 0 & high >= 1)
             {
-                int[] rand = new int[high + 1 + 1 /* for VB to C# conversion */ ];
+                int[] rand = new int[high + 2 ];
                 int N;
                 for (N = low; N <= high; N++)
                 {
@@ -959,7 +959,7 @@ namespace StatsDirect.Builtins
             double P1;
             double nm = 0;
 
-            double[] t = new double[1000 + 1 /* for VB to C# conversion */];
+            double[] t = new double[1000 + 1];
             er = 0;
             double rm = M;
             double r = sr;

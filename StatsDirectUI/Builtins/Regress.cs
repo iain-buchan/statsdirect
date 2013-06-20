@@ -111,8 +111,8 @@ namespace StatsDirect.Builtins
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
             SimpleLinearRegressionContext context = new SimpleLinearRegressionContext
                                                         {
-                                                            Y = new double[vy.Length + 1 /* for VB to C# conversion */],
-                                                            X = new double[vx.Length + 1 /* for VB to C# conversion */]
+                                                            Y = new double[vy.Length + 1],
+                                                            X = new double[vx.Length + 1]
                                                         };
 
             Array.Copy(vy.Data, 0, context.Y, 1, vy.Length);
@@ -321,8 +321,8 @@ namespace StatsDirect.Builtins
 
             int nx = vx.Length;
             ParameterBag outputParameters = new ParameterBag();
-            double[] z = new double[nx - 1 + 1 /* for VB to C# conversion */ ];
-            double[] r = new double[nx - 1 + 1 /* for VB to C# conversion */];
+            double[] z = new double[nx - 1 + 1 ];
+            double[] r = new double[nx - 1 + 1];
             for (int j = 0; j <= nx - 1; j++)
             {
                 z[j] = vx.Data[j] * context.Slope + context.YInt;
@@ -618,8 +618,8 @@ namespace StatsDirect.Builtins
             //  RTF_LoadTemplate("princ.rtf")
             N = frame.VariableCount;
             nx = frame.Variables[0].Length;
-            x = new double[N + 1 /* for VB to C# conversion */, nx + 1 /* for VB to C# conversion */];
-            bool[] revx = new bool[N + 1 /* for VB to C# conversion */ ];
+            x = new double[N + 1, nx + 1];
+            bool[] revx = new bool[N + 1 ];
             int inx = 0;
             for (j = 1; j <= nx; j++)
             {
@@ -734,9 +734,9 @@ namespace StatsDirect.Builtins
         {
             int i; int j;
 
-            xc = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
-            xr = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
-            u = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
+            xc = new double[N + 1, N + 1];
+            xr = new double[N + 1, N + 1];
+            u = new double[N + 1, N + 1];
             if (irv == 1)
             {
                 for (j = 1; j <= N; j++)
@@ -759,8 +759,8 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            w = new double[N + 1 /* for VB to C# conversion */ ];
-            v = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
+            w = new double[N + 1 ];
+            v = new double[N + 1, N + 1];
             for (i = 1; i <= N; i++)
             {
                 w[i] = 1.0;
@@ -792,12 +792,12 @@ namespace StatsDirect.Builtins
             int i;
             double[] av = null; double[] sd = null;
 
-            double[] ps = new double[nx + 1 /* for VB to C# conversion */];
-            double[] xx = new double[nx + 1 /* for VB to C# conversion */];
+            double[] ps = new double[nx + 1];
+            double[] xx = new double[nx + 1];
             if (irv == 1)
             {
-                av = new double[N + 1 /* for VB to C# conversion */];
-                sd = new double[N + 1 /* for VB to C# conversion */ ];
+                av = new double[N + 1];
+                sd = new double[N + 1 ];
                 for (j = 1; j <= N; j++)
                 {
                     Regress1.x_avsd(x, nx, j, out av[j], out sd[j]);
@@ -888,7 +888,7 @@ namespace StatsDirect.Builtins
             else
             {
                 //  Weights aren't in use, use all 1s
-                double[] allOnes = new double[outcomeVariable.Length - 1 + 1 /* for VB to C# conversion */ ];
+                double[] allOnes = new double[outcomeVariable.Length - 1 + 1 ];
                 for (int i = 0; i <= allOnes.Length - 1; i++)
                 {
                     allOnes[i] = 1;
@@ -912,8 +912,8 @@ namespace StatsDirect.Builtins
             context.N = outcomeVariable.Length;
             int ip = predictorsFrame.VariableCount;
             context.P = ip;
-            context.Y = new double[context.N + 1 /* for VB to C# conversion */ ];
-            context.S = new double[context.N + 1 /* for VB to C# conversion */ ];
+            context.Y = new double[context.N + 1 ];
+            context.S = new double[context.N + 1 ];
             context.outcomeTitle = outcomeVariable.Title;
             context.weightTitle = weighted ? weightsVariable.Title : "";
             if (calculateIntercept)
@@ -921,7 +921,7 @@ namespace StatsDirect.Builtins
                 // intercept
                 context.DoC = true;
                 context.P += 1;
-                context.X = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */];
+                context.X = new double[context.N + 1, context.P + 1];
                 iq = 1;
                 for (int j = 1; j <= context.N; j++)
                 {
@@ -932,10 +932,10 @@ namespace StatsDirect.Builtins
             {
                 // no intercept
                 context.DoC = false;
-                context.X = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */];
+                context.X = new double[context.N + 1, context.P + 1];
                 iq = 0;
             }
-            context.Titles = new string[predictorsFrame.VariableCount + iq + 1 /* for VB to C# conversion */ ];
+            context.Titles = new string[predictorsFrame.VariableCount + iq + 1 ];
             for (int i = 0; i <= predictorsFrame.VariableCount - 1; i++)
             {
                 context.Titles[i + 1 + iq] = predictorsFrame.get_Variable(i).Title;
@@ -986,11 +986,11 @@ namespace StatsDirect.Builtins
             double s;
             context.warn = "";
             int original_p = P;
-            SEB = new double[P + 1 /* for VB to C# conversion */ ];
-            bd = new double[P * P + 1 /* for VB to C# conversion */];
-            xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-            er = new double[nx + 1 /* for VB to C# conversion */ ];
-            yfit = new double[nx + 1 /* for VB to C# conversion */ ];
+            SEB = new double[P + 1 ];
+            bd = new double[P * P + 1];
+            xtxi = new double[P + 1, P + 1];
+            er = new double[nx + 1 ];
+            yfit = new double[nx + 1 ];
             if (DoC)
             {
                 incep = 1;
@@ -1009,13 +1009,13 @@ namespace StatsDirect.Builtins
                     iwt = 1;
                 }
             }
-            double[,] xx = new double[nx + 1 /* for VB to C# conversion */, indep + 1 + iwt + 1 /* for VB to C# conversion */ ];
-            double[,] r = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-            double[] D = new double[P + 1 /* for VB to C# conversion */ ];
-            double[] xmin = new double[P + 1 /* for VB to C# conversion */ ];
-            double[] XMax = new double[P + 1 /* for VB to C# conversion */ ];
-            double[] WK = new double[2 * (P + 1) + 1 /* for VB to C# conversion */ ];
-            int[] idum = new int[1 + 1 /* for VB to C# conversion */ ];
+            double[,] xx = new double[nx + 1, indep + 1 + iwt + 1 ];
+            double[,] r = new double[P + 1, P + 1];
+            double[] D = new double[P + 1 ];
+            double[] xmin = new double[P + 1 ];
+            double[] XMax = new double[P + 1 ];
+            double[] WK = new double[2 * (P + 1) + 1 ];
+            int[] idum = new int[1 + 1 ];
             for (i = 1; i <= nx; i++)
             {
                 for (j = 1 + incep; j <= indep + incep; j++)
@@ -1068,11 +1068,11 @@ namespace StatsDirect.Builtins
                     context.warn = context.warn.Substring(0, context.warn.Length - 2) + " dropped from the model due to very high correlation with other variable(s) included.";
                 }
                 P = irank;
-                SEB = new double[P + 1 /* for VB to C# conversion */ ];
-                bd = new double[P * P + 1 /* for VB to C# conversion */];
-                xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-                er = new double[nx + 1 /* for VB to C# conversion */];
-                yfit = new double[nx + 1 /* for VB to C# conversion */];
+                SEB = new double[P + 1 ];
+                bd = new double[P * P + 1];
+                xtxi = new double[P + 1, P + 1];
+                er = new double[nx + 1];
+                yfit = new double[nx + 1];
                 if (DoC)
                 {
                     incep = 1;
@@ -1083,12 +1083,12 @@ namespace StatsDirect.Builtins
                     incep = 0;
                     indep = P;
                 }
-                r = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-                D = new double[P + 1 /* for VB to C# conversion */ ];
-                xmin = new double[P + 1 /* for VB to C# conversion */];
-                XMax = new double[P + 1 /* for VB to C# conversion */];
-                WK = new double[2 * (P + 1) + 1 /* for VB to C# conversion */];
-                idum = new int[1 + 1 /* for VB to C# conversion */];
+                r = new double[P + 1, P + 1];
+                D = new double[P + 1 ];
+                xmin = new double[P + 1];
+                XMax = new double[P + 1];
+                WK = new double[2 * (P + 1) + 1];
+                idum = new int[1 + 1];
                 for (i = 1; i <= nx; i++)
                 {
                     for (j = 1 + incep; j <= indep + incep; j++)
@@ -1111,12 +1111,12 @@ namespace StatsDirect.Builtins
             {
                 context.warn = "QR solution failed and SVD used, extreme results may be invalid.";
                 P = original_p;
-                vif = new double[P + 1 /* for VB to C# conversion */ ];
-                SEB = new double[P + 1 /* for VB to C# conversion */ ];
-                bd = new double[P + 1 /* for VB to C# conversion */ ];
-                xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-                er = new double[nx + 1 /* for VB to C# conversion */ ];
-                double[] sig = new double[nx + 1 /* for VB to C# conversion */ ];
+                vif = new double[P + 1 ];
+                SEB = new double[P + 1 ];
+                bd = new double[P + 1 ];
+                xtxi = new double[P + 1, P + 1];
+                er = new double[nx + 1 ];
+                double[] sig = new double[nx + 1 ];
                 for (i = 1; i <= P; i++)
                 {
                     vif[i] = Constant.MISSING;
@@ -1128,8 +1128,8 @@ namespace StatsDirect.Builtins
                 x_glin_svd(yd, sig, xd, SEB, bd, bss, ctss, xtxi, er, out yfit, DoC, nx, P, out ifault);
                 return;
             }
-            double[,] covb = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-            vif = new double[P + 1 /* for VB to C# conversion */];
+            double[,] covb = new double[P + 1, P + 1];
+            vif = new double[P + 1];
             // variance inflation
             if (incep == 1 & r[1, 1] > 0.0)
             {
@@ -1315,7 +1315,7 @@ namespace StatsDirect.Builtins
             }
             outputParameters.Add("context", new FilledParameter(true, context));
             //  For best subset code
-            string[] predictorTitles = new string[P - 2 + 1 /* for VB to C# conversion */ ];
+            string[] predictorTitles = new string[P - 2 + 1 ];
             for (i = 2; i <= P; i++)
             {
                 predictorTitles[i - 2] = context.Titles[i];
@@ -1331,16 +1331,16 @@ namespace StatsDirect.Builtins
             int i;
             double wt;
 
-            // SEB = new double[P + 1 /* for VB to C# conversion */ ];
-            // bd = new double[P + 1 /* for VB to C# conversion */ ];
-            // xtxi = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-            // er = new double[nx + 1 /* for VB to C# conversion */ ];
-            yfit = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[,] ud = new double[nx + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-            double[,] vd = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-            double[] wd = new double[P + 1 /* for VB to C# conversion */];
-            double[] cn = new double[P + 1 /* for VB to C# conversion */];
-            double[] hi = new double[nx + 1 /* for VB to C# conversion */ ];
+            // SEB = new double[P + 1 ];
+            // bd = new double[P + 1 ];
+            // xtxi = new double[P + 1, P + 1];
+            // er = new double[nx + 1 ];
+            yfit = new double[nx + 1 ];
+            double[,] ud = new double[nx + 1, P + 1];
+            double[,] vd = new double[P + 1, P + 1];
+            double[] wd = new double[P + 1];
+            double[] cn = new double[P + 1];
+            double[] hi = new double[nx + 1 ];
             bss = 0.0;
             ctss = 0.0;
             Regress1.X_SVGO(xd, yd, sig, nx, P, bd, ud, vd, wd, yfit, er, out ifault);
@@ -1469,7 +1469,7 @@ namespace StatsDirect.Builtins
             double cl; double pl;
 
             //  RTF_LoadTemplate("interpmr.rtf")
-            double[] newx = new double[context.P + 1 /* for VB to C# conversion */ ];
+            double[] newx = new double[context.P + 1 ];
             bool lsqmean = true;
             if (context.DoC)
             {
@@ -1542,7 +1542,7 @@ namespace StatsDirect.Builtins
                 if (i > 1 | !(context.DoC))
                 {
                     int k = context.DoC ? i - 1 : i;
-                    r = new double[context.N + 1 /* for VB to C# conversion */];
+                    r = new double[context.N + 1];
                     r[0] = Constant.MISSING;
                     for (j = 1; j <= context.N; j++)
                     {
@@ -1554,7 +1554,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            r = new double[context.N + 1 /* for VB to C# conversion */ ];
+            r = new double[context.N + 1 ];
             double xf;
             ExFortran.Rank(context.R, r, 1, context.N, 0, out xf);
             for (j = 1; j <= context.N; j++)
@@ -1619,8 +1619,8 @@ namespace StatsDirect.Builtins
             }
             if (!(used_svd))
             {
-                double[] vif2 = new double[context.P + 1 /* for VB to C# conversion */ ];
-                string[] ti = new string[context.P + 1 /* for VB to C# conversion */ ];
+                double[] vif2 = new double[context.P + 1 ];
+                string[] ti = new string[context.P + 1 ];
                 double sumv = 0.0;
                 for (i = 1; i <= context.P; i++)
                 {
@@ -1786,12 +1786,12 @@ namespace StatsDirect.Builtins
             double jackcrit = PDF.tfromp(alpha / 2.0, Convert.ToDouble(context.N - context.P - 1));
             double cdcrit = PDF.ffromp(Convert.ToDouble(context.N - context.P), Convert.ToDouble(context.P), alpha);
             double dfcrit = 2.0 * Math.Sqrt(Convert.ToDouble(context.P) / Convert.ToDouble(context.N));
-            double[] hi = new double[context.N + 1 /* for VB to C# conversion */];
-            double[] sey = new double[context.N + 1 /* for VB to C# conversion */];
-            double[] rstd = new double[context.N + 1 /* for VB to C# conversion */ ];
-            double[] rstudent = new double[context.N + 1 /* for VB to C# conversion */];
-            double[] cd = new double[context.N + 1 /* for VB to C# conversion */];
-            double[] dff = new double[context.N + 1 /* for VB to C# conversion */ ];
+            double[] hi = new double[context.N + 1];
+            double[] sey = new double[context.N + 1];
+            double[] rstd = new double[context.N + 1 ];
+            double[] rstudent = new double[context.N + 1];
+            double[] cd = new double[context.N + 1];
+            double[] dff = new double[context.N + 1 ];
             double rdf = Convert.ToDouble(context.N - context.P);
             //  root mean square is estimate of population variance
             double rms = (context.SSY - context.SSREG) / rdf;
@@ -1947,7 +1947,7 @@ namespace StatsDirect.Builtins
                 iq = 1;
             }
             double[] yfit;
-            int[] force = new int[context.P + 1 /* for VB to C# conversion */ ];
+            int[] force = new int[context.P + 1 ];
             for (C = 0; C <= selectedPredictors.Length - 1; C++)
             {
                 if (selectedPredictors[C])
@@ -1960,14 +1960,14 @@ namespace StatsDirect.Builtins
             {
                 forced = forced + 1;
                 // create temp variable for copying values 
-                int[] transTemp12 = new int[forced + 1 /* for VB to C# conversion */ ];
+                int[] transTemp12 = new int[forced + 1 ];
                 Array.Copy(force, transTemp12, Math.Min(force.Length, transTemp12.Length));
                 force = transTemp12;
                 force[forced] = 1;
             }
             for (int j = 1; j <= context.P; j++)
             {
-                int[] preds = new int[j + 1 /* for VB to C# conversion */ ];
+                int[] preds = new int[j + 1 ];
                 for (int i = 1; i <= j; i++)
                 {
                     preds[i] = i;
@@ -1997,7 +1997,7 @@ namespace StatsDirect.Builtins
                     }
                     if (oktry)
                     {
-                        double[,] tryx = new double[context.N + 1 /* for VB to C# conversion */, j + 1 /* for VB to C# conversion */];
+                        double[,] tryx = new double[context.N + 1, j + 1];
                         for (int i = 1; i <= context.N; i++)
                         {
                             for (int k = 1; k <= j; k++)
@@ -2022,7 +2022,7 @@ namespace StatsDirect.Builtins
                                 mincp = cp;
                                 maxr2 = r2;
                                 kept = j;
-                                keep = new int[kept + 1 /* for VB to C# conversion */ ];
+                                keep = new int[kept + 1 ];
                                 for (int k = 1; k <= j; k++)
                                 {
                                     keep[k] = preds[k];
@@ -2074,7 +2074,7 @@ namespace StatsDirect.Builtins
 
             //  Hack the data in the analysis to drop some of the predictors
             context.P = kept;
-            double[,] newX = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */];
+            double[,] newX = new double[context.N + 1, context.P + 1];
             for (int j = 1; j <= context.N; j++)
             {
                 for (int k = 1; k <= context.P; k++)
@@ -2092,7 +2092,7 @@ namespace StatsDirect.Builtins
                 context.Titles[ix2] = temp;
             }
             // create temp variable for copying values 
-            string[] transTemp13 = new string[context.P + 1 /* for VB to C# conversion */ ];
+            string[] transTemp13 = new string[context.P + 1 ];
             Array.Copy(context.Titles, transTemp13, Math.Min(context.Titles.Length, transTemp13.Length));
             context.Titles = transTemp13;
             x_glin(context, context.Y, context.S, context.X, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out yfit, ref context.DoC, ref context.N, ref context.P, ref errcode);
@@ -2233,7 +2233,7 @@ namespace StatsDirect.Builtins
                 cco = 0.95;
             }
             //  RTF_LoadTemplate("cronbach.rtf")
-            double[] qv = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] qv = new double[k + 1 ];
             for (int i = 1; i <= N; i++)
             {
                 x[0, i] = 0.0;
@@ -2417,8 +2417,8 @@ namespace StatsDirect.Builtins
             }
             if (context.ERR == 1)
             {
-                av = new double[N + 1 /* for VB to C# conversion */];
-                sd = new double[N + 1 /* for VB to C# conversion */];
+                av = new double[N + 1];
+                sd = new double[N + 1];
                 for (int j = 1; j <= N; j++)
                 {
                     Regress1.x_avsd(x, nx, j, out av[j], out sd[j]);
@@ -2509,8 +2509,8 @@ namespace StatsDirect.Builtins
 
             int nx = vY.Length;
             context.N = nx;
-            context.X = new double[nx + 1 /* for VB to C# conversion */ ];
-            context.Y = new double[nx + 1 /* for VB to C# conversion */ ];
+            context.X = new double[nx + 1 ];
+            context.Y = new double[nx + 1 ];
             ParameterBag outputParameters = new ParameterBag();
             double perf; double mnsqr; double r = 0; double seest = 0;
             double sumx, ssx, sdx, ssy, ssreg;
@@ -2667,10 +2667,10 @@ namespace StatsDirect.Builtins
             //  Sort X and Y in increasing order of X
             Array.Sort(vX.Data, vY.Data);
             int deg = context.P - 1;
-            context.Y = new double[context.N + 1 /* for VB to C# conversion */ ];
-            context.S = new double[context.N + 1 /* for VB to C# conversion */ ];
-            context.X = new double[context.N + 1 /* for VB to C# conversion */, context.P + 1 /* for VB to C# conversion */];
-            context.Titles = new string[context.N + 1 /* for VB to C# conversion */ ];
+            context.Y = new double[context.N + 1 ];
+            context.S = new double[context.N + 1 ];
+            context.X = new double[context.N + 1, context.P + 1];
+            context.Titles = new string[context.N + 1 ];
             context.Titles[0] = vY.Title;
             context.Titles[1] = vX.Title;
             for (int j = 1; j <= context.N; j++)
@@ -2716,7 +2716,7 @@ namespace StatsDirect.Builtins
             double rss = context.SSY - context.SSREG;
             int nx = context.N;
             int P = context.P;
-            double[] newx = new double[P + 1 /* for VB to C# conversion */ ];
+            double[] newx = new double[P + 1 ];
             newx[1] = 1.0;
             double nwx = parameters["newx"].AsDouble;
             if (P > 1)
@@ -2843,8 +2843,8 @@ namespace StatsDirect.Builtins
             const int jmaxp = jmax + 1;
             const int k = 5;
             const int km = k - 1;
-            double[] h = new double[jmaxp + 1 /* for VB to C# conversion */ ];
-            double[] s = new double[jmaxp + 1 /* for VB to C# conversion */ ];
+            double[] h = new double[jmaxp + 1 ];
+            double[] s = new double[jmaxp + 1 ];
             h[1] = 1.0;
             int j;
             for (j = 1; j <= jmax; j++)
@@ -3054,9 +3054,9 @@ namespace StatsDirect.Builtins
                 DoubleVariable totalVariable = totalFrame.Variables[0].AsDoubleVariable;
                 // Store the total Data
                 rows = totalVariable.Length;
-                tt = new double[rows + 1 /* for VB to C# conversion */];
-                tr = new double[rows + 1 /* for VB to C# conversion */];
-                tw = new double[rows + 1 /* for VB to C# conversion */];
+                tt = new double[rows + 1];
+                tr = new double[rows + 1];
+                tw = new double[rows + 1];
                 tot_obs = 0;
                 for (C = 1; C <= rows; C++)
                 {
@@ -3076,9 +3076,9 @@ namespace StatsDirect.Builtins
                 DataFrame responseFrame = parameters["response"].AsDataFrame;
                 responseVariable = responseFrame.Variables[0].AsDoubleVariable;
                 rows = responseVariable.Length;
-                tt = new double[rows + 1 /* for VB to C# conversion */];
-                tr = new double[rows + 1 /* for VB to C# conversion */];
-                tw = new double[rows + 1 /* for VB to C# conversion */];
+                tt = new double[rows + 1];
+                tr = new double[rows + 1];
+                tw = new double[rows + 1];
                 // Store the response Data
                 for (C = 1; C <= rows; C++)
                 {
@@ -3117,7 +3117,7 @@ namespace StatsDirect.Builtins
             DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
             // Store the predictors
             int prd = predictorsFrame.VariableCount - 1;
-            double[,] pt = new double[prd + 1 /* for VB to C# conversion */, rows + 1 /* for VB to C# conversion */];
+            double[,] pt = new double[prd + 1, rows + 1];
             for (C = 0; C <= prd; C++)
             {
                 DoubleVariable v = predictorsFrame.Variables[C].AsDoubleVariable;
@@ -3199,10 +3199,10 @@ namespace StatsDirect.Builtins
             int cnt = 0;
             int fault;
             int N = newrows;
-            double[] t = new double[N + 1 /* for VB to C# conversion */];
-            double[] y = new double[N + 1 /* for VB to C# conversion */ ];
-            double[] wt = new double[N + 1 /* for VB to C# conversion */];
-            int[] rxi = new int[1 + 1 /* for VB to C# conversion */];
+            double[] t = new double[N + 1];
+            double[] y = new double[N + 1 ];
+            double[] wt = new double[N + 1];
+            int[] rxi = new int[1 + 1];
             int M = predictorsFrame.VariableCount;
             int ip = M;
             bool mean = shouldCalculateIntercept;
@@ -3211,8 +3211,8 @@ namespace StatsDirect.Builtins
                 ip = ip + 1;
             }
             double tol = accuracy;
-            double[,] x = new double[N + 1 /* for VB to C# conversion */, ip + 1 /* for VB to C# conversion */];
-            string[] Label = new string[ip + 1 /* for VB to C# conversion */ ];
+            double[,] x = new double[N + 1, ip + 1];
+            string[] Label = new string[ip + 1 ];
             string transTemp5 = responseVariable.Title;
             Label[0] = transTemp5.Trim();
             for (j = 1; j <= M; j++)
@@ -3271,22 +3271,22 @@ namespace StatsDirect.Builtins
                 N = cnt;
             }
             //  get intercept deviance - drop predictors
-            double[,] x2 = new double[N + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
+            double[,] x2 = new double[N + 1, 1 + 1];
             for (j = 1; j <= N; j++)
             {
                 x2[j, 0] = 1;
                 x2[j, 1] = 1;
             }
-            int[] isx = new int[1 + 1 /* for VB to C# conversion */ ];
+            int[] isx = new int[1 + 1 ];
             isx[1] = 1;
-            double[] b = new double[1 + 1 /* for VB to C# conversion */ ];
-            double[] se = new double[N + 1 /* for VB to C# conversion */ ];
-            double[] cov = new double[1 + 1 /* for VB to C# conversion */];
-            double[] fvl = new double[N + 1 /* for VB to C# conversion */ ];
-            double[] var = new double[N + 1 /* for VB to C# conversion */];
-            double[] dr = new double[N + 1 /* for VB to C# conversion */];
-            double[] h = new double[N + 1 /* for VB to C# conversion */];
-            double[] offst = new double[N + 1 /* for VB to C# conversion */ ];
+            double[] b = new double[1 + 1 ];
+            double[] se = new double[N + 1 ];
+            double[] cov = new double[1 + 1];
+            double[] fvl = new double[N + 1 ];
+            double[] var = new double[N + 1];
+            double[] dr = new double[N + 1];
+            double[] h = new double[N + 1];
+            double[] offst = new double[N + 1 ];
             string msg = "";
             Regress1.X_LOGIREG(false, false, ref Weight, N, x2, 1, isx, 1, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
             int idfx = idf;
@@ -3301,19 +3301,19 @@ namespace StatsDirect.Builtins
                 devx = dev;
             }
             //  calculate full model
-            isx = new int[ip + 1 /* for VB to C# conversion */];
+            isx = new int[ip + 1];
             for (j = 1; j <= ip; j++)
             {
                 isx[j] = j;
             }
-            b = new double[ip + 1 /* for VB to C# conversion */];
-            se = new double[N + 1 /* for VB to C# conversion */];
-            cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1 /* for VB to C# conversion */];
-            fvl = new double[N + 1 /* for VB to C# conversion */ ];
-            var = new double[N + 1 /* for VB to C# conversion */ ];
-            dr = new double[N + 1 /* for VB to C# conversion */];
-            h = new double[N + 1 /* for VB to C# conversion */];
-            offst = new double[N + 1 /* for VB to C# conversion */ ];
+            b = new double[ip + 1];
+            se = new double[N + 1];
+            cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1];
+            fvl = new double[N + 1 ];
+            var = new double[N + 1 ];
+            dr = new double[N + 1];
+            h = new double[N + 1];
+            offst = new double[N + 1 ];
             msg = "";
             Regress1.X_LOGIREG(mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
             if (fault != 0 & fault != 10 & fault != 9)
@@ -3898,11 +3898,11 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             }
 
-            double[] yy1 = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[] yy2 = new double[nx + 1 /* for VB to C# conversion */ ];
-            double[] yy3 = new double[nx + 1 /* for VB to C# conversion */];
-            double[] yy4 = new double[nx + 1 /* for VB to C# conversion */];
-            double[] xx = new double[nx + 1 /* for VB to C# conversion */];
+            double[] yy1 = new double[nx + 1 ];
+            double[] yy2 = new double[nx + 1 ];
+            double[] yy3 = new double[nx + 1];
+            double[] yy4 = new double[nx + 1];
+            double[] xx = new double[nx + 1];
             // diagnostic plots
             const string ep = "Event Probability (pi)";
             const string lv = "Leverage (Hi)";
@@ -4230,10 +4230,10 @@ namespace StatsDirect.Builtins
                     ntot += Convert.ToInt32(t[i]);
                 }
                 ll = x_loglik_l(weight, N, wt, y, t, fvl);
-                double[] OBS = new double[10 + 1 /* for VB to C# conversion */];
-                double[] tot = new double[10 + 1 /* for VB to C# conversion */];
-                double[] mpi = new double[10 + 1 /* for VB to C# conversion */ ];
-                Tri[] z = new Tri[N + 1 /* for VB to C# conversion */ ];
+                double[] OBS = new double[10 + 1];
+                double[] tot = new double[10 + 1];
+                double[] mpi = new double[10 + 1 ];
+                Tri[] z = new Tri[N + 1 ];
                 for (i = 1; i <= N; i++)
                 {
                     PP = fvl[i] / t[i];
@@ -4400,7 +4400,7 @@ namespace StatsDirect.Builtins
                 }
             }
             // relative to dichotomous covariates
-            int[] nsel = new int[P + 1 /* for VB to C# conversion */];
+            int[] nsel = new int[P + 1];
             int ctr = 0;
             OptionDescriptor descriptor = new OptionDescriptor { Title = "Select covariate for sub-population relative risk" };
 
@@ -4620,8 +4620,8 @@ namespace StatsDirect.Builtins
             co = 0.0;
             double cmax = co;
             const int stps = 100;
-            double[] ry = new double[stps + 1 /* for VB to C# conversion */ ];
-            double[] rx = new double[stps + 1 /* for VB to C# conversion */ ];
+            double[] ry = new double[stps + 1 ];
+            double[] rx = new double[stps + 1 ];
             for (i = 1; i <= stps; i++)
             {
                 co = co + 0.01;
@@ -4747,14 +4747,14 @@ namespace StatsDirect.Builtins
                         rndwt[j] = wt[j];
                     }
                 }
-                b = new double[ip + 1 /* for VB to C# conversion */];
-                se = new double[N + 1 /* for VB to C# conversion */];
-                cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1 /* for VB to C# conversion */];
-                fvl = new double[N + 1 /* for VB to C# conversion */];
-                var = new double[N + 1 /* for VB to C# conversion */];
-                dr = new double[N + 1 /* for VB to C# conversion */];
-                h = new double[N + 1 /* for VB to C# conversion */];
-                offst = new double[N + 1 /* for VB to C# conversion */ ];
+                b = new double[ip + 1];
+                se = new double[N + 1];
+                cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1];
+                fvl = new double[N + 1];
+                var = new double[N + 1];
+                dr = new double[N + 1];
+                h = new double[N + 1];
+                offst = new double[N + 1 ];
                 msg = "";
                 bool iweight = true;
                 int fault;
@@ -4783,7 +4783,7 @@ namespace StatsDirect.Builtins
             }
             for (j = 1; j <= ip; j++)
             {
-                double[] qq = new double[booted + 1 /* for VB to C# conversion */ ];
+                double[] qq = new double[booted + 1 ];
                 int ctr = 0;
                 for (i = 1; i <= booted; i++)
                 {
@@ -4831,14 +4831,14 @@ namespace StatsDirect.Builtins
                 }
             }
             //  recalculate full model
-            b = new double[ip + 1 /* for VB to C# conversion */];
-            se = new double[N + 1 /* for VB to C# conversion */];
-            cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1 /* for VB to C# conversion */];
-            fvl = new double[N + 1 /* for VB to C# conversion */ ];
-            var = new double[N + 1 /* for VB to C# conversion */ ];
-            dr = new double[N + 1 /* for VB to C# conversion */ ];
-            h = new double[N + 1 /* for VB to C# conversion */];
-            offst = new double[N + 1 /* for VB to C# conversion */ ];
+            b = new double[ip + 1];
+            se = new double[N + 1];
+            cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1];
+            fvl = new double[N + 1 ];
+            var = new double[N + 1 ];
+            dr = new double[N + 1 ];
+            h = new double[N + 1];
+            offst = new double[N + 1 ];
             msg = "";
             int scrapFault;
             Regress1.X_LOGIREG(mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, 50, fvl, var, dr, h, offst, out scrapFault, ref msg);
@@ -4861,7 +4861,7 @@ namespace StatsDirect.Builtins
 
 
             ParameterBag outputParameters = new ParameterBag();
-            double[] newx = new double[P + 1 /* for VB to C# conversion */ ];
+            double[] newx = new double[P + 1 ];
             bool lsqmean = true;
             if (DoC)
             {
@@ -5235,7 +5235,7 @@ namespace StatsDirect.Builtins
             DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
             // Store the predictors
             int prd = predictorsFrame.VariableCount;
-            double[,] x = new double[rows + 1 /* for VB to C# conversion */, prd + 1 /* for VB to C# conversion */];
+            double[,] x = new double[rows + 1, prd + 1];
             for (C = 1; C <= prd; C++)
             {
                 DoubleVariable v = predictorsFrame.Variables[C - 1].AsDoubleVariable;
@@ -5314,7 +5314,7 @@ namespace StatsDirect.Builtins
             double dev = 0; double devx; double llx;
             int fault;
             int N = rows;
-            int[] rxi = new int[1 + 1 /* for VB to C# conversion */ ];
+            int[] rxi = new int[1 + 1 ];
             int M = prd;
             int ip = M;
             bool mean = intercept;
@@ -5322,7 +5322,7 @@ namespace StatsDirect.Builtins
             {
                 ip = ip + 1;
             }
-            string[] label = new string[ip + 1 /* for VB to C# conversion */ ];
+            string[] label = new string[ip + 1 ];
             label[0] = responseVariable.Title;
             for (j = 1; j <= prd; j++)
             {
@@ -5335,22 +5335,22 @@ namespace StatsDirect.Builtins
             }
             bool uoffset = ptime;
             //  get intercept deviance - drop predictors
-            double[,] x2 = new double[N + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
+            double[,] x2 = new double[N + 1, 1 + 1];
             for (j = 1; j <= N; j++)
             {
                 x2[j, 0] = 1;
                 x2[j, 1] = 1;
             }
-            int[] isx = new int[1 + 1 /* for VB to C# conversion */];
+            int[] isx = new int[1 + 1];
             isx[1] = 1;
-            double[] b = new double[1 + 1 /* for VB to C# conversion */];
-            double[] se = new double[N + 1 /* for VB to C# conversion */];
-            double[] cov = new double[1 + 1 /* for VB to C# conversion */];
-            double[] fvl = new double[N + 1 /* for VB to C# conversion */];
-            double[] var = new double[N + 1 /* for VB to C# conversion */ ];
-            double[] dr = new double[N + 1 /* for VB to C# conversion */ ];
-            double[] h = new double[N + 1 /* for VB to C# conversion */];
-            double[] offst = new double[N + 1 /* for VB to C# conversion */ ];
+            double[] b = new double[1 + 1];
+            double[] se = new double[N + 1];
+            double[] cov = new double[1 + 1];
+            double[] fvl = new double[N + 1];
+            double[] var = new double[N + 1 ];
+            double[] dr = new double[N + 1 ];
+            double[] h = new double[N + 1];
+            double[] offst = new double[N + 1 ];
             //  use offset of log(exposure) if exposure specified
             if (uoffset)
             {
@@ -5373,18 +5373,18 @@ namespace StatsDirect.Builtins
                 devx = dev;
             }
             //  calculate full model
-            isx = new int[ip + 1 /* for VB to C# conversion */ ];
+            isx = new int[ip + 1 ];
             for (j = 1; j <= ip; j++)
             {
                 isx[j] = j;
             }
-            b = new double[ip + 1 /* for VB to C# conversion */];
-            se = new double[N + 1 /* for VB to C# conversion */];
-            cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1 /* for VB to C# conversion */];
-            fvl = new double[N + 1 /* for VB to C# conversion */ ];
-            var = new double[N + 1 /* for VB to C# conversion */ ];
-            dr = new double[N + 1 /* for VB to C# conversion */ ];
-            h = new double[N + 1 /* for VB to C# conversion */ ];
+            b = new double[ip + 1];
+            se = new double[N + 1];
+            cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1];
+            fvl = new double[N + 1 ];
+            var = new double[N + 1 ];
+            dr = new double[N + 1 ];
+            h = new double[N + 1 ];
             Regress1.X_POISREG(mean, uoffset, ref weighted, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
             if (fault != 0 & fault != 10 & fault != 9)
             {
@@ -5861,7 +5861,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            double[] r = new double[nx + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[nx + 1 ];
             r[0] = Constant.MISSING; //  Avoid drawing a point at (0,0)
             for (int j = 1; j <= nx; j++)
             {
@@ -5879,7 +5879,7 @@ namespace StatsDirect.Builtins
                 {
                     bool OK = false;
                     int k = Intercept ? i - 1 : i;
-                    r = new double[nx + 1 /* for VB to C# conversion */ ];
+                    r = new double[nx + 1 ];
                     for (int j = 1; j <= nx; j++)
                     {
                         r[j] = xd[j, k];
@@ -5949,7 +5949,7 @@ namespace StatsDirect.Builtins
             cd[0] = new ColumnData { Title = doseVariable.Title };
 
             int rows = doseVariable.Length;
-            double[] dv = new double[rows + 1 /* for VB to C# conversion */];
+            double[] dv = new double[rows + 1];
             for (int row = 1; row <= rows; row++)
                 dv[row] = doseVariable.Data[row - 1];
 
@@ -5989,9 +5989,9 @@ namespace StatsDirect.Builtins
 
             int k = rows;
             double C1 = 0.0;
-            double[] D = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] s = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] r = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] D = new double[k + 1 ];
+            double[] s = new double[k + 1 ];
+            double[] r = new double[k + 1 ];
             for (N = 1; N <= k; N++)
             {
                 if (dv[N] != Constant.MISSING && sv[N] != Constant.MISSING && rv[N] != Constant.MISSING)
@@ -6013,15 +6013,15 @@ namespace StatsDirect.Builtins
             }
             k = nx;
             // create temp variable for copying values 
-            double[] transTemp14 = new double[k + 1 /* for VB to C# conversion */];
+            double[] transTemp14 = new double[k + 1];
             Array.Copy(D, transTemp14, Math.Min(D.Length, transTemp14.Length));
             D = transTemp14;
             // create temp variable for copying values 
-            double[] transTemp15 = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] transTemp15 = new double[k + 1 ];
             Array.Copy(s, transTemp15, Math.Min(s.Length, transTemp15.Length));
             s = transTemp15;
             // create temp variable for copying values 
-            double[] transTemp16 = new double[k + 1 /* for VB to C# conversion */];
+            double[] transTemp16 = new double[k + 1];
             Array.Copy(r, transTemp16, Math.Min(r.Length, transTemp16.Length));
             r = transTemp16;
             if (C1 == 0.0)
@@ -6037,11 +6037,11 @@ namespace StatsDirect.Builtins
             if (qld >= 100.0 || qld <= 0.0)
                 qld = 90.0;
 
-            double[] P = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] w = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] y = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] pob = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] x = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] P = new double[k + 1 ];
+            double[] w = new double[k + 1 ];
+            double[] y = new double[k + 1 ];
+            double[] pob = new double[k + 1 ];
+            double[] x = new double[k + 1 ];
             x_sortbydose(ref D, ref s, ref r, k);
             double C = 0;
             x_probits(model, k, ref C1, ref C, ref nc, nrc, clog, qld, D, s, r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out ifault);
@@ -6119,7 +6119,7 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("*warn", null);
             }
-            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { ARG = new double[18 + 1 /* for VB to C# conversion */] };
+            MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { ARG = new double[18 + 1] };
 
             context.ARG[1] = a;
             context.ARG[2] = b;
@@ -6151,7 +6151,7 @@ namespace StatsDirect.Builtins
             context.DV = dv;
             context.SV = sv;
             context.RV = rv;
-            context.Label = new string[2 + 1 /* for VB to C# conversion */ ];
+            context.Label = new string[2 + 1 ];
             context.Label[0] = doseVariable.Title;
             context.Label[1] = subjectsVariable.Title;
             context.Label[2] = respondersVariable.Title;
@@ -6162,7 +6162,7 @@ namespace StatsDirect.Builtins
 
         private static void x_sortbydose(ref double[] D, ref double[] s, ref double[] r, int k)
         {
-            Tri[] swp = new Tri[k + 1 /* for VB to C# conversion */ ];
+            Tri[] swp = new Tri[k + 1 ];
             for (int i = 1; i <= k; i++)
             {
                 swp[i].D = D[i];
@@ -6221,8 +6221,8 @@ namespace StatsDirect.Builtins
             double swl;
             double dsq;
 
-            double[] Y2 = new double[k + 1 /* for VB to C# conversion */];
-            double[] t2 = new double[k + 1 /* for VB to C# conversion */];
+            double[] Y2 = new double[k + 1];
+            double[] t2 = new double[k + 1];
             //  ***  CALCULATE EXPERIMENTAL VALUE OF NATURAL MORTALITY (C1) AND RESET CPOOL
             double rc = nrc;
             double cpool = -1.0;

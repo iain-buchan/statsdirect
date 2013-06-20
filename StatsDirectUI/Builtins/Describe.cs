@@ -226,7 +226,7 @@ namespace StatsDirect.Builtins
                 int cm = 0;
                 int xtot = vc.Length;
                 int bins = vc.GroupCount;
-                Group[] bin = new Group[bins + 1 /* for VB to C# conversion */ ];
+                Group[] bin = new Group[bins + 1 ];
                 int i;
                 for (i = 1; i <= bins; i++)
                 {
@@ -594,7 +594,7 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         public static double Median(double[] x, int ia, int iz)
         {
-            double[] ao = new double[iz - ia + 1 /* for VB to C# conversion */ ];
+            double[] ao = new double[iz - ia + 1 ];
             int reali = 0;
             for (int i = ia; i <= iz; i++)
             {
@@ -608,7 +608,7 @@ namespace StatsDirect.Builtins
             if (reali > 1)
             {
                 // create temp variable for copying values 
-                double[] transTemp0 = new double[reali - 1 + 1 /* for VB to C# conversion */];
+                double[] transTemp0 = new double[reali - 1 + 1];
                 Array.Copy(ao, transTemp0, Math.Min(ao.Length, transTemp0.Length));
                 ao = transTemp0;
                 Array.Sort(ao);

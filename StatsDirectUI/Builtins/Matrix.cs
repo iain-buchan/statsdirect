@@ -23,8 +23,8 @@ namespace StatsDirect.Builtins
         public static void MXSRT( ref int nrx, ref int ncx, ref double[] x, ref int nkey, ref int[] indkey, ref int[] iperm, ref int ngroup, ref int[] ni, ref int ifault ) 
         {
             int i = ncx > nrx ? ncx : nrx;
-            double[] wk = new double[4 * i + 1 /* for VB to C# conversion */];
-            int[] iwk = new int[i + Convert.ToInt32(2.8854 * Math.Log(Convert.ToDouble(i))) + 2 + 1 /* for VB to C# conversion */]; 
+            double[] wk = new double[4 * i + 1];
+            int[] iwk = new int[i + Convert.ToInt32(2.8854 * Math.Log(Convert.ToDouble(i))) + 2 + 1]; 
             
             if ( nrx <= 0 )
             { 

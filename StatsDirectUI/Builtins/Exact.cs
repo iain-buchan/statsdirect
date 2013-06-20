@@ -218,9 +218,9 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                double[] f1 = new double[p + 1 + 1 /* for VB to C# conversion */ ];
-                double[] g1 = new double[p + 1 + 1 /* for VB to C# conversion */ ];
-                double[] h1 = new double[p + 1 + 1 /* for VB to C# conversion */ ];
+                double[] f1 = new double[p + 2 ];
+                double[] g1 = new double[p + 2 ];
+                double[] h1 = new double[p + 2 ];
                 int a1 = 0;
                 int q1 = q - r;
                 int p1 = p;
@@ -367,7 +367,7 @@ namespace StatsDirect.Builtins
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
 
             int k = rows / 3;
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 5];
+            double[,] o = new double[k + 1, 5];
             int cnt = 0;
             for (rc = 1; rc <= rows; rc += 2)
             {
@@ -534,7 +534,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tab_a2", table[3].ToString());
             outputParameters.AddOutput("tab_b2", table[4].ToString());
 
-            ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* for VB to C# conversion */];
+            ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
             tabl[1].Freq = 1;
             tabl[1].A = table[1];
             tabl[1].M1 = table[1] + table[2];

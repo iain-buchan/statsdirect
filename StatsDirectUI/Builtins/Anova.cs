@@ -52,8 +52,8 @@ namespace StatsDirect.Builtins
             double ydd = 0.0;
             double s4 = 0.0;
 
-            ngp = new int[frame.VariableCount + 1 /* for VB to C# conversion */ ];
-            gbar = new double[frame.VariableCount + 1 /* for VB to C# conversion */];
+            ngp = new int[frame.VariableCount + 1 ];
+            gbar = new double[frame.VariableCount + 1];
             for (int i = 0; i < frame.VariableCount; i++)
             {
                 int ngpi = 0;
@@ -157,9 +157,9 @@ namespace StatsDirect.Builtins
             double dnc = Convert.ToDouble(nc);
             double dnm = Convert.ToDouble(nm);
             double yt = 0.0;
-            double[,] cell = new double[nr + 1 /* for VB to C# conversion */, nc + 1 /* for VB to C# conversion */];
-            double[] row = new double[nr + 1 /* for VB to C# conversion */ ];
-            Col = new double[nc + 1 /* for VB to C# conversion */ ];
+            double[,] cell = new double[nr + 1, nc + 1];
+            double[] row = new double[nr + 1 ];
+            Col = new double[nc + 1 ];
             for (int i = 1; i <= nr; i++)
             {
                 double yr = 0.0;
@@ -259,8 +259,8 @@ namespace StatsDirect.Builtins
             double ps; double s = 0; double varf = 0;
             double hn = 0;
             //  Note: x and y are 1-based
-            double[] x = new double[rx + 1 /* for VB to C# conversion */ ];
-            double[] y = new double[rx + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[rx + 1 ];
+            double[] y = new double[rx + 1 ];
             tau = Formatting.ERRR;
             P2 = tau;
             bool fault = true;
@@ -428,18 +428,18 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             int rows = frame.Variables[0].Length;
             int cols = frame.VariableCount;
-            double[][] ARR2 = new double[cols - 1 + 1 /* for VB to C# conversion */ ][];
+            double[][] ARR2 = new double[cols - 1 + 1 ][];
             for (C = 0; C < cols; C++)
             {
                 ARR2[C] = ((DoubleVariable)(frame.Variables[C])).Data;
             }
 
-            double[] av = new double[rows + 1 /* for VB to C# conversion */];
-            double[] mxd = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] xd = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] vr = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] ssd = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] xxm = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] av = new double[rows + 1];
+            double[] mxd = new double[rows + 1 ];
+            double[] xd = new double[rows + 1 ];
+            double[] vr = new double[rows + 1 ];
+            double[] ssd = new double[rows + 1 ];
+            double[] xxm = new double[rows + 1 ];
 
             // Get Min, Max range (into xd) for all rows
             int rx = 0;
@@ -516,27 +516,27 @@ namespace StatsDirect.Builtins
             int ifault;
             double z = PDF.gauinv(1 - (1 - GAMMA) / 2, out ifault);
             // create temp variable for copying values 
-            double[] transTemp0 = new double[rx - 1 + 1 /* for VB to C# conversion */ ];
+            double[] transTemp0 = new double[rx - 1 + 1 ];
             Array.Copy(av, transTemp0, Math.Min(av.Length, transTemp0.Length));
             av = transTemp0;
             // create temp variable for copying values 
-            double[] transTemp1 = new double[rx - 1 + 1 /* for VB to C# conversion */];
+            double[] transTemp1 = new double[rx - 1 + 1];
             Array.Copy(mxd, transTemp1, Math.Min(mxd.Length, transTemp1.Length));
             mxd = transTemp1;
             // xd not used from here
-            // double[] transTemp2 = new double[rx - 1 + 1 /* for VB to C# conversion */ ]; 
+            // double[] transTemp2 = new double[rx - 1 + 1 ]; 
             // Array.Copy( xd, transTemp2, Math.Min( xd.Length, transTemp2.Length ) ); 
             // xd = transTemp2; 
             // vr not used from here
-            // double[] transTemp3 = new double[rx - 1 + 1 /* for VB to C# conversion */ ]; 
+            // double[] transTemp3 = new double[rx - 1 + 1 ]; 
             // Array.Copy( vr, transTemp3, Math.Min( vr.Length, transTemp3.Length ) ); 
             // vr = transTemp3; 
             // create temp variable for copying values 
-            double[] transTemp4 = new double[rx - 1 + 1 /* for VB to C# conversion */];
+            double[] transTemp4 = new double[rx - 1 + 1];
             Array.Copy(ssd, transTemp4, Math.Min(ssd.Length, transTemp4.Length));
             ssd = transTemp4;
             // create temp variable for copying values 
-            double[] transTemp5 = new double[rx - 1 + 1 /* for VB to C# conversion */ ];
+            double[] transTemp5 = new double[rx - 1 + 1 ];
             Array.Copy(xxm, transTemp5, Math.Min(xxm.Length, transTemp5.Length));
             xxm = transTemp5;
             double wssd = Math.Sqrt(meanvr);
@@ -647,8 +647,8 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
-            int[] tnx = new int[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
-            double[] mean = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
+            int[] tnx = new int[frame.VariableCount - 1 + 1 ];
+            double[] mean = new double[frame.VariableCount - 1 + 1 ];
             double sumtot = 0.0;
             int ntot = 0;
             string tlist = "";
@@ -842,9 +842,9 @@ namespace StatsDirect.Builtins
 
             int nc = frame.VariableCount;
             int nr = 0;
-            double[] mean = new double[nc + 1 /* for VB to C# conversion */ ];
-            int[] tnx = new int[nc + 1 /* for VB to C# conversion */ ];
-            double[, ,] y = new double[2, v0.Length + 1 /* for VB to C# conversion */, nc + 1 /* for VB to C# conversion */];
+            double[] mean = new double[nc + 1 ];
+            int[] tnx = new int[nc + 1 ];
+            double[, ,] y = new double[2, v0.Length + 1, nc + 1];
 
             int skipped = 0;
             for (int N = 0; N <= v0.Length - 1; N++)
@@ -959,9 +959,9 @@ namespace StatsDirect.Builtins
             int nc = frame.Variables[0].Count;
             int nr = frame.VariableCount;
             int nm = frame.MaxRows;
-            double[] mean = new double[nc + 1 /* for VB to C# conversion */ ];
-            int[] tnx = new int[nc + 1 /* for VB to C# conversion */ ];
-            double[, ,] y = new double[nm + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */, nc + 1 /* for VB to C# conversion */];
+            double[] mean = new double[nc + 1 ];
+            int[] tnx = new int[nc + 1 ];
+            double[, ,] y = new double[nm + 1, nr + 1, nc + 1];
             int absconders = 0;
 
             DataFrame outputFrame = new DataFrame();
@@ -1112,12 +1112,12 @@ namespace StatsDirect.Builtins
             {
                 ivar += frame.Variables[j].Count;
             }
-            int[] nobs = new int[ivar + 1 /* for VB to C# conversion */ ];
-            double[] sgbar = new double[ivar + 1 /* for VB to C# conversion */ ];
+            int[] nobs = new int[ivar + 1 ];
+            double[] sgbar = new double[ivar + 1 ];
             ivar = 0;
             int ctr = 0;
             string tlist = "";
-            double[] y = new double[1 + 1 /* for VB to C# conversion */ ];
+            double[] y = new double[1 + 1 ];
             for (int j = 0; j <= frame.VariableCount - 1; j++)
             {
                 tlist += " (";
@@ -1145,7 +1145,7 @@ namespace StatsDirect.Builtins
                                 ctr += 1;
                                 eobs += 1;
                                 // create temp variable for copying values 
-                                double[] transTemp6 = new double[ctr + 1 /* for VB to C# conversion */];
+                                double[] transTemp6 = new double[ctr + 1];
                                 Array.Copy(y, transTemp6, Math.Min(y.Length, transTemp6.Length));
                                 y = transTemp6;
                                 y[ctr] = val;
@@ -1158,10 +1158,10 @@ namespace StatsDirect.Builtins
             }
 
             bool fault;
-            double[] ss = new double[5 + 1 /* for VB to C# conversion */ ];
-            int[] idf = new int[5 + 1 /* for VB to C# conversion */ ];
-            double[] f = new double[3 + 1 /* for VB to C# conversion */ ];
-            double[] fp = new double[3 + 1 /* for VB to C# conversion */ ];
+            double[] ss = new double[5 + 1 ];
+            int[] idf = new int[5 + 1 ];
+            double[] f = new double[3 + 1 ];
+            double[] fp = new double[3 + 1 ];
             int[] ngp = null;
             double[] gbar = null;
             double gm = 0;
@@ -1387,7 +1387,7 @@ namespace StatsDirect.Builtins
             double msx = carrier.Msx;
 
             int kn = frame.VariableCount;
-            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1 /* for VB to C# conversion */ ]; //  1-based
+            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1 ]; //  1-based
 
             int totn = 0;
             for (int N = 0; N <= kn - 1; N++)
@@ -1645,8 +1645,8 @@ namespace StatsDirect.Builtins
             }
 
             int k = kn - 1;
-            Contraster[] hold = new Contraster[kn + 1 + 1 /* for VB to C# conversion */ ]; //  1-based
-            double[] lam = new double[k + 1 /* for VB to C# conversion */ ];
+            Contraster[] hold = new Contraster[kn + 2 ]; //  1-based
+            double[] lam = new double[k + 1 ];
 
             int nu = 0;
             for (int N = 0; N <= k; N++)
@@ -1735,9 +1735,9 @@ namespace StatsDirect.Builtins
 
             DataFrame frame = parameters["data"].AsDataFrame;
 
-            double[] ao = new double[frame.MaxRows + 1 /* for VB to C# conversion */ ];
-            int[] reali = new int[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
-            double[] mdn = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
+            double[] ao = new double[frame.MaxRows + 1 ];
+            int[] reali = new int[frame.VariableCount - 1 + 1 ];
+            double[] mdn = new double[frame.VariableCount - 1 + 1 ];
 
             for (int D = 0; D <= frame.VariableCount - 1; D++)
             {
@@ -1771,9 +1771,9 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double[] sum = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
-            double[] sum2 = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
-            long[] tnx = new long[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
+            double[] sum = new double[frame.VariableCount - 1 + 1 ];
+            double[] sum2 = new double[frame.VariableCount - 1 + 1 ];
+            long[] tnx = new long[frame.VariableCount - 1 + 1 ];
             for (int D = 0; D <= frame.VariableCount - 1; D++)
             {
                 DoubleVariable v = frame.Variables[D].AsDoubleVariable;
@@ -1816,8 +1816,8 @@ namespace StatsDirect.Builtins
             long bdf = frame.VariableCount - 1;
             double C = 1.0 + (1.0 / (3.0 * bdf)) * (svii - (1.0 / svi));
             double x2 = M / C;
-            sum = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ]; //  Force to zeroes
-            sum2 = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ]; //  Force to zeroes
+            sum = new double[frame.VariableCount - 1 + 1 ]; //  Force to zeroes
+            sum2 = new double[frame.VariableCount - 1 + 1 ]; //  Force to zeroes
             sum2tot = 0.0;
             sumtot = 0.0;
             ntot = 0;
@@ -1923,10 +1923,10 @@ namespace StatsDirect.Builtins
             DataFrame observationFrame = parameters["observations"].AsDataFrame;
             DoubleVariable observationVariable = observationFrame.Variables[0].AsDoubleVariable;
             int nn = observationVariable.Length;
-            double[] v = new double[nn + 1 /* for VB to C# conversion */ ];
-            double[] vcx = new double[nn + 1 /* for VB to C# conversion */ ];
-            double[] vrx = new double[nn + 1 /* for VB to C# conversion */ ];
-            double[] vlx = new double[nn + 1 /* for VB to C# conversion */ ];
+            double[] v = new double[nn + 1 ];
+            double[] vcx = new double[nn + 1 ];
+            double[] vrx = new double[nn + 1 ];
+            double[] vlx = new double[nn + 1 ];
             int n = Convert.ToInt32(Math.Sqrt(nn));
             for (int i = 1; i <= nn; i++)
             {
@@ -1961,10 +1961,10 @@ namespace StatsDirect.Builtins
             tlist += ", " + treatmentVariable.Title + ".";
 
             // set up calculation variables
-            double[,] x = new double[n + 1 /* for VB to C# conversion */, n + 1 /* for VB to C# conversion */];
-            double[] tx = new double[n + 1 /* for VB to C# conversion */ ];
-            double[] sr = new double[n + 1 /* for VB to C# conversion */ ];
-            double[] sc = new double[n + 1 /* for VB to C# conversion */ ];
+            double[,] x = new double[n + 1, n + 1];
+            double[] tx = new double[n + 1 ];
+            double[] sr = new double[n + 1 ];
+            double[] sc = new double[n + 1 ];
 
             // make sure row and column pointers range from 1 to n
             double vx = 1.0 - MathDbl.vector_min(vcx, 1, n);
@@ -2111,8 +2111,8 @@ namespace StatsDirect.Builtins
             {
                 group1BaselineData = null;
             }
-            double[] x1d = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] x1p = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] x1d = new double[rows + 1 ];
+            double[] x1p = new double[rows + 1 ];
             int ng1 = 0;
             for (int j = 0; j <= rows - 1; j++)
             {
@@ -2144,8 +2144,8 @@ namespace StatsDirect.Builtins
             {
                 group2BaselineData = null;
             }
-            double[] x2d = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] x2p = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] x2d = new double[rows + 1 ];
+            double[] x2p = new double[rows + 1 ];
             int ng2 = 0;
             for (int j = 0; j <= rows - 1; j++)
             {
@@ -2281,8 +2281,8 @@ namespace StatsDirect.Builtins
             {
                 DataFrame frame = parameters["data"].AsDataFrame;
 
-                int[] tnx = new int[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
-                double[] mean = new double[frame.VariableCount - 1 + 1 /* for VB to C# conversion */ ];
+                int[] tnx = new int[frame.VariableCount - 1 + 1 ];
+                double[] mean = new double[frame.VariableCount - 1 + 1 ];
                 double sumtot = 0.0;
                 int ntot = 0;
                 for (int d = 0; d < frame.VariableCount; d++)

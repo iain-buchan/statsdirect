@@ -374,10 +374,10 @@ namespace StatsDirect.Builtins
             DataFrame stratumFrame = parameters["stratum"].AsDataFrame;
             ClassifierVariable stratumVariable = stratumFrame.get_Variable(0).AsClassifierVariable;
             int rows = stratumVariable.Length;
-            int[] isi = new int[rows + 1 /* for VB to C# conversion */];
-            int[] ic = new int[rows + 1 /* for VB to C# conversion */];
+            int[] isi = new int[rows + 1];
+            int[] ic = new int[rows + 1];
             int strata = stratumVariable.GroupCount;
-            string[] stratlab = new string[strata + 1 /* for VB to C# conversion */];
+            string[] stratlab = new string[strata + 1];
             for (int i = 1; i <= rows; i++)
             {
                 if (stratumVariable.Data[i - 1] == Constant.MISSING)
@@ -412,8 +412,8 @@ namespace StatsDirect.Builtins
             DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
             // Store the predictor Data
             int cols = predictorsFrame.VariableCount;
-            double[,] x = new double[cols + 1 /* for VB to C# conversion */, rows + 1 /* for VB to C# conversion */];
-            ColumnData[] cd = new ColumnData[cols + 1 /* for VB to C# conversion */];
+            double[,] x = new double[cols + 1, rows + 1];
+            ColumnData[] cd = new ColumnData[cols + 1];
             for (int C = 1; C <= cols; C++)
             {
                 DoubleVariable v = predictorsFrame.Variables[C - 1].AsDoubleVariable;
@@ -426,7 +426,7 @@ namespace StatsDirect.Builtins
             }
             // check predictors for categorical data not yet dummied
             // transpose x into z
-            double[,] z = new double[rows + 1 /* for VB to C# conversion */, cols + 1 /* for VB to C# conversion */];
+            double[,] z = new double[rows + 1, cols + 1];
             for (int C = 1; C <= cols; C++)
             {
                 for (int r = 1; r <= rows; r++)
@@ -439,13 +439,13 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double[] b = new double[cols + 1 /* for VB to C# conversion */];
-            double[] cov = new double[((int)(Math.Floor((double)cols * (cols + 1) / 2))) + 1 /* for VB to C# conversion */];
-            double[] sc = new double[cols + 1 /* for VB to C# conversion */ ];
-            double[] se = new double[cols + 1 /* for VB to C# conversion */];
-            int[] isz = new int[cols + 1 /* for VB to C# conversion */];
-            int[] NCA = new int[strata + 1 /* for VB to C# conversion */ ];
-            int[] nct = new int[strata + 1 /* for VB to C# conversion */ ];
+            double[] b = new double[cols + 1];
+            double[] cov = new double[((int)(Math.Floor((double)cols * (cols + 1) / 2))) + 1];
+            double[] sc = new double[cols + 1 ];
+            double[] se = new double[cols + 1];
+            int[] isz = new int[cols + 1];
+            int[] NCA = new int[strata + 1 ];
+            int[] nct = new int[strata + 1 ];
 
             bool show_counts = parameters["show-counts"].AsBoolean;
             double tol = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
@@ -457,8 +457,8 @@ namespace StatsDirect.Builtins
             const int maxit = 15;
 
             // first with a single unity predictor to get LR chi-square baseline
-            double[,] z_dum = new double[rows + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
-            int[] isz_dum = new int[1 + 1 /* for VB to C# conversion */ ];
+            double[,] z_dum = new double[rows + 1, 1 + 1];
+            int[] isz_dum = new int[1 + 1 ];
             isz_dum[1] = 1;
             for (int i = 1; i <= rows; i++)
             {
@@ -697,7 +697,7 @@ namespace StatsDirect.Builtins
             }
             maxobs = maxobs + 1;
             k = ip * nobs + maxobs * (ip + 2) * (ip + 1) / 2 + maxobs - 1;
-            double[] wk = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] wk = new double[k + 1 ];
 
             // int l1 = ip * nobs + 1; 
             // int l2 = maxobs + l1; 
@@ -775,7 +775,7 @@ namespace StatsDirect.Builtins
             nct[1] = nct[1] - NCA[1];
 
             // Call CLMAIN(ns, NCA(1), nct(1), ip, wk(1), ip, dev, b(1), sc(1), cov(1), wk(l1), wk(l2), wk(l3), wk(l4), maxit, tol, iter, ifault)
-            double[,] wz = new double[ip + 1 /* for VB to C# conversion */, nobs + 1 /* for VB to C# conversion */];
+            double[,] wz = new double[ip + 1, nobs + 1];
             for (j = 1; j <= nobs; j++)
             {
                 for (int i = 1; i <= ip; i++)
@@ -812,10 +812,10 @@ namespace StatsDirect.Builtins
 
             int info;
             double dlikx = 0;
-            double[] wb = new double[maxobs + 1 /* for VB to C# conversion */];
-            double[,] wdb = new double[ip + 1 /* for VB to C# conversion */, maxobs + 1 /* for VB to C# conversion */];
-            double[,] wd2b = new double[ip * (ip + 1) / 2 + 1 /* for VB to C# conversion */, maxobs + 1 /* for VB to C# conversion */];
-            double[] u = new double[maxobs + 1 /* for VB to C# conversion */ ];
+            double[] wb = new double[maxobs + 1];
+            double[,] wdb = new double[ip + 1, maxobs + 1];
+            double[,] wd2b = new double[ip * (ip + 1) / 2 + 1, maxobs + 1];
+            double[] u = new double[maxobs + 1 ];
 
             double toobig = -Math.Log(Constant.SPREAL);
             iter = 0;
@@ -1072,7 +1072,7 @@ namespace StatsDirect.Builtins
         /// </summary>
         private static void dpptrs(int n, double[] ap, double[,] b, out int info)
         {
-            double[] tb = new double[n + 1 /* for VB to C# conversion */ ];
+            double[] tb = new double[n + 1 ];
 
             info = 0;
             if (n < 0)

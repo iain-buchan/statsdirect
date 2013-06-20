@@ -16,9 +16,9 @@ namespace StatsDirect.Numerics
         ///  <remarks>last Fortran revision: 6/4/97 by ieb, converted to VB.Net 2008-04-25</remarks>
         public static void ppq2( int km1, double[] fact1, int nu, out double cc, double d, out int ifault ) 
         {
-            double[] a = new double[km1 + 1 /* for VB to C# conversion */ ];
-            double[] b = new double[km1 + 1 /* for VB to C# conversion */ ];
-            double[] c = new double[km1 + 1 /* for VB to C# conversion */ ]; 
+            double[] a = new double[km1 + 1 ];
+            double[] b = new double[km1 + 1 ];
+            double[] c = new double[km1 + 1 ]; 
             
             const double dinfnu = 360.0; 
             ifault = 0; 
@@ -57,9 +57,9 @@ namespace StatsDirect.Numerics
         ///  <remarks>last Fortran revision: 6/4/97 by ieb, converted to VB.Net 2008-04-25</remarks>
         public static void ppd2( int km1, double[] fact1, int nu, out double cc, double d, out int ifault ) 
         {
-            double[] a = new double[km1 + 1 /* for VB to C# conversion */ ];
-            double[] b = new double[km1 + 1 /* for VB to C# conversion */ ];
-            double[] c = new double[km1 + 1 /* for VB to C# conversion */ ]; 
+            double[] a = new double[km1 + 1 ];
+            double[] b = new double[km1 + 1 ];
+            double[] c = new double[km1 + 1 ]; 
             
             const double dinfnu = 360.0; 
             ifault = 0; 
@@ -98,9 +98,9 @@ namespace StatsDirect.Numerics
         ///  <remarks>last Fortran revision: 6/4/97 by ieb, converted to VB.Net 2008-04-25</remarks>
         public static void dmca( int km1, double[] fact1, int nu, double cc, out double d, out int ifault ) 
         {
-            double[] a = new double[km1 + 1 /* for VB to C# conversion */ ];
-            double[] b = new double[km1 + 1 /* for VB to C# conversion */ ];
-            double[] c = new double[km1 + 1 /* for VB to C# conversion */ ]; 
+            double[] a = new double[km1 + 1 ];
+            double[] b = new double[km1 + 1 ];
+            double[] c = new double[km1 + 1 ]; 
             
             const double dinfnu = 360.0;
 
@@ -177,9 +177,9 @@ namespace StatsDirect.Numerics
         ///  <remarks>last Fortran revision: 6/4/97 by ieb, converted to VB.Net 2008-04-25</remarks>
         public static void dmcc( int km1, double[] fact1, int nu, double cc, out double d, out int ifault ) 
         {
-            double[] a = new double[km1 + 1 /* for VB to C# conversion */ ];
-            double[] b = new double[km1 + 1 /* for VB to C# conversion */ ];
-            double[] c = new double[km1 + 1 /* for VB to C# conversion */ ]; 
+            double[] a = new double[km1 + 1 ];
+            double[] b = new double[km1 + 1 ];
+            double[] c = new double[km1 + 1 ]; 
             
             const double dinfnu = 3600;
 

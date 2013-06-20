@@ -147,7 +147,7 @@ namespace StatsDirect.Builtins
             ic = ic + 1;
             int irt = ic;
             int rows = timesVariable.Length;
-            double[] x = new double[rows * ic + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[rows * ic + 1 ];
             bool ok = true;
             int ik = 0;
             double adjt = 0.0;
@@ -185,7 +185,7 @@ namespace StatsDirect.Builtins
             ic++;
             int icen = ic;
             // create temp variable for copying values 
-            double[] transTemp3 = new double[rows * ic + 1 /* for VB to C# conversion */ ];
+            double[] transTemp3 = new double[rows * ic + 1 ];
             Array.Copy(x, transTemp3, Math.Min(x.Length, transTemp3.Length));
             x = transTemp3;
             ok = false;
@@ -214,7 +214,7 @@ namespace StatsDirect.Builtins
                 ic = ic + 1;
                 ifrq = ic;
                 // create temp variable for copying values 
-                double[] transTemp4 = new double[rows * ic + 1 /* for VB to C# conversion */ ];
+                double[] transTemp4 = new double[rows * ic + 1 ];
                 Array.Copy(x, transTemp4, Math.Min(x.Length, transTemp4.Length));
                 x = transTemp4;
                 for (r = 1; r <= rows; r++)
@@ -240,7 +240,7 @@ namespace StatsDirect.Builtins
             {
                 predictorsFrame = parameters["predictors"].AsDataFrame;
                 // Store the predictor Data
-                double[,] xx = new double[predictorsFrame.VariableCount - 1 + 1 /* for VB to C# conversion */, rows + 1 /* for VB to C# conversion */];
+                double[,] xx = new double[predictorsFrame.VariableCount - 1 + 1, rows + 1];
                 for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
                 {
                     for (r = 1; r <= rows; r++)
@@ -251,10 +251,10 @@ namespace StatsDirect.Builtins
                 // load predictors into the master matrix
                 ncov = predictorsFrame.VariableCount;
                 // create temp variable for copying values 
-                double[] transTemp5 = new double[rows * (ic + ncov) + 1 /* for VB to C# conversion */ ];
+                double[] transTemp5 = new double[rows * (ic + ncov) + 1 ];
                 Array.Copy(x, transTemp5, Math.Min(x.Length, transTemp5.Length));
                 x = transTemp5;
-                indef = new int[ncov + 1 /* for VB to C# conversion */];
+                indef = new int[ncov + 1];
                 icov = ik;
                 for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
                 {
@@ -270,11 +270,11 @@ namespace StatsDirect.Builtins
             else
             {
                 ncov = 0;
-                indef = new int[1 + 1 /* for VB to C# conversion */];
+                indef = new int[1 + 1];
             }
 
             // start to fill the holdx matrix needed for the plot function
-            double[,] holdx = new double[rows + 1 + 1 /* for VB to C# conversion */, ncov + 1 + 1 /* for VB to C# conversion */];
+            double[,] holdx = new double[rows + 2, ncov + 2];
             for (c = 1; c <= ncov; c++)
             {
                 // If we get here, ncov must be at least 1, so predictorsFrame cannot be null.
@@ -286,8 +286,8 @@ namespace StatsDirect.Builtins
             }
 
             // identify the binary covariates
-            bool[] bincov = new bool[ncov + 1 /* for VB to C# conversion */];
-            ColumnData[] xd = new ColumnData[predictorsFrame.VariableCount - 1 + 1 /* for VB to C# conversion */];
+            bool[] bincov = new bool[ncov + 1];
+            ColumnData[] xd = new ColumnData[predictorsFrame.VariableCount - 1 + 1];
             int binaries = 0;
             if (ncov > 0)
             {
@@ -320,7 +320,7 @@ namespace StatsDirect.Builtins
                 ic = ic + 1;
                 istrat = ic;
                 // create temp variable for copying values 
-                double[] transTemp6 = new double[rows * ic + 1 /* for VB to C# conversion */ ];
+                double[] transTemp6 = new double[rows * ic + 1 ];
                 Array.Copy(x, transTemp6, Math.Min(x.Length, transTemp6.Length));
                 x = transTemp6;
                 for (r = 1; r <= rows; r++)
@@ -341,7 +341,7 @@ namespace StatsDirect.Builtins
             {
                 throw new TemplateOperationCancelledException();
             }
-            int[] nvef = new int[nef + 1 /* for VB to C# conversion */];
+            int[] nvef = new int[nef + 1];
             for (r = 1; r <= nef; r++)
             {
                 nvef[r] = 1;
@@ -378,15 +378,15 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            int[] igrp = new int[nobs + 1 /* for VB to C# conversion */];
-            double[,] ccase = new double[nobs + 1 /* for VB to C# conversion */, 6 + 1 /* for VB to C# conversion */];
-            double[,] coef = new double[ldcoef + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
-            double[,] cov = new double[ldcoef + 1 /* for VB to C# conversion */, ldcoef + 1 /* for VB to C# conversion */];
-            double[] GR = new double[ldcoef + 1 /* for VB to C# conversion */ ];
-            double[] xmean = new double[ldcoef + 1 /* for VB to C# conversion */];
+            int[] igrp = new int[nobs + 1];
+            double[,] ccase = new double[nobs + 1, 6 + 1];
+            double[,] coef = new double[ldcoef + 1, 4 + 1];
+            double[,] cov = new double[ldcoef + 1, ldcoef + 1];
+            double[] GR = new double[ldcoef + 1 ];
+            double[] xmean = new double[ldcoef + 1];
             coxreg(ref nobs, ref nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
-            // double[,] ARR2 = new double[nobs + 1 + 1 /* for VB to C# conversion */, 6 + 1 /* for VB to C# conversion */];
-            // double[, ,] ARR3 = new double[2 + 1 /* for VB to C# conversion */, ncoef + 1 + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */]; 
+            // double[,] ARR2 = new double[nobs + 2, 6 + 1];
+            // double[, ,] ARR3 = new double[2 + 1, ncoef + 2, 4 + 1]; 
             if (ifault != 0)
             {
                 if (ifault == 3)
@@ -403,9 +403,9 @@ namespace StatsDirect.Builtins
                 }
                 throw new TemplateOperationCancelledException();
             }
-            ColumnData[] CDAT1 = new ColumnData[ncoef + 1 /* for VB to C# conversion */ ];
-            double[, ,] ARR3 = new double[1 + 1 /* for VB to C# conversion */, ncoef + 1 /* for VB to C# conversion */, 3 + 1 /* for VB to C# conversion */];
-            double[,] ARR2 = new double[nobs + 1 /* for VB to C# conversion */, 10 + 1 /* for VB to C# conversion */];
+            ColumnData[] CDAT1 = new ColumnData[ncoef + 1 ];
+            double[, ,] ARR3 = new double[1 + 1, ncoef + 1, 3 + 1];
+            double[,] ARR2 = new double[nobs + 1, 10 + 1];
             for (i = 1; i <= ncoef; i++)
             {
                 ARR3[1, i, 1] = coef[i, 1];
@@ -446,12 +446,12 @@ namespace StatsDirect.Builtins
                 x[i] = 1.0;
             }
             indef[1] = 3;
-            igrp = new int[nobs + 1 /* for VB to C# conversion */ ];
-            ccase = new double[nobs + 1 /* for VB to C# conversion */, 6 + 1 /* for VB to C# conversion */];
-            coef = new double[ldcoef + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
-            cov = new double[ldcoef + 1 /* for VB to C# conversion */, ldcoef + 1 /* for VB to C# conversion */];
-            GR = new double[ldcoef + 1 /* for VB to C# conversion */ ];
-            xmean = new double[ldcoef + 1 /* for VB to C# conversion */ ];
+            igrp = new int[nobs + 1 ];
+            ccase = new double[nobs + 1, 6 + 1];
+            coef = new double[ldcoef + 1, 4 + 1];
+            cov = new double[ldcoef + 1, ldcoef + 1];
+            GR = new double[ldcoef + 1 ];
+            xmean = new double[ldcoef + 1 ];
             coxreg(ref nobs, ref nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             ARR2[3, 0] = algl;
 
@@ -616,7 +616,7 @@ namespace StatsDirect.Builtins
         private static void coxreg(ref int nRow, ref int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref int ifault)
         {
             int i;
-            double[] obz = new double[1 + 1 /* for VB to C# conversion */];
+            double[] obz = new double[1 + 1];
             if (nRow > 1)
             {
                 if (ldx < nRow)
@@ -669,12 +669,12 @@ namespace StatsDirect.Builtins
             {
                 return;
             }
-            double[] OBS = new double[2 * (ncoef + 1) + 1 /* for VB to C# conversion */];
-            double[] smg = new double[2 * ncoef + 1 /* for VB to C# conversion */];
-            double[] smh = new double[2 * Math.Max(ncoef * ncoef, 2) + 1 /* for VB to C# conversion */];
-            int[] iptr = new int[nRow + ncoef + 1 /* for VB to C# conversion */];
-            int[] idt = new int[nRow + 1 /* for VB to C# conversion */];
-            int[] iwk = new int[3 * Math.Max(nRow, nCol) + 1 /* for VB to C# conversion */ ];
+            double[] OBS = new double[2 * (ncoef + 1) + 1];
+            double[] smg = new double[2 * ncoef + 1];
+            double[] smh = new double[2 * Math.Max(ncoef * ncoef, 2) + 1];
+            int[] iptr = new int[nRow + ncoef + 1];
+            int[] idt = new int[nRow + 1];
+            int[] iwk = new int[3 * Math.Max(nRow, nCol) + 1 ];
             coxest(nRow, nCol, ref x, ref ldx, ref irt, ref IFRQ, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref iwk, ref ifault);
         }
 
@@ -686,7 +686,7 @@ namespace StatsDirect.Builtins
             double xx = 0;
 
             //   ESTIMATES FOR PARAMETERS IN PROPORTIONAL HAZARDS MODEL
-            int[] indkey = new int[3 + 1 /* for VB to C# conversion */];
+            int[] indkey = new int[3 + 1];
             if (nRow >= 1)
             {
                 if (ldx < nRow)
@@ -953,7 +953,7 @@ namespace StatsDirect.Builtins
             bool change;
 
             //   NEWTON-RAPHSON ITERATIONS
-            double[] smd = new double[1 + 1 /* for VB to C# conversion */ ];
+            double[] smd = new double[1 + 1 ];
             for (int i = 1; i <= ncoef; i++)
             {
                 xmean[i] = 0.0;
@@ -1209,8 +1209,8 @@ namespace StatsDirect.Builtins
                 int indep = indy;
                 // Call GLREG(1, 0, INDY, X(1), -NCOEF, INDEF(1), INDEP, COEF(1, 1), NCOEF, COV(1, 1), LDCOV, SMG(1), irank, SMU, SMD(1), IMISS, SMH(1), SMH(1), NCOEF, OBS(1), ifault)
                 //  Can't do calls with array offsets into VB, so this separates the top half of smh into its own array for the call
-                double[] smhmax = new double[ncoef + 1 /* for VB to C# conversion */ ];
-                double[] coef1 = new double[ncoef + 1 /* for VB to C# conversion */ ];
+                double[] smhmax = new double[ncoef + 1 ];
+                double[] coef1 = new double[ncoef + 1 ];
                 for (int i = 0; i <= ncoef; i++)
                 {
                     smhmax[i] = smh[i + ncoef];
@@ -1292,8 +1292,8 @@ namespace StatsDirect.Builtins
                         OBS[indy] = OBS[indy] - ymean;
                         // Call GLREG(2, 1, INDY, OBS(1), -NCOEF, INDEF(1), INDEP, COEF(1, 1), NCOEF, COV(1, 1), LDCOV, SMG(1), irank, SMU, SMD(1), IMISS, SMH(1), SMH(1), NCOEF, OBS(1), ifault)
                         //  Can't do calls with array offsets into VB, so this separates the top half of smh into its own array for the call
-                        smhmax = new double[ncoef + 1 /* for VB to C# conversion */ ];
-                        coef1 = new double[ncoef + 1 /* for VB to C# conversion */ ];
+                        smhmax = new double[ncoef + 1 ];
+                        coef1 = new double[ncoef + 1 ];
                         for (ii = 0; ii <= ncoef; ii++)
                         {
                             smhmax[ii] = smh[ii + ncoef];
@@ -1336,8 +1336,8 @@ namespace StatsDirect.Builtins
                     // Call GLREG(3, 0, INDY, OBS(1), -NCOEF, INDEF(1), INDEP, COEF(1, 1), NCOEF, COV(1, 1), LDCOV, SMG(1), irank, SMU, SMD(1), IMISS, SMH(1), SMH(1), NCOEF, OBS(1), ifault)
                     // Declare Sub GLSQR Lib "StatsDirect" (ByVal ido As Long, ByVal intcep As Long, ByVal isub As Long, ByVal nRow As Long, ByVal nvar As Long, ByVal x As Double, !!ByVal ldx As Long!!, ByVal iind As Long, ByVal indind As Long, ByVal idep As Long, ByVal inddep As Long, ByVal IFRQ As Long, ByVal iwt As Long, ByVal b As Double, !!ByVal ldb As Long!!, ByVal r As Double, !!ByVal ldr As Long!!, ByVal D As Double, ByVal irank As Long, ByVal rdf As Double, ByVal rss As Double, ByVal nrmiss As Long, ByVal xmin As Double, ByVal XMax As Double, ByVal WK As Double, ByVal ifault As Long)
                     //  Can't do calls with array offsets into VB, so this separates the top half of smh into its own array for the call
-                    smhmax = new double[ncoef + 1 /* for VB to C# conversion */ ];
-                    coef1 = new double[ncoef + 1 /* for VB to C# conversion */ ];
+                    smhmax = new double[ncoef + 1 ];
+                    coef1 = new double[ncoef + 1 ];
                     for (ii = 0; ii <= ncoef; ii++)
                     {
                         smhmax[ii] = smh[ii + ncoef];
@@ -2267,7 +2267,7 @@ namespace StatsDirect.Builtins
             }
             int mn = m * n;
             int iwrk = ((int)(Math.Floor((double)(m + n) / 2)));
-            int[] move = new int[iwrk + 1 /* for VB to C# conversion */];
+            int[] move = new int[iwrk + 1];
 
             if (m == n)
             {
@@ -2509,7 +2509,7 @@ namespace StatsDirect.Builtins
 
             //  baseline S and H and S and H values at mean covariate
             int iobs = Convert.ToInt32(ARR2[0, 0]);
-            coxp[] z = new coxp[iobs + 1 + 1 /* for VB to C# conversion */ ];
+            coxp[] z = new coxp[iobs + 2 ];
             z[0] = new coxp();
             for (i = 1; i <= iobs; i++)
             {
@@ -2544,7 +2544,7 @@ namespace StatsDirect.Builtins
                     istrata = istrata + 1;
                 }
                 watch_time = z[i].TM;
-                double[] dead_theta = new double[30 + 1 /* for VB to C# conversion */ ];
+                double[] dead_theta = new double[30 + 1 ];
                 double dead = 0.0;
                 int iinc = 0;
                 for (int j = i; j <= iobs; j++)
@@ -2560,7 +2560,7 @@ namespace StatsDirect.Builtins
                         if (dead > transTemp0.GetUpperBound(0))
                         {
                             // create temp variable for copying values 
-                            double[] transTemp7 = new double[Convert.ToInt32(dead) + 1 /* for VB to C# conversion */ ];
+                            double[] transTemp7 = new double[Convert.ToInt32(dead) + 1 ];
                             Array.Copy(dead_theta, transTemp7, Math.Min(dead_theta.Length, transTemp7.Length));
                             dead_theta = transTemp7;
                         }
@@ -2685,7 +2685,7 @@ namespace StatsDirect.Builtins
             bool use_tic = parameters["use-tics"].AsBoolean;
             bool use_marker = parameters["use-markers"].AsBoolean;
 
-            int[] gn = new int[3 + 1 /* for VB to C# conversion */];
+            int[] gn = new int[3 + 1];
 
             int ncoef = Convert.ToInt32(ARR2[1, 0]);
             IComparer<coxp> comparer;
@@ -2865,7 +2865,7 @@ namespace StatsDirect.Builtins
 
             int iobs = Convert.ToInt32(ARR2[0, 0]);
             jcoef = Convert.ToInt32(ARR2[1, 0]);
-            coxp[] z = new coxp[iobs + 1 + 1 /* for VB to C# conversion */];
+            coxp[] z = new coxp[iobs + 2];
             for (i = 1; i <= iobs; i++)
             {
                 z[i] = new coxp
@@ -2896,7 +2896,7 @@ namespace StatsDirect.Builtins
                     istrata = istrata + 1;
                 }
                 double watch_time = z[i].TM;
-                double[] dead_theta = new double[30 + 1 /* for VB to C# conversion */];
+                double[] dead_theta = new double[30 + 1];
                 double dead = 0.0;
                 int iinc = 0;
                 int j;
@@ -2912,7 +2912,7 @@ namespace StatsDirect.Builtins
                         if (dead > dead_theta.GetUpperBound(0))
                         {
                             // create temp variable for copying values 
-                            double[] transTemp8 = new double[Convert.ToInt32(dead) + 1 /* for VB to C# conversion */];
+                            double[] transTemp8 = new double[Convert.ToInt32(dead) + 1];
                             Array.Copy(dead_theta, transTemp8, Math.Min(dead_theta.Length, transTemp8.Length));
                             dead_theta = transTemp8;
                         }
@@ -2968,9 +2968,9 @@ namespace StatsDirect.Builtins
             }
 
             int ictr = 0;
-            double[] xp = new double[iobs + 1 /* for VB to C# conversion */ ];
-            double[] yp = new double[iobs + 1 /* for VB to C# conversion */ ];
-            double[] XR = new double[iobs + 1 /* for VB to C# conversion */ ];
+            double[] xp = new double[iobs + 1 ];
+            double[] yp = new double[iobs + 1 ];
+            double[] XR = new double[iobs + 1 ];
             for (i = 1; i <= iobs; i++)
             {
                 if (z[i].s != 0.0)

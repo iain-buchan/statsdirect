@@ -2017,7 +2017,7 @@ namespace StatsDirect.Charting
                     DoubleSeries ys = definition.YSeries[c].AsDoubleSeries;
                     double[] xdat = xs.Data;
                     double[] ydat = ys.Data;
-                    PointF[] xys = new PointF[xs.Data.Length - 1 + 1 /* for VB to C# conversion */ ];
+                    PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
                     for (int r = 0; r <= xs.Data.Length - 1; r++)
                     {
                         if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2130,7 +2130,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 /* for VB to C# conversion */ ];
+            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2224,7 +2224,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 /* for VB to C# conversion */ ];
+            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2593,7 +2593,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 /* for VB to C# conversion */ ];
+            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2687,7 +2687,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 /* for VB to C# conversion */ ];
+            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
             for (int r = 0; r < xs.Data.Length; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -5002,8 +5002,8 @@ namespace StatsDirect.Charting
                 int mp = so.Bins;
                 double zint = so.MidPointInterval;
                 double zmin = so.MinimumBinMidPoint;
-                int[] size = new int[mp + 1 + 1 /* for VB to C# conversion */ ];
-                double[] midpt = new double[mp + 1 + 1 /* for VB to C# conversion */ ];
+                int[] size = new int[mp + 2 ];
+                double[] midpt = new double[mp + 2];
 
                 //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
                 axisXMin = zmin;
@@ -5116,8 +5116,8 @@ namespace StatsDirect.Charting
                     int mp = so.Bins;
                     double zint = so.MidPointInterval;
                     double zmin = so.MinimumBinMidPoint;
-                    int[] size = new int[mp + 1 + 1 /* for VB to C# conversion */ ];
-                    double[] midpt = new double[mp + 1 + 1 /* for VB to C# conversion */ ];
+                    int[] size = new int[mp + 2];
+                    double[] midpt = new double[mp + 2];
                     string msk = GetAxisMask(zint, zmin, mp, 1);
 
                     //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
@@ -5406,7 +5406,7 @@ namespace StatsDirect.Charting
             int rows = x.Length;
             int xOffset = x.GetLowerBound(0);
             int yOffset = y.GetLowerBound(0);
-            PointF[] xys = new PointF[rows - 1 + 1 /* for VB to C# conversion */ ];
+            PointF[] xys = new PointF[rows - 1 + 1 ];
             for (int r = 0; r <= rows - 1; r++)
             {
                 if (x[r + xOffset] != Constant.MISSING && y[r + yOffset] != Constant.MISSING)
@@ -5954,7 +5954,7 @@ namespace StatsDirect.Charting
 
             //  Assume data passed as series - X is present, Y is absent.
 
-            ROCSeriesRecord[] seriesData = new ROCSeriesRecord[definition.XSeries.Count + 1 /* for VB to C# conversion */ ];
+            ROCSeriesRecord[] seriesData = new ROCSeriesRecord[definition.XSeries.Count + 1 ];
             for (int C = 0; C <= definition.XSeries.Count - 1; C++)
             {
                 seriesData[C] = new ROCSeriesRecord();
@@ -6195,8 +6195,8 @@ namespace StatsDirect.Charting
                 double y1 = offy + sens * yExtCanvas;
 
                 int stps = thisData.tdata.Length;
-                double[] rx = new double[stps + 1 /* for VB to C# conversion */ ];
-                double[] ry = new double[stps + 1 /* for VB to C# conversion */ ];
+                double[] rx = new double[stps + 1 ];
+                double[] ry = new double[stps + 1 ];
 
                 for (int r = 0; r <= stps - 1; r++)
                 {
@@ -6289,8 +6289,8 @@ namespace StatsDirect.Charting
                     // Wilcoxon estimate for AUC
                     // Hanley JA, mcNeil BJ, Radiology 143:29-36
                     //  Note that mwx and mwr are 1-based
-                    double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1 /* for VB to C# conversion */ ];
-                    double[] mwr = new double[thisData.pdata.Length + thisData.adata.Length + 1 /* for VB to C# conversion */ ];
+                    double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1 ];
+                    double[] mwr = new double[thisData.pdata.Length + thisData.adata.Length + 1 ];
                     for (int j = 0; j < thisData.pdata.Length; j++)
                     {
                         mwx[j + 1] = thisData.pdata[j];
@@ -6502,13 +6502,13 @@ namespace StatsDirect.Charting
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
 
-            double[] y = new double[rows - 1 + 1 /* for VB to C# conversion */ ];
+            double[] y = new double[rows - 1 + 1 ];
             for (int j = 0; j <= rows - 1; j++)
             {
                 y[j] = xs0.Data[j];
             }
 
-            double[] x = new double[rows - 1 + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[rows - 1 + 1 ];
             double transTemp68;
             ExFortran.Rank(y, x, 0, rows, 0, out transTemp68);
 
@@ -6581,7 +6581,7 @@ namespace StatsDirect.Charting
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
 
-            double[] y = new double[rows - 1 + 1 /* for VB to C# conversion */ ];
+            double[] y = new double[rows - 1 + 1 ];
             for (int j = 0; j <= rows - 1; j++)
             {
                 y[j] = xs0.Data[j];
@@ -6632,7 +6632,7 @@ namespace StatsDirect.Charting
             double sdy = Math.Sqrt(vary);
 
 
-            double[] x = new double[rows - 1 + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[rows - 1 + 1 ];
             double transTemp63;
             ExFortran.Rank(y, x, 0, rows, 0, out transTemp63);
 
@@ -6795,8 +6795,8 @@ namespace StatsDirect.Charting
                 //  Separate male and female values
                 DataFrame femaleFrame = pOptions.FemaleFrame;
                 DoubleVariable females = femaleFrame.Variables[0].AsDoubleVariable;
-                female = new double[nmale - 1 + 1 /* for VB to C# conversion */ ];
-                male = new double[nmale - 1 + 1 /* for VB to C# conversion */ ];
+                female = new double[nmale - 1 + 1 ];
+                male = new double[nmale - 1 + 1 ];
                 maxfemale = females.Max;
 
                 for (int r = 0; r <= nmale - 1; r++)
@@ -6814,8 +6814,8 @@ namespace StatsDirect.Charting
             else
             {
                 //  Combined male/female values - assume an even split
-                female = new double[nmale - 1 + 1 /* for VB to C# conversion */];
-                male = new double[nmale - 1 + 1 /* for VB to C# conversion */];
+                female = new double[nmale - 1 + 1];
+                male = new double[nmale - 1 + 1];
                 for (int r = 0; r <= nmale - 1; r++)
                 {
                     if (males.Data[r] != Constant.MISSING)
@@ -6829,7 +6829,7 @@ namespace StatsDirect.Charting
                 mode = 2;
             }
 
-            string[] title = new string[nmale + 1 /* for VB to C# conversion */ ];
+            string[] title = new string[nmale + 1 ];
             if (pOptions.LabelFrame != null)
             {
                 StringVariable labels = pOptions.LabelFrame.Variables[0].AsStringVariable;
@@ -7190,7 +7190,7 @@ namespace StatsDirect.Charting
             // Plot the points
             double maxz = double.MinValue;
             double sumz = Convert.ToDouble(0M);
-            int[] scalez = new int[rows + 1 /* for VB to C# conversion */ ];
+            int[] scalez = new int[rows + 1 ];
             for (int r = LowerBound; r <= rows + LowerBound - 1; r++)
             {
                 sumz = sumz + z[r];
@@ -7289,9 +7289,9 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         private void PlotLAbbe(int k, double[,] o, double rmh)
         {
-            double[] y = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] x = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] w = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] y = new double[k + 1 ];
+            double[] x = new double[k + 1 ];
+            double[] w = new double[k + 1 ];
             for (int i = 1; i <= k; i++)
             {
                 y[i] = o[i, 1] / (o[i, 1] + o[i, 3]);
@@ -7384,8 +7384,8 @@ namespace StatsDirect.Charting
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
-            double[] xdat = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] ydat = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] xdat = new double[rows + 1 ];
+            double[] ydat = new double[rows + 1 ];
 
             int ctr = 0;
             double[] ySeriesData = ys0.Data;
@@ -7499,8 +7499,8 @@ namespace StatsDirect.Charting
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
-            double[] xdat = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] ydat = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] xdat = new double[rows + 1 ];
+            double[] ydat = new double[rows + 1 ];
 
             int ctr = 0;
             bool looksLikeDates = true;
@@ -7627,7 +7627,7 @@ namespace StatsDirect.Charting
             ToCanvasX(xdat[1]);
             ToCanvasY(ydat[1]);
             // plot points
-            PointF[] xys = new PointF[rows - 1 + 1 /* for VB to C# conversion */ ];
+            PointF[] xys = new PointF[rows - 1 + 1 ];
             for (int r = 0; r <= rows - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -8763,7 +8763,7 @@ namespace StatsDirect.Charting
             int plotMethod;
             get_ma_ordinate(host, out y, yy, yw, cl, cu, ref cco, rows, out title, ref ytx, xtxt, out plotMethod, xform, ref reverse, ref use_ci);
 
-            double[] xx = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] xx = new double[rows + 1 ];
             xx[0] = Constant.MISSING;
             switch (xform)
             {
@@ -9174,7 +9174,7 @@ namespace StatsDirect.Charting
 
         private void get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, ref string ytx, string xtxt, out int plot_method, Transformation xform, ref bool reverse, ref bool use_ci)
         {
-            y = new double[rows + 1 /* for VB to C# conversion */ ];
+            y = new double[rows + 1 ];
             y[0] = Constant.MISSING;
             if (xtxt == "Peto weights")
             {
@@ -9413,8 +9413,8 @@ namespace StatsDirect.Charting
         private double DeLongSE(double[] x, double[] y, double auc)
         {
 
-            double[] v10 = new double[x.Length + 1 /* for VB to C# conversion */ ];
-            double[] v01 = new double[y.Length + 1 /* for VB to C# conversion */ ];
+            double[] v10 = new double[x.Length + 1 ];
+            double[] v01 = new double[y.Length + 1 ];
             for (int i = 0; i <= x.Length - 1; i++)
             {
                 for (int j = 0; j <= y.Length - 1; j++)
@@ -9620,8 +9620,8 @@ namespace StatsDirect.Charting
             const string tim = "Times";
             const string ltim = "Log Times";
             int gx = stime.GetUpperBound(0);
-            double[,] x = new double[gx + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            double[,] y = new double[gx + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
+            double[,] x = new double[gx + 1, groups + 1];
+            double[,] y = new double[gx + 1, groups + 1];
             for (j3 = 1; j3 <= 5; j3++)
             {
                 string vx;
@@ -9849,7 +9849,7 @@ namespace StatsDirect.Charting
                 scaleYAxis = 1;
                 metafileHeight = DEFAULT_METAFILE_HEIGHT;
             }
-            double[] gw = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] gw = new double[k + 1 ];
             double ormax = double.NegativeInfinity;
             double ormin = double.PositiveInfinity;
             double orumax = double.NegativeInfinity;
@@ -9927,7 +9927,7 @@ namespace StatsDirect.Charting
             }
 
             const int tics = 15;
-            double[] tic = new double[tics + 1 /* for VB to C# conversion */ ];
+            double[] tic = new double[tics + 1 ];
             tic[1] = 0.00000001;
             tic[2] = 0.00001;
             tic[3] = 0.001;
@@ -10157,7 +10157,7 @@ namespace StatsDirect.Charting
             }
             DefaultAxes(0);
 
-            double[] gw = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] gw = new double[k + 1 ];
             double ormax = double.NegativeInfinity;
             double ormin = double.PositiveInfinity;
             double orumax = double.NegativeInfinity;
@@ -10424,7 +10424,7 @@ namespace StatsDirect.Charting
             }
             DefaultAxes(0);
 
-            double[] gn = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] gn = new double[k + 1 ];
             int kok = 0;
             double ormax = double.NegativeInfinity;
             double ormin = double.PositiveInfinity;

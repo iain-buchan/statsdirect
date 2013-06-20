@@ -374,9 +374,9 @@ namespace StatsDirect.Builtins
 
                 if (fault != 0)
                     return Constant.MISSING;
-                double[] f1 = new double[p + 1 + 1 /* VB to C# conversion */ ];
-                double[] g1 = new double[p + 1 + 1/* VB to C# conversion */ ];
-                double[] h1 = new double[p + 1 + 1/* VB to C# conversion */];
+                double[] f1 = new double[p + 2];
+                double[] g1 = new double[p + 2];
+                double[] h1 = new double[p + 2];
                 int a1 = 0;
                 int q1 = q - r;
                 int p1 = p;

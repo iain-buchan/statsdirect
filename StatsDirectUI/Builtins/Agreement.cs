@@ -79,7 +79,7 @@ namespace StatsDirect.Builtins
             {
                 c = categoriesVariable.GroupCount;
             }
-            data = new double[n + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */, c + 1 /* for VB to C# conversion */];
+            data = new double[n + 1, b + 1, c + 1];
             for (int i = 1; i <= n; i++)
             {
                 for (int j = 1; j <= b; j++)
@@ -292,21 +292,21 @@ namespace StatsDirect.Builtins
             int i, j, k;
             int ix, ir, irr;
             int jss, iss;
-            double[,] d = new double[n * b + 1 /* for VB to C# conversion */, n * b + 1 /* for VB to C# conversion */ ];
-            double[, ,] sj = new double[n + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[, ,] sj2 = new double[n + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[,] vi = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[, ,] sj3 = new double[n + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[, ,] uj = new double[n + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[, ,] wi = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[, ,] yij = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[,] uij = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[, ,] zijk = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[,] sij = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[,] sij2 = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[,] sij3 = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[,] tij2 = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
-            double[,] tij3 = new double[b + 1 /* for VB to C# conversion */, b + 1 /* for VB to C# conversion */ ];
+            double[,] d = new double[n * b + 1, n * b + 1 ];
+            double[, ,] sj = new double[n + 1, b + 1, b + 1 ];
+            double[, ,] sj2 = new double[n + 1, b + 1, b + 1 ];
+            double[,] vi = new double[b + 1, b + 1 ];
+            double[, ,] sj3 = new double[n + 1, b + 1, b + 1 ];
+            double[, ,] uj = new double[n + 1, b + 1, b + 1 ];
+            double[, ,] wi = new double[b + 1, b + 1, b + 1 ];
+            double[, ,] yij = new double[b + 1, b + 1, b + 1 ];
+            double[,] uij = new double[b + 1, b + 1 ];
+            double[, ,] zijk = new double[b + 1, b + 1, b + 1 ];
+            double[,] sij = new double[b + 1, b + 1 ];
+            double[,] sij2 = new double[b + 1, b + 1 ];
+            double[,] sij3 = new double[b + 1, b + 1 ];
+            double[,] tij2 = new double[b + 1, b + 1 ];
+            double[,] tij3 = new double[b + 1, b + 1 ];
 
             const double zero = 0.0;
             for (i = 1; i <= n; i++)
@@ -585,16 +585,16 @@ namespace StatsDirect.Builtins
         private static void AgreeStandard(int kn, int km, int kr, double[, ,] tdata, out double delta, out double edel, out double var, out double gam, out double rho, out double prob)
         {
             int i, j;
-            double[] c1 = new double[km + 1 /* for VB to C# conversion */ ];
-            double[] c2 = new double[km + 1 /* for VB to C# conversion */ ];
-            double[] c3 = new double[km + 1 /* for VB to C# conversion */ ];
-            double[,] d = new double[2 * kn + 1 /* for VB to C# conversion */, 2 * kn + 1 /* for VB to C# conversion */];
-            double[, ,] data = new double[kn + 1 /* for VB to C# conversion */, 3, kr + 1 /* for VB to C# conversion */];
-            double[] del = new double[km + 1 /* for VB to C# conversion */ ];
-            double[, ,] sj1 = new double[kn + 1 /* for VB to C# conversion */, 3, 3];
-            double[, ,] sj2 = new double[kn + 1 /* for VB to C# conversion */, 3, 3];
-            double[, ,] sj3 = new double[kn + 1 /* for VB to C# conversion */, 3, 3];
-            double[, ,] uj = new double[kn + 1 /* for VB to C# conversion */, 3, 3];
+            double[] c1 = new double[km + 1 ];
+            double[] c2 = new double[km + 1 ];
+            double[] c3 = new double[km + 1 ];
+            double[,] d = new double[2 * kn + 1, 2 * kn + 1];
+            double[, ,] data = new double[kn + 1, 3, kr + 1];
+            double[] del = new double[km + 1 ];
+            double[, ,] sj1 = new double[kn + 1, 3, 3];
+            double[, ,] sj2 = new double[kn + 1, 3, 3];
+            double[, ,] sj3 = new double[kn + 1, 3, 3];
+            double[, ,] uj = new double[kn + 1, 3, 3];
 
             for (i = 1; i <= kn; i++)
             {
@@ -844,9 +844,9 @@ namespace StatsDirect.Builtins
             //    ALIGNMENT, IC = 1 IMPLIES COMMENSURATION, AND LR = 1 IMPLIES C(G,H)
             //    RANKS TEST.   NOTE: ASSOCIATE G, B AND R WITH KG, KB AND KR IN PROGRAM.
 
-            double[] ad = new double[kr + 1 /* for VB to C# conversion */ ];
-            double[,] xm = new double[kb + 1 /* for VB to C# conversion */, kr + 1 /* for VB to C# conversion */];
-            double[, ,] x = new double[kg + 1 /* for VB to C# conversion */, kb + 1 /* for VB to C# conversion */, kr + 1 /* for VB to C# conversion */];
+            double[] ad = new double[kr + 1 ];
+            double[,] xm = new double[kb + 1, kr + 1];
+            double[, ,] x = new double[kg + 1, kb + 1, kr + 1];
             double dm1 = 0;
             double dm2 = 0;
             double a2 = 0;
@@ -955,7 +955,7 @@ namespace StatsDirect.Builtins
         private static void Rank(int kg, int kb, int kr, int h, ref double[, ,] data)
         {
 
-            double[] rks = new double[kg + 1 /* for VB to C# conversion */ ];
+            double[] rks = new double[kg + 1 ];
             int j;
 
             double ym = 1.0 * (kg + 1) / 2;
@@ -1035,8 +1035,8 @@ namespace StatsDirect.Builtins
         private static void Calc(ITemplateHost host, double v, int kg, int kb, int kr, int iseed, int ms, double[, ,] data, out int mp, out int mpd)
         {
 
-            double[,] d = new double[kb * (kg - 1) + kb + 1 /* for VB to C# conversion */, kb * (kg - 1) + kb + 1 /* for VB to C# conversion */];
-            // double[,] dt = new double[kg + 1 /* for VB to C# conversion */, kr + 1 /* for VB to C# conversion */]; Array never referenced.  PJC 2012/04/09.
+            double[,] d = new double[kb * (kg - 1) + kb + 1, kb * (kg - 1) + kb + 1];
+            // double[,] dt = new double[kg + 1, kr + 1]; Array never referenced.  PJC 2012/04/09.
             int lo, l, ij, kl, is0, is1, irr, iss, i, j, k, iw, m;
             MersenneTwister rng = new MersenneTwister();
             int trigger = Convert.ToInt32(ms / 1000) + 1;

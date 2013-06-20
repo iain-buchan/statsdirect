@@ -57,6 +57,8 @@ namespace StatsDirect.UI
                 return;
             }
             SdApplication.SoleInstance.NoteFormClosing(this, e);
+            Visible = false;
+            MdiParent = null;
         }
 
         private void frmScript_TextChanged(object sender, EventArgs e)

@@ -383,7 +383,7 @@ namespace StatsDirect.Builtins
             foreach (Variable varbl in data.Variables)
             {
                 DoubleVariable variable = varbl.AsDoubleVariable;
-                double[] x = new double[variable.Length + 1 /* for VB to C# conversion */ ];
+                double[] x = new double[variable.Length + 1 ];
                 int nobs = 0;
                 bool not_int = false;
                 bool non_neg = false;
@@ -608,7 +608,7 @@ namespace StatsDirect.Builtins
             // string swt = "Shapiro-Wilk test"; 
             DataFrame Data = parameters["data"].AsDataFrame;
             DoubleVariable v0 = Data.Variables[0].AsDoubleVariable;
-            double[] x = new double[v0.Length + 1 /* for VB to C# conversion */ ];
+            double[] x = new double[v0.Length + 1 ];
             int n = 0;
             foreach (double Val in v0.Data)
             {
@@ -722,7 +722,7 @@ namespace StatsDirect.Builtins
 
 
             ChartDefinition cd = new ChartDefinition { ChartOptions = nOptions };
-            double[] qx0 = new double[x.Length - 2 + 1 /* for VB to C# conversion */ ];
+            double[] qx0 = new double[x.Length - 2 + 1 ];
             Array.Copy(x, 1, qx0, 0, qx0.Length);
             cd.XSeries.Add(new DoubleSeries(qx0, v0.Title));
 
@@ -891,7 +891,7 @@ namespace StatsDirect.Builtins
             p = Constant.MISSING;
 
             // clean observations
-            double[] q = new double[n + 1 /* for VB to C# conversion */ ];
+            double[] q = new double[n + 1 ];
             int i;
             int k = 0;
             for (i = lowerBound; i <= n + lowerBound - 1; i++)
@@ -908,7 +908,7 @@ namespace StatsDirect.Builtins
             }
 
             // ranks
-            double[] r = new double[n + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[n + 1 ];
             double xf;
             Array.Sort(q, 1, k);
             ExFortran.Rank(q, r, 1, k, 1, out xf);
@@ -1055,7 +1055,7 @@ namespace StatsDirect.Builtins
             p = Constant.MISSING;
 
             // clean observations
-            double[] q = new double[n + 1 /* for VB to C# conversion */ ];
+            double[] q = new double[n + 1 ];
             int i;
             int k = 0;
             for (i = lowerBound; i <= n + lowerBound - 1; i++)
@@ -1072,7 +1072,7 @@ namespace StatsDirect.Builtins
             }
 
             // ranks
-            double[] r = new double[n + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[n + 1 ];
             double xf;
             Array.Sort(q, 1, k);
             ExFortran.Rank(q, r, 1, k, 1, out xf);
@@ -1421,7 +1421,7 @@ namespace StatsDirect.Builtins
             bool DoAgree = Data.VariableCount > 1 && parameters.ContainsKey("doAgreement") && parameters["doAgreement"].AsBoolean;
             //  RTF_LoadTemplate("m_paired.rtf")
 
-            double[] arr1 = new double[Data.MaxRows + 1 /* for VB to C# conversion */ ]; // New array to replace Arr2(0,n)
+            double[] arr1 = new double[Data.MaxRows + 1 ]; // New array to replace Arr2(0,n)
             DoubleVariable v0 = Data.Variables[0].AsDoubleVariable;
             int nx = 0;
             string txc;
@@ -1494,8 +1494,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*chart", chartList);
 
                 DoubleVariable v1 = Data.Variables[1].AsDoubleVariable;
-                double[] x = new double[v0.Length + 1 /* for VB to C# conversion */ ];
-                double[] y = new double[v1.Length + 1 /* for VB to C# conversion */ ];
+                double[] x = new double[v0.Length + 1 ];
+                double[] y = new double[v1.Length + 1 ];
                 x[0] = Constant.MISSING;
                 y[0] = Constant.MISSING;
                 nx = 0;

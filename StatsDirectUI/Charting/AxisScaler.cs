@@ -77,7 +77,7 @@ namespace StatsDirect.Charting
                     Q_Axis_ShiftMin(qmin, qmax, ref zmin, ref zint, ref div, out pref);
 
                     const int tries = 4;
-                    int[] trydiv = new int[tries + 1 /* for VB to C# conversion */];
+                    int[] trydiv = new int[tries + 1];
                     trydiv[1] = 15;
                     trydiv[2] = 25;
                     trydiv[3] = 16;
@@ -195,7 +195,7 @@ namespace StatsDirect.Charting
             {
                 ipow = ((int)(Math.Floor(Math.Log(Math.Abs(zmin)) / Math.Log(10.0)))) + 1;
                 const int tries = 14;
-                double[] ztry = new double[tries + 1 /* for VB to C# conversion */];
+                double[] ztry = new double[tries + 1];
                 ztry[1] = 1.0;
                 ztry[2] = 0.5;
                 ztry[3] = 0.1;

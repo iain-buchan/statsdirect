@@ -174,7 +174,7 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             int totrows = data.MaxRows;
             int totcols = data.VariableCount;
-            string[,] hold = new string[totrows + 1 /* for VB to C# conversion */, totcols + 1 /* for VB to C# conversion */];
+            string[,] hold = new string[totrows + 1, totcols + 1];
 
             string clearRowString = parameters["row-or-cell"].AsString;
             bool clearRow = totcols > 1 && "row".Equals(clearRowString);
@@ -779,9 +779,9 @@ namespace StatsDirect.Builtins
             ClassifierVariable gidsVariable = gidsFrame.Variables[0].AsClassifierVariable;
             int rows = gidsVariable.Length;
             int ng = gidsVariable.GroupCount;
-            double[] gid = new double[rows + 1 /* for VB to C# conversion */ ];
-            string[] glabel = new string[ng + 1 /* for VB to C# conversion */ ];
-            double[] g = new double[ng + 1 /* for VB to C# conversion */ ];
+            double[] gid = new double[rows + 1 ];
+            string[] glabel = new string[ng + 1 ];
+            double[] g = new double[ng + 1 ];
             for (int c = 1; c <= ng; c++)
             {
                 if (gidsVariable.Title == "Group ID")
@@ -805,7 +805,7 @@ namespace StatsDirect.Builtins
 
             DataFrame data = parameters["data"].AsDataFrame;
             int cols = data.VariableCount;
-            double[,] x = new double[cols + 1 /* for VB to C# conversion */, rows + 1 /* for VB to C# conversion */];
+            double[,] x = new double[cols + 1, rows + 1];
             // Transfer data to working arrays, padding with MISSING as necessary
             for (int i = 1; i <= rows; i++)
             {
@@ -883,7 +883,7 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
             int rows = dataVariable.Length;
-            double[] prk = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] prk = new double[rows + 1 ];
             for (n = 1; n <= rows; n++)
             {
                 if (dataVariable.Data[n - 1] != Constant.MISSING)
@@ -892,7 +892,7 @@ namespace StatsDirect.Builtins
                     prk[nx] = dataVariable.Data[n - 1];
                 }
             }
-            double[] r = new double[nx + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[nx + 1 ];
             double xf;
             ExFortran.Rank(prk, r, 1, nx, 0, out xf);
             if (method == 3)
@@ -994,7 +994,7 @@ namespace StatsDirect.Builtins
             DoubleVariable yVariable = yFrame.Variables[0].AsDoubleVariable;
             int rows = yVariable.Length;
             string yt = yVariable.Title;
-            double[] yy = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] yy = new double[rows + 1 ];
             for (i = 1; i <= rows; i++)
             {
                 yy[i] = yVariable.Data[i - 1];
@@ -1011,7 +1011,7 @@ namespace StatsDirect.Builtins
                     return null;
                 }
                 xt = xVariable.Title;
-                xx = new double[rows2 + 1 /* for VB to C# conversion */ ];
+                xx = new double[rows2 + 1 ];
                 for (i = 1; i <= rows2; i++)
                 {
                     xx[i] = xVariable.Data[i - 1];
@@ -1021,7 +1021,7 @@ namespace StatsDirect.Builtins
             if (index == 2)
             {
                 // means
-                x = new double[rows + 1 /* for VB to C# conversion */ ];
+                x = new double[rows + 1 ];
                 ctr = 0;
                 for (i = 1; i <= rows; i++)
                 {
@@ -1036,8 +1036,8 @@ namespace StatsDirect.Builtins
             else if (index == 3)
             {
                 // slopes
-                x = new double[rows + 1 /* for VB to C# conversion */ ];
-                y = new double[rows + 1 /* for VB to C# conversion */ ];
+                x = new double[rows + 1 ];
+                y = new double[rows + 1 ];
                 ctr = 0;
                 for (i = 1; i <= rows; i++)
                 {
@@ -1054,8 +1054,8 @@ namespace StatsDirect.Builtins
             else
             {
                 // differences
-                x = new double[rows + 1 /* for VB to C# conversion */ ];
-                y = new double[rows2 + 1 /* for VB to C# conversion */ ];
+                x = new double[rows + 1 ];
+                y = new double[rows2 + 1 ];
                 ctr = 0;
                 for (i = 1; i <= rows2; i++)
                 {
@@ -1178,7 +1178,7 @@ namespace StatsDirect.Builtins
                         int fault;
                         double pu;
                         MathDbl.taufromp(p, out pu, out ix, ref nx, out fault);
-                        double[] pws = new double[cnt + 1 /* for VB to C# conversion */ ];
+                        double[] pws = new double[cnt + 1 ];
                         if (fault == 0)
                         {
                             cnt = 0;
@@ -1432,7 +1432,7 @@ namespace StatsDirect.Builtins
             DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
             int q = Parsing.Cint_Txt(parameters["tie-correction"].AsString);
             int rows = inputVariable.Length;
-            double[] prk = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] prk = new double[rows + 1 ];
             foreach (double value in inputVariable.Data)
             {
                 if (value != Constant.MISSING)
@@ -1441,7 +1441,7 @@ namespace StatsDirect.Builtins
                     prk[nx] = value;
                 }
             }
-            double[] r = new double[nx + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[nx + 1 ];
             ExFortran.Rank(prk, r, 1, nx, q, out tie);
             const string pre = "Rank: ";
             if (q < 2)
@@ -1554,14 +1554,14 @@ namespace StatsDirect.Builtins
 
             string t = "Sort: " + dataVariable.Title;
 
-            double[] dataArray = new double[rows - 1 + 1 /* for VB to C# conversion */ ];
+            double[] dataArray = new double[rows - 1 + 1 ];
             int nx;
             if (hasLink)
             {
                 DataFrame linkData = parameters["linkdata"].AsDataFrame;
                 DoubleVariable linkVariable = linkData.Variables[0].AsDoubleVariable;
                 t += " (by " + linkVariable.Title + ")";
-                double[] linkArray = new double[rows - 1 + 1 /* for VB to C# conversion */ ];
+                double[] linkArray = new double[rows - 1 + 1 ];
                 nx = 0;
                 for (int i = 0; i <= rows - 1; i++)
                 {
@@ -1699,7 +1699,7 @@ namespace StatsDirect.Builtins
             double[] inputData = inputVariable.Data;
             int rows = inputData.Length;
 
-            double[] a = new double[rows - 1 + 1 /* for VB to C# conversion */ ];
+            double[] a = new double[rows - 1 + 1 ];
             if ((index == 0))
             {
                 double cons = Constant.MISSING;
@@ -1900,7 +1900,7 @@ namespace StatsDirect.Builtins
             }
             if ((index == 6))
             {
-                double[] fn = new double[inputData.Length - 1 + 1 /* for VB to C# conversion */ ];
+                double[] fn = new double[inputData.Length - 1 + 1 ];
                 int err;
                 MathDbl.ecdf(inputData, fn, out err);
                 if (err == 0)
@@ -1911,7 +1911,7 @@ namespace StatsDirect.Builtins
             }
             if ((index == 7))
             {
-                double[] fn = new double[inputData.Length - 1 + 1 /* for VB to C# conversion */ ];
+                double[] fn = new double[inputData.Length - 1 + 1 ];
                 int err;
                 MathDbl.zscore(inputData, ref fn, false, out err);
                 if (err == 0)
@@ -1922,7 +1922,7 @@ namespace StatsDirect.Builtins
             }
             if ((index == 8))
             {
-                double[] fn = new double[inputData.Length - 1 + 1 /* for VB to C# conversion */ ];
+                double[] fn = new double[inputData.Length - 1 + 1 ];
                 int err;
                 MathDbl.zscore(inputData, ref fn, true, out err);
                 if (err == 0)
@@ -1975,7 +1975,7 @@ namespace StatsDirect.Builtins
             CategoriseOptions options = new CategoriseOptions
                                             {
                                                 Title = "Categorised: " + inputVariable.Title,
-                                                PassX = new double[rows - 1 + 1 /* for VB to C# conversion */],
+                                                PassX = new double[rows - 1 + 1],
                                                 Data = inputVariable
                                             };
             if (null == host.Amend(options, parameters))

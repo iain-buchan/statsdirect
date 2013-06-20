@@ -51,7 +51,7 @@ namespace StatsDirect.Builtins
             int i ; int j ; int k ; int L = 0;
             double s ; double f ; double h ;
 
-            double[] rv1 = new double[P + 1 /* for VB to C# conversion */ ]; 
+            double[] rv1 = new double[P + 1 ]; 
             if ( nx < P ) 
             { 
                 ifault = 1; 
@@ -407,7 +407,7 @@ namespace StatsDirect.Builtins
         
         private static void X_SVDBKD( double[,] ud, double[] wd, double[,] vd, int nx, int P, double[] yd, double[] sig, double[] bd ) 
         {
-            double[] t = new double[P + 1 /* for VB to C# conversion */ ]; 
+            double[] t = new double[P + 1 ]; 
             for (int j=1; j <= P; j++ ) 
             { 
                 double s = 0.0; 
@@ -438,7 +438,7 @@ namespace StatsDirect.Builtins
             int i ; int j ; int k ;
             double sum ;
 
-            double[] owt = new double[P + 1 /* for VB to C# conversion */ ]; 
+            double[] owt = new double[P + 1 ]; 
             double wmax = w[ 1 ]; 
             for ( i=1; i <= P; i++ ) 
             { 
@@ -498,7 +498,7 @@ namespace StatsDirect.Builtins
                 }
             }
             // X_SVDCP ud(), nx, p, wd(), vd(), ifault
-            double[] rv1 = new double[P + 1 /* for VB to C# conversion */ ]; 
+            double[] rv1 = new double[P + 1 ]; 
             svd(nx, P, wd, ud, vd, out ifault, rv1 ); 
             double wmax = wd[ 1 ]; 
             for ( j=1; j <= P; j++ ) 
@@ -535,7 +535,7 @@ namespace StatsDirect.Builtins
             int i , j , iobs , nobs ;
             int irow;
 
-            double[] sparam = new double[5 + 1 /* for VB to C# conversion */ ]; 
+            double[] sparam = new double[5 + 1 ]; 
             double frq = 0, temp , wt = 0 ;
 
             bool skip = false; 
@@ -552,7 +552,7 @@ namespace StatsDirect.Builtins
             int intp1 = intcep + 1; 
             int idepx = ncoef + 1;
 
-            double[,] b2 = new double[ncoef + 1 /* for VB to C# conversion */, ncoef + 1 /* for VB to C# conversion */]; 
+            double[,] b2 = new double[ncoef + 1, ncoef + 1]; 
             
             // tolerance of 100 * largest relative spacing
             const double tol = 100.0 * Constant.EPSILON; 
@@ -853,7 +853,7 @@ namespace StatsDirect.Builtins
             int i , j , iobs , nobs ;
             int irow;
 
-            double[] sparam = new double[5 + 1 /* for VB to C# conversion */ ];
+            double[] sparam = new double[5 + 1 ];
             double frq = 0, temp , wt = 0;
 
             bool skip = false; 
@@ -869,7 +869,7 @@ namespace StatsDirect.Builtins
             int intp1 = intcep + 1; 
             int idepx = ncoef + 1;
 
-            double[,] b2 = new double[ncoef + 1 /* for VB to C# conversion */, ncoef + 1 /* for VB to C# conversion */]; 
+            double[,] b2 = new double[ncoef + 1, ncoef + 1]; 
             
             // tolerance of 100 * largest relative spacing
             const double tol = 100.0 * Constant.EPSILON; 
@@ -2317,7 +2317,7 @@ namespace StatsDirect.Builtins
         
         public static void x_dwsd( double[] er, int nx, out double dw ) 
         { 
-            double[] erd = new double[nx + 1 /* for VB to C# conversion */ ]; 
+            double[] erd = new double[nx + 1 ]; 
             int iseas = 0; 
             const int idif = 1; 
             x_difd(  er,  erd,  nx,  idif, ref iseas ); 
@@ -2446,8 +2446,8 @@ namespace StatsDirect.Builtins
         public static void polint( double[] xa, double[] ya, int StartIndex, int n, double x, out double y, ref double dy, ref int ifault ) 
         { 
             const int nmax = 10;
-            double[] c = new double[nmax + 1 /* for VB to C# conversion */ ];
-            double[] d = new double[nmax + 1 /* for VB to C# conversion */ ]; 
+            double[] c = new double[nmax + 1 ];
+            double[] d = new double[nmax + 1 ]; 
             int ns = 1; 
             double dif = Math.Abs( x - xa[ StartIndex ] ); 
             for ( int i=1; i <= n; i++ ) 
@@ -2529,10 +2529,10 @@ namespace StatsDirect.Builtins
         {
             double ti = 0;
 
-            double[] eta = new double[N + 1 /* for VB to C# conversion */];
-            double[,] Q = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
-            double[] wwt = new double[N + 1 /* for VB to C# conversion */];
-            double[] WK = new double[N * 2 + 1 /* for VB to C# conversion */]; 
+            double[] eta = new double[N + 1];
+            double[,] Q = new double[N + 1, N + 1];
+            double[] wwt = new double[N + 1];
+            double[] WK = new double[N * 2 + 1]; 
             double eps = Constant.EPSILON; 
             if ( N < 2 ) 
             { 
@@ -2745,10 +2745,10 @@ namespace StatsDirect.Builtins
         {
             int no = 0;
 
-            double[] eta = new double[N + 1 /* for VB to C# conversion */ ];
-            double[,] Q = new double[N + 1 /* for VB to C# conversion */, N + 1 /* for VB to C# conversion */];
-            double[] wwt = new double[N + 1 /* for VB to C# conversion */ ];
-            double[] WK = new double[N * 2 + 1 /* for VB to C# conversion */ ]; 
+            double[] eta = new double[N + 1 ];
+            double[,] Q = new double[N + 1, N + 1];
+            double[] wwt = new double[N + 1 ];
+            double[] WK = new double[N * 2 + 1 ]; 
             const double eps = Constant.EPSILON; 
             if ( N < 2 ) 
             { 
@@ -3769,7 +3769,7 @@ namespace StatsDirect.Builtins
         { 
             int ierr = 0;
 
-            double[] work = new double[2 * lda + 1 /* for VB to C# conversion */ ]; 
+            double[] work = new double[2 * lda + 1 ]; 
             X_E_SVOT( N, a, lda, sv, work, ncolb, b, ref ierr ); 
             X_E_SVZP( N, a, lda ); 
             int ncolp = N;
@@ -3835,10 +3835,10 @@ namespace StatsDirect.Builtins
             int i ;
             int j ; int L ;
 
-            double[] wrk = new double[N + 1 /* for VB to C# conversion */];
-            double[] wrk1 = new double[N + 1 /* for VB to C# conversion */];
-            double[] wrk2 = new double[N + 1 /* for VB to C# conversion */];
-            double[] wrk3 = new double[N + 1 /* for VB to C# conversion */]; 
+            double[] wrk = new double[N + 1];
+            double[] wrk1 = new double[N + 1];
+            double[] wrk2 = new double[N + 1];
+            double[] wrk3 = new double[N + 1]; 
             wrk[ 1 ] = 0; 
             bool wantb = ncolb > 0; 
             bool wantz = NCOLZ > 0; 
@@ -4063,7 +4063,7 @@ namespace StatsDirect.Builtins
         
         private static void X_E_SVZP( int N, double[,] a, int lda ) 
         {
-            double[] work = new double[2 * lda + 1 /* for VB to C# conversion */]; 
+            double[] work = new double[2 * lda + 1]; 
             if ( N > 1 ) 
             { 
                 a[ N, N ] = 1.0; 

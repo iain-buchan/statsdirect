@@ -35,7 +35,7 @@ namespace StatsDirect.Builtins
             DataFrame snFrame = parameters["sn"].AsDataFrame;
             DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
             int k = snVariable.Length;
-            double[] sn = new double[k + 1 /* for VB to C# conversion */];
+            double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 sn[i] = snVariable.Data[i - 1];
@@ -43,7 +43,7 @@ namespace StatsDirect.Builtins
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
             DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
-            double[] sr = new double[k + 1 /* for VB to C# conversion */];
+            double[] sr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 sr[i] = srVariable.Data[i - 1];
@@ -51,7 +51,7 @@ namespace StatsDirect.Builtins
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
             DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
-            double[] xn = new double[k + 1 /* for VB to C# conversion */];
+            double[] xn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 xn[i] = xnVariable.Data[i - 1];
@@ -59,13 +59,13 @@ namespace StatsDirect.Builtins
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
             DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
-            double[] xr = new double[k + 1 /* for VB to C# conversion */];
+            double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 xr[i] = xrVariable.Data[i - 1];
             }
 
-            string[] title = new string[k + 1 /* for VB to C# conversion */ ];
+            string[] title = new string[k + 1 ];
             if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
             {
                 stratlab = true;
@@ -97,17 +97,17 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
-            double[] oe = new double[k + 1 /* for VB to C# conversion */];
-            double[] odr = new double[k + 1 /* for VB to C# conversion */];
-            double[] odrl = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odru = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odw = new double[k + 1 /* for VB to C# conversion */];
-            double[] odz = new double[k + 1 /* for VB to C# conversion */];
-            double[] odx = new double[k + 1 /* for VB to C# conversion */];
-            bool[] lerr = new bool[k + 1 /* for VB to C# conversion */];
-            bool[] uerr = new bool[k + 1 /* for VB to C# conversion */];
-            bool[] cced = new bool[k + 1 /* for VB to C# conversion */ ];
+            double[,] o = new double[k + 1, 4 + 1];
+            double[] oe = new double[k + 1];
+            double[] odr = new double[k + 1];
+            double[] odrl = new double[k + 1 ];
+            double[] odru = new double[k + 1 ];
+            double[] odw = new double[k + 1];
+            double[] odz = new double[k + 1];
+            double[] odx = new double[k + 1];
+            bool[] lerr = new bool[k + 1];
+            bool[] uerr = new bool[k + 1];
+            bool[] cced = new bool[k + 1 ];
             double[] standardizedEffect = new double[k + 1];
             double[] se = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -379,12 +379,12 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                double[] y = new double[nx + 1 /* for VB to C# conversion */ ];
-                double[,] x = new double[nx + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-                double[] wt = new double[nx + 1 /* for VB to C# conversion */ ];
-                double[] var = new double[nx + 1 /* for VB to C# conversion */];
-                double[] tt = new double[nx + 1 /* for VB to C# conversion */];
-                double[] ts = new double[nx + 1 /* for VB to C# conversion */ ];
+                double[] y = new double[nx + 1 ];
+                double[,] x = new double[nx + 1, P + 1];
+                double[] wt = new double[nx + 1 ];
+                double[] var = new double[nx + 1];
+                double[] tt = new double[nx + 1];
+                double[] ts = new double[nx + 1 ];
                 nx = 0;
                 double se;
                 switch (xform)
@@ -469,18 +469,18 @@ namespace StatsDirect.Builtins
                 }
 
                 // setup regression call
-                seb = new double[P + 1 /* for VB to C# conversion */];
-                bd = new double[P * P + 1 /* for VB to C# conversion */];
+                seb = new double[P + 1];
+                bd = new double[P * P + 1];
                 int incep = 1;
                 int indep = 1;
                 int iwt = 1;
-                double[,] xx = new double[nx + 1 /* for VB to C# conversion */, indep + 1 + iwt + 1 /* for VB to C# conversion */];
-                double[,] r = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
-                double[] D = new double[P + 1 /* for VB to C# conversion */ ];
-                double[] xmin = new double[P + 1 /* for VB to C# conversion */ ];
-                double[] XMax = new double[P + 1 /* for VB to C# conversion */ ];
-                double[] WK = new double[2 * (P + 1) + 1 /* for VB to C# conversion */];
-                int[] idum = new int[1 + 1 /* for VB to C# conversion */];
+                double[,] xx = new double[nx + 1, indep + 1 + iwt + 1];
+                double[,] r = new double[P + 1, P + 1];
+                double[] D = new double[P + 1 ];
+                double[] xmin = new double[P + 1 ];
+                double[] XMax = new double[P + 1 ];
+                double[] WK = new double[2 * (P + 1) + 1];
+                int[] idum = new int[1 + 1];
                 for (i = 1; i <= nx; i++)
                 {
                     int j;
@@ -495,7 +495,7 @@ namespace StatsDirect.Builtins
                 Regress1.glsqr(0, incep, 0, nx, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, bd, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xmin, XMax, WK, ref ifault);
                 if (ifault == 0)
                 {
-                    double[,] covb = new double[P + 1 /* for VB to C# conversion */, P + 1 /* for VB to C# conversion */];
+                    double[,] covb = new double[P + 1, P + 1];
                     Regress1.rcovarb(P, r, 1.0, covb, ref ifault);
                     double rms = rss / rdf;
                     Regress1.rcovarb(P, r, rms, covb, ref ifault);
@@ -585,7 +585,7 @@ namespace StatsDirect.Builtins
             DataFrame snFrame = parameters["sn"].AsDataFrame;
             DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
             int k = snVariable.Length;
-            double[] sn = new double[k + 1 /* for VB to C# conversion */];
+            double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 sn[i] = snVariable.Data[i - 1];
@@ -593,7 +593,7 @@ namespace StatsDirect.Builtins
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
             DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
-            double[] sr = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] sr = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 sr[i] = srVariable.Data[i - 1];
@@ -601,7 +601,7 @@ namespace StatsDirect.Builtins
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
             DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
-            double[] xn = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] xn = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 xn[i] = xnVariable.Data[i - 1];
@@ -609,13 +609,13 @@ namespace StatsDirect.Builtins
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
             DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
-            double[] xr = new double[k + 1 /* for VB to C# conversion */];
+            double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 xr[i] = xrVariable.Data[i - 1];
             }
 
-            string[] title = new string[k + 1 /* for VB to C# conversion */ ];
+            string[] title = new string[k + 1 ];
             if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
             {
                 stratlab = true;
@@ -647,16 +647,16 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
-            double[] rkr = new double[k + 1 /* for VB to C# conversion */];
-            double[] rkw = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] dsw = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] rkrl = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] rkru = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] rkx = new double[k + 1 /* for VB to C# conversion */ ];
-            bool[] lerr = new bool[k + 1 /* for VB to C# conversion */ ];
-            bool[] uerr = new bool[k + 1 /* for VB to C# conversion */ ];
-            bool[] cced = new bool[k + 1 /* for VB to C# conversion */ ];
+            double[,] o = new double[k + 1, 4 + 1];
+            double[] rkr = new double[k + 1];
+            double[] rkw = new double[k + 1 ];
+            double[] dsw = new double[k + 1 ];
+            double[] rkrl = new double[k + 1 ];
+            double[] rkru = new double[k + 1 ];
+            double[] rkx = new double[k + 1 ];
+            bool[] lerr = new bool[k + 1 ];
+            bool[] uerr = new bool[k + 1 ];
+            bool[] cced = new bool[k + 1 ];
             double[] standardizedEffect = new double[k+1];
             double[] se = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -827,7 +827,7 @@ namespace StatsDirect.Builtins
             DataFrame snFrame = parameters["sn"].AsDataFrame;
             DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
             int k = snVariable.Length;
-            double[] sn = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] sn = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 sn[i] = snVariable.Data[i - 1];
@@ -835,7 +835,7 @@ namespace StatsDirect.Builtins
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
             DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
-            double[] sr = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] sr = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 sr[i] = srVariable.Data[i - 1];
@@ -843,7 +843,7 @@ namespace StatsDirect.Builtins
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
             DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
-            double[] xn = new double[k + 1 /* for VB to C# conversion */];
+            double[] xn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 xn[i] = xnVariable.Data[i - 1];
@@ -851,13 +851,13 @@ namespace StatsDirect.Builtins
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
             DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
-            double[] xr = new double[k + 1 /* for VB to C# conversion */];
+            double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 xr[i] = xrVariable.Data[i - 1];
             }
 
-            string[] title = new string[k + 1 /* for VB to C# conversion */];
+            string[] title = new string[k + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
             {
                 stratlab = true;
@@ -889,18 +889,18 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
-            double[] rkr = new double[k + 1 /* for VB to C# conversion */];
-            double[] rkw = new double[k + 1 /* for VB to C# conversion */];
-            double[] dsw = new double[k + 1 /* for VB to C# conversion */];
-            double[] rkrl = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] rkru = new double[k + 1 /* for VB to C# conversion */];
-            double[] rkx = new double[k + 1 /* for VB to C# conversion */];
-            bool[] lerr = new bool[k + 1 /* for VB to C# conversion */];
-            bool[] uerr = new bool[k + 1 /* for VB to C# conversion */];
-            bool[] cced = new bool[k + 1 /* for VB to C# conversion */];
-            double[] axll = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] axul = new double[k + 1 /* for VB to C# conversion */ ];
+            double[,] o = new double[k + 1, 4 + 1];
+            double[] rkr = new double[k + 1];
+            double[] rkw = new double[k + 1];
+            double[] dsw = new double[k + 1];
+            double[] rkrl = new double[k + 1 ];
+            double[] rkru = new double[k + 1];
+            double[] rkx = new double[k + 1];
+            bool[] lerr = new bool[k + 1];
+            bool[] uerr = new bool[k + 1];
+            bool[] cced = new bool[k + 1];
+            double[] axll = new double[k + 1 ];
+            double[] axul = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
@@ -1089,9 +1089,9 @@ namespace StatsDirect.Builtins
             DataFrame enFrame = parameters["en"].AsDataFrame;
             DoubleVariable enVariable = enFrame.Variables[0].AsDoubleVariable;
             int k = enVariable.Length;
-            double[] en = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] g = new double[k + 1 /* for VB to C# conversion */ ];
-            string[] title = new string[k + 1 /* for VB to C# conversion */ ];
+            double[] en = new double[k + 1 ];
+            double[] g = new double[k + 1 ];
+            string[] title = new string[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 en[i] = enVariable.Data[i - 1];
@@ -1101,7 +1101,7 @@ namespace StatsDirect.Builtins
             {
                 DataFrame emFrame = parameters["em"].AsDataFrame;
                 DoubleVariable emVariable = emFrame.Variables[0].AsDoubleVariable;
-                em = new double[k + 1 /* for VB to C# conversion */ ];
+                em = new double[k + 1 ];
                 for (i = 1; i <= k; i++)
                 {
                     em[i] = emVariable.Data[i - 1];
@@ -1109,7 +1109,7 @@ namespace StatsDirect.Builtins
 
                 DataFrame esFrame = parameters["es"].AsDataFrame;
                 DoubleVariable esVariable = esFrame.Variables[0].AsDoubleVariable;
-                es = new double[k + 1 /* for VB to C# conversion */ ];
+                es = new double[k + 1 ];
                 for (i = 1; i <= k; i++)
                 {
                     es[i] = esVariable.Data[i - 1];
@@ -1119,7 +1119,7 @@ namespace StatsDirect.Builtins
             DataFrame cnFrame = parameters["cn"].AsDataFrame;
             DoubleVariable cnVariable = cnFrame.Variables[0].AsDoubleVariable;
             k = cnVariable.Length;
-            double[] cn = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] cn = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 cn[i] = cnVariable.Data[i - 1];
@@ -1142,7 +1142,7 @@ namespace StatsDirect.Builtins
                 gotg = false;
                 DataFrame cmFrame = parameters["cm"].AsDataFrame;
                 DoubleVariable cmVariable = cmFrame.Variables[0].AsDoubleVariable;
-                cm = new double[k + 1 /* for VB to C# conversion */ ];
+                cm = new double[k + 1 ];
                 for (i = 1; i <= k; i++)
                 {
                     cm[i] = cmVariable.Data[i - 1];
@@ -1150,7 +1150,7 @@ namespace StatsDirect.Builtins
 
                 DataFrame csFrame = parameters["cs"].AsDataFrame;
                 DoubleVariable csVariable = csFrame.Variables[0].AsDoubleVariable;
-                cs = new double[k + 1 /* for VB to C# conversion */ ];
+                cs = new double[k + 1 ];
                 for (i = 1; i <= k; i++)
                 {
                     cs[i] = csVariable.Data[i - 1];
@@ -1192,14 +1192,14 @@ namespace StatsDirect.Builtins
             {
 
                 // single effect analysis
-                d = new double[k + 1 /* for VB to C# conversion */ ];
-                double[] gj = new double[k + 1 /* for VB to C# conversion */];
-                lcid = new double[k + 1 /* for VB to C# conversion */];
-                ucid = new double[k + 1 /* for VB to C# conversion */ ];
-                double[] lcig = new double[k + 1 /* for VB to C# conversion */ ];
-                double[] ucig = new double[k + 1 /* for VB to C# conversion */ ];
-                rkw = new double[k + 1 /* for VB to C# conversion */];
-                rkx = new double[k + 1 /* for VB to C# conversion */ ];
+                d = new double[k + 1 ];
+                double[] gj = new double[k + 1];
+                lcid = new double[k + 1];
+                ucid = new double[k + 1 ];
+                double[] lcig = new double[k + 1 ];
+                double[] ucig = new double[k + 1 ];
+                rkw = new double[k + 1];
+                rkx = new double[k + 1 ];
                 Debug.Assert(null != es);
                 poolok = k > 1;
                 if (!(gotg))
@@ -1420,11 +1420,11 @@ namespace StatsDirect.Builtins
             else
             {
                 // single wmd analysis
-                d = new double[k + 1 /* for VB to C# conversion */ ];
-                lcid = new double[k + 1 /* for VB to C# conversion */];
-                ucid = new double[k + 1 /* for VB to C# conversion */ ];
-                rkw = new double[k + 1 /* for VB to C# conversion */];
-                rkx = new double[k + 1 /* for VB to C# conversion */];
+                d = new double[k + 1 ];
+                lcid = new double[k + 1];
+                ucid = new double[k + 1 ];
+                rkw = new double[k + 1];
+                rkx = new double[k + 1];
                 poolok = k > 1;
                 for (i = 1; i <= k; i++)
                 {
@@ -2163,7 +2163,7 @@ namespace StatsDirect.Builtins
                 // Try exact IRR
                 if (host.Preferences.MetaExact)
                 {
-                    ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1 /* for VB to C# conversion */];
+                    ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1];
                     for (i = 1; i <= k; i++)
                     {
                         tbl[i].Freq = 1;
@@ -2299,7 +2299,7 @@ namespace StatsDirect.Builtins
             }
             Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, xform);
 
-            double[] ptt = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] ptt = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 o[i, 1] = pt1[i];
@@ -2409,7 +2409,7 @@ namespace StatsDirect.Builtins
             DataFrame snFrame = parameters["sn"].AsDataFrame;
             DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
             int k = snVariable.Length;
-            double[] sn = new double[k + 1 /* for VB to C# conversion */];
+            double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 sn[i] = snVariable.Data[i - 1];
@@ -2417,7 +2417,7 @@ namespace StatsDirect.Builtins
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
             DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
-            double[] sr = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] sr = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 sr[i] = srVariable.Data[i - 1];
@@ -2425,7 +2425,7 @@ namespace StatsDirect.Builtins
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
             DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
-            double[] xn = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] xn = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 xn[i] = xnVariable.Data[i - 1];
@@ -2433,13 +2433,13 @@ namespace StatsDirect.Builtins
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
             DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
-            double[] xr = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] xr = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
                 xr[i] = xrVariable.Data[i - 1];
             }
 
-            string[] title = new string[k + 1 /* for VB to C# conversion */];
+            string[] title = new string[k + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
             {
                 stratlab = true;
@@ -2471,18 +2471,18 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
-            double[] odr = new double[k + 1 /* for VB to C# conversion */];
-            double[] odrl = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odru = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odw = new double[k + 1 /* for VB to C# conversion */];
-            double[] dswt = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odx = new double[k + 1 /* for VB to C# conversion */ ];
-            bool[] lerr = new bool[k + 1 /* for VB to C# conversion */ ];
-            bool[] uerr = new bool[k + 1 /* for VB to C# conversion */];
-            bool[] cced = new bool[k + 1 /* for VB to C# conversion */];
-            double[] axll = new double[k + 1 /* for VB to C# conversion */];
-            double[] axul = new double[k + 1 /* for VB to C# conversion */];
+            double[,] o = new double[k + 1, 4 + 1];
+            double[] odr = new double[k + 1];
+            double[] odrl = new double[k + 1 ];
+            double[] odru = new double[k + 1 ];
+            double[] odw = new double[k + 1];
+            double[] dswt = new double[k + 1 ];
+            double[] odx = new double[k + 1 ];
+            bool[] lerr = new bool[k + 1 ];
+            bool[] uerr = new bool[k + 1];
+            bool[] cced = new bool[k + 1];
+            double[] axll = new double[k + 1];
+            double[] axul = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
@@ -2512,7 +2512,7 @@ namespace StatsDirect.Builtins
             // Try exact Mantel
             if (host.Preferences.MetaExact)
             {
-                ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1 /* for VB to C# conversion */];
+                ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1];
                 for (i = 1; i <= k; i++)
                 {
                     tbl[i].Freq = 1;
@@ -3043,7 +3043,7 @@ namespace StatsDirect.Builtins
             {
                 if ((a * d != 0) || (b * c != 0))
                 {
-                    ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* for VB to C# conversion */];
+                    ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
                     tabl[1].Freq = 1;
                     tabl[1].A = a;
                     tabl[1].M1 = a + b;
@@ -3719,10 +3719,10 @@ namespace StatsDirect.Builtins
             DataFrame rFrame = parameters["r"].AsDataFrame;
             DoubleVariable rVariable = rFrame.Variables[0].AsDoubleVariable; //  Ends up in y
             int k = rVariable.Length;
-            double[] y = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            // double[] n = new double[k + 1 + 1 /* for VB to C# conversion */ ]; - unused
-            string[] title = new string[k + 1 + 1 /* for VB to C# conversion */ ];
-            int[] pg = new int[k + 1 + 1 /* for VB to C# conversion */ ];
+            double[] y = new double[k + 2 ];
+            // double[] n = new double[k + 2 ]; - unused
+            string[] title = new string[k + 2 ];
+            int[] pg = new int[k + 2 ];
             for (i = 1; i <= k; i++)
             {
                 y[i] = rVariable.Data[i - 1];
@@ -3737,10 +3737,10 @@ namespace StatsDirect.Builtins
 
             DataFrame nFrame = parameters["n"].AsDataFrame;
             DoubleVariable nVariable = nFrame.Variables[0].AsDoubleVariable;
-            double[] seY = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] llY = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] ulY = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] ss = new double[k + 1 + 1 /* for VB to C# conversion */ ];
+            double[] seY = new double[k + 2 ];
+            double[] llY = new double[k + 2 ];
+            double[] ulY = new double[k + 2 ];
+            double[] ss = new double[k + 2 ];
             for (i = 1; i <= k; i++)
             {
                 double sampleSize = nVariable.Data[i - 1];
@@ -3790,8 +3790,8 @@ namespace StatsDirect.Builtins
             double sumwt = 0.0;
             double sumsqwt = 0.0;
             double sumywt = 0.0;
-            double[] wt = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] dswt = new double[k + 1 + 1 /* for VB to C# conversion */ ];
+            double[] wt = new double[k + 2 ];
+            double[] dswt = new double[k + 2 ];
             for (i = 1; i <= k; i++)
             {
                 if (seY[i] == 0.0)
@@ -4223,12 +4223,12 @@ namespace StatsDirect.Builtins
             DataFrame snFrame = parameters["sn"].AsDataFrame;
             DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
             int k = snVariable.Length;
-            double[] sn = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] y = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] seY = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] llY = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] ulY = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            int[] pg = new int[k + 1 + 1 /* for VB to C# conversion */ ];
+            double[] sn = new double[k + 2 ];
+            double[] y = new double[k + 2 ];
+            double[] seY = new double[k + 2 ];
+            double[] llY = new double[k + 2 ];
+            double[] ulY = new double[k + 2 ];
+            int[] pg = new int[k + 2 ];
             for (int i = 1; i <= k; i++)
             {
                 sn[i] = snVariable.Data[i - 1];
@@ -4238,7 +4238,7 @@ namespace StatsDirect.Builtins
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
             DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
-            double[] sr = new double[k + 1 /* for VB to C# conversion */ ];
+            double[] sr = new double[k + 1 ];
             bool allRZero = true;
             bool allREqualN = true;
             for (int i = 1; i <= k; i++)
@@ -4255,7 +4255,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            string[] title = new string[k + 1 + 1 /* for VB to C# conversion */ ];
+            string[] title = new string[k + 2 ];
             if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
             {
                 stratlab = true;
@@ -4286,8 +4286,8 @@ namespace StatsDirect.Builtins
             double sumwt = 0.0;
             double sumsqwt = 0.0;
             double sumywt = 0.0;
-            double[] wt = new double[k + 1 + 1 /* for VB to C# conversion */ ];
-            double[] dswt = new double[k + 1 + 1 /* for VB to C# conversion */ ];
+            double[] wt = new double[k + 2 ];
+            double[] dswt = new double[k + 2 ];
             for (int i = 1; i <= k; i++)
             {
                 // arcsine transformation to stabilize the variance of the proportion
@@ -4338,7 +4338,7 @@ namespace StatsDirect.Builtins
                 Utilities.Utilities.Swap(ref dsll, ref dsul);
 
             // convert back to proportion scale
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
+            double[,] o = new double[k + 1, 4 + 1];
             rmh = ArcsineInv(rmh, sn);
             llrmh = ArcsineInv(llrmh, sn);
             ulrmh = ArcsineInv(ulrmh, sn);

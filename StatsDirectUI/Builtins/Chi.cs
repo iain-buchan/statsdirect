@@ -122,7 +122,7 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("woolf_ci_1", host.RoundU(yodr));
                 oddsParameters.AddOutput("woolf_ci_2", host.RoundU(xodr));
                 // CMLE
-                ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* for VB to C# conversion */];
+                ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
                 tabl[1].Freq = 1;
                 tabl[1].A = a;
                 tabl[1].M1 = a + b;
@@ -233,10 +233,10 @@ namespace StatsDirect.Builtins
                 datV2 = datFrame.Variables[2].AsDoubleVariable;
             }
             int rows = datFrame.MaxRows;
-            double[] f = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] g = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] h = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] s = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] f = new double[rows + 1 ];
+            double[] g = new double[rows + 1 ];
+            double[] h = new double[rows + 1 ];
+            double[] s = new double[rows + 1 ];
 
             //  RTF_LoadTemplate("chi2xc.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
@@ -384,19 +384,19 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException();
 
             int k = rows / 2;
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 4 + 1 /* for VB to C# conversion */];
-            double[] odr = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odw = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] dswt = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odrl = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odru = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] odx = new double[k + 1 /* for VB to C# conversion */ ];
-            bool[] lerr = new bool[k + 1 /* for VB to C# conversion */ ];
-            bool[] uerr = new bool[k + 1 /* for VB to C# conversion */];
-            string[] title = new string[k + 1 /* for VB to C# conversion */ ];
-            bool[] cced = new bool[k + 1 /* for VB to C# conversion */ ];
-            double[] axll = new double[k + 1 /* for VB to C# conversion */ ];
-            double[] axul = new double[k + 1 /* for VB to C# conversion */ ];
+            double[,] o = new double[k + 1, 4 + 1];
+            double[] odr = new double[k + 1 ];
+            double[] odw = new double[k + 1 ];
+            double[] dswt = new double[k + 1 ];
+            double[] odrl = new double[k + 1 ];
+            double[] odru = new double[k + 1 ];
+            double[] odx = new double[k + 1 ];
+            bool[] lerr = new bool[k + 1 ];
+            bool[] uerr = new bool[k + 1];
+            string[] title = new string[k + 1 ];
+            bool[] cced = new bool[k + 1 ];
+            double[] axll = new double[k + 1 ];
+            double[] axul = new double[k + 1 ];
             for (r = 1; r <= rows; r += 2)
             {
                 int strat = 1 + r / 2;
@@ -429,7 +429,7 @@ namespace StatsDirect.Builtins
             bool tryExact = parameters["try_exact"].AsBoolean;
             if (tryExact)
             {
-                ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1 /* for VB to C# conversion */];
+                ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1];
                 for (i = 1; i <= k; i++)
                 {
                     tbl[i].Freq = 1;
@@ -606,7 +606,7 @@ namespace StatsDirect.Builtins
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             int rows = dataFrame.MaxRows;
             int cols = dataFrame.VariableCount;
-            double[,] a = new double[rows + 1 /* for VB to C# conversion */, cols + 1 /* for VB to C# conversion */];
+            double[,] a = new double[rows + 1, cols + 1];
             double t = 0;
             for (int r = 1; r <= rows; r++)
             {
@@ -655,7 +655,7 @@ namespace StatsDirect.Builtins
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
 
             int k = rows / 2;
-            double[,] o = new double[k + 1 /* for VB to C# conversion */, 5];
+            double[,] o = new double[k + 1, 5];
             int cnt = 0;
             for (rc = 1; rc <= rows; rc += 2)
             {
@@ -692,8 +692,8 @@ namespace StatsDirect.Builtins
             int rows = datFrame.MaxRows;
             const int cols = 2;
 
-            int[,] x = new int[rows + 1 /* for VB to C# conversion */, 3];
-            double[] wt = new double[rows + 1 /* for VB to C# conversion */ ];
+            int[,] x = new int[rows + 1, 3];
+            double[] wt = new double[rows + 1 ];
             for (int row = 1; row <= rows; row++)
             {
                 x[row, 1] = Convert.ToInt32(datV0.Data[row - 1]);
@@ -753,8 +753,8 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         private static void Chi2TrendResample(ITemplateHost host, int[,] x, double[] wt, int nrow, int ncol, double x2, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
         {
-            int[] ncolt = new int[ncol + 1 /* for VB to C# conversion */];
-            int[] nrowt = new int[nrow + 1 /* for VB to C# conversion */ ];
+            int[] ncolt = new int[ncol + 1];
+            int[] nrowt = new int[nrow + 1 ];
             int ntotal = 0;
             int i;
             int j;
@@ -782,8 +782,8 @@ namespace StatsDirect.Builtins
             int maxtot = 5000000;
             bool primed = false;
 
-            double[] fact = new double[1 + 1 /* for VB to C# conversion */ ];
-            int[] jwork = new int[1 + 1 /* for VB to C# conversion */ ];
+            double[] fact = new double[1 + 1 ];
+            int[] jwork = new int[1 + 1 ];
 
             r = 0;
             for (i = 1; i <= iter; i++)
@@ -913,7 +913,7 @@ namespace StatsDirect.Builtins
                     ierror = 5;
                     return;
                 }
-                fact = new double[ntotal + 1 + 1 /* for VB to C# conversion */ ];
+                fact = new double[ntotal + 2 ];
                 //   Calculate log-factorials.
                 double x = 0.0;
                 fact[1] = 0.0;

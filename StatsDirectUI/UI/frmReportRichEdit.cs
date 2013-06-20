@@ -35,6 +35,8 @@ namespace StatsDirect.UI
             }
             UnmergeToolStrip();
             SdApplication.SoleInstance.NoteFormClosing(this, e);
+            Visible = false;
+            MdiParent = null;
         }
 
         private void frmReport_TextChanged(object sender, EventArgs e)

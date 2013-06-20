@@ -82,8 +82,8 @@ namespace StatsDirect.Builtins
             }
             int fault;
             double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out fault);
-            double[] gpid = new double[1 + 1 /* for VB to C# conversion */];
-            string[] glab = new string[1 + 1 /* for VB to C# conversion */];
+            double[] gpid = new double[1 + 1];
+            string[] glab = new string[1 + 1];
             int r;
             int c;
             double[] g;
@@ -92,9 +92,9 @@ namespace StatsDirect.Builtins
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
             int rows = timesVariable.Length;
-            ColumnData[] cd = new ColumnData[2 + 1 /* for VB to C# conversion */ ];
+            ColumnData[] cd = new ColumnData[2 + 1 ];
             cd[1] = new ColumnData { Title = timesVariable.Title };
-            double[] t = new double[rows + 1 /* for VB to C# conversion */];
+            double[] t = new double[rows + 1];
             for (r = 1; r <= rows; r++)
             {
                 t[r] = timesVariable.Data[r - 1];
@@ -104,7 +104,7 @@ namespace StatsDirect.Builtins
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
             cd[2] = new ColumnData { Title = deathsVariable.Title };
-            double[] d = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] d = new double[rows + 1 ];
             int extra = 0;
             for (r = 1; r <= rows; r++)
             {
@@ -119,7 +119,7 @@ namespace StatsDirect.Builtins
             {
                 DataFrame groupsFrame = parameters["groups"].AsDataFrame;
                 ClassifierVariable groupsVariable = groupsFrame.Variables[0].AsClassifierVariable;
-                glab = new string[groupsVariable.GroupCount + 1 /* for VB to C# conversion */ ];
+                glab = new string[groupsVariable.GroupCount + 1 ];
                 for (j = 1; j <= groupsVariable.GroupCount; j++)
                 {
                     glab[j] = groupsVariable.Groups[j - 1].Label;
@@ -136,12 +136,12 @@ namespace StatsDirect.Builtins
                 }
                 // Store the group data
                 cd[0] = new ColumnData { Title = groupsVariable.Title };
-                g = new double[rows + 1 /* for VB to C# conversion */ ];
+                g = new double[rows + 1 ];
                 for (r = 1; r <= rows; r++)
                 {
                     g[r] = groupsVariable.Data[r - 1] + zbase;
                 }
-                gpid = new double[0 + 1 /* for VB to C# conversion */ ];
+                gpid = new double[0 + 1 ];
                 int igot = 0;
                 for (r = 1; r <= rows; r++)
                 {
@@ -161,7 +161,7 @@ namespace StatsDirect.Builtins
                         {
                             igot++;
                             // create temp variable for copying values 
-                            double[] transTemp5 = new double[igot + 1 /* for VB to C# conversion */ ];
+                            double[] transTemp5 = new double[igot + 1 ];
                             Array.Copy(gpid, transTemp5, Math.Min(gpid.Length, transTemp5.Length));
                             gpid = transTemp5;
                             gpid[igot] = temp;
@@ -185,7 +185,7 @@ namespace StatsDirect.Builtins
             {
                 //  one group
                 cd[0] = new ColumnData { Rows = rows };
-                g = new double[rows + 1 /* for VB to C# conversion */ ];
+                g = new double[rows + 1 ];
                 for (r = 1; r <= rows; r++)
                 {
                     g[r] = 1;
@@ -195,8 +195,8 @@ namespace StatsDirect.Builtins
             }
 
             // Put the data back into the Public array
-            double[,] arr2 = new double[2 + 1 /* for VB to C# conversion */, rows + extra + 1 /* for VB to C# conversion */];
-            ColumnData[] cdat1 = new ColumnData[2 + 1 /* for VB to C# conversion */ ];
+            double[,] arr2 = new double[2 + 1, rows + extra + 1];
+            ColumnData[] cdat1 = new ColumnData[2 + 1 ];
             for (c = 0; c <= 2; c++)
             {
                 cdat1[c] = cd[c];
@@ -229,7 +229,7 @@ namespace StatsDirect.Builtins
             }
 
             int nt = cdat1[0].Rows;
-            int[] gnx = new int[groups + 1 /* for VB to C# conversion */];
+            int[] gnx = new int[groups + 1];
             for (lap = 1; lap <= groups; lap++)
             {
                 int j2 = 0;
@@ -247,11 +247,11 @@ namespace StatsDirect.Builtins
                 }
             }
             //  RTF_LoadTemplate("kap_meir.rtf") Then
-            double[,] stime = new double[nmax + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            int[,] dead = new int[nmax + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            double[,] h = new double[nmax + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            double[,] s = new double[nmax + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            int[] cnx = new int[groups + 1 /* for VB to C# conversion */];
+            double[,] stime = new double[nmax + 1, groups + 1];
+            int[,] dead = new int[nmax + 1, groups + 1];
+            double[,] h = new double[nmax + 1, groups + 1];
+            double[,] s = new double[nmax + 1, groups + 1];
+            int[] cnx = new int[groups + 1];
 
             bool save = parameters["save"].AsBoolean;
 
@@ -264,10 +264,10 @@ namespace StatsDirect.Builtins
                 ParameterBag groupParameters = new ParameterBag();
                 groupList.Add(groupParameters);
 
-                int[] nat = new int[gnx[lap] + 1 + 1 /* for VB to C# conversion */];
-                int[] cen = new int[gnx[lap] + 1 /* for VB to C# conversion */ ];
-                int[] allcens = new int[gnx[lap] + 1 /* for VB to C# conversion */ ];
-                double[] alltime = new double[gnx[lap] + 1 + 1 /* for VB to C# conversion */ ];
+                int[] nat = new int[gnx[lap] + 2];
+                int[] cen = new int[gnx[lap] + 1 ];
+                int[] allcens = new int[gnx[lap] + 1 ];
+                double[] alltime = new double[gnx[lap] + 2 ];
                 int nx;
                 Plprep(ref arr2, ref cdat1, ref stime, ref dead, ref nat, ref cen, ref gnx, out nx, ref lap, out nt, ref allcens, ref alltime);
 
@@ -284,8 +284,8 @@ namespace StatsDirect.Builtins
                     grpParameters.AddOutput("grp", gid + " = " + glab[Convert.ToInt32(gpid[lap])]);
                 }
                 cnx[lap] = nx;
-                double[] vh = new double[nx + 1 /* for VB to C# conversion */];
-                double[] vs = new double[nx + 1 /* for VB to C# conversion */];
+                double[] vh = new double[nx + 1];
+                double[] vs = new double[nx + 1];
                 Plest(host, groupParameters, ref stime, ref nat, ref dead, ref cen, ref h, ref s, ref vh, ref vs, ref nx, ref lap);
                 //  median survival time
                 //  Hosmer & Lemeshow
@@ -620,8 +620,8 @@ namespace StatsDirect.Builtins
             int i;
             double w;
 
-            double[] f = new double[rows + 1 /* for VB to C# conversion */];
-            double[] c = new double[rows + 1 /* for VB to C# conversion */];
+            double[] f = new double[rows + 1];
+            double[] c = new double[rows + 1];
             for (i = 1; i <= rows; i++)
             {
                 vq[i] = (q[i] * q[i] * (1.0 - q[i])) / d[i];
@@ -846,8 +846,8 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             }
             int rows = gidVariable.Length;
-            int[] g = new int[rows + 1 /* for VB to C# conversion */];
-            int[] n = new int[2 + 1 /* for VB to C# conversion */];
+            int[] g = new int[rows + 1];
+            int[] n = new int[2 + 1];
             int gid1 = Convert.ToInt32(gidVariable.Data[0]) + 1;
             for (j = 1; j <= rows; j++)
             {
@@ -872,8 +872,8 @@ namespace StatsDirect.Builtins
             if (nr > 0)
             {
                 double minTime = Constant.MISSING;
-                s = new int[rows + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
-                x = new double[rows + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
+                s = new int[rows + 1, nr + 1];
+                x = new double[rows + 1, nr + 1];
 
                 DataFrame timesFrame = parameters["times"].AsDataFrame;
                 DataFrame censorFrame = parameters["censor"].AsDataFrame;
@@ -972,17 +972,17 @@ namespace StatsDirect.Builtins
             string tx;
 
             int nn = ((int)(Math.Floor((double)nr * (nr + 1) / 2)));
-            int[,] y = new int[2 + 1 /* for VB to C# conversion */, nt + 1 /* for VB to C# conversion */];
-            int[,] d = new int[2 + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
-            double[] qe = new double[2 + 1 /* for VB to C# conversion */];
-            double[,] ees = new double[2 + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
-            double[, ,] mu = new double[2 + 1 /* for VB to C# conversion */, nt + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
-            double[, ,] psi = new double[2 + 1 /* for VB to C# conversion */, nt + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
-            double[] sigma = new double[nn + 1 /* for VB to C# conversion */];
-            double[] siginv = new double[nn + 1 /* for VB to C# conversion */];
-            double[] wlt = new double[nr + 1 /* for VB to C# conversion */];
-            double[] nruniv = new double[nr + 1 /* for VB to C# conversion */];
-            double[, ,] sig = new double[2 + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */, nr + 1 /* for VB to C# conversion */];
+            int[,] y = new int[2 + 1, nt + 1];
+            int[,] d = new int[2 + 1, nr + 1];
+            double[] qe = new double[2 + 1];
+            double[,] ees = new double[2 + 1, nr + 1];
+            double[, ,] mu = new double[2 + 1, nt + 1, nr + 1];
+            double[, ,] psi = new double[2 + 1, nt + 1, nr + 1];
+            double[] sigma = new double[nn + 1];
+            double[] siginv = new double[nn + 1];
+            double[] wlt = new double[nr + 1];
+            double[] nruniv = new double[nr + 1];
+            double[, ,] sig = new double[2 + 1, nr + 1, nr + 1];
             ifault = 0;
             for (i = 1; i <= 2; i++)
             {
@@ -1217,7 +1217,7 @@ namespace StatsDirect.Builtins
         ///  <remarks>ALGORITHM AS 7 APPL. STATIST. (1968) VOL.17, P.198</remarks>
         private static void Syminv(ref double[] a, ref int n, ref int nn, ref double[] c, ref int nullty, out int ifault)
         {
-            double[] w = new double[n + 1 /* for VB to C# conversion */ ];
+            double[] w = new double[n + 1 ];
             Chol(a, n, nn, c, ref nullty, out ifault);
             if (ifault != 0)
             {
@@ -1415,7 +1415,7 @@ namespace StatsDirect.Builtins
         private static void Plprep(ref double[,] arr2, ref ColumnData[] cdat1, ref double[,] stime, ref int[,] dead, ref int[] nat, ref int[] cen, ref int[] gnx, out int nx, ref int lap, out int nt, ref int[] allcens, ref double[] alltime)
         {
             nt = cdat1[0].Rows;
-            Trisvar[] q = new Trisvar[nt + 1 /* for VB to C# conversion */];
+            Trisvar[] q = new Trisvar[nt + 1];
             int nxx = 0;
             for (int j = 1; j <= nt; j++)
             {
@@ -1499,19 +1499,19 @@ namespace StatsDirect.Builtins
 
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0].AsClassifierVariable;
-            glab = new string[gidVariable.GroupCount + 1 /* for VB to C# conversion */ ];
+            glab = new string[gidVariable.GroupCount + 1 ];
             for (j = 1; j <= gidVariable.GroupCount; j++)
             {
                 glab[j] = gidVariable.Groups[j - 1].Label;
             }
             rows = gidVariable.Length;
             gid = gidVariable.Title;
-            double[] g = new double[rows + 1 /* for VB to C# conversion */];
+            double[] g = new double[rows + 1];
             for (r = 1; r <= rows; r++)
             {
                 g[r] = gidVariable.Data[r - 1] + 1;
             }
-            gpid = new double[0 + 1 /* for VB to C# conversion */ ];
+            gpid = new double[0 + 1 ];
             int igot = 0;
             for (r = 1; r <= rows; r++)
             {
@@ -1531,7 +1531,7 @@ namespace StatsDirect.Builtins
                     {
                         igot = igot + 1;
                         // create temp variable for copying values - TODO: Optimise
-                        double[] transTemp6 = new double[igot + 1 /* for VB to C# conversion */ ];
+                        double[] transTemp6 = new double[igot + 1 ];
                         Array.Copy(gpid, transTemp6, Math.Min(gpid.Length, transTemp6.Length));
                         gpid = transTemp6;
                         gpid[igot] = temp;
@@ -1553,7 +1553,7 @@ namespace StatsDirect.Builtins
 
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
-            double[] t = new double[rows + 1 /* for VB to C# conversion */];
+            double[] t = new double[rows + 1];
             for (r = 1; r <= rows; r++)
             {
                 t[r] = timesVariable.Data[r - 1];
@@ -1561,18 +1561,18 @@ namespace StatsDirect.Builtins
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
-            double[] c = new double[rows + 1 /* for VB to C# conversion */];
+            double[] c = new double[rows + 1];
             for (r = 1; r <= rows; r++)
             {
                 c[r] = deathsVariable.Data[r - 1];
             }
 
-            double[] s = new double[rows + 1 /* for VB to C# conversion */];
+            double[] s = new double[rows + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"] != null)
             {
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
                 ClassifierVariable strataVariable = strataFrame.Variables[0].AsClassifierVariable;
-                slab = new string[strataVariable.GroupCount + 1 /* for VB to C# conversion */];
+                slab = new string[strataVariable.GroupCount + 1];
                 for (j = 1; j <= strataVariable.GroupCount; j++)
                 {
                     slab[j] = strataVariable.Title + "=" + strataVariable.Groups[j - 1].Label;
@@ -1581,7 +1581,7 @@ namespace StatsDirect.Builtins
                 {
                     s[r] = strataVariable.Data[r - 1];
                 }
-                double[] sid = new double[0 + 1 /* for VB to C# conversion */];
+                double[] sid = new double[0 + 1];
                 int igots = 0;
                 for (r = 1; r <= rows; r++)
                 {
@@ -1601,7 +1601,7 @@ namespace StatsDirect.Builtins
                         {
                             igots = igots + 1;
                             // create temp variable for copying values 
-                            double[] transTemp7 = new double[igots + 1 /* for VB to C# conversion */];
+                            double[] transTemp7 = new double[igots + 1];
                             Array.Copy(sid, transTemp7, Math.Min(sid.Length, transTemp7.Length));
                             sid = transTemp7;
                             sid[igots] = temp;
@@ -1630,8 +1630,8 @@ namespace StatsDirect.Builtins
                 }
             }
             // put the data back into the Public array
-            arr2 = new double[3 + 1 /* for VB to C# conversion */, rows + extra + 1 /* for VB to C# conversion */];
-            cdat1 = new ColumnData[3 + 1 /* for VB to C# conversion */];
+            arr2 = new double[3 + 1, rows + extra + 1];
+            cdat1 = new ColumnData[3 + 1];
             for (j = 0; j <= 3; j++)
             {
                 cdat1[j] = new ColumnData { Rows = rows + extra };
@@ -1667,7 +1667,7 @@ namespace StatsDirect.Builtins
             rows = rows + extra;
             if (groups > 2)
             {
-                score = new double[groups + 1 /* for VB to C# conversion */ ];
+                score = new double[groups + 1 ];
                 bool use123 = parameters["use123"].AsBoolean;
                 if (use123)
                 {
@@ -1717,22 +1717,22 @@ namespace StatsDirect.Builtins
             DataFrame intervalsFrame = parameters["intervals"].AsDataFrame;
             DoubleVariable intervalsVariable = intervalsFrame.Variables[0].AsDoubleVariable;
             int rows = intervalsVariable.Length + 1;
-            double[] r = new double[rows + 1 /* for VB to C# conversion */];
-            double[] x = new double[rows + 1 /* for VB to C# conversion */];
-            double[] p = new double[rows + 1 /* for VB to C# conversion */];
-            double[] d = new double[rows + 1 /* for VB to C# conversion */];
-            double[] a = new double[rows + 1 /* for VB to C# conversion */];
-            double[] rm = new double[rows + 1 /* for VB to C# conversion */];
-            double[] q = new double[rows + 1 /* for VB to C# conversion */];
-            double[] dd = new double[rows + 1 /* for VB to C# conversion */];
-            double[] sl = new double[rows + 1 /* for VB to C# conversion */];
-            double[] yl = new double[rows + 1 /* for VB to C# conversion */];
-            double[] e = new double[rows + 1 /* for VB to C# conversion */];
-            double[] t = new double[rows + 1 /* for VB to C# conversion */];
-            double[] vq = new double[rows + 1 /* for VB to C# conversion */];
-            double[] ve = new double[rows + 1 /* for VB to C# conversion */];
-            double[] vs = new double[rows + 1 /* for VB to C# conversion */];
-            double[] u = new double[rows + 1 /* for VB to C# conversion */ ];
+            double[] r = new double[rows + 1];
+            double[] x = new double[rows + 1];
+            double[] p = new double[rows + 1];
+            double[] d = new double[rows + 1];
+            double[] a = new double[rows + 1];
+            double[] rm = new double[rows + 1];
+            double[] q = new double[rows + 1];
+            double[] dd = new double[rows + 1];
+            double[] sl = new double[rows + 1];
+            double[] yl = new double[rows + 1];
+            double[] e = new double[rows + 1];
+            double[] t = new double[rows + 1];
+            double[] vq = new double[rows + 1];
+            double[] ve = new double[rows + 1];
+            double[] vs = new double[rows + 1];
+            double[] u = new double[rows + 1 ];
             x[1] = 0.0;
             for (int i = 1; i <= rows - 1; i++)
             {
@@ -1796,9 +1796,9 @@ namespace StatsDirect.Builtins
             bool saveDetails = parameters["save"].AsBoolean;
 
             // simulation
-            double[] dsim = new double[rows + 1 /* for VB to C# conversion */ ];
-            double[] esim = new double[simits + 1 /* for VB to C# conversion */ ];
-            double[] emdsim = new double[simits + 1 /* for VB to C# conversion */ ];
+            double[] dsim = new double[rows + 1 ];
+            double[] esim = new double[simits + 1 ];
+            double[] emdsim = new double[simits + 1 ];
             PoissonRNG rng = new PoissonRNG();
             //  RNG.Seed(DefaultSeed()) not required as the default seed is used if the RNG isn't seeded on first call
             host.StartProgress("Simulating...");
@@ -2121,8 +2121,8 @@ namespace StatsDirect.Builtins
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
             int rows = timesVariable.Length;
-            ColumnData[] td = new ColumnData[2 + 1 /* for VB to C# conversion */];
-            double[] t = new double[rows + 1 /* for VB to C# conversion */];
+            ColumnData[] td = new ColumnData[2 + 1];
+            double[] t = new double[rows + 1];
             td[0] = new ColumnData { Title = timesVariable.Title };
 
             for (int r = 1; r <= rows; r++)
@@ -2130,7 +2130,7 @@ namespace StatsDirect.Builtins
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
-            double[] d = new double[rows + 1 /* for VB to C# conversion */];
+            double[] d = new double[rows + 1];
             td[1] = new ColumnData { Title = deathsVariable.Title };
 
             for (int r = 1; r <= rows; r++)
@@ -2138,7 +2138,7 @@ namespace StatsDirect.Builtins
 
             DataFrame withdrawalsFrame = parameters["withdrawals"].AsDataFrame;
             DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0].AsDoubleVariable;
-            double[] w = new double[rows + 1 /* for VB to C# conversion */];
+            double[] w = new double[rows + 1];
             td[2] = new ColumnData { Title = withdrawalsVariable.Title };
 
             for (int r = 1; r <= rows; r++)
@@ -2146,7 +2146,7 @@ namespace StatsDirect.Builtins
 
             double natst = parameters["natst"].AsDouble;
 
-            Trisvar[] qx = new Trisvar[rows + 1 /* for VB to C# conversion */ ];
+            Trisvar[] qx = new Trisvar[rows + 1 ];
             int nx = 0;
             for (int j = 1; j <= rows; j++)
             {
@@ -2157,9 +2157,9 @@ namespace StatsDirect.Builtins
                 }
             }
             Array.Sort(qx, 1, nx, new TrisvarByTm());
-            t = new double[nx + 1 /* for VB to C# conversion */];
-            d = new double[nx + 1 /* for VB to C# conversion */];
-            w = new double[nx + 1 /* for VB to C# conversion */];
+            t = new double[nx + 1];
+            d = new double[nx + 1];
+            w = new double[nx + 1];
             int nt = 0;
             for (int j = 1; j <= nx; j++)
             {
@@ -2183,9 +2183,9 @@ namespace StatsDirect.Builtins
             double cump = 1.0;
             double var1 = 0.0;
             double natr = natst;
-            double[] xcump = new double[nt + 1 /* for VB to C# conversion */];
-            double[] xvar = new double[nt + 1 /* for VB to C# conversion */];
-            double[] xp = new double[nt + 1 /* for VB to C# conversion */];
+            double[] xcump = new double[nt + 1];
+            double[] xvar = new double[nt + 1];
+            double[] xp = new double[nt + 1];
             IList<ParameterBag> deathsList = new List<ParameterBag>();
             outputParameters.AddOutput("*deaths", deathsList);
             for (int j = 1; j <= nt; j++)
@@ -2293,10 +2293,10 @@ namespace StatsDirect.Builtins
             ExactBB.Rec2X2[] tbl = null;
             bool ifault;
 
-            double[] score = new double[0 + 1 /* for VB to C# conversion */ ];
-            double[] gpid = new double[1 + 1 /* for VB to C# conversion */];
-            string[] glab = new string[1 + 1 /* for VB to C# conversion */];
-            string[] slab = new string[1 + 1 /* for VB to C# conversion */];
+            double[] score = new double[0 + 1 ];
+            double[] gpid = new double[1 + 1];
+            string[] glab = new string[1 + 1];
+            string[] slab = new string[1 + 1];
             double[,] arr2 = null;
             ColumnData[] cdat1 = null;
             Petoprep(host, parameters, ref nt, out gamma, ref cit, ref groups, ref strata, ref score, ref gid, ref gpid, ref glab, ref slab, out ifault, ref arr2, ref cdat1);
@@ -2310,13 +2310,13 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> outerList = new List<ParameterBag>();
             outputParameters.AddOutput("*outer", outerList);
-            double[] tesum = new double[groups + 1 /* for VB to C# conversion */];
-            int[] tdg = new int[groups + 1 /* for VB to C# conversion */];
-            Trisvar[] q = new Trisvar[nt + 1 + 1 /* for VB to C# conversion */];
-            double[,] vsuml = new double[groups + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            double[] u0Suml = new double[groups + 1 /* for VB to C# conversion */];
-            double[,] vsumw = new double[groups + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-            double[] u0Sumw = new double[groups + 1 /* for VB to C# conversion */];
+            double[] tesum = new double[groups + 1];
+            int[] tdg = new int[groups + 1];
+            Trisvar[] q = new Trisvar[nt + 2];
+            double[,] vsuml = new double[groups + 1, groups + 1];
+            double[] u0Suml = new double[groups + 1];
+            double[,] vsumw = new double[groups + 1, groups + 1];
+            double[] u0Sumw = new double[groups + 1];
             do
             {
                 // stratum loop
@@ -2324,8 +2324,8 @@ namespace StatsDirect.Builtins
                 {
                     stratum = stratum + 1;
                 }
-                int[] ng = new int[groups + 1 /* for VB to C# conversion */];
-                int[] dg = new int[groups + 1 /* for VB to C# conversion */ ];
+                int[] ng = new int[groups + 1];
+                int[] dg = new int[groups + 1 ];
                 int ntx = 0;
                 int j;
                 for (j = 1; j <= nt; j++)
@@ -2352,15 +2352,15 @@ namespace StatsDirect.Builtins
                 do
                 {
                     test = test + 1;
-                    int[] drop = new int[groups + 1 /* for VB to C# conversion */];
-                    int[] rg = new int[groups + 1 /* for VB to C# conversion */];
-                    int[] dead = new int[groups + 1 /* for VB to C# conversion */];
-                    double[,] v = new double[groups + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
-                    double[] u0 = new double[groups + 1 /* for VB to C# conversion */ ];
-                    double[] esum = new double[groups + 1 /* for VB to C# conversion */ ];
+                    int[] drop = new int[groups + 1];
+                    int[] rg = new int[groups + 1];
+                    int[] dead = new int[groups + 1];
+                    double[,] v = new double[groups + 1, groups + 1];
+                    double[] u0 = new double[groups + 1 ];
+                    double[] esum = new double[groups + 1 ];
                     if (groups == 2 && test == 1)
                     {
-                        tbl = new ExactBB.Rec2X2[ntx + 1 /* for VB to C# conversion */];
+                        tbl = new ExactBB.Rec2X2[ntx + 1];
                     } // exact 2x2 test
 
                     for (j = 1; j <= groups; j++)
@@ -2487,8 +2487,8 @@ namespace StatsDirect.Builtins
                         sv = sv * (risktot - Convert.ToDouble(totd) + 1.0) / (risktot + 1);
                     }
                     // invert the first groups-1 elements of the v matrix
-                    double[,] vtemp = new double[groups - 1 + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
-                    double[,] vinv = new double[groups + 1 /* for VB to C# conversion */, groups + 1 /* for VB to C# conversion */];
+                    double[,] vtemp = new double[groups - 1 + 1, 1 + 1];
+                    double[,] vinv = new double[groups + 1, groups + 1];
                     // save v for summing later if stratified
                     for (j2 = 1; j2 <= groups; j2++)
                     {
@@ -2532,7 +2532,7 @@ namespace StatsDirect.Builtins
                             x2Num = x2Num + u0[k] * score[k];
                         }
                         x2Num = x2Num * x2Num;
-                        vtemp = new double[groups + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
+                        vtemp = new double[groups + 1, 1 + 1];
                         x2Den = 0.0;
                         for (j2 = 1; j2 <= groups; j2++)
                         {
@@ -2717,7 +2717,7 @@ namespace StatsDirect.Builtins
                         if (test == 1)
                         {
                             // stratified logrank
-                            vtemp = new double[groups - 1 + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
+                            vtemp = new double[groups - 1 + 1, 1 + 1];
                             MathDbl.gaussj(vsuml, 1, groups - 1, vtemp, 1, ref imfault);
                             if (imfault != 0)
                             {
@@ -2742,7 +2742,7 @@ namespace StatsDirect.Builtins
                         else
                         {
                             // stratified Wilcoxon
-                            vtemp = new double[groups - 1 + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
+                            vtemp = new double[groups - 1 + 1, 1 + 1];
                             MathDbl.gaussj(vsumw, 1, groups - 1, vtemp, 1, ref imfault);
                             if (imfault != 0)
                             {
@@ -2782,7 +2782,7 @@ namespace StatsDirect.Builtins
                                 }
                             }
                             x2Num = x2Num * x2Num;
-                            vtemp = new double[groups + 1 /* for VB to C# conversion */, 1 + 1 /* for VB to C# conversion */];
+                            vtemp = new double[groups + 1, 1 + 1];
                             x2Den = 0.0;
                             for (j2 = 1; j2 <= groups; j2++)
                             {
