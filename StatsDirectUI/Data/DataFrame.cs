@@ -235,14 +235,12 @@ namespace StatsDirect.Data
                 copy._variables.Add( ( ( Variable )( v.CopyAndStripForRedo( shouldKeepData ) ) ) ); 
             return copy; 
         } 
-        // interface methods implemented by CopyAndStripForRedo
+
         object IStripForRedo.CopyAndStripForRedo( bool shouldKeepData )
         { 
             return CopyAndStripForRedo( shouldKeepData );
         }
         
-        
-        // TRANSMISSINGCOMMENT: Method RefillForRedo
         public void RefillForRedo( IRefillSource refillSource ) 
         { 
             foreach ( Variable v in _variables ) 
@@ -250,7 +248,7 @@ namespace StatsDirect.Data
                 v.RefillForRedo( refillSource ); 
             }
         } 
-        // interface methods implemented by RefillForRedo
+
         void IStripForRedo.RefillForRedo( IRefillSource refillSource )
         { 
             RefillForRedo( refillSource );
