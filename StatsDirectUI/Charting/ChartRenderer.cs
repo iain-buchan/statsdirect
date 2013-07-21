@@ -3187,12 +3187,10 @@ namespace StatsDirect.Charting
             return PlotBoxWhiskerVertical(outputStream, SeriesToUse);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotBoxWhiskerHorizontal
-        private ParameterBag PlotBoxWhiskerHorizontal(Stream OutputStream, List<Series> SeriesToUse)
+        private ParameterBag PlotBoxWhiskerHorizontal(Stream outputStream, List<Series> seriesToUse)
         {
 
-            int k = SeriesToUse.Count + 1;
+            int k = seriesToUse.Count + 1;
             if (k > 10)
             {
                 scaleYAxis = 1 + (k - 10) / 20;
@@ -3209,7 +3207,7 @@ namespace StatsDirect.Charting
             }
 
             // sort the array and get the min, max values
-            GetMinMaxSort(SeriesToUse, out dataMinX, out dataMaxX);
+            GetMinMaxSort(seriesToUse, out dataMinX, out dataMaxX);
 
             BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
 
@@ -3220,7 +3218,7 @@ namespace StatsDirect.Charting
             string axisTitle = bwOptions.XAxisTitle;
 
             // Plot a Metafile version
-            StartMetafile(OutputStream);
+            StartMetafile(outputStream);
 
             //  Fonts
             if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
@@ -3232,7 +3230,7 @@ namespace StatsDirect.Charting
 
             AssignMarkersToSeries();
             double xtra = 0;
-            foreach (Series s in SeriesToUse)
+            foreach (Series s in seriesToUse)
             {
                 double w = canvas.MeasureString(s.Title, axisLabelFont).Width + 20;
                 if (w > xtra + xAxisCanvas)
@@ -3240,7 +3238,7 @@ namespace StatsDirect.Charting
                     xtra = w - xAxisCanvas;
                 }
             }
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(axisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, xtra, definition.ScaleParameters.Y.ScaleType) { Series = SeriesToUse }, false, false);
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(axisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, xtra, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
 
             using (Pen blackPen = GetPen(_markerTypes[10], true))
             {
@@ -3249,9 +3247,9 @@ namespace StatsDirect.Charting
                     dottedBlackPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
 
                     // work through the columns
-                    for (int c = 0; c <= SeriesToUse.Count - 1; c++)
+                    for (int c = 0; c <= seriesToUse.Count - 1; c++)
                     {
-                        DoubleSeries s = SeriesToUse[c].AsDoubleSeries;
+                        DoubleSeries s = seriesToUse[c].AsDoubleSeries;
                         double centre = 0;
                         double boxL = 0;
                         double boxR = 0;
@@ -3273,31 +3271,17 @@ namespace StatsDirect.Charting
                         double yt = yc + halfBoxHeight;
                         double yb = yc - halfBoxHeight;
 
-                        double boxLX = ToCanvasX(boxL);
-                        double boxRX = ToCanvasX(boxR);
+                        double boxLx = ToCanvasX(boxL);
+                        double boxRx = ToCanvasX(boxR);
 
                         // Draw marker, centre line and box
-                        DrawRectangle(blackPen, boxLX, yt, boxRX - boxLX, yt - yb); //  Box
+                        DrawRectangle(blackPen, boxLx, yt, boxRx - boxLx, yt - yb); //  Box
                         if (bwOptions.MarkMeanAndMedian)
                         {
                             //  Other mark
-                            double otherMarkX = ToCanvasX(otherMark);
-                            MarkerShape otherMarkShape;
-                            double otherMarkScaleFactor;
-                            if (centreIsMedian)
-                            {
-                                //  Other marker is mean (x)
-                                otherMarkShape = MarkerShape.Cross;
-                                otherMarkScaleFactor = 0.5;
-                            }
-                            else
-                            {
-                                //  Other marker is median (x)
-                                otherMarkShape = MarkerShape.Cross;
-                                otherMarkScaleFactor = 0.5;
-                            }
-                            DrawMarker(otherMarkX, yc, 21 * otherMarkScaleFactor, otherMarkShape, false, blackPen);
+                            DrawMarker(ToCanvasX(otherMark), yc, 10, MarkerShape.Cross, false, blackPen);
                         }
+                        DrawMarker(centreX, yc, 10, MarkerShape.Diamond, true, blackPen);
                         DrawLine(blackPen, centreX, yt, centreX, yb); //  Centre line
 
                         //  Draw whiskers, fences etc.
@@ -3377,7 +3361,7 @@ namespace StatsDirect.Charting
                         double minWhiskerLX = ToCanvasX(minWhiskerL);
 
                         //  Draw min whisker to outer limit
-                        DrawLine(blackPen, minWhiskerLX, yc, boxLX, yc);
+                        DrawLine(blackPen, minWhiskerLX, yc, boxLx, yc);
 
                         //  Draw outer marker
                         // ReSharper disable ConvertToConstant.Local
@@ -3497,7 +3481,7 @@ namespace StatsDirect.Charting
                             maxWhiskerR = s.Data[s.Data.Length - 1];
                         }
                         double maxWhiskerRX = ToCanvasX(maxWhiskerR);
-                        DrawLine(blackPen, maxWhiskerRX, yc, boxRX, yc);
+                        DrawLine(blackPen, maxWhiskerRX, yc, boxRx, yc);
 
                         //  Outer fence
                         // ReSharper disable ConvertToConstant.Local
@@ -3685,11 +3669,9 @@ namespace StatsDirect.Charting
                         if (bwOptions.MarkMeanAndMedian)
                         {
                             //  Other mark
-                            double otherMarky = ToCanvasY(otherMark);
-                            const double otherMarkScaleFactor = 0.5;
-                            const MarkerShape otherMarkShape = MarkerShape.Cross;
-                            DrawMarker(xc, otherMarky, 21 * otherMarkScaleFactor, otherMarkShape, false, blackPen);
+                            DrawMarker(xc, ToCanvasY(otherMark), 10, MarkerShape.Cross, false, blackPen);
                         }
+                        DrawMarker(xc, centreY, 10, MarkerShape.Diamond, true, blackPen);
                         DrawLine(blackPen, xr, centreY, xl, centreY); //  Centre line
 
                         //  Draw whiskers, fences etc.
@@ -4629,12 +4611,12 @@ namespace StatsDirect.Charting
         ///  <param name="p"></param>
         ///  <param name="x"></param>
         ///  <param name="y"></param>
-        ///  <param name="Size"></param>
-        ///  <param name="Fill"></param>
+        ///  <param name="size"></param>
+        ///  <param name="fill"></param>
         ///  <remarks></remarks>
-        public void DrawDiamond(Pen p, double x, double y, double Size, bool Fill)
+        public void DrawDiamond(Pen p, double x, double y, double size, bool fill)
         {
-            double size2 = Size / 2;
+            double size2 = size / 2;
             PointF[] pt = new PointF[5];
             pt[0].X = Convert.ToSingle(x - size2);
             pt[0].Y = Convert.ToSingle(metafileHeight - y);
@@ -4646,7 +4628,7 @@ namespace StatsDirect.Charting
             pt[3].Y = Convert.ToSingle(metafileHeight - (y + size2));
             pt[4].X = Convert.ToSingle(x - size2);
             pt[4].Y = Convert.ToSingle(metafileHeight - y);
-            if (Fill)
+            if (fill)
             {
                 using (Brush b = new SolidBrush(p.Color))
                 {
@@ -5316,12 +5298,6 @@ namespace StatsDirect.Charting
 
                 return new ParameterBag();
             }
-#if DEBUG
-            catch (Exception ex)
-            {
-                throw;
-            }
-#endif
             finally
             {
                 if (originalMarkerTypes != null)
