@@ -13,7 +13,6 @@ namespace StatsDirect.UI
     {
         private WeakReference window;
         private TabPage tabPage;
-        private string fileName;
         private string path;
 
         internal StatsDirectForm Window
@@ -45,15 +44,15 @@ namespace StatsDirect.UI
 
         internal bool IsNew
         {
-            get { return null == fileName; }
+            get { return null == path; }
         }
 
         internal string FriendlyName
         {
             get
             {
-                if (null != fileName)
-                    return fileName;
+                if (null != path)
+                    return System.IO.Path.GetFileNameWithoutExtension(path);
                 if (HasWindow)
                     return Window.Text;
                 if (null != tabPage)
@@ -74,21 +73,15 @@ namespace StatsDirect.UI
             }
         }
 
-        internal string FileName
-        {
-            get { return fileName; }
-        }
-
         /// <summary>
         /// The full path to the file that is presently loaded in this window
         /// </summary>
         internal string Path
         {
-            get { return path; }
             set
             {
                 path = value;
-                fileName = new FileInfo(value).Name;
+                string fileName = System.IO.Path.GetFileNameWithoutExtension(value);
                 if (HasWindow)
                     Window.Text = fileName;
                 if (null != tabPage)
@@ -133,8 +126,10 @@ namespace StatsDirect.UI
             if (!window.IsAlive)
                 return false;
 
-            // TODO: May need a more sophisticated comparison here
-            return null != path && Path.Equals(candidateFilename);
+            if (null != path)
+                return path.Equals(candidateFilename);
+            string f = FriendlyName;
+            return null != f && f.Equals(candidateFilename);
         }
     }
 }

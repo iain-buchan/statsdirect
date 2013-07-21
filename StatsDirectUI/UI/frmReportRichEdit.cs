@@ -12,6 +12,7 @@ using DevExpress.XtraRichEdit;
 using DevExpress.XtraRichEdit.API.Native;
 using DevExpress.XtraRichEdit.Commands;
 using System.Drawing.Imaging;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
@@ -756,6 +757,10 @@ namespace StatsDirect.UI
 #endif
                 ReplayOperation();
 #if !WATCH_EXCEPTIONS
+            }
+            catch (TemplateOperationCancelledException)
+            {
+                // The operation was cancelled during replay.  Do nothing.
             }
             catch (Exception ex)
             {

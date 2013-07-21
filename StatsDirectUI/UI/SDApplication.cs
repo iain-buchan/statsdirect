@@ -1651,7 +1651,8 @@ namespace StatsDirect.UI
             StatsDirectForm gridWindow = mainWindow.FindOrOpenGrid(worksheetOrigin.WorkbookPath);
             if (null == gridWindow)
             {
-                throw new Exception("Cannot refill variable as the workbook \"" + worksheetOrigin.WorkbookPath + "\" no longer exists.");
+                FriendlyError("Cannot replay the operation as it took data from the unsaved workbook \"" + worksheetOrigin.WorkbookPath + "\", which is no longer open.", null, false);
+                throw new TemplateOperationCancelledException();
             }
             IGrid grid = (IGrid)gridWindow;
             grid.Refill(variable, worksheetOrigin);

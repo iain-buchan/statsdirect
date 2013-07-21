@@ -3965,5 +3965,18 @@ namespace StatsDirect.UI
             DoOperation("QuickSummary");
         }
 
+        internal void SetUnsavedName(string childName)
+        {
+            Text = childName;
+            workbookView.GetLock();
+            try
+            {
+                workbookView.ActiveWorkbook.FullName = childName;
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
+        }
     }
 }

@@ -487,9 +487,9 @@ namespace StatsDirect.UI
             // Make and add the child window
             using (new WaitCursor())
             {
-                StatsDirectForm child = new frmSpreadsheetGear();
+                frmSpreadsheetGear child = new frmSpreadsheetGear();
                 string childName = child.Text + " " + SdApplication.SoleInstance.GetGridNumber();
-                child.Text = childName;
+                child.SetUnsavedName(childName);
                 SetUpForm(child);
                 return child;
             }
@@ -502,7 +502,11 @@ namespace StatsDirect.UI
                 if (wi.IsFile(filename))
                     return wi.Window;
             }
-            // If we get here, no existing grid has the file open - we'll have to reopen it.
+            // If we get here, no existing grid has the file open - we'll have to reopen it if we can.
+
+            // Check that the grid was, in fact, a file.  If it doesn't contain a directory separator, it wasn't - it was therefore almost certainly never saved and we can't recover it.
+            if (filename.IndexOf(Path.DirectorySeparatorChar) < 0)
+                return null;
             return CreateGrid(filename, true);
         }
 
@@ -654,20 +658,34 @@ namespace StatsDirect.UI
 
         private void newGridToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CreateGrid();
+            try
+            {
+                CreateGrid();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Creating a new grid failed due to an internal error", ex, false);
+            }
         }
 
         private void tabWindows_Selecting(object sender, TabControlCancelEventArgs e)
         {
-            // If there are no tabs to activate, the tab page will be null - in which case we need to do nothing
-            if (null == e.TabPage)
-                return;
-
-            WindowInformation info = (WindowInformation)e.TabPage.Tag;
-            // The tab may be asked to activate while it is still being set up, hence before it has an associated window.  Handle that case.
-            if (null != info && info.HasWindow && !activatingViaWindow)
+            try
             {
-                ActivateWindowViaTab(info.Window);
+                // If there are no tabs to activate, the tab page will be null - in which case we need to do nothing
+                if (null == e.TabPage)
+                    return;
+
+                WindowInformation info = (WindowInformation) e.TabPage.Tag;
+                // The tab may be asked to activate while it is still being set up, hence before it has an associated window.  Handle that case.
+                if (null != info && info.HasWindow && !activatingViaWindow)
+                {
+                    ActivateWindowViaTab(info.Window);
+                }
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Swapping windows failed due to an internal error", ex, false);
             }
         }
 
@@ -704,10 +722,17 @@ namespace StatsDirect.UI
 
         private void closeTabToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            WindowInformation lastClickedTab = TabStripLastClickedTab();
-            if (null != lastClickedTab)
+            try
             {
-                lastClickedTab.Window.Close();
+                WindowInformation lastClickedTab = TabStripLastClickedTab();
+                if (null != lastClickedTab)
+                {
+                    lastClickedTab.Window.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Closing the tab failed due to an internal error", ex, false);
             }
         }
 
@@ -750,14 +775,28 @@ namespace StatsDirect.UI
 
         private void newReportToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CreateReport();
+            try
+            {
+                CreateReport();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Creating a report failed due to an internal error", ex, false);
+            }
         }
 
         private void saveToolStripButton_Click(object sender, EventArgs e)
         {
-            WindowInformation activeInfo = ActiveWindowInformation();
-            if (null != activeInfo)
-                activeInfo.Window.SaveContents();
+            try
+            {
+                WindowInformation activeInfo = ActiveWindowInformation();
+                if (null != activeInfo)
+                    activeInfo.Window.SaveContents();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Save failed due to an internal error", ex, false);
+            }
         }
 
         /// <summary>
@@ -773,25 +812,32 @@ namespace StatsDirect.UI
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // Each child form will have been given the opportunity to save its data and close.
-            InsideSubformClose = false;
+            try
+            {
+                // Each child form will have been given the opportunity to save its data and close.
+                InsideSubformClose = false;
 
-            // If any have refused, they will not be safe to close - we should cancel the close if so.
-            bool cancel = false;
-            foreach (Form child in MdiChildren)
-            {
-                if (child is StatsDirectForm && !((StatsDirectForm)child).SafeToClose)
-                    cancel = true;
-            }
-            if (cancel)
-            {
-                e.Cancel = true;
+                // If any have refused, they will not be safe to close - we should cancel the close if so.
+                bool cancel = false;
                 foreach (Form child in MdiChildren)
-                    if (child is StatsDirectForm)
-                        ((StatsDirectForm)child).NoteNonClosure();
+                {
+                    if (child is StatsDirectForm && !((StatsDirectForm) child).SafeToClose)
+                        cancel = true;
+                }
+                if (cancel)
+                {
+                    e.Cancel = true;
+                    foreach (Form child in MdiChildren)
+                        if (child is StatsDirectForm)
+                            ((StatsDirectForm) child).NoteNonClosure();
+                }
+                else
+                    SaveApplicationState();
             }
-            else
-                SaveApplicationState();
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Closing the main form failed due to an internal error", ex, false);
+            }
         }
 
         /// <summary>
@@ -1129,7 +1175,14 @@ namespace StatsDirect.UI
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFile();
+            try
+            {
+                OpenFile();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Open failed due to an internal error", ex, false);
+            }
         }
 
         internal bool OpenFile()
@@ -1187,7 +1240,14 @@ namespace StatsDirect.UI
 
         private void newScriptToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CreateScriptWindow();
+            try
+            {
+                CreateScriptWindow();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Creating a script window failed due to an internal error", ex, false);
+            }
         }
 
         private void cmdClose_Click(object sender, EventArgs e)
@@ -1857,12 +1917,26 @@ namespace StatsDirect.UI
 
         private void frmMain_HelpButtonClicked(object sender, CancelEventArgs e)
         {
-            SdApplication.SoleInstance.ShowHelp(this);
+            try
+            {
+                SdApplication.SoleInstance.ShowHelp(this);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Showing help failed due to an internal error", ex, false);
+            }
         }
 
         private void frmMain_HelpRequested(object sender, HelpEventArgs hlpevent)
         {
-            ShowHelp();
+            try
+            {
+                ShowHelp();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Showing help failed due to an internal error", ex, false);
+            }
         }
 
         private void ShowHelp()
@@ -1902,14 +1976,28 @@ namespace StatsDirect.UI
 
         private void contentsAndIndexToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ActiveHelpTopic = 0;
-            SdApplication.SoleInstance.ShowHelp(this);
+            try
+            {
+                SdApplication.SoleInstance.ActiveHelpTopic = 0;
+                SdApplication.SoleInstance.ShowHelp(this);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Showing help contents failed due to an internal error", ex, false);
+            }
         }
 
         private void methodSelectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ActiveHelpTopic = 1213;
-            SdApplication.SoleInstance.ShowHelp(this);
+            try
+            {
+                SdApplication.SoleInstance.ActiveHelpTopic = 1213;
+                SdApplication.SoleInstance.ShowHelp(this);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Showing help failed due to an internal error", ex, false);
+            }
         }
 
         private bool cancelProgressPressed;
@@ -1948,18 +2036,25 @@ namespace StatsDirect.UI
 
         private void tabWindows_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
+            try
             {
-                lastClickedTabIndex = -1;
-                for (int i = 0; i < tabWindows.TabCount; i++)
+                if (e.Button == MouseButtons.Right)
                 {
-                    Rectangle box = tabWindows.GetTabRect(i);
-                    if (box.Contains(e.Location))
+                    lastClickedTabIndex = -1;
+                    for (int i = 0; i < tabWindows.TabCount; i++)
                     {
-                        lastClickedTabIndex = i;
-                        break;
+                        Rectangle box = tabWindows.GetTabRect(i);
+                        if (box.Contains(e.Location))
+                        {
+                            lastClickedTabIndex = i;
+                            break;
+                        }
                     }
                 }
+            }
+            catch (Exception)
+            {
+                // There's really not a lot we can do here.  TODO: Log?
             }
         }
 
@@ -2867,6 +2962,8 @@ namespace StatsDirect.UI
 
         static void cmdPrevious_KeyPress(object sender, EventArgs e)
         {
+            try
+            {
             // Find our control and get tag data
             Button cmdPrevious = (Button)sender;
             FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)cmdPrevious.Parent;
@@ -2930,10 +3027,17 @@ namespace StatsDirect.UI
 
             cmdPrevious.Enabled = stratum > 1;
             cmdNext.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't move to previous stratum due to an internal error", ex, false);
+            }
         }
 
         static void cmdNext_KeyPress(object sender, EventArgs e)
         {
+            try
+            {
             // Find our control and get tag data
             Button cmdNext = (Button)sender;
             FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)cmdNext.Parent;
@@ -2995,6 +3099,11 @@ namespace StatsDirect.UI
 
             cmdPrevious.Enabled = true;
             cmdNext.Enabled = true; // Can always Next to create another stratum
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't move to next stratum due to an internal error", ex, false);
+            }
         }
 
         internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, EditGridParameter parameter, ParameterBag context)
@@ -3109,13 +3218,21 @@ namespace StatsDirect.UI
         /// <returns></returns>
         private WorkbookView FindGridOrNull()
         {
-            TableLayoutPanel tlp = GetUserInputTable();
-            foreach (Control column in tlp.Controls)
+            return FindGridOrNull(GetUserInputTable());
+        }
+
+        private WorkbookView FindGridOrNull(Control root)
+        {
+            foreach (Control child in root.Controls)
             {
-                // Make use of the fact that grids are always added directly to the panel
-                foreach (Control c in column.Controls)
-                    if (c is WorkbookView)
-                        return (WorkbookView)c;
+                if (child is WorkbookView)
+                    return (WorkbookView) child;
+                if (child.Controls.Count > 0)
+                {
+                    WorkbookView found = FindGridOrNull(child);
+                    if (null != found)
+                        return found;
+                }
             }
             // If we get here, there's no grid
             return null;
@@ -3482,7 +3599,14 @@ namespace StatsDirect.UI
 
         void OptionParameter_CheckedChanged(object sender, EventArgs e)
         {
-            CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
+            try
+            {
+                CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
+            }
+            catch (Exception)
+            {
+                // Eat the exception.  TODO: Log
+            }
         }
 
         private void CheckCombinedParameterVisibilityAndMaybeResize(Control sender)
@@ -3781,11 +3905,15 @@ namespace StatsDirect.UI
                             }
                         }
                     }
-                    // grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
+                    grid.ActiveWorksheet.WindowInfo.SplitColumns = has3Columns ? 3 : 2;
+                    grid.ActiveWorksheet.WindowInfo.FreezePanes = true;
                     grid.ActiveWorksheet.Cells[0, has3Columns ? 3 : 2, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
                     grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.ColumnWidth = 11; // characters
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
                     grid.ActiveWorkbook.WindowInfo.DisplayHorizontalScrollBar = false;
+                    grid.CellEndEdit += grid_CellEndEdit;
+                    grid.RangeSelectionChanging += grid_RangeSelectionChanging;
+                    grid.KeyUp += grid_KeyUp;
                 }
                 finally
                 {
@@ -3909,6 +4037,36 @@ namespace StatsDirect.UI
                 return null;
             }
             throw new ArgumentOutOfRangeException("parameter", parameter.SpecialType, "parameter.SpecialType: Unknown option");
+        }
+
+        void grid_KeyUp(object sender, KeyEventArgs e)
+        {
+            enterPressed = e.KeyCode == Keys.Enter;
+        }
+
+        IRange mostRecentActiveCell;
+        bool enterPressed;
+
+        void grid_RangeSelectionChanging(object sender, RangeSelectionChangingEventArgs e)
+        {
+            if (mostRecentActiveCell != null && enterPressed)
+            {
+                // Cancel event...
+                e.Cancel = true;
+
+                // ...and move range selection one cell to the right of mostRecentActiveCell, instead of down
+                mostRecentActiveCell[0, 1].Select();
+                mostRecentActiveCell = null;
+                enterPressed = false;
+            }
+        }
+
+        /// <summary>
+        /// Remember where the most recently edited cell was.  Used to implement enter-moves-across in 2-column and 3-column grids.
+        /// </summary>
+        void grid_CellEndEdit(object sender, CellEndEditEventArgs e)
+        {
+            mostRecentActiveCell = e.ActiveCell;
         }
 
         static void DumpIntoSsg(SpreadsheetGear.Advanced.Cells.IValues values, int column, DoubleVariable variable)
@@ -4798,8 +4956,15 @@ namespace StatsDirect.UI
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (SdApplication.HasInstance)
-                SdApplication.SoleInstance.Shutdown();
+            try
+            {
+                if (SdApplication.HasInstance)
+                    SdApplication.SoleInstance.Shutdown();
+            }
+            catch (Exception)
+            {
+                // Eat the exception
+            }
 
             // HACK: There are occasions when the main window is closed when we're in a DoEvents loop many levels down the stack.  This deals with the problem that the process can stick around.
             Environment.Exit(0);
@@ -4807,15 +4972,22 @@ namespace StatsDirect.UI
 
         private void frmMain_Shown(object sender, EventArgs e)
         {
-            EnsureBuiltInMenuItemsCanShowHelp(mnuMain);
-
-            // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
-            if (MdiChildren.Length == 0)
+            try
             {
-                using (frmOpening opening = new frmOpening())
+                EnsureBuiltInMenuItemsCanShowHelp(mnuMain);
+
+                // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
+                if (MdiChildren.Length == 0)
                 {
-                    opening.ShowDialog(this);
+                    using (frmOpening opening = new frmOpening())
+                    {
+                        opening.ShowDialog(this);
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                // Eat the exception.  TODO: Log.
             }
         }
 
@@ -4995,81 +5167,179 @@ namespace StatsDirect.UI
 
         private void setupToolsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (frmSetupTools frm = new frmSetupTools())
+            try
             {
-                frm.ShowDialog(this);
+                using (frmSetupTools frm = new frmSetupTools())
+                {
+                    frm.ShowDialog(this);
+                }
+                UpdateToolsMenu();
             }
-            UpdateToolsMenu();
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't show tools setup form due to an internal error", ex, false);
+            }
         }
 
         private void aboutsStatsDirectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (frmAbout frm = new frmAbout())
+            try
             {
-                frm.ShowDialog(this);
+                using (frmAbout frm = new frmAbout())
+                {
+                    frm.ShowDialog(this);
+                }
+                GC.Collect();
             }
-            GC.Collect();
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't show About form due to an internal error", ex, false);
+            }
         }
 
         private void openToolStripButton_Click(object sender, EventArgs e)
         {
-            OpenFile();
+            try
+            {
+                OpenFile();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't open file due to an internal error", ex, false);
+            }
         }
 
         private void helpToolStripButton_Click(object sender, EventArgs e)
         {
-            ShowHelp();
+            try
+            {
+                ShowHelp();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't show help due to an internal error", ex, false);
+            }
         }
 
         private void cutToolStripButton_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ActiveWindow.EditCut();
+            try
+            {
+                SdApplication.SoleInstance.ActiveWindow.EditCut();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Cut failed due to an internal error", ex, false);
+            }
         }
 
         private void copyToolStripButton_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ActiveWindow.EditCopy();
+            try
+            {
+                SdApplication.SoleInstance.ActiveWindow.EditCopy();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Copy failed due to an internal error", ex, false);
+            }
         }
 
         private void pasteToolStripButton_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ActiveWindow.EditPaste();
+            try
+            {
+                SdApplication.SoleInstance.ActiveWindow.EditPaste();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Paste failed due to an internal error", ex, false);
+            }
         }
 
         private void printToolStripButton_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ActiveWindow.Print();
+            try
+            {
+                SdApplication.SoleInstance.ActiveWindow.Print();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Print failed due to an internal error", ex, false);
+            }
         }
 
         private void cmdHelp_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ShowCurrentHelp();
+            try
+            {
+                SdApplication.SoleInstance.ShowCurrentHelp();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Show help failed due to an internal error", ex, false);
+            }
         }
 
         private void cascadeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            LayoutMdi(MdiLayout.Cascade);
+            try
+            {
+                LayoutMdi(MdiLayout.Cascade);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Layout failed due to an internal error", ex, false);
+            }
         }
 
         private void tileHorizontallyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            LayoutMdi(MdiLayout.TileHorizontal);
+            try
+            {
+                LayoutMdi(MdiLayout.TileHorizontal);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Layout failed due to an internal error", ex, false);
+            }
         }
 
         private void tileVerticallyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            LayoutMdi(MdiLayout.TileVertical);
+            try
+            {
+                LayoutMdi(MdiLayout.TileVertical);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Layout failed due to an internal error", ex, false);
+            }
         }
 
         private void arrangeIconsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            LayoutMdi(MdiLayout.ArrangeIcons);
+            try
+            {
+                LayoutMdi(MdiLayout.ArrangeIcons);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Layout failed due to an internal error", ex, false);
+            }
         }
 
         private void maximiseToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (null != ActiveMdiChild)
-                ActiveMdiChild.WindowState = FormWindowState.Maximized;
+            try
+            {
+                if (null != ActiveMdiChild)
+                    ActiveMdiChild.WindowState = FormWindowState.Maximized;
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Maximise failed due to an internal error", ex, false);
+            }
         }
 
         internal bool InOperation
@@ -5109,19 +5379,27 @@ namespace StatsDirect.UI
         /// <param name="childToActivate"></param>
         public new void ActivateMdiChild(Form childToActivate)
         {
-            if (ActiveMdiChild != childToActivate)
+            try
             {
-                MdiClient mdiClient = GetMDIClient();
+                if (ActiveMdiChild != childToActivate)
+                {
+                    MdiClient mdiClient = GetMDIClient();
 
-                int pos = mdiClient.Controls.IndexOf(childToActivate);
-                if (pos < 0)
-                    throw new InvalidOperationException("MDIChild form not found");
-                Control form = pos == 0 ? mdiClient.Controls[1] : mdiClient.Controls[pos - 1];
+                    int pos = mdiClient.Controls.IndexOf(childToActivate);
+                    if (pos < 0)
+                        throw new InvalidOperationException("MDIChild form not found");
+                    Control form = pos == 0 ? mdiClient.Controls[1] : mdiClient.Controls[pos - 1];
 
 
-                // flag indicating whether to activate previous or next MDIChild
-                IntPtr direction = new IntPtr(pos == 0 ? 1 : 0);
-                SendMessage(mdiClient.Handle, WM_MDINEXT, form.Handle, direction);
+                    // flag indicating whether to activate previous or next MDIChild
+                    IntPtr direction = new IntPtr(pos == 0 ? 1 : 0);
+                    SendMessage(mdiClient.Handle, WM_MDINEXT, form.Handle, direction);
+                }
+            }
+            catch (Exception)
+            {
+                // Deliberately do nothing.  The child has not activated; the user will have to try again.
+                // This happens unexpectedly - I *think* the Controls collection may be updated on another thread while this code is running.
             }
         }
 
@@ -5145,7 +5423,14 @@ namespace StatsDirect.UI
 
         private void cmdSelectionHelp_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ShowCurrentHelp();
+            try
+            {
+                SdApplication.SoleInstance.ShowCurrentHelp();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Show help failed due to an internal error", ex, false);
+            }
         }
 
         private void cmdCancelProgress_Click(object sender, EventArgs e)
@@ -5155,7 +5440,14 @@ namespace StatsDirect.UI
 
         private void newToolStripButton_Click(object sender, EventArgs e)
         {
-            CreateNewInstanceOfCurrentWindow();
+            try
+            {
+                CreateNewInstanceOfCurrentWindow();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Create new window failed due to an internal error", ex, false);
+            }
         }
 
         private void CreateNewInstanceOfCurrentWindow()
@@ -5172,7 +5464,7 @@ namespace StatsDirect.UI
                     CreateGrid();
                 else if (activeWindow.ImplementsIReport)
                     CreateReport();
-                if (activeWindow.ImplementsIScriptWindow)
+                else if (activeWindow.ImplementsIScriptWindow)
                     CreateScriptWindow();
             }
         }
@@ -5195,78 +5487,120 @@ namespace StatsDirect.UI
 
         private void saveContextMenuToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            WindowInformation lastClickedTab = TabStripLastClickedTab();
-            if (null != lastClickedTab)
+            try
             {
-                lastClickedTab.Window.SaveContents();
+                WindowInformation lastClickedTab = TabStripLastClickedTab();
+                if (null != lastClickedTab)
+                {
+                    lastClickedTab.Window.SaveContents();
+                }
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Save failed due to an internal error", ex, false);
             }
         }
 
         private void saveAsContextToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            WindowInformation lastClickedTab = TabStripLastClickedTab();
-            if (null != lastClickedTab)
+            try
             {
-                lastClickedTab.Window.SaveAsContents();
+                WindowInformation lastClickedTab = TabStripLastClickedTab();
+                if (null != lastClickedTab)
+                {
+                    lastClickedTab.Window.SaveAsContents();
+                }
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Save failed due to an internal error", ex, false);
             }
         }
 
         private void printToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            WindowInformation lastClickedTab = TabStripLastClickedTab();
-            if (null != lastClickedTab)
+            try
             {
-                lastClickedTab.Window.Print();
+                WindowInformation lastClickedTab = TabStripLastClickedTab();
+                if (null != lastClickedTab)
+                {
+                    lastClickedTab.Window.Print();
+                }
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Print failed due to an internal error", ex, false);
             }
         }
 
         private void renameContextMenuToolStripTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if ('\n' == e.KeyChar || '\r' == e.KeyChar)
+            try
             {
-                string newName = renameContextMenuToolStripTextBox.Text.Trim();
-                if (!string.IsNullOrEmpty(newName))
+                if ('\n' == e.KeyChar || '\r' == e.KeyChar)
                 {
-                    WindowInformation lastClickedTab = TabStripLastClickedTab();
-                    if (null != lastClickedTab)
+                    string newName = renameContextMenuToolStripTextBox.Text.Trim();
+                    if (!string.IsNullOrEmpty(newName))
                     {
-                        lastClickedTab.FriendlyName = newName;
-
-                        // If it's a report, we might need to add it with its new name
-                        if (lastClickedTab.HasWindow && lastClickedTab.Window.ImplementsIReport)
+                        WindowInformation lastClickedTab = TabStripLastClickedTab();
+                        if (null != lastClickedTab)
                         {
-                            // Force the update - the list only notices a name change when we remove and re-add.
-                            StatsDirectForm f = lastClickedTab.Window;
-                            int index = cboActiveReport.Items.IndexOf(new ComboFormAdapter(f));
-                            cboActiveReport.Items[index] = new ComboFormAdapter(f);
+                            lastClickedTab.FriendlyName = newName;
+
+                            // If it's a report, we might need to add it with its new name
+                            if (lastClickedTab.HasWindow && lastClickedTab.Window.ImplementsIReport)
+                            {
+                                // Force the update - the list only notices a name change when we remove and re-add.
+                                StatsDirectForm f = lastClickedTab.Window;
+                                int index = cboActiveReport.Items.IndexOf(new ComboFormAdapter(f));
+                                cboActiveReport.Items[index] = new ComboFormAdapter(f);
+                            }
                         }
                     }
+
+                    e.Handled = true;
+
+                    tabContextMenuStrip.Close(ToolStripDropDownCloseReason.Keyboard);
                 }
-
-                e.Handled = true;
-
-                tabContextMenuStrip.Close(ToolStripDropDownCloseReason.Keyboard);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Rename failed due to an internal error", ex, false);
             }
         }
 
         private void renameContextMenutoolStripMenuItem_Click(object sender, EventArgs e)
         {
-            renameContextMenuToolStripTextBox.Focus();
+            try
+            {
+                renameContextMenuToolStripTextBox.Focus();
+            }
+            catch (Exception)
+            {
+                // Eat the exception
+            }
         }
 
         private void tabContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
-            WindowInformation lastClickedTab = TabStripLastClickedTab();
-            if (null != lastClickedTab)
+            try
             {
-                bool isNew = lastClickedTab.IsNew;
-                renameContextMenuToolStripTextBox.Enabled = isNew;
-                renameContextMenutoolStripMenuItem.Enabled = isNew;
-                if (isNew)
+                WindowInformation lastClickedTab = TabStripLastClickedTab();
+                if (null != lastClickedTab)
                 {
-                    renameContextMenuToolStripTextBox.Text = lastClickedTab.FriendlyName;
-                }
+                    bool isNew = lastClickedTab.IsNew;
+                    renameContextMenuToolStripTextBox.Enabled = isNew;
+                    renameContextMenutoolStripMenuItem.Enabled = isNew;
+                    if (isNew)
+                    {
+                        renameContextMenuToolStripTextBox.Text = lastClickedTab.FriendlyName;
+                    }
 
+                }
+            }
+            catch (Exception)
+            {
+                // Eat the exception
             }
         }
 
@@ -5278,53 +5612,96 @@ namespace StatsDirect.UI
         /// <remarks>Required because tabs select themselves on the way out of the event handling, after we have the opportunity to select anything else.</remarks>
         private void postTabTimer_Tick(object sender, EventArgs e)
         {
-            postTabTimer.Enabled = false;
-            if (null != mostRecentlySelectedWindow)
+            try
             {
-                ActivateMdiChild(mostRecentlySelectedWindow);
-                mostRecentlySelectedWindow = null;
+                postTabTimer.Enabled = false;
+                if (null != mostRecentlySelectedWindow)
+                {
+                    ActivateMdiChild(mostRecentlySelectedWindow);
+                    mostRecentlySelectedWindow = null;
+                }
+            }
+            catch (Exception)
+            {
+                // Eat the error
             }
         }
+
         private void cutContextMenuItem1_Click(object sender, EventArgs e)
         {
-            WorkbookView workbookView = FindGridOrNull();
-            if (null == workbookView)
-                return;
-            workbookView.Cut();
+            try
+            {
+                WorkbookView workbookView = FindGridOrNull();
+                if (null == workbookView)
+                    return;
+                workbookView.Cut();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Cut failed due to an internal error", ex, false);
+            }
         }
 
         private void copyContextMenuItem_Click(object sender, EventArgs e)
         {
-            WorkbookView workbookView = FindGridOrNull();
-            if (null == workbookView)
-                return;
-            workbookView.Copy();
+            try
+            {
+                WorkbookView workbookView = FindGridOrNull();
+                if (null == workbookView)
+                    return;
+                workbookView.Copy();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Copy failed due to an internal error", ex, false);
+            }
         }
 
         private void pasteContextMenuItem_Click(object sender, EventArgs e)
         {
-            WorkbookView workbookView = FindGridOrNull();
-            if (null == workbookView)
-                return;
-            workbookView.Paste();
+            try
+            {
+                WorkbookView workbookView = FindGridOrNull();
+                if (null == workbookView)
+                    return;
+                workbookView.Paste();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Paste failed due to an internal error", ex, false);
+            }
         }
 
         private void pasteSpecialContextMenuItem_Click(object sender, EventArgs e)
         {
-            WorkbookView workbookView = FindGridOrNull();
-            if (null == workbookView)
-                return;
-            using (frmPasteSpecial frm = new frmPasteSpecial())
+            try
             {
-                frm.ShowDialog(this);
-                if (!frm.UserCancelled)
-                    workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
+                WorkbookView workbookView = FindGridOrNull();
+                if (null == workbookView)
+                    return;
+                using (frmPasteSpecial frm = new frmPasteSpecial())
+                {
+                    frm.ShowDialog(this);
+                    if (!frm.UserCancelled)
+                        workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Paste Special due to an internal error", ex, false);
             }
         }
 
         private void insertContextMenuItem_Click(object sender, EventArgs e)
         {
-            InsertCells();
+            try
+            {
+                InsertCells();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Insert Cells failed due to an internal error", ex, false);
+            }
         }
 
         private void InsertCells()
@@ -5366,7 +5743,14 @@ namespace StatsDirect.UI
 
         private void deleteContextMenuItem_Click(object sender, EventArgs e)
         {
-            DeleteSpecial();
+            try
+            {
+                DeleteSpecial();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Delete cells failed due to an internal error", ex, false);
+            }
         }
 
         private void DeleteSpecial()
@@ -5409,17 +5793,31 @@ namespace StatsDirect.UI
 
         private void clearContentsContextMenuItem_Click(object sender, EventArgs e)
         {
-            WorkbookView workbookView = FindGridOrNull();
-            if (null == workbookView)
-                return;
-            workbookView.Focus();
-            SendKeys.Send("{DEL}");
-            Application.DoEvents(); // Force processing of events, in this case clearing the selection
+            try
+            {
+                WorkbookView workbookView = FindGridOrNull();
+                if (null == workbookView)
+                    return;
+                workbookView.Focus();
+                SendKeys.Send("{DEL}");
+                Application.DoEvents(); // Force processing of events, in this case clearing the selection
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Clear Contents failed due to an internal error", ex, false);
+            }
         }
 
         private void goToContextMenuItem_Click(object sender, EventArgs e)
         {
-            GoToCell();
+            try
+            {
+                GoToCell();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Go to cell failed due to an internal error", ex, false);
+            }
         }
 
         private void GoToCell()
@@ -5448,18 +5846,32 @@ namespace StatsDirect.UI
 
         private void findAndReplaceContextMenuItem_Click(object sender, EventArgs e)
         {
-            WorkbookView workbookView = FindGridOrNull();
-            if (null == workbookView)
-                return;
-            // TODO: Fix this rather nasty workaround once SpreadsheetGear has API support for its replace dialog
-            workbookView.Focus();
-            SendKeys.Send("^h");
-            Application.DoEvents(); // Force processing of events, in this case showing the replace dialog
+            try
+            {
+                WorkbookView workbookView = FindGridOrNull();
+                if (null == workbookView)
+                    return;
+                // TODO: Fix this rather nasty workaround once SpreadsheetGear has API support for its replace dialog
+                workbookView.Focus();
+                SendKeys.Send("^h");
+                Application.DoEvents(); // Force processing of events, in this case showing the replace dialog
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Showing the find+replace dialog failed due to an internal error", ex, false);
+            }
         }
 
         private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.CheckForUpdates();
+            try
+            {
+                SdApplication.SoleInstance.CheckForUpdates();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Checking for updates failed due to an internal error", ex, false);
+            }
         }
 
         private int mostRecentModalMessageButtonPressed;
