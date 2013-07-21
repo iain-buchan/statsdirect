@@ -1191,7 +1191,7 @@ namespace StatsDirect.Templates
                 bool shouldKeepData = host.Preferences.ShouldKeepData;
                 xml = parameters.SerializeForRedo(shouldKeepData);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // TODO: Log what failed to be serialized so that it's possible to fix the problem.
             }
