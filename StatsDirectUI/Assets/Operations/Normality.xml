@@ -8,16 +8,16 @@
       <parameters>
         <frame>
           <name>data</name>
+          <prompt>Select DATA</prompt>
           <same-length>false</same-length>
-          <mode>NumericReplaceMissing</mode>
+          <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
-          <max-columns>1</max-columns>
+          <max-columns>200</max-columns>
           <ask-for-group-id>false</ask-for-group-id>
         </frame>
       </parameters>
     </settings>
 	  <builtin function-name="rptNormality" />
 	  <report type="text/rtf" filename="normality.rtf" />
-    <report type="text/rtf" filename="charts.rtf" />
   </steps>
 </operation>
