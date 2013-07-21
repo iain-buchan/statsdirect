@@ -529,7 +529,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("size", tnx[0].ToString());
                 outputParameters.AddOutput("sd", host.RoundU(sd[0]));
                 string tmp;
-                if (psd == Constant.MISSING | psd == 0.0)
+                if (psd == Constant.MISSING || psd == 0.0)
                 {
                     tmp = "not known";
                     statz = (mean[0] - pm) / (sd[0] / Math.Sqrt(tnx[0]));
@@ -553,12 +553,12 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("p_1", host.pval(P));
                 outputParameters.AddOutput("p_2", host.pval(P * 2));
                 int nx = 0;
-                foreach (double Val in v0.Data)
+                foreach (double val in v0.Data)
                 {
-                    if (Val != Constant.MISSING & Val > 0)
+                    if (val != Constant.MISSING & val > 0)
                     {
                         nx = nx + 1;
-                        double logVal = Math.Log(Val);
+                        double logVal = Math.Log(val);
                         gsum = gsum + logVal;
                         gsumsq = gsumsq + (logVal * logVal);
                     }
@@ -605,135 +605,121 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptNormality(ITemplateHost host, ParameterBag parameters)
         {
-            // string swt = "Shapiro-Wilk test"; 
-            DataFrame Data = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = Data.Variables[0].AsDoubleVariable;
-            double[] x = new double[v0.Length + 1 ];
-            int n = 0;
-            foreach (double Val in v0.Data)
-            {
-                if (Val != Constant.MISSING)
-                {
-                    n += 1;
-                    x[n] = Val;
-                }
-            }
-            //  Chop off any missing values
-            // create temp variable for copying values 
-            double[] transTemp0 = new double[n + 1 /* VB to C# conversion */ ];
-            Array.Copy(x, transTemp0, Math.Min(x.Length, transTemp0.Length));
-            x = transTemp0;
+            // ASSUME: Data passed in was acquired with NumericSkipMissing and has no missing values.
+            DataFrame frame = parameters["data"].AsDataFrame;
 
-            // variable
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("sample", v0.Title);
-            outputParameters.AddOutput("n", n.ToString());
+            List<ParameterBag> outputList = new List<ParameterBag>();
+            outputParameters.AddOutput("*variable", outputList);
 
-            // D'Agostino omnibus skewness and kurtosis test
-            double mean, sd, skewness, kurtosis, b1, b1_p, b2, b2_p, k2, k2_p;
-            normality_sk(x, 1, n, out mean, out sd, out skewness, out kurtosis, out b1, out b1_p, out b2, out b2_p, out k2, out k2_p);
-            outputParameters.AddOutput("mean", host.RoundU(mean));
-            outputParameters.AddOutput("sd", host.RoundU(sd));
-            string xtra = n < 8 ? "" : ",";
-            outputParameters.AddOutput("skewness", host.RoundU(skewness) + xtra);
-            outputParameters.AddOutput("kurtosis", host.RoundU(kurtosis) + xtra);
-            if (n < 8)
+            foreach (Variable v in frame.Variables)
             {
-                outputParameters.AddOutput("b1_p", "");
-                outputParameters.AddOutput("b2_p", "");
-                outputParameters.AddOutput("k2", "Not calculated if sample size < 8");
-                outputParameters.AddOutput("k2_p", "");
-            }
-            else
-            {
-                outputParameters.AddOutput("b1_p", host.pval(b1_p));
-                outputParameters.AddOutput("b2_p", host.pval(b2_p));
-                outputParameters.AddOutput("k2", host.RoundU(k2) + ",");
-                outputParameters.AddOutput("k2_p", host.pval(k2_p));
-            }
+                DoubleVariable v0 = v.AsDoubleVariable;
+                double[] data = v0.Data;
+                int n = data.Length;
 
-            // Shapiro-Wilk
-            double sw_w, sw_p, sw_z = 0, sw_v = 0;
-            normality_sw(x, 1, n, out sw_w, out sw_p, ref sw_z, ref sw_v);
-            if (n < 3)
-            {
-                outputParameters.AddOutput("sw_w", "Not calculated if sample size < 3");
-                outputParameters.AddOutput("sw_v", "");
-                outputParameters.AddOutput("sw_p", "");
-            }
-            else
-            {
-                outputParameters.AddOutput("sw_w", host.RoundU(sw_w) + ",");
-                outputParameters.AddOutput("sw_v", "V = " + host.RoundU(sw_v) + ",");
-                xtra = n > 2000 ? ": Test unreliable with more than 2000 observations." : "";
-                outputParameters.AddOutput("sw_p", host.pval(sw_p) + xtra);
-            }
+                // variable
+                ParameterBag variableParameters = new ParameterBag();
+                outputList.Add(variableParameters);
+                variableParameters.AddOutput("sample", v0.Title);
+                variableParameters.AddOutput("n", n.ToString());
 
-            // Shapiro-Francia
-            double sf_w, sf_p, sf_v, sf_z;
-            normality_sf(x, 1, n, out sf_w, out sf_v, out sf_z, out sf_p);
-            if (n < 5)
-            {
-                outputParameters.AddOutput("sf_w", "Not calculated if sample size < 5");
-                outputParameters.AddOutput("sf_v", "");
-                outputParameters.AddOutput("sf_p", "");
-            }
-            else
-            {
-                outputParameters.AddOutput("sf_w", host.RoundU(sf_w) + ",");
-                outputParameters.AddOutput("sf_v", "V' = " + host.RoundU(sf_v) + ",");
-                xtra = n > 5000 ? ": Test unreliable with more than 5000 observations." : "";
-                outputParameters.AddOutput("sf_p", host.pval(sf_p) + xtra);
-            }
-
-            double pmin = Constant.MISSING;
-            if (sw_p != Constant.MISSING)
-            {
-                pmin = sw_p;
-            }
-            if (sf_p != Constant.MISSING & sf_p < pmin)
-            {
-                pmin = sf_p;
-            }
-            if (pmin != Constant.MISSING)
-            {
-                if (pmin < 0.05)
+                // D'Agostino omnibus skewness and kurtosis test
+                double mean, sd, skewness, kurtosis, b1, b1P, b2, b2P, k2, k2P;
+                normality_sk(data, 0, n - 1, out mean, out sd, out skewness, out kurtosis, out b1, out b1P, out b2, out b2P, out k2, out k2P);
+                variableParameters.AddOutput("mean", host.RoundU(mean));
+                variableParameters.AddOutput("sd", host.RoundU(sd));
+                string xtra = n < 8 ? "" : ",";
+                variableParameters.AddOutput("skewness", host.RoundU(skewness) + xtra);
+                variableParameters.AddOutput("kurtosis", host.RoundU(kurtosis) + xtra);
+                if (n < 8)
                 {
-                    outputParameters.AddOutput("result", "Sample unlikely to be from a normal distribution");
-                }
-                else if (pmin < 0.1)
-                {
-                    outputParameters.AddOutput("result", "Tests not quite significant but do not assume normality");
+                    variableParameters.AddOutput("b1_p", "");
+                    variableParameters.AddOutput("b2_p", "");
+                    variableParameters.AddOutput("k2", "Not calculated if sample size < 8");
+                    variableParameters.AddOutput("k2_p", "");
                 }
                 else
                 {
-                    outputParameters.AddOutput("result", "No non-normality detected by tests: examine plot");
+                    variableParameters.AddOutput("b1_p", host.pval(b1P));
+                    variableParameters.AddOutput("b2_p", host.pval(b2P));
+                    variableParameters.AddOutput("k2", host.RoundU(k2) + ",");
+                    variableParameters.AddOutput("k2_p", host.pval(k2P));
+                }
+
+                // Shapiro-Wilk
+                double sw_w, sw_p, sw_z = 0, sw_v = 0;
+                normality_sw(data, 0, n - 1, out sw_w, out sw_p, ref sw_z, ref sw_v);
+                if (n < 3)
+                {
+                    variableParameters.AddOutput("sw_w", "Not calculated if sample size < 3");
+                    variableParameters.AddOutput("sw_v", "");
+                    variableParameters.AddOutput("sw_p", "");
+                }
+                else
+                {
+                    variableParameters.AddOutput("sw_w", host.RoundU(sw_w) + ",");
+                    variableParameters.AddOutput("sw_v", "V = " + host.RoundU(sw_v) + ",");
+                    xtra = n > 2000 ? ": Test unreliable with more than 2000 observations." : "";
+                    variableParameters.AddOutput("sw_p", host.pval(sw_p) + xtra);
+                }
+
+                // Shapiro-Francia
+                double sf_w, sf_p, sf_v, sf_z;
+                normality_sf(data, 0, n - 1, out sf_w, out sf_v, out sf_z, out sf_p);
+                if (n < 5)
+                {
+                    variableParameters.AddOutput("sf_w", "Not calculated if sample size < 5");
+                    variableParameters.AddOutput("sf_v", "");
+                    variableParameters.AddOutput("sf_p", "");
+                }
+                else
+                {
+                    variableParameters.AddOutput("sf_w", host.RoundU(sf_w) + ",");
+                    variableParameters.AddOutput("sf_v", "V' = " + host.RoundU(sf_v) + ",");
+                    xtra = n > 5000 ? ": Test unreliable with more than 5000 observations." : "";
+                    variableParameters.AddOutput("sf_p", host.pval(sf_p) + xtra);
+                }
+
+                double pmin = Constant.MISSING;
+                if (sw_p != Constant.MISSING)
+                {
+                    pmin = sw_p;
+                }
+                if (sf_p != Constant.MISSING && sf_p < pmin)
+                {
+                    pmin = sf_p;
+                }
+                if (pmin != Constant.MISSING)
+                {
+                    if (pmin < 0.05)
+                    {
+                        variableParameters.AddOutput("result", "Sample unlikely to be from a normal distribution");
+                    }
+                    else if (pmin < 0.1)
+                    {
+                        variableParameters.AddOutput("result", "Tests not quite significant but do not assume normality");
+                    }
+                    else
+                    {
+                        variableParameters.AddOutput("result", "No non-normality detected by tests: examine plot");
+                    }
+                }
+                else
+                {
+                    variableParameters.AddOutput("result", "Error in calculation");
+                }
+
+                NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour) {Scaling = true, Method = NormalOptions.ScoreMethod.Blom};
+                ChartDefinition cd = new ChartDefinition {ChartOptions = nOptions};
+                cd.XSeries.Add(new DoubleSeries(data, v0.Title));
+
+                using (ChartRenderer ch = new ChartRenderer(cd))
+                {
+                    string rtf = ch.PlotNormalAndReturnRtf(host, data);
+                    variableParameters.AddOutput("chart", rtf);
                 }
             }
-            else
-            {
-                outputParameters.AddOutput("result", "Error in calculation");
-            }
-
-            IList<ParameterBag> chartList = new List<ParameterBag>();
-            outputParameters.AddOutput("*chart", chartList);
-
-            NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour) { Scaling = true, Method = NormalOptions.ScoreMethod.Blom };
-
-
-            ChartDefinition cd = new ChartDefinition { ChartOptions = nOptions };
-            double[] qx0 = new double[x.Length - 2 + 1 ];
-            Array.Copy(x, 1, qx0, 0, qx0.Length);
-            cd.XSeries.Add(new DoubleSeries(qx0, v0.Title));
-
-            using (ChartRenderer ch = new ChartRenderer(cd))
-            {
-                string rtf = ch.PlotNormalAndReturnRtf(host, qx0);
-                ParameterBag chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
-            }
-
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
