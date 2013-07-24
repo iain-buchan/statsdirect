@@ -3911,9 +3911,9 @@ namespace StatsDirect.UI
                     grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.ColumnWidth = 11; // characters
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
                     grid.ActiveWorkbook.WindowInfo.DisplayHorizontalScrollBar = false;
-                    grid.CellEndEdit += grid_CellEndEdit;
-                    grid.RangeSelectionChanging += grid_RangeSelectionChanging;
-                    grid.KeyUp += grid_KeyUp;
+                    // grid.CellEndEdit += grid_CellEndEdit;
+                    // grid.RangeSelectionChanging += grid_RangeSelectionChanging;
+                    // grid.KeyUp += grid_KeyUp;
                 }
                 finally
                 {

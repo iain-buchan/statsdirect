@@ -425,7 +425,7 @@ namespace StatsDirect.UI
         {
             // PaneAndBoolean mostRecent = MostRecentlySelectedGrid;
             Pane mostRecentPane = null;
-            if (null != ActiveGrid)
+            if (null != ActiveGrid && ActiveGrid.HasWindow)
                 mostRecentPane = ActiveGrid.Window.SelectedPane;
             IList<PaneAndPosition> availableWindows = new List<PaneAndPosition>();
             foreach (Pane pane in AvailableFramePanes())
@@ -793,13 +793,23 @@ namespace StatsDirect.UI
                         throw new ArgumentOutOfRangeException("parameter", parameter.Type, "EditGrid should always be filled inline");
                     case ParameterType.Grid:
                         {
+                            if (null == ActiveGrid || !ActiveGrid.HasWindow)
+                            {
+                                FriendlyError("There are no workbooks open from which to select data. Please create or open a workbook containing your data, then run the operation again.", null, false);
+                                throw new TemplateOperationCancelledException();
+                            }
                             frmSpreadsheetGear gearWindow = (frmSpreadsheetGear) ActiveGrid.Window;
                             outputParameters = gearWindow.FillGridParameter(parameter, processor, this, context);
                         }
                         break;
                     case ParameterType.Grid2D:
                         {
-                            frmSpreadsheetGear gearWindow = (frmSpreadsheetGear) ActiveGrid.Window;
+                            if (null == ActiveGrid || !ActiveGrid.HasWindow)
+                            {
+                                FriendlyError("There are no workbooks open from which to select data. Please create or open a workbook containing your data, then run the operation again.", null, false);
+                                throw new TemplateOperationCancelledException();
+                            }
+                            frmSpreadsheetGear gearWindow = (frmSpreadsheetGear)ActiveGrid.Window;
                             DataFrame2D frame = gearWindow.FillGridParameter2D(parameter, processor, this, context);
                             outputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(true, frame));
                         }

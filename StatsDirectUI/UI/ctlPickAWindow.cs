@@ -73,7 +73,7 @@ namespace StatsDirect.UI
                 case OutputType.Frame:
                     panesAndPositions = SdApplication.SoleInstance.AvailableFramePanesAndPositions();
                     newName = "New workbook";
-                    if (null != SdApplication.SoleInstance.ActiveGrid)
+                    if (null != SdApplication.SoleInstance.ActiveGrid && SdApplication.SoleInstance.ActiveGrid.HasWindow)
                         defaultSelection = SdApplication.SoleInstance.ActiveGrid.Window.SelectedPane;
                     break;
                 case OutputType.Report:
