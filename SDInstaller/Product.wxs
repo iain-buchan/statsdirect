@@ -14,7 +14,7 @@
     <Package
       InstallerVersion="200"
       Compressed="yes"
-      Description="StatsDirect v3.0 beta"
+      Description="StatsDirect v3.0"
       Manufacturer="StatsDirect Limited"/>
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
     
@@ -192,7 +192,7 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <!-- Start menu shortcut location -->
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="StatsDirect 3 Beta"/>
+        <Directory Id="ApplicationProgramsFolder" Name="StatsDirect 3"/>
       </Directory>
       
       <Directory Id="DesktopFolder" Name="Desktop" />
