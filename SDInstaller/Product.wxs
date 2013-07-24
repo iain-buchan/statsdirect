@@ -180,9 +180,7 @@
     <!-- Initial registry area so that SD3 can write its licence key -->
     <DirectoryRef Id="TARGETDIR">
       <Component Id="RegistryEntries" Guid="D2C93068-C954-4b1d-8516-355434B623D7">
-        <RegistryKey Root="HKCU"
-		     Key="Software\VB and VBA Program Settings"
-		     Action="create">
+        <RegistryKey Root="HKCU" Key="Software\VB and VBA Program Settings" ForceCreateOnInstall="yes">
           <Permission GenericAll="yes" User="[LogonUser]"/>
           <RegistryValue Type="string" Value="Default Value"/>
         </RegistryKey>
