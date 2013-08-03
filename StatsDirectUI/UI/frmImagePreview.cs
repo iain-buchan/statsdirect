@@ -26,12 +26,18 @@ namespace StatsDirect.UI
             {
                 pic.Image = value;
                 aspectRatio = value.Width / ((double)value.Height);
+                SetHeight();
             }
         }
 
         private void frmImagePreview_Resize(object sender, EventArgs e)
         {
-            pic.Height = (int)(pic.Width / aspectRatio);
+            SetHeight();
+        }
+
+        private void SetHeight()
+        {
+            pic.Height = (int) (pic.Width / aspectRatio);
         }
     }
 }

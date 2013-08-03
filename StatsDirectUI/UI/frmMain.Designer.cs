@@ -621,12 +621,12 @@ namespace StatsDirect.UI
             this.tabWindows.ItemSize = new System.Drawing.Size(0, 25);
             this.tabWindows.Location = new System.Drawing.Point(0, 0);
             this.tabWindows.Margin = new System.Windows.Forms.Padding(0);
-            this.tabWindows.MaximumSize = new System.Drawing.Size(0, 31);
-            this.tabWindows.MinimumSize = new System.Drawing.Size(0, 31);
+            this.tabWindows.MaximumSize = new System.Drawing.Size(0, 25);
+            this.tabWindows.MinimumSize = new System.Drawing.Size(0, 25);
             this.tabWindows.Name = "tabWindows";
             this.tabWindows.SelectedIndex = 0;
             this.tabWindows.ShowToolTips = true;
-            this.tabWindows.Size = new System.Drawing.Size(692, 31);
+            this.tabWindows.Size = new System.Drawing.Size(692, 25);
             this.tabWindows.TabIndex = 3;
             this.tabWindows.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabWindows_Selecting);
             this.tabWindows.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tabWindows_MouseDown);

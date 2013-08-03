@@ -38,7 +38,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// The minimum amount of other decoration that must be preserved above and below the operations panel.  Forces large panels to scroll.
         /// </summary>
-        // private const int HEIGHT_BREATHING_SPACE = 100;
+        private const int HEIGHT_BREATHING_SPACE = 100;
 
         /// <summary>
         /// The name of the parameter to be passed around a result set that contains a list of operations that have contributed to the list.
@@ -1349,7 +1349,7 @@ namespace StatsDirect.UI
             contentHeight = Math.Max(contentHeight, 58);
 
             // Set a constraint on the maximum height of the table so that it's never off the bottom of the window
-            int constrainedHeight = contentHeight; // Math.Min(contentHeight, this.Height - HEIGHT_BREATHING_SPACE);
+            int constrainedHeight = Math.Min(contentHeight, Height - HEIGHT_BREATHING_SPACE);
             if (enforceHeightOnOperations)
             {
                 pnlTop.Height = constrainedHeight;
@@ -1358,9 +1358,8 @@ namespace StatsDirect.UI
                 pnlUser.Height = contentHeight;
             }
 
-            // bool shouldScrollVertically = (constrainedHeight < contentHeight);
-            // bool shouldScrollHorizontally = false;
-            // tlpOperations.AutoScroll = shouldScrollVertically | shouldScrollHorizontally;
+            bool shouldScrollVertically = (constrainedHeight < contentHeight);
+            tlpOperations.AutoScroll = shouldScrollVertically;
             // The following is a workaround for the TableLayoutPanel apparently not following its own wishes for height, even when the preferred height is reported correctly.  No idea why!
             if (HasUserInputTable())
             {
@@ -3442,12 +3441,11 @@ namespace StatsDirect.UI
                                 groupBox = new SDGroupBox
                                 {
                                     Tag = parameter,
-                                    Padding = new Padding(3, 0, 3, 3),
+                                    Padding = new Padding(3, 3, 3, 3),
                                     AutoSize = true,
                                     Text = prompt
                                 };
-                                tlp.Controls.Add(groupBox);
-                                tlp.SetColumnSpan(groupBox, 2);
+                                // Add later so that autosizing can size the contained controls as well
                             }
                         }
 
@@ -3496,9 +3494,10 @@ namespace StatsDirect.UI
                         else
                         {
                             panelOptions.Height = panelOptions.PreferredSize.Height;
-                            groupBox.Height = panelOptions.PreferredSize.Height + 20;
-                            panelOptions.Location = new Point(7, 15);
+                            panelOptions.Location = new Point(7, 20);
                             groupBox.Controls.Add(panelOptions);
+                            tlp.Controls.Add(groupBox);
+                            tlp.SetColumnSpan(groupBox, 2);
                         }
                     }
                     break;
