@@ -110,6 +110,9 @@ namespace StatsDirect.UI
         /// </summary>
         private int pendingPanelPops /* = 0 */;
 
+        // Record the running scale factor used, for sizing controls we add dynamically where they don't do it themselves
+        private SizeF currentScaleFactor = new SizeF(1f, 1f);
+
         /// <summary>
         /// Outside the debugger, the runtime cannot propagate exception through native code - the native handler gets them and fails.
         /// In two key places, exceptions are "punted" through the native code of a DoEvents loop.
@@ -180,7 +183,12 @@ namespace StatsDirect.UI
                 userDefinedMenuItem.MergeAction = MergeAction.Replace;
                 mnuMain.Items.Insert(mnuMain.Items.Count - 3, userDefinedMenuItem);
             }
-            SetMenuVisibility(false);
+
+            // #844: Templates can be loaded with windows open (for example from the Excel add-in).  Make sure that menus are set up for the active window if there is one.
+            if (null != ActiveMdiChild && ActiveMdiChild is StatsDirectForm)
+                SdApplication.SoleInstance.NoteFormActivated((WindowInformation)ActiveMdiChild.Tag);
+            else
+                SetMenuVisibility(false);
         }
 
         internal void SetMenuVisibility(bool isGridVisible)
@@ -3883,7 +3891,7 @@ namespace StatsDirect.UI
 
                 WorkbookView grid = new WorkbookView
                                         {
-                                            Size = new Size(has3Columns ? 320 : 230, 400),
+                                            Size = new Size((int)((has3Columns ? 320 : 230) * currentScaleFactor.Width), (int)(400 * currentScaleFactor.Height)),
                                             ContextMenuStrip = contextMenuStrip,
                                             Padding = new Padding(0, 0, 0, 0),
                                             Margin = new Padding(0, 0, 0, 0)
@@ -3943,7 +3951,7 @@ namespace StatsDirect.UI
                 VerticalLabel rowsLabel = new VerticalLabel { Text = "Rater 1", AutoSize = true, TabStop = false };
                 ssgContainer.Controls.Add(rowsLabel, 0, 1);
 
-                WorkbookView grid = new WorkbookView { Size = new Size(450, 400), ContextMenuStrip = contextMenuStrip };
+                WorkbookView grid = new WorkbookView { Size = new Size((int)(450 * currentScaleFactor.Width), (int)(400 * currentScaleFactor.Height)), ContextMenuStrip = contextMenuStrip };
                 grid.GetLock();
                 try
                 {
@@ -6254,6 +6262,13 @@ namespace StatsDirect.UI
                 PopPanel(true);
                 pendingPanelPops--;
             }
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            // Record the running scale factor used, for sizing controls we add dynamically where they don't do it themselves
+            currentScaleFactor = new SizeF(currentScaleFactor.Width * factor.Width, currentScaleFactor.Height * factor.Height);
         }
     }
 }

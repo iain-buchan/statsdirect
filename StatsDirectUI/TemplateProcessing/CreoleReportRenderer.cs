@@ -23,6 +23,7 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         private static string Prettify(string substitutedTemplate)
         {
+            int STANDARD_CELL_WIDTH = 1440; // twips
             Dictionary<string, string> substitutions = new Dictionary<string, string>
             {
                 // Colour table entries: 1=black, 2=white, 3=green/blue, 4=strong blue (CI), 5=green (pval), 6=strong red (warn), 7=dark red, 8=dark blue.
@@ -48,7 +49,8 @@ namespace StatsDirect.TemplateProcessing
                 { "</table>", @"}" },
                 { "<title>", @"{\ul\b " },
                 { "</title>", @"}" },
-                { "<tr>", @"\trowd\trgaph135\trleft0\trautofit1 " },
+                // { "<tr>", @"\trowd\trgaph135\trleft0\trautofit1 " },
+                { "<tr>", @"\trowd\trgaph135\trleft0\!!CELLSHERE!! " },
                 { "</tr>", @"\row " },
                 { "<warn>", @"{\cf6 " },
                 { "</warn>", @"}" }
@@ -75,12 +77,12 @@ namespace StatsDirect.TemplateProcessing
                     // If we have a table row with no cells, it's invalid - prevent it from being emitted.
                     if (count > 0)
                     {
-                        // If we get here, there are some cells in this line.  We need one \cellx0 for each \cell, placed at the end of the row data (which we know to end with \trautofit1).
+                        // If we get here, there are some cells in this line.  We need one \cellx<width> for each \cell, placed at the end of the row data (which we know ends with \!!CELLSHERE!! from the translation of </tr>).
                         StringBuilder cellxs = new StringBuilder();
-                        cellxs.Append(@"\trautofit1");
+                        // cellxs.Append(@"\trautofit1");
                         for (int i = 0; i < count; i++)
-                            cellxs.Append(@"\clNoWrap\cellx0");
-                        finalOutput.AppendLine(line.Replace(@"\trautofit1", cellxs.ToString()));
+                            cellxs.Append(string.Format(@"\clNoWrap\cellx{0}", (i + 1) * STANDARD_CELL_WIDTH));
+                        finalOutput.AppendLine(line.Replace(@"\!!CELLSHERE!!", cellxs.ToString()));
                     }
                 }
                 else

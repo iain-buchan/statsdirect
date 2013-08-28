@@ -43,6 +43,9 @@
           </parameters>
         </settings>
       </iftrue>
+    </test>
+    <test>
+      <condition>=parameters.ContainsKey("c3")</condition>
       <iffalse>
         <settings>
           <parameters>

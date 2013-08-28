@@ -2571,7 +2571,8 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("st", i.ToString());
                 orParameters.AddOutput("or", host.RoundU(odr[i]));
                 orParameters.AddOutput("standardized_effect", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
-                orParameters.AddOutput("se", "TODO: ?");
+                double variance = 1.0 / (odw[i] / Formatting.dsum(odw, 1));
+                orParameters.AddOutput("se", host.RoundU(Math.Sqrt(variance)));
                 orParameters.AddOutput("lci", host.RoundU(odrl[i]));
                 orParameters.AddOutput("uci", host.RoundU(odru[i]));
                 orParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
