@@ -5420,7 +5420,6 @@ namespace StatsDirect.UI
             throw new InvalidOperationException("No MDIClient !!!");
         }
 
-        [SuppressUnmanagedCodeSecurity]
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg,
                                     IntPtr wParam, IntPtr lParam);

@@ -38,7 +38,7 @@ namespace StatsDirect.Templates
             Dictionary<string, Exception> loadErrors = new Dictionary<string, Exception>();
             operations = new Dictionary<string, Operation>();
             System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(Operation));
-            DirectoryInfo di = new DirectoryInfo(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, Numerics.Properties.Settings.Default.OperationsDirectory));
+            DirectoryInfo di = new DirectoryInfo(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, UI.Properties.Settings.Default.OperationsDirectory));
             FileInfo[] knownOperations = di.GetFiles();
             foreach (FileInfo info in knownOperations)
             {

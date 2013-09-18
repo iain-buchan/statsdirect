@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Security;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Diagnostics;
 using System.Windows.Forms;
-using System.Security.Permissions;
 
 using StatsDirect.Templates;
 using StatsDirect.Configuration;
@@ -589,30 +587,22 @@ namespace StatsDirect.UI
         /// <param name="preferredOutputLocation"></param>
         object ITemplateHost.OutputReport(string rtf, Operation operation, string redoInformation, object preferredOutputLocation)
         {
-            try
+            // Locate the existing report window if it still exists
+            IReport report;
+            if (null != preferredOutputLocation)
             {
-                new UIPermission(UIPermissionWindow.AllWindows).Assert();
-                // Locate the existing report window if it still exists
-                IReport report;
-                if (null != preferredOutputLocation)
-                {
-                    Pane pane = (Pane)preferredOutputLocation;
-                    report = SelectReportWindow(pane);
-                }
-                else
-                {
-                    report = PickReportWindow(true);
-                }
-                if (null == report)
-                    throw new TemplateOperationCancelledException();
-                report.AppendRtfText(rtf, ActiveHelpTopic, operation, redoInformation);
-                report.EnsureActive();
-                return report.SelectedPane;
+                Pane pane = (Pane)preferredOutputLocation;
+                report = SelectReportWindow(pane);
             }
-            finally
+            else
             {
-                CodeAccessPermission.RevertAssert();
+                report = PickReportWindow(true);
             }
+            if (null == report)
+                throw new TemplateOperationCancelledException();
+            report.AppendRtfText(rtf, ActiveHelpTopic, operation, redoInformation);
+            report.EnsureActive();
+            return report.SelectedPane;
         }
 
         /// <summary>
@@ -747,16 +737,7 @@ namespace StatsDirect.UI
                 throw new Exception("Attempt to fill combined parameters with no main window open");
             if (null == outstandingParameters || outstandingParameters.Count == 0)
                 return new ParameterBag();
-            UIPermission p = new UIPermission(UIPermissionWindow.AllWindows, UIPermissionClipboard.AllClipboard);
-            try
-            {
-                p.Assert();
-                return mainWindow.FillAndValidateCombinedParameters(this, processor, context, outstandingParameters);
-            }
-            finally
-            {
-                CodeAccessPermission.RevertAssert();
-            }
+            return mainWindow.FillAndValidateCombinedParameters(this, processor, context, outstandingParameters);
         }
 
         ParameterBag ITemplateHost.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
@@ -1604,7 +1585,7 @@ namespace StatsDirect.UI
                 // If this is the first time we've been started, so there are no recently used files, add the centrally-maintained test.xlsx for this version.
                 if (0 == output.Count)
                 {
-                    string mySdPath = SDConfiguration.InstallationDirectory;
+                    string mySdPath = SDConfiguration.MyStatsDirectFolder;
                     string defaultRecentlyUsedFile = Properties.Settings.Default.DefaultRecentlyUsedFile;
                     string defaultRecentlyUsedPath = Path.Combine(mySdPath, defaultRecentlyUsedFile);
                     output.Add(defaultRecentlyUsedPath);

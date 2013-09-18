@@ -6,6 +6,7 @@ using StatsDirect.Numerics;
 using StatsDirect.UI;
 using StatsDirect.Utilities;
 using StatsDirect.Builtins;
+using StatsDirect.UI.Properties;
 
 namespace StatsDirect.Calculator
 {
@@ -79,23 +80,23 @@ namespace StatsDirect.Calculator
 
         private void SavePosition()
         {
-            Calculator.Default.CalculatorTop = Top;
-            Calculator.Default.CalculatorLeft = Left;
-            Calculator.Default.CalculatorWidth = Width;
-            Calculator.Default.CalculatorHeight = Height;
-            Calculator.Default.CalculatorMaximized = WindowState == FormWindowState.Maximized;
-            Calculator.Default.Save();
+            Settings.Default.CalculatorTop = Top;
+            Settings.Default.CalculatorLeft = Left;
+            Settings.Default.CalculatorWidth = Width;
+            Settings.Default.CalculatorHeight = Height;
+            Settings.Default.CalculatorMaximized = WindowState == FormWindowState.Maximized;
+            Settings.Default.Save();
         }
 
         private void LoadPosition()
         {
-            if (null != Calculator.Default && null != Calculator.Default.Properties)
+            if (null != Settings.Default && null != Settings.Default.Properties)
             {
-                Top = Calculator.Default.CalculatorTop;
-                Left = Calculator.Default.CalculatorLeft;
-                Width = Calculator.Default.CalculatorWidth;
-                Height = Calculator.Default.CalculatorHeight;
-                WindowState = Calculator.Default.CalculatorMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
+                Top = Settings.Default.CalculatorTop;
+                Left = Settings.Default.CalculatorLeft;
+                Width = Settings.Default.CalculatorWidth;
+                Height = Settings.Default.CalculatorHeight;
+                WindowState = Settings.Default.CalculatorMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
             }
         }
 

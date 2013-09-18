@@ -8,9 +8,6 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.UI;
 using StatsDirect.Utilities;
-#if SECURE
-using System.Security.Permissions;
-#endif
 
 namespace StatsDirect.Templates
 {
@@ -35,10 +32,6 @@ namespace StatsDirect.Templates
         /// <param name="Operation"></param>
         /// <param name="startingParameters">If non-null, some parameters to be used as defaults.</param>
         /// <param name="isRedo"> </param>
-#if SECURE
-        [SecurityPermission(SecurityAction.PermitOnly, Flags = SecurityPermissionFlag.Execution)]
-        [UIPermission(SecurityAction.PermitOnly, Clipboard=UIPermissionClipboard.AllClipboard, Window=UIPermissionWindow.SafeTopLevelWindows)]
-#endif
         public ParameterBag Execute(Operation Operation, ParameterBag startingParameters, bool isRedo)
         {
             host.Operation = Operation;

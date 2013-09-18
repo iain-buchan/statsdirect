@@ -1,7 +1,6 @@
 ﻿// From http://www.codeproject.com/KB/miscctrl/Vertical_Label_Control.aspx
 using System.ComponentModel;
 using System.Drawing;
-using System.Security.Permissions;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -95,7 +94,7 @@ namespace StatsDirect.UI
         /// </summary>
         protected override CreateParams CreateParams//v1.10 
         {
-            [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
+            // [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
             get
             {
                 CreateParams cp = base.CreateParams;

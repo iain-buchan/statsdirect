@@ -33,8 +33,23 @@ namespace StatsDirect.UI
             workbookView.GetLock();
             try
             {
-                workbookView.ActiveWorkbookSet.DefaultFontName = "Calibri";
-                workbookView.ActiveWorkbookSet.DefaultFontSize = 11;
+                if (null != workbookView.ActiveWorkbook)
+                    workbookView.ActiveWorkbook.Close();
+                string fontString = Properties.Settings.Default.DefaultWorkbookFont;
+                if (null != fontString)
+                {
+                    using (Font f = Utilities.Utilities.FontFromSaveString(fontString))
+                    {
+                        workbookView.ActiveWorkbookSet.DefaultFontName = f.Name;
+                        workbookView.ActiveWorkbookSet.DefaultFontSize = f.SizeInPoints;
+                    }
+                }
+                else
+                {
+                    workbookView.ActiveWorkbookSet.DefaultFontName = "Calibri";
+                    workbookView.ActiveWorkbookSet.DefaultFontSize = 11;
+                }
+                workbookView.ActiveWorkbook = workbookView.ActiveWorkbookSet.Workbooks.Add();
             }
             finally
             {
@@ -3616,14 +3631,12 @@ namespace StatsDirect.UI
         private void defaultFontToolStripMenuItem_Click(object sender, EventArgs e)
         {
             FontDialog dlg = new FontDialog
-                                 {
-                                     Font =
-                                         new Font(workbookView.ActiveWorkbookSet.DefaultFontName,
-                                                  (float)workbookView.ActiveWorkbookSet.DefaultFontSize),
-                                     ShowApply = false,
-                                     ShowEffects = false,
-                                     ShowHelp = false
-                                 };
+            {
+                Font = new Font(workbookView.ActiveWorkbookSet.DefaultFontName, (float)workbookView.ActiveWorkbookSet.DefaultFontSize),
+                ShowApply = false,
+                ShowEffects = false,
+                ShowHelp = false
+            };
             DialogResult result = dlg.ShowDialog(this);
             if (DialogResult.OK == result)
             {
@@ -3637,6 +3650,8 @@ namespace StatsDirect.UI
                 {
                     workbookView.ReleaseLock();
                 }
+                Properties.Settings.Default.DefaultWorkbookFont = Utilities.Utilities.SaveStringFromFont(dlg.Font);
+                Properties.Settings.Default.Save();
             }
         }
 

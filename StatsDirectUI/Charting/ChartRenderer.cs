@@ -2,14 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Security;
-using System.Security.Permissions;
 using System.Drawing;
 using System.Text;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using StatsDirect.UI.Properties;
 
 namespace StatsDirect.Charting
 {
@@ -481,14 +480,14 @@ namespace StatsDirect.Charting
 
         private static void InitFlags()
         {
-            defaultBoxAxes = Settings1.Default.BoxAxes;
-            defaultAllBlack = Settings1.Default.BlackAndWhite;
+            defaultBoxAxes = Settings.Default.BoxAxes;
+            defaultAllBlack = Settings.Default.BlackAndWhite;
         }
 
         private static void InitFonts()
         {
             //  Title
-            string savedTitleFont = Settings1.Default.TitleFont;
+            string savedTitleFont = Settings.Default.TitleFont;
 
             if (savedTitleFont == null || !CanParseSaveString(savedTitleFont))
             {
@@ -497,7 +496,7 @@ namespace StatsDirect.Charting
             else
             {
                 DefaultTitleFont = savedTitleFont;
-                string savedLabelFont = Settings1.Default.LabelFont;
+                string savedLabelFont = Settings.Default.LabelFont;
                 DefaultAxisLabelFont = savedLabelFont;
                 DefaultAxisTitleFont = savedLabelFont;
                 DefaultLabelFont = savedLabelFont;
@@ -578,7 +577,7 @@ namespace StatsDirect.Charting
                 _markerTypes[i] = new MarkerType();
             }
 
-            string savedSettings = Settings1.Default.Markers;
+            string savedSettings = Settings.Default.Markers;
 
             if (savedSettings == null || savedSettings.Length < 10)
             {
@@ -635,18 +634,18 @@ namespace StatsDirect.Charting
 
         public static void SaveFlags()
         {
-            Settings1.Default.BlackAndWhite = defaultAllBlack;
-            Settings1.Default.BoxAxes = defaultBoxAxes;
+            Settings.Default.BlackAndWhite = defaultAllBlack;
+            Settings.Default.BoxAxes = defaultBoxAxes;
 
-            SaveSettings(Settings1.Default);
+            SaveSettings(Settings.Default);
         }
 
         public static void SaveFonts()
         {
-            Settings1.Default.LabelFont = DefaultLabelFont;
-            Settings1.Default.TitleFont = DefaultTitleFont;
+            Settings.Default.LabelFont = DefaultLabelFont;
+            Settings.Default.TitleFont = DefaultTitleFont;
 
-            SaveSettings(Settings1.Default);
+            SaveSettings(Settings.Default);
         }
 
         public static void SaveMarkerTypes()
@@ -684,8 +683,8 @@ namespace StatsDirect.Charting
                 //  Marker size
                 savedSettings.Append(_markerTypes[i].MarkerSize.ToString());
             }
-            Settings1.Default.Markers = savedSettings.ToString();
-            SaveSettings(Settings1.Default);
+            Settings.Default.Markers = savedSettings.ToString();
+            SaveSettings(Settings.Default);
         }
 
         private static void InitFirstMarkerTypes()
@@ -743,18 +742,9 @@ namespace StatsDirect.Charting
             SaveMarkerTypes();
         }
 
-        private static void SaveSettings(Settings1 s)
+        private static void SaveSettings(Settings s)
         {
-            IsolatedStorageFilePermission p = new IsolatedStorageFilePermission(PermissionState.Unrestricted);
-            try
-            {
-                p.Assert();
-                s.Save();
-            }
-            finally
-            {
-                CodeAccessPermission.RevertAssert();
-            }
+            s.Save();
         }
 
         ///  <summary>

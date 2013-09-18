@@ -70,7 +70,7 @@
       <Value Profile="(Default)">Data</Value>
     </Setting>
     <Setting Name="DefaultRecentlyUsedFile" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">data\test.xlsx</Value>
+      <Value Profile="(Default)">test.xlsx</Value>
     </Setting>
     <Setting Name="ShouldKeepData" Provider="StatsDirect.UI.PortableSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -78,8 +78,50 @@
     <Setting Name="DisplayDecimalPlaces" Provider="StatsDirect.UI.PortableSettingsProvider" Roaming="true" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">6</Value>
     </Setting>
-    <Setting Name="ShouldUseColour" Type="System.Boolean" Scope="User">
+    <Setting Name="ShouldUseColour" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DefaultWorkbookFont" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Calibri;0;11</Value>
+    </Setting>
+    <Setting Name="TemplateDirectory" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Template</Value>
+    </Setting>
+    <Setting Name="OperationsDirectory" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Operations</Value>
+    </Setting>
+    <Setting Name="CalculatorTop" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="CalculatorLeft" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="CalculatorWidth" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="CalculatorHeight" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="CalculatorMaximized" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Markers" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="TitleFont" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LabelFont" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BoxAxes" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="BlackAndWhite" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RequestScaleLimits" Provider="StatsDirect.UI.PortableSettingsProvider" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

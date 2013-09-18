@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.IO;
 using StatsDirect.Calculator;
 using StatsDirect.Utilities;
+using System.Diagnostics;
 
 namespace StatsDirect.UI
 {
@@ -11,7 +12,7 @@ namespace StatsDirect.UI
     {
         // private const string sd_ini = "StatsDirect.ini";
         // private const string SD_XLS = "StatsDirect.xls";
-        // private const string TEST_XLSX = "test.xlsx";
+        private const string TEST_XLSX = "test.xlsx";
         private const string STATSDIRECT_FOLDER_NAME = "StatsDirect";
 
         /// <summary>
@@ -44,22 +45,29 @@ namespace StatsDirect.UI
 
         private static void StartStatsDirect(string[] args)
         {
+            Stopwatch sw = Stopwatch.StartNew();
             frmMain mainWindow;
             // As soon as possible, put up a loader
             using (frmLoading loader = new frmLoading())
             {
                 loader.Show();
                 Application.DoEvents(); // Force display of the show form
+                Debug.WriteLine("After loader show: {0}", sw.ElapsedMilliseconds);
 
                 CheckExcelAddIn();
+                Debug.WriteLine("After CheckExcelAddIn: {0}", sw.ElapsedMilliseconds);
                 SetupInitialFiles();
+                Debug.WriteLine("After SetupInitialFiles: {0}", sw.ElapsedMilliseconds);
 
                 // Preload a report, to ensure all the report libraries are ready to go.
                 PreloadReport();
+                Debug.WriteLine("PreloadReport: {0}", sw.ElapsedMilliseconds);
 
                 // Preload and parse XML for operations
                 IDictionary<string, Templates.Operation> scrap = Templates.TemplateFactory.Operations;
+                Debug.WriteLine("After operations: {0}", sw.ElapsedMilliseconds);
                 IList<Templates.Operation> userScrap = Templates.TemplateFactory.UserOperations;
+                Debug.WriteLine("After user operations: {0}", sw.ElapsedMilliseconds);
 
                 // Perform any UI hooks we need to...
                 SetupUserInterface();
@@ -70,6 +78,7 @@ namespace StatsDirect.UI
 
                 // ... and go!
                 loader.Hide();
+                Debug.WriteLine("End: {0}", sw.ElapsedMilliseconds);
             }
 
             if (args.Length >= 2)
@@ -180,17 +189,7 @@ namespace StatsDirect.UI
             // first ini override of userdir - copy over test.xlsx and statsdirect.xls
             if (!mySDFolder.Equals(appPath))
             {
-                string mySdXls = Path.Combine(mySDFolder, SD_XLS);
-                if (!File.Exists(mySdXls))
-                {
-                    string distSdXls = Path.Combine(appPath, SD_XLS);
-                    if (File.Exists(distSdXls))
-                    {
-                        File.Copy(distSdXls, mySdXls, false);
-                        // Set the copied file read-only
-                        new FileInfo(mySdXls).IsReadOnly = true;
-                    }
-                }
+             **/
 
                 string myTestXlsx = Path.Combine(mySDFolder, TEST_XLSX);
                 if (!File.Exists(myTestXlsx))
@@ -203,8 +202,7 @@ namespace StatsDirect.UI
                         new FileInfo(myTestXlsx).IsReadOnly = true;
                     }
                 }
-            }
-             **/
+            /* } */
         }
 
         static void CheckExcelAddIn()
