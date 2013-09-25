@@ -1021,6 +1021,7 @@
     <None Include="Assets\Excel\StatsDirectExcelLink.xls" />
     <None Include="Assets\Operations\Operation.xsd" />
     <None Include="Assets\Template\chirxc.creole" />
+    <None Include="Assets\Template\lr_fit.creole" />
     <None Include="Assets\Template\fisher.creole" />
     <None Include="Assets\Template\relrisk.creole" />
     <None Include="Assets\Template\odds.creole" />

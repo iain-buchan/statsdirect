@@ -225,6 +225,9 @@
           <Component Id="DevExpress.RichEdit.v13.1.Core.dll">
             <File Id="DevExpress.RichEdit.v13.1.Core.dll" KeyPath="yes" Name="DevExpress.RichEdit.v13.1.Core.dll" Checksum="yes" />
           </Component>
+          <Component Id="DevExpress.Sparkline.v13.1.Core.dll">
+            <File Id="DevExpress.Sparkline.v13.1.Core.dll" KeyPath="yes" Name="DevExpress.Sparkline.v13.1.Core.dll" Checksum="yes" />
+          </Component>
           <Component Id="DevExpress.Utils.v13.1.dll">
             <File Id="DevExpress.Utils.v13.1.dll" KeyPath="yes" Name="DevExpress.Utils.v13.1.dll" Checksum="yes" />
           </Component>
@@ -1649,6 +1652,7 @@
       <ComponentRef Id="DevExpress.Office.v13.1.Core.dll" />
       <ComponentRef Id="DevExpress.Printing.v13.1.Core.dll" />
       <ComponentRef Id="DevExpress.RichEdit.v13.1.Core.dll" />
+      <ComponentRef Id="DevExpress.Sparkline.v13.1.Core.dll" />
       <ComponentRef Id="DevExpress.Utils.v13.1.dll" />
       <ComponentRef Id="DevExpress.XtraBars.v13.1.dll" />
       <ComponentRef Id="DevExpress.XtraEditors.v13.1.dll" />

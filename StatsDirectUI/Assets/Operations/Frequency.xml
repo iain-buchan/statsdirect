@@ -14,6 +14,28 @@
           <max-columns>200</max-columns>
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
+        <option>
+          <name>sortBy</name>
+          <prompt>Sort the results by</prompt>
+          <prompt-precedes-parameter>true</prompt-precedes-parameter>
+          <format-type>Dropdown</format-type>
+          <options>
+            <option value="value">Value</option>
+            <option value="frequency">Frequency</option>
+          </options>
+          <default-value>value</default-value>
+        </option>
+        <option>
+          <name>sortOrder</name>
+          <prompt>Order</prompt>
+          <prompt-precedes-parameter>true</prompt-precedes-parameter>
+          <format-type>Dropdown</format-type>
+          <options>
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </options>
+          <default-value>asc</default-value>
+        </option>
       </parameters>
     </settings>
 		<builtin function-name="rptFrequency" />

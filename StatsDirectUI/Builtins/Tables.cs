@@ -2782,7 +2782,7 @@ namespace StatsDirect.Builtins
             double[] rowScore = new double[rows + 1 ];
             double[] colScore = new double[cols + 1 ];
 
-            if (cco >= 1.0 | cco <= 0.0)
+            if (cco >= 1.0 || cco <= 0.0)
             {
                 cco = 0.95;
             }

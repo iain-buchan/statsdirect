@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
 {
     public class Describe
     {
-        private class GroupByTitle : IComparer<Group>
+        private class SortGroupByTitleAscending : IComparer<Group>
         {
             private static int Compare(Group x, Group y)
             {
@@ -34,12 +34,72 @@ namespace StatsDirect.Builtins
 
                 return lower ? -1 : 1;
             }
+
             // interface methods implemented by Compare
             int IComparer<Group>.Compare(Group x, Group y)
             {
                 return Compare(x, y);
             }
+        }
 
+        private class SortGroupByTitleDescending : IComparer<Group>
+        {
+            private static int Compare(Group x, Group y)
+            {
+                if (x.Label.Equals(y.Label))
+                {
+                    return 0;
+                }
+
+                //  If both titles are numeric, compare numerically; else, compare as text
+                bool lower;
+                double numericX;
+                double numericY;
+                if (double.TryParse(x.Label, out numericX) && double.TryParse(y.Label, out numericY))
+                {
+                    lower = numericX <= numericY;
+                }
+                else
+                {
+                    lower = String.CompareOrdinal(x.Label, y.Label) < 0;
+                }
+
+                return lower ? 1 : -1;
+            }
+
+            // interface methods implemented by Compare
+            int IComparer<Group>.Compare(Group x, Group y)
+            {
+                return Compare(x, y);
+            }
+        }
+
+        private class SortGroupByNbinAscending : IComparer<Group>
+        {
+            private static int Compare(Group x, Group y)
+            {
+                return x.NBin == y.NBin ? 0 : x.NBin < y.NBin ? -1 : 1;
+            }
+
+            // interface methods implemented by Compare
+            int IComparer<Group>.Compare(Group x, Group y)
+            {
+                return Compare(x, y);
+            }
+        }
+
+        private class SortGroupByNbinDescending : IComparer<Group>
+        {
+            private static int Compare(Group x, Group y)
+            {
+                return x.NBin == y.NBin ? 0 : x.NBin < y.NBin ? 1 : -1;
+            }
+
+            // interface methods implemented by Compare
+            int IComparer<Group>.Compare(Group x, Group y)
+            {
+                return Compare(x, y);
+            }
         }
 
         public static StepResult RptPreferences(ITemplateHost host, ParameterBag parameters)
@@ -207,12 +267,13 @@ namespace StatsDirect.Builtins
             for (int v = 0; v <= data.VariableCount - 1; v++)
             {
                 if (!(data.Variables[v].IsClassifier))
-                {
                     data.Variables[v] = TemplateProcessor.gidx_bins(data.Variables[v].AsDoubleVariable);
-                }
             }
 
-            //  RTF_LoadTemplate("freq.rtf") Then
+            bool shouldSortByValue = "value".Equals(parameters["sortBy"].AsString);
+            bool shouldSortAscending = "asc".Equals(parameters["sortOrder"].AsString);
+
+            //  RTF_LoadTemplate("freq.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> variableList = new List<ParameterBag>();
             outputParameters.AddOutput("*variable", variableList);
@@ -232,12 +293,25 @@ namespace StatsDirect.Builtins
                 {
                     bin[i] = vc.get_Group(i - 1);
                     if (bin[i].Label == Formatting.MISSINGLABEL)
-                    {
                         xtot -= bin[i].NBin;
-                    }
                 }
 
-                Array.Sort(bin, 1, bins, new GroupByTitle());
+                IComparer<Group> comparer;
+                if (shouldSortByValue)
+                {
+                    if (shouldSortAscending)
+                        comparer = new SortGroupByTitleAscending();
+                    else
+                        comparer = new SortGroupByTitleDescending();
+                }
+                else
+                {
+                    if (shouldSortAscending)
+                        comparer = new SortGroupByNbinAscending();
+                    else
+                        comparer = new SortGroupByNbinDescending();
+                }
+                Array.Sort(bin, 1, bins, comparer);
 
                 List<ParameterBag> binList = new List<ParameterBag>();
                 variableParameters.AddOutput("*bin", binList);

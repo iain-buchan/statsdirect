@@ -4,7 +4,6 @@ using System.Diagnostics;
 
 namespace StatsDirect.Charting
 {
-    // TRANSMISSINGCOMMENT: Class HistogramSeriesOptions
     [Serializable]
     public class HistogramSeriesOptions
     {
@@ -29,8 +28,6 @@ namespace StatsDirect.Charting
         public double MidPointInterval;
     }
 
-
-    // TRANSMISSINGCOMMENT: Class HistogramOptions
     [Serializable]
     public class HistogramOptions : GenericOptions
     {
@@ -55,7 +52,6 @@ namespace StatsDirect.Charting
 
         }
 
-        // TRANSMISSINGCOMMENT: Property ShowRelativeFrequencies
         public bool ShowRelativeFrequencies
         {
             get
@@ -68,7 +64,8 @@ namespace StatsDirect.Charting
                 _showRelativeFrequencies = value;
                 if (changed)
                 {
-                    if (null != ScaleChanged) ScaleChanged(this, EventArgs.Empty);
+                    if (null != ScaleChanged)
+                        ScaleChanged(this, EventArgs.Empty);
                 }
             }
         }
@@ -82,7 +79,6 @@ namespace StatsDirect.Charting
         [field: NonSerialized]
         public event EventHandler ScaleChanged;
 
-        // TRANSMISSINGCOMMENT: Property UsesShowLegend
         public override bool UsesShowLegend
         {
             get
@@ -91,7 +87,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property OptionType
         public override OptionTypes OptionType
         {
             get

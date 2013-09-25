@@ -20,6 +20,7 @@
         <boolean>
           <name>doExact</name>
           <prompt>Try exact test</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <column>2</column>
           <default-value>false</default-value>
@@ -27,6 +28,7 @@
         <boolean>
           <name>show_pc</name>
           <prompt>Show percentages</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <column>2</column>
           <default-value>true</default-value>
@@ -34,6 +36,7 @@
         <boolean>
           <name>xp</name>
           <prompt>Show expected counts</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <column>2</column>
           <default-value>false</default-value>
@@ -41,6 +44,7 @@
         <boolean>
           <name>cs</name>
           <prompt>Show cell chi-square</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <column>2</column>
           <default-value>false</default-value>
@@ -48,6 +52,7 @@
         <boolean>
           <name>xs</name>
           <prompt>Show trend scores</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <column>2</column>
           <default-value>false</default-value>

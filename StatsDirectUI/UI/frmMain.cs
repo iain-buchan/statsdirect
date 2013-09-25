@@ -3424,15 +3424,17 @@ namespace StatsDirect.UI
                             Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
                         };
 
-                        tlp.Controls.Add(cbo);
-                        tlp.Controls.Add(lbl);
                         if (parameter.PromptPrecedesParameter)
                         {
+                            tlp.Controls.Add(lbl);
+                            tlp.Controls.Add(cbo);
                             tlp.SetColumn(lbl, 0);
                             tlp.SetColumn(cbo, 1);
                         }
                         else
                         {
+                            tlp.Controls.Add(cbo);
+                            tlp.Controls.Add(lbl);
                             tlp.SetColumn(cbo, 0);
                             tlp.SetColumn(lbl, 1);
                         }
@@ -4237,7 +4239,7 @@ namespace StatsDirect.UI
                     {
                         // We use cancel if we're in a follow-on operation that requires input (i.e. if pressing the button would lead to the option of closing the whole thing rather than an auto-close)
                         // #573: Always show Cancel
-                        cmdClose.Text = ShouldShowClose() ? "C&ancel" : "C&ancel";
+                        cmdClose.Text = ShouldShowClose() ? "&Close" : "C&ancel";
                     }
                     while (true)
                     {
