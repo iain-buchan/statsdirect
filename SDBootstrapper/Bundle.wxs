@@ -2,13 +2,16 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
-	<Bundle Name="StatsDirect" Version="1.0.0.0" Manufacturer="StatsDirect Limited" UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5">
-    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense">
-      <bal:WixStandardBootstrapperApplication
-            LicenseUrl="..\SDInstaller\Licence.rtf"
+	<Bundle Name="StatsDirect" Version="3.0.91.0" Manufacturer="StatsDirect Limited" UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+      <bal:WixStandardBootstrapperApplication ThemeFile="Theme.xml"
+            LicenseFile="Licence.rtf"
             />
+      <Payload SourceFile="dlgbmp-sd.png" />
+      <Payload SourceFile="bannrbmp-sd.png" />
+      <Payload SourceFile="greybar.png" />
+      <Payload SourceFile="white.png" />
     </BootstrapperApplicationRef>
-    <!-- <WixVariable Id="WixStdbaThemeWxl" Value="Resources\CustomHyperlinkBasedTheme.wxl" /> -->
 		<Chain>
       <PackageGroupRef Id="Netfx4Full"/>
       <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x86.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="NOT VersionNT64" />
