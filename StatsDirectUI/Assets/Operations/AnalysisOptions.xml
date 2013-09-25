@@ -60,6 +60,11 @@
           </options>
         </option>
         <boolean>
+          <name>use-scientific-notation-for-small-p-values</name>
+          <prompt>Use scientific notation for small P values</prompt>
+          <default-value>=host.Preferences.UseScientificNotationForSmallPValues</default-value>
+        </boolean>
+        <boolean>
           <name>should-keep-data</name>
           <prompt>Save data in reports to allow replay of operations</prompt>
           <default-value>=host.Preferences.ShouldKeepData</default-value>

@@ -214,11 +214,6 @@ namespace StatsDirect.Templates
         /// </summary>
         ParameterBag SessionParametersAcrossOperations { get; }
 
-        int PDecimalPlaces
-        {
-            get;
-        }
-
         /// <summary>
         /// A non-fatal exception has occurred (generally in calculation).
         /// The process will continue, but the user should be warned not to rely on the results of the operation.

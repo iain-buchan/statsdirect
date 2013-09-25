@@ -1219,19 +1219,16 @@ namespace StatsDirect.UI
                 if (".xls".Equals(extension) || ".xlsx".Equals(extension))
                 {
                     CreateGrid(path, isTempFile);
-                    UpdateFileList();
                     return true;
                 }
                 if (".rtf".Equals(extension) || ".htm".Equals(extension) || ".html".Equals(extension) || ".mht".Equals(extension) || ".mhtml".Equals(extension) || ".txt".Equals(extension))
                 {
                     CreateReport(path, isTempFile);
-                    UpdateFileList();
                     return true;
                 }
                 if (".cs".Equals(extension) || ".vb".Equals(extension))
                 {
                     CreateScriptWindow(path, isTempFile);
-                    UpdateFileList();
                     return true;
                 }
                 if (".sdw".Equals(extension))
@@ -1241,7 +1238,6 @@ namespace StatsDirect.UI
                 }
                 SdApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                 SdApplication.SoleInstance.NoteRecentFile(path, false);
-                UpdateFileList();
                 return false;
             }
         }
@@ -2360,8 +2356,8 @@ namespace StatsDirect.UI
                 pnlUser.Controls.RemoveByKey(USER_INPUT_TABLE_NAME);
                 table.Dispose();
             }
-            cmdCalculate.Text = "&OK";
-            cmdClose.Text = "C&ancel";
+            cmdCalculate.Text = "R&un";
+            cmdClose.Text = "&Return";
         }
 
         internal void StartCombinedParameters()
@@ -4232,14 +4228,16 @@ namespace StatsDirect.UI
                 SelectFirstUsefulControlIn(tlp); // Must be performed once the operations panel is visible, as Select() only selects controls whose parents are all visible.
                 using (new DefaultCursor())
                 {
-                    cmdCalculate.Text = "&OK";
+                    cmdCalculate.Text = "R&un";
                     if (cancelSkipsParameterString != null)
                         cmdClose.Text = cancelSkipsParameterString;
                     else
                     {
                         // We use cancel if we're in a follow-on operation that requires input (i.e. if pressing the button would lead to the option of closing the whole thing rather than an auto-close)
                         // #573: Always show Cancel
-                        cmdClose.Text = ShouldShowClose() ? "&Close" : "C&ancel";
+                        // cmdClose.Text = ShouldShowClose() ? "C&ancel" : "C&ancel";
+                        cmdClose.Text = "&Return";
+                        picArrowAcross.Visible = true;
                     }
                     while (true)
                     {
@@ -4295,8 +4293,9 @@ namespace StatsDirect.UI
             finally
             {
                 fillCombinedParametersContext = null;
-                cmdCalculate.Text = "&OK";
-                cmdClose.Text = "&Cancel";
+                cmdCalculate.Text = "R&un";
+                cmdClose.Text = "&Return";
+                picArrowAcross.Visible = false;
                 PopPanel(true);
             }
 

@@ -118,23 +118,33 @@ namespace StatsDirect.Utilities
             return x.ToString("F" + decpm.ToString());
         }
 
-        public static string pval(double P, int decimalPlaces)
+        public static string pval(double P, int decimalPlaces, bool useScientificNotationForSmallPValues)
         {
             if (Math.Abs(P) > 10)
                 return "P = *";
             if (P < Math.Pow(10D, -decimalPlaces))
-                return "P < 0" + DecimalSeparator + new String('0', decimalPlaces - 1) + "1";
+            {
+                if (useScientificNotationForSmallPValues && P != 0.0)
+                    return "P = " + P.ToString("E");
+                else
+                    return "P < 0" + DecimalSeparator + new String('0', decimalPlaces - 1) + "1";
+            }
             if (P > 1D - Math.Pow(10D, -decimalPlaces))
                 return "P > 0" + DecimalSeparator + new String('9', decimalPlaces);
             return P.ToString("P = 0." + new String('#', decimalPlaces));
         }
 
-        public static string pval_half(double P, int decimalPlaces)
+        public static string pval_half(double P, int decimalPlaces, bool useScientificNotationForSmallPValues)
         {
             if (Math.Abs(P) > 10)
                 return "P = err";
             if (P < Math.Pow(10D, -decimalPlaces))
-                return "P < 0" + DecimalSeparator + new String('0', decimalPlaces - 1) + "1";
+            {
+                if (useScientificNotationForSmallPValues && P != 0.0)
+                    return "P = " + P.ToString("E");
+                else
+                    return "P < 0" + DecimalSeparator + new String('0', decimalPlaces - 1) + "1";
+            }
             if (P > 0.5D - Math.Pow(10D, -decimalPlaces))
                 return "P > 0" + DecimalSeparator + "4" + new String('9', decimalPlaces - 1);
             return P.ToString("P = 0." + new String('#', decimalPlaces));

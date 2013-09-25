@@ -1087,7 +1087,7 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag totParameters = new ParameterBag();
                     totList.Add(totParameters);
-                    totParameters.AddOutput("tot", Formatting.XRound(w[i - 1, j - 1], host.PDecimalPlaces));
+                    totParameters.AddOutput("tot", Formatting.XRound(w[i - 1, j - 1], host.Preferences.PDecimalPlaces));
                 }
             }
             outputParameters.AddOutput("pow", Formatting.XRound(pow * 100, 2));

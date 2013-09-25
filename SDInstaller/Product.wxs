@@ -12,6 +12,7 @@
     
     <!-- Packaging: a single .msi with compressed files in .cab format, embedded in the .msi -->
     <Package
+      InstallScope="perMachine"
       InstallerVersion="200"
       Compressed="yes"
       Description="StatsDirect v3.0"
@@ -144,7 +145,7 @@
 
     <!-- Installation conditions: At least Windows XP, no service pack required, no upper limit on OS version-->
     <!-- Verify not an Unknown OS -->
-    <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows XP, 2003, Vista, 2008 and 7.">
+    <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows XP, 2003 and 2003R2, Vista, 2008 and 2008R2, 7, 2012 and 8.">
       <![CDATA[Installed OR (VersionNT >= 501)]]>
     </Condition>
     <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
@@ -268,8 +269,8 @@
           <Component Id="menu.xml">
             <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
           </Component>
-          <Component Id="Antlr3.Runtime.dll">
-            <File Id="Antlr3.Runtime.dll" KeyPath="yes" Name="Antlr3.Runtime.dll" Checksum="yes" />
+          <Component Id="Antlr4.Runtime.v4.0.dll">
+            <File Id="Antlr4.Runtime.v4.0.dll" KeyPath="yes" Name="Antlr4.Runtime.v4.0.dll" Checksum="yes" />
           </Component>
           <Component Id="STATSDIRECT.chm">
             <File Id="STATSDIRECT.chm" KeyPath="yes" Name="STATSDIRECT.chm" Checksum="yes" />
@@ -1668,7 +1669,7 @@
       <ComponentRef Id="SpreadsheetGear2012.Windows.Forms.dll" />
 
       <ComponentRef Id="menu.xml" />
-      <ComponentRef Id="Antlr3.Runtime.dll" />
+      <ComponentRef Id="Antlr4.Runtime.v4.0.dll" />
       <ComponentRef Id="STATSDIRECT.chm" />
       <ComponentRef Id="StatsDirect.exe.config" />
 

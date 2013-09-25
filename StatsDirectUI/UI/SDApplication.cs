@@ -19,7 +19,7 @@ namespace StatsDirect.UI
     /// <remarks>This class is a Singleton (ref Gamma et al "Design Patterns")</remarks>
     public sealed class SdApplication : ITemplateHost, IRefillSource
     {
-        private const int MAX_RECENT_FILES = 4;
+        private const int MAX_RECENT_FILES = 7;
 
         private int sActiveHelpTopic;
         private string activeHelpUrl;
@@ -1052,12 +1052,12 @@ namespace StatsDirect.UI
 
         public string pval(double p)
         {
-            return Formatting.pval(p, Properties.Settings.Default.PDecimalPlaces);
+            return Formatting.pval(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
         }
 
         public string pval_half(double p)
         {
-            return Formatting.pval_half(p, Properties.Settings.Default.PDecimalPlaces);
+            return Formatting.pval_half(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
         }
 
         /// <summary>
@@ -1323,6 +1323,18 @@ namespace StatsDirect.UI
 
         public class SDPreferencesImpl : SDPreferences
         {
+            public bool UseScientificNotationForSmallPValues
+            {
+                get
+                {
+                    return Properties.Settings.Default.UseScientificNotationForSmallPValues;
+                }
+                set
+                {
+                    Properties.Settings.Default.UseScientificNotationForSmallPValues = value;
+                }
+            }
+
             public bool CanDefaultConfidenceInterval
             {
                 get
@@ -1552,9 +1564,17 @@ namespace StatsDirect.UI
             {
                 recentFiles.Add(path);
                 if (recentFiles.Count > MAX_RECENT_FILES)
-                    recentFiles.RemoveAt(0);
+                {
+                    // Never remove the example file; keep it as the oldest entry even if that means removing a younger file
+                    if (recentFiles[0].Equals(SDConfiguration.MyTestFilePath))
+                        recentFiles.RemoveAt(1);
+                    else
+                        recentFiles.RemoveAt(0);
+                }
             }
             Properties.Settings.Default.RecentFileList = recentFiles;
+            if (null != mainWindow)
+                mainWindow.UpdateFileList();
         }
 
         internal IList<string> RecentFiles
@@ -1585,9 +1605,7 @@ namespace StatsDirect.UI
                 // If this is the first time we've been started, so there are no recently used files, add the centrally-maintained test.xlsx for this version.
                 if (0 == output.Count)
                 {
-                    string mySdPath = SDConfiguration.MyStatsDirectFolder;
-                    string defaultRecentlyUsedFile = Properties.Settings.Default.DefaultRecentlyUsedFile;
-                    string defaultRecentlyUsedPath = Path.Combine(mySdPath, defaultRecentlyUsedFile);
+                    string defaultRecentlyUsedPath = SDConfiguration.MyTestFilePath;
                     output.Add(defaultRecentlyUsedPath);
                 }
                 return output;

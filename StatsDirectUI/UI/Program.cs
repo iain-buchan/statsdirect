@@ -5,15 +5,12 @@ using System.IO;
 using StatsDirect.Calculator;
 using StatsDirect.Utilities;
 using System.Diagnostics;
+using StatsDirect.Configuration;
 
 namespace StatsDirect.UI
 {
     static class Program
     {
-        // private const string sd_ini = "StatsDirect.ini";
-        // private const string SD_XLS = "StatsDirect.xls";
-        private const string TEST_XLSX = "test.xlsx";
-        private const string STATSDIRECT_FOLDER_NAME = "StatsDirect";
 
         /// <summary>
         /// The main entry point for the application.
@@ -54,6 +51,10 @@ namespace StatsDirect.UI
                 Application.DoEvents(); // Force display of the show form
                 Debug.WriteLine("After loader show: {0}", sw.ElapsedMilliseconds);
 
+                // Preload and parse XML for operations
+                Templates.TemplateFactory.LoadOperationsAsync();
+                Debug.WriteLine("After async operations start: {0}", sw.ElapsedMilliseconds);
+
                 CheckExcelAddIn();
                 Debug.WriteLine("After CheckExcelAddIn: {0}", sw.ElapsedMilliseconds);
                 SetupInitialFiles();
@@ -62,12 +63,6 @@ namespace StatsDirect.UI
                 // Preload a report, to ensure all the report libraries are ready to go.
                 PreloadReport();
                 Debug.WriteLine("PreloadReport: {0}", sw.ElapsedMilliseconds);
-
-                // Preload and parse XML for operations
-                IDictionary<string, Templates.Operation> scrap = Templates.TemplateFactory.Operations;
-                Debug.WriteLine("After operations: {0}", sw.ElapsedMilliseconds);
-                IList<Templates.Operation> userScrap = Templates.TemplateFactory.UserOperations;
-                Debug.WriteLine("After user operations: {0}", sw.ElapsedMilliseconds);
 
                 // Perform any UI hooks we need to...
                 SetupUserInterface();
@@ -175,34 +170,20 @@ namespace StatsDirect.UI
                 return;
 
             // Copy sample files locally if they don't already exist
-            string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string mySDFolder = Path.Combine(myDocuments, STATSDIRECT_FOLDER_NAME);
-            if (!Directory.Exists(mySDFolder))
+            string userStatsDirectFolder = SDConfiguration.MyStatsDirectFolder;
+            if (!Directory.Exists(userStatsDirectFolder))
+                Directory.CreateDirectory(userStatsDirectFolder);
+            string myTestXlsx = SDConfiguration.MyTestFilePath;
+            if (!File.Exists(myTestXlsx))
             {
-                Directory.CreateDirectory(mySDFolder);
-            }
-            /**
-            if (!Directory.Exists(mySDFolder))
-            {
-                mySDFolder = appPath;
-            }
-            // first ini override of userdir - copy over test.xlsx and statsdirect.xls
-            if (!mySDFolder.Equals(appPath))
-            {
-             **/
-
-                string myTestXlsx = Path.Combine(mySDFolder, TEST_XLSX);
-                if (!File.Exists(myTestXlsx))
+                string distTestXlsx = Path.Combine(Path.Combine(appPath, "Data"), Properties.Settings.Default.DefaultRecentlyUsedFile);
+                if (File.Exists(distTestXlsx))
                 {
-                    string distTestXlsx = Path.Combine(Path.Combine(appPath, "Data"), TEST_XLSX);
-                    if (File.Exists(distTestXlsx))
-                    {
-                        File.Copy(distTestXlsx, myTestXlsx, false);
-                        // Set the copied file read-only
-                        new FileInfo(myTestXlsx).IsReadOnly = true;
-                    }
+                    File.Copy(distTestXlsx, myTestXlsx, false);
+                    // Set the copied file read-only
+                    new FileInfo(myTestXlsx).IsReadOnly = true;
                 }
-            /* } */
+            }
         }
 
         static void CheckExcelAddIn()

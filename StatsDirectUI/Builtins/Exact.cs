@@ -57,8 +57,8 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("*exact", exactList);
                     ParameterBag exactParameters = new ParameterBag();
                     exactList.Add(exactParameters);
-                    exactParameters.AddOutput("prob_2", host.RoundU(p2));
-                    exactParameters.AddOutput("prob_1", host.RoundU(p));
+                    exactParameters.AddOutput("prob_2", host.pval(p2));
+                    exactParameters.AddOutput("prob_1", host.pval(p));
                     outputParameters.AddOutput("*large", null);
                 }
                 else

@@ -86,6 +86,15 @@
             get;
             set;
         }
+        
+        /// <summary>
+        /// If true, scientific notation should be used for small P value display.  If false, P < 0.*1 will be shown.
+        /// </summary>
+        bool UseScientificNotationForSmallPValues
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// If true, source data should be kept in the log of an operation so that the operation can be re-done.

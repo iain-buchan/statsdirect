@@ -25,6 +25,7 @@ namespace StatsDirect.Builtins
             preferences.DisplayDecimalPlaces = Parsing.Cint_Txt(parameters["decp"].AsString);
             preferences.PDecimalPlaces = Parsing.Cint_Txt(parameters["pdecp"].AsString);
             preferences.ShouldKeepData = parameters["should-keep-data"].AsBoolean;
+            preferences.UseScientificNotationForSmallPValues = parameters["use-scientific-notation-for-small-p-values"].AsBoolean;
             return new StepResult(StepSuccess.Success, new ParameterBag());
         }
 

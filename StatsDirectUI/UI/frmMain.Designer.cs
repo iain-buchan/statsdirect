@@ -137,9 +137,11 @@ namespace StatsDirect.UI
             this.cmdHelp = new System.Windows.Forms.Button();
             this.cmdClose = new System.Windows.Forms.Button();
             this.cmdCalculate = new System.Windows.Forms.Button();
+            this.picArrowAcross = new System.Windows.Forms.PictureBox();
             this.pnlSelectOperation = new System.Windows.Forms.Panel();
             this.lblFurtherAnalysis = new System.Windows.Forms.Label();
             this.cboOperation = new System.Windows.Forms.ComboBox();
+            this.picLinkArrow = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.pnlConfidenceInterval = new System.Windows.Forms.Panel();
             this.lblConfidenceInterval = new System.Windows.Forms.Label();
@@ -167,7 +169,9 @@ namespace StatsDirect.UI
             this.tlpOperations.SuspendLayout();
             this.tlpSelectOperation.SuspendLayout();
             this.pnlOperationButtons.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picArrowAcross)).BeginInit();
             this.pnlSelectOperation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picLinkArrow)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.pnlConfidenceInterval.SuspendLayout();
             this.pnlVariables.SuspendLayout();
@@ -619,7 +623,7 @@ namespace StatsDirect.UI
             this.tabWindows.ContextMenuStrip = this.tabContextMenuStrip;
             this.tabWindows.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.tabWindows.ItemSize = new System.Drawing.Size(0, 25);
-            this.tabWindows.Location = new System.Drawing.Point(0, 0);
+            this.tabWindows.Location = new System.Drawing.Point(0, 6);
             this.tabWindows.Margin = new System.Windows.Forms.Padding(0);
             this.tabWindows.MaximumSize = new System.Drawing.Size(0, 25);
             this.tabWindows.MinimumSize = new System.Drawing.Size(0, 25);
@@ -747,7 +751,7 @@ namespace StatsDirect.UI
             // 
             // cmdSelectionHelp
             // 
-            this.cmdSelectionHelp.Location = new System.Drawing.Point(86, 4);
+            this.cmdSelectionHelp.Location = new System.Drawing.Point(85, 3);
             this.cmdSelectionHelp.Name = "cmdSelectionHelp";
             this.cmdSelectionHelp.Size = new System.Drawing.Size(75, 23);
             this.cmdSelectionHelp.TabIndex = 6;
@@ -760,9 +764,10 @@ namespace StatsDirect.UI
             this.lblNonAdjoined.AutoSize = true;
             this.lblNonAdjoined.Location = new System.Drawing.Point(260, 34);
             this.lblNonAdjoined.Name = "lblNonAdjoined";
-            this.lblNonAdjoined.Size = new System.Drawing.Size(308, 13);
+            this.lblNonAdjoined.Size = new System.Drawing.Size(388, 13);
             this.lblNonAdjoined.TabIndex = 5;
-            this.lblNonAdjoined.Text = "To select non-adjoined data, hold down Ctrl and use the mouse.";
+            this.lblNonAdjoined.Text = "Click OK or right mouse button to select. Use Ctrl. + mouse for non-adjoined data" +
+    ".";
             // 
             // optGroupsByIdentifier
             // 
@@ -799,7 +804,7 @@ namespace StatsDirect.UI
             // 
             // cmdCancel
             // 
-            this.cmdCancel.Location = new System.Drawing.Point(167, 4);
+            this.cmdCancel.Location = new System.Drawing.Point(3, 3);
             this.cmdCancel.Name = "cmdCancel";
             this.cmdCancel.Size = new System.Drawing.Size(75, 23);
             this.cmdCancel.TabIndex = 1;
@@ -809,7 +814,7 @@ namespace StatsDirect.UI
             // 
             // cmdOK
             // 
-            this.cmdOK.Location = new System.Drawing.Point(4, 4);
+            this.cmdOK.Location = new System.Drawing.Point(166, 3);
             this.cmdOK.Name = "cmdOK";
             this.cmdOK.Size = new System.Drawing.Size(75, 23);
             this.cmdOK.TabIndex = 0;
@@ -1177,16 +1182,15 @@ namespace StatsDirect.UI
             this.tlpSelectOperation.ColumnCount = 1;
             this.tlpSelectOperation.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpSelectOperation.Controls.Add(this.pnlOperationButtons, 0, 0);
-            this.tlpSelectOperation.Controls.Add(this.pnlSelectOperation, 0, 1);
-            this.tlpSelectOperation.Controls.Add(this.tableLayoutPanel1, 0, 2);
+            this.tlpSelectOperation.Controls.Add(this.tableLayoutPanel1, 0, 1);
             this.tlpSelectOperation.Location = new System.Drawing.Point(0, 0);
             this.tlpSelectOperation.Margin = new System.Windows.Forms.Padding(0);
             this.tlpSelectOperation.Name = "tlpSelectOperation";
             this.tlpSelectOperation.RowCount = 3;
             this.tlpSelectOperation.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpSelectOperation.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpSelectOperation.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpSelectOperation.Size = new System.Drawing.Size(244, 85);
+            this.tlpSelectOperation.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tlpSelectOperation.Size = new System.Drawing.Size(249, 105);
             this.tlpSelectOperation.TabIndex = 1;
             // 
             // pnlOperationButtons
@@ -1195,10 +1199,12 @@ namespace StatsDirect.UI
             this.pnlOperationButtons.Controls.Add(this.cmdHelp);
             this.pnlOperationButtons.Controls.Add(this.cmdClose);
             this.pnlOperationButtons.Controls.Add(this.cmdCalculate);
+            this.pnlOperationButtons.Controls.Add(this.picArrowAcross);
+            this.pnlOperationButtons.Controls.Add(this.pnlSelectOperation);
             this.pnlOperationButtons.Location = new System.Drawing.Point(0, 0);
             this.pnlOperationButtons.Margin = new System.Windows.Forms.Padding(0);
             this.pnlOperationButtons.Name = "pnlOperationButtons";
-            this.pnlOperationButtons.Size = new System.Drawing.Size(244, 29);
+            this.pnlOperationButtons.Size = new System.Drawing.Size(249, 57);
             this.pnlOperationButtons.TabIndex = 0;
             // 
             // cmdHelp
@@ -1213,39 +1219,52 @@ namespace StatsDirect.UI
             // 
             // cmdClose
             // 
-            this.cmdClose.Location = new System.Drawing.Point(166, 3);
+            this.cmdClose.Location = new System.Drawing.Point(3, 3);
             this.cmdClose.Name = "cmdClose";
             this.cmdClose.Size = new System.Drawing.Size(75, 23);
             this.cmdClose.TabIndex = 3;
-            this.cmdClose.Text = "C&ancel";
+            this.cmdClose.Text = "&Return";
             this.cmdClose.UseVisualStyleBackColor = true;
             this.cmdClose.Click += new System.EventHandler(this.cmdClose_Click);
             // 
             // cmdCalculate
             // 
-            this.cmdCalculate.Location = new System.Drawing.Point(3, 3);
+            this.cmdCalculate.Location = new System.Drawing.Point(166, 3);
             this.cmdCalculate.Name = "cmdCalculate";
             this.cmdCalculate.Size = new System.Drawing.Size(75, 23);
             this.cmdCalculate.TabIndex = 1;
-            this.cmdCalculate.Text = "&OK";
+            this.cmdCalculate.Text = "R&un";
             this.cmdCalculate.UseVisualStyleBackColor = true;
             this.cmdCalculate.Click += new System.EventHandler(this.cmdCalculate_Click);
+            // 
+            // picArrowAcross
+            // 
+            this.picArrowAcross.Image = ((System.Drawing.Image)(resources.GetObject("picArrowAcross.Image")));
+            this.picArrowAcross.InitialImage = ((System.Drawing.Image)(resources.GetObject("picArrowAcross.InitialImage")));
+            this.picArrowAcross.Location = new System.Drawing.Point(241, 3);
+            this.picArrowAcross.Margin = new System.Windows.Forms.Padding(0);
+            this.picArrowAcross.Name = "picArrowAcross";
+            this.picArrowAcross.Size = new System.Drawing.Size(6, 23);
+            this.picArrowAcross.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picArrowAcross.TabIndex = 7;
+            this.picArrowAcross.TabStop = false;
             // 
             // pnlSelectOperation
             // 
             this.pnlSelectOperation.AutoSize = true;
             this.pnlSelectOperation.Controls.Add(this.lblFurtherAnalysis);
             this.pnlSelectOperation.Controls.Add(this.cboOperation);
-            this.pnlSelectOperation.Location = new System.Drawing.Point(0, 29);
+            this.pnlSelectOperation.Controls.Add(this.picLinkArrow);
+            this.pnlSelectOperation.Location = new System.Drawing.Point(0, 0);
             this.pnlSelectOperation.Margin = new System.Windows.Forms.Padding(0);
             this.pnlSelectOperation.Name = "pnlSelectOperation";
-            this.pnlSelectOperation.Size = new System.Drawing.Size(244, 28);
+            this.pnlSelectOperation.Size = new System.Drawing.Size(249, 57);
             this.pnlSelectOperation.TabIndex = 1;
             // 
             // lblFurtherAnalysis
             // 
             this.lblFurtherAnalysis.AutoSize = true;
-            this.lblFurtherAnalysis.Location = new System.Drawing.Point(3, 7);
+            this.lblFurtherAnalysis.Location = new System.Drawing.Point(3, 36);
             this.lblFurtherAnalysis.Name = "lblFurtherAnalysis";
             this.lblFurtherAnalysis.Size = new System.Drawing.Size(80, 13);
             this.lblFurtherAnalysis.TabIndex = 5;
@@ -1256,12 +1275,24 @@ namespace StatsDirect.UI
             this.cboOperation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboOperation.DropDownWidth = 240;
             this.cboOperation.FormattingEnabled = true;
-            this.cboOperation.Location = new System.Drawing.Point(85, 4);
+            this.cboOperation.Location = new System.Drawing.Point(85, 33);
             this.cboOperation.MaxDropDownItems = 15;
             this.cboOperation.Name = "cboOperation";
             this.cboOperation.Size = new System.Drawing.Size(156, 21);
             this.cboOperation.TabIndex = 4;
             this.cboOperation.SelectedIndexChanged += new System.EventHandler(this.cboOperation_SelectedIndexChanged);
+            // 
+            // picLinkArrow
+            // 
+            this.picLinkArrow.Image = ((System.Drawing.Image)(resources.GetObject("picLinkArrow.Image")));
+            this.picLinkArrow.InitialImage = ((System.Drawing.Image)(resources.GetObject("picLinkArrow.InitialImage")));
+            this.picLinkArrow.Location = new System.Drawing.Point(200, 26);
+            this.picLinkArrow.Margin = new System.Windows.Forms.Padding(0);
+            this.picLinkArrow.Name = "picLinkArrow";
+            this.picLinkArrow.Size = new System.Drawing.Size(8, 6);
+            this.picLinkArrow.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picLinkArrow.TabIndex = 6;
+            this.picLinkArrow.TabStop = false;
             // 
             // tableLayoutPanel1
             // 
@@ -1351,10 +1382,10 @@ namespace StatsDirect.UI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlUser.AutoSize = true;
             this.pnlUser.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.pnlUser.Location = new System.Drawing.Point(244, 3);
+            this.pnlUser.Location = new System.Drawing.Point(249, 3);
             this.pnlUser.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
             this.pnlUser.Name = "pnlUser";
-            this.pnlUser.Size = new System.Drawing.Size(448, 0);
+            this.pnlUser.Size = new System.Drawing.Size(443, 0);
             this.pnlUser.TabIndex = 0;
             // 
             // openFileDialog
@@ -1413,8 +1444,11 @@ namespace StatsDirect.UI
             this.tlpSelectOperation.ResumeLayout(false);
             this.tlpSelectOperation.PerformLayout();
             this.pnlOperationButtons.ResumeLayout(false);
+            this.pnlOperationButtons.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picArrowAcross)).EndInit();
             this.pnlSelectOperation.ResumeLayout(false);
             this.pnlSelectOperation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picLinkArrow)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.pnlConfidenceInterval.ResumeLayout(false);
@@ -1549,5 +1583,7 @@ namespace StatsDirect.UI
         private System.Windows.Forms.ToolStripComboBox cboRecentOperations;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolTip tipBatch;
+        private System.Windows.Forms.PictureBox picLinkArrow;
+        private System.Windows.Forms.PictureBox picArrowAcross;
     }
 }

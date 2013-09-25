@@ -396,11 +396,11 @@ namespace StatsDirect.Builtins
                 {
                     pvs = 1.0 - pvs;
                 }
-                P2 = Formatting.pval(pvs * 2, host.PDecimalPlaces);
+                P2 = Formatting.pval(pvs * 2, host.Preferences.PDecimalPlaces, host.Preferences.UseScientificNotationForSmallPValues);
             }
             else
             {
-                P2 = Formatting.pval(ps * 2, host.PDecimalPlaces);
+                P2 = Formatting.pval(ps * 2, host.Preferences.PDecimalPlaces, host.Preferences.UseScientificNotationForSmallPValues);
             }
             if (nxx < 11)
             {

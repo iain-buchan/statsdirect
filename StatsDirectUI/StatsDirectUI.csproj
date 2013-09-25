@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.props" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -47,6 +48,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -56,6 +58,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
     <OutputPath>bin\ReleaseWithSigning\</OutputPath>
@@ -67,82 +70,69 @@
     <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Antlr3.Runtime">
-      <HintPath>..\lib\Antlr3.Runtime.dll</HintPath>
+    <Reference Include="Antlr4.Runtime.v4.0">
+      <HintPath>..\packages\Antlr4.Runtime.4.1.0-alpha003\lib\net40\Antlr4.Runtime.v4.0.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Data.v13.1, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Data.v13.1, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Data.v13.1.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Docs.v13.1, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Docs.v13.1, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Docs.v13.1.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Office.v13.1.Core, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Office.v13.1.Core, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Office.v13.1.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Printing.v13.1.Core, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Printing.v13.1.Core, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Printing.v13.1.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.RichEdit.v13.1.Core, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.RichEdit.v13.1.Core, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.RichEdit.v13.1.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Sparkline.v13.1.Core, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Sparkline.v13.1.Core, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Sparkline.v13.1.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Utils.v13.1, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Utils.v13.1, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.Utils.v13.1.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraBars.v13.1, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraBars.v13.1, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraBars.v13.1.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraEditors.v13.1, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraEditors.v13.1, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraEditors.v13.1.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraPrinting.v13.1, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraPrinting.v13.1, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraPrinting.v13.1.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v13.1, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v13.1, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraRichEdit.v13.1.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v13.1.Extensions, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v13.1.Extensions, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraRichEdit.v13.1.Extensions.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v13.1.Printing, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v13.1.Printing, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraRichEdit.v13.1.Printing.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraTreeList.v13.1, Version=13.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraTreeList.v13.1, Version=13.1.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\DevExpress.XtraTreeList.v13.1.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
@@ -161,10 +151,7 @@
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Management" />
     <Reference Include="System.Net" />
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
@@ -269,8 +256,6 @@
     <Compile Include="Expressions\FunctionDefinition.cs" />
     <Compile Include="Expressions\FunctionRegistry.cs" />
     <Compile Include="Expressions\SDMath.cs" />
-    <Compile Include="Expressions\StatsDirectExpressionLexer.cs" />
-    <Compile Include="Expressions\StatsDirectExpressionParser.cs" />
     <Compile Include="Expressions\StatsDirectExpressionParserPartial.cs" />
     <Compile Include="Numerics\BetaRNG.cs" />
     <Compile Include="Numerics\BinomialRNG.cs" />
@@ -287,6 +272,11 @@
     <Compile Include="Numerics\Rank.cs" />
     <Compile Include="Numerics\Summary.cs" />
     <Compile Include="Numerics\UniformXRNG.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="TemplateProcessing\CreoleReportRenderer.cs" />
     <Compile Include="TemplateProcessing\ReportRenderer.cs" />
     <Compile Include="TemplateProcessing\RtfReportRenderer.cs" />
@@ -342,8 +332,6 @@
     <Compile Include="Templates\TemplateFactory.cs" />
     <Compile Include="Templates\TestStep.cs" />
     <Compile Include="Templates\Validator.cs" />
-    <Compile Include="TextProcessing\ActiveRtfLexer.cs" />
-    <Compile Include="TextProcessing\ActiveRtfParser.cs" />
     <Compile Include="TextProcessing\ActiveRtfParserPartial.cs" />
     <Compile Include="UI\CallerHandlesChangedOperationAttribute.cs" />
     <Compile Include="UI\CancelCurrentOperationAndDoException.cs" />
@@ -781,6 +769,10 @@
     <EmbeddedResource Include="Calculator\frmStatsDirectCalculator.resx">
       <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlFindAndReplaceData.resx">
       <DependentUpon>ctlFindAndReplaceData.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1021,16 +1013,19 @@
     <None Include="Assets\Excel\StatsDirectExcelLink.xls" />
     <None Include="Assets\Operations\Operation.xsd" />
     <None Include="Assets\Template\chirxc.creole" />
-    <None Include="Assets\Template\lr_fit.creole" />
     <None Include="Assets\Template\fisher.creole" />
+    <None Include="Assets\Template\lr_fit.creole" />
     <None Include="Assets\Template\relrisk.creole" />
     <None Include="Assets\Template\odds.creole" />
     <None Include="Charting\app.config" />
-    <None Include="Expressions\StatsDirectExpression.g" />
-    <None Include="Expressions\StatsDirectExpression.tokens" />
+    <Antlr4 Include="Expressions\StatsDirectExpression.g4">
+      <Generator>MSBuild:Compile</Generator>
+      <CustomToolNamespace>StatsDirect.Expressions</CustomToolNamespace>
+    </Antlr4>
     <Antlr3 Include="TextProcessing\ActiveRtf.g">
       <Generator>MSBuild:Compile</Generator>
     </Antlr3>
+    <None Include="packages.config" />
     <None Include="UI\Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -1636,13 +1631,13 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>$(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)Expressions -make $(ProjectDir)Expressions\StatsDirectExpression.g
-$(SolutionDir)ANTLR\antlr3.exe -o $(ProjectDir)TextProcessing -make $(ProjectDir)TextProcessing\ActiveRtf.g
-</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
       <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
+  <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets')" />
 </Project>

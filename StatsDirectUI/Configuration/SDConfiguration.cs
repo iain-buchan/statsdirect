@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Diagnostics;
+using StatsDirect.UI.Properties;
 
 namespace StatsDirect.Configuration
 {
@@ -24,6 +25,16 @@ namespace StatsDirect.Configuration
         public static string MyStatsDirectFolder
         {
             get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), STATSDIRECT_FOLDER_NAME); }
+        }
+
+        public static string MyTestFilePath
+        {
+            get
+            {
+                string mySdPath = MyStatsDirectFolder;
+                string defaultRecentlyUsedFile = Settings.Default.DefaultRecentlyUsedFile;
+                return Path.Combine(mySdPath, defaultRecentlyUsedFile);
+            }
         }
 
         public static string InstallationDirectory
