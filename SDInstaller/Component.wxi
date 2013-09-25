@@ -1142,8 +1142,8 @@
     <Component Id="lr_det.rtf">
       <File Id="lr_det.rtf" Name="lr_det.rtf" KeyPath="yes" />
     </Component>
-    <Component Id="lr_fit.rtf">
-      <File Id="lr_fit.rtf" Name="lr_fit.rtf" KeyPath="yes" />
+    <Component Id="lr_fit.creole">
+      <File Id="lr_fit.creole" Name="lr_fit.creole" KeyPath="yes" />
     </Component>
     <Component Id="lr_odds.rtf">
       <File Id="lr_odds.rtf" Name="lr_odds.rtf" KeyPath="yes" />

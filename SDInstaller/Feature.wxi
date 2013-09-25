@@ -397,7 +397,7 @@
     <ComponentRef Id="lr_bootstrap.rtf" />
     <ComponentRef Id="lr_class.rtf" />
     <ComponentRef Id="lr_det.rtf" />
-    <ComponentRef Id="lr_fit.rtf" />
+    <ComponentRef Id="lr_fit.creole" />
     <ComponentRef Id="lr_odds.rtf" />
     <ComponentRef Id="MANNWHIT.rtf" />
     <ComponentRef Id="mantel.rtf" />
