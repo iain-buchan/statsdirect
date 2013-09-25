@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ON EACH BUILD, INCREMENT THE VERSION NUMBER IN STATSDIRECTUI - and remember this system ignores the fourth number! -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <Product
+    Id="*"
+    Name="StatsDirect"
+    Language="1033"
+    Version="!(bind.FileVersion.statsdirectexe)"
+    Manufacturer="StatsDirect Limited"
+    UpgradeCode="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
+
+    <!-- Packaging: a single .msi with compressed files in .cab format -->
+    <Package
+      InstallScope="perMachine"
+      InstallerVersion="200"
+      Compressed="yes"
+      Description="StatsDirect v3.0"
+      Manufacturer="StatsDirect Limited"/>
+    <Media Id="1" Cabinet="StatsDirect.cab" EmbedCab="no" />
+
+    <?include Ui.wxi ?>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Start menu shortcut location -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="StatsDirect 3"/>
+      </Directory>
+
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLLOCATION" Name="StatsDirect3" FileSource="$(var.StatsDirectUI.TargetDir)">
+          <Component Id="ProductComponent" Guid="CE038078-F78B-42b0-A547-8509996AA427">
+            <File Id="statsdirectexe" KeyPath="yes" Name="StatsDirect.exe" Checksum="yes">
+              <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="64bit" Priority="1" AppBaseDirectory="INSTALLLOCATION"/>
+              <Shortcut Id="StatsDirectExeDesktopShortcut"
+                        Directory="DesktopFolder"
+                        Name="StatsDirect"
+                        Description="StatsDirect Statistical Package"
+                        Icon="statsdirect.ico"
+                        WorkingDirectory="INSTALLLOCATION"
+                        Advertise="yes"/>
+            </File>
+          </Component>
+          <?include Component.wxi ?>
+
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <?include Feature.wxi ?>
+  </Product>
+</Wix>

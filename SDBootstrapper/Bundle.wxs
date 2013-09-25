@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+	<Bundle Name="StatsDirect" Version="1.0.0.0" Manufacturer="StatsDirect Limited" UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense">
+      <bal:WixStandardBootstrapperApplication
+            LicenseUrl="..\SDInstaller\Licence.rtf"
+            />
+    </BootstrapperApplicationRef>
+    <!-- <WixVariable Id="WixStdbaThemeWxl" Value="Resources\CustomHyperlinkBasedTheme.wxl" /> -->
+		<Chain>
+      <PackageGroupRef Id="Netfx4Full"/>
+      <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x86.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="NOT VersionNT64" />
+      <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x64.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="VersionNT64" />
+    </Chain>
+	</Bundle>
+  <Fragment>
+    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Netfx4FullVersion" />
+    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Netfx4x64FullVersion" Win64="yes" />
+
+    <PackageGroup Id="Netfx4Full">
+      <ExePackage Id="Netfx4Full" Cache="no" Compressed="no" PerMachine="yes" Permanent="yes" Vital="yes"
+          SourceFile="dotNetFx40_Full_Setup.exe"
+          DownloadUrl="http://go.microsoft.com/fwlink/?LinkId=164193"
+          DetectCondition="Netfx4FullVersion AND (NOT VersionNT64 OR Netfx4x64FullVersion)" />
+    </PackageGroup>
+  </Fragment>
+</Wix>
