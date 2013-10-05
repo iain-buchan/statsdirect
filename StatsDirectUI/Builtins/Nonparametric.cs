@@ -2725,20 +2725,20 @@ namespace StatsDirect.Builtins
                     bigx = y[j];
                 }
             }
-            int scaler = 100000;
+            double scaler = 100000;
             do
             {
-                if (bigx * Convert.ToDouble(scaler) < Convert.ToDouble(int.MaxValue) / 10.0)
+                if (bigx * scaler < Convert.ToDouble(long.MaxValue) / 10.0)
                 {
                     break;
                 }
-                scaler = Convert.ToInt32(scaler / 10);
+                scaler = scaler / 10;
             }
             while (true);
-            int[] xx = new int[size + 1 ];
+            long[] xx = new long[size + 1 ];
             for (j = 1; j <= size; j++)
             {
-                xx[j] = Convert.ToInt32((x[j] - y[j]) * scaler);
+                xx[j] = Convert.ToInt64((x[j] - y[j]) * scaler);
             }
             Array.Sort(xx, 1, size);
             if (limit % 2 == 0)
@@ -2754,11 +2754,11 @@ namespace StatsDirect.Builtins
             bool domed = true;
             bool dokl = true;
             int goal = midu + k;
-            int C = 2 * xx[1] - 1;
+            long c = 2 * xx[1] - 1;
             int i = 0;
             while (i < midu)
             {
-                C = ExFortran.pairnext(out occurences, C, xx, size);
+                c = ExFortran.pairnext(out occurences, c, xx, size);
                 i = i + occurences;
                 if (host.UpdateProgress(i / (double)goal))
                 {
@@ -2772,7 +2772,7 @@ namespace StatsDirect.Builtins
                     if (dokl)
                     {
                         dokl = false;
-                        kl = C / ((double)scaler) / 2.0;
+                        kl = c / scaler / 2.0;
                     }
                 }
                 if (i >= midl)
@@ -2780,7 +2780,7 @@ namespace StatsDirect.Builtins
                     if (domed)
                     {
                         domed = false;
-                        median = C / ((double)scaler) / 2.0;
+                        median = c / scaler / 2.0;
                     }
                 }
             }
@@ -2788,11 +2788,11 @@ namespace StatsDirect.Builtins
             {
                 if (domed)
                 {
-                    median = C / ((double)scaler) / 2.0;
+                    median = c / scaler / 2.0;
                 }
                 else
                 {
-                    median = (median + C / ((double)scaler) / 2.0) / 2.0;
+                    median = (median + c / scaler / 2.0) / 2.0;
                 }
             }
             for (j = 1; j <= size; j++)
@@ -2800,11 +2800,11 @@ namespace StatsDirect.Builtins
                 xx[j] = -xx[j];
             }
             Array.Sort(xx, 1, size);
-            C = 2 * xx[1] - 1;
+            c = 2 * xx[1] - 1;
             i = 0;
             while (i < k)
             {
-                C = ExFortran.pairnext(out occurences, C, xx, size);
+                c = ExFortran.pairnext(out occurences, c, xx, size);
                 i = i + occurences;
                 if (host.UpdateProgress((midu + i) / (double)goal))
                 {
@@ -2814,7 +2814,7 @@ namespace StatsDirect.Builtins
                     return outputParameters;
                 }
             }
-            double ku = -C / ((double)scaler) / 2.0;
+            double ku = -c / scaler / 2.0;
             host.FinishProgress();
             outputParameters.AddOutput("from", host.RoundU(kl));
             outputParameters.AddOutput("to", host.RoundU(ku));

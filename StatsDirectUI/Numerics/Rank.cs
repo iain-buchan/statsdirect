@@ -266,7 +266,7 @@ namespace StatsDirect.Numerics
             return x[xki] - y[yki];
         }
 
-        public static int pairnext(out int occ, int c, int[] x, int lenx)
+        public static long pairnext(out int occ, long c, long[] x, int lenx)
         {
             occ = 1;
             int xii = 1;
