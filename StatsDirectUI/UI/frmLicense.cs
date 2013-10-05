@@ -7,6 +7,7 @@ namespace StatsDirect.UI
     public partial class frmLicense : Form
     {
         private bool userCancelled;
+        private bool closedViaButton;
         private readonly UserInfo ui;
 
         public frmLicense(UserInfo ui)
@@ -45,6 +46,7 @@ namespace StatsDirect.UI
 
         private void cmdCancel_Click(object sender, EventArgs e)
         {
+            closedViaButton = true;
             userCancelled = true;
             Close();
         }
@@ -54,7 +56,10 @@ namespace StatsDirect.UI
             bool shouldClose = SetResults();
             userCancelled = false;
             if (shouldClose)
+            {
+                closedViaButton = true;
                 Close();
+            }
         }
 
         static int count;
@@ -176,6 +181,19 @@ namespace StatsDirect.UI
                 e.Handled = true;
                 cmdOK.PerformClick();
             }
+        }
+
+        private void frmLicense_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // By default we go round again if the user didn't indicate an explicit cancel and we didn't get the data we need.
+            // This is unpleasant on e.g. a Windows shutdown, so we only do this if the close is the user's initiation.
+            if (e.CloseReason != CloseReason.UserClosing)
+                userCancelled = true;
+
+            // If closedViaButton is not set, we've been closed via some other means such as Alt-F4.  In this case, assume the user wants to cancel.
+            // This prevents the form being repeatedly displayed.
+            if (!closedViaButton)
+                userCancelled = true;
         }
     }
 }
