@@ -2,7 +2,16 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
-	<Bundle Name="StatsDirect" Version="3.0.91.0" Manufacturer="StatsDirect Limited" UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5">
+	<Bundle
+    Name="StatsDirect"
+    Version="3.0.92.0"
+    Manufacturer="StatsDirect Limited"
+    UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5"
+    DisableModify="yes"
+    Copyright="Copyright © 1995-2013 StatsDirect Limited. All rights reserved."
+    HelpUrl="http://www.statsdirect.com/Support.aspx"
+    UpdateUrl="http://www.statsdirect.com/Update.aspx"
+    IconSourceFile="sd3.ico">
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication ThemeFile="Theme.xml"
             LicenseFile="Licence.rtf"
@@ -14,8 +23,8 @@
     </BootstrapperApplicationRef>
 		<Chain>
       <PackageGroupRef Id="Netfx4Full"/>
-      <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x86.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="NOT VersionNT64" />
-      <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x64.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="VersionNT64" />
+      <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x86.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="NOT VersionNT64" ForcePerMachine="yes" />
+      <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x64.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="VersionNT64" ForcePerMachine="yes" />
     </Chain>
 	</Bundle>
   <Fragment>

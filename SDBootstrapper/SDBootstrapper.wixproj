@@ -80,7 +80,7 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>rem "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
@@ -90,4 +90,16 @@
 	<Target Name="AfterBuild">
 	</Target>
 	-->
+  <Target Name="SignBundleEngine" >
+    <Exec Command='"$(SolutionDir)\Key\signtool.exe" sign /f "$(SolutionDir)Key\sdsign.pfx" /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /v /d "%(SignBundleEngine.Filename)" "@(SignBundleEngine)"' />
+  </Target>
+  <Target Name="SignBundle">
+    <Exec Command='"$(SolutionDir)\Key\signtool.exe" sign /f "$(SolutionDir)Key\sdsign.pfx" /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /v /d "%(SignBundle.Filename)" "@(SignBundle)"' />
+  </Target>
+  <Target Name="SignMsi">
+    <Exec Command='"$(SolutionDir)\Key\signtool.exe" sign /f "$(SolutionDir)Key\sdsign.pfx" /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /v /d "%(SignMsi.Filename)" "@(SignMsi)"' />
+  </Target>
+  <Target Name="SignCabs">
+    <Exec Command='"$(SolutionDir)\Key\signtool.exe" sign /f "$(SolutionDir)Key\sdsign.pfx" /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /v /d "%(SignCabs.Filename)" "@(SignCabs)"' />
+  </Target>
 </Project>

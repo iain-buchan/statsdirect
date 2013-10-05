@@ -3,9 +3,9 @@
   <Window Width="499" Height="390" FontId="0">#(loc.Caption)</Window>
   <Font Id="0" Height="-12" Weight="500" Foreground="000000" Background="ffffff">Segoe UI</Font>
   <Font Id="1" Height="-24" Weight="500" Foreground="000000">Segoe UI</Font>
-  <Font Id="2" Height="-22" Weight="500" Foreground="000000">Segoe UI</Font>
-  <Font Id="3" Height="-12" Weight="500" Foreground="000000">Segoe UI</Font>
-  <Font Id="4" Height="-12" Weight="500" Foreground="ff0000" Underline="yes">Segoe UI</Font>
+  <Font Id="2" Height="-22" Weight="500" Foreground="000000" Background="ffffff">Segoe UI</Font>
+  <Font Id="3" Height="-12" Weight="500" Foreground="000000" Background="ffffff">Segoe UI</Font>
+  <Font Id="4" Height="-12" Weight="500" Foreground="ff0000" Background="ffffff" Underline="yes">Segoe UI</Font>
   <Page Name="Help">
     <Text X="11" Y="80" Width="-11" Height="30" FontId="2" DisablePrefix="yes">#(loc.HelpHeader)</Text>
     <Text X="11" Y="112" Width="-11" Height="-35" FontId="3" DisablePrefix="yes">#(loc.HelpText)</Text>
