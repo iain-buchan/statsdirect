@@ -17,7 +17,7 @@
       Compressed="yes"
       Description="StatsDirect v3.0"
       Manufacturer="StatsDirect Limited"/>
-    <Media Id="1" Cabinet="StatsDirect.cab" EmbedCab="no" />
+    <Media Id="1" Cabinet="SD.cab" EmbedCab="no" />
 
     <?include Ui.wxi ?>
     <Directory Id="TARGETDIR" Name="SourceDir">
