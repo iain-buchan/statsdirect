@@ -15,6 +15,7 @@ namespace StatsDirect.UI
         private bool mXP;
         private bool mVista;
         private bool m7;
+        private bool m8;
 
         public frmAbout()
         {
@@ -64,6 +65,7 @@ namespace StatsDirect.UI
                     mXP = (osInfo.Version.Major >= 5) && (osInfo.Version.Minor >= 1);
                     mVista = (osInfo.Version.Major >= 6);
                     m7 = (osInfo.Version.Major >= 6) && (osInfo.Version.Minor >= 1);
+                    m8 = (osInfo.Version.Major >= 6) && (osInfo.Version.Minor >= 2);
                     break;
             }
 
@@ -135,13 +137,14 @@ namespace StatsDirect.UI
         {
             get
             {
-
                 if (mMe)
                     return "Windows Me";
                 if (m98)
                     return "Windows 98";
                 if (m95)
                     return "Windows 95";
+                if (m8)
+                    return "Windows 8";
                 if (m7)
                     return "Windows 7";
                 if (mVista)
