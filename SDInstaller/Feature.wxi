@@ -146,6 +146,7 @@
     <ComponentRef Id="LinearizedEstimates.xml" />
     <ComponentRef Id="LinearizedEstimatesWithModel.xml" />
     <ComponentRef Id="LinePlot.xml" />
+    <ComponentRef Id="LOESS.xml" />
     <ComponentRef Id="LogisticRegression.xml" />
     <ComponentRef Id="LogisticRegressionBootstrap.xml" />
     <ComponentRef Id="LogisticRegressionClassification.xml" />

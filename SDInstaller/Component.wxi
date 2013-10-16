@@ -391,6 +391,9 @@
     <Component Id="LinePlot.xml">
       <File Id="LinePlot.xml" Name="LinePlot.xml" KeyPath="yes" />
     </Component>
+    <Component Id="LOESS.xml">
+      <File Id="LOESS.xml" Name="LOESS.xml" KeyPath="yes" />
+    </Component>
     <Component Id="LogisticRegression.xml">
       <File Id="LogisticRegression.xml" Name="LogisticRegression.xml" KeyPath="yes" />
     </Component>
