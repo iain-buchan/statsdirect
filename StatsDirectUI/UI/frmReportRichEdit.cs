@@ -631,29 +631,21 @@ namespace StatsDirect.UI
                     }
                     else if (s.Length < 16)
                     {
-                        // Not a header value we know, and less than an 8-byte hex value - so a very small image!
-                        // Assume another header value that we don't yet know about
-                        throw new ArgumentException("Unexpected header '" + s + "' when importing image");
+                        if (IsHex(s))
+                        {
+                            AccumulateHex(bytes, s);
+                        }
+                        else
+                        {
+                            // Not a header value we know, and less than an 8-byte hex value - so a very small image!
+                            // Assume another header value that we don't yet know about.
+                            // On the principle of "be liberal in what you accept", ignore it.
+                        }
                     }
                     else
                     {
                         // Assume bytes encoded as hex
-                        for (int i = 0; i < s.Length; i += 2)
-                        {
-                            int hiChar = s[i] - 48; // 48 is ASCII '0'
-                            if (hiChar > 9) hiChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
-                            if (hiChar > 15) hiChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
-                            if (hiChar > 15 || hiChar < 0)
-                                throw new ArgumentException("Unexpected non-hex char '" + s[i] + "' in hex string");
-
-                            int loChar = s[i + 1] - 48; // 48 is ASCII '0'
-                            if (loChar > 9) loChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
-                            if (loChar > 15) loChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
-                            if (loChar > 15 || loChar < 0)
-                                throw new ArgumentException("Unexpected non-hex char '" + s[i + 1] + "' in hex string");
-                            byte b = (byte) (hiChar * 16 + loChar);
-                            bytes.WriteByte(b);
-                        }
+                        AccumulateHex(bytes, s);
                     }
                 }
                 rawBytes = bytes.ToArray();
@@ -668,6 +660,34 @@ namespace StatsDirect.UI
                     img = Image.FromStream(bytes);
                 }
                 return img;
+            }
+        }
+
+        private static bool IsHex(string s)
+        {
+            foreach (char c in s)
+                if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')))
+                    return false;
+            return true;
+        }
+
+        private static void AccumulateHex(MemoryStream bytes, string s)
+        {
+            for (int i = 0; i < s.Length; i += 2)
+            {
+                int hiChar = s[i] - 48; // 48 is ASCII '0'
+                if (hiChar > 9) hiChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
+                if (hiChar > 15) hiChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
+                if (hiChar > 15 || hiChar < 0)
+                    throw new ArgumentException("Unexpected non-hex character '" + s[i] + "' in hex string");
+
+                int loChar = s[i + 1] - 48; // 48 is ASCII '0'
+                if (loChar > 9) loChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
+                if (loChar > 15) loChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
+                if (loChar > 15 || loChar < 0)
+                    throw new ArgumentException("Unexpected non-hex character '" + s[i + 1] + "' in hex string");
+                byte b = (byte)(hiChar * 16 + loChar);
+                bytes.WriteByte(b);
             }
         }
 
