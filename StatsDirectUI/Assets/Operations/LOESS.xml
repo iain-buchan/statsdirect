@@ -94,12 +94,12 @@
           <must-request>true</must-request>
           <default-value>false</default-value>
         </boolean>
-        <boolean>
+<!--        <boolean>
           <name>saveRScript</name>
           <prompt>Save R script</prompt>
           <must-request>true</must-request>
           <default-value>false</default-value>
-        </boolean>
+        </boolean> -->
       </parameters>
     </settings>
     <script language="R"><![CDATA[

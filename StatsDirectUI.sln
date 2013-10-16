@@ -89,7 +89,6 @@ Global
 		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.ReleaseWithSigning|x86.Build.0 = Release|x86
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
-		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|Mixed Platforms.Build.0 = Debug|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|x64.ActiveCfg = Debug|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|x64.Build.0 = Debug|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|x86.ActiveCfg = Debug|x64
@@ -130,11 +129,11 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_BuildAction = Both
-		BuildVersion_ConfigurationName = ReleaseWithSigning
-		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
-		BuildVersion_UpdateAssemblyVersion = False
 		BuildVersion_UpdateFileVersion = False
+		BuildVersion_UpdateAssemblyVersion = False
+		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
+		BuildVersion_ConfigurationName = ReleaseWithSigning
+		BuildVersion_BuildAction = Both
+		BuildVersion_UseGlobalSettings = False
 	EndGlobalSection
 EndGlobal
