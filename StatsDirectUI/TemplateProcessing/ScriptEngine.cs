@@ -4,10 +4,11 @@ using System.Diagnostics;
 using System.Text;
 using System.CodeDom.Compiler;
 using System.IO;
-#if USE_R
-using org.rosuda.REngine;
-#endif
 using System.Reflection;
+using System.Windows.Forms;
+using StatsDirect.Data;
+using StatsDirect.R;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.Templates
 {
@@ -27,9 +28,6 @@ namespace StatsDirect.Templates
         };
 
         private static Dictionary<string, Dictionary<string, CompiledScript>> compiledScripts;
-#if USE_R
-        private static org.rosuda.REngine.Rserve.RConnection rConnection;
-#endif
 
         public ScriptEngine()
         {
@@ -52,142 +50,50 @@ namespace StatsDirect.Templates
                 case VISUALBASICLOWER:
                     return RunDotNet(scriptLanguage, code, scriptType, host, parameters, parameter, entryPoint);
                 case R:
-#if USE_R
-
-                    return RunR(code, parameters);
-#else
-                    throw new Exception("R is not available on this build of StatsDirect");
-#endif
+                    return RunR(host, code, parameters);
                 default:
                     throw new ArgumentOutOfRangeException("scriptLanguage", scriptLanguage, "Must be CSharp, R, VB");
             }
         }
 
-#if USE_R
-
-        private object RunR(string code, ParameterBag parameters)
+        private object RunR(ITemplateHost host, string code, ParameterBag parameters)
         {
-            if (null == rConnection)
-            {
-                if (!StartRserve.checkLocalRserve())
-                {
-                    // TODO: Install R
-                    throw new Exception("R appears not to be running and I cannot find a way of starting it. Please start Rserve manually.");
-                }
-                rConnection = new org.rosuda.REngine.Rserve.RConnection();
-            }
+            StringBuilder sb = new StringBuilder();
             if (null != parameters)
             {
                 foreach (KeyValuePair<string, FilledParameter> pair in parameters.Pairs)
                 {
-                    ToR(pair.Key, pair.Value);
+                    RConvert.ToR(sb, pair.Key, pair.Value);
                 }
             }
-            StringBuilder sb = new StringBuilder();
-            sb.Append("tryCatch( { ");
-            sb.Append(code);
-            sb.Append(" }, error=function(e) { capture.output(print(e)) })");
+            sb.AppendLine(code);
             string modifiedCode = sb.ToString();
-            REXP rExp = rConnection.eval(modifiedCode);
-            return Flatten(rExp);
-        }
-
-        private void ToR(string name, Variable variable)
-        {
-            REXP rExp;
-            switch (variable.VariableType)
+            host.StartProgress("Running R script", false);
+            try
             {
-                case VariableType.ClassifierType:
-                    // TODO: Factor
-                    double[] data = variable.AsDoubleVariable.Data;
-                    rExp = new REXPDouble(data);
-                    break;
-                case VariableType.DoubleType:
-                    rExp = new REXPDouble(variable.AsDoubleVariable.Data);
-                    break;
-                case VariableType.StringType:
-                    rExp = new REXPString(variable.AsStringVariable.Data);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("variable", variable.VariableType, "Unknown VariableType");
-            }
-            rConnection.assign(name, rExp);
-        }
-
-        private void ToR(string name, FilledParameter filledParameter)
-        {
-            if (null == filledParameter || !filledParameter.HasData)
-            {
-                rConnection.assign(name, new REXPNull());
-                return;
-            }
-            if (filledParameter.IsDataFrame)
-            {
-                DataFrame frame = filledParameter.AsDataFrame;
-                List<string> variableNames = new List<string>();
-                for (int i = 0; i < frame.VariableCount; i++)
+                Process p = RController.RunScriptAndQuit(host, modifiedCode);
+                while (true)
                 {
-                    string varName = name + "VAR" + i.ToString();
-                    ToR(varName, frame.Variables[i]);
-                    variableNames.Add(varName);
+                    bool exited = p.WaitForExit(50);
+                    if (exited)
+                        break;
+                    if (host.UpdateProgress(0))
+                    {
+                        p.Kill();
+                        throw new TemplateOperationCancelledException();
+                    }
                 }
-                string cmd = name + " <- data.frame(";
-                cmd += string.Join(", ", variableNames.ToArray());
-                cmd += ")";
-                rConnection.voidEval(cmd);
-            }
-            else if (filledParameter.IsString)
-            {
-                rConnection.assign(name, new REXPString(filledParameter.AsString));
-            }
-            else if (filledParameter.IsDouble)
-            {
-                rConnection.assign(name, new REXPDouble(filledParameter.AsDouble));
-            }
-            else if (filledParameter.IsInt32)
-            {
-                rConnection.assign(name, new REXPInteger(filledParameter.AsInt32));
-            }
-            else if (filledParameter.IsBoolean)
-            {
-                rConnection.assign(name, new REXPLogical(new[] { filledParameter.AsBoolean }, null));
-            }
-        }
-
-        private ParameterBag Flatten(REXP rExp)
-        {
-            ParameterBag output = new ParameterBag();
-            object flattened;
-            if (rExp.String)
-            {
-                if (rExp.length() > 1)
-                {
-                    // TODO: HACK: How to represent strings?  Lists?
-                    REXPString s = (REXPString)rExp;
-                    string[] strings = s.asStrings();
-                    flattened = string.Join("\n\\par ", strings);
-                }
+                int exitCode = p.ExitCode;
+                if (0 != exitCode)
+                    return null;
                 else
-                {
-                    flattened = rExp.asString();
-                }
+                    return RController.FilesToParameterBag();
             }
-            else if (rExp.Integer)
+            finally
             {
-                flattened = rExp.asInteger();
+                host.FinishProgress();
             }
-            else if (rExp.Numeric)
-            {
-                flattened = rExp.asDouble();
-            }
-            else
-            {
-                flattened = rExp.toDebugString();
-            }
-            output.AddOutput("output", flattened);
-            return output;
         }
-#endif
 
         /// <summary>
         /// Runs the script's step entry point.  If it doesn't have one, throws an exception.
@@ -217,6 +123,7 @@ namespace StatsDirect.Templates
                     case CHASH:
                     case CHASHLOWER:
                         sourceBuilder.AppendLine("using System;");
+                        sourceBuilder.AppendLine("using System.Linq;");
                         sourceBuilder.AppendLine("using System.Text;");
                         sourceBuilder.AppendLine("using System.Collections;");
                         sourceBuilder.AppendLine("using System.Collections.Generic;");
@@ -225,6 +132,7 @@ namespace StatsDirect.Templates
                         sourceBuilder.AppendLine("using StatsDirect.Numerics;");
                         sourceBuilder.AppendLine("using StatsDirect.Builtins;");
                         sourceBuilder.AppendLine("using StatsDirect.Utilities;");
+                        sourceBuilder.AppendLine("using StatsDirect.R;");
                         sourceBuilder.AppendLine("namespace StatsDirect.Templates {");
                         sourceBuilder.AppendLine("public class Temp1 {");
                         switch (scriptType)
@@ -266,6 +174,7 @@ namespace StatsDirect.Templates
                     case VISUALBASIC:
                     case VISUALBASICLOWER:
                         sourceBuilder.AppendLine("Imports System");
+                        sourceBuilder.AppendLine("Imports System.Linq");
                         sourceBuilder.AppendLine("Imports System.Text");
                         sourceBuilder.AppendLine("Imports System.Collections");
                         sourceBuilder.AppendLine("Imports System.Collections.Generic");
@@ -275,6 +184,7 @@ namespace StatsDirect.Templates
                         sourceBuilder.AppendLine("Imports StatsDirect.Numerics");
                         sourceBuilder.AppendLine("Imports StatsDirect.Builtins");
                         sourceBuilder.AppendLine("Imports StatsDirect.Utilities");
+                        sourceBuilder.AppendLine("Imports StatsDirect.R");
                         sourceBuilder.AppendLine("Namespace StatsDirect.Templates");
                         sourceBuilder.AppendLine("Public Class Temp1");
                         switch (scriptType)
@@ -324,6 +234,7 @@ namespace StatsDirect.Templates
                 compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.exe"));
                 compilerParameters.ReferencedAssemblies.Add("System.Windows.Forms.dll");
                 compilerParameters.ReferencedAssemblies.Add("System.Drawing.dll");
+                compilerParameters.ReferencedAssemblies.Add("System.Core.dll");
                 compilerParameters.GenerateInMemory = true;
                 CompilerResults compilerResults = codeProvider.CompileAssemblyFromSource(compilerParameters, sourceBuilder.ToString());
                 codeProvider.Dispose();

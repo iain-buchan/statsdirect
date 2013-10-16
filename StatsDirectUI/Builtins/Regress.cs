@@ -4696,7 +4696,7 @@ namespace StatsDirect.Builtins
                 gtot += Convert.ToInt32(t[j]);
             }
             int boots = parameters["boots"].AsInt32;
-            host.StartProgress("Bootstrapping " + boots.ToString() + " iterations");
+            host.StartProgress("Bootstrapping " + boots.ToString() + " iterations", true);
             double[,] qo = new double[ip + 1, boots + 1];
             double[] theta = new double[ip + 1];
             double[] ql = new double[ip + 1];

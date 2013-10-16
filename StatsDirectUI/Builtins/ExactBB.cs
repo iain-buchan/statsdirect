@@ -505,7 +505,7 @@ namespace StatsDirect.Builtins
 
             if (waiter)
             {
-                host.StartProgress("Multiplying polynomials: " + job);
+                host.StartProgress("Multiplying polynomials: " + job, true);
             }
 
             if (logScale)

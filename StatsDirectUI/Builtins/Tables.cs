@@ -1512,7 +1512,7 @@ namespace StatsDirect.Builtins
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            host.StartProgress("Simulating exact P");
+            host.StartProgress("Simulating exact P", true);
 
             if (iseed != 0)
             {
@@ -1744,7 +1744,7 @@ namespace StatsDirect.Builtins
                 pp[i] = Math.Round(p[i] + pp[i - 1], 12);
             }
             r = 0;
-            host.StartProgress("Simulating exact P");
+            host.StartProgress("Simulating exact P", true);
             MersenneTwister rng = new MersenneTwister(iseed);
             for (int l = 1; l <= iter; l++)
             {

@@ -33,7 +33,7 @@ namespace StatsDirect.Builtins
                     throw new Exception("Please Open an excel file rather than Importing it.");
                 }
 
-                host.StartProgress("Importing data");
+                host.StartProgress("Importing data", true);
                 try
                 {
                     ParameterBag outputParameters = FileImportAscii(C_FD.FileName);
@@ -150,7 +150,7 @@ namespace StatsDirect.Builtins
                     bool tabout = C_FD.FileName.Substring(C_FD.FileName.Length - 3).ToLower() == "tab";
                     using (StreamWriter sw = File.CreateText(C_FD.FileName))
                     {
-                        host.StartProgress("Exporting Worksheet");
+                        host.StartProgress("Exporting Worksheet", true);
 
                         //  Titles
                         string a = "";

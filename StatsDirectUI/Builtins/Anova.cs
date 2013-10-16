@@ -284,7 +284,7 @@ namespace StatsDirect.Builtins
                 {
                     nxx = nx;
                     double gd = nxx - 1;
-                    host.StartProgress("Calculating Kendall");
+                    host.StartProgress("Calculating Kendall", true);
                     int pn;
                     for (pn = 1; pn <= nxx - 1; pn++)
                     {

@@ -16,6 +16,7 @@ using SpreadsheetGear;
 using SpreadsheetGear.Windows.Forms;
 using Color = System.Drawing.Color;
 using SystemColors = System.Drawing.SystemColors;
+using StatsDirect.R;
 
 namespace StatsDirect.UI
 {
@@ -3992,6 +3993,24 @@ namespace StatsDirect.UI
             {
                 workbookView.ReleaseLock();
             }
+        }
+
+        private void exportToRToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExportSelectionToR();
+        }
+
+        private void ExportSelectionToR()
+        {
+            bool userCancelled;
+            bool wasPivoted;
+            DataFrame frame = GetCellArray(0, DataAcquisitionMode.NumericReplaceMissing, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out userCancelled, out wasPivoted);
+            if (userCancelled)
+                return;
+            StringBuilder sb = new StringBuilder();
+            RConvert.ToR(sb, "copied.data", frame);
+            Clipboard.Clear();
+            Clipboard.SetText(sb.ToString(), TextDataFormat.Text);
         }
     }
 }

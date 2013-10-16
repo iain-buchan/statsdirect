@@ -188,7 +188,9 @@ namespace StatsDirect.Templates
         /// A host might elect to show a progress bar at this point, for example.
         /// </summary>
         /// <param name="operationDescription"></param>
-        void StartProgress(string operationDescription);
+        /// <param name="provideProgress">true to indicate that the caller will provide meaningful progress information via fractionComplete in UpdateProgress, so a progress bar might be appropriate.
+        /// False to indicate that the caller will provide no meaningful progress, so a marquee might be appropriate.</param>
+        void StartProgress(string operationDescription, bool provideProgress);
 
         /// <summary>
         /// Notes that any current progress operation has now finished.

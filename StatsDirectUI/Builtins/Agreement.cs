@@ -1102,7 +1102,7 @@ namespace StatsDirect.Builtins
             double dx = delta * 1.000000000001;
             mp = 0;
 
-            host.StartProgress("Simulating exact P");
+            host.StartProgress("Simulating exact P", true);
             int ctr = 0;
 
             mpd = ms;

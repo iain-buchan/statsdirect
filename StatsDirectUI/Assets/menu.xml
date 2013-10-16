@@ -285,6 +285,7 @@
             <menu-item label="&amp;Kendall Rank Correlation" operation="Kendall" />
             <menu-item label="&amp;Spearman Rank Correlation" operation="Spearman" />
             <menu-item label="&amp;Nonparametric Linear Regression" operation="NonparametricLinearRegression" />
+            <menu-item label="&amp;LOESS Curve Fitting" operation="LOESS" />
             <menu-item label="&amp;Cuzick Trend" operation="Cuzick" />
             <menu-item label="Sm&amp;irnov Two Sample" operation="Smirnov" />
             <menu-item label="&amp;Quantile Confidence Interval" operation = "Quantile" />

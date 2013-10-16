@@ -136,15 +136,15 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
-    <Reference Include="SpreadsheetGear2012.Core, Version=7.0.3.172, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2012.Core, Version=7.0.6.138, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\SpreadsheetGear2012.Core.dll</HintPath>
     </Reference>
-    <Reference Include="SpreadsheetGear2012.Drawing, Version=7.0.3.172, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2012.Drawing, Version=7.0.6.138, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\SpreadsheetGear2012.Drawing.dll</HintPath>
     </Reference>
-    <Reference Include="SpreadsheetGear2012.Windows.Forms, Version=7.0.3.172, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2012.Windows.Forms, Version=7.0.6.138, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\SpreadsheetGear2012.Windows.Forms.dll</HintPath>
     </Reference>
@@ -257,6 +257,23 @@
     <Compile Include="Expressions\FunctionRegistry.cs" />
     <Compile Include="Expressions\SDMath.cs" />
     <Compile Include="Expressions\StatsDirectExpressionParserPartial.cs" />
+    <Compile Include="R\RConvert.cs" />
+    <Compile Include="R\RController.cs" />
+    <Compile Include="R\RResults.g4.lexer.cs">
+      <DependentUpon>RResults.g4</DependentUpon>
+    </Compile>
+    <Compile Include="R\RResults.g4.parser.cs">
+      <DependentUpon>RResults.g4</DependentUpon>
+    </Compile>
+    <Compile Include="R\RResultsParserPartial.cs" />
+    <Compile Include="UI\frmInstallR.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmInstallR.Designer.cs">
+      <DependentUpon>frmInstallR.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\IpcSender.cs" />
+    <Compile Include="UI\IpcListener.cs" />
     <Compile Include="Numerics\BetaRNG.cs" />
     <Compile Include="Numerics\BinomialRNG.cs" />
     <Compile Include="Numerics\Dunett.cs" />
@@ -799,6 +816,9 @@
     <EmbeddedResource Include="UI\ctlPDF.resx">
       <DependentUpon>ctlPDF.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmInstallR.resx">
+      <DependentUpon>frmInstallR.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\frmReportRichEditDummy.resx">
       <DependentUpon>frmReportRichEditDummy.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1026,6 +1046,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Antlr3>
     <None Include="packages.config" />
+    <Antlr4 Include="R\RResults.g4">
+      <Generator>MSBuild:Compile</Generator>
+      <CustomToolNamespace>StatsDirect.R</CustomToolNamespace>
+    </Antlr4>
     <None Include="UI\Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -1216,6 +1240,9 @@
     </Content>
     <Content Include="Assets\Operations\ConvertUnits.xml" />
     <Content Include="Assets\Operations\ConvertUnitsScreen.xml" />
+    <Content Include="Assets\Operations\LOESS.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\SearchAndReplace.xml" />
     <Content Include="Assets\Operations\UnivariateSummaryToWorksheetOnly.xml">
       <SubType>Designer</SubType>
@@ -1631,12 +1658,12 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
+    <PreBuildEvent>rem if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(ProjectDir)Assets\Excel\StatsDirectExcelLink.xla"
+</PreBuildEvent>
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets')" />

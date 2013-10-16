@@ -762,7 +762,7 @@ namespace StatsDirect.Builtins
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            host.StartProgress("Simulating exact P");
+            host.StartProgress("Simulating exact P", true);
 
             if (iseed != 0)
             {

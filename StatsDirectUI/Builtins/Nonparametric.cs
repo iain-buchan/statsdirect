@@ -415,7 +415,7 @@ namespace StatsDirect.Builtins
                 {
                     gd = nxx - 1.0;
                 }
-                host.StartProgress("Calculating Kendall");
+                host.StartProgress("Calculating Kendall", true);
                 int N;
                 int pn;
                 for (pn = 1; pn <= nxx - 1; pn++)
@@ -828,7 +828,7 @@ namespace StatsDirect.Builtins
                 midu = ((int)(Math.Floor((double)(limit + 1) / 2)));
                 midl = midu;
             }
-            host.StartProgress("Calculating Confidence Interval");
+            host.StartProgress("Calculating Confidence Interval", true);
             int[] xx = new int[n1 + 1 /* VB to C# conversion */ ];
             int[] yy = new int[n2 + 1 /* VB to C# conversion */ ];
             Array.Sort(x, n1 + 1, n2);
@@ -1116,7 +1116,7 @@ namespace StatsDirect.Builtins
             for (int k = 0; k <= frame.VariableCount - 1; k++)
             {
                 DoubleVariable v = frame.Variables[k].AsDoubleVariable;
-                host.StartProgress("Bootstrapping diversity indices for " + v.Title);
+                host.StartProgress("Bootstrapping diversity indices for " + v.Title, true);
 
                 int rx = 0;
                 double sumn = 0.0;
@@ -2712,7 +2712,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
                 return outputParameters;
             }
-            host.StartProgress("Calculating Confidence Interval");
+            host.StartProgress("Calculating Confidence Interval", true);
             double bigx = x[1];
             for (j = 1; j <= size; j++)
             {
@@ -3091,7 +3091,7 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             int boots_divisor = Math.Max(1, iterations / 1000);
 
-            host.StartProgress("Simulating exact P");
+            host.StartProgress("Simulating exact P", true);
 
             double[,] x;
             int N;
@@ -3582,7 +3582,7 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             int bootsDivisor = Math.Max(1, iterations / 1000);
 
-            host.StartProgress("Simulating exact P");
+            host.StartProgress("Simulating exact P", true);
 
             int prelx = 0;
             foreach (Variable v in frame.Variables)
@@ -4060,7 +4060,7 @@ namespace StatsDirect.Builtins
             for (int k = 0; k <= frame.VariableCount - 1; k++)
             {
                 DoubleVariable v = frame.Variables[k].AsDoubleVariable;
-                host.StartProgress("Bootstrapping Gini coefficient for " + v.Title);
+                host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
                 rx = 0;
                 double vtot = 0.0;
                 foreach (double val in v.Data)

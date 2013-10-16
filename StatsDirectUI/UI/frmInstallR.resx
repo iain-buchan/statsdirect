@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,58 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="toolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>236, 17</value>
-  </metadata>
-  <metadata name="menuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>335, 17</value>
-  </metadata>
-  <metadata name="contextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>559, 17</value>
-  </metadata>
-  <data name="workbookView.WorkbookSetState" xml:space="preserve">
-    <value>7ZdNbBtFFMd/M9611yVNHCehpKRh2UBqO8GyQWorPurQCDiBqlaolZLKuM1KRW1IZcKBA2L5uoGE3BPiVOVUCQm4wLXc4IBAnBCncOMIEkg90Eylt7P+2BIpiCAVlL/k2dn//N+88eybmTcADjEUQAG+/25089rnB3+2dBfHybBl8mT7OAW99wK4ltsyxiTtZg//KeS9AmRdrj/wbe4bFFkHlrnCJJy+0g5bK69eDMP158JW2z9arVWPVOuPHfP/BZxA85nTUhq4oWASDRSlHJPyU2l7iiKb6kk+fvaT2WM2Ks/qBVF8IGUg5TAaxZdi85MwdSb4GjBvfijBDy5Pt19uXd7FhmlnCpcDEGwEM/MzM7Vm+YnlUvKyXJ52HiTL1ED70qlw5dygKCDHoZ6oWhvsp1oT1WE8grQq1ZuVHqXCo9AsBRtBxU88N0vBhgZuGWMydm/YMsYkvz38/xFU/OWSDTwJiKDiB48EEh0LzfK0U6VMGZql/rgZNEpZNJjn8cFgi2PTMtZUQrPPZaPR6+IIc9T7nCb2dxinLDcZl+X4h/HjdSm44Q/wv+/xu8Ur/mqe52P9zTRf2YbPb8PPbcOXt+HteLwef1U7jEUZ0/F8Ol0elJvBZZE1VlmlJdxV7TAeZU3HK6W0WfJ9Wp8lapzr2hQix3S82ZSNg8cir9GmTcgrXOD1rsVolDMdr5qyyDF0h0XaFxGm4wWDlgqyvMAabRnf5a66GLmm4z2U8uOS4yQhbS6In3XhX5KT8j2GmZcUL8vpi2G4Xn8fB4ViHxDnCoWBXGG/nLNDaFYYkfqonLYFPP68/tsPz58/2WgKXxF+Tsq3hYl6n4qHtQM46i00XznjwATwjqjflXK2q/6lcbivXurWf22U++rXCMizIqNXaM5q28RmI3kqXkTj8QZDMjk/ehPiCz0sivh0V8BxXeQLmZmFpBvgECNk4qpNBPgIzWp+n32766FA/nFy/rs2x88RL6Q8yLe/B2SO9ktuBSPxFYBRydJgDGQNTgD3AgeA+4BJ4CBwPzAlMxbnGHu4O3CKNdZY5xnZCdp2l9o5xnFV0leyBHaCKBc/z8i+dYnzMo5LPcEOUUR3/Rt7D90Jlqz/XcDf9p/cl3cJ/8i/tuv7hJ3/erKfcRs=</value>
-  </data>
-  <metadata name="saveFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>437, 17</value>
-  </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        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
-</value>
+  <data name="lblRubric.Text" xml:space="preserve">
+    <value>This operation requires R, and StatsDirect cannot find an installed version of R on this computer. R is a free language and environment for statistical computing and graphics. For more information, choose the More Information link below.
+
+If you would like to use this operation, you will need to download and install R. Choose "Install R" and your Web browser will be opened to allow you to download and install R. Once you have installed R, choose "R is installed" and StatsDirect will carry on running this operation.
+
+If you do not want to install R, choose "Do not install R". This operation cannot run without R, so this operation will be cancelled.</value>
   </data>
 </root>

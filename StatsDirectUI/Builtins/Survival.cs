@@ -1801,7 +1801,7 @@ namespace StatsDirect.Builtins
             double[] emdsim = new double[simits + 1 ];
             PoissonRNG rng = new PoissonRNG();
             //  RNG.Seed(DefaultSeed()) not required as the default seed is used if the RNG isn't seeded on first call
-            host.StartProgress("Simulating...");
+            host.StartProgress("Simulating...", true);
             for (int j = 1; j <= simits; j++)
             {
                 if (host.UpdateProgress(j / (double)simits))

@@ -26,6 +26,7 @@ using SpreadsheetGear.Windows.Forms;
 using SpreadsheetGear;
 using Color = System.Drawing.Color;
 using SystemColors = System.Drawing.SystemColors;
+using StatsDirect.R;
 
 namespace StatsDirect.UI
 {
@@ -533,6 +534,7 @@ namespace StatsDirect.UI
                 catch (IOException ex)
                 {
                     SdApplication.SoleInstance.FriendlyError("Couldn't open spreadsheet", ex, true);
+                    SdApplication.SoleInstance.NoteRecentFile(filename, false);
                 }
                 if (!opened)
                 {
@@ -572,6 +574,7 @@ namespace StatsDirect.UI
             catch (IOException ex)
             {
                 SdApplication.SoleInstance.FriendlyError("Couldn't open report", ex, true);
+                SdApplication.SoleInstance.NoteRecentFile(filename, false);
             }
             if (!opened)
             {
@@ -610,6 +613,7 @@ namespace StatsDirect.UI
             catch (IOException ex)
             {
                 SdApplication.SoleInstance.FriendlyError("Couldn't open script", ex, true);
+                SdApplication.SoleInstance.NoteRecentFile(filename, false);
             }
             if (!opened)
             {
@@ -837,10 +841,14 @@ namespace StatsDirect.UI
                     e.Cancel = true;
                     foreach (Form child in MdiChildren)
                         if (child is StatsDirectForm)
-                            ((StatsDirectForm) child).NoteNonClosure();
+                            ((StatsDirectForm)child).NoteNonClosure();
                 }
                 else
+                {
+                    // Stop handling opens from other StatsDirect instances, as we're about to close.
+                    IpcListener.StopListening();
                     SaveApplicationState();
+                }
             }
             catch (Exception ex)
             {
@@ -2005,9 +2013,10 @@ namespace StatsDirect.UI
 
         private bool cancelProgressPressed;
 
-        internal void StartProgress(string operationDescription)
+        internal void StartProgress(string operationDescription, bool provideProgress)
         {
             ShowPanel(PanelType.Progress, false);
+            progressBar.Style = provideProgress ? ProgressBarStyle.Continuous : ProgressBarStyle.Marquee;
             progressBar.Value = 0;
             lblProgress.Text = operationDescription;
             cancelProgressPressed = false;
@@ -2016,11 +2025,14 @@ namespace StatsDirect.UI
         internal bool UpdateProgress(double fractionComplete)
         {
             // Prevent overzealous input causing exceptions
-            if (fractionComplete < 0)
-                fractionComplete = 0;
-            else if (fractionComplete > 1)
-                fractionComplete = 1;
-            progressBar.Value = (int)(progressBar.Maximum * fractionComplete);
+            if (ProgressBarStyle.Marquee != progressBar.Style)
+            {
+                if (fractionComplete < 0)
+                    fractionComplete = 0;
+                else if (fractionComplete > 1)
+                    fractionComplete = 1;
+                progressBar.Value = (int)(progressBar.Maximum * fractionComplete);
+            }
             Application.DoEvents(); // Force the display to update, and catch any cancellations
             bool retVal = cancelProgressPressed;
             cancelProgressPressed = false;
@@ -4100,9 +4112,9 @@ namespace StatsDirect.UI
                 txt.Size = new Size(6 + CHARWIDTH * parameter.MaxLength, 18);
             }
             txt.Tag = parameter;
-            if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsInt32)
+            if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsString)
             {
-                txt.Text = context[parameter.Name].AsInt32.ToString();
+                txt.Text = context[parameter.Name].AsString;
             }
             else
             {
@@ -4983,6 +4995,9 @@ namespace StatsDirect.UI
             try
             {
                 EnsureBuiltInMenuItemsCanShowHelp(mnuMain);
+
+                // We're now ready to accept files from other StatsDirect instances.
+                IpcListener.StartListening();
 
                 // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
                 if (MdiChildren.Length == 0)
@@ -6269,6 +6284,19 @@ namespace StatsDirect.UI
             base.ScaleControl(factor, specified);
             // Record the running scale factor used, for sizing controls we add dynamically where they don't do it themselves
             currentScaleFactor = new SizeF(currentScaleFactor.Width * factor.Width, currentScaleFactor.Height * factor.Height);
+        }
+
+        private void rGuiToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StartRGui();
+        }
+
+        private void StartRGui()
+        {
+            ICollection<RVersion> rVersions = R.RController.CheckR();
+            RVersion preferred = RController.PreferredRVersion(rVersions);
+            string guiPath = preferred.GuiPath;
+            System.Diagnostics.Process.Start(guiPath);
         }
     }
 }

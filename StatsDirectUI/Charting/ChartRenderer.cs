@@ -11272,7 +11272,7 @@ namespace StatsDirect.Charting
             try
             {
                 stream.Position = 0;
-                return MetastreamToRtf(stream);
+                return MetastreamToRtf(stream, (int)metafileWidth, (int)metafileHeight);
             }
             catch (OutOfMemoryException ex)
             {
@@ -11280,7 +11280,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        private string MetastreamToRtf(Stream metaStream)
+        public static string MetastreamToRtf(Stream metaStream, int width, int height)
         {
             StringBuilder rtf = new StringBuilder();
 
@@ -11293,20 +11293,20 @@ namespace StatsDirect.Charting
 
             // Create the image control string and append it to the RTF string
             const float desiredInches = 6.0F;
-            float desiredPixelsPerInch = (float)Math.Ceiling(metafileWidth / desiredInches);
+            float desiredPixelsPerInch = (float)Math.Ceiling(width / desiredInches);
 
             // Calculate the current width of the image in (0.01)mm
             // TODO: HACK: DevExpress seems to undo+redo insertion with the image very large unless this 2.6 bodge factor is in place.
-            int picw = (int)Math.Round((metafileWidth / desiredPixelsPerInch) * HMM_PER_INCH * 2.6);
+            int picw = (int)Math.Round((width / desiredPixelsPerInch) * HMM_PER_INCH * 2.6);
 
             // Calculate the current height of the image in (0.01)mm
-            int pich = (int)Math.Round((metafileHeight / desiredPixelsPerInch) * HMM_PER_INCH * 2.6);
+            int pich = (int)Math.Round((height / desiredPixelsPerInch) * HMM_PER_INCH * 2.6);
 
             // Calculate the target width of the image in twips
-            int picwgoal = (int)Math.Round((metafileWidth / desiredPixelsPerInch) * TWIPS_PER_INCH);
+            int picwgoal = (int)Math.Round((width / desiredPixelsPerInch) * TWIPS_PER_INCH);
 
             // Calculate the target height of the image in twips
-            int pichgoal = (int)Math.Round((metafileHeight / desiredPixelsPerInch) * TWIPS_PER_INCH);
+            int pichgoal = (int)Math.Round((height / desiredPixelsPerInch) * TWIPS_PER_INCH);
 
             // Append values to RTF string
             rtf.Append(@"{\pict");

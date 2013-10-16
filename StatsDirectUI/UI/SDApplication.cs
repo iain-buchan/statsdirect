@@ -1192,10 +1192,10 @@ namespace StatsDirect.UI
             MsgboxX(Message, MessageBoxButtons.OK, MessageBoxIcon.Error, Caption, true);
         }
 
-        public void StartProgress(string operationDescription)
+        public void StartProgress(string operationDescription, bool provideProgress)
         {
             if (null != mainWindow)
-                mainWindow.StartProgress(operationDescription);
+                mainWindow.StartProgress(operationDescription, provideProgress);
         }
 
         public bool UpdateProgress(double fractionComplete)

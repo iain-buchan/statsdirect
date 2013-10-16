@@ -91,6 +91,7 @@ namespace StatsDirect.UI
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.printToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.pnlSelection = new System.Windows.Forms.Panel();
+            this.lblOkOrRightMouse = new System.Windows.Forms.Label();
             this.lblGroupsBy = new System.Windows.Forms.Label();
             this.chkBatchMode = new System.Windows.Forms.CheckBox();
             this.cmdSelectionHelp = new System.Windows.Forms.Button();
@@ -153,6 +154,7 @@ namespace StatsDirect.UI
             this.tipVariables = new System.Windows.Forms.ToolTip(this.components);
             this.postTabTimer = new System.Windows.Forms.Timer(this.components);
             this.tipBatch = new System.Windows.Forms.ToolTip(this.components);
+            this.rGuiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuMain.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.tabContextMenuStrip.SuspendLayout();
@@ -391,6 +393,7 @@ namespace StatsDirect.UI
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.rGuiToolStripMenuItem,
             this.toolsToolStripSeparator,
             this.setupToolsToolStripMenuItem,
             this.checkForUpdatesToolStripMenuItem});
@@ -712,6 +715,7 @@ namespace StatsDirect.UI
             // 
             this.pnlSelection.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlSelection.BackColor = System.Drawing.SystemColors.Info;
+            this.pnlSelection.Controls.Add(this.lblOkOrRightMouse);
             this.pnlSelection.Controls.Add(this.lblGroupsBy);
             this.pnlSelection.Controls.Add(this.chkBatchMode);
             this.pnlSelection.Controls.Add(this.cmdSelectionHelp);
@@ -729,6 +733,15 @@ namespace StatsDirect.UI
             this.pnlSelection.Size = new System.Drawing.Size(692, 58);
             this.pnlSelection.TabIndex = 6;
             this.pnlSelection.Visible = false;
+            // 
+            // lblOkOrRightMouse
+            // 
+            this.lblOkOrRightMouse.AutoSize = true;
+            this.lblOkOrRightMouse.Location = new System.Drawing.Point(260, 34);
+            this.lblOkOrRightMouse.Name = "lblOkOrRightMouse";
+            this.lblOkOrRightMouse.Size = new System.Drawing.Size(196, 13);
+            this.lblOkOrRightMouse.TabIndex = 9;
+            this.lblOkOrRightMouse.Text = "Click OK or right mouse button to select.";
             // 
             // lblGroupsBy
             // 
@@ -762,12 +775,11 @@ namespace StatsDirect.UI
             // lblNonAdjoined
             // 
             this.lblNonAdjoined.AutoSize = true;
-            this.lblNonAdjoined.Location = new System.Drawing.Point(260, 34);
+            this.lblNonAdjoined.Location = new System.Drawing.Point(460, 34);
             this.lblNonAdjoined.Name = "lblNonAdjoined";
-            this.lblNonAdjoined.Size = new System.Drawing.Size(388, 13);
+            this.lblNonAdjoined.Size = new System.Drawing.Size(196, 13);
             this.lblNonAdjoined.TabIndex = 5;
-            this.lblNonAdjoined.Text = "Click OK or right mouse button to select. Use Ctrl. + mouse for non-adjoined data" +
-    ".";
+            this.lblNonAdjoined.Text = "Use Ctrl. + mouse for non-adjoined data.";
             // 
             // optGroupsByIdentifier
             // 
@@ -1060,7 +1072,7 @@ namespace StatsDirect.UI
             // 
             // cmdModalMessage3
             // 
-            this.cmdModalMessage3.Location = new System.Drawing.Point(179, 4);
+            this.cmdModalMessage3.Location = new System.Drawing.Point(15, 4);
             this.cmdModalMessage3.Name = "cmdModalMessage3";
             this.cmdModalMessage3.Size = new System.Drawing.Size(75, 23);
             this.cmdModalMessage3.TabIndex = 2;
@@ -1082,7 +1094,7 @@ namespace StatsDirect.UI
             // 
             // cmdModalMessage1
             // 
-            this.cmdModalMessage1.Location = new System.Drawing.Point(15, 4);
+            this.cmdModalMessage1.Location = new System.Drawing.Point(179, 4);
             this.cmdModalMessage1.Name = "cmdModalMessage1";
             this.cmdModalMessage1.Size = new System.Drawing.Size(75, 23);
             this.cmdModalMessage1.TabIndex = 0;
@@ -1399,6 +1411,13 @@ namespace StatsDirect.UI
             this.postTabTimer.Interval = 10;
             this.postTabTimer.Tick += new System.EventHandler(this.postTabTimer_Tick);
             // 
+            // rGuiToolStripMenuItem
+            // 
+            this.rGuiToolStripMenuItem.Name = "rGuiToolStripMenuItem";
+            this.rGuiToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.rGuiToolStripMenuItem.Text = "R";
+            this.rGuiToolStripMenuItem.Click += new System.EventHandler(this.rGuiToolStripMenuItem_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1585,5 +1604,7 @@ namespace StatsDirect.UI
         private System.Windows.Forms.ToolTip tipBatch;
         private System.Windows.Forms.PictureBox picLinkArrow;
         private System.Windows.Forms.PictureBox picArrowAcross;
+        private System.Windows.Forms.Label lblOkOrRightMouse;
+        private System.Windows.Forms.ToolStripMenuItem rGuiToolStripMenuItem;
     }
 }

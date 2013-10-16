@@ -8,6 +8,7 @@ namespace StatsDirect.Configuration
     public class SDConfiguration
     {
         private const string STATSDIRECT_FOLDER_NAME = "StatsDirect";
+        private const string R_FOLDER_NAME = "R";
         public const string PERSISTENT_VALUE_FILE_NAME = "session.ser";
         private const string HELP_FILE_NAME = "statsdirect.chm";
         private const string TEMPLATE_DIRECTORY_NAME = "Template";
@@ -25,6 +26,11 @@ namespace StatsDirect.Configuration
         public static string MyStatsDirectFolder
         {
             get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), STATSDIRECT_FOLDER_NAME); }
+        }
+
+        public static string MyStatsDirectRFolder
+        {
+            get { return Path.Combine(MyStatsDirectFolder, R_FOLDER_NAME); }
         }
 
         public static string MyTestFilePath
