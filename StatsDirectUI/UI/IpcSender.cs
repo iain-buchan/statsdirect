@@ -28,7 +28,7 @@ namespace StatsDirect.UI
                     return false;
 
                 // Otherwise, something's there.  Either we're very unlucky and have hit another probe like this one, or a StatsDirect process is waiting to handle the call.
-                using (MemoryMappedFile memoryMappedFile = MemoryMappedFile.CreateOrOpen(IpcListener.MEMORY_FILE_NAME, IpcListener.MAXIMUM_PATH_LENGTH, MemoryMappedFileAccess.ReadWrite, MemoryMappedFileOptions.None, null, System.IO.HandleInheritability.None))
+                using (MemoryMappedFile memoryMappedFile = MemoryMappedFile.OpenExisting(IpcListener.MEMORY_FILE_NAME))
                 {
                     using (Semaphore accessSemaphore = new Semaphore(1, 1, IpcListener.MEMORY_SEMAPHORE_NAME))
                     {
@@ -40,6 +40,7 @@ namespace StatsDirect.UI
                                 StreamWriter sw = new StreamWriter(s);
                                 sw.WriteLine(path);
                                 sw.WriteLine(); // Just to ensure there's extra space available
+                                sw.Flush();
                             }
                         }
                         finally
@@ -49,6 +50,7 @@ namespace StatsDirect.UI
                         }
                     }
                 }
+                semaphore.Release();
 
                 return true;
             }

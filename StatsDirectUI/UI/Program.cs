@@ -43,13 +43,11 @@ namespace StatsDirect.UI
 
         private static void StartStatsDirect(string[] args)
         {
-#if false
             // If we're opening a file on behalf of someone, check whether we should open it in an older StatsDirect process that owns the user interface.  If so, we need do nothing more.
             if (args.Length >= 2)
                 if ("FileOpen".Equals(args[0]) && null != args[1])
                     if (IpcSender.TryToTellAnotherStatsDirectToOpen(args[1]))
                         return;
-#endif
 
             Stopwatch sw = Stopwatch.StartNew();
             frmMain mainWindow;

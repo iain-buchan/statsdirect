@@ -16,7 +16,7 @@ namespace StatsDirect.UI
         public const string WAIT_SEMAPHORE_NAME = "StatsDirect3IPCWait";
         public const string MEMORY_SEMAPHORE_NAME = "StatsDirect3IPCMemoryAccess";
         public const string MEMORY_FILE_NAME = "StatsDirect3IPCMemoryFile";
-        public const long MAXIMUM_PATH_LENGTH = 10000; // Bytes
+        public const long MAXIMUM_PATH_LENGTH = 0x3000; // Bytes
         public const int IPC_TIMEOUT = 1000; // Time between IPC timeouts and hence checks that the thread should shut down (milliseconds).
         private static Semaphore waitSemaphore;
         private static MemoryMappedFile memoryMappedFile;
@@ -34,7 +34,7 @@ namespace StatsDirect.UI
             listening = true;
             bool wasCreated; // We don't use this but, if wasCreated is true, no other process presently knows about that mutex.  If wasCreated is false, some other process has got a handle on it (which shouldn't happen unless we happen to be created at the same time as another SD instance is trying to get hold of the mutex).
             waitSemaphore = new Semaphore(0, 1, WAIT_SEMAPHORE_NAME, out wasCreated);
-            memoryMappedFile = MemoryMappedFile.CreateOrOpen(MEMORY_FILE_NAME, MAXIMUM_PATH_LENGTH, MemoryMappedFileAccess.Read, MemoryMappedFileOptions.None, null, System.IO.HandleInheritability.None);
+            memoryMappedFile = MemoryMappedFile.CreateNew(MEMORY_FILE_NAME, MAXIMUM_PATH_LENGTH);
             (new Thread(new ThreadStart(ListenThreadTop)) {Name = "IPC Listener" }).Start();
         }
 
@@ -54,37 +54,49 @@ namespace StatsDirect.UI
         /// <remarks>Precondition: mutex is non-null.</remarks>
         private static void ListenThreadTop()
         {
-            while (!shouldStopListening)
+            try
             {
-                bool signalled = waitSemaphore.WaitOne(IPC_TIMEOUT);
-                if (signalled)
+                while (!shouldStopListening)
                 {
-                    // If we get here, there must have been a signal.
-                    string path;
-                    using (Semaphore accessSemaphore = new Semaphore(1, 1, MEMORY_SEMAPHORE_NAME))
+                    bool signalled = waitSemaphore.WaitOne(IPC_TIMEOUT);
+                    if (signalled)
                     {
-                        accessSemaphore.WaitOne();
-                        try
+                        // If we get here, there must have been a signal.
+                        string path;
+                        using (Semaphore accessSemaphore = new Semaphore(1, 1, MEMORY_SEMAPHORE_NAME))
                         {
-                            using (MemoryMappedViewStream s = memoryMappedFile.CreateViewStream())
+                            accessSemaphore.WaitOne();
+                            try
                             {
-                                StreamReader sr = new StreamReader(s);
-                                path = sr.ReadLine();
+                                using (MemoryMappedViewStream s = memoryMappedFile.CreateViewStream())
+                                {
+                                    StreamReader sr = new StreamReader(s);
+                                    path = sr.ReadLine();
+                                }
+                            }
+                            finally
+                            {
+                                // Don't let an exception prevent us releasing the access semaphore.
+                                accessSemaphore.Release();
                             }
                         }
-                        finally
-                        {
-                            // Don't let an exception prevent us releasing the access semaphore.
-                            accessSemaphore.Release();
-                        }
+                        // The mutex doesn't need to be released.  A different process will release the mutex when communicating with this one.
+                        ReceiveFileOpen(path);
                     }
-                    // The mutex doesn't need to be released.  A different process will release the mutex when communicating with this one.
-                    ReceiveFileOpen(path);
                 }
-            }
 
-            // If we get here, we should stop.
-            Cleanup();
+                // If we get here, we should stop.
+            }
+            catch (Exception ex)
+            {
+                // TODO: How to log or tell the user that there's a problem here?
+            }
+            finally
+            {
+                // Whether caused by legitimate exit or by an exception, release our resources.
+                // As a side effect, this *should* cause an exceptional condition here to make it look like no open server is running and hence cause other SDs to open files locally - causing an irritating case of multiple windows but no lost opens.
+                Cleanup();
+            }
         }
 
         private static void Cleanup()
