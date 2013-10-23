@@ -20,12 +20,13 @@ compileUnit returns [Dictionary<string, object> Values]
 	;
 
 stanza returns [Dictionary<string, object> Values]
-	: nameDataPair { $stanza.Values = $nameDataPair.Values; }
+	: nameAndData { $stanza.Values = $nameAndData.Values; }
 	| charts { $stanza.Values = $charts.Values; }
 	;
 
-nameDataPair returns [Dictionary<string, object> Values]
-	: nameAndValues dataAndValues { $nameDataPair.Values = new Dictionary<string, object>(); for (int i = 0; i < $nameAndValues.Names.Count; i++) $nameDataPair.Values[$nameAndValues.Names[i]] = $dataAndValues.Values[i]; }
+nameAndData returns [Dictionary<string, object> Values]
+	: nameAndValues dataAndValues titleAndValues { $nameAndData.Values = CoalesceNamesAndValues($nameAndValues.Names, $dataAndValues.Values, $titleAndValues.Titles); }
+	| nameAndValues dataAndValues { $nameAndData.Values = CoalesceNamesAndValues($nameAndValues.Names, $dataAndValues.Values, null); }
 	;
 
 charts returns [Dictionary<string, object> Values]
@@ -42,6 +43,10 @@ nameAndValues returns [List<string> Names]
 
 dataAndValues returns [List<object> Values]
 	: STARTDATA { $dataAndValues.Values = new List<object>(); } (expression { $dataAndValues.Values.Add($expression.Value); })*
+	;
+
+titleAndValues returns [List<string> Titles]
+	: STARTTITLES { $titleAndValues.Titles = new List<string>(); } (STRING { $titleAndValues.Titles.Add(ToStringBody($STRING.text)); })*
 	;
 
 expression returns [object Value]
@@ -79,6 +84,7 @@ RPAREN		: ')';
 STARTDATA	:	's' 't' 'a' 'r' 't' '~' 'd' 'a' 't' 'a';
 STARTGRAPHICS:	's' 't' 'a' 'r' 't' '~' 'g' 'r' 'a' 'p' 'h' 'i' 'c' 's';
 STARTNAMES	:	's' 't' 'a' 'r' 't' '~' 'n' 'a' 'm' 'e' 's';
+STARTTITLES	:	's' 't' 'a' 'r' 't' '~' 't' 'i' 't' 'l' 'e' 's';
 STARTVECTOR	:	'c' '(';
 
 IDENTIFIER	: ('A'..'Z'|'a'..'z')('A'..'Z'|'a'..'z'|'0'..'9'|'.'|'!')*

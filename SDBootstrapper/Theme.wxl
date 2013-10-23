@@ -40,4 +40,5 @@
   <String Id="FailureRestartText">You must restart your computer to complete the rollback of the software.</String>
   <String Id="FailureRestartButton">&amp;Restart</String>
   <String Id="FailureCloseButton">&amp;Close</String>
+  <String Id="OptimisationNotice">If you wait a few minutes for optimisation to finish then StatsDirect will run faster</String>
 </WixLocalization>

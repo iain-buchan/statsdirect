@@ -4219,7 +4219,7 @@ namespace StatsDirect.Builtins
                 cit = PDF.gauinv(0.975, out scrap);
             }
 
-            double fudge = Parsing.Cdbl_Txt(parameters["fudge"].AsString);
+            double fudge = 0.5; // Parsing.Cdbl_Txt(parameters["fudge"].AsString); removed as part of #893
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
             DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
@@ -4517,7 +4517,12 @@ namespace StatsDirect.Builtins
                 hmn += 1.0 / n[i];
             }
             hmn = (n.Length - 2) / hmn;
-            return 0.5 * (1.0 - Math.Sign(Math.Cos(t)) * Math.Pow((1.0 - Math.Pow((Math.Sin(t) + (Math.Sin(t) - 1.0 / Math.Sin(t)) / hmn), 2.0)), 0.5));
+
+            if (t > ArcsineP(hmn, hmn))
+                return 1.0;
+            if (t < ArcsineP(0, hmn))
+                return 0;
+            return 0.5 * (1.0 - Math.Sign(Math.Cos(t)) * Math.Sqrt(1.0 - Math.Pow(Math.Sin(t) + (Math.Sin(t) - 1.0 / Math.Sin(t)) / hmn, 2.0)));
         }
 
 

@@ -71,7 +71,8 @@ namespace StatsDirect.Templates
             host.StartProgress("Running R script", false);
             try
             {
-                Process p = RController.RunScriptAndQuit(host, modifiedCode);
+                string codeForEmit;
+                Process p = RController.RunScriptAndQuit(host, modifiedCode, out codeForEmit);
                 while (true)
                 {
                     bool exited = p.WaitForExit(50);
@@ -85,9 +86,13 @@ namespace StatsDirect.Templates
                 }
                 int exitCode = p.ExitCode;
                 if (0 != exitCode)
-                    return null;
+                    throw new Exception(RController.GetErrorText() ?? "R did not complete successfully and did not save an error message");
                 else
-                    return RController.FilesToParameterBag();
+                {
+                    ParameterBag pb = RController.FilesToParameterBag();
+                    pb.AddOutput("formattedRScript", codeForEmit);
+                    return pb;
+                }
             }
             finally
             {

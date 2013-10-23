@@ -94,30 +94,40 @@
           <must-request>true</must-request>
           <default-value>false</default-value>
         </boolean>
-<!--        <boolean>
+        <boolean>
           <name>saveRScript</name>
           <prompt>Save R script</prompt>
           <must-request>true</must-request>
           <default-value>false</default-value>
-        </boolean> -->
+        </boolean>
       </parameters>
     </settings>
-    <script language="R"><![CDATA[
+    <script language="R">
+  <![CDATA[
 m<-loess(model,span=span,degree=degree)
 p<-predict(m,se=T)
 
-gr1<-file.path(getwd(),"metafile1.wmf")
-win.metafile(gr1)
-plot(predictors[[1]],outcome[[1]],main=title,ylab=ylab,xlab=xlab)
-lines(predictors[[1]],p$fit)
-lines(predictors[[1]],p$fit+2*p$s, lty=2)
-lines(predictors[[1]],p$fit-2*p$s, lty=2)
-suppressWarnings(dev.off())
+shouldPlot <- ncol(predictors) == 1 # Plots are only valid if there is a single predictor
+if (shouldPlot) {
+  gr1<-file.path(getwd(),"metafile1.wmf")
+  win.metafile(gr1)
+  plot(predictors[[1]],outcome[[1]],main=title,ylab=ylab,xlab=xlab)
+  i <- order(predictors[[1]]) # The line plot requires the x values pre-sorted; this approach ensures that pre-sorting.  See e.g. http://stackoverflow.com/questions/10007830/loess-line-not-plotting-correctly
+  lines(predictors[[1]][i],p$fit[i])
+  lines(predictors[[1]][i],p$fit[i]+2*p$s[i], lty=2)
+  lines(predictors[[1]][i],p$fit[i]-2*p$s[i], lty=2)
+  suppressWarnings(dev.off())
+}
 
 r1<-data.frame(observations=m$n,parameters=m$enp,residualse=m$s,df=p$df)
 rn<-data.frame(residuals=m$residuals,fits=m$fitted,sefits=p$se.fit)
+rn.titles<-c('"LOESS residuals"','"LOESS fit"','"LOESS fit SE"')
+outs<-c("start~names",colnames(r1),"start~data",as.character(r1))
+outs<-c(outs,"start~names",colnames(rn),"start~data",as.character(rn),"start~titles",rn.titles)
+if (shouldPlot)
+  outs<-c(outs,"start~graphics",paste('"',gr1,'"'))
 op<-file("results.txt")
-writeLines(c("start~names",colnames(r1),"start~data",as.character(r1),"start~names",colnames(rn),"start~data",as.character(rn),"start~graphics",paste('"', gr1, '"')),op)
+writeLines(outs, op)
 close(op)
 ]]></script>
     <test>
@@ -145,10 +155,36 @@ close(op)
 <line>Number of Observations: <in>observations</in></line>
 <line>Equivalent Number of Parameters: <in>parameters</in></line>
 <line>Residual Standard Error: <in>residualse</in></line>
+</report>
+]]>
+    </report>
+    <test>
+      <condition>=parameters["predictors"].AsDataFrame.Variables.Count == 1</condition>
+      <iftrue>
+        <report type="application/x-statsdirect-creole">
+          <![CDATA[
+<report>
 <line></line>
 <line><in>metafile1</in></line>
 </report>
 ]]>
-    </report>
+        </report>
+      </iftrue>
+    </test>
+    <test>
+      <condition>=parameters["saveRScript"].AsBoolean</condition>
+      <iftrue>
+        <report type="application/x-statsdirect-creole">
+          <![CDATA[
+<report>
+<line></line>
+<line><title>R script to reproduce this result</title></line>
+<line></line>
+<line><in>formattedRScript</in></line>
+</report>
+]]>
+        </report>
+      </iftrue>
+    </test>
   </steps>
 </operation>

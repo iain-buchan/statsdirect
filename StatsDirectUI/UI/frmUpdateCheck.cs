@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -78,7 +79,7 @@ namespace StatsDirect.UI
         private void client_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
         {
             Application.UseWaitCursor = false;
-            const string prefix = "Current version ";
+            const string prefix = "Current version";
             if (e.Cancelled)
                 return;
             if (null != e.Error)
@@ -95,47 +96,25 @@ namespace StatsDirect.UI
                 UpdateStatus("Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx");
                 return;
             }
-            string latestVersion = downloadedPage.Substring(latestVersionPos + prefix.Length);
-            int versionEndPos = latestVersion.IndexOf(' ');
-            if (versionEndPos < 0)
+            string latestVersionLine = downloadedPage.Substring(latestVersionPos + prefix.Length);
+            int versionsEndPos = latestVersionLine.IndexOf("<br");
+            if (versionsEndPos < 0)
             {
                 UpdateStatus("Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx");
                 return;
             }
-            latestVersion = latestVersion.Substring(0, versionEndPos - 1);
-            string currentVersion = Application.ProductVersion;
-            int lastDotPos = currentVersion.LastIndexOf('.');
-            if (lastDotPos > 0)
-                currentVersion = currentVersion.Substring(0, lastDotPos);
-            // Check versions
-            bool isNewer = false;
-            string[] splitCurrentVersion = currentVersion.Split('.');
-            string[] splitLatestVersion = latestVersion.Split('.');
-            for (int i = 0; i < Math.Min(splitCurrentVersion.Length, splitLatestVersion.Length); i++ )
+            latestVersionLine = latestVersionLine.Substring(0, versionsEndPos - 1);
+            MajorMinorPoint availableVersion = GetVersion3(latestVersionLine);
+            if (null == availableVersion || !availableVersion.IsValid)
             {
-                int currentValue;
-                int latestValue;
-                if (!(int.TryParse(splitCurrentVersion[i], out currentValue) && int.TryParse(splitLatestVersion[i], out latestValue)))
-                {
-                    UpdateStatus("Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx");
-                    return;
-                }
-                if (latestValue > currentValue)
-                {
-                    isNewer = true;
-                    break;
-                }
-                if (latestValue < currentValue)
-                {
-                    // We're newer
-                    break;
-                }
-                // Check the next part - the numbers are neck-and-neck to here.  If there are no more values, we're equal to the latest version, so we'll exit the loop with isNewer = false.
+                UpdateStatus("Could not locate a version of StatsDirect 3 on update page. Please check manually at www.statsdirect.com/update.aspx");
+                return;
             }
+            MajorMinorPoint installedVersion = new MajorMinorPoint(Application.ProductVersion);
             // isNewer = true; // useful for testing without updating the web site!
-            if (isNewer)
+            if (installedVersion < availableVersion)
             {
-                lblStatus.Text = "You are presently running version " + currentVersion + ". Version " + latestVersion +
+                lblStatus.Text = "You are presently running version " + installedVersion + ". Version " + availableVersion.ToString() +
                                     " is available. Would you like to close StatsDirect and install the new version?";
                 cmdClose.Text = "Cancel";
                 button1.Visible = true;
@@ -143,14 +122,83 @@ namespace StatsDirect.UI
             }
             else
             {
-                lblStatus.Text = "You are presently running version " + currentVersion +
+                lblStatus.Text = "You are presently running version " + installedVersion +
                                     ". You have the latest version of StatsDirect.";
             }
+        }
+
+        private MajorMinorPoint GetVersion3(string latestVersionLine)
+        {
+            Regex versionSpotter = new Regex("[0-9]+\\.[0-9]+\\.[0-9]+");
+            MatchCollection matches = versionSpotter.Matches(latestVersionLine);
+            if (null == matches || matches.Count == 0)
+                return null;
+            foreach (Match m in matches)
+            {
+                MajorMinorPoint version = new MajorMinorPoint(m.Value);
+                if (version.IsValid && version.Major == 3)
+                    return version;
+            }
+            return null;
         }
 
         private void lblWhatsNew_Click(object sender, EventArgs e)
         {
             Process.Start("http://www.statsdirect.com/Revisions.aspx");
+        }
+    }
+
+    class MajorMinorPoint
+    {
+        public int Major { get; set; }
+        public int Minor { get; set; }
+        public int Point { get; set; }
+        public bool IsValid { get; set; }
+
+        public MajorMinorPoint()
+        {
+        }
+
+        public MajorMinorPoint(string s)
+        {
+            int major;
+            int minor;
+            int point;
+            string[] parts = s.Split('.');
+            if (parts.Length >= 3 && int.TryParse(parts[0], out major) && int.TryParse(parts[1], out minor) && int.TryParse(parts[2], out point))
+            {
+                Major = major;
+                Minor = minor;
+                Point = point;
+                IsValid = true;
+            }
+        }
+
+        public override string ToString()
+        {
+            return IsValid ? (Major.ToString() + "." + Minor.ToString() + "." + Point.ToString()) : "(invalid)";
+        }
+
+        public static bool operator <(MajorMinorPoint lhs, MajorMinorPoint rhs)
+        {
+            if (!(lhs.IsValid && rhs.IsValid))
+                return false;
+            return lhs.Major != rhs.Major
+                ? lhs.Major < rhs.Major
+                : lhs.Minor != rhs.Minor
+                    ? lhs.Minor < rhs.Minor
+                    : lhs.Point < rhs.Point;
+        }
+
+        public static bool operator >(MajorMinorPoint lhs, MajorMinorPoint rhs)
+        {
+            if (!(lhs.IsValid && rhs.IsValid))
+                return false;
+            return lhs.Major != rhs.Major
+                ? lhs.Major > rhs.Major
+                : lhs.Minor != rhs.Minor
+                    ? lhs.Minor > rhs.Minor
+                    : lhs.Point > rhs.Point;
         }
     }
 }

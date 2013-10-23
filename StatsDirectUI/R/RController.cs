@@ -18,7 +18,8 @@ namespace StatsDirect.R
         const string RSCRIPT_EXE_NAME = "Rscript.exe";
         const string RSCRIPT_NAME = "script.r";
         const string RESULTS_FILE_NAME = "results.txt";
-        const string SCRIPT_HEAD = "userdir<-\"{0}\"\nlibdir<-\"Lib\"\nrlib=file.path(userdir, libdir)\ndir.create(rlib,recursive=T,showWarnings=F)\nsetwd(file.path(userdir))\n.libPaths(rlib)\nzz <- file(\"warn.txt\", open = \"wt\")\nsink(zz, type = \"message\")";
+        const string ERROR_FILE_NAME = "error.txt";
+        const string SCRIPT_HEAD = "userdir<-\"{0}\"\r\nlibdir<-\"Lib\"\r\nrlib=file.path(userdir, libdir)\r\ndir.create(rlib,recursive=T,showWarnings=F)\r\nsetwd(file.path(userdir))\r\n.libPaths(rlib)\r\nzz <- file(\"{1}\", open = \"wt\")\r\nsink(zz, type = \"message\")";
         /// <summary>
         /// Checks whether R is installed and, if so, what versions.
         /// </summary>
@@ -124,8 +125,9 @@ namespace StatsDirect.R
             return preferred;
         }
 
+        /// <param name="rtfScriptBody">A version of the script body that contains everything necessary to run the script, suitable for emitting into an RTF report window.</param>
         /// <returns> <code>true</code> if the script appears to have been run successfully, <code>false</code> otherwise.</returns>
-        public static Process RunScriptAndQuit(ITemplateHost host, string scriptBody)
+        public static Process RunScriptAndQuit(ITemplateHost host, string scriptBody, out string rtfScriptBody)
         {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             // Just in case this is the first time the user has run an R script.  TODO: Is there a more sensible place for this?
@@ -133,13 +135,25 @@ namespace StatsDirect.R
                 Directory.CreateDirectory(rFolder);
             string scriptPath = Path.Combine(rFolder, RSCRIPT_NAME);
 
+            // We get a right mix of terminations at this point; we need Windows newlines in order to match the rest of the file format and meet the requirement to be openable in Notepad.
+            string repairedScriptBody = scriptBody
+                .Replace("\r", "")
+                .Replace("\n", "\r\n");
+            rtfScriptBody = repairedScriptBody
+                .Replace(@"\", @"\\")
+                .Replace("\n", "\n\\par ");
+
             using (TextWriter tw = new StreamWriter(scriptPath, false, Encoding.ASCII))
             {
-                tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
+                tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"), ERROR_FILE_NAME);
                 tw.WriteLine();
-                tw.WriteLine(scriptBody);
+                tw.WriteLine(repairedScriptBody);
                 tw.WriteLine("quit()");
             }
+
+            string errorFilePath = Path.Combine(rFolder, ERROR_FILE_NAME);
+            if (File.Exists(errorFilePath))
+                File.Delete(errorFilePath);
 
             // TODO: Probably don't do this per-script in the future.
             RVersion preferredVersion = PreferredRVersion(CheckR());
@@ -199,11 +213,31 @@ namespace StatsDirect.R
         {
             ParameterBag outputParameters = new ParameterBag();
             foreach (KeyValuePair<string, object> pair in dictionary)
-                if (pair.Value is List<object>)
-                    outputParameters.AddOutput(pair.Key, RConvert.ToFrame(pair.Key, (List<object>)pair.Value));
+                if (pair.Value is TitleAndValue)
+                {
+                    TitleAndValue tv = (TitleAndValue)pair.Value;
+                    outputParameters.AddOutput(pair.Key, RConvert.ToFrame(pair.Key, tv.Title, (List<object>)tv.Value));
+                }
                 else
                     outputParameters.AddOutput(pair.Key, pair.Value);
             return outputParameters;
+        }
+
+        /// <summary>
+        /// Returns the most recent error text from R.
+        /// </summary>
+        /// <returns>The most recent error text, or null if no error text could be retrieved</returns>
+        public static string GetErrorText()
+        {
+            string rFolder = SDConfiguration.MyStatsDirectRFolder;
+            string errorFilePath = Path.Combine(rFolder, ERROR_FILE_NAME);
+            if (!File.Exists(errorFilePath))
+                return null;
+
+            using (TextReader tr = new StreamReader(errorFilePath))
+            {
+                return tr.ReadToEnd().Replace("\r", "");
+            }
         }
     }
 

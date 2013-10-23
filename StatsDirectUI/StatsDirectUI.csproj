@@ -696,44 +696,6 @@
       <DependentUpon>PopupCustomColorPicker.cs</DependentUpon>
     </Compile>
     <Compile Include="PJLControls\Utils.cs" />
-    <Compile Include="Rserve.NET\MutableR.cs" />
-    <Compile Include="Rserve.NET\REngine.cs" />
-    <Compile Include="Rserve.NET\REngineE.cs" />
-    <Compile Include="Rserve.NET\REXP.cs" />
-    <Compile Include="Rserve.NET\REXPDoub.cs" />
-    <Compile Include="Rserve.NET\REXPEnvi.cs" />
-    <Compile Include="Rserve.NET\REXPExpr.cs" />
-    <Compile Include="Rserve.NET\REXPFact.cs" />
-    <Compile Include="Rserve.NET\REXPGene.cs" />
-    <Compile Include="Rserve.NET\REXPInte.cs" />
-    <Compile Include="Rserve.NET\REXPLang.cs" />
-    <Compile Include="Rserve.NET\REXPList.cs" />
-    <Compile Include="Rserve.NET\REXPLogi.cs" />
-    <Compile Include="Rserve.NET\REXPMism.cs" />
-    <Compile Include="Rserve.NET\REXPNull.cs" />
-    <Compile Include="Rserve.NET\REXPRaw.cs" />
-    <Compile Include="Rserve.NET\REXPRefe.cs" />
-    <Compile Include="Rserve.NET\REXPS4.cs" />
-    <Compile Include="Rserve.NET\REXPStri.cs" />
-    <Compile Include="Rserve.NET\REXPSymb.cs" />
-    <Compile Include="Rserve.NET\REXPUnkn.cs" />
-    <Compile Include="Rserve.NET\REXPVect.cs" />
-    <Compile Include="Rserve.NET\RFactor.cs" />
-    <Compile Include="Rserve.NET\RList.cs" />
-    <Compile Include="Rserve.NET\Rserve\protocol\jcrypt.cs" />
-    <Compile Include="Rserve.NET\Rserve\protocol\REXPFact.cs" />
-    <Compile Include="Rserve.NET\Rserve\protocol\RPacket.cs" />
-    <Compile Include="Rserve.NET\Rserve\protocol\RTalk.cs" />
-    <Compile Include="Rserve.NET\Rserve\RConnect.cs" />
-    <Compile Include="Rserve.NET\Rserve\RFileInp.cs" />
-    <Compile Include="Rserve.NET\Rserve\RFileOut.cs" />
-    <Compile Include="Rserve.NET\Rserve\RserveEx.cs" />
-    <Compile Include="Rserve.NET\Rserve\RSession.cs" />
-    <Compile Include="Rserve.NET\Rserve\test\jt.cs" />
-    <Compile Include="Rserve.NET\Rserve\test\PlotDemo.cs" />
-    <Compile Include="Rserve.NET\Rserve\test\StartRse.cs" />
-    <Compile Include="Rserve.NET\Rserve\test\test.cs" />
-    <Compile Include="Rserve.NET\SupportClass.cs" />
     <Compile Include="UI\DataAcquisitionWidth.cs" />
     <Compile Include="UI\SDGroupBox.cs">
       <SubType>Component</SubType>
@@ -1054,10 +1016,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="Rserve.NET\LICENSE" />
-    <None Include="Rserve.NET\Makefile" />
-    <None Include="Rserve.NET\Rserve\Makefile" />
-    <None Include="Rserve.NET\Rserve\test\Makefile" />
     <None Include="Assets\STATSDIRECT.chm" />
     <None Include="Assets\Template\abridged.rtf" />
     <None Include="Assets\Template\agree.rtf" />
@@ -1663,7 +1621,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets')" />

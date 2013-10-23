@@ -4,7 +4,7 @@
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
 	<Bundle
     Name="StatsDirect"
-    Version="3.0.93.0"
+    Version="3.0.94.0"
     Manufacturer="StatsDirect Limited"
     UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5"
     DisableModify="yes"
@@ -19,7 +19,6 @@
       <Payload SourceFile="dlgbmp-sd.png" />
       <Payload SourceFile="bannrbmp-sd.png" />
       <Payload SourceFile="greybar.png" />
-      <Payload SourceFile="white.png" />
     </BootstrapperApplicationRef>
 		<Chain>
       <PackageGroupRef Id="Netfx4Full"/>

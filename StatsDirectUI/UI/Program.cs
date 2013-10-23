@@ -6,7 +6,6 @@ using StatsDirect.Calculator;
 using StatsDirect.Utilities;
 using System.Diagnostics;
 using StatsDirect.Configuration;
-using StatsDirect.R;
 
 namespace StatsDirect.UI
 {

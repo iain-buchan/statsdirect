@@ -39,6 +39,7 @@
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
+        <!-- Removed as part of #893
         <option>
           <name>fudge</name>
           <prompt>Weights = n +</prompt>
@@ -50,6 +51,7 @@
             <option value="1">1.0</option>
           </options>
         </option>
+        -->
       </parameters>
     </settings>
 		<builtin function-name="rptProportionMeta" />

@@ -166,26 +166,26 @@ namespace StatsDirect.R
             sb.Append(value ? "TRUE" : "FALSE");
         }
 
-        internal static DataFrame ToFrame(string variableName, List<object> p)
+        internal static DataFrame ToFrame(string frameName, string variableName, List<object> data)
         {
             // Check types: use double if all double, else (for now) string.  TODO: Other types.
-            bool allDouble = p.All(o => o is double);
+            bool allDouble = data.All(o => o is double);
             Variable v;
             if (allDouble)
             {
-                DoubleVariable dv = new DoubleVariable(p.Count, variableName);
-                for (int i = 0; i < p.Count; i++)
-                    dv.Data[i] = (double)p[i];
+                DoubleVariable dv = new DoubleVariable(data.Count, variableName);
+                for (int i = 0; i < data.Count; i++)
+                    dv.Data[i] = (double)data[i];
                 v = dv;
             }
             else
             {
-                StringVariable dv = new StringVariable(p.Count, variableName);
-                for (int i = 0; i < p.Count; i++)
-                    dv.Data[i] = p[i].ToString();
+                StringVariable dv = new StringVariable(data.Count, variableName);
+                for (int i = 0; i < data.Count; i++)
+                    dv.Data[i] = data[i].ToString();
                 v = dv;
             }
-            return new DataFrame(v, variableName);
+            return new DataFrame(v, frameName);
         }
     }
 }
