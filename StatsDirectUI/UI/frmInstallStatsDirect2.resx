@@ -118,8 +118,8 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="lblRubric.Text" xml:space="preserve">
-    <value>This operation requires the free R software, and StatsDirect can't find it installed on your computer.
+    <value>You can use StatsDirect 2 version 2.8.0 or greater to convert an old-format workbook (.sdw file) into Excel format and open it in StatsDirect 3. {0}
 
-If you want to continue with this operation you first need to download and install R by clicking "Install R". After R is installed you can select the "R is installed" button below and the operation will continue.</value>
+If you would like to open this .sdw file, you will need to download and {1} StatsDirect 2 by choosing "Download StatsDirect 2". Once you have {2} it, choose "StatsDirect 2 is installed" and StatsDirect 3 will try to convert the .sdw file.</value>
   </data>
 </root>

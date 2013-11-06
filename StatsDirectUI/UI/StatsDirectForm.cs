@@ -112,7 +112,8 @@ namespace StatsDirect.UI
             }
         }
 
-        public abstract bool OpenFile(string filename, bool isTempFile);
+        /// <param name="nameToDisplay">If null or isTempFile is false (the normal case), use the filename.  If non-null and isTempFile is true, use this as the name to be shown for the file.</param>
+        public abstract bool OpenFile(string filename, bool isTempFile, string nameToDisplay);
 
         internal virtual void ShowHelp()
         {

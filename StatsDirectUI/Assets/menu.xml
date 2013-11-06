@@ -49,14 +49,14 @@
             <menu-item label="Common &amp;Transforms">
               <help chm-id="1091" />
               <sub-items>
-                <menu-item label="&amp;Log (natural)" operation="TransformLog" />
-                <menu-item label="Log (base &amp;10)" operation="TransformLog10" />
+                <menu-item label="&amp;Log (Natural)" operation="TransformLog" />
+                <menu-item label="Log (Base &amp;10)" operation="TransformLog10" />
                 <menu-item label="Lo&amp;git" operation="TransformLogit" />
                 <menu-item label="&amp;Probit" operation="TransformProbit" />
                 <menu-item label="&amp;Angular" operation="TransformAngular" />
                 <menu-item label="&amp;Cumulative" operation="TransformCumulate" />
                 <menu-item label="La&amp;dder of Powers" operation="LadderPowers" />
-                <menu-item label="&amp;Empirical cumuative distribution" operation="TransformECDF" />
+                <menu-item label="&amp;Empirical Cumulative Distribution" operation="TransformECDF" />
                 <menu-item label="&amp;Z Score" operation="TransformZSD" />
               </sub-items>
             </menu-item>
@@ -313,7 +313,7 @@
             <menu-item label="Fr&amp;iedman" operation = "Friedman" />
           </sub-items>
         </menu-item>
-        <menu-item label="&amp;Regression and correlation">
+        <menu-item label="&amp;Regression and Correlation">
           <help chm-id="1285" />
           <sub-items>
             <menu-item label="&amp;Simple Linear with Correlation..." operation="SimpleLinearRegression" />
@@ -360,7 +360,7 @@
             <menu-item label="C&amp;ompare Two R Agreement Measures..." operation="UniversalRCompare" />
           </sub-items>
         </menu-item>
-        <menu-item label="&amp;Survival analysis">
+        <menu-item label="&amp;Survival Analysis">
           <help chm-id="1326" />
           <sub-items>
             <menu-item label="&amp;Kaplan-Meier" operation="KaplanMeier" />
@@ -405,7 +405,7 @@
         <menu-item label="&amp;Error Bars" operation="ErrorPlot" />
         <menu-item label="&amp;Forest (Meta-analysis)" operation="CochranePlot" />
         <menu-item label="&amp;Histogram" operation="HistogramPlot" />
-        <menu-item label="H&amp;istogram (text)" operation="HistogramPlotText" />
+        <menu-item label="H&amp;istogram (Text)" operation="HistogramPlotText" />
         <menu-item label="&amp;Ladder" operation="LadderPlot" />
         <menu-item label="Lin&amp;e" operation="LinePlot" />
         <menu-item label="&amp;Normal" operation="NormalPlot" />

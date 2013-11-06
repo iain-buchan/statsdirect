@@ -187,7 +187,7 @@ namespace StatsDirect.UI
 
         public void OkClicked()
         {
-            PopulateDataFromForm(currentRecord);
+            PopulateDataFromForm(originalRecord);
         }
     }
 }

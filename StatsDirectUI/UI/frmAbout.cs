@@ -126,11 +126,11 @@ namespace StatsDirect.UI
 
         void lblEmail_DoubleClick(object sender, EventArgs e)
         {
-            Close();
             using (frmLicense f = new frmLicense(SdApplication.SoleInstance.UserInfo))
             {
                 f.ShowDialog(this);
             }
+            RefreshUserInfo();
         }
 
         public string Platform

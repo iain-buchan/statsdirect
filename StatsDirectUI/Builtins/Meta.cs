@@ -4206,6 +4206,7 @@ namespace StatsDirect.Builtins
             bool stratlab;
 
             double cco = parameters["gamma"].AsDouble;
+            VarianceStabilisationMethod method = ("doubleArcsine".Equals(parameters["method"].AsString)) ? VarianceStabilisationMethod.DoubleArcsine : VarianceStabilisationMethod.ArcsineSquareRoot;
             if (cco > 0)
             {
                 double p = (1.0 - cco) / 2.0;
@@ -4340,12 +4341,12 @@ namespace StatsDirect.Builtins
 
             // convert back to proportion scale
             double[,] o = new double[k + 1, 4 + 1];
-            rmh = ArcsineInv(rmh, sn);
-            llrmh = ArcsineInv(llrmh, sn);
-            ulrmh = ArcsineInv(ulrmh, sn);
-            dspr = ArcsineInv(dspr, sn);
-            dsll = ArcsineInv(dsll, sn);
-            dsul = ArcsineInv(dsul, sn);
+            rmh = ArcsineInv(rmh, sn, method);
+            llrmh = ArcsineInv(llrmh, sn, method);
+            ulrmh = ArcsineInv(ulrmh, sn, method);
+            dspr = ArcsineInv(dspr, sn, method);
+            dsll = ArcsineInv(dsll, sn, method);
+            dsul = ArcsineInv(dsul, sn, method);
 
             // Set limits (ticket #495, 2012-05-08)
             if (allRZero)
@@ -4407,6 +4408,8 @@ namespace StatsDirect.Builtins
                 }
                 proportionsParameters.AddOutput("lb", tmp);
             }
+
+            outputParameters.AddOutput("method", method == VarianceStabilisationMethod.ArcsineSquareRoot ? "Stuart-Ord (inverse double arcsine square root)" : "Miller (exact inverse Freeman-Tukey double arcsine)");
 
             outputParameters.AddOutput("rmh", host.RoundU(rmh));
             outputParameters.AddOutput("from", host.RoundU(llrmh));
@@ -4502,27 +4505,31 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static double ArcsineInv(double t, double[] n)
+        private static double ArcsineInv(double t, double[] n, VarianceStabilisationMethod method)
         {
             // Anscombe (1948)
             // arcsine_inv = Sin(P) ^ 2#
-            // 
-            // Freeman-Tukey
-            // arcsine_inv = Math.Sin(t / 2.0) ^ 2.0
-
-            double hmn = 0;
-            //  n(0) is empty, n(n.Length - 1) is empty
-            for (int i = 1; i <= n.Length - 2; i++)
+            switch (method)
             {
-                hmn += 1.0 / n[i];
-            }
-            hmn = (n.Length - 2) / hmn;
+                case VarianceStabilisationMethod.ArcsineSquareRoot:
+                    return Math.Pow(Math.Sin(t / 2.0), 2);
+                case VarianceStabilisationMethod.DoubleArcsine:
+                    double hmn = 0;
+                    //  n(0) is empty, n(n.Length - 1) is empty
+                    for (int i = 1; i <= n.Length - 2; i++)
+                    {
+                        hmn += 1.0 / n[i];
+                    }
+                    hmn = (n.Length - 2) / hmn;
 
-            if (t > ArcsineP(hmn, hmn))
-                return 1.0;
-            if (t < ArcsineP(0, hmn))
-                return 0;
-            return 0.5 * (1.0 - Math.Sign(Math.Cos(t)) * Math.Sqrt(1.0 - Math.Pow(Math.Sin(t) + (Math.Sin(t) - 1.0 / Math.Sin(t)) / hmn, 2.0)));
+                    if (t > ArcsineP(hmn, hmn))
+                        return 1.0;
+                    if (t < ArcsineP(0, hmn))
+                        return 0;
+                    return 0.5 * (1.0 - Math.Sign(Math.Cos(t)) * Math.Sqrt(1.0 - Math.Pow(Math.Sin(t) + (Math.Sin(t) - 1.0 / Math.Sin(t)) / hmn, 2.0)));
+                default:
+                    throw new ArgumentOutOfRangeException("method", method, "Only Arcsine and DoubleArcsine are known");
+            }
         }
 
 

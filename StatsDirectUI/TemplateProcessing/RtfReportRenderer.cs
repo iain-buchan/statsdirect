@@ -9,7 +9,7 @@ namespace StatsDirect.TemplateProcessing
     {
         public string Template { get; set; }
 
-        public override string Render(ParameterBag substitutions)
+        public override string Render(ITemplateHost host, ParameterBag substitutions)
         {
             string rtfWithInclusions = ResolveTemplates(Template, new List<string>());
             string rtfWithPossibleDeadBlocks = SubstituteInternal(rtfWithInclusions, substitutions);

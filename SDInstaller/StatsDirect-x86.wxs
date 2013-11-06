@@ -35,7 +35,7 @@
               <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="32bit" Priority="1" AppBaseDirectory="INSTALLLOCATION"/>
               <Shortcut Id="StatsDirectExeDesktopShortcut"
                         Directory="DesktopFolder"
-                        Name="StatsDirect"
+                        Name="StatsDirect 3"
                         Description="StatsDirect Statistical Package"
                         Icon="statsdirect.ico"
                         WorkingDirectory="INSTALLLOCATION"

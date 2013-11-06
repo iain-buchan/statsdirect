@@ -109,26 +109,34 @@ p<-predict(m,se=T)
 
 shouldPlot <- ncol(predictors) == 1 # Plots are only valid if there is a single predictor
 if (shouldPlot) {
-  gr1<-file.path(getwd(),"metafile1.wmf")
-  win.metafile(gr1)
+  if (exists("returning.to.statsdirect")) {
+    gr1<-file.path(getwd(),"metafile1.wmf")
+    win.metafile(gr1)
+  }
   plot(predictors[[1]],outcome[[1]],main=title,ylab=ylab,xlab=xlab)
   i <- order(predictors[[1]]) # The line plot requires the x values pre-sorted; this approach ensures that pre-sorting.  See e.g. http://stackoverflow.com/questions/10007830/loess-line-not-plotting-correctly
   lines(predictors[[1]][i],p$fit[i])
   lines(predictors[[1]][i],p$fit[i]+2*p$s[i], lty=2)
   lines(predictors[[1]][i],p$fit[i]-2*p$s[i], lty=2)
-  suppressWarnings(dev.off())
+  if (exists("returning.to.statsdirect")) {
+    suppressWarnings(dev.off())
+  }
 }
 
-r1<-data.frame(observations=m$n,parameters=m$enp,residualse=m$s,df=p$df)
-rn<-data.frame(residuals=m$residuals,fits=m$fitted,sefits=p$se.fit)
-rn.titles<-c('"LOESS residuals"','"LOESS fit"','"LOESS fit SE"')
-outs<-c("start~names",colnames(r1),"start~data",as.character(r1))
-outs<-c(outs,"start~names",colnames(rn),"start~data",as.character(rn),"start~titles",rn.titles)
-if (shouldPlot)
-  outs<-c(outs,"start~graphics",paste('"',gr1,'"'))
-op<-file("results.txt")
-writeLines(outs, op)
-close(op)
+if (exists("returning.to.statsdirect")) {
+  r1<-data.frame(observations=m$n,parameters=m$enp,residualse=m$s,df=p$df)
+  rn<-data.frame(residuals=m$residuals,fits=m$fitted,sefits=p$se.fit)
+  rn.titles<-c('"LOESS residuals"','"LOESS fit"','"LOESS fit SE"')
+  outs<-c("start~names",colnames(r1),"start~data",as.character(r1))
+  outs<-c(outs,"start~names",colnames(rn),"start~data",as.character(rn),"start~titles",rn.titles)
+  if (shouldPlot)
+    outs<-c(outs,"start~graphics",paste('"',gr1,'"'))
+  op<-file("results.txt")
+  writeLines(outs, op)
+  close(op)
+} else {
+  m
+}
 ]]></script>
     <test>
       <condition>=parameters["saveFitsAndSe"].AsBoolean</condition>
@@ -152,9 +160,9 @@ close(op)
 <line><title>LOESS Curve Fitting</title></line>
 <line></line>
 <line><in>title</in></line>
-<line>Number of Observations: <in>observations</in></line>
-<line>Equivalent Number of Parameters: <in>parameters</in></line>
-<line>Residual Standard Error: <in>residualse</in></line>
+<line>Number of Observations: <inx>observations</inx></line>
+<line>Equivalent Number of Parameters: <inx>parameters</inx></line>
+<line>Residual Standard Error: <inx>residualse</inx></line>
 </report>
 ]]>
     </report>

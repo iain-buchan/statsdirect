@@ -4,7 +4,6 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Charting
 {
-    // TRANSMISSINGCOMMENT: Class BoxWhiskerOptions
     [ Serializable ]
     public class BoxWhiskerOptions : GenericOptions 
     { 
@@ -16,15 +15,13 @@ namespace StatsDirect.Charting
             MeanConfidenceIntervalRange = 3,
             SevenNumberSummary = 4,
             BowleySummary = 5,
+            MeanStandardErrorRange = 6
         } 
-        
         
         public BoxWhiskerMethod Method = BoxWhiskerMethod.MedianQuartilesRange; 
         public bool MarkMeanAndMedian; 
         public bool UseInnerFence; 
         public bool UseOuterFence; 
-        //  Public MinX As Double
-        //  Public MaxX As Double
         
         public bool IsAscii; 
         
@@ -32,12 +29,11 @@ namespace StatsDirect.Charting
         public string AxisFontDescriptor; 
         public double Cco; 
         
-        public BoxWhiskerOptions( bool UseColour ) : base( UseColour ) 
+        public BoxWhiskerOptions( bool UseColour )
+            : base( UseColour ) 
         { 
-            
         } 
         
-        // TRANSMISSINGCOMMENT: Property OptionType
         public override OptionTypes OptionType 
         { 
             get 
@@ -46,7 +42,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Method SetDefaultXAxisTitle
         public void SetDefaultXAxisTitle() 
         { 
             //  This used to try to be cleverer, but it turns out that formatting for each combination is almost essential to allow variation.
@@ -54,47 +49,37 @@ namespace StatsDirect.Charting
             {
                 case BoxWhiskerMethod.MedianQuartilesRange:
                     if ( UseInnerFence ) 
-                    { 
                         XAxisTitle = UseOuterFence ? "min < LQ < median%MEAN% > UQ > max, fences (1.5 & 3.0 IQR)" : "min < LQ < median%MEAN% > UQ > max, fence (1.5 IQR)"; 
-                    } 
                     else 
-                    { 
                         XAxisTitle = UseOuterFence ? "min < LQ < median%MEAN% > UQ > max, fence (3.0 IQR)" : "min < LQ < median%MEAN% > UQ > max"; 
-                    } 
                     break;
                 case BoxWhiskerMethod.MeanStandardDeviationRange:
                     if ( UseInnerFence ) 
-                    { 
                         XAxisTitle = UseOuterFence ? "min < 1 SD < mean%MEDIAN% > 1 SD > max, fences (1.96 SD, 2.58 SD)" : "min < 1 SD < mean%MEDIAN% > 1 SD > max, fence (1.96 SD)"; 
-                    } 
                     else 
-                    { 
                         XAxisTitle = UseOuterFence ? "min < 1 SD < mean%MEDIAN% > 1 SD > max, fence (2.58 SD)" : "min < 1 SD < mean%MEDIAN% > 1 SD > max"; 
-                    } 
+                    break;
+                case BoxWhiskerMethod.MeanStandardErrorRange:
+                    if (UseInnerFence)
+                        XAxisTitle = UseOuterFence ? "min < 1 SE < mean%MEDIAN% > 1 SE > max, fences (1.96 SD, 2.58 SD)" : "min < 1 SE < mean%MEDIAN% > 1 SE > max, fence (1.96 SD)";
+                    else
+                        XAxisTitle = UseOuterFence ? "min < 1 SE < mean%MEDIAN% > 1 SE > max, fence (2.58 SD)" : "min < 1 SE < mean%MEDIAN% > 1 SE > max";
                     break;
                 case BoxWhiskerMethod.MeanConfidenceIntervalRange:
                     string ci = Formatting.XRound( Cco * 100.0, 1 ) + "% confidence interval"; 
                     if ( UseInnerFence ) 
                     { 
                         if ( UseOuterFence ) 
-                        { 
                             XAxisTitle = "min < mean%MEDIAN% ? " + ci + " > max, fences (1.96 SD, 2.58 SD)"; 
-                        } 
                         else 
-                        { 
                             XAxisTitle = "min < mean%MEDIAN% ? " + ci + " > max, fence (1.96 SD)"; 
-                        } 
                     } 
                     else 
                     { 
                         if ( UseOuterFence ) 
-                        { 
                             XAxisTitle = "min < mean%MEDIAN% ? " + ci + " > max, fence (2.58 SD)"; 
-                        } 
                         else 
-                        { 
                             XAxisTitle = "min < mean%MEDIAN% ? " + ci + " > max"; 
-                        } 
                     } 
                     break;
                 case BoxWhiskerMethod.SevenNumberSummary:
@@ -119,8 +104,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Property ShowBoxWhiskerOptions
         public override bool ShowBoxWhiskerOptions 
         { 
             get 
@@ -129,7 +112,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisLabelFontDescriptor
         public override bool UsesAxisLabelFontDescriptor 
         { 
             get 
@@ -138,7 +120,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisTitleFontDescriptor
         public override bool UsesAxisTitleFontDescriptor 
         { 
             get 
@@ -147,7 +128,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesBoxAxes
         public override bool UsesBoxAxes 
         { 
             get 
@@ -156,7 +136,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
         public override bool UsesChartTitle 
         { 
             get 
@@ -165,7 +144,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesColour
         public override bool UsesColour 
         { 
             get 
@@ -174,7 +152,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesOrientation
         public override bool UsesOrientation 
         { 
             get 
@@ -183,7 +160,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesSeriesLabels
         public override bool UsesSeriesLabels 
         { 
             get 
@@ -192,7 +168,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesShowLegend
         public override bool UsesShowLegend 
         { 
             get 
@@ -201,7 +176,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesTitleFontDescriptor
         public override bool UsesTitleFontDescriptor 
         { 
             get 
@@ -210,7 +184,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesXAxisTitle
         public override bool UsesXAxisTitle 
         { 
             get 
@@ -219,7 +192,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
         public override bool ShowLegendIsRelevant 
         { 
             get 
@@ -228,7 +200,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property IsNaturalOrientation
         public override bool IsNaturalOrientation 
         { 
             get 

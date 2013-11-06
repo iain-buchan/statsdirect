@@ -1403,7 +1403,7 @@ namespace StatsDirect.UI
             // openFileDialog
             // 
             this.openFileDialog.DefaultExt = "xlsx";
-            this.openFileDialog.Filter = "Data or reports|*.xls;*.xlsx;*.csv;*.rtf|HTML files (*.htm, *.html, *.mht, *.mhtm" +
+            this.openFileDialog.Filter = "Data or reports|*.xls;*.xlsx;*.csv;*.rtf;*.sdw|HTML files (*.htm, *.html, *.mht, *.mhtm" +
     "l)|*.htm*;*.mht*|Script files (*.cs, *.vb, *.r)|*.cs;*.vb;*.r|All files|*.*";
             // 
             // postTabTimer

@@ -21,6 +21,6 @@ namespace StatsDirect.TemplateProcessing
             }
         }
 
-        public abstract string Render(ParameterBag substitutions);
+        public abstract string Render(ITemplateHost host, ParameterBag substitutions);
     }
 }

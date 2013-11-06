@@ -1242,6 +1242,7 @@ namespace StatsDirect.UI
                 case "Dummy":
                 case "Extraction":
                 case "GraphicsOptions":
+                case "ROCCutoff":
                 case "Scores":
                 case "SortInPlace":
                     return AmendUsingControl(fillable);

@@ -19,7 +19,7 @@ namespace StatsDirect.R
         const string RSCRIPT_NAME = "script.r";
         const string RESULTS_FILE_NAME = "results.txt";
         const string ERROR_FILE_NAME = "error.txt";
-        const string SCRIPT_HEAD = "userdir<-\"{0}\"\r\nlibdir<-\"Lib\"\r\nrlib=file.path(userdir, libdir)\r\ndir.create(rlib,recursive=T,showWarnings=F)\r\nsetwd(file.path(userdir))\r\n.libPaths(rlib)\r\nzz <- file(\"{1}\", open = \"wt\")\r\nsink(zz, type = \"message\")";
+        const string SCRIPT_HEAD = "userdir<-\"{0}\"\r\nlibdir<-\"Lib\"\r\nrlib=file.path(userdir, libdir)\r\ndir.create(rlib,recursive=T,showWarnings=F)\r\nsetwd(file.path(userdir))\r\n.libPaths(rlib)\r\nzz <- file(\"{1}\", open = \"wt\")\r\nsink(zz, type = \"message\")\r\nreturning.to.statsdirect <- TRUE";
         /// <summary>
         /// Checks whether R is installed and, if so, what versions.
         /// </summary>
@@ -141,6 +141,8 @@ namespace StatsDirect.R
                 .Replace("\n", "\r\n");
             rtfScriptBody = repairedScriptBody
                 .Replace(@"\", @"\\")
+                .Replace(@"{", @"\{")
+                .Replace(@"}", @"\}")
                 .Replace("\n", "\n\\par ");
 
             using (TextWriter tw = new StreamWriter(scriptPath, false, Encoding.ASCII))

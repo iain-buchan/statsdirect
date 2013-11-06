@@ -66,6 +66,8 @@ namespace StatsDirect.UI
                 options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange;
             else if (rdoMethodMSDR.Checked)
                 options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange;
+            else if (rdoMethodMSER.Checked)
+                options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange;
             else if (rdoMethodMQR.Checked)
                 options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange;
             else if (rdoMethodSevenNumberSummary.Checked)
@@ -105,6 +107,9 @@ namespace StatsDirect.UI
                     break;
                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange:
                     rdoMethodMSDR.Checked = true;
+                    break;
+                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange:
+                    rdoMethodMSER.Checked = true;
                     break;
                 case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
                     rdoMethodMQR.Checked = true;
@@ -151,6 +156,7 @@ namespace StatsDirect.UI
             {
                 return BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange == options.Method
                     || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange == options.Method
+                    || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange == options.Method
                     || BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange == options.Method;
             }
         }

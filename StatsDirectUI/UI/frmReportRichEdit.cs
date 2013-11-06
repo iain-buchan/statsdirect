@@ -45,7 +45,7 @@ namespace StatsDirect.UI
             dirty = true;
         }
 
-        public override bool OpenFile(string filename, bool isTempFile)
+        public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
             string strExt = System.IO.Path.GetExtension(filename) ?? "";
             strExt = strExt.ToLower();
@@ -823,11 +823,11 @@ namespace StatsDirect.UI
         {
             if (IsSelectionReplayable)
             {
-                e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Replay operation", ReplayOperation));
+                e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Replay Operation", ReplayOperation));
             }
             if (IsImageSelected)
             {
-                e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Export graphic", ExportGraphic));
+                e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Export Graphic", ExportGraphic));
             }
         }
 

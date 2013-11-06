@@ -102,7 +102,7 @@ namespace StatsDirect.UI
         }
          */
 
-        public override bool OpenFile(string filename, bool isTempFile)
+        public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
             string strExt = System.IO.Path.GetExtension(filename);
             if (null != strExt)

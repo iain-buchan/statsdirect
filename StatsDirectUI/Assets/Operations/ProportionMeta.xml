@@ -52,6 +52,17 @@
           </options>
         </option>
         -->
+        <option>
+          <name>method</name>
+          <prompt>Inverse transform</prompt>
+          <prompt-precedes-parameter>true</prompt-precedes-parameter>
+          <default-value>arcsine</default-value>
+          <format-type>Dropdown</format-type>
+          <options>
+            <option value="arcsine">Stuart-Ord</option>
+            <option value="doubleArcsine">Miller</option>
+          </options>
+        </option>
       </parameters>
     </settings>
 		<builtin function-name="rptProportionMeta" />

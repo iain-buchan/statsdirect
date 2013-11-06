@@ -58,7 +58,7 @@
   <DirectoryRef Id="ApplicationProgramsFolder">
     <Component Id="ApplicationShortcut" Guid="4A69823D-392D-49aa-81DF-B660EA920F25">
       <Shortcut Id="ApplicationStartMenuShortcut"
-                Name="StatsDirect"
+                Name="StatsDirect 3"
                 Description="StatsDirect Statistical Package"
                 Icon="statsdirect.ico"
                 Target="[INSTALLLOCATION]StatsDirect.exe"

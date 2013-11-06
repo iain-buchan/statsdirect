@@ -26,10 +26,10 @@ namespace StatsDirect.Templates
         /// </summary>
         /// <param name="substitutions"></param>
         /// <returns>The template including all substitutions this has made from the substitutions.</returns>
-        public string Substitute(ParameterBag substitutions)
+        public string Substitute(ITemplateHost host, ParameterBag substitutions)
         {
             ReportRenderer renderer = GetRenderer();
-            return renderer.Render(substitutions);
+            return renderer.Render(host, substitutions);
         }
 
         private ReportRenderer GetRenderer()

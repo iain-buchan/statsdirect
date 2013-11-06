@@ -4867,7 +4867,7 @@ namespace StatsDirect.Charting
                         CentreIsMedian = true;
                         //  Other centre is the mean
                         double sum = 0;
-                        for (int N = 0; N <= count - 1; N++)
+                        for (int N = 0; N < count; N++)
                         {
                             sum += s.Data[N];
                         }
@@ -4875,28 +4875,24 @@ namespace StatsDirect.Charting
 
                     } break;
                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange:
+                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange:
                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange:
                     {
 
                         double sum = 0.0;
-                        // double sumsq = 0.0; 
                         double sumsqdev = 0.0;
 
-                        for (int N = 0; N <= count - 1; N++)
-                        {
+                        for (int N = 0; N < count; N++)
                             sum += s.Data[N];
-                            // sumsq += s.Data[ N ] * s.Data[ N ]; 
-                        }
 
                         double mean = sum / Convert.ToDouble(count);
-                        // double ss = sumsq - ( ( sum * sum ) / Convert.ToDouble( count ) ); 
 
-                        for (int N = 0; N <= count - 1; N++)
+                        for (int N = 0; N < count; N++)
                         {
                             if (Math.Abs(sumsqdev) > 1.0E+300)
                             {
                                 sumsqdev = Constant.MISSING;
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                             double dev = s.Data[N] - mean;
                             sumsqdev += dev * dev;
@@ -4923,37 +4919,43 @@ namespace StatsDirect.Charting
                         }
                         else
                         {
-                            double variance = sumsqdev / Convert.ToDouble(count - 1);
+                            double variance = sumsqdev / (count - 1);
                             double standardDeviation = Math.Sqrt(variance);
+                            double standardError = Math.Sqrt(variance / count);
 
-                            if (method == BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange)
+                            switch (method)
                             {
-                                BoxL = mean - standardDeviation;
-                                BoxR = mean + standardDeviation;
-                            }
-                            else
-                            {
-                                double cit = PDF.tfromp(P, Convert.ToDouble(count - 1));
-                                double bit = cit * standardDeviation / Math.Sqrt(count);
-                                BoxL = mean - bit;
-                                BoxR = mean + bit;
+                                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange:
+                                    BoxL = mean - standardDeviation;
+                                    BoxR = mean + standardDeviation;
+                                    break;
+                                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange:
+                                    BoxL = mean - standardError;
+                                    BoxR = mean + standardError;
+                                    break;
+                                case BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange:
+                                    double cit = PDF.tfromp(P, Convert.ToDouble(count - 1));
+                                    double bit = cit * standardDeviation / Math.Sqrt(count);
+                                    BoxL = mean - bit;
+                                    BoxR = mean + bit;
+                                    break;
+                                default:
+                                    throw new Exception("Unexpected box+whisker plot type");
                             }
 
                             if (useInnerFence)
                             {
                                 //  95% CI
-                                int transTemp75;
-                                double innerSdFactor = PDF.gauinv(0.975, out transTemp75);
-                                InnerFenceL = mean - innerSdFactor * standardDeviation;
-                                InnerFenceR = mean + innerSdFactor * standardDeviation;
+                                double innerFenceFactor = PDF.gauinv(0.975);
+                                InnerFenceL = mean - innerFenceFactor * standardDeviation;
+                                InnerFenceR = mean + innerFenceFactor * standardDeviation;
                             }
                             if (useOuterFence)
                             {
                                 //  99% CI
-                                int transTemp74;
-                                double outerSdFactor = PDF.gauinv(0.995, out transTemp74);
-                                OuterFenceL = mean - outerSdFactor * standardDeviation;
-                                OuterFenceR = mean + outerSdFactor * standardDeviation;
+                                double outerFenceFactor = PDF.gauinv(0.995);
+                                OuterFenceL = mean - outerFenceFactor * standardDeviation;
+                                OuterFenceR = mean + outerFenceFactor * standardDeviation;
                             }
                         }
 
@@ -4961,12 +4963,8 @@ namespace StatsDirect.Charting
                 default:
                     throw new ArgumentOutOfRangeException("method", method.ToString());
             }
-
-
         }
 
-
-        // TRANSMISSINGCOMMENT: Method GetHistogramScaleParameters
         private ScaleParameters GetHistogramScaleParameters()
         {
             HistogramOptions histOptions = ((HistogramOptions)(definition.ChartOptions));

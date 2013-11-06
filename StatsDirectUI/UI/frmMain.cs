@@ -27,6 +27,7 @@ using SpreadsheetGear;
 using Color = System.Drawing.Color;
 using SystemColors = System.Drawing.SystemColors;
 using StatsDirect.R;
+using StatsDirect.Charting;
 
 namespace StatsDirect.UI
 {
@@ -493,12 +494,19 @@ namespace StatsDirect.UI
         /// </summary>
         internal StatsDirectForm CreateGrid()
         {
+            return CreateGrid(null);
+        }
+
+        /// <summary>
+        /// Create and add a new grid window
+        /// </summary>
+        internal StatsDirectForm CreateGrid(string unsavedName)
+        {
             // Make and add the child window
             using (new WaitCursor())
             {
                 frmSpreadsheetGear child = new frmSpreadsheetGear();
-                string childName = child.Text + " " + SdApplication.SoleInstance.GetGridNumber();
-                child.SetUnsavedName(childName);
+                child.SetUnsavedName(unsavedName ?? child.Text + " " + SdApplication.SoleInstance.GetGridNumber());
                 SetUpForm(child);
                 return child;
             }
@@ -516,18 +524,18 @@ namespace StatsDirect.UI
             // Check that the grid was, in fact, a file.  If it doesn't contain a directory separator, it wasn't - it was therefore almost certainly never saved and we can't recover it.
             if (filename.IndexOf(Path.DirectorySeparatorChar) < 0)
                 return null;
-            return CreateGrid(filename, true);
+            return CreateGrid(filename, true, null);
         }
 
-        internal StatsDirectForm CreateGrid(string filename, bool isTempFile)
+        internal StatsDirectForm CreateGrid(string filename, bool isTempFile, string nameToDisplay)
         {
             using (new WaitCursor())
             {
-                StatsDirectForm newGrid = CreateGrid();
+                StatsDirectForm newGrid = CreateGrid(nameToDisplay);
                 bool opened = false;
                 try
                 {
-                    opened = newGrid.OpenFile(filename, isTempFile);
+                    opened = newGrid.OpenFile(filename, isTempFile, nameToDisplay);
                     if (!isTempFile)
                         SdApplication.SoleInstance.NoteRecentFile(filename, opened);
                 }
@@ -567,7 +575,7 @@ namespace StatsDirect.UI
             bool opened = false;
             try
             {
-                opened = newReport.OpenFile(filename, isTempFile);
+                opened = newReport.OpenFile(filename, isTempFile, null);
                 if (!isTempFile)
                     SdApplication.SoleInstance.NoteRecentFile(filename, opened);
             }
@@ -606,7 +614,7 @@ namespace StatsDirect.UI
             bool opened = false;
             try
             {
-                opened = newScriptWindow.OpenFile(filename, isTempFile);
+                opened = newScriptWindow.OpenFile(filename, isTempFile, null);
                 if (!isTempFile)
                     SdApplication.SoleInstance.NoteRecentFile(filename, opened);
             }
@@ -628,7 +636,6 @@ namespace StatsDirect.UI
         /// </summary>
         private void SetUpForm(StatsDirectForm child)
         {
-            // child.WindowState = FormWindowState.Minimized;
             Cursor = Cursors.WaitCursor;
             // Make and add the child window
             child.MdiParent = this;
@@ -1226,7 +1233,7 @@ namespace StatsDirect.UI
                     extension = extension.ToLower();
                 if (".xls".Equals(extension) || ".xlsx".Equals(extension))
                 {
-                    CreateGrid(path, isTempFile);
+                    CreateGrid(path, isTempFile, null);
                     return true;
                 }
                 if (".rtf".Equals(extension) || ".htm".Equals(extension) || ".html".Equals(extension) || ".mht".Equals(extension) || ".mhtml".Equals(extension) || ".txt".Equals(extension))
@@ -1241,13 +1248,104 @@ namespace StatsDirect.UI
                 }
                 if (".sdw".Equals(extension))
                 {
-                    SdApplication.SoleInstance.MsgboxX("StatsDirect 3 cannot open .sdw files. Please use StatsDirect 2 to save the file in Excel format.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
-                    return false;
+                    return OpenSdwOrPrompt(path);
                 }
                 SdApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                 SdApplication.SoleInstance.NoteRecentFile(path, false);
                 return false;
             }
+        }
+
+        private bool OpenSdwOrPrompt(string path)
+        {
+            while (true)
+            {
+                string sd2Path;
+                bool sd2ExistsAndSupportsConversion = FindStatsDirect2(out sd2Path);
+                if (sd2ExistsAndSupportsConversion)
+                    return ConvertSdwAndOpen(path, sd2Path);
+
+                // If we get here, SD2 exists but does not support conversion (path not null) or does not exist at all (path null)
+                bool tryToOpen = PromptUserToInstallOrUpgradeSd2(null != sd2Path);
+                if (!tryToOpen)
+                    return false;
+            }
+        }
+
+        private bool ConvertSdwAndOpen(string sdwPath, string sd2Path)
+        {
+            SdApplication.SoleInstance.StartProgress("Converting file", false);
+            try
+            {
+                string arguments = "/FileConvert \"" + sdwPath + "\"";
+                ProcessStartInfo startInfo = new ProcessStartInfo { UseShellExecute = false, FileName = sd2Path, Arguments = arguments, WindowStyle = ProcessWindowStyle.Minimized, CreateNoWindow = true };
+                Process p = Process.Start(startInfo);
+                while (true)
+                {
+                    bool exited = p.WaitForExit(50);
+                    if (exited)
+                        break;
+                    if (SdApplication.SoleInstance.UpdateProgress(0))
+                    {
+                        p.Kill();
+                        throw new TemplateOperationCancelledException();
+                    }
+                }
+                int exitCode = p.ExitCode;
+                if (0 != exitCode)
+                    throw new Exception("The .sdw file was not converted successfully");
+                else
+                {
+                    // Assume the filename ends with ".sdw".  The converted file will be "~fromsd2.xls".
+                    string convertedPath = sdwPath.Substring(0, sdwPath.Length - 4) + "~fromsd2.xls";
+                    if (!File.Exists(convertedPath))
+                        throw new Exception("The converted file does not exist");
+
+                    // If we get here, the file should exist
+                    StatsDirectForm grid = CreateGrid(convertedPath, true, Path.GetFileNameWithoutExtension(convertedPath).Replace("~fromsd2", ""));
+                    File.Delete(convertedPath);
+                    return true;
+                }
+            }
+            finally
+            {
+                SdApplication.SoleInstance.FinishProgress();
+            }
+        }
+
+        private bool PromptUserToInstallOrUpgradeSd2(bool isUpgrade)
+        {
+            using (frmInstallStatsDirect2 f = new frmInstallStatsDirect2(isUpgrade))
+            {
+                f.ShowDialog(this);
+                return f.UserThinksStatsDirect2IsInstalled;
+            }
+        }
+
+        private bool FindStatsDirect2(out string sd2Path)
+        {
+            string programFilesFolder;
+            if (Environment.Is64BitOperatingSystem)
+                programFilesFolder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            else
+                programFilesFolder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string statsDirectFolder = Path.Combine(programFilesFolder, "StatsDirect");
+            if (!Directory.Exists(statsDirectFolder))
+            {
+                sd2Path = null;
+                return false;
+            }
+            string sd2ExePath = Path.Combine(statsDirectFolder, "StatsDirect.exe");
+            if (!File.Exists(sd2ExePath))
+            {
+                sd2Path = null;
+                return false;
+            }
+            // If we get here, there's something claiming to be StatsDirect.exe
+            sd2Path = sd2ExePath;
+            FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(sd2ExePath);
+            // 2.8.0 was the earliest version with the open functionality.  It's only available in StatsDirect 2.
+            return versionInfo.ProductMajorPart == 2 && versionInfo.ProductMinorPart >= 8;
         }
 
         private void newScriptToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3207,6 +3305,12 @@ namespace StatsDirect.UI
                 case "OptionDescriptor":
                     ctl = new ctlOptions((OptionDescriptor)fillable);
                     break;
+                case "ROCCutoff":
+                    {
+                        ROCCutoff rc = (ROCCutoff)fillable;
+                        ctl = new ctlROCCutoff(rc.SeriesRecord, rc.Weight, rc.Title);
+                        break;
+                    }
                 case "SortInPlace":
                     // HACK: Break layering completely
                     frmSpreadsheetGear gearForm = (frmSpreadsheetGear)ActiveMdiChild;
@@ -6293,10 +6397,22 @@ namespace StatsDirect.UI
 
         private void StartRGui()
         {
-            ICollection<RVersion> rVersions = R.RController.CheckR();
-            RVersion preferred = RController.PreferredRVersion(rVersions);
-            string guiPath = preferred.GuiPath;
-            System.Diagnostics.Process.Start(guiPath);
+            try
+            {
+                ICollection<RVersion> rVersions = R.RController.CheckR();
+                RVersion preferred = RController.PreferredRVersion(rVersions);
+                if (null == preferred)
+                {
+                    SdApplication.SoleInstance.Error("No version of R appears to be installed.  Please install R and try again.", "StatsDirect");
+                    return;
+                }
+                string guiPath = preferred.GuiPath;
+                System.Diagnostics.Process.Start(guiPath);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't start R", ex, false);
+            }
         }
     }
 }

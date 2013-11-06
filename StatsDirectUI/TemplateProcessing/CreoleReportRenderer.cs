@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.TemplateProcessing
 {
@@ -10,10 +11,10 @@ namespace StatsDirect.TemplateProcessing
     {
         public string Template { get; set; }
 
-        public override string Render(ParameterBag substitutions)
+        public override string Render(ITemplateHost host, ParameterBag substitutions)
         {
             string templateWithInclusions = ResolveTemplates(Template, new List<string>());
-            string templateWithPossibleDeadBlocks = SubstituteInternal(templateWithInclusions, substitutions);
+            string templateWithPossibleDeadBlocks = SubstituteInternal(host, templateWithInclusions, substitutions);
             string substitutedTemplate = RemoveBlocks(templateWithPossibleDeadBlocks);
             return Prettify(substitutedTemplate);
         }
@@ -168,7 +169,7 @@ namespace StatsDirect.TemplateProcessing
         /// <summary>
         /// Recursively fill in any values in this block, examining the template for nested blocks.
         /// </summary>
-        private string SubstituteInternal(string template, ParameterBag substitutions)
+        private string SubstituteInternal(ITemplateHost host, string template, ParameterBag substitutions)
         {
             if (null != substitutions)
             {
@@ -187,7 +188,7 @@ namespace StatsDirect.TemplateProcessing
                             IList<ParameterBag> value = null;
                             if (null != pair.Value)
                                 value = pair.Value.AsParameterBagList;
-                            string nestedResult = SubstituteInternal(nestedTemplate, value);
+                            string nestedResult = SubstituteInternal(host, nestedTemplate, value);
                             template = template.Replace(nestedTemplate, nestedResult);
                             nestedTemplate = FindNestedTemplate(template, nestedTemplateName);
                         }
@@ -195,9 +196,22 @@ namespace StatsDirect.TemplateProcessing
                     else
                     {
                         string value = "";
+                        string valueP = "";
+                        string valueU = "";
                         if (null != pair.Value && pair.Value.HasData)
+                        {
                             value = pair.Value.Data.ToString();
+                            if (pair.Value.IsDouble)
+                            {
+                                valueU = host.RoundU(pair.Value.AsDouble);
+                                valueP = host.pval(pair.Value.AsDouble);
+                            }
+                            else
+                                valueU = valueP = value;
+                        }
                         template = template.Replace("<in>" + pair.Key + "</in>", value);
+                        template = template.Replace("<inx>" + pair.Key + "</inx>", valueU);
+                        template = template.Replace("<inp>" + pair.Key + "</inp>", valueP);
                     }
                 }
                 // We may have a nested template, but nothing to put in it.  If this is the case, delete the template.
@@ -215,7 +229,7 @@ namespace StatsDirect.TemplateProcessing
         /// Recursively fill in a template.  We've found a nested template; clone it as many times as we have values, and fill it in.
         /// If there are no values, remove the template entirely.
         /// </summary>
-        private string SubstituteInternal(string template, IEnumerable<ParameterBag> substitutions)
+        private string SubstituteInternal(ITemplateHost host, string template, IEnumerable<ParameterBag> substitutions)
         {
             // If the template still has a /bs templatename/.../bf/ pair, strip them.
             if (template.StartsWith("<block"))
@@ -233,7 +247,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 foreach (ParameterBag substitutionDictionary in substitutions)
                 {
-                    filledValue += SubstituteInternal(template, substitutionDictionary);
+                    filledValue += SubstituteInternal(host, template, substitutionDictionary);
                 }
             }
             return filledValue;

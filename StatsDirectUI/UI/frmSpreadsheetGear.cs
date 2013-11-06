@@ -163,7 +163,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public override bool OpenFile(string filename, bool isTempFile)
+        public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
             if (null != workbookView.ActiveWorkbook)
             {
@@ -192,6 +192,8 @@ namespace StatsDirect.UI
             }
             if (null != wb)
                 workbookView.ActiveWorkbook = wb;
+            if (isTempFile && null != nameToDisplay)
+                SetUnsavedName(nameToDisplay);
             return null != wb;
         }
 

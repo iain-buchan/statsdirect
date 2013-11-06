@@ -1172,7 +1172,7 @@ namespace StatsDirect.Templates
 
         public StepResult ExecuteInternal(ReportStep reportStep, ParameterBag parameters, bool isRedo)
         {
-            string filledReport = reportStep.Substitute(parameters);
+            string filledReport = reportStep.Substitute(host, parameters);
 
             object /* Pane */ preferredPane = null;
             if (parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
