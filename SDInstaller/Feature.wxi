@@ -41,7 +41,7 @@
     <ComponentRef Id="test.xlsx" />
 
     <!-- Excel add-in -->
-    <ComponentRef Id="StatsDirectExcelLink.xla" />
+    <ComponentRef Id="StatsDirect3ExcelLink.xla" />
 
     <!-- Operations -->
     <ComponentRef Id="AbridgedLifetable.xml" />

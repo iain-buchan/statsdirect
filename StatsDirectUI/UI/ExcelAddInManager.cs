@@ -7,7 +7,7 @@ namespace StatsDirect.UI
 {
     public class ExcelAddInManager
     {
-        private const string Sdxla = "StatsDirectExcelLink.xla";
+        private const string Sdxla = "StatsDirect3ExcelLink.xla";
 
         public static bool IsExcelInstalled()
         {

@@ -1001,8 +1001,7 @@
     </Compile>
     <None Include="App.config" />
     <None Include="Assets\Data\test.xlsx" />
-    <None Include="Assets\Excel\StatsDirectExcelLink.xla" />
-    <None Include="Assets\Excel\StatsDirectExcelLink.xls" />
+    <None Include="Assets\Excel\StatsDirect3ExcelLink.xla" />
     <None Include="Assets\Operations\Operation.xsd" />
     <None Include="Assets\Template\chirxc.creole" />
     <None Include="Assets\Template\fisher.creole" />
@@ -1626,12 +1625,12 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>rem if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(ProjectDir)Assets\Excel\StatsDirectExcelLink.xla"
-</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets')" />

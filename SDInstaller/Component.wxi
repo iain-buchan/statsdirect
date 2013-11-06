@@ -78,8 +78,8 @@
 
   <!-- Excel add-in -->
   <Directory Id="Excel" Name="Excel">
-    <Component Id="StatsDirectExcelLink.xla">
-      <File Id="StatsDirectExcelLink.xla" KeyPath="yes" Name="StatsDirectExcelLink.xla" Checksum="yes" />
+    <Component Id="StatsDirect3ExcelLink.xla">
+      <File Id="StatsDirect3ExcelLink.xla" KeyPath="yes" Name="StatsDirect3ExcelLink.xla" Checksum="yes" />
     </Component>
   </Directory>
 

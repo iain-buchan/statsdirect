@@ -184,7 +184,7 @@ namespace StatsDirect.UI
                 wb = workbookView.ActiveWorkbookSet.Workbooks.Open(filename);
                 if (!isTempFile)
                     Path = filename;
-                dirty = isTempFile;
+                // dirty = isTempFile; Removed in #909
             }
             finally
             {
