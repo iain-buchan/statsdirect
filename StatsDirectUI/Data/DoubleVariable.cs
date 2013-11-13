@@ -214,7 +214,7 @@ namespace StatsDirect.Data
         {
             get
             {
-                return StatsDirect.Data.VariableType.DoubleType;
+                return StatsDirect.Data.VariableType.Double;
             }
         }
 

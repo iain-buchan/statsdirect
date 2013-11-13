@@ -320,8 +320,9 @@ namespace StatsDirect.UI
             int probeBottom = Math.Min(probeTop + PROBE_ROWS - 1, lastUsedRow);
             while (probeTop <= probeBottom)
             {
-                object[,] probe = GetCellObjects(probeColumn, probeTop, probeBottom);
-                for (int offset = 0; offset <= probe.GetUpperBound(0); offset++)
+                int nonHiddenRowCount;
+                object[,] probe = GetCellObjects(probeColumn, probeTop, probeBottom, out nonHiddenRowCount);
+                for (int offset = 0; offset < nonHiddenRowCount; offset++)
                 {
                     object value = probe[offset, 0];
                     if (null == value)
@@ -470,7 +471,7 @@ namespace StatsDirect.UI
                                 }
                             }
                             break;
-                        case VariableType.DoubleType:
+                        case VariableType.Double:
                             {
                                 DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
                                 double[] data = variable.Data;
@@ -961,8 +962,9 @@ namespace StatsDirect.UI
                             int gridColumn;
                             int gridFirstDataRow;
                             bool titleIsInData;
+                            bool wasFiltered;
                             string title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
-                            double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
+                            double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1, out wasFiltered);
 
                             // If there's no data in the row (for example if it's hidden), ignore the row
                             if (null == values)
@@ -987,7 +989,7 @@ namespace StatsDirect.UI
                                 SdApplication.SoleInstance.MsgboxX("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                                 return null;
                             }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered);
                             variable.TruncateDataToLength(size);
                         }
                         break;
@@ -999,8 +1001,9 @@ namespace StatsDirect.UI
                             int gridColumn;
                             int gridFirstDataRow;
                             bool titleIsInData;
+                            bool wasFiltered;
                             string title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
-                            double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
+                            double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1, out wasFiltered);
 
                             // If there's no data in the row (for example if it's hidden), ignore the row
                             if (null == values)
@@ -1008,7 +1011,7 @@ namespace StatsDirect.UI
 
                             // Find the last row
                             int lrow;
-                            for (lrow = dataRows - 1; lrow >= 0; lrow--)
+                            for (lrow = values.GetUpperBound(0); lrow >= 0; lrow--)
                                 if (values[lrow] != Constant.MISSING)
                                     break;
 
@@ -1023,13 +1026,12 @@ namespace StatsDirect.UI
                                     v = Constant.MISSING;
                                 variable.Data[row] = v;
                             }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered);
                         }
                         break;
-                    case DataAcquisitionMode.MODE3:
+                    case DataAcquisitionMode.GroupIdentifiers:
                     case DataAcquisitionMode.CategoryReplaceMissing:
                     case DataAcquisitionMode.CategoryCombineAllColumns:
-                    case DataAcquisitionMode.MODE6:
                     case DataAcquisitionMode.Text:
                         {
                             // code text categories as numbers
@@ -1041,23 +1043,25 @@ namespace StatsDirect.UI
                             int maxRowCount = int.MinValue;
                             for (int c = 0; c < cellSelection.TotalColumns; c++)
                             {
-                                int rc = cellSelection.ColumnSelections[c].RowCount;
+                                CellColumnSelection columnSelection = cellSelection.ColumnSelections[c];
+                                int rc = columnSelection.RowCount;
                                 if (rc < minRowCount)
                                     minRowCount = rc;
                                 if (rc > maxRowCount)
                                     maxRowCount = rc;
 
-                                int gridColumn = cellSelection.ColumnSelections[c].ColumnIndex;
-                                string qtitle =
-                                    GetCellText(cellSelection.ColumnSelections[c].RowIndex, gridColumn).Trim();
+                                int gridColumn = columnSelection.ColumnIndex;
+                                string qtitle = GetCellText(columnSelection.RowIndex, gridColumn).Trim();
                                 if (qtitle.Length < 3)
                                     isShort = true;
-                                string[] ColumnArray = GetCellTexts(gridColumn,
-                                                                    cellSelection.ColumnSelections[c].RowIndex + 1,
-                                                                    cellSelection.ColumnSelections[c].RowIndex +
-                                                                    cellSelection.ColumnSelections[c].RowCount - 1);
-                                foreach (string candidate in ColumnArray)
+                                int nonHiddenRowCount;
+                                string[] columnArray = GetCellTexts(gridColumn,
+                                                                    columnSelection.RowIndex + 1,
+                                                                    columnSelection.RowIndex + columnSelection.RowCount - 1,
+                                                                    out nonHiddenRowCount);
+                                for (int i = 0; i < nonHiddenRowCount; i++)
                                 {
+                                    string candidate = columnArray[i];
                                     string bufr = (null == candidate) ? "" : candidate.Trim();
                                     if (bufr.Length > 0)
                                     {
@@ -1111,20 +1115,27 @@ namespace StatsDirect.UI
 
                             // At this point, we know whether we have titles or not.  Now obtain our data strings.
                             string[,] hold = new string[cellSelection.LongestRowCount,cellSelection.TotalColumns];
+                            bool wasFiltered = false;
                             for (int c = 0; c < cellSelection.TotalColumns; c++)
                             {
                                 int rx = 0;
                                 int gridColumn = cellSelection.ColumnSelections[c].ColumnIndex;
                                 // get text not entry because we want formulae translated
-                                string[] ColumnArray = GetCellTexts(gridColumn,
+                                int nonHiddenRowCount;
+                                string[] columnArray = GetCellTexts(gridColumn,
                                                                     cellSelection.ColumnSelections[c].RowIndex,
-                                                                    cellSelection.ColumnSelections[c].RowIndex +
-                                                                    cellSelection.ColumnSelections[c].RowCount - 1);
-                                foreach (string t in ColumnArray)
+                                                                    cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1,
+                                                                    out nonHiddenRowCount);
+                                wasFiltered |= nonHiddenRowCount != cellSelection.ColumnSelections[c].RowCount;
+                                for (int i = 0; i < nonHiddenRowCount; i++)
                                 {
+                                    string t = columnArray[i];
                                     string bufr = (null == t) ? "" : t.Trim();
                                     hold[rx++, c] = bufr;
                                 }
+                                // Fill in blanks for any rows that have been filtered out
+                                while (rx < cellSelection.LongestRowCount)
+                                    hold[rx++, c] = string.Empty;
                             }
 
                             if (DataAcquisitionMode.CategoryReplaceMissing == mode)
@@ -1195,7 +1206,8 @@ namespace StatsDirect.UI
                                             cellSelection.ColumnSelections[c].ColumnIndex,
                                             cellSelection.ColumnSelections[c].RowIndex,
                                             cellSelection.ColumnSelections[c].RowCount, mode,
-                                            topRow > 0);
+                                            topRow > 0,
+                                            wasFiltered);
                                     }
                                 }
                             }
@@ -1285,7 +1297,8 @@ namespace StatsDirect.UI
                                                                       cellSelection.ColumnSelections[0].ColumnIndex,
                                                                       cellSelection.ColumnSelections[0].RowIndex,
                                                                       cellSelection.ColumnSelections[0].RowCount, mode,
-                                                                      topRow > 0);
+                                                                      topRow > 0,
+                                                                      wasFiltered);
                             }
                             else
                             {
@@ -1357,7 +1370,10 @@ namespace StatsDirect.UI
                                         cellSelection.ColumnSelections[c].WorksheetName,
                                         cellSelection.ColumnSelections[c].ColumnIndex,
                                         cellSelection.ColumnSelections[c].RowIndex,
-                                        cellSelection.ColumnSelections[c].RowCount, mode, topRow > 0);
+                                        cellSelection.ColumnSelections[c].RowCount,
+                                        mode,
+                                        topRow > 0,
+                                        wasFiltered);
                                 }
                             }
                         }
@@ -1375,11 +1391,12 @@ namespace StatsDirect.UI
                             bool titleIsInData;
                             variable.Title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
                             // mrow isn't required, as GetColumnTitle adjusts rowindexes and totrows to skip the title.
-                            DateTime[] values = GetCellDateValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
+                            bool wasFiltered;
+                            DateTime[] values = GetCellDateValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1, out wasFiltered);
 
                             // Find the last row
                             int lrow;
-                            for (lrow = dataRows - 1; lrow >= 0; lrow--)
+                            for (lrow = values.GetUpperBound(0); lrow >= 0; lrow--)
                                 if (values[lrow] != DateTime.MinValue)
                                     break;
 
@@ -1389,23 +1406,76 @@ namespace StatsDirect.UI
                             {
                                 variable.Data[r++] = values[row];
                             }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath,
+                                cellSelection.ColumnSelections[c].WorksheetName,
+                                gridColumn,
+                                cellSelection.ColumnSelections[c].RowIndex,
+                                dataRows,
+                                mode,
+                                titleIsInData,
+                                wasFiltered);
                         }
                         break;
                     case DataAcquisitionMode.TextWithFormulae:
                         for (int c = 0; c < cellSelection.TotalColumns; c++)
                         {
-                            StringVariable variable = new StringVariable(GetCellFormulae(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null)
-                            {Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false)};
+                            int nonHiddenRowCount;
+                            string[] formulae = GetCellFormulae(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1, out nonHiddenRowCount);
+                            // Trim any hidden rows before returning the variable - optimised for the very common case that there aren't any
+                            if (nonHiddenRowCount != formulae.Length)
+                            {
+                                string[] temp = new string[nonHiddenRowCount];
+                                Array.Copy(formulae, temp, nonHiddenRowCount);
+                                formulae = temp;
+                            }
+                            StringVariable variable = new StringVariable(formulae, null);
+                            IOrigin origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false, nonHiddenRowCount != formulae.Length);
+                            variable.Origin = origin;
                             frame.Variables.Add(variable);
+                        }
+                        break;
+                    case DataAcquisitionMode.Variant:
+                        {
+
+                            for (int c = 0; c < cellSelection.TotalColumns; c++)
+                            {
+                                CellColumnSelection cs = cellSelection.ColumnSelections[c];
+                                int dataRows;
+                                int gridColumn;
+                                int gridFirstDataRow;
+                                bool titleIsInData;
+                                string title = GetColumnTitle(cs, out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
+
+                                int nonHiddenRowCount;
+                                object[,] raw = GetCellObjects(cs.ColumnIndex, cs.RowIndex, cs.RowIndex + cs.RowCount - 1, out nonHiddenRowCount);
+                                while (nonHiddenRowCount > 0 && null == raw[nonHiddenRowCount - 1, 0])
+                                    --nonHiddenRowCount;
+                                object[] cooked = new object[nonHiddenRowCount];
+                                for (int i = 0; i < nonHiddenRowCount; i++)
+                                    cooked[i] = raw[i, 0];
+                                VariantVariable variable = new VariantVariable(cooked, title);
+                                IOrigin origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != raw.GetUpperBound(0));
+                                variable.Origin = origin;
+                                frame.Variables.Add(variable);
+                            }
                         }
                         break;
                     case DataAcquisitionMode.TextNoTitles:
                         for (int c = 0; c < cellSelection.TotalColumns; c++)
                         {
-                            StringVariable variable = new StringVariable(GetCellTexts(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1), null)
+                            CellColumnSelection cs = cellSelection.ColumnSelections[c];
+                            int nonHiddenRowCount;
+                            string[] texts = GetCellTexts(cs.ColumnIndex, cs.RowIndex, cs.RowIndex + cs.RowCount - 1, out nonHiddenRowCount);
+                            // Trim any hidden rows before returning the variable - optimised for the very common case that there aren't any
+                            if (nonHiddenRowCount != texts.Length)
                             {
-                                Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false)
+                                string[] temp = new string[nonHiddenRowCount];
+                                Array.Copy(texts, temp, nonHiddenRowCount);
+                                texts = temp;
+                            }
+                            StringVariable variable = new StringVariable(texts, null)
+                            {
+                                Origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != texts.Length)
                             };
                             frame.Variables.Add(variable);
                         }
@@ -1419,21 +1489,23 @@ namespace StatsDirect.UI
                             int gridFirstDataRow;
                             bool titleIsInData;
                             string title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
-                            double[] numericValues = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1);
+                            bool numericValuesWereFiltered;
+                            double[] numericValues = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1, out numericValuesWereFiltered);
 
                             // If there's no data in the row (for example if it's hidden), ignore the row
                             if (null == numericValues)
                                 continue;
 
-                            string[] textValues = GetCellTexts(gridColumn, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1);
+                            int nonHiddenTextRowCount;
+                            string[] textValues = GetCellTexts(gridColumn, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1, out nonHiddenTextRowCount);
 
                             // Find the last row
                             int lastNumericRow;
-                            for (lastNumericRow = dataRows - 1; lastNumericRow >= 0; lastNumericRow--)
+                            for (lastNumericRow = numericValues.GetUpperBound(0); lastNumericRow >= 0; lastNumericRow--)
                                 if (numericValues[lastNumericRow] != Constant.MISSING)
                                     break;
                             int lastTextRow;
-                            for (lastTextRow = textValues.Length - 1; lastTextRow >= 0; lastTextRow--)
+                            for (lastTextRow = nonHiddenTextRowCount - 1; lastTextRow >= 0; lastTextRow--)
                                 if (!string.IsNullOrWhiteSpace(textValues[lastTextRow]))
                                     break;
                             int lastRow = Math.Max(lastNumericRow, lastTextRow);
@@ -1485,7 +1557,7 @@ namespace StatsDirect.UI
 
                                 // Fill in column title
                                 variable.Title = title;
-                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, titleIsInData);
+                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, titleIsInData, nonHiddenTextRowCount != textValues.Length);
                                 if (mode == DataAcquisitionMode.NumericCodingTextToCategories)
                                 {
                                     frame.Variables.Add(variable);
@@ -1508,7 +1580,7 @@ namespace StatsDirect.UI
                                         v = Constant.MISSING;
                                     variable.Data[row] = v;
                                 }
-                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData);
+                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, nonHiddenTextRowCount != textValues.Length);
                                 if (mode == DataAcquisitionMode.NumericCodingTextToCategories)
                                 {
                                     frame.Variables.Add(variable);
@@ -1991,7 +2063,7 @@ namespace StatsDirect.UI
         /// Amends ccs.RowIndex and totrows to step past a column title if found.
         /// </summary>
         /// <param name="ccs"></param>
-        /// <param name="dataRows">Filled in with the total number of DATA rows.  This may not be the same as the number of non-title rows, as there may be blanks between the titles and the data.</param>
+        /// <param name="dataRows">Filled in with the total number of visible and hidden DATA rows.  This may not be the same as the number of non-title rows, as there may be blanks between the titles and the data.</param>
         /// <param name="gridFirstDataRow">Filled in with the grid row index of the first non-title, non-missing data row.</param>
         /// <param name="gridColumn">Filled in with the grid column index of the column.</param>
         /// <param name="titleIsInData">true iff the title has been found within the data; false if the title is auto-generated.</param>
@@ -2164,19 +2236,43 @@ namespace StatsDirect.UI
         /// <param name="column">The grid column (indexed from 0) from which to obtain the values</param>
         /// <param name="firstRow">The first grid row (indexed from 0) to include in the results</param>
         /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
+        /// <param name="nonHiddenRowCount">The number of non-hidden objects in the array.  Note that raw retrieved values will have been copied down the array to obscure hidden objects in this case; the top end of the array will NOT have been null-filled, so the values in return[nonHiddenRowCount] and above should be considered unknown.</param>
         /// <returns></returns>
-        object[,] GetCellObjects(int column, int firstRow, int lastRow)
+        object[,] GetCellObjects(int column, int firstRow, int lastRow, out int nonHiddenRowCount)
         {
             if (lastRow < firstRow)
+            {
+                nonHiddenRowCount = 0;
                 return new object[0, 0];
+            }
             workbookView.GetLock();
             try
             {
                 object val = workbookView.ActiveWorksheet.Cells[firstRow, column, lastRow, column].Value;
                 if (null != val && val.GetType().IsArray)
                 {
-                    return (object[,])val;
+                    // If we get here, the returned value is an array.  Some of the rows may be hidden; if so, we should return only the visible data.
+                    object[,] valArray = (object[,])val;
+                    int validRows = 0;
+                    for (int rowOffset = 0; rowOffset <= lastRow - firstRow; rowOffset++)
+                    {
+                        bool hidden = workbookView.ActiveWorksheet.Cells[firstRow + rowOffset, column].EntireRow.Hidden;
+                        if (!hidden)
+                        {
+                            if (validRows != rowOffset)
+                            {
+                                // We can guarantee there is only one column, so the array minor index must always be 0
+                                valArray[validRows, 0] = valArray[rowOffset, 0];
+                            }
+                            validRows++;
+                        }
+                    }
+                    nonHiddenRowCount = validRows;
+                    return valArray;
                 }
+
+                // If we get here, the returned value is a single cell.  It may still be hidden.
+                nonHiddenRowCount = (workbookView.ActiveWorksheet.Cells[firstRow, column].EntireRow.Hidden) ? 0 : 1;
                 return new[,] { { val } };
             }
             finally
@@ -2188,21 +2284,24 @@ namespace StatsDirect.UI
         /// <summary>
         /// Obtain a raw array of formulae from SpreadsheetGear, ensuring that even a single cell is wrapped in a 2-D array for subsequent processing.
         /// </summary>
-        /// <param name="Column">The grid column (indexed from 0) from which to obtain the values</param>
-        /// <param name="FirstRow">The first grid row (indexed from 0) to include in the results</param>
-        /// <param name="LastRow">The last grid row (indexed from 0) to include in the results</param>
+        /// <param name="column">The grid column (indexed from 0) from which to obtain the values</param>
+        /// <param name="firstRow">The first grid row (indexed from 0) to include in the results</param>
+        /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
         /// <returns></returns>
-        string[] GetCellFormulae(int Column, int FirstRow, int LastRow)
+        string[] GetCellFormulae(int column, int firstRow, int lastRow, out int nonHiddenRowCount)
         {
-            string[] result = new string[LastRow - FirstRow + 1];
             workbookView.GetLock();
             try
             {
-                for (int row = FirstRow; row <= LastRow; row++)
+                string[] result = new string[lastRow - firstRow + 1];
+                int validRows = 0;
+                for (int row = firstRow; row <= lastRow; row++)
                 {
-                    string formula = workbookView.ActiveWorksheet.Cells[row, Column].Formula;
-                    result[row - FirstRow] = formula;
+                    bool hidden = workbookView.ActiveWorksheet.Cells[row, column].EntireRow.Hidden;
+                    if (!hidden)
+                        result[validRows++] = workbookView.ActiveWorksheet.Cells[row, column].Formula;
                 }
+                nonHiddenRowCount = validRows;
                 return result;
             }
             finally
@@ -2211,16 +2310,21 @@ namespace StatsDirect.UI
             }
         }
 
-        double[] GetCellValues(int column, int firstRow, int lastRow)
+        double[] GetCellValues(int column, int firstRow, int lastRow, out bool wasFiltered)
         {
             if (IsHiddenColumn(column))
+            {
+                wasFiltered = false;
                 return null;
+            }
 
-            object[,] values = GetCellObjects(column, firstRow, lastRow);
+            int nonHiddenRowCount;
+            object[,] values = GetCellObjects(column, firstRow, lastRow, out nonHiddenRowCount);
 
-            double[] returnValues = new double[values.GetUpperBound(0) + 1];
-            for (int r = values.GetLowerBound(0); r <= values.GetUpperBound(0); r++)
+            double[] returnValues = new double[nonHiddenRowCount];
+            for (int r = 0; r < nonHiddenRowCount; r++)
                 returnValues[r] = ToCellValue(values[r, 0]);
+            wasFiltered = nonHiddenRowCount != returnValues.GetUpperBound(0) + 1;
             return returnValues;
         }
 
@@ -2232,33 +2336,39 @@ namespace StatsDirect.UI
             return isHidden;
         }
 
-        DateTime[] GetCellDateValues(int column, int firstRow, int lastRow)
+        DateTime[] GetCellDateValues(int column, int firstRow, int lastRow, out bool wasFiltered)
         {
-            object[,] values = GetCellObjects(column, firstRow, lastRow);
+            int nonHiddenRowCount;
+            object[,] values = GetCellObjects(column, firstRow, lastRow, out nonHiddenRowCount);
 
-            DateTime[] returnValues = new DateTime[values.GetUpperBound(0) + 1];
-            for (int r = values.GetLowerBound(0); r <= values.GetUpperBound(0); r++)
+            DateTime[] returnValues = new DateTime[nonHiddenRowCount];
+            for (int r = 0; r < nonHiddenRowCount; r++)
                 returnValues[r] = ToCellDateValue(values[r, 0]);
+            wasFiltered = nonHiddenRowCount != lastRow - firstRow + 1;
             return returnValues;
         }
 
         /// <summary>
         /// Obtain a raw array of display strings from SpreadsheetGear, ensuring that even a single cell is wrapped in a 2-D array for subsequent processing.
         /// </summary>
-        /// <param name="Column">The grid column (indexed from 0) from which to obtain the values</param>
-        /// <param name="FirstRow">The first grid row (indexed from 0) to include in the results</param>
-        /// <param name="LastRow">The last grid row (indexed from 0) to include in the results</param>
+        /// <param name="column">The grid column (indexed from 0) from which to obtain the values</param>
+        /// <param name="firstRow">The first grid row (indexed from 0) to include in the results</param>
+        /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
         /// <returns></returns>
-        string[] GetCellTexts(int Column, int FirstRow, int LastRow)
+        string[] GetCellTexts(int column, int firstRow, int lastRow, out int nonHiddenRowCount)
         {
             workbookView.GetLock();
             try
             {
-                string[] returnedValues = new string[LastRow - FirstRow + 1];
-                for (int i = 0; i <= LastRow - FirstRow; i++)
+                string[] returnedValues = new string[lastRow - firstRow + 1];
+                int validRows = 0;
+                for (int i = 0; i <= lastRow - firstRow; i++)
                 {
-                    returnedValues[i] = workbookView.ActiveWorksheet.Cells[FirstRow + i, Column].Text;
+                    bool hidden = workbookView.ActiveWorksheet.Cells[firstRow + i, column].EntireRow.Hidden;
+                    if (!hidden)
+                        returnedValues[validRows++] = workbookView.ActiveWorksheet.Cells[firstRow + i, column].Text;
                 }
+                nonHiddenRowCount = validRows;
                 return returnedValues;
             }
             finally
@@ -2702,7 +2812,7 @@ namespace StatsDirect.UI
             ((IGrid)this).ClearSelection();
 
             bool userCancelled;
-            DataFrame groupFrame = GetCellArray(0, DataAcquisitionMode.MODE3, 1, 1, "Select GROUP IDENTIFIER", null, true, false, out userCancelled, out wasPivoted);
+            DataFrame groupFrame = GetCellArray(0, DataAcquisitionMode.GroupIdentifiers, 1, 1, "Select GROUP IDENTIFIER", null, true, false, out userCancelled, out wasPivoted);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
             if (wasPivoted)
@@ -2751,7 +2861,7 @@ namespace StatsDirect.UI
 
             ((IGrid)this).ClearSelection();
 
-            DataFrame subGroupFrame = GetCellEqual(rows, DataAcquisitionMode.MODE3, 1, 1, subGroupSelectionLabel, null, true, DataAcquisitionWidth.Wide, false, out userCancelled);
+            DataFrame subGroupFrame = GetCellEqual(rows, DataAcquisitionMode.GroupIdentifiers, 1, 1, subGroupSelectionLabel, null, true, DataAcquisitionWidth.Wide, false, out userCancelled);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
             ClassifierVariable subGroupVariable = subGroupFrame.Variables[0].AsClassifierVariable;
@@ -4006,13 +4116,26 @@ namespace StatsDirect.UI
         {
             bool userCancelled;
             bool wasPivoted;
-            DataFrame frame = GetCellArray(0, DataAcquisitionMode.NumericReplaceMissing, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out userCancelled, out wasPivoted);
+            DataFrame frame = GetCellArray(0, DataAcquisitionMode.Variant, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out userCancelled, out wasPivoted);
             if (userCancelled)
                 return;
             StringBuilder sb = new StringBuilder();
             RConvert.ToR(sb, "copied.data", frame);
             Clipboard.Clear();
             Clipboard.SetText(sb.ToString(), TextDataFormat.Text);
+        }
+
+        internal void ToggleFilters()
+        {
+            workbookView.GetLock();
+            try
+            {
+                workbookView.RangeSelection.AutoFilter();
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
     }
 }

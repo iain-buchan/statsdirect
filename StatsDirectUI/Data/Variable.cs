@@ -124,6 +124,20 @@ namespace StatsDirect.Data
         }
 
         ///  <summary>
+        ///  True if this Variable is a variant variable; false if it is not
+        ///  </summary>
+        ///  <value></value>
+        ///  <returns></returns>
+        [XmlIgnore]
+        public virtual bool IsVariantVariable
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        ///  <summary>
         ///  Ensure the data array is allocated and at least MinimumLength items in length.  Any new elements will be filled with the platform default value.
         ///  </summary>
         ///  <param name="minimumLength">The minimum length of the array.  Note this is a length, not a bound.  The array will have items from 0 to MinimumLength - 1.</param>
@@ -184,6 +198,15 @@ namespace StatsDirect.Data
             get
             {
                 throw new InvalidOperationException("Cannot cast variable to StringVariable");
+            }
+        }
+
+        [XmlIgnore]
+        public virtual VariantVariable AsVariantVariable
+        {
+            get
+            {
+                throw new InvalidOperationException("Cannot cast variable to VariantVariable");
             }
         }
 

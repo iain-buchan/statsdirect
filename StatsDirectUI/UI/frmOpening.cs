@@ -17,12 +17,19 @@ namespace StatsDirect.UI
 
         private void cmdOk_Click(object sender, EventArgs e)
         {
-            if (rdoNewWorkbook.Checked)
-                CreateNewWorkbook();
-            else if (rdoNewReport.Checked)
-                CreateNewReport();
-            else
-                OpenFromList();
+            try
+            {
+                if (rdoNewWorkbook.Checked)
+                    CreateNewWorkbook();
+                else if (rdoNewReport.Checked)
+                    CreateNewReport();
+                else
+                    OpenFromList();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't create or open file", ex, false);
+            }
         }
 
         private void cmdCancel_Click(object sender, EventArgs e)
@@ -40,27 +47,62 @@ namespace StatsDirect.UI
 
         private void cmdNewWorkbook_Click(object sender, EventArgs e)
         {
-            CreateNewWorkbook();
+            try
+            {
+                CreateNewWorkbook();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't create workbook", ex, false);
+            }
         }
 
         private void cmdNewReport_Click(object sender, EventArgs e)
         {
-            CreateNewReport();
+            try
+            {
+                CreateNewReport();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't create report", ex, false);
+            }
         }
 
         private void cmdBrowse_Click(object sender, EventArgs e)
         {
-            BrowseForFile();
+            try
+            {
+                BrowseForFile();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't find or open file", ex, false);
+            }
         }
 
         private void cmdBrowseImage_Click(object sender, EventArgs e)
         {
-            BrowseForFile();
+            try
+            {
+                BrowseForFile();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't find or open file", ex, false);
+            }
         }
 
         private void lstRecent_DoubleClick(object sender, EventArgs e)
         {
-            OpenFromList();
+            try
+            {
+                OpenFromList();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't open file", ex, false);
+            }
         }
 
         private void lstRecent_Enter(object sender, EventArgs e)
@@ -73,7 +115,14 @@ namespace StatsDirect.UI
         {
             if ('\n' == e.KeyChar)
             {
-                OpenFromList();
+                try
+                {
+                    OpenFromList();
+                }
+                catch (Exception ex)
+                {
+                    SdApplication.SoleInstance.FriendlyError("Couldn't open file", ex, false);
+                }
                 e.Handled = true;
             }
             else if (27 == e.KeyChar)
@@ -129,7 +178,14 @@ namespace StatsDirect.UI
             DateTime now = DateTime.Now;
             if (lastNewWorkbookClick.AddMilliseconds(doubleClickMilliseconds) > now)
             {
-                CreateNewWorkbook();
+                try
+                {
+                    CreateNewWorkbook();
+                }
+                catch (Exception ex)
+                {
+                    SdApplication.SoleInstance.FriendlyError("Couldn't create workbook", ex, false);
+                }
             }
             else
             {
@@ -143,7 +199,14 @@ namespace StatsDirect.UI
             DateTime now = DateTime.Now;
             if (lastNewReportClick.AddMilliseconds(doubleClickMilliseconds) > now)
             {
-                CreateNewReport();
+                try
+                {
+                    CreateNewReport();
+                }
+                catch (Exception ex)
+                {
+                    SdApplication.SoleInstance.FriendlyError("Couldn't create report", ex, false);
+                }
             }
             else
             {

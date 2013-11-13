@@ -91,6 +91,7 @@
                 <menu-item label="&amp;Create Sorted Variables" operation="Sort" />
               </sub-items>
             </menu-item>
+            <menu-item label="&amp;Filter Worksheet Rows" operation="ToggleFilters" />
             <menu-item label="R&amp;otate Data Block" operation="Rotate" />
             <menu-item label="&amp;Combine Groups" operation="Combine" />
             <menu-item label="&amp;Split Combined Groups" operation="GroupSplit" />

@@ -166,6 +166,7 @@
     <Compile Include="Builtins\ChartExplorer.cs" />
     <Compile Include="Builtins\Chi.cs" />
     <Compile Include="Builtins\ConvertUnitsOptions.cs" />
+    <Compile Include="Builtins\ToggleFiltersOptions.cs" />
     <Compile Include="Builtins\Coxreg.cs" />
     <Compile Include="Builtins\Describe.cs" />
     <Compile Include="Builtins\Distribution.cs" />
@@ -239,6 +240,7 @@
     <Compile Include="Configuration\SDConfiguration.cs" />
     <Compile Include="Data\ClassifierVariable.cs" />
     <Compile Include="Data\ColumnData.cs" />
+    <Compile Include="Data\VariantVariable.cs" />
     <Compile Include="Data\DataFrame.cs" />
     <Compile Include="Data\DataFrame2D.cs" />
     <Compile Include="Data\DateVariable.cs" />
@@ -1207,6 +1209,7 @@
     </Content>
     <Content Include="Assets\Operations\ConvertUnits.xml" />
     <Content Include="Assets\Operations\ConvertUnitsScreen.xml" />
+    <Content Include="Assets\Operations\ToggleFilters.xml" />
     <Content Include="Assets\Operations\LOESS.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1630,7 +1633,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets')" />

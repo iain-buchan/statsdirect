@@ -5,10 +5,11 @@ namespace StatsDirect.Data
     [ Serializable ]
     public enum VariableType 
     { 
-        DoubleType,
+        Double,
         ClassifierType,
         StringType,
         DateType,
+        Variant
     } 
     
     

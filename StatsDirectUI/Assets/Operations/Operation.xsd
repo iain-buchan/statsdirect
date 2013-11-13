@@ -318,7 +318,6 @@
       <xs:enumeration value="MODE3" />
       <xs:enumeration value="CategoryReplaceMissing" />
       <xs:enumeration value="CategoryCombineAllColumns" />
-      <xs:enumeration value="MODE6" />
       <xs:enumeration value="Text" />
     </xs:restriction>
   </xs:simpleType>

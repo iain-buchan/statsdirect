@@ -105,8 +105,10 @@ namespace StatsDirect.R
         {
             if (variable.IsDoubleVariable)
                 ToR(sb, variable.AsDoubleVariable);
-            if (variable.IsStringVariable)
+            else if (variable.IsStringVariable)
                 ToR(sb, variable.AsStringVariable);
+            else if (variable.IsVariantVariable)
+                ToR(sb, variable.AsVariantVariable);
         }
 
         public static void ToR(StringBuilder sb, DoubleVariable variable)
@@ -141,12 +143,51 @@ namespace StatsDirect.R
             sb.Append(")");
         }
 
+        public static void ToR(StringBuilder sb, VariantVariable variable)
+        {
+            object[] data = variable.Data;
+            sb.Append("c(");
+            bool first = true;
+            foreach (object value in data)
+            {
+                if (first)
+                    first = false;
+                else
+                    sb.Append(",");
+                ToR(sb, value);
+            }
+            sb.Append(")");
+        }
+
+        public static void ToR(StringBuilder sb, object value)
+        {
+            if (null == value)
+                sb.Append("NA");
+            else if (value is double)
+                ToR(sb, (double)value);
+            else if (value is string)
+                ToR(sb, (string)value);
+            else if (value is int)
+                ToR(sb, (int)value);
+            else if (value is bool)
+                ToR(sb, (bool)value);
+            else if (value is DateTime)
+                ToR(sb, (DateTime)value);
+        }
+
         public static void ToR(StringBuilder sb, double value)
         {
             if (Constant.MISSING == value)
                 sb.Append("NA");
             else
                 sb.Append(value.ToString("R"));
+        }
+
+        public static void ToR(StringBuilder sb, DateTime value)
+        {
+            sb.Append("as.Date(\"");
+            sb.Append(value.ToString("yyyy-MM-dd hh:mm:ss"));
+            sb.Append(")");
         }
 
         public static void ToR(StringBuilder sb, int value)

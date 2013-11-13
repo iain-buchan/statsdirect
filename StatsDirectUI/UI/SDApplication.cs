@@ -1245,7 +1245,8 @@ namespace StatsDirect.UI
                 case "ROCCutoff":
                 case "Scores":
                 case "SortInPlace":
-                    return AmendUsingControl(fillable);
+                case "ToggleFilters":
+                    return ToggleFilters();
                 case "Categorise":
                     return Amend((Builtins.CategoriseOptions)fillable);
                 case "ChartExplorer":
@@ -1258,6 +1259,13 @@ namespace StatsDirect.UI
                 default:
                     throw new ArgumentOutOfRangeException("fillable", fillable, "fillable.FillerToUse: Unknown option");
             }
+        }
+
+        private ParameterBag ToggleFilters()
+        {
+            if (null != mainWindow)
+                mainWindow.ToggleFilters();
+            return new ParameterBag();
         }
 
         private ParameterBag AmendUsingControl(IFillable fillable)

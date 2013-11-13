@@ -4,12 +4,12 @@ using StatsDirect.Utilities;
 namespace StatsDirect.Data
 {
     ///  <summary>
-    ///  Represents a single string-based non-classifier variable/factor/column/field.
+    ///  Represents a single variant variable/factor/column/field.
     ///  </summary>
     [Serializable]
-    public class StringVariable : Variable 
+    public class VariantVariable : Variable 
     { 
-        private string[] _data; 
+        private object[] _data; 
         
         ///  <summary>
         ///  Manage the entire data array at one time
@@ -17,7 +17,7 @@ namespace StatsDirect.Data
         ///  <value>The new data array to set</value>
         ///  <returns>The current data array</returns>
         ///  <remarks></remarks>
-        public string[] Data 
+        public object[] Data 
         { 
             get 
             { 
@@ -29,24 +29,24 @@ namespace StatsDirect.Data
             } 
         } 
         
-        public StringVariable( int length, string title ) 
+        public VariantVariable( int length, string title ) 
         { 
             EnsureLength( length ); 
             Title = title; 
         } 
         
-        public StringVariable( string[] Data ) 
+        public VariantVariable( object[] Data ) 
         { 
             _data = Data; 
-        } 
-        
-        public StringVariable( string[] Data, string title ) 
+        }
+
+        public VariantVariable(object[] Data, string title) 
         { 
             _data = Data; 
             Title = title; 
-        } 
-        
-        public StringVariable() 
+        }
+
+        public VariantVariable() 
         { 
             //  Nothing else required
         } 
@@ -58,14 +58,12 @@ namespace StatsDirect.Data
         ///  <param name="value">The new value to set. Storage management is done internally, so the array is always sufficently large to hold the value</param>
         ///  <returns>The value at the specified index, or an exception if the index is out of bounds</returns>
         ///  <remarks></remarks>
-        public void set_Data(int index, string value) 
+        public void set_Data(int index, object value) 
         { 
             EnsureLength( index + 1 ); 
             _data[ index ] = value; 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Property Length
         public override int Length 
         { 
             get
@@ -74,40 +72,37 @@ namespace StatsDirect.Data
             }
         } 
         
-        // TRANSMISSINGCOMMENT: Method EnsureLength
         public override void EnsureLength( int minimumLength ) 
         { 
             if ( ( _data == null ) ) 
-            { 
-                _data = new string[ minimumLength ]; 
+            {
+                _data = new object[minimumLength]; 
             } 
             else 
             { 
                 if ( _data.Length < minimumLength ) 
-                { 
-                    string[] transTemp0 = new string[ minimumLength ]; 
+                {
+                    object[] transTemp0 = new object[minimumLength]; 
                     Array.Copy( _data, transTemp0, _data.Length ); 
                     _data = transTemp0; 
                 } 
             } 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Method EnsureLength
         public override void EnsureLength( int minimumLength, bool useMissing ) 
         { 
             int currentLength; 
             if ( ( _data == null ) ) 
             { 
-                currentLength = 0; 
-                _data = new string[ minimumLength ]; 
+                currentLength = 0;
+                _data = new object[minimumLength]; 
             } 
             else 
             { 
                 currentLength = _data.Length; 
                 if ( _data.Length < minimumLength ) 
-                { 
-                    string[] transTemp1 = new string[ minimumLength ]; 
+                {
+                    object[] transTemp1 = new object[minimumLength]; 
                     Array.Copy( _data, transTemp1, _data.Length ); 
                     _data = transTemp1; 
                 } 
@@ -121,30 +116,24 @@ namespace StatsDirect.Data
             } 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Method TruncateDataToLength
         public override void TruncateDataToLength( int maximumLength ) 
         { 
             if ( ( _data.Length > maximumLength ) ) 
-            { 
-                string[] transTemp2 = new string[ maximumLength ]; 
+            {
+                object[] transTemp2 = new object[maximumLength]; 
                 Array.Copy( _data, transTemp2, maximumLength ); 
                 _data = transTemp2; 
             } 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Method SameSizeForResults
         public override Variable SameSizeForResults() 
         { 
-            Variable newVariable = new StringVariable(); 
+            Variable newVariable = new VariantVariable(); 
             newVariable.EnsureLength( Length ); 
             return newVariable; 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Property AsStringVariable
-        public override StringVariable AsStringVariable 
+        public override VariantVariable AsVariantVariable 
         { 
             get 
             { 
@@ -152,49 +141,41 @@ namespace StatsDirect.Data
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property VariableType
         public override VariableType VariableType 
         { 
             get 
             { 
-                return StatsDirect.Data.VariableType.StringType; 
+                return StatsDirect.Data.VariableType.Variant; 
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Method CopyAndStripForRedo
         public override object CopyAndStripForRedo( bool shouldKeepData ) 
         { 
-            StringVariable copy = new StringVariable(); 
+            VariantVariable copy = new VariantVariable(); 
             CopyAndStripForRedoInto( copy, shouldKeepData ); 
             return copy; 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Method CopyAndStripForRedoInto
-        protected void CopyAndStripForRedoInto( StringVariable copy, bool ShouldKeepData ) 
+        protected void CopyAndStripForRedoInto( VariantVariable copy, bool shouldKeepData ) 
         { 
-            base.CopyAndStripForRedoInto( copy, ShouldKeepData ); 
-            if ( Origin == null || ShouldKeepData ) 
+            base.CopyAndStripForRedoInto( copy, shouldKeepData ); 
+            if ( Origin == null || shouldKeepData ) 
             { 
                 //  Note: This is deliberately a shallow copy for speed.  It does mean that callers should not alter anything in copy's data, though.
                 copy._data = _data; 
             } 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Method StealDataFrom
         public override void StealDataFrom( Variable victim ) 
         { 
-            if ( !( victim.IsStringVariable ) ) 
+            if ( !( victim.IsVariantVariable ) ) 
             { 
                 throw new InvalidCastException( "Victim must be of the same type when stealing variables" ); 
             } 
-            _data = victim.AsStringVariable._data; 
+            _data = victim.AsVariantVariable._data; 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Property IsStringVariable
-        public override bool IsStringVariable 
+        public override bool IsVariantVariable 
         { 
             get 
             { 
@@ -202,7 +183,6 @@ namespace StatsDirect.Data
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property HasData
         protected override bool HasData 
         { 
             get 

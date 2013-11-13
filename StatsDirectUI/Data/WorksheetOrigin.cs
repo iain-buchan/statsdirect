@@ -9,7 +9,7 @@ namespace StatsDirect.Data
     [XmlType("worksheet-origin")]
     public class WorksheetOrigin : IOrigin
     {
-        public WorksheetOrigin(string workbookPath, string worksheetName, int column, int topRow, int rows, DataAcquisitionMode mode, bool hasTitle)
+        public WorksheetOrigin(string workbookPath, string worksheetName, int column, int topRow, int rows, DataAcquisitionMode mode, bool hasTitle, bool wasFiltered)
         {
             WorkbookPath = workbookPath;
             WorksheetName = worksheetName;
@@ -60,6 +60,9 @@ namespace StatsDirect.Data
 
         [XmlElement("has-title")]
         public bool HasTitle { get; set; }
+
+        [XmlElement("was-filtered")]
+        public bool WasFiltered { get; set; }
     }
 
 

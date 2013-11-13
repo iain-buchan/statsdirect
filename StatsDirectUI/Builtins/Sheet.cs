@@ -2058,5 +2058,12 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = host.Amend(convertUnitsOptions, parameters);
             return new StepResult(StepSuccess.Success, outputParameters);
         }
+
+        internal static StepResult ShtToggleFilters(ITemplateHost host, ParameterBag parameters)
+        {
+            //  A gross hack - this just hands off to the UI.
+            host.Amend(new ToggleFiltersOptions(), parameters);
+            return new StepResult(StepSuccess.Success, new ParameterBag());
+        }
     }
 }

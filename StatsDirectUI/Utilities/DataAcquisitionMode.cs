@@ -4,28 +4,28 @@
     {
         NotSet = 0,
         /// <summary>
-        /// Acquire doubles; missing rows are removed from the output
+        /// Doubles; missing values are removed from the output
         /// </summary>
         NumericSkipMissing = 1,
         /// <summary>
-        /// Acquire doubles; missing rows are preserved in the output, replaced with Constant.MISSING.
+        /// Doubles; missing rows are preserved in the output, replaced with Constant.MISSING.
         /// </summary>
         NumericReplaceMissing = 2,
         /// <summary>
-        /// Ported from SD2, unknown purpose
+        /// Acquire identifiers for groups or subgroups
         /// </summary>
-        MODE3 = 3,
+        GroupIdentifiers = 3,
         CategoryReplaceMissing = 4,
         CategoryCombineAllColumns = 5,
-        /// <summary>
-        /// Ported from SD2, unknown purpose
-        /// </summary>
-        MODE6 = 6,
         Text = 101,
         DateReplaceMissing = 102,
         TextWithFormulae = 103,
         TextNoTitles = 104,
         NumericCodingTextToCategories = 105,
-        NumericCodingTextToDummies = 106
+        NumericCodingTextToDummies = 106,
+        /// <summary>
+        /// Whatever we can get, of whatever types.  Used for R export.
+        /// </summary>
+        Variant = 107
     }
 }

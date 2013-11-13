@@ -252,6 +252,7 @@ namespace StatsDirect.Builtins
                 new Builtin("shtSortInPlace", Sheet.ShtSortInPlace, InputDuringStep.Always),
                 new Builtin("shtStandardize", Sheet.ShtStandardize, InputDuringStep.Never),
                 new Builtin("shtTabulate", Tables.ShtTabulate, InputDuringStep.Never),
+                new Builtin("shtToggleFilters", Sheet.ShtToggleFilters, InputDuringStep.Never),
                 new Builtin("shtTransformAngular", Sheet.ShtTransformAngular, InputDuringStep.Never),
                 new Builtin("shtTransformCumulate", Sheet.ShtTransformCumulate, InputDuringStep.Never),
                 new Builtin("shtTransformECDF", Sheet.ShtTransformECDF, InputDuringStep.Never),

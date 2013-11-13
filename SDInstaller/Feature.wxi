@@ -292,6 +292,7 @@
     <ComponentRef Id="SurvivalPlot.xml" />
     <ComponentRef Id="Tabulate.xml" />
     <ComponentRef Id="TextCode.xml" />
+    <ComponentRef Id="ToggleFilters.xml" />
     <ComponentRef Id="TPaired.xml" />
     <ComponentRef Id="TransformAngular.xml" />
     <ComponentRef Id="TransformCumulate.xml" />

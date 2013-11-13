@@ -1,5 +1,5 @@
-#define RELEASE_EXCEPTIONS
-// #define WATCH_EXCEPTIONS
+// #define RELEASE_EXCEPTIONS
+#define WATCH_EXCEPTIONS
 
 // If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
 // Current uses:
@@ -1275,8 +1275,40 @@ namespace StatsDirect.UI
         private bool ConvertSdwAndOpen(string sdwPath, string sd2Path)
         {
             SdApplication.SoleInstance.StartProgress("Converting file", false);
+            string originalSdwPath = sdwPath;
             try
             {
+                // Name our converted file and try to create one to see if we can (and hence if we believe SD2 will be able to).
+                // Assume the filename ends with ".sdw".  The converted file will be "~fromsd2.xls".
+                string convertedPath = sdwPath.Substring(0, sdwPath.Length - 4) + "~fromsd2.xls";
+                // If we can convert the file in situ, do so.  If not (because we can't write the new file), copy to a temporary location which we expect to be writable, then convert.
+                bool canWrite;
+                try
+                {
+                    // Try to open and then close the converted file; this will throw an exception if we can't.
+                    using (Stream s = File.Create(convertedPath))
+                    {
+                    }
+                    // Now that it's created, try to delete it; again this will throw an exception if we can't.
+                    File.Delete(convertedPath);
+
+                    // If we get here, we can create and delete the converted file (and it is presently deleted).  Assume SD2 will also be able to create it.
+                    canWrite = true;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // If we get here, we couldn't create or delete the converted file.  Assume SD2 will also be unable to do so.
+                    canWrite = false;
+                }
+                if (!canWrite)
+                {
+                    // Copy the file to %TEMP% (which should always be writable or else the user will already have considerable other problems) and convert from there.
+                    string copiedSdwPath = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(sdwPath));
+                    File.Copy(sdwPath, copiedSdwPath);
+                    sdwPath = copiedSdwPath;
+                    convertedPath = sdwPath.Substring(0, sdwPath.Length - 4) + "~fromsd2.xls";
+                }
+
                 string arguments = "/FileConvert \"" + sdwPath + "\"";
                 ProcessStartInfo startInfo = new ProcessStartInfo { UseShellExecute = false, FileName = sd2Path, Arguments = arguments, WindowStyle = ProcessWindowStyle.Minimized, CreateNoWindow = true };
                 Process p = Process.Start(startInfo);
@@ -1296,14 +1328,16 @@ namespace StatsDirect.UI
                     throw new Exception("The .sdw file was not converted successfully");
                 else
                 {
-                    // Assume the filename ends with ".sdw".  The converted file will be "~fromsd2.xls".
-                    string convertedPath = sdwPath.Substring(0, sdwPath.Length - 4) + "~fromsd2.xls";
                     if (!File.Exists(convertedPath))
                         throw new Exception("The converted file does not exist");
 
                     // If we get here, the file should exist
                     StatsDirectForm grid = CreateGrid(convertedPath, true, Path.GetFileNameWithoutExtension(convertedPath).Replace("~fromsd2", ""));
                     File.Delete(convertedPath);
+                    // If we couldn't write, we copied the file for conversion.  Delete that copied file.
+                    // As a paranoia check, NEVER delete the original - the code should never get here if the two were the same, but even so.
+                    if (!canWrite && !originalSdwPath.Equals(sdwPath))
+                        File.Delete(sdwPath);
                     return true;
                 }
             }
@@ -3329,6 +3363,12 @@ namespace StatsDirect.UI
             tlp.Controls.Add(ctl);
             tlp.SetColumnSpan(ctl, 2);
             return null;
+        }
+
+        public void ToggleFilters()
+        {
+            if (null != ActiveMdiChild && ActiveMdiChild is IGrid)
+                ((frmSpreadsheetGear)ActiveMdiChild).ToggleFilters();
         }
 
         /// <summary>
