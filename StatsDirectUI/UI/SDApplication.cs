@@ -114,7 +114,7 @@ namespace StatsDirect.UI
 
         private static void FetchTheUpgrade()
         {
-            const string DOWNLOAD_URL = "http://www.statsdirect.com/download/statsdirect.msi";
+            const string DOWNLOAD_URL = "http://www.statsdirect.com/download/StatsDirectSetup.exe";
             Process.Start(DOWNLOAD_URL);
         }
 
