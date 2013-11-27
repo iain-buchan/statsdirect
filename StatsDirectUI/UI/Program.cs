@@ -195,7 +195,7 @@ namespace StatsDirect.UI
         static void CheckExcelAddIn()
         {
             // Install the registry settings if not already present.
-            const string app = "ExcelStatsDirectLink";
+            const string app = "ExcelStatsDirect3Link";
             const string key = "Paths";
             string helpPath = SDRegistry.GetSetting(app, key, "Help");
             string appPath = Path.GetDirectoryName(Application.ExecutablePath);
