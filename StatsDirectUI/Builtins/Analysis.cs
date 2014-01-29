@@ -1043,8 +1043,13 @@ namespace StatsDirect.Builtins
             double pew;
             double spe;
             double spi;
+            double gama;
+            double segama;
+            double gamacil;
+            double gamaciu;
+            double pegama;
             bool ierror;
-            Tables.Kappa(host, o, w, g, out k, out sek, out kcil, out kciu, out kw, out sekw, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out ierror);
+            Tables.Kappa(host, o, w, g, out k, out sek, out kcil, out kciu, out kw, out sekw, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out gama, out segama, out gamacil, out gamaciu, out pegama, out ierror);
             if (ierror)
                 return null;
 
@@ -1154,6 +1159,15 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("dfmcnemar", dfm.ToString());
                 outputParameters.AddOutput("pmcnemar", host.pval(PDF.chivalp(x2M, Convert.ToDouble(dfm))));
             }
+
+            // Gwet's AC1
+            outputParameters.AddOutput("gama", host.RoundU(gama));
+            outputParameters.AddOutput("gamapc", Math.Round(gama * 100.0, 1));
+            outputParameters.AddOutput("segama", host.RoundU(segama));
+            outputParameters.AddOutput("gamacil", host.RoundU(gamacil));
+            outputParameters.AddOutput("gamaciu", host.RoundU(gamaciu));
+            outputParameters.AddOutput("pegama", host.RoundU(pegama));
+            outputParameters.AddOutput("pegamapc", Math.Round(pegama * 100.0, 1));
 
             return new StepResult(StepSuccess.Success, outputParameters);
         }

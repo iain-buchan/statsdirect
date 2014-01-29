@@ -440,99 +440,121 @@ namespace StatsDirect.Builtins
         }
 
 
-        ///  <summary>
-        ///  
-        ///  </summary>
+        /// <summary>
+        /// Categorical agreement statistics for the case of two raters: Cohen's kappa, weighted kappa, Scott's Pi and Gwett's AC1
+        /// </summary>
         /// <param name="host"></param>
         /// <param name="o">(0..g-1, 0..g-1)-based array of values</param>
-        ///  <param name="w">(0..g-1, 0..g-1)-based array of weights</param>
-        ///  <param name="g"></param>
-        ///  <param name="k"></param>
-        ///  <param name="sek"></param>
-        ///  <param name="kcil"></param>
-        ///  <param name="kciu"></param>
-        ///  <param name="kw"></param>
-        ///  <param name="sekw"></param>
-        ///  <param name="kwcil"></param>
-        ///  <param name="kwciu"></param>
-        ///  <param name="po"></param>
-        ///  <param name="pe"></param>
-        ///  <param name="pow"></param>
-        ///  <param name="pew"></param>
-        ///  <param name="cit"></param>
-        ///  <param name="spe"></param>
-        ///  <param name="spi"></param>
-        ///  <param name="ierror"></param>
-        ///  <remarks>The double version</remarks>
-        public static void Kappa(ITemplateHost host, double[,] o, double[,] w, int g, out double k, out double sek, out double kcil, out double kciu, out double kw, out double sekw, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, double cit, out double spe, out double spi, out bool ierror)
+        /// <param name="w">(0..g-1, 0..g-1)-based array of weights</param>
+        /// <param name="g">number of observations per rater</param>
+        /// <param name="k">Cohen's kappa</param>
+        /// <param name="sek">Standard error of kappa</param>
+        /// <param name="kcil">Lower confidence bound for kappa</param>
+        /// <param name="kciu">Upper confidence bound for kappa</param>
+        /// <param name="kw">Weighted kappa</param>
+        /// <param name="sekw">Standard error of weighted kappa</param>
+        /// <param name="kwcil">Lower confidence bound for weighted kappa</param>
+        /// <param name="kwciu">Upper confidence bound for weighted kappa</param>
+        /// <param name="po">Observed agreement for kappa</param>
+        /// <param name="pe">Expected agreement for kappa</param>
+        /// <param name="pow">Observed agreement for weighted kappa</param>
+        /// <param name="pew">Expected agreement for weighted kappa</param>
+        /// <param name="cit">Confidence level</param>
+        /// <param name="spe">Expected agreement for Scott's Pi</param>
+        /// <param name="spi">Scott's Pi</param>
+        /// <param name="gama">Gwett's AC1</param>
+        /// <param name="segama">Standard error of AC1</param>
+        /// <param name="gamacil">Lower confidence bound for AC1</param>
+        /// <param name="gamaciu">Upper confidence bound for AC1</param>
+        /// <param name="pegama">Chance-independent agreement for Gwett's AC1</param>
+        /// <param name="ierror"></param>
+        /// <remarks>The double version</remarks>
+        public static void Kappa(ITemplateHost host, double[,] o, double[,] w, int g, out double k, out double sek, out double kcil, out double kciu, out double kw, out double sekw, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, double cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror)
         {
             int i; int j;
 
             ierror = true;
-            double[] pidot = new double[g - 1 + 1 ];
-            double[] pdotj = new double[g - 1 + 1 ];
-            double[] crtot = new double[g - 1 + 1 ];
+            double[] pidot = new double[g];
+            double[] pdotj = new double[g];
+            double[] crtot = new double[g];
             double gt = 0.0;
-            for (i = 0; i <= g - 1; i++)
+            for (i = 0; i < g; i++)
             {
-                for (j = 0; j <= g - 1; j++)
+                for (j = 0; j < g; j++)
                 {
-                    pdotj[i] = pdotj[i] + o[i, j];
-                    pidot[j] = pidot[j] + o[i, j];
-                    gt = gt + o[i, j];
+                    pdotj[i] += o[i, j];
+                    pidot[j] += o[i, j];
+                    gt += o[i, j];
                 }
             }
-            for (i = 0; i <= g - 1; i++)
-            {
-                crtot[i] = crtot[i] + pdotj[i] + pidot[i];
-            }
+            for (i = 0; i < g; i++)
+                crtot[i] += pdotj[i] + pidot[i];
             if (gt <= 0.0)
-            {
                 throw new InvalidDataException();
-            }
             po = 0.0;
             pe = 0.0;
             double px = 0.0;
-            for (i = 0; i <= g - 1; i++)
+            double pik = 0.0;
+            double pog = 0.0;
+            double peg = 0.0;
+            for (i = 0; i < g; i++)
             {
                 pdotj[i] = pdotj[i] / gt;
                 pidot[i] = pidot[i] / gt;
-                po = po + o[i, i] / gt;
-                pe = pe + pdotj[i] * pidot[i];
-                px = px + pdotj[i] * pidot[i] * (pdotj[i] + pidot[i]);
+                po += o[i, i] / gt;
+                pe += pdotj[i] * pidot[i];
+                px += pdotj[i] * pidot[i] * (pdotj[i] + pidot[i]);
+                pik = (pdotj[i] + pidot[i]) / 2.0;
+                pog += (o[i, i] / gt) * (1.0 - pik);
+                peg += pik * (1.0 - pik);
             }
+            pegama = peg / (g - 1.0);
+            gama = (po - pegama) / (1.0 - pegama);
+            // gama is Gwett's AC1 statistic and pegama is the chance-independent agreement with po as the observed agreement
             k = (po - pe) / (1.0 - pe);
             sek = (1.0 / ((1.0 - pe) * Math.Sqrt(gt))) * Math.Sqrt(pe + pe * pe - px);
             kcil = k - cit * sek;
             kciu = k + cit * sek;
             pow = 0.0;
             pew = 0.0;
-            for (i = 0; i <= g - 1; i++)
+            double soma = 0.0;
+            double pkl = 0.0;
+            for (i = 0; i < g; i++)
             {
-                for (j = 0; j <= g - 1; j++)
+                for (j = 0; j < g; j++)
                 {
-                    pow = pow + w[i, j] * (o[i, j] / gt);
-                    pew = pew + w[i, j] * pidot[i] * pdotj[j];
+                    pkl = (o[i, j] / gt);
+                    pow += w[i, j] * pkl;
+                    pew += w[i, j] * pidot[i] * pdotj[j];
+                    soma += pkl * Math.Pow(1.0 - (((pdotj[i] + pidot[i]) / 2.0) + ((pdotj[j] + pidot[j]) / 2.0)) / 2.0, 2.0);
                 }
             }
             kw = (pow - pew) / (1.0 - pew);
             sekw = 1.0 / ((1.0 - pew) * Math.Sqrt(gt));
-            double[] wibar = new double[g - 1 + 1 ];
-            double[] wjbar = new double[g - 1 + 1 ];
+            double vgama = 0.0;
+            double f = 0.0;
+            // set f to gt/population size if population size is known, otherwise assume an infinite inference population thus f = 0
+            vgama = ((1.0 - f) / (gt * Math.Pow(1.0 - pegama, 2.0))) * (po * (1.0 - po) - 4.0 * (1.0 - gama) * ((1.0 / (g - 1.0)) * pog - po * pegama) + 4.0 * (Math.Pow(1.0 - gama, 2.0)) * ((1.0 / (Math.Pow(g - 1.0, 2.0))) * soma - Math.Pow(pegama, 2.0)));
+            segama = Math.Sqrt(vgama);
+            gamacil = gama - cit * segama;
+            gamaciu = gama + cit * segama;
+            // vgamma is the variance of Gwett's AC1 statistic and epgamma its standard error
+            double[] wibar = new double[g];
+            double[] wjbar = new double[g];
             for (i = 0; i <= g - 1; i++)
             {
-                for (j = 0; j <= g - 1; j++)
+                for (j = 0; j < g; j++)
                 {
                     wibar[i] = wibar[i] + w[i, j] * pdotj[j];
                     wjbar[j] = wjbar[j] + w[i, j] * pidot[i];
                 }
             }
             px = 0.0;
-            for (i = 0; i <= g - 1; i++)
+            for (i = 0; i < g; i++)
             {
-                for (j = 0; j <= g - 1; j++)
+                for (j = 0; j < g; j++)
                 {
-                    px = px + pidot[i] * pdotj[j] * Math.Pow((w[i, j] - (wibar[i] + wjbar[j])), 2.0);
+                    px += pidot[i] * pdotj[j] * Math.Pow((w[i, j] - (wibar[i] + wjbar[j])), 2.0);
                 }
             }
             sekw = sekw * Math.Sqrt(px - Math.Pow(pew, 2.0));
@@ -540,14 +562,13 @@ namespace StatsDirect.Builtins
             kwciu = kw + cit * sekw;
             // Scott's pi
             spe = 0.0;
-            for (i = 0; i <= g - 1; i++)
+            for (i = 0; i < g; i++)
             {
-                spe = spe + Math.Pow((crtot[i] / (gt * 2.0)), 2.0);
+                spe += Math.Pow((crtot[i] / (gt * 2.0)), 2.0);
             }
             spi = (po - spe) / (1.0 - spe);
             ierror = false;
         }
-
 
         ///  <summary>
         ///  
@@ -926,8 +947,13 @@ namespace StatsDirect.Builtins
                 double pew;
                 double spe;
                 double spi;
+                double gama;
+                double segama;
+                double gamacil;
+                double gamaciu;
+                double pegama;
                 bool ierror;
-                Kappa(host, o, w, g, out k, out sek, out kcil, out kciu, out kw, out sekw, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out ierror);
+                Kappa(host, o, w, g, out k, out sek, out kcil, out kciu, out kw, out sekw, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out gama, out segama, out gamacil, out gamaciu, out pegama, out ierror);
                 if (!(ierror))
                 {
                     outputParameters.AddOutput("po", Formatting.XRound(po * 100, 2));
@@ -1051,6 +1077,16 @@ namespace StatsDirect.Builtins
                         outputParameters.AddOutput("dfmcnemar", dfm.ToString());
                         outputParameters.AddOutput("pmcnemar", host.pval(PDF.chivalp(x2M, Convert.ToDouble(dfm))));
                     }
+
+                    // Gwet's AC1
+                    outputParameters.AddOutput("gama", host.RoundU(gama));
+                    outputParameters.AddOutput("gamapc", Math.Round(gama * 100.0, 1));
+                    outputParameters.AddOutput("segama", host.RoundU(segama));
+                    outputParameters.AddOutput("gamacil", host.RoundU(gamacil));
+                    outputParameters.AddOutput("gamaciu", host.RoundU(gamaciu));
+                    outputParameters.AddOutput("pegama", host.RoundU(pegama));
+                    outputParameters.AddOutput("pegamapc", Math.Round(pegama * 100.0, 1));
+
                     return new StepResult(StepSuccess.Success, outputParameters);
                 }
                 throw new InvalidDataException();
