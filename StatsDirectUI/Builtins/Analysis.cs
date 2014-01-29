@@ -1162,12 +1162,12 @@ namespace StatsDirect.Builtins
 
             // Gwet's AC1
             outputParameters.AddOutput("gama", host.RoundU(gama));
-            outputParameters.AddOutput("gamapc", Math.Round(gama * 100.0, 1));
+            outputParameters.AddOutput("gamapc", Math.Round(gama * 100.0, 2));
             outputParameters.AddOutput("segama", host.RoundU(segama));
             outputParameters.AddOutput("gamacil", host.RoundU(gamacil));
             outputParameters.AddOutput("gamaciu", host.RoundU(gamaciu));
             outputParameters.AddOutput("pegama", host.RoundU(pegama));
-            outputParameters.AddOutput("pegamapc", Math.Round(pegama * 100.0, 1));
+            outputParameters.AddOutput("pegamapc", Math.Round(pegama * 100.0, 2));
 
             return new StepResult(StepSuccess.Success, outputParameters);
         }
