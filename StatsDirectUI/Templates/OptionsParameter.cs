@@ -34,7 +34,7 @@ namespace StatsDirect.Templates
     }
 
     /// <summary>
-    /// A parameter allowing selection of one option from a list.
+    /// A parameter allowing selection of one or more options from a list.
     /// </summary>
     [Serializable]
     public sealed class OptionsParameter: Parameter

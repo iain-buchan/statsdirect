@@ -1245,6 +1245,7 @@ namespace StatsDirect.UI
                 case "ROCCutoff":
                 case "Scores":
                 case "SortInPlace":
+                    return AmendUsingControl(fillable);
                 case "ToggleFilters":
                     return ToggleFilters();
                 case "Categorise":
