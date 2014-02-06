@@ -16,7 +16,8 @@ grammar RResults;
  */
 
 compileUnit returns [Dictionary<string, object> Values]
-	: { $compileUnit.Values = new Dictionary<string, object>(); } (stanza { foreach (KeyValuePair<string, object> pair in $stanza.Values) $compileUnit.Values[pair.Key] = pair.Value; })+ EOF
+@init { $compileUnit.Values = new Dictionary<string, object>(); }
+	: (stanza { foreach (KeyValuePair<string, object> pair in $stanza.Values) $compileUnit.Values[pair.Key] = pair.Value; })+ EOF
 	;
 
 stanza returns [Dictionary<string, object> Values]
@@ -30,7 +31,14 @@ nameAndData returns [Dictionary<string, object> Values]
 	;
 
 charts returns [Dictionary<string, object> Values]
-	: STARTGRAPHICS { $charts.Values = new Dictionary<string, object>(); } (path { $charts.Values.Add(PathToName($path.Path), PathToChart($path.Path)); } )*
+@init { $charts.Values = new Dictionary<string, object>(); }
+	: STARTGRAPHICS (chartRow { foreach (var kv in $chartRow.Values) $charts.Values.Add(kv.Key, kv.Value); })*
+	;
+
+chartRow returns [Dictionary<string, object> Values]
+@init { $chartRow.Values = new Dictionary<string, object>(); }
+	: STRING EQUALS path { $chartRow.Values.Add(ToStringBody($STRING.text), PathToChart($path.Path)); }
+	| path { $chartRow.Values.Add(PathToName($path.Path), PathToChart($path.Path)); }
 	;
 
 path returns [string Path]
@@ -80,6 +88,8 @@ FLOAT
 COMMA		: ',';
 DIRSEP		: '\\'|'/';
 DRIVE		: ('A'..'Z'|'a'..'z') ':';
+EQUALS		: '=';
+LPAREN		: '(';
 RPAREN		: ')';
 STARTDATA	:	's' 't' 'a' 'r' 't' '~' 'd' 'a' 't' 'a';
 STARTGRAPHICS:	's' 't' 'a' 'r' 't' '~' 'g' 'r' 'a' 'p' 'h' 'i' 'c' 's';
@@ -87,7 +97,7 @@ STARTNAMES	:	's' 't' 'a' 'r' 't' '~' 'n' 'a' 'm' 'e' 's';
 STARTTITLES	:	's' 't' 'a' 'r' 't' '~' 't' 'i' 't' 'l' 'e' 's';
 STARTVECTOR	:	'c' '(';
 
-IDENTIFIER	: ('A'..'Z'|'a'..'z')('A'..'Z'|'a'..'z'|'0'..'9'|'.'|'!')*
+IDENTIFIER	: ('A'..'Z'|'a'..'z')('A'..'Z'|'a'..'z'|'0'..'9'|'.'|'!'|'$')*
 	;
 
 WS	

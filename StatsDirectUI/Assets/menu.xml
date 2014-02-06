@@ -326,6 +326,7 @@
                 <menu-item label="&amp;Covariance" operation="GroupedCovariance" />
               </sub-items>
             </menu-item>
+            <menu-item label="&amp;Deming" operation="MethodComparisonRegression" />
             <menu-item label="&amp;Principal Components">
               <help chm-id="1280" />
               <sub-items>
@@ -356,6 +357,7 @@
           <sub-items>
             <menu-item label="&amp;Continuous (Intraclass)..." operation="Agreement" />
             <menu-item label="C&amp;ategorical (Kappa)..." operation="Kappa" />
+            <menu-item label="&amp;Method Comparison Regression" operation="MethodComparisonRegression" />
             <menu-item label="&amp;Reliability Analysis..." operation="PCRCovarianceNoFollowOns" />
             <menu-item label="&amp;Universal R..." operation="UniversalAgreement" />
             <menu-item label="C&amp;ompare Two R Agreement Measures..." operation="UniversalRCompare" />

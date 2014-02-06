@@ -211,17 +211,74 @@ namespace StatsDirect.R
             }
         }
 
+        /// <summary>
+        /// Split a string of the form name$name$name so that each non-leaf name becomes a dictionary named in that way inside the current dictionary, and the leaf name is returned.
+        /// </summary>
+        private static ParameterBag GetBag(string nameToParse, ParameterBag current, out string leafName)
+        {
+            int pos = nameToParse.IndexOf('$');
+            if (pos < 0)
+            {
+                // No more $ signs; we're at a leaf
+                leafName = nameToParse;
+                return current;
+            }
+            else
+            {
+                // A branch
+                string branchName = "*" + nameToParse.Substring(0, pos);
+                string rhs = nameToParse.Substring(pos + 1);
+                // Branches always have indexed lists of bags as immediate children
+                IList<ParameterBag> child;
+                if (current.ContainsKey(branchName))
+                {
+                    child = current[branchName].AsParameterBagList;
+                }
+                else
+                {
+                    child = new List<ParameterBag>();
+                    current.AddOutput(branchName, child);
+                }
+                // The next name in the list might be non-numeric (it's the name of the next bag level at index 0 of this bag) or numeric (it's the index of a bag at this level).  Find the bag, creating as necessary.
+                int nextPos = rhs.IndexOf('$');
+                int bagIndex;
+                ParameterBag subBag;
+                if (nextPos < 0 || !int.TryParse(rhs.Substring(0, nextPos), out bagIndex))
+                {
+                    // No $: Next is a leaf; we need to put the leaf into index 0
+                    // $ but non-numeric: Next is a branch; we need to put the leaf into index 0
+                    if (child.Count == 0)
+                        child.Add(new ParameterBag());
+                    subBag = child[0];
+                }
+                else
+                {
+                    // $ and next is numeric: We need to offset to that bag in the current list, creating any bags we're missing.  Note that R indices are 1-based, C# indices are 0-based.
+                    while (child.Count < bagIndex)
+                        child.Add(new ParameterBag());
+                    subBag = child[bagIndex - 1];
+                    rhs = rhs.Substring(nextPos + 1);
+                }
+                // Search down the branch
+                return GetBag(rhs, subBag, out leafName);
+            }
+        }
+
         private static ParameterBag DictionaryToParameterBag(Dictionary<string, object> dictionary)
         {
             ParameterBag outputParameters = new ParameterBag();
             foreach (KeyValuePair<string, object> pair in dictionary)
+            {
+                string leafName;
+                ParameterBag thisBag = GetBag(pair.Key, outputParameters, out leafName);
                 if (pair.Value is TitleAndValue)
                 {
                     TitleAndValue tv = (TitleAndValue)pair.Value;
-                    outputParameters.AddOutput(pair.Key, RConvert.ToFrame(pair.Key, tv.Title, (List<object>)tv.Value));
+                    thisBag.AddOutput(leafName, RConvert.ToFrame(leafName, tv.Title, (List<object>)tv.Value));
                 }
                 else
-                    outputParameters.AddOutput(pair.Key, pair.Value);
+                    thisBag.AddOutput(leafName, pair.Value);
+            }
             return outputParameters;
         }
 

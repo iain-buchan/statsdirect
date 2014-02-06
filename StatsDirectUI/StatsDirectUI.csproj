@@ -1205,6 +1205,7 @@
     </Content>
     <Content Include="Assets\Operations\ConvertUnits.xml" />
     <Content Include="Assets\Operations\ConvertUnitsScreen.xml" />
+    <Content Include="Assets\Operations\MethodComparisonRegression.xml" />
     <Content Include="Assets\Operations\ToggleFilters.xml" />
     <Content Include="Assets\Operations\LOESS.xml">
       <SubType>Designer</SubType>
