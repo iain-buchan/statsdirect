@@ -451,6 +451,9 @@
     <Component Id="MetaSummary.xml">
       <File Id="MetaSummary.xml" Name="MetaSummary.xml" KeyPath="yes" />
     </Component>
+    <Component Id="MethodComparisonRegression.xml">
+      <File Id="MethodComparisonRegression.xml" Name="MethodComparisonRegression.xml" KeyPath="yes" />
+    </Component>
     <Component Id="MiscDiagnostic.xml">
       <File Id="MiscDiagnostic.xml" Name="MiscDiagnostic.xml" KeyPath="yes" />
     </Component>

@@ -166,6 +166,7 @@
     <ComponentRef Id="MetaIncidenceRateRatio.xml" />
     <ComponentRef Id="MetaPlotOptions.xml" />
     <ComponentRef Id="MetaSummary.xml" />
+    <ComponentRef Id="MethodComparisonRegression.xml" />
     <ComponentRef Id="MiscDiagnostic.xml" />
     <ComponentRef Id="MiscFalseResult.xml" />
     <ComponentRef Id="MiscLikely.xml" />
