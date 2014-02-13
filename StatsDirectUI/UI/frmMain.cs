@@ -6439,14 +6439,14 @@ namespace StatsDirect.UI
         {
             try
             {
-                ICollection<RVersion> rVersions = R.RController.CheckR();
-                RVersion preferred = RController.PreferredRVersion(rVersions);
-                if (null == preferred)
+                RVersion preferredVersion = RController.PreferredRVersion(RController.CheckR());
+                while (null == preferredVersion)
                 {
-                    SdApplication.SoleInstance.Error("No version of R appears to be installed.  Please install R and try again.", "StatsDirect");
-                    return;
+                    if (!RController.UserMightHaveInstalledR())
+                        return;
+                    preferredVersion = RController.PreferredRVersion(RController.CheckR());
                 }
-                string guiPath = preferred.GuiPath;
+                string guiPath = preferredVersion.GuiPath;
                 System.Diagnostics.Process.Start(guiPath);
             }
             catch (Exception ex)
