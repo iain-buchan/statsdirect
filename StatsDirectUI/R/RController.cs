@@ -178,7 +178,7 @@ namespace StatsDirect.R
         /// If necessary, prompt the user to install R.  Return true if we think the user might have installed R successfully, or false if there's no chance (for example, the user's told us that they're not going to)
         /// </summary>
         /// <returns></returns>
-        private static bool UserMightHaveInstalledR()
+        public static bool UserMightHaveInstalledR()
         {
             using (frmInstallR f = new frmInstallR())
             {

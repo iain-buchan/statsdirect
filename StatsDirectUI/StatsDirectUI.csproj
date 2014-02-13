@@ -788,6 +788,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInstallR.resx">
       <DependentUpon>frmInstallR.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmReportRichEditDummy.resx">
       <DependentUpon>frmReportRichEditDummy.cs</DependentUpon>
@@ -1366,7 +1367,9 @@
     <Content Include="Assets\Operations\DistributionF.xml" />
     <Content Include="Assets\Operations\DistributionT.xml" />
     <Content Include="Assets\Operations\DistributionQ.xml" />
-    <Content Include="Assets\Operations\DistributionNormal.xml" />
+    <Content Include="Assets\Operations\DistributionNormal.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\FillSeries.xml" />
     <Content Include="Assets\Operations\Detabulate.xml" />
     <Content Include="Assets\Operations\Tabulate.xml" />
@@ -1630,7 +1633,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets')" />

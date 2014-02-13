@@ -84,6 +84,7 @@ namespace StatsDirect.R
         public static void ToR(StringBuilder sb, string frameName, DataFrame frame)
         {
             List<string> variableNames = new List<string>();
+            List<string> columnNames = new List<string>();
             foreach (Variable variable in frame.Variables)
             {
                 StringBuilder nameBuilder = new StringBuilder();
@@ -94,10 +95,16 @@ namespace StatsDirect.R
                 ToR(sb, variable);
                 sb.AppendLine();
                 variableNames.Add(variableName);
+                columnNames.Add("\"" + variable.Title.Replace("\"", "\"\"") + "\"");
             }
             ToRName(sb, frameName);
             sb.Append(" <- data.frame(");
             sb.Append(string.Join(", ", variableNames.ToArray()));
+            sb.AppendLine(")");
+            sb.Append("colnames(");
+            ToRName(sb, frameName);
+            sb.Append(") <- c(");
+            sb.Append(string.Join(", ", columnNames.ToArray()));
             sb.Append(")");
         }
 

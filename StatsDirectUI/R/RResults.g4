@@ -66,6 +66,7 @@ term returns [object Value]
 	: INTEGER { $term.Value = int.Parse($INTEGER.text); }
 	| FLOAT { $term.Value = double.Parse($FLOAT.text); }
 	| STRING { $term.Value = ToStringBody($STRING.text); }
+	| NA { $term.Value = null; }
 	;
 
 vector returns [List<object> Terms]
@@ -90,6 +91,7 @@ DIRSEP		: '\\'|'/';
 DRIVE		: ('A'..'Z'|'a'..'z') ':';
 EQUALS		: '=';
 LPAREN		: '(';
+NA			: 'N' 'A';
 RPAREN		: ')';
 STARTDATA	:	's' 't' 'a' 'r' 't' '~' 'd' 'a' 't' 'a';
 STARTGRAPHICS:	's' 't' 'a' 'r' 't' '~' 'g' 'r' 'a' 'p' 'h' 'i' 'c' 's';
