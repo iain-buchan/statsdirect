@@ -2015,16 +2015,16 @@ namespace StatsDirect.Charting
                 }
 
                 // plot points
-                for (int c = 0; c <= definition.XSeries.Count - 1; c++)
+                for (int c = 0; c < definition.XSeries.Count; c++)
                 {
                     DoubleSeries xs = definition.XSeries[c].AsDoubleSeries;
                     DoubleSeries ys = definition.YSeries[c].AsDoubleSeries;
                     double[] xdat = xs.Data;
                     double[] ydat = ys.Data;
                     PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
-                    for (int r = 0; r <= xs.Data.Length - 1; r++)
+                    for (int r = 0; r < xs.Data.Length; r++)
                     {
-                        if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
+                        if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
                         {
                             xys[r].X = Convert.ToSingle(ToCanvasX(xdat[r]));
                             xys[r].Y = Convert.ToSingle(ToCanvasY(ydat[r]));
