@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace StatsDirect.UI
 {
@@ -81,7 +82,7 @@ namespace StatsDirect.UI
                     break;
                 // Default: Do nothing
             }
-            string version = Platform + " v" + osInfo.Version.Major + "." + osInfo.Version.Minor + "." + osInfo.Version.Build + " " + osInfo.ServicePack + ", CLR " + clrVersion + " " + bitness;
+            string version = Platform + " v" + osInfo.Version.Major + "." + osInfo.Version.Minor + "." + osInfo.Version.Build + " " + osInfo.ServicePack + ", CLR " + clrVersion + " " + bitness + (IsNgen() ? ", native image" : ", JIT-compiled");
             lblSysInfo.Text = version;
         }
 
@@ -157,6 +158,20 @@ namespace StatsDirect.UI
                     return "Windows NT";
                 return "Unknown platform";
             }
+        }
+
+        private static bool IsNgen()
+        {
+            Process process = Process.GetCurrentProcess();
+            ProcessModuleCollection modules = process.Modules;
+            foreach (ProcessModule m in modules)
+            {
+                if (m.FileName.Contains("\\" + process.ProcessName + ".ni"))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
