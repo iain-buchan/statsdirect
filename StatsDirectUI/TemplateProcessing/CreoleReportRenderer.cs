@@ -42,8 +42,14 @@ namespace StatsDirect.TemplateProcessing
                 { "</pval>", @"}" },
                 { "<subtitle>", @"{\ul " },
                 { "</subtitle>", @"}" },
+                // TODO: Add general width parsing - this is a gross hack.
+                { "<td width=\"2\">", @"\pard\intbl!!2!! " },
+                { "<td width=\"1.5\">", @"\pard\intbl!!1.5!! " },
                 { "<td>", @"\pard\intbl " },
                 { "</td>", @"\cell " },
+                // TODO: Add general width parsing - this is a gross hack.
+                { "<th width=\"2\">", @"\pard\intbl!!2!! {\ul " },
+                { "<th width=\"1.5\">", @"\pard\intbl!!1.5!! {\ul " },
                 { "<th>", @"\pard\intbl {\ul " },
                 { "</th>", @"}\cell " },
                 { "<table>", @"{" },
@@ -64,7 +70,7 @@ namespace StatsDirect.TemplateProcessing
             // ASSUMPTION: An entire table row is on one line in the source and hence in the translated data.
             string[] splitResults = afterSubstitutions.Split('\n');
             StringBuilder finalOutput = new StringBuilder();
-            Regex cellFinder = new Regex(@"\\cell");
+            Regex cellFinder = new Regex(@"\\intbl(?:!!(?<width>[0-9.]+)!!)?");
             foreach (string unchangedLine in splitResults)
             {
                 // Do not propagate blank lines
@@ -74,16 +80,24 @@ namespace StatsDirect.TemplateProcessing
                 string line = unchangedLine.Trim();
                 if (line.Contains(@"\row"))
                 {
-                    int count = cellFinder.Matches(line).Count;
+                    MatchCollection matches = cellFinder.Matches(line);
                     // If we have a table row with no cells, it's invalid - prevent it from being emitted.
-                    if (count > 0)
+                    if (matches.Count > 0)
                     {
                         // If we get here, there are some cells in this line.  We need one \cellx<width> for each \cell, placed at the end of the row data (which we know ends with \!!CELLSHERE!! from the translation of </tr>).
                         StringBuilder cellxs = new StringBuilder();
                         // cellxs.Append(@"\trautofit1");
-                        for (int i = 0; i < count; i++)
-                            cellxs.Append(string.Format(@"\clNoWrap\cellx{0}", (i + 1) * STANDARD_CELL_WIDTH));
-                        finalOutput.AppendLine(line.Replace(@"\!!CELLSHERE!!", cellxs.ToString()));
+                        double widthsToDate = 0;
+                        foreach (Match m in matches)
+                        {
+                            string widthString = m.Groups["width"].Value;
+                            double thisWidth = 1;
+                            if (!string.IsNullOrWhiteSpace(widthString))
+                                thisWidth = double.Parse(widthString);
+                            widthsToDate += thisWidth;
+                            cellxs.Append(string.Format(@"\clNoWrap\cellx{0}", widthsToDate * STANDARD_CELL_WIDTH));
+                        }
+                        finalOutput.AppendLine(line.Replace("!!2!!", "").Replace("!!1.5!!", "").Replace(@"\!!CELLSHERE!!", cellxs.ToString()));
                     }
                 }
                 else

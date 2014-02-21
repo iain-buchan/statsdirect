@@ -298,9 +298,9 @@ return.to.statsdirect(results)
 <line><subtitle><in>title</in>:</subtitle></line>
 <line></line>
 <table>
-<tr><th></th><th>Estimate</th><th>Standard Error</th><th><inx>ci100</inx>% CI</th><th>Meaning</th></tr>
-<tr><td>Slope</td><td><inx>slope</inx></td><td><inx>seslope</inx></td><td><ci><inx>slopelci</inx> to <inx>slopeuci</inx></ci></td><td>Proportional differences</td></tr>
-<tr><td>Intercept</td><td><inx>intercept</inx></td><td><inx>seintercept</inx></td><td><ci><inx>interceptlci</inx> to <inx>interceptuci</inx></ci></td><td>Systematic differences</td></tr>
+<tr><th></th><th>Estimate</th><th width="1.5">Standard Error</th><th width="2"><inx>ci100</inx>% CI</th><th width="2">Meaning</th></tr>
+<tr><td>Slope</td><td><inx>slope</inx></td><td width="1.5"><inx>seslope</inx></td><td width="2"><ci><inx>slopelci</inx> to <inx>slopeuci</inx></ci></td><td width="2">Proportional differences</td></tr>
+<tr><td>Intercept</td><td><inx>intercept</inx></td><td width="1.5"><inx>seintercept</inx></td><td width="2"><ci><inx>interceptlci</inx> to <inx>interceptuci</inx></ci></td><td width="2">Systematic differences</td></tr>
 </table>
 <block name="testvsreference">
 <line></line>
