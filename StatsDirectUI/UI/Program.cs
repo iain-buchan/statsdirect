@@ -11,7 +11,6 @@ namespace StatsDirect.UI
 {
     static class Program
     {
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -171,25 +170,80 @@ namespace StatsDirect.UI
 
         static void SetupInitialFiles()
         {
-            string appPath = Path.GetDirectoryName(Application.ExecutablePath);
-            if (null == appPath)
-                return;
-
             // Copy sample files locally if they don't already exist
             string userStatsDirectFolder = SDConfiguration.MyStatsDirectFolder;
             if (!Directory.Exists(userStatsDirectFolder))
                 Directory.CreateDirectory(userStatsDirectFolder);
             string myTestXlsx = SDConfiguration.MyTestFilePath;
-            if (!File.Exists(myTestXlsx))
+            if (File.Exists(myTestXlsx))
             {
-                string distTestXlsx = Path.Combine(Path.Combine(appPath, "Data"), Properties.Settings.Default.DefaultRecentlyUsedFile);
-                if (File.Exists(distTestXlsx))
+                // If we have a newer distribution file, save the user's as an old version (in case they've made any alterations) and then copy over our new one.
+                string distTestXlsx = DistTestXlsx();
+                if (null != distTestXlsx)
                 {
-                    File.Copy(distTestXlsx, myTestXlsx, false);
-                    // Set the copied file read-only
-                    new FileInfo(myTestXlsx).IsReadOnly = true;
+                    DateTime distCreated = new FileInfo(distTestXlsx).CreationTimeUtc;
+                    DateTime mineCreated = new FileInfo(myTestXlsx).CreationTimeUtc;
+                    if (distCreated > mineCreated)
+                    {
+                        string extension = Path.GetExtension(myTestXlsx);
+                        string prefix = Path.Combine(Path.GetDirectoryName(myTestXlsx), Path.GetFileNameWithoutExtension(myTestXlsx));
+                        int nonExistingVersion = 1;
+                        while (true)
+                        {
+                            string probePath = string.Format("{0}_old_{1}{2}", prefix, nonExistingVersion, extension);
+                            if (File.Exists(probePath))
+                                nonExistingVersion++;
+                            else
+                            {
+                                try
+                                {
+                                    File.Copy(myTestXlsx, probePath);
+                                    if (File.Exists(probePath))
+                                    {
+                                        new FileInfo(myTestXlsx).IsReadOnly = false;
+                                        File.Delete(myTestXlsx);
+                                        CopyTestFileTo(myTestXlsx);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    SdApplication.SoleInstance.FriendlyError("Couldn't copy the new StatsDirect test file to your own copy; will try again next time you start StatsDirect", ex, false);
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
             }
+            else
+            {
+                CopyTestFileTo(myTestXlsx);
+            }
+        }
+
+        private static void CopyTestFileTo(string myTestXlsx)
+        {
+            string distTestXlsx = DistTestXlsx();
+            if (null == distTestXlsx)
+                return;
+            File.Copy(distTestXlsx, myTestXlsx, false);
+            // Set the copied file read-only
+            new FileInfo(myTestXlsx).IsReadOnly = true;
+        }
+
+        /// <summary>
+        /// Return the path to the distribution test.xlsx if it is defined and the file exists at that location; otherwise return null.
+        /// </summary>
+        /// <returns></returns>
+        private static string DistTestXlsx()
+        {
+            string appPath = Path.GetDirectoryName(Application.ExecutablePath);
+            if (null == appPath)
+                return null;
+            string path = Path.Combine(Path.Combine(appPath, "Data"), Properties.Settings.Default.DefaultRecentlyUsedFile);
+            if (!File.Exists(path))
+                return null;
+            return path;
         }
 
         static void CheckExcelAddIn()
