@@ -1,3 +1,4 @@
+using StatsDirect.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -86,7 +87,7 @@ namespace StatsDirect.Templates
                 }
 
                 userOperations = new List<Operation>();
-                string userOperationDir = Path.Combine(Configuration.SDConfiguration.InstallationDirectory, System.Configuration.ConfigurationManager.AppSettings["UserOperationDir"]);
+                string userOperationDir = Path.Combine(SDConfiguration.InstallationDirectory, System.Configuration.ConfigurationManager.AppSettings["UserOperationDir"]);
                 if (Directory.Exists(userOperationDir))
                 {
                     di = new DirectoryInfo(userOperationDir);

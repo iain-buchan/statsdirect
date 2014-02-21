@@ -4,17 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using StatsDirect.Templates;
+using StatsDirect.Configuration;
 
 namespace StatsDirect.TemplateProcessing
 {
     public abstract class ReportRenderer
     {
-        /// <remarks>TODO: Move this to the application, not the template processor - this breaks layering</remarks>
-        private static readonly string TEMPLATE_PATH = Path.Combine(Configuration.SDConfiguration.InstallationDirectory, UI.Properties.Settings.Default.TemplateDirectory);
-
         public static string GetContent(string name)
         {
-            string path = Path.Combine(TEMPLATE_PATH, name);
+            string path = Path.Combine(SDConfiguration.TemplatePath, name);
             using (TextReader tr = new StreamReader(path, Encoding.ASCII))
             {
                 return tr.ReadToEnd();

@@ -11,7 +11,6 @@ namespace StatsDirect.Configuration
         private const string R_FOLDER_NAME = "R";
         public const string PERSISTENT_VALUE_FILE_NAME = "session.ser";
         private const string HELP_FILE_NAME = "statsdirect.chm";
-        private const string TEMPLATE_DIRECTORY_NAME = "Template";
 
         public static string HelpFilePath
         {
@@ -20,7 +19,7 @@ namespace StatsDirect.Configuration
 
         public static string TemplatePath
         {
-            get { return Path.Combine(InstallationDirectory, TEMPLATE_DIRECTORY_NAME); }
+            get { return Path.Combine(InstallationDirectory, Settings.Default.TemplateDirectory); }
         }
 
         public static string MyStatsDirectFolder
