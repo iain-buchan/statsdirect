@@ -30,7 +30,7 @@
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
-              <append-to-grid>ydat</append-to-grid>
+              <append-to-frame>ydat</append-to-frame>
               <must-request>true</must-request>
             </frame>
             <frame>
@@ -42,7 +42,7 @@
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
-              <append-to-grid>xdat</append-to-grid>
+              <append-to-frame>xdat</append-to-frame>
               <must-request>true</must-request>
             </frame>
             <frame>
@@ -54,7 +54,7 @@
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
-              <append-to-grid>ydatu</append-to-grid>
+              <append-to-frame>ydatu</append-to-frame>
               <must-request>true</must-request>
             </frame>
             <frame>
@@ -66,7 +66,7 @@
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
-              <append-to-grid>ydatl</append-to-grid>
+              <append-to-frame>ydatl</append-to-frame>
               <must-request>true</must-request>
             </frame>
           </parameters>

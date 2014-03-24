@@ -66,7 +66,7 @@ namespace StatsDirect.Templates
         /// If non-null and non-blank, variables are appended to the existing frame with this name.
         /// If null or blank, variables are added to a new frame.
         /// </summary>
-        [XmlElement(ElementName = "append-to-grid")]
+        [XmlElement(ElementName = "append-to-frame")]
         public string AppendToFrame
         {
             get { return appendToFrame; }

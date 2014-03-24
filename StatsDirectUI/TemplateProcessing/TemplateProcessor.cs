@@ -8,6 +8,7 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.UI;
 using StatsDirect.Utilities;
+using System.Globalization;
 
 namespace StatsDirect.Templates
 {
@@ -588,31 +589,26 @@ namespace StatsDirect.Templates
                         if (!parameters.ContainsKey("series-count"))
                             throw new Exception("Chart expected parameter \"series-count\", which was not supplied");
                         int seriesCount = parameters["series-count"].AsInt32;
-                        for (int i = 1; i <= seriesCount; i++)
+                        // Series: First present...
+                        if (!parameters.ContainsKey("P"))
+                            throw new Exception("Chart expected parameter \"P\", which was not supplied");
+                        DataFrame frame = parameters["P"].AsDataFrame;
+                        for (int v = 0; v < frame.VariableCount; v++)
                         {
-                            // Series: First present...
-                            string presentDataName = "P" + i.ToString();
-                            if (!parameters.ContainsKey(presentDataName))
-                                throw new Exception("Chart expected parameter \"" + presentDataName + "\", which was not supplied");
-                            DataFrame frame = parameters[presentDataName].AsDataFrame;
-                            for (int v = 0; v < frame.VariableCount; v++)
-                            {
-                                DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
-                                definition.AddXSeriesAt(VariableToSeries(variable), v);
-                            }
-                            // dataName = frame.Name;
-                            // ... then absent
-                            string absentDataName = "A" + i.ToString();
-                            if (!parameters.ContainsKey(absentDataName))
-                                throw new Exception("Chart expected parameter \"" + absentDataName + "\", which was not supplied");
-                            frame = parameters[absentDataName].AsDataFrame;
-                            for (int v = 0; v < frame.VariableCount; v++)
-                            {
-                                DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
-                                definition.AddYSeriesAt(VariableToSeries(variable), v);
-                            }
-                            dataName = frame.Name;
+                            DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
+                            definition.AddXSeriesAt(VariableToSeries(variable), v);
                         }
+                        // dataName = frame.Name;
+                        // ... then absent
+                        if (!parameters.ContainsKey("A"))
+                            throw new Exception("Chart expected parameter \"A\", which was not supplied");
+                        frame = parameters["A"].AsDataFrame;
+                        for (int v = 0; v < frame.VariableCount; v++)
+                        {
+                            DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
+                            definition.AddYSeriesAt(VariableToSeries(variable), v);
+                        }
+                        dataName = frame.Name;
                         double pmn = 1;
                         double amn = 1;
                         for (int C = 0; C < definition.XSeries.Count; C++)
@@ -1240,7 +1236,7 @@ namespace StatsDirect.Templates
             if (Int32.TryParse(expression.Body, out candidateInt))
                 return candidateInt;
             double candidateDouble;
-            if (double.TryParse(expression.Body, out candidateDouble))
+            if (double.TryParse(expression.Body, NumberStyles.Float, CultureInfo.InvariantCulture, out candidateDouble))
                 return candidateDouble;
             bool candidateBoolean;
             if (bool.TryParse(expression.Body, out candidateBoolean))

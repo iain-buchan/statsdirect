@@ -18,26 +18,31 @@
 		<iteration>
 			<lower-bound>1</lower-bound>
 			<upper-bound-parameter>series-count</upper-bound-parameter>
-			<steps>
+      <loop-variable-name>i</loop-variable-name>
+      <steps>
         <settings>
           <parameters>
             <frame>
               <name>P1</name>
-              <prompt>Select data for feature PRESENT of series 1</prompt>
+              <prompt>="Select data for feature PRESENT of series " + parameters["i"].AsInt32.ToString()</prompt>
               <same-length>false</same-length>
               <mode>NumericSkipMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
+              <append-to-frame>P</append-to-frame>
+              <must-request>true</must-request>
             </frame>
             <frame>
               <name>A1</name>
-              <prompt>Select data for feature ABSENT of series 1</prompt>
+              <prompt>="Select data for feature ABSENT of series " + parameters["i"].AsInt32.ToString()</prompt>
               <same-length>false</same-length>
               <mode>NumericSkipMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
+              <append-to-frame>A</append-to-frame>
+              <must-request>true</must-request>
             </frame>
           </parameters>
         </settings>

@@ -2414,7 +2414,7 @@ namespace StatsDirect.Builtins
                         string studyType = parameters["study_type"].AsString;
                         if ("casecontrol".Equals(studyType))
                         {
-                            ParameterBag mantelParameters = TabMh(host, cco, ref zcats, ref zt, ref zcat);
+                            ParameterBag mantelParameters = TabMh(host, cco, zcats, zt, zcat);
                             if (mantelParameters != null)
                             {
                                 List<ParameterBag> mantelList = new List<ParameterBag>();
@@ -2424,7 +2424,7 @@ namespace StatsDirect.Builtins
                         }
                         else if ("cohort".Equals(studyType))
                         {
-                            ParameterBag rrmetaParameters = TabRr(host, cco, zcats, zt, zcat);
+                            ParameterBag rrmetaParameters = TabRelativeRisk(host, cco, zcats, zt, zcat);
                             if (rrmetaParameters != null)
                             {
                                 List<ParameterBag> rrmetaList = new List<ParameterBag>();
@@ -2629,7 +2629,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        private static ParameterBag TabRr(ITemplateHost host, double cco, int zcats, double[, ,] zt, Namevar[] zcat)
+        private static ParameterBag TabRelativeRisk(ITemplateHost host, double cco, int zcats, double[, ,] zt, Namevar[] zcat)
         {
             double dsul = 0; double dsll = 0;
             double dsx2 = 0; double dsrr = 0; double qc = 0; double sk = 0; double x2Rmh = 0; double ul = 0; double ll = 0; double rmh = 0; double cit;
@@ -2673,13 +2673,13 @@ namespace StatsDirect.Builtins
             double[] axul = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
-                o[i, 1] = zt[1, 1, i];
+                o[i, 4] = zt[1, 1, i];
                 o[i, 3] = zt[1, 2, i];
                 o[i, 2] = zt[2, 1, i];
-                o[i, 4] = zt[2, 2, i];
+                o[i, 1] = zt[2, 2, i];
             }
 
-            Meta.Relriskma(host, ref k, out realk, ref o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
+            Meta.RelativeRiskMA(host, k, out realk, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
             if (ierr == -1)
             {
                 throw new InvalidDataException();
@@ -3443,7 +3443,7 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-        private static ParameterBag TabMh(ITemplateHost host, double cco, ref int zcats, ref double[, ,] zt, ref Namevar[] zcat)
+        private static ParameterBag TabMh(ITemplateHost host, double cco, int zcats, double[, ,] zt, Namevar[] zcat)
         {
             double p2M; double p1M;
             double p2F; double p1F; double llm; double ulm; double llf; double ulf; double eor = 0; double tausq = 0;
@@ -3490,10 +3490,10 @@ namespace StatsDirect.Builtins
             double[] axul = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
-                o[i, 1] = zt[1, 1, i];
+                o[i, 4] = zt[1, 1, i];
                 o[i, 3] = zt[1, 2, i];
                 o[i, 2] = zt[2, 1, i];
-                o[i, 4] = zt[2, 2, i];
+                o[i, 1] = zt[2, 2, i];
             }
 
             Meta.Mantel(host, true, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out dsor, out dsx2, out dsll, out dsul, ref cced, ref tausq, out ierr);
@@ -3781,7 +3781,7 @@ namespace StatsDirect.Builtins
             }
             if (ir > 1 & ic > 1)
             {
-                iq = ((int)(  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor((double)iq / (ir * ic))));
+                iq = ((int)(Math.Floor((double)iq / (ir * ic))));
                 if (ldres <= iq)
                 {
                     ierr = 8;

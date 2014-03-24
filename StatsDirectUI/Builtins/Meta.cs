@@ -675,7 +675,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            Riskdifma(host, k, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrd, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, standardizedEffect, se, out ierr);
+            Riskdifma(host, k, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, ref qc, ref dsrd, ref dsx2, ref dsll, ref dsul, ref tausq, cced, standardizedEffect, se, out ierr);
             if (ierr == -1)
             {
                 throw new InvalidDataException();
@@ -917,7 +917,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            Relriskma(host, ref k, out realk, ref o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
+            RelativeRiskMA(host, k, out realk, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
             if (ierr == -1)
             {
                 throw new InvalidDataException("relriskma() returned an error");
@@ -1700,7 +1700,7 @@ namespace StatsDirect.Builtins
             while (true);
         }
 
-        public static void Relriskma(ITemplateHost host, ref int k, out int realk, ref double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2Rmh, ref double sk, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref double[] rkx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double dsrr, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, ref bool[] cced, out int ierr)
+        public static void RelativeRiskMA(ITemplateHost host, int k, out int realk, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2Rmh, ref double sk, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref double[] rkx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double dsrr, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, ref bool[] cced, out int ierr)
         {
             ierr = -1;
             double siga = 0.0;
@@ -1871,7 +1871,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void Riskdifma(ITemplateHost host, int k, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2Rmh, ref double sk, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref double[] rkx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double dsrd, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, ref bool[] cced, double[] standardizedEffect, double[] se, out int ierr)
+        private static void Riskdifma(ITemplateHost host, int k, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2Rmh, ref double sk, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, ref double qc, ref double dsrd, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, bool[] cced, double[] standardizedEffect, double[] sefixed, out int ierr)
         {
             double wt;
             double rkrs;
@@ -1938,10 +1938,10 @@ namespace StatsDirect.Builtins
                 if (!(host.Preferences.MetaExact))
                 {
                     vark = a * c / Math.Pow((a + c), 3.0) + b * d / Math.Pow((b + d), 3.0);
-                    se[i] = Math.Sqrt(vark);
+                    double se = Math.Sqrt(vark);
                     standardizedEffect[i] = rkr[i];
-                    rkrl[i] = rkr[i] - cit * se[i];
-                    rkru[i] = rkr[i] + cit * se[i];
+                    rkrl[i] = rkr[i] - cit * se;
+                    rkru[i] = rkr[i] + cit * se;
                 }
                 if (rkrl[i] != Constant.MISSING)
                 {
@@ -1980,6 +1980,8 @@ namespace StatsDirect.Builtins
                     ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
                 }
                 vark = a * c / Math.Pow((a + c), 3.0) + b * d / Math.Pow((b + d), 3.0);
+                standardizedEffect[i] = rkrs;
+                sefixed[i] = Math.Sqrt(vark);
                 wt = 1.0 / vark;
                 qc += wt * Math.Pow((rkrs - rmh), 2.0);
                 sumwt += wt;
@@ -2009,8 +2011,6 @@ namespace StatsDirect.Builtins
                 d = o[i, 4];
                 // nmn = ( ( a + C ) * ( b + D ) ) / N; 
                 rkrs = a / (a + c) - b / (b + d);
-                standardizedEffect[i] = rkrs;
-                se[i] = 0; // TODO: What?
                 if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                 {
                     ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
@@ -2816,7 +2816,7 @@ namespace StatsDirect.Builtins
                     if (rkok)
                     {
                         // do cc if not done earlier
-                        if (a <= 0 | b <= 0 | c <= 0 | d <= 0)
+                        if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                         {
                             ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
                             // N = a + b + C + D; 

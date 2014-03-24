@@ -25,7 +25,7 @@
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
-          <append-to-grid>data</append-to-grid>
+          <append-to-frame>data</append-to-frame>
         </frame>
         <frame>
           <name>strata</name>

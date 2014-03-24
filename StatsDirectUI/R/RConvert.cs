@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
+using System.Globalization;
 
 namespace StatsDirect.R
 {
@@ -187,7 +188,7 @@ namespace StatsDirect.R
             if (Constant.MISSING == value)
                 sb.Append("NA");
             else
-                sb.Append(value.ToString("R"));
+                sb.Append(value.ToString("R", CultureInfo.InvariantCulture));
         }
 
         public static void ToR(StringBuilder sb, DateTime value)
@@ -199,7 +200,7 @@ namespace StatsDirect.R
 
         public static void ToR(StringBuilder sb, int value)
         {
-            sb.Append(value.ToString());
+            sb.Append(value.ToString(CultureInfo.InvariantCulture));
         }
 
         public static void ToR(StringBuilder sb, string value)

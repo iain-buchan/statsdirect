@@ -182,8 +182,8 @@ namespace StatsDirect.UI
                 if (null != distTestXlsx)
                 {
                     DateTime distCreated = new FileInfo(distTestXlsx).CreationTimeUtc;
-                    DateTime mineCreated = new FileInfo(myTestXlsx).CreationTimeUtc;
-                    if (distCreated > mineCreated)
+                    DateTime mineModified = new FileInfo(myTestXlsx).LastWriteTimeUtc;
+                    if (distCreated > mineModified)
                     {
                         string extension = Path.GetExtension(myTestXlsx);
                         string prefix = Path.Combine(Path.GetDirectoryName(myTestXlsx), Path.GetFileNameWithoutExtension(myTestXlsx));
@@ -228,7 +228,8 @@ namespace StatsDirect.UI
                 return;
             File.Copy(distTestXlsx, myTestXlsx, false);
             // Set the copied file read-only
-            new FileInfo(myTestXlsx).IsReadOnly = true;
+            FileInfo tx = new FileInfo(myTestXlsx);
+            tx.IsReadOnly = true;
         }
 
         /// <summary>

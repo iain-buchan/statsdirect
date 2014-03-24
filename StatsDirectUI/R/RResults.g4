@@ -63,8 +63,8 @@ expression returns [object Value]
 	;
 
 term returns [object Value]
-	: INTEGER { $term.Value = int.Parse($INTEGER.text); }
-	| FLOAT { $term.Value = double.Parse($FLOAT.text); }
+	: INTEGER { $term.Value = int.Parse($INTEGER.text, System.Globalization.CultureInfo.InvariantCulture); }
+	| FLOAT { $term.Value = double.Parse($FLOAT.text, System.Globalization.CultureInfo.InvariantCulture); }
 	| STRING { $term.Value = ToStringBody($STRING.text); }
 	| NA { $term.Value = null; }
 	;

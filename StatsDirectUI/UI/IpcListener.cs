@@ -87,7 +87,7 @@ namespace StatsDirect.UI
 
                 // If we get here, we should stop.
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // TODO: How to log or tell the user that there's a problem here?
             }

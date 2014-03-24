@@ -255,6 +255,7 @@
     <Compile Include="Expressions\FunctionDefinition.cs" />
     <Compile Include="Expressions\FunctionRegistry.cs" />
     <Compile Include="Expressions\SDMath.cs" />
+    <Compile Include="Expressions\StatsDirectExpressionLexerPartial.cs" />
     <Compile Include="Expressions\StatsDirectExpressionParserPartial.cs" />
     <Compile Include="R\RConvert.cs" />
     <Compile Include="R\RController.cs" />
@@ -1635,7 +1636,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets')" />

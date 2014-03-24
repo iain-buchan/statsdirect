@@ -2128,11 +2128,11 @@ namespace StatsDirect.UI
                 candidateTitle = GetGridColumnTitle(gridColumn).Trim();
             }
 
-            // Find the first data row - anything other than MISSING is fair game
+            // Find the first data row - anything other than blank is fair game
             int skippedRows = 0;
             for (gridFirstDataRow = firstGridRow; gridFirstDataRow < firstGridRow + dataRows; gridFirstDataRow++)
             {
-                if (GetCellValue(gridFirstDataRow, gridColumn) != Constant.MISSING)
+                if (!string.IsNullOrWhiteSpace(GetCellText(gridFirstDataRow, gridColumn)))
                     break;
                 skippedRows++;
             }

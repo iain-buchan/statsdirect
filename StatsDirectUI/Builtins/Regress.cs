@@ -4626,7 +4626,7 @@ namespace StatsDirect.Builtins
             {
                 co = co + 0.01;
                 x_lclass(t, fvl, y, N, out tp, out fp, out fn, out tn, co);
-                if (tp + fn > 0 & tn + fp > 0)
+                if (tp + fn > 0 && tn + fp > 0)
                 {
                     double sens = Convert.ToDouble(tp) / Convert.ToDouble(tp + fn);
                     double sec = Convert.ToDouble(tn) / Convert.ToDouble(tn + fp);

@@ -45,8 +45,8 @@ factorial returns [string builtExpression]
 	;
 	
 term returns [string builtExpression]
-	: INTEGER { $term.builtExpression = "((double)" + $INTEGER.text + ")"; }
-	| MINUS INTEGER { $term.builtExpression = "((double)-" + $INTEGER.text + ")"; }
+	: INTEGER { $term.builtExpression = "((double)" + double.Parse($INTEGER.text).ToString() + ")"; }
+	| MINUS INTEGER { $term.builtExpression = "((double)-" + double.Parse($INTEGER.text).ToString() + ")"; }
 	| FLOAT { $term.builtExpression = double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")).ToString(); }
 	| MINUS FLOAT { $term.builtExpression = "-" + double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")).ToString(); }
 	| LPAREN expr RPAREN { $term.builtExpression = "(" + $expr.builtExpression + ")"; }
@@ -74,8 +74,8 @@ constant returns [string builtExpression]
 	: PI { $constant.builtExpression = "Math.PI"; }
 	| EE { $constant.builtExpression = "Math.E"; }
 	| FALSE { $constant.builtExpression = "false"; }
-	| LR { throw new System.NotImplementedException(); }
 	| TRUE { $constant.builtExpression = "true"; }
+//	| LR { throw new System.NotImplementedException(); }
 	;
 	
 relop returns [string builtExpression]
@@ -105,13 +105,13 @@ explicitParameterName
 
 // Anything below here is lexical analysis
 
-INTEGER :	('0'..'9')+
+INTEGER :	DIGITSANDTHOUSANDS
     ;
 
 FLOAT
-    :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-    |   '.' ('0'..'9')+ EXPONENT?
-    |   ('0'..'9')+ EXPONENT
+    :   DIGITSANDTHOUSANDS DECIMALSEPARATOR ('0'..'9')* EXPONENT?
+    |   DECIMALSEPARATOR ('0'..'9')+ EXPONENT?
+    |   DIGITSANDTHOUSANDS EXPONENT
     ;
 
 // Tokens.  Implemented in this way to provide cheap, portable case-insensitivity.
@@ -175,6 +175,10 @@ fragment Y	:	'Y'|'y';
 fragment Z	:	'Z'|'z';
 
 
+STRING
+    :  '"' ( ~('\\'|'"') )* '"'
+    ;
+
 WS:     ( ' '
         | '\t'
         | '\r'
@@ -182,8 +186,20 @@ WS:     ( ' '
         ) -> skip
     ;
 
-STRING
-    :  '"' ( ~('\\'|'"') )* '"'
-    ;
-
 fragment EXPONENT : ('d'|'D'|'e'|'E') ('+'|'-')? ('0'..'9')+ ;
+
+fragment DIGITSANDTHOUSANDS
+	: ('0'..'9')('0'..'9')('0'..'9')('0'..'9')+
+	| ('0'..'9')('0'..'9')?('0'..'9')? (THOUSANDSEPARATOR ('0'..'9')('0'..'9')('0'..'9'))*
+	;
+
+fragment THOUSANDSEPARATOR
+	: {Separators == SeparatorStructure.CommaDot}? ','
+	| {Separators == SeparatorStructure.DotComma}? '.'
+	| {Separators == SeparatorStructure.SpaceDot}? ' '
+	;
+
+fragment DECIMALSEPARATOR
+	: {Separators == SeparatorStructure.CommaDot || Separators == SeparatorStructure.SpaceDot}? '.'
+	| {Separators == SeparatorStructure.DotComma}? ','
+	;

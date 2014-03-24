@@ -19,7 +19,8 @@ namespace StatsDirect.R
         const string RSCRIPT_NAME = "script.r";
         const string RESULTS_FILE_NAME = "results.txt";
         const string ERROR_FILE_NAME = "error.txt";
-        const string SCRIPT_HEAD = "userdir<-\"{0}\"\r\nlibdir<-\"Lib\"\r\nrlib=file.path(userdir, libdir)\r\ndir.create(rlib,recursive=T,showWarnings=F)\r\nsetwd(file.path(userdir))\r\n.libPaths(rlib)\r\nzz <- file(\"{1}\", open = \"wt\")\r\nsink(zz, type = \"message\")\r\nreturning.to.statsdirect <- TRUE";
+        const string SCRIPT_HEAD = "userdir<-\"{0}\"\r\nlibdir<-\"Lib\"\r\nrlib=file.path(userdir, libdir)\r\ndir.create(rlib,recursive=T,showWarnings=F)\r\nsetwd(file.path(userdir))\r\n.libPaths(rlib)";
+        const string STATSDIRECT_HEAD = "zz <- file(\"{0}\", open = \"wt\")\r\nsink(zz, type = \"message\")\r\nreturning.to.statsdirect <- TRUE";
         /// <summary>
         /// Checks whether R is installed and, if so, what versions.
         /// </summary>
@@ -139,7 +140,7 @@ namespace StatsDirect.R
             string repairedScriptBody = scriptBody
                 .Replace("\r", "")
                 .Replace("\n", "\r\n");
-            rtfScriptBody = repairedScriptBody
+            rtfScriptBody = (string.Format(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\")) + "\r\n" + repairedScriptBody)
                 .Replace(@"\", @"\\")
                 .Replace(@"{", @"\{")
                 .Replace(@"}", @"\}")
@@ -147,7 +148,9 @@ namespace StatsDirect.R
 
             using (TextWriter tw = new StreamWriter(scriptPath, false, Encoding.ASCII))
             {
-                tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"), ERROR_FILE_NAME);
+                tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
+                tw.WriteLine();
+                tw.Write(STATSDIRECT_HEAD, ERROR_FILE_NAME);
                 tw.WriteLine();
                 tw.WriteLine(repairedScriptBody);
                 tw.WriteLine("quit()");
@@ -168,6 +171,7 @@ namespace StatsDirect.R
 
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.FileName = Path.Combine(preferredVersion.BinPath, RSCRIPT_EXE_NAME);
+            startInfo.WorkingDirectory = rFolder;
             startInfo.Arguments = string.Format("--vanilla \"{0}\"", scriptPath);
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;

@@ -1929,6 +1929,11 @@ namespace StatsDirect.Charting
             }
         }
 
+        private void DrawMarkerInChartCoordinates(double x, double y, double size, MarkerType mType)
+        {
+            DrawMarker(ToCanvasX(x), ToCanvasY(y), size, mType);
+        }
+
         private void SetStandardAsciiScaling()
         {
             divx = axisXMax - axisXMin;
@@ -2021,7 +2026,7 @@ namespace StatsDirect.Charting
                     DoubleSeries ys = definition.YSeries[c].AsDoubleSeries;
                     double[] xdat = xs.Data;
                     double[] ydat = ys.Data;
-                    PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
+                    PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
                     for (int r = 0; r < xs.Data.Length; r++)
                     {
                         if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
@@ -2134,7 +2139,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
+            PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2228,7 +2233,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
+            PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2597,7 +2602,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
+            PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2691,7 +2696,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1 ];
+            PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
             for (int r = 0; r < xs.Data.Length; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2864,7 +2869,7 @@ namespace StatsDirect.Charting
             double log10 = Math.Log(10);
             for (int i = 0; i < xdat.Length; i++)
                 if (xdat[i] > 0 && x[i] != Constant.MISSING)
-                    x[i] = Math.Log(xdat[i])/log10;
+                    x[i] = Math.Log(xdat[i]) / log10;
                 else
                     x[i] = xdat[i];
 
@@ -2918,7 +2923,7 @@ namespace StatsDirect.Charting
                 for (double calcx = axisXMin; calcx <= axisXMax; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
-                    double log10X = Math.Log(originalX)/log10;
+                    double log10X = Math.Log(originalX) / log10;
                     double calcy = a + b * log10X;
                     if (model == 1)
                         calcy = PDF.alnorm(calcy);
@@ -4986,7 +4991,7 @@ namespace StatsDirect.Charting
                 int mp = so.Bins;
                 double zint = so.MidPointInterval;
                 double zmin = so.MinimumBinMidPoint;
-                int[] size = new int[mp + 2 ];
+                int[] size = new int[mp + 2];
                 double[] midpt = new double[mp + 2];
 
                 //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
@@ -5362,7 +5367,7 @@ namespace StatsDirect.Charting
             int rows = x.Length;
             int xOffset = x.GetLowerBound(0);
             int yOffset = y.GetLowerBound(0);
-            PointF[] xys = new PointF[rows - 1 + 1 ];
+            PointF[] xys = new PointF[rows - 1 + 1];
             for (int r = 0; r <= rows - 1; r++)
             {
                 if (x[r + xOffset] != Constant.MISSING && y[r + yOffset] != Constant.MISSING)
@@ -5869,8 +5874,6 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method GetRocScaleParameters
         private ScaleParameters GetRocScaleParameters()
         {
             return new ScaleParameters
@@ -5892,7 +5895,6 @@ namespace StatsDirect.Charting
                                      };
         }
 
-
         ///  <summary>
         ///  Plot a ROC chart to the specified stream
         ///  </summary>
@@ -5908,33 +5910,32 @@ namespace StatsDirect.Charting
             double P0;
             MathDbl.civ(0, out cit, GAMMA, out P0);
 
-            //  Assume data passed as series - X is present, Y is absent.
+            //  Assume data passed as series - X is positive, Y is negative.
 
-            ROCSeriesRecord[] seriesData = new ROCSeriesRecord[definition.XSeries.Count + 1 ];
-            for (int C = 0; C <= definition.XSeries.Count - 1; C++)
+            ROCSeriesRecord[] seriesData = new ROCSeriesRecord[definition.XSeries.Count];
+            for (int c = 0; c < definition.XSeries.Count; c++)
             {
-                seriesData[C] = new ROCSeriesRecord();
-                DoubleSeries xs = definition.XSeries[C].AsDoubleSeries;
-                DoubleSeries ys = definition.YSeries[C].AsDoubleSeries;
-                seriesData[C].pdata = xs.Data;
-                seriesData[C].adata = ys.Data;
-                seriesData[C].pmn = xs.Sum / Convert.ToDouble(xs.Points);
-                seriesData[C].amn = ys.Sum / Convert.ToDouble(ys.Points);
-                seriesData[C].min = Math.Min(xs.Min, ys.Min);
-                seriesData[C].max = Math.Max(xs.Max, ys.Max);
+                seriesData[c] = new ROCSeriesRecord();
+                DoubleSeries xs = definition.XSeries[c].AsDoubleSeries;
+                DoubleSeries ys = definition.YSeries[c].AsDoubleSeries;
+                seriesData[c].pdata = xs.Data;
+                seriesData[c].adata = ys.Data;
+                seriesData[c].pmn = xs.Sum / Convert.ToDouble(xs.Points);
+                seriesData[c].amn = ys.Sum / Convert.ToDouble(ys.Points);
+                seriesData[c].min = Math.Min(xs.Min, ys.Min);
+                seriesData[c].max = Math.Max(xs.Max, ys.Max);
                 // get a sorted list of all data in order to calculate cut points
-                seriesData[C].tdata = new double[xs.Points + ys.Points];
+                seriesData[c].tdata = new double[xs.Points + ys.Points];
                 for (int r = 0; r < xs.Points; r++)
-                    seriesData[C].tdata[r] = xs.Data[r];
+                    seriesData[c].tdata[r] = xs.Data[r];
                 for (int r = 0; r < ys.Points; r++)
-                    seriesData[C].tdata[xs.Points + r] = ys.Data[r];
-                Array.Sort(seriesData[C].tdata);
-
+                    seriesData[c].tdata[xs.Points + r] = ys.Data[r];
+                Array.Sort(seriesData[c].tdata);
             }
 
-            //  Work out how many series there are and extend the plot area as required to hold the legend
+            // Work out how many series there are and extend the plot area as required to hold the legend
 
-            //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
+            // Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
             double legendFontHeight;
             using (MemoryStream scratchStream = new MemoryStream())
             {
@@ -5947,7 +5948,7 @@ namespace StatsDirect.Charting
                 EndMetafile();
             }
 
-            //  By now, all measurements are known.  Set up the plot areas.
+            // By now, all measurements are known.  Set up the plot areas.
             double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
             double markerMidlineOffset = (legendFontHeight - LEGEND_MARKER_SIZE) / 2;
             double legendSpacing = MINIMUM_LEGEND_GAP + Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
@@ -5982,7 +5983,7 @@ namespace StatsDirect.Charting
                 DrawLine(tenPenDiagonal, xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas);
             }
 
-            // get the offsets for the Markers
+            // get the offsets for the markers
             offx = xAxisCanvas;
             offy = yAxisCanvas;
 
@@ -5991,14 +5992,14 @@ namespace StatsDirect.Charting
             ParameterBag results = new ParameterBag();
             IList<ParameterBag> allResults = new List<ParameterBag>();
             results.AddOutput("*", allResults);
-            for (int cs = 0; cs <= definition.XSeries.Count - 1; cs++)
+            for (int cs = 0; cs < definition.XSeries.Count; cs++)
             {
                 ROCSeriesRecord thisData = seriesData[cs];
                 DoubleSeries xs = definition.XSeries[cs].AsDoubleSeries;
                 DoubleSeries ys = definition.YSeries[cs].AsDoubleSeries;
-                double Weight = rOptions.Weight;
-                if (Weight <= 0)
-                    Weight = 1.0;
+                double weight = rOptions.Weight;
+                if (weight <= 0)
+                    weight = 1.0;
 
                 // Draw the legend for each series
                 DrawMarker(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendTop - (cs * legendSpacing) - markerMidlineOffset, LEGEND_MARKER_SIZE, definition.YSeries[cs].AsDoubleSeries);
@@ -6014,64 +6015,18 @@ namespace StatsDirect.Charting
                 {
                     // work out cutoff for max(weight*sens+spec)
                     double maxss = 0.0;
-                    for (int r = 0; r <= thisData.tdata.Length - 1; r++)
+                    for (int r = 0; r < thisData.tdata.Length; r++)
                     {
-                        a = 0;
-                        b = 0;
                         cutoff = thisData.tdata[r];
-                        for (int j = 0; j <= thisData.pdata.Length - 1; j++)
-                        {
-                            switch (showopt)
-                            {
-                                case ComparisonValue.LT:
-                                    if (thisData.pdata[j] < cutoff)
-                                        a++;
-                                    break;
-                                case ComparisonValue.LE:
-                                    if (thisData.pdata[j] <= cutoff)
-                                        a++;
-                                    break;
-                                case ComparisonValue.GT:
-                                    if (thisData.pdata[j] > cutoff)
-                                        a++;
-                                    break;
-                                default:
-                                    if (thisData.pdata[j] >= cutoff)
-                                        a++;
-                                    break;
-                            }
-
-                        }
+                        a = CountValues(showopt, thisData.pdata, cutoff);
                         c = thisData.pdata.Length - a;
-                        for (int j = 0; j <= thisData.adata.Length - 1; j++)
-                        {
-                            switch (showopt)
-                            {
-                                case ComparisonValue.LT:
-                                    if (thisData.adata[j] < cutoff)
-                                        b++;
-                                    break;
-                                case ComparisonValue.LE:
-                                    if (thisData.adata[j] <= cutoff)
-                                        b++;
-                                    break;
-                                case ComparisonValue.GT:
-                                    if (thisData.adata[j] > cutoff)
-                                        b++;
-                                    break;
-                                default:
-                                    if (thisData.adata[j] >= cutoff)
-                                        b++;
-                                    break;
-                            }
-
-                        }
+                        b = CountValues(showopt, thisData.adata, cutoff);
                         d = thisData.adata.Length - b;
                         sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
                         double spec = Convert.ToDouble(d) / Convert.ToDouble(b + d);
-                        if (Weight * sens + spec > maxss)
+                        if (weight * sens + spec > maxss)
                         {
-                            maxss = Weight * sens + spec;
+                            maxss = weight * sens + spec;
                             thisData.cutoff = cutoff;
                             thisData.a = a;
                             thisData.b = b;
@@ -6087,63 +6042,20 @@ namespace StatsDirect.Charting
                     if (rOptions.ShowCutOffCalculator)
                     {
                         string q = "ROC plot for " + rOptions.SeriesTitles[cs];
-                        thisData = ShowCutoff(host, thisData, Weight, q);
+                        thisData = ShowCutoff(host, thisData, weight, q);
                     }
                     seriesData[cs] = thisData;
-
                 }
 
                 // make first mark
-                a = 0;
-                b = 0;
                 cutoff = thisData.cutoff;
-                for (int r = 0; r <= thisData.pdata.Length - 1; r++)
-                {
-                    switch (showopt)
-                    {
-                        case ComparisonValue.LT:
-                            if (thisData.pdata[r] < cutoff)
-                                a++;
-                            break;
-                        case ComparisonValue.LE:
-                            if (thisData.pdata[r] <= cutoff)
-                                a++;
-                            break;
-                        case ComparisonValue.GT:
-                            if (thisData.pdata[r] > cutoff)
-                                a++;
-                            break;
-                        default:
-                            if (thisData.pdata[r] >= cutoff)
-                                a++;
-                            break;
-                    }
-
-                }
+                a = 0;
+                for (int r = 0; r < thisData.pdata.Length; r++)
+                    a += CountValues(showopt, thisData.pdata, cutoff);
                 c = thisData.pdata.Length - a;
-                for (int r = 0; r <= thisData.adata.Length - 1; r++)
-                {
-                    switch (showopt)
-                    {
-                        case ComparisonValue.LT:
-                            if (thisData.adata[r] < cutoff)
-                                b++;
-                            break;
-                        case ComparisonValue.LE:
-                            if (thisData.adata[r] <= cutoff)
-                                b++;
-                            break;
-                        case ComparisonValue.GT:
-                            if (thisData.adata[r] > cutoff)
-                                b++;
-                            break;
-                        default:
-                            if (thisData.adata[r] >= cutoff)
-                                b++;
-                            break;
-                    }
-
-                }
+                b = 0;
+                for (int r = 0; r < thisData.adata.Length; r++)
+                    b += CountValues(showopt, thisData.adata, cutoff);
                 d = thisData.adata.Length - b;
                 sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
                 double mspec = 1.0 - Convert.ToDouble(d) / Convert.ToDouble(b + d);
@@ -6151,60 +6063,15 @@ namespace StatsDirect.Charting
                 double y1 = offy + sens * yExtCanvas;
 
                 int stps = thisData.tdata.Length;
-                double[] rx = new double[stps + 1 ];
-                double[] ry = new double[stps + 1 ];
+                double[] rx = new double[stps];
+                double[] ry = new double[stps];
 
-                for (int r = 0; r <= stps - 1; r++)
+                for (int r = 0; r < stps; r++)
                 {
-                    a = 0;
-                    b = 0;
                     cutoff = thisData.tdata[r];
-                    for (int j = 0; j <= thisData.pdata.Length - 1; j++)
-                    {
-                        switch (showopt)
-                        {
-                            case ComparisonValue.LT:
-                                if (thisData.pdata[j] < cutoff)
-                                    a++;
-                                break;
-                            case ComparisonValue.LE:
-                                if (thisData.pdata[j] <= cutoff)
-                                    a++;
-                                break;
-                            case ComparisonValue.GT:
-                                if (thisData.pdata[j] > cutoff)
-                                    a++;
-                                break;
-                            default:
-                                if (thisData.pdata[j] >= cutoff)
-                                    a++;
-                                break;
-                        }
-
-                    }
+                    a = CountValuesSingleSided(showopt, thisData.pdata, cutoff);
                     c = thisData.pdata.Length - a;
-                    foreach (double t in thisData.adata)
-                    {
-                        switch (showopt)
-                        {
-                            case ComparisonValue.LT:
-                                if (t < cutoff)
-                                    b++;
-                                break;
-                            case ComparisonValue.LE:
-                                if (t <= cutoff)
-                                    b++;
-                                break;
-                            case ComparisonValue.GT:
-                                if (t > cutoff)
-                                    b++;
-                                break;
-                            default:
-                                if (t >= cutoff)
-                                    b++;
-                                break;
-                        }
-                    }
+                    b = CountValuesSingleSided(showopt, thisData.adata, cutoff);
                     d = thisData.adata.Length - b;
                     sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
                     ry[r] = sens;
@@ -6212,6 +6079,7 @@ namespace StatsDirect.Charting
                     rx[r] = mspec;
                 }
 
+                // Draw markers
                 for (int r = 0; r < stps; r++)
                 {
                     double x2 = offx + rx[r] * xExtCanvas;
@@ -6219,6 +6087,7 @@ namespace StatsDirect.Charting
                     DrawMarker(x2, y2, ys.MarkerSize, definition.YSeries[cs].AsDoubleSeries);
                 }
 
+                // Draw lines between markers
                 double last_x2 = x1;
                 double last_y2 = y1;
                 for (int r = 0; r < stps; r++)
@@ -6231,10 +6100,15 @@ namespace StatsDirect.Charting
                     last_y2 = y2;
                 }
 
-                // mark cutoff point
-                double x = offx + (1.0 - thisData.spec) * xExtCanvas;
-                double y = offy + thisData.sens * yExtCanvas;
-                DrawMarker(x, y, rOptions.MarkerTypes[definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[definition.XSeries.Count + cs]);
+                // Mark cutoff point.  This is reversed if the chart requires reversal.
+                double x = 1.0 - thisData.spec;
+                double y = thisData.sens;
+                if (showopt == ComparisonValue.LT || showopt == ComparisonValue.LE)
+                {
+                    x = 1.0 - x;
+                    y = 1.0 - y;
+                }
+                DrawMarkerInChartCoordinates(x, y, rOptions.MarkerTypes[definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[definition.XSeries.Count + cs]);
 
                 thisData.auc = MathDbl.trapezoid_xy_roc(rx, ry, 0, stps);
 
@@ -6245,8 +6119,8 @@ namespace StatsDirect.Charting
                     // Wilcoxon estimate for AUC
                     // Hanley JA, mcNeil BJ, Radiology 143:29-36
                     //  Note that mwx and mwr are 1-based
-                    double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1 ];
-                    double[] mwr = new double[thisData.pdata.Length + thisData.adata.Length + 1 ];
+                    double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1];
+                    double[] mwr = new double[thisData.pdata.Length + thisData.adata.Length + 1];
                     for (int j = 0; j < thisData.pdata.Length; j++)
                     {
                         mwx[j + 1] = thisData.pdata[j];
@@ -6260,7 +6134,7 @@ namespace StatsDirect.Charting
                     double transTemp69 = 0;
                     double transTemp70 = 0;
                     double transTemp71 = 0;
-                    NonParametric.x_mwut(ref mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, mwr, ref u, ref transTemp69, ref transTemp70, ref transTemp71, out fault);
+                    NonParametric.x_mwut(mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, mwr, ref u, ref transTemp69, ref transTemp70, ref transTemp71, out fault);
                     double theta;
                     double ll;
                     double ul;
@@ -6273,11 +6147,9 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        if (Convert.ToDouble(thisData.pdata.Length * thisData.adata.Length) - u > u)
-                        {
-                            u = Convert.ToDouble(thisData.pdata.Length * thisData.adata.Length) - u;
-                        }
-                        theta = u / Convert.ToDouble(thisData.pdata.Length * thisData.adata.Length);
+                        // if (thisData.pdata.Length * thisData.adata.Length - u > u)
+                        //     u = thisData.pdata.Length * thisData.adata.Length - u;
+                        theta = u / (thisData.pdata.Length * thisData.adata.Length);
                         // Q1 = theta / (2# - theta)
                         // Q2 = (2# * (theta ^ 2#)) / (1# + theta)
                         // sew = Sqr((theta * (1# - theta) + CDbl(rowsp(cs) - 1) * (Q1 - theta ^ 2#) + CDbl(rowsa(cs) - 1) * (Q2 - theta# ^ 2#)) / CDbl(rowsp(cs) * rowsa(cs)))
@@ -6293,7 +6165,7 @@ namespace StatsDirect.Charting
                             ul = theta + cit * sew;
                         }
                     }
-                    // end of Wilcoxon extimate
+                    // end of Wilcoxon estimate
                     string warn;
                     thisResults.AddOutput("ti", rOptions.SeriesTitles[cs]);
                     thisResults.AddOutput("auc", host.RoundU(thisData.auc));
@@ -6448,6 +6320,55 @@ namespace StatsDirect.Charting
             return results;
         }
 
+        private static int CountValues(ComparisonValue showopt, double[] data, double cutoff)
+        {
+            int a = 0;
+            for (int j = 0; j < data.Length; j++)
+            {
+                switch (showopt)
+                {
+                    case ComparisonValue.LT:
+                        if (data[j] < cutoff)
+                            a++;
+                        break;
+                    case ComparisonValue.LE:
+                        if (data[j] <= cutoff)
+                            a++;
+                        break;
+                    case ComparisonValue.GT:
+                        if (data[j] > cutoff)
+                            a++;
+                        break;
+                    default:
+                        if (data[j] >= cutoff)
+                            a++;
+                        break;
+                }
+            }
+            return a;
+        }
+
+        private static int CountValuesSingleSided(ComparisonValue showopt, double[] data, double cutoff)
+        {
+            int a = 0;
+            for (int j = 0; j < data.Length; j++)
+            {
+                switch (showopt)
+                {
+                    case ComparisonValue.LT:
+                    case ComparisonValue.GT:
+                        if (data[j] > cutoff)
+                            a++;
+                        break;
+                    default:
+                        if (data[j] >= cutoff)
+                            a++;
+                        break;
+                }
+            }
+            return a;
+        }
+
 
         // TRANSMISSINGCOMMENT: Method GetNormalScaleParameters
         private ScaleParameters GetNormalScaleParameters()
@@ -6458,13 +6379,13 @@ namespace StatsDirect.Charting
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
 
-            double[] y = new double[rows - 1 + 1 ];
+            double[] y = new double[rows - 1 + 1];
             for (int j = 0; j <= rows - 1; j++)
             {
                 y[j] = xs0.Data[j];
             }
 
-            double[] x = new double[rows - 1 + 1 ];
+            double[] x = new double[rows - 1 + 1];
             double transTemp68;
             ExFortran.Rank(y, x, 0, rows, 0, out transTemp68);
 
@@ -6537,7 +6458,7 @@ namespace StatsDirect.Charting
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
 
-            double[] y = new double[rows - 1 + 1 ];
+            double[] y = new double[rows - 1 + 1];
             for (int j = 0; j <= rows - 1; j++)
             {
                 y[j] = xs0.Data[j];
@@ -6588,7 +6509,7 @@ namespace StatsDirect.Charting
             double sdy = Math.Sqrt(vary);
 
 
-            double[] x = new double[rows - 1 + 1 ];
+            double[] x = new double[rows - 1 + 1];
             double transTemp63;
             ExFortran.Rank(y, x, 0, rows, 0, out transTemp63);
 
@@ -6751,8 +6672,8 @@ namespace StatsDirect.Charting
                 //  Separate male and female values
                 DataFrame femaleFrame = pOptions.FemaleFrame;
                 DoubleVariable females = femaleFrame.Variables[0].AsDoubleVariable;
-                female = new double[nmale - 1 + 1 ];
-                male = new double[nmale - 1 + 1 ];
+                female = new double[nmale - 1 + 1];
+                male = new double[nmale - 1 + 1];
                 maxfemale = females.Max;
 
                 for (int r = 0; r <= nmale - 1; r++)
@@ -6785,7 +6706,7 @@ namespace StatsDirect.Charting
                 mode = 2;
             }
 
-            string[] title = new string[nmale + 1 ];
+            string[] title = new string[nmale + 1];
             if (pOptions.LabelFrame != null)
             {
                 StringVariable labels = pOptions.LabelFrame.Variables[0].AsStringVariable;
@@ -7146,7 +7067,7 @@ namespace StatsDirect.Charting
             // Plot the points
             double maxz = double.MinValue;
             double sumz = Convert.ToDouble(0M);
-            int[] scalez = new int[rows + 1 ];
+            int[] scalez = new int[rows + 1];
             for (int r = LowerBound; r <= rows + LowerBound - 1; r++)
             {
                 sumz = sumz + z[r];
@@ -7245,9 +7166,9 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         private void PlotLAbbe(int k, double[,] o, double rmh)
         {
-            double[] y = new double[k + 1 ];
-            double[] x = new double[k + 1 ];
-            double[] w = new double[k + 1 ];
+            double[] y = new double[k + 1];
+            double[] x = new double[k + 1];
+            double[] w = new double[k + 1];
             for (int i = 1; i <= k; i++)
             {
                 y[i] = o[i, 1] / (o[i, 1] + o[i, 3]);
@@ -7340,8 +7261,8 @@ namespace StatsDirect.Charting
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
-            double[] xdat = new double[rows + 1 ];
-            double[] ydat = new double[rows + 1 ];
+            double[] xdat = new double[rows + 1];
+            double[] ydat = new double[rows + 1];
 
             int ctr = 0;
             double[] ySeriesData = ys0.Data;
@@ -7455,8 +7376,8 @@ namespace StatsDirect.Charting
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
-            double[] xdat = new double[rows + 1 ];
-            double[] ydat = new double[rows + 1 ];
+            double[] xdat = new double[rows + 1];
+            double[] ydat = new double[rows + 1];
 
             int ctr = 0;
             bool looksLikeDates = true;
@@ -7583,7 +7504,7 @@ namespace StatsDirect.Charting
             ToCanvasX(xdat[1]);
             ToCanvasY(ydat[1]);
             // plot points
-            PointF[] xys = new PointF[rows - 1 + 1 ];
+            PointF[] xys = new PointF[rows - 1 + 1];
             for (int r = 0; r <= rows - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -8105,7 +8026,7 @@ namespace StatsDirect.Charting
 
             if (k > 10)
             {
-                scaleYAxis = 1 + (k - 10) / 20;
+                scaleYAxis = 1.0 + (k - 10.0) / 20.0;
                 if (scaleYAxis > 5)
                     scaleYAxis = 5;
                 metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
@@ -8719,7 +8640,7 @@ namespace StatsDirect.Charting
             int plotMethod;
             get_ma_ordinate(host, out y, yy, yw, cl, cu, ref cco, rows, out title, ref ytx, xtxt, out plotMethod, xform, ref reverse, ref use_ci);
 
-            double[] xx = new double[rows + 1 ];
+            double[] xx = new double[rows + 1];
             xx[0] = Constant.MISSING;
             switch (xform)
             {
@@ -9130,7 +9051,7 @@ namespace StatsDirect.Charting
 
         private void get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, ref string ytx, string xtxt, out int plot_method, Transformation xform, ref bool reverse, ref bool use_ci)
         {
-            y = new double[rows + 1 ];
+            y = new double[rows + 1];
             y[0] = Constant.MISSING;
             if (xtxt == "Peto weights")
             {
@@ -9355,93 +9276,68 @@ namespace StatsDirect.Charting
             return payload.SeriesRecord;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method DeLongPsi
-        private double DeLongPsi(double x, double y)
+        private static double DeLongPsi(double x, double y)
         {
-            if (y < x)
-                return 1.0;
             if (y == x)
                 return 0.5;
-            return 0.0;
+            return (y < x) ? 1.0 : 0.0;
         }
 
-        private double DeLongSE(double[] x, double[] y, double auc)
+        private static double DeLongSE(double[] x, double[] y, double auc)
         {
-
-            double[] v10 = new double[x.Length + 1 ];
-            double[] v01 = new double[y.Length + 1 ];
-            for (int i = 0; i <= x.Length - 1; i++)
+            double[] v10 = new double[x.Length];
+            double[] v01 = new double[y.Length];
+            for (int i = 0; i < x.Length; i++)
             {
-                for (int j = 0; j <= y.Length - 1; j++)
-                {
-                    v10[i] = v10[i] + DeLongPsi(x[i], y[j]);
-                }
-                v10[i] = v10[i] / Convert.ToDouble(y.Length);
+                for (int j = 0; j < y.Length; j++)
+                    v10[i] += DeLongPsi(x[i], y[j]);
+                v10[i] /= y.Length;
             }
-            for (int j = 0; j <= y.Length - 1; j++)
+            for (int j = 0; j < y.Length; j++)
             {
-                for (int i = 0; i <= x.Length - 1; i++)
-                {
-                    v01[j] = v01[j] + DeLongPsi(x[i], y[j]);
-                }
-                v01[j] = v01[j] / Convert.ToDouble(x.Length);
+                for (int i = 0; i < x.Length; i++)
+                    v01[j] += DeLongPsi(x[i], y[j]);
+                v01[j] /= x.Length;
             }
             double s10 = 0.0;
             double s01 = 0.0;
-            for (int i = 0; i <= x.Length - 1; i++)
-            {
-                s10 = s10 + Math.Pow((v10[i] - auc), 2.0);
-            }
-            s10 = s10 / Convert.ToDouble(x.Length - 1);
-            for (int j = 0; j <= y.Length - 1; j++)
-            {
-                s01 = s01 + Math.Pow((v01[j] - auc), 2.0);
-            }
-            s01 = s01 / Convert.ToDouble(y.Length - 1);
-            double var = s10 / Convert.ToDouble(x.Length) + s01 / Convert.ToDouble(y.Length);
+            for (int i = 0; i < x.Length; i++)
+                s10 += Math.Pow((v10[i] - auc), 2.0);
+            s10 /= x.Length - 1;
+            for (int j = 0; j < y.Length; j++)
+                s01 += Math.Pow((v01[j] - auc), 2.0);
+            s01 /= y.Length - 1;
+            double var = s10 / x.Length + s01 / y.Length;
             return var < 0.0 ? Constant.MISSING : Math.Sqrt(var);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method Swap
-        private void Swap(ref double x, ref double y)
+        private static void Swap(ref double x, ref double y)
         {
             double temp = x;
             x = y;
             y = temp;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method AxisLabelWidth
         private float AxisLabelWidth(string s)
         {
             return canvas.MeasureString(s, axisLabelFont).Width;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method AxisLabelHeight
         private float AxisLabelHeight(string s)
         {
             return canvas.MeasureString(s, axisLabelFont).Height;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method LabelHeight
         private float LabelHeight(string s)
         {
             return canvas.MeasureString(s, labelFont).Height;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method LegendWidth
         private float LegendWidth(string s)
         {
             return canvas.MeasureString(s, legendFont).Width;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method LegendHeight
         private float LegendHeight(string s)
         {
             return canvas.MeasureString(s, legendFont).Height;
@@ -9805,7 +9701,7 @@ namespace StatsDirect.Charting
                 scaleYAxis = 1;
                 metafileHeight = DEFAULT_METAFILE_HEIGHT;
             }
-            double[] gw = new double[k + 1 ];
+            double[] gw = new double[k + 1];
             double ormax = double.NegativeInfinity;
             double ormin = double.PositiveInfinity;
             double orumax = double.NegativeInfinity;
@@ -9883,7 +9779,7 @@ namespace StatsDirect.Charting
             }
 
             const int tics = 15;
-            double[] tic = new double[tics + 1 ];
+            double[] tic = new double[tics + 1];
             tic[1] = 0.00000001;
             tic[2] = 0.00001;
             tic[3] = 0.001;
@@ -10113,7 +10009,7 @@ namespace StatsDirect.Charting
             }
             DefaultAxes(0);
 
-            double[] gw = new double[k + 1 ];
+            double[] gw = new double[k + 1];
             double ormax = double.NegativeInfinity;
             double ormin = double.PositiveInfinity;
             double orumax = double.NegativeInfinity;
@@ -10380,7 +10276,7 @@ namespace StatsDirect.Charting
             }
             DefaultAxes(0);
 
-            double[] gn = new double[k + 1 ];
+            double[] gn = new double[k + 1];
             int kok = 0;
             double ormax = double.NegativeInfinity;
             double ormin = double.PositiveInfinity;

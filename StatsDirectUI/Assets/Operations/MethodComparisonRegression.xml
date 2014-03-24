@@ -26,6 +26,7 @@
         <options>
           <name>methods</name>
           <prompt>Regression Methods</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <options>
             <option name="do.deming.jackknife" selected="true">Deming (jackknife CI)</option>
@@ -33,10 +34,9 @@
             <option name="do.deming.analytical" selected="false">Deming (Wald CI)</option>
             <option name="do.wdeming.jackknife" selected="false">Weighted Deming (jackknife CI)</option>
             <option name="do.wdeming.nestedbootstrap" selected="false">Weighted Deming (nested bootstrap CI)</option>
-            <option name="do.wdeming.analytical" selected="false">Weighted Deming (Wald CI)</option>
-            <option name="do.paba" selected="true">Passing-Bablok</option>
+            <option name="do.paba" selected="true">Passing-Bablok (bootstrap CI)</option>
             <option name="do.paba.nestedbootstrap" selected="false">Passing-Bablok (nested boostrap CI) [may take several minutes to run]</option>
-            <option name="do.pabalarge" selected="false">Approximate Passing-Bablok</option>
+            <option name="do.pabalarge" selected="false">Approximate Passing-Bablok (bootstrap CI)</option>
             <option name="do.pabalarge.nestedbootstrap" selected="false">Approximate Passing-Bablok (nested boostrap CI) [may take several minutes to run]</option>
           </options>
         </options>
@@ -46,6 +46,7 @@
         <double>
           <name>error-ratio</name>
           <prompt>Error Ratio</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
           <default-value>1</default-value>
@@ -53,6 +54,7 @@
         <options>
           <name>desired-charts</name>
           <prompt>Charts</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <options>
             <option name="plot.testvsreference" selected="true">Test vs. Reference</option>
@@ -65,6 +67,7 @@
         <boolean>
           <name>saveRScript</name>
           <prompt>Save R script</prompt>
+          <lifetime>SessionForThisOperation</lifetime>
           <must-request>true</must-request>
           <default-value>false</default-value>
         </boolean>
@@ -193,19 +196,17 @@ once <- function(sd.method.name, x, xname, y, yname, human.readable.name) {
     method.reg <- "PaBaLarge"
   }
   method.ci <- NULL
-  method.bootstrap.ci <- NULL
+  method.bootstrap.ci <- "BCa"
   if (sd.method.name %in% c("do.wdeming.jackknife", "do.deming.jackknife")) {
     method.ci <- "jackknife"
   } else if (sd.method.name %in% c("do.deming.bootstrap")) {
     method.ci <- "bootstrap"
-    method.bootstrap.ci <- "BCa"
   } else if (sd.method.name %in% c("do.deming.analytical", "do.wdeming.analytical")) {
     method.ci <- "analytical"
   } else if (sd.method.name %in% c("do.pabalarge", "do.paba")) {
     method.ci <- NULL
   } else if (sd.method.name %in% c("do.pabalarge.nestedbootstrap", "do.paba.nestedbootstrap", "do.wdeming.nestedbootstrap")) {
     method.ci <- "nestedbootstrap"
-    method.bootstrap.ci <- "BCa"
   }
   
   model <- mcreg(x, y, error.ratio=error.ratio, alpha=alpha, method.reg=method.reg, method.ci=method.ci, method.bootstrap.ci = method.bootstrap.ci, mref.name = xname, mtest.name = yname, na.rm=TRUE)
@@ -213,11 +214,11 @@ once <- function(sd.method.name, x, xname, y, yname, human.readable.name) {
     retval <- list()
     retval$title <- human.readable.name
     retval$slope <- model@para[2,1]
-    retval$seslope <- model@para[2,2]
+    retval$seslope <- if (is.na(model@para[2,2])) sd(model@B1) else model@para[2,2]
     retval$slopelci <- model@para[2,3]
     retval$slopeuci <- model@para[2,4]
     retval$intercept <- model@para[1,1]
-    retval$seintercept <- model@para[1,2]
+    retval$seintercept <- if (is.na(model@para[1,2])) sd(model@B0) else model@para[1,2]
     retval$interceptlci <- model@para[1,3]
     retval$interceptuci <- model@para[1,4]
     retval$samples <- length(model@data[[1]])
@@ -263,10 +264,9 @@ pairs$do.deming.bootstrap <- once("do.deming.bootstrap", x, xname, y, yname, "De
 pairs$do.deming.analytical <- once("do.deming.analytical", x, xname, y, yname, "Deming (Wald CI)")
 pairs$do.wdeming.jackknife <- once("do.wdeming.jackknife", x, xname, y, yname, "Weighted Deming (jackknife CI)")
 pairs$do.wdeming.nestedbootstrap <- once("do.wdeming.nestedbootstrap", x, xname, y, yname, "Weighted Deming (nested bootstrap CI)")
-pairs$do.wdeming.analytical <- once("do.wdeming.analytical", x, xname, y, yname, "Weighted Deming (Wald CI)")
-pairs$do.paba <- once("do.paba", x, xname, y, yname, "Passing-Bablok")
+pairs$do.paba <- once("do.paba", x, xname, y, yname, "Passing-Bablok (bootstrap CI)")
 pairs$do.paba.nestedbootstrap <- once("do.paba.nestedbootstrap", x, xname, y, yname, "Passing-Bablok (nested boostrap CI)")
-pairs$do.pabalarge <- once("do.pabalarge", x, xname, y, yname, "Approximate Passing-Bablok")
+pairs$do.pabalarge <- once("do.pabalarge", x, xname, y, yname, "Approximate Passing-Bablok (bootstrap CI)")
 pairs$do.pabalarge.nestedbootstrap <- once("do.pabalarge.nestedbootstrap", x, xname, y, yname, "Approximate Passing-Bablok (nested boostrap CI)")
 
 models <- lapply(pairs, function(pair) { pair[["model"]] } )
@@ -278,9 +278,11 @@ results$xname <- xname
 results$yname <- yname
 results$methodResults <- method.results
 results$samples <- if (length(method.results) == 0) 0 else method.results[[1]]$samples
-if (exists("returning.to.statsdirect")) {
+if (plot.modelcomparison) {
   results$comparefit <- statsdirect.plot(function() { do.call(compareFit, models) } )
-return.to.statsdirect(results)
+}
+if (exists("returning.to.statsdirect")) {
+  return.to.statsdirect(results)
 }
 ]]>
     </script>

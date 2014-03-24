@@ -1658,7 +1658,8 @@ namespace StatsDirect.Builtins
             n = cnt;
 
             bool fault;
-            NonParametric.x_mwut(ref x, n, n1, n2, w1, ref u, ref z, ref xf, ref r1, out fault);
+            NonParametric.x_mwut(x, n, n1, n2, w1, ref u, ref z, ref xf, ref r1, out fault);
+            double uprime = n1 * n2 - u;
 
             ParameterBag outputParameters = new ParameterBag();
 
@@ -1672,7 +1673,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("median_2", host.RoundU(XXmdn(x, n, n1, n2)));
 
             outputParameters.AddOutput("u", host.RoundU(u));
-            outputParameters.AddOutput("u_prime", host.RoundU(Convert.ToDouble(n1) * Convert.ToDouble(n2) - u));
+            outputParameters.AddOutput("u_prime", host.RoundU(uprime));
 
             if (!(fault))
             {
@@ -1706,8 +1707,8 @@ namespace StatsDirect.Builtins
 
                 outputParameters.AddOutput("pc0", Formatting.XRound(gamma * 100, 1));
                 outputParameters.AddOutput("theta", host.RoundU(u / (n1 * n2)));
-                outputParameters.AddOutput("tll", host.RoundU(ThetaLl(u, n1, n2, gamma)));
-                outputParameters.AddOutput("tul", host.RoundU(ThetaUl(u, n1, n2, gamma)));
+                outputParameters.AddOutput("tll", host.RoundU(ThetaLl(uprime, n1, n2, gamma)));
+                outputParameters.AddOutput("tul", host.RoundU(ThetaUl(uprime, n1, n2, gamma)));
 
                 if (n1 < 4 || n2 < 4)
                 {
@@ -1736,11 +1737,21 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
+        /// <summary>
+        /// Newcombe's Method 5 quadratic minimization for the Mann-Whitney theta (U/mn)
+        /// </summary>
+        /// <param name="upper"></param>
+        /// <param name="tzpre"></param>
+        /// <param name="ypre"></param>
+        /// <param name="lp"></param>
+        /// <param name="ln"></param>
+        /// <param name="z"></param>
+        /// <param name="t"></param>
+        /// <param name="m"></param>
+        /// <param name="n"></param>
+        /// <returns></returns>
         private static double theta_tzmin(bool upper, double tzpre, double ypre, double lp, double ln, double z, double t, int m, int n)
         {
-
-            //Newcombe's Method 5 quadratic minimization for the Mann-Whitney theta (U/mn)
-
             const double prec = Double.Epsilon * 10;
             double y = 0;
             int i;
@@ -1766,96 +1777,81 @@ namespace StatsDirect.Builtins
 
         private static double ThetaTzfn(bool upper, double y, double z, double t, int m, int n)
         {
-            double offset = z * Math.Sqrt(y * (1 - y) * (1 + (0.5 * (m + n) - 1) * ((1 - y) / (2 - y) + y / (1 + y))) / (m * n)) - t;
-            return upper ? y + offset : y - offset;
+            double offset = z * Math.Sqrt(y * (1.0 - y) * (1.0 + (0.5 * (m + n) - 1.0) * ((1.0 - y) / (2.0 - y) + y / (1.0 + y))) / (m * n));
+            return upper ? y - offset - t : y + offset - t;
         }
 
+        /// <summary>
+        /// Newcombe's Method 5 lower confidence limit for the Mann-Whitney theta (U'/mn)
+        /// </summary>
+        /// <param name="u"></param>
+        /// <param name="m"></param>
+        /// <param name="n"></param>
+        /// <param name="gamma"></param>
+        /// <returns></returns>
         private static double ThetaLl(double u, int m, int n, double gamma)
         {
-
-            //Newcombe's Method 5 lower confidence limit for the Mann-Whitney theta (U/mn)
-
-            double tll;
+            double alpha = (1.0 - gamma) / 2.0;
             int ifault;
-
-            double alpha = (1 - gamma) / 2;
-            double z = PDF.gauinv(alpha, out ifault);
+            double z = PDF.gauinv(1.0 - alpha, out ifault);
 
             double t = u / (m * n);
 
             if (t == 0)
-            {
-                tll = 0;
-            }
-            else if (t < 0 || t > 1)
-            {
-                tll = Double.NaN;
-            }
+                return 0;
+            
+            if (t < 0 || t > 1)
+                return Double.NaN;
+
+            const double y0 = 0;
+            double tz0 = ThetaTzfn(false, y0, z, t, m, n);
+            const double y1 = 1;
+            double tz1 = ThetaTzfn(false, y1, z, t, m, n);
+            const double y2 = 0.5;
+            double tz2 = ThetaTzfn(false, y2, z, t, m, n);
+            double lp = tz1 < 0 ? Double.NaN : y1;
+            double ln = tz0 > 0 ? Double.NaN : y0;
+            if (Double.IsNaN(lp) || Double.IsNaN(ln))
+                return Double.NaN;
             else
-            {
-                const double y0 = 0;
-                double tz0 = ThetaTzfn(false, y0, z, t, m, n);
-                const double y1 = 1;
-                double tz1 = ThetaTzfn(false, y1, z, t, m, n);
-                const double y2 = 0.5;
-                double tz2 = ThetaTzfn(false, y2, z, t, m, n);
-                double lp = tz1 < 0 ? Double.NaN : y1;
-                double ln = tz0 > 0 ? Double.NaN : y0;
-                if (Double.IsNaN(lp) || Double.IsNaN(ln))
-                {
-                    tll = Double.NaN;
-                }
-                else
-                {
-                    tll = theta_tzmin(false, tz2, y2, lp, ln, z, t, m, n);
-                }
-            }
-            return tll;
+                return theta_tzmin(false, tz2, y2, lp, ln, z, t, m, n);
         }
 
+        /// <summary>
+        /// Newcombe's Method 5 upper confidence limit for the Mann-Whitney theta (U'/mn)
+        /// </summary>
+        /// <param name="u"></param>
+        /// <param name="m"></param>
+        /// <param name="n"></param>
+        /// <param name="gamma"></param>
+        /// <returns></returns>
         private static double ThetaUl(double u, int m, int n, double gamma)
         {
-
-            //Newcombe's Method 5 upper confidence limit for the Mann-Whitney theta (U/mn)
-
-            double tul;
+            double alpha = (1.0 - gamma) / 2.0;
             int ifault;
-
-            double alpha = (1 - gamma) / 2;
-            double z = PDF.gauinv(alpha, out ifault);
+            double z = PDF.gauinv(1.0 - alpha, out ifault);
 
             double t = u / (m * n);
 
             if (t == 1)
-            {
-                tul = 1;
-            }
-            else if (t < 0 || t > 1)
-            {
-                tul = Double.NaN;
-            }
-            else
-            {
-                const double y0 = 0;
-                double tz0 = ThetaTzfn(true, y0, z, t, m, n);
-                const double y1 = 1;
-                double tz1 = ThetaTzfn(true, y1, z, t, m, n);
-                const double y2 = 0.5;
-                double tz2 = ThetaTzfn(true, y2, z, t, m, n);
-                double lp = tz1 < 0 ? Double.NaN : y1;
-                double ln = tz0 > 0 ? Double.NaN : y0;
-                if (Double.IsNaN(lp) || Double.IsNaN(ln))
-                {
-                    tul = Double.NaN;
-                }
-                else
-                {
-                    tul = theta_tzmin(true, tz2, y2, lp, ln, z, t, m, n);
-                }
-            }
-            return tul;
-        }
+                return 1;
+            
+            if (t < 0 || t > 1)
+                return Double.NaN;
 
+            const double y0 = 0;
+            double tz0 = ThetaTzfn(true, y0, z, t, m, n);
+            const double y1 = 1;
+            double tz1 = ThetaTzfn(true, y1, z, t, m, n);
+            const double y2 = 0.5;
+            double tz2 = ThetaTzfn(true, y2, z, t, m, n);
+            double lp = tz1 < 0 ? Double.NaN : y1;
+            double ln = tz0 > 0 ? Double.NaN : y0;
+            if (Double.IsNaN(lp) || Double.IsNaN(ln))
+                return Double.NaN;
+            else
+                return theta_tzmin(true, tz2, y2, lp, ln, z, t, m, n);
+        }
 
         public static StepResult RptSpearman(ITemplateHost host, ParameterBag parameters)
         {
