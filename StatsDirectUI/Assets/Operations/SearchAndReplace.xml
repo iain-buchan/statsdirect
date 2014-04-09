@@ -4,6 +4,6 @@
   <friendly-name lang="en-GB">Search and replace</friendly-name>
   <help chm-id="1085" />
   <steps>
-    <script language="CSharp"><![CDATA[System.Windows.Forms.SendKeys.Send("^h"); return new ParameterBag();]]></script>
+    <script language="CSharp" requires-grid="true"><![CDATA[System.Windows.Forms.SendKeys.Send("^h"); return new ParameterBag();]]></script>
   </steps>
 </operation>

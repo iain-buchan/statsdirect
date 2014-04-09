@@ -5,9 +5,17 @@ namespace StatsDirect.Templates
     public sealed class ScriptStep: Step
     {
         private InputDuringStep requiresInput;
+        private bool requiresGrid;
 
         [XmlAttribute(AttributeName = "language")]
         public string Language { get; set; }
+
+        [XmlAttribute(AttributeName = "requires-grid")]
+        public bool RequiresGridForXml 
+        {
+            get { return requiresGrid; }
+            set { requiresGrid = value; }
+        }
 
         [XmlAttribute(AttributeName = "entry-point")]
         public string EntryPoint { get; set; }
@@ -36,6 +44,12 @@ namespace StatsDirect.Templates
         public override InputDuringStep RequiresInput
         {
             get { return requiresInput; }
+        }
+
+        [XmlIgnore]
+        public override bool RequiresGrid
+        {
+            get { return requiresGrid; }
         }
     }
 }

@@ -1706,7 +1706,7 @@ namespace StatsDirect.Builtins
                 }
 
                 outputParameters.AddOutput("pc0", Formatting.XRound(gamma * 100, 1));
-                outputParameters.AddOutput("theta", host.RoundU(u / (n1 * n2)));
+                outputParameters.AddOutput("theta", host.RoundU(uprime / (n1 * n2)));
                 outputParameters.AddOutput("tll", host.RoundU(ThetaLl(uprime, n1, n2, gamma)));
                 outputParameters.AddOutput("tul", host.RoundU(ThetaUl(uprime, n1, n2, gamma)));
 
