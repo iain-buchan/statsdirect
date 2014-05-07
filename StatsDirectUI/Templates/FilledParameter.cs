@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using StatsDirect.Data;
 using StatsDirect.UI;
+using StatsDirect.Charting;
 
 namespace StatsDirect.Templates
 {
@@ -48,13 +49,10 @@ namespace StatsDirect.Templates
             get { return (bool)data; }
         }
 
-        /// <summary>
-        /// Should return a StatsDirect.Charting.ChartOptions, but that would lead to a circular dependency - hence this.
-        /// </summary>
         [XmlIgnore]
-        public object AsChartOptions
+        public ChartOptions AsChartOptions
         {
-            get { return data; }
+            get { return (ChartOptions)data; }
         }
 
         [XmlIgnore]
@@ -109,6 +107,12 @@ namespace StatsDirect.Templates
         public IList<ParameterBag> AsParameterBagList
         {
             get { return (IList<ParameterBag>)data; }
+        }
+
+        [XmlIgnore]
+        public ScaleParameters AsScaleParameters
+        {
+            get { return (ScaleParameters)data; }
         }
 
         [XmlIgnore]

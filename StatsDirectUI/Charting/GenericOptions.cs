@@ -3,11 +3,9 @@ using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
-    // TRANSMISSINGCOMMENT: Class GenericOptions
     [ Serializable ]
     public abstract class GenericOptions : ChartOptions 
     { 
-        
         public bool ShouldAutoscale; 
         public bool ShouldBoxAxes; 
         public string[] SeriesTitles; 
@@ -46,7 +44,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
         public virtual bool UsesChartTitle 
         { 
             get 
@@ -55,7 +52,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAutoscale
         public virtual bool UsesAutoscale 
         { 
             get 
@@ -64,7 +60,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesBoxAxes
         public virtual bool UsesBoxAxes 
         { 
             get 
@@ -73,7 +68,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesSeriesLabels
         public virtual bool UsesSeriesLabels 
         { 
             get 
@@ -82,7 +76,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisLabelFontDescriptor
         public virtual bool UsesAxisLabelFontDescriptor 
         { 
             get 
@@ -91,7 +84,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property AxisLabelFontLabel
         public virtual string AxisLabelFontLabel 
         { 
             get 
@@ -100,7 +92,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisTitleFontDescriptor
         public virtual bool UsesAxisTitleFontDescriptor 
         { 
             get 
@@ -109,7 +100,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesLegendFontDescriptor
         public virtual bool UsesLegendFontDescriptor 
         { 
             get 
@@ -118,7 +108,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property LegendFontLabel
         public virtual string LegendFontLabel 
         { 
             get 
@@ -127,7 +116,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property OrientationLabel
         public virtual string OrientationLabel 
         { 
             get 
@@ -151,7 +139,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesTitleFontDescriptor
         public virtual bool UsesTitleFontDescriptor 
         { 
             get 
@@ -160,7 +147,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesOrientation
         public virtual bool UsesOrientation 
         { 
             get 
@@ -311,11 +297,9 @@ namespace StatsDirect.Charting
         
     } 
     
-    
     public enum ChartOrientation 
     { 
         Horizontal,
         Vertical,
     } 
-    
 } 

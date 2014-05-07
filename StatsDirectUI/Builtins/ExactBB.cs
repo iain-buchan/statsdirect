@@ -30,7 +30,7 @@ namespace StatsDirect.Builtins
 
         private const int MAXDEGREE = 1000000; // Max degree of a polynomial
         private const int MAX_ITER = 300; // Max # of iterations to bracket/converge to a root
-        private const double TOLERANCE = 0.00000000001; // Relative tolerance in results (do not use < 1e-15 if Pegasus rootfinder used)
+        private const double TOLERANCE = 0.000000000001; // Relative tolerance in results (do not use < 1e-15 if Pegasus rootfinder used)
 
         /// <summary>
         /// Data for one "unique" 2x2 table
@@ -211,8 +211,6 @@ namespace StatsDirect.Builtins
             return brentRootReturn;
         }
 */
-
-
         public void Exact22K(ITemplateHost host, int numTables, int dataType, Rec2X2[] tables, double confLevel, ref double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
         {
             //   Stratified case-control data, matched case-control data, and
@@ -1115,6 +1113,7 @@ namespace StatsDirect.Builtins
         {
             double x0; double x1; double f0; double f1 = 0;
 
+            if (double.IsInfinity(approx)) approx=1.0;
             BracketRoot(approx, out x0, out x1, out f0, ref f1, out ierr);
             if (ierr != 0)
             {
@@ -1127,6 +1126,8 @@ namespace StatsDirect.Builtins
             Zero(ref x0, ref x1, ref f0, ref f1, out root, out ierr);
 
         }
+
+
 
         /// <summary>
         /// This routine returns the exact P-values as defined in 'Modern
@@ -1371,5 +1372,115 @@ namespace StatsDirect.Builtins
             ierr = 0;
             return Math.Exp(z);
         }
+
+        public static void OddsRatioCI(ITemplateHost host, double cco, double a, double b, double c, double d, ref double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
+        {
+            if ((((a == 0) && (b == 0)) || ((c == 0) && (d == 0))))
+            {
+                ulf = double.PositiveInfinity;
+                llf = 0;
+                eor = 0;
+            }
+            else
+            {
+                if ((a * d != 0) || (b * c != 0))
+                {
+                    ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
+                    tabl[1].Freq = 1;
+                    tabl[1].A = a;
+                    tabl[1].M1 = a + b;
+                    tabl[1].N1 = a + c;
+                    tabl[1].N0 = b + d;
+                    tabl[1].Informative = (a * d != 0) || (b * c != 0);
+                    bool useLogScale = false;
+                    double ulm;
+                    int ierr;
+                    double llm;
+                    double p1M; double p2M; double p1F; double p2F;
+                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                }
+                else
+                {
+                    eor = Constant.MISSING;
+                    llf = Constant.MISSING;
+                    ulf = Constant.MISSING;
+                }
+                if ((a == 0) | (d == 0))
+                {
+                    eor = 0;
+                    llf = 0;
+                }
+                else if ((b == 0) | (c == 0))
+                {
+                    eor = double.PositiveInfinity;
+                    ulf = double.PositiveInfinity;
+                }
+            }
+            lerr = (llf == Constant.MISSING);
+            uerr = (ulf == Constant.MISSING);
+        }
+        public static void OddsRatioCMLE(ITemplateHost host, double cco, double a, double b, double c, double d, ref double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr)
+        {
+            eor = Constant.MISSING;
+            llf = Constant.MISSING;
+            ulf = Constant.MISSING;
+            llm = Constant.MISSING;
+            ulm = Constant.MISSING;
+            p1f = Constant.MISSING;
+            p2f = Constant.MISSING;
+            p1m = Constant.MISSING;
+            p2m = Constant.MISSING;
+            ierr = 0;
+            if ((((a == 0) && (b == 0)) || ((c == 0) && (d == 0))))
+            {
+                ulf = double.PositiveInfinity;
+                llf = 0.0;
+                eor = 0.0;
+            }
+            else
+            {
+                if ((a * d != 0) || (b * c != 0))
+                {
+                    ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
+                    tabl[1].Freq = 1;
+                    tabl[1].A = a;
+                    tabl[1].M1 = a + b;
+                    tabl[1].N1 = a + c;
+                    tabl[1].N0 = b + d;
+                    tabl[1].Informative = (a * d != 0) || (b * c != 0);
+                    bool useLogScale = false;
+                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1f, out p2f, out p1m, out p2m, ref useLogScale, out ierr);
+                }
+                if ((a == 0) | (d == 0))
+                {
+                    eor = 0;
+                    llf = 0;
+                }
+                else if ((b == 0) | (c == 0))
+                {
+                    eor = double.PositiveInfinity;
+                    ulf = double.PositiveInfinity;
+                }
+            }
+        }
+
+        public static double OddsRatio(double a, double b, double c, double d)
+        {
+            double odr;
+            if ((a == 0) || (d == 0))
+            {
+                odr = 0;
+            }
+            else if ((b == 0) || (c == 0))
+            {
+                odr = double.PositiveInfinity;
+            }
+            else
+            {
+                odr = (a * c) / (b * d);
+            }
+            return odr;
+        }
+
     }
 }

@@ -15,11 +15,11 @@ namespace StatsDirect.Charting
             
         } 
         
-        public override OptionTypes OptionType 
+        public override ChartOptionType OptionType 
         { 
             get 
             { 
-                return OptionTypes.LinearRegression; 
+                return ChartOptionType.LinearRegression; 
             } 
         } 
         

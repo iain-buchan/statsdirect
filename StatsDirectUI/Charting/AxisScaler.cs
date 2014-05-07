@@ -1,6 +1,7 @@
 using System;
 
 using StatsDirect.Templates;
+using StatsDirect.Numerics;
 
 namespace StatsDirect.Charting
 {
@@ -14,10 +15,10 @@ namespace StatsDirect.Charting
         ///  <param name="div">OUTPUT: The number of equal divisions in the scale.</param>
         ///  <param name="zmin">OUTPUT: The value of the lowest division.</param>
         ///  <param name="zint">OUTPUT: The value of the interval between divisions.</param>
-        ///  <param name="MinorTicsPerMajorTic">OUTPUT: The number of divisions between major tics.</param>
-        ///  <param name="ScaleType"></param>
+        ///  <param name="minorTicsPerMajorTic">OUTPUT: The number of divisions between major tics.</param>
+        ///  <param name="scaleType"></param>
         ///  <remarks></remarks>
-        public static void Q_Axis(ref double qmin, ref double qmax, out int div, ref double zmin, ref double zint, out int MinorTicsPerMajorTic, ScaleType ScaleType)
+        public static void Q_Axis(ref double qmin, ref double qmax, out int div, out double zmin, out double zint, out int minorTicsPerMajorTic, ScaleType scaleType)
         {
             double nzmin = 0, nzint = 0;
 
@@ -28,43 +29,43 @@ namespace StatsDirect.Charting
                 qmax = 1.0;
             }
 
-            switch (ScaleType)
+            switch (scaleType)
             {
                 case ScaleType.Log10:
                     {
                         //  Start at the first power of 10 smaller than or equal to qmin, stop at the first power of 10 greater than or equal to qmax.
-                        int minPower = Convert.ToInt32(Math.Floor(Math.Log10(qmin)));
-                        int maxPower = Convert.ToInt32(Math.Ceiling(Math.Log10(qmax)));
+                        int minPower = qmin <= 0 ? int.MinValue : (int)Math.Floor(Math.Log10(qmin));
+                        int maxPower = qmax <= 0 ? int.MinValue : (int)Math.Ceiling(Math.Log10(qmax));
                         div = maxPower - minPower;
                         zmin = minPower;
                         zint = 1;
                         if (div <= 5)
                         {
-                            MinorTicsPerMajorTic = 3;
+                            minorTicsPerMajorTic = 3;
                             div *= 3;
                             zint /= 3.0;
                         }
                         else
                         {
-                            MinorTicsPerMajorTic = 1;
+                            minorTicsPerMajorTic = 1;
                         }
                     } break;
                 case ScaleType.LogNatural:
                     {
                         //  Start at the first power of 2 smaller than or equal to qmin, stop at the first power of 2 greater than or equal to qmax.
                         double scaler = 1.0 / Math.Log(2);
-                        int minPower = Convert.ToInt32(Math.Floor(Math.Log(qmin) * scaler));
-                        int maxPower = Convert.ToInt32(Math.Ceiling(Math.Log(qmax) * scaler));
+                        int minPower = qmin <= 0 ? int.MinValue : (int)Math.Floor(Math.Log(qmin) * scaler);
+                        int maxPower = qmax <= 0 ? int.MinValue : (int)Math.Ceiling(Math.Log(qmax) * scaler);
                         div = maxPower - minPower;
                         zmin = minPower;
                         zint = 1;
-                        MinorTicsPerMajorTic = 1;
+                        minorTicsPerMajorTic = 1;
                     } break;
                 default:
                     //  Assume linear
-                    if (qmin == 0.0 & qmax == 1.0)
+                    if (qmin == 0.0 && qmax == 1.0)
                     {
-                        MinorTicsPerMajorTic = 5;
+                        minorTicsPerMajorTic = 5;
                         div = 20;
                         zmin = 0.0;
                         zint = 0.05;
@@ -72,7 +73,7 @@ namespace StatsDirect.Charting
                     }
 
                     div = 20;
-                    Axis(ref qmin, ref qmax, div, ref zmin, ref zint);
+                    Axis(ref qmin, ref qmax, div, out zmin, out zint);
                     int pref;
                     Q_Axis_ShiftMin(qmin, qmax, ref zmin, ref zint, ref div, out pref);
 
@@ -86,7 +87,7 @@ namespace StatsDirect.Charting
                     for (i = 1; i <= tries; i++)
                     {
                         int ndiv = trydiv[i];
-                        Axis(ref qmin, ref qmax, ndiv, ref nzmin, ref nzint);
+                        Axis(ref qmin, ref qmax, ndiv, out nzmin, out nzint);
                         int npref;
                         Q_Axis_ShiftMin(qmin, qmax, ref nzmin, ref nzint, ref ndiv, out npref);
                         bool shorteq;
@@ -101,13 +102,11 @@ namespace StatsDirect.Charting
                         }
                     }
 
-                    MinorTicsPerMajorTic = div % 5 == 0 ? 5 : 4;
+                    minorTicsPerMajorTic = div % 5 == 0 ? 5 : 4;
                     break;
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method Q_Axis_Neater
         private static void Q_Axis_Neater(ref double zmin, ref double nzmin, ref double zint, ref double nzint, out bool shorteq, out bool shorter, ref int div, ref int ndiv)
         {
             int dp, ipow;
@@ -155,17 +154,19 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method Q_Axis_Scale01
+        /// <summary>
+        /// Scale a real number to lie between zero and one
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="ipow"></param>
+        /// <param name="dp"></param>
         private static void Q_Axis_Scale01(double x, out int ipow, out int dp)
         {
-            // scale a real number to lie between zero and one
-
             if (x == 0.0)
             {
                 dp = 0;
                 ipow = 1; // TODO: For the sake of argument
-                return; // 0.0; 
+                return;
             }
             ipow = ((int)(Math.Floor(Math.Log(Math.Abs(x)) / Math.Log(10.0)))) + 1;
             double sc = x / (Math.Pow(10.0, ipow));
@@ -173,9 +174,7 @@ namespace StatsDirect.Charting
                 dp = 1;
             else
                 dp = sc.ToString().Length - 2;
-            // return sc;
         }
-
 
         ///  <summary>
         ///  
@@ -302,13 +301,18 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Method Axis
-        public static void Axis(ref double zmn, ref double zmx, int nstep, ref double znmin, ref double zstep)
+        public static void Axis(ref double zmn, ref double zmx, int nstep, out double znmin, out double zstep)
         {
             double[] r = { 0.1, 0.15, 0.2, 0.25, 0.4, 0.5, 0.6, 0.75, 0.8 };
 
             //  can replace with smallest relative spacing constant EPSNEG
             const double xmp = SDGlobalStub.EPSNEG;
+            if (Math.Abs(zmn- Constant.MISSING)<Constant.EPSNEG || Math.Abs(zmx)==Constant.MISSING || double.IsInfinity(zmn) || double.IsInfinity(zmx) || double.IsNaN (zmn) || double.IsNaN (zmx))
+            {
+                znmin = 0;
+                zstep = 0;
+                return;
+            }
             if (Math.Abs(zmn - zmx) < 1e-10)
             {
                 zmn = zmn - 1.0;
@@ -316,12 +320,16 @@ namespace StatsDirect.Charting
             }
             if (nstep < 1)
             {
+                znmin = 0;
+                zstep = 0;
                 return;
             }
             double rnstpz = nstep;
             double rint = (zmx - zmn) / (rnstpz + 0.1);
             if (rint <= 0.0)
             {
+                znmin = 0;
+                zstep = 0;
                 return;
             }
 
@@ -354,6 +362,12 @@ namespace StatsDirect.Charting
                 }
                 zstep = tenn * ar;
                 ar = zstep * Math.Floor((1.0 + 2.0 * xmp) * zmn / zstep);
+                if (double.IsInfinity(ar))
+                {
+                    znmin = 0;
+                    zstep = 0;
+                    return;
+                }
                 while (!((ar - zstep * 0.05) <= zmn))
                 {
                     ar = ar - zstep;
@@ -403,8 +417,6 @@ namespace StatsDirect.Charting
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method Axis_Q0
         public static double Axis_Q0(double zmin, double Q)
         {
             if (Math.Abs(zmin) > SDGlobalStub.EPSILON)
@@ -417,13 +429,11 @@ namespace StatsDirect.Charting
             return Q;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method v_axis
-        public static void v_axis(ref double qmin, ref double qmax, ref int cm, ref double zmin, ref double zint)
+        public static void v_axis(ref double qmin, ref double qmax, ref int cm, out double zmin, out double zint)
         {
             if (cm > 0)
             {
-                Axis(ref qmin, ref qmax, cm, ref zmin, ref zint);
+                Axis(ref qmin, ref qmax, cm, out zmin, out zint);
             }
             else
             {
@@ -432,7 +442,6 @@ namespace StatsDirect.Charting
             }
         }
 
-
         ///  <summary>
         ///  
         ///  </summary>
@@ -440,13 +449,13 @@ namespace StatsDirect.Charting
         ///  <param name="znmin">The value at the zeroth division</param>
         ///  <param name="nstep">The number of divisions</param>
         ///  <param name="sp">The number of minor (unlabeled) tics per major (labeled) tic</param>
-        ///  <param name="ScaleType"></param>
+        ///  <param name="scaleType"></param>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        public static string AxisMask(double stepp, double znmin, int nstep, int sp, ScaleType ScaleType)
+        public static string AxisMask(double stepp, double znmin, int nstep, int sp, ScaleType scaleType)
         {
             //  Handle input scaling - if this isn't a linear scale, our input values are the transformed versions
-            switch (ScaleType)
+            switch (scaleType)
             {
                 case ScaleType.Log10:
                     znmin = Math.Pow(10, znmin);

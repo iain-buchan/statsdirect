@@ -4,7 +4,26 @@
 	<friendly-name lang="en-GB">Fits and residuals to worksheet</friendly-name>
   <prerequisite-operation>LogisticRegression</prerequisite-operation>
   <steps>
-		<builtin function-name="rptLogisticRegressionFit" />
+    <test>
+      <condition>="individual".Equals(parameters["grouping"].AsString)</condition>
+      <iftrue>
+        <settings>
+          <parameters>
+            <option>
+              <name>row_type</name>
+              <prompt>Output</prompt>
+              <must-request>true</must-request>
+              <format-type>Radio</format-type>
+              <default-value>covariatePatterns</default-value>
+              <options>
+                <option value="covariatePatterns">Covariate patterns</option>
+                <option value="individual">Individual observations</option>
+              </options>
+            </option>
+          </parameters>
+        </settings>
+      </iftrue>
+    </test>
     <settings>
       <parameters>
         <options>
@@ -25,7 +44,8 @@
         </options>
       </parameters>
     </settings>
-		<builtin function-name="gridLogisticRegressionFit" />
+    <builtin function-name="rptLogisticRegressionFit" />
+    <builtin function-name="gridLogisticRegressionFit" />
 		<output-frame frame-name="results" />
 	</steps>
 </operation>

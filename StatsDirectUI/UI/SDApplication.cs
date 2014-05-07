@@ -1622,15 +1622,6 @@ namespace StatsDirect.UI
             }
         }
 
-        public bool CheckScale(ScaleParameters scaleParameters)
-        {
-            using (frmScale f = new frmScale(scaleParameters))
-            {
-                f.ShowDialog(mainWindow);
-                return !f.Cancelled;
-            }
-        }
-
         public void ReplayWithCurrentData(string operationName, string freezeDriedData)
         {
             ParameterBag parameters = ParameterBag.DeserializeAndRefillForRedo(freezeDriedData, this);

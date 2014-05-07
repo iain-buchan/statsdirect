@@ -11,7 +11,6 @@ namespace StatsDirect.Builtins
 {
     public class Regress
     {
-
         [Serializable]
         private class SimpleLinearRegressionContext
         {
@@ -37,7 +36,6 @@ namespace StatsDirect.Builtins
             public double G { get; set; }
             public int N { get; set; }
         }
-
 
         ///  <summary>
         ///  The equivalent of the PASS_* variables in SD2, so PASS_X is X in this class
@@ -79,6 +77,9 @@ namespace StatsDirect.Builtins
             public double SSREG;
             public double SSY;
             public double[] SV;
+            /// <summary>
+            /// Trials
+            /// </summary>
             public double[] T;
 
             ///  <remarks>1-based when used as predictor titles, 0-based when used for polynomial regression</remarks>
@@ -94,9 +95,11 @@ namespace StatsDirect.Builtins
             public double[] WT;
             public double[,] X;
             public double[] X1;
+            /// <summary>
+            /// Events
+            /// </summary>
             public double[] Y;
         }
-
 
         private static SimpleLinearRegressionContext GetSimpleLinearRegressionContext(ParameterBag parameters)
         {
@@ -119,7 +122,6 @@ namespace StatsDirect.Builtins
             Array.Copy(vx.Data, 0, context.X, 1, vx.Length);
             return context;
         }
-
 
         private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext(ParameterBag parameters)
         {
@@ -3033,9 +3035,7 @@ namespace StatsDirect.Builtins
         public static StepResult RptLogisticRegression(ITemplateHost host, ParameterBag parameters)
         {
             int rows;
-            int C; int tot_obs;
-            int i; int j;
-            int k;
+            int tot_obs;
             double[] tt; double[] tr; double[] tw;
 
             double accuracy = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
@@ -3058,15 +3058,15 @@ namespace StatsDirect.Builtins
                 tr = new double[rows + 1];
                 tw = new double[rows + 1];
                 tot_obs = 0;
-                for (C = 1; C <= rows; C++)
+                for (int C = 1; C <= rows; C++)
                 {
                     tt[C] = totalVariable.Data[C - 1];
                     tot_obs = tot_obs + Convert.ToInt32(tt[C]);
                 }
                 DataFrame responseFrame = parameters["response"].AsDataFrame;
                 responseVariable = responseFrame.Variables[0].AsDoubleVariable;
-                // Store the response Data
-                for (C = 1; C <= rows; C++)
+                // Store the response data
+                for (int C = 1; C <= rows; C++)
                 {
                     tr[C] = responseVariable.Data[C - 1];
                 }
@@ -3079,11 +3079,11 @@ namespace StatsDirect.Builtins
                 tt = new double[rows + 1];
                 tr = new double[rows + 1];
                 tw = new double[rows + 1];
-                // Store the response Data
-                for (C = 1; C <= rows; C++)
+                // Store the response data
+                for (int C = 1; C <= rows; C++)
                 {
                     tr[C] = responseVariable.Data[C - 1];
-                    if (tr[C] > 1.0 & tr[C] != Constant.MISSING)
+                    if (tr[C] > 1.0 && tr[C] != Constant.MISSING)
                     {
                         host.Error("Response data must be either 0 (not responded) or 1 (responded), if you want to use grouped response data then please select this option at the start", "Logistic Regression");
                         throw new TemplateOperationCancelledException();
@@ -3092,7 +3092,7 @@ namespace StatsDirect.Builtins
                 // Total observations = rows
                 tot_obs = rows;
                 // set denominator/total as 1
-                for (C = 1; C <= rows; C++)
+                for (int C = 1; C <= rows; C++)
                 {
                     tt[C] = 1.0;
                 }
@@ -3102,55 +3102,55 @@ namespace StatsDirect.Builtins
                 DataFrame weightsFrame = parameters["weights"].AsDataFrame;
                 DoubleVariable weightsVariable = weightsFrame.Variables[0].AsDoubleVariable;
                 // Store the weight Data
-                for (C = 1; C <= rows; C++)
+                for (int C = 1; C <= rows; C++)
                 {
                     tw[C] = weightsVariable.Data[C - 1];
                 }
             }
             else
             {
-                for (C = 1; C <= rows; C++)
+                for (int C = 1; C <= rows; C++)
                 {
                     tw[C] = 1.0;
                 }
             }
             DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
             // Store the predictors
-            int prd = predictorsFrame.VariableCount - 1;
-            double[,] pt = new double[prd + 1, rows + 1];
-            for (C = 0; C <= prd; C++)
+            int prd = predictorsFrame.VariableCount;
+            double[,] pt = new double[prd, rows + 1];
+            for (int c = 0; c < prd; c++)
             {
-                DoubleVariable v = predictorsFrame.Variables[C].AsDoubleVariable;
+                DoubleVariable v = predictorsFrame.Variables[c].AsDoubleVariable;
                 double[] data = v.Data;
                 int r;
                 for (r = 1; r <= rows; r++)
                 {
-                    pt[C, r] = data[r - 1];
+                    pt[c, r] = data[r - 1];
                 }
             }
             // check predictors for categorical data not yet dummied
-            if (prd + 2 >= tot_obs)
+            if (prd + 1 >= tot_obs)
             {
                 host.Error("You must have more observations than parameters", "Logistic Regression");
                 throw new TemplateOperationCancelledException();
-                // TRANSWARNING: Unreachable code detected and removed 
             }
+
             // stack entries with duplicate covariate patterns
             // IEB July 2009: don't stack missing observations in the response as the subsequent dropper won't work
             int cutrows = 0;
-            for (i = 1; i <= rows - 1; i++)
+            for (int i = 1; i < rows; i++)
             {
-                for (j = i + 1; j <= rows; j++)
+                for (int j = i + 1; j <= rows; j++)
                 {
-                    if (tw[j] == 1.0 & tr[j] != Constant.MISSING)
+                    if (tw[j] == 1.0 && tr[j] != Constant.MISSING)
                     {
                         bool snap = true;
-                        for (k = 0; k <= prd; k++)
+                        for (int k = 0; k < prd; k++)
                         {
                             if (pt[k, j] != pt[k, i])
                             {
                                 snap = false;
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                         }
                         if (snap)
@@ -3181,7 +3181,7 @@ namespace StatsDirect.Builtins
                         tt[targetRow] = tt[sourceRow];
                         tr[targetRow] = tr[sourceRow];
                         tw[targetRow] = tw[sourceRow];
-                        for (int pred = 0; pred <= prd; pred++)
+                        for (int pred = 0; pred < prd; pred++)
                         {
                             pt[pred, targetRow] = pt[pred, sourceRow];
                         }
@@ -3212,31 +3212,21 @@ namespace StatsDirect.Builtins
             }
             double tol = accuracy;
             double[,] x = new double[N + 1, ip + 1];
-            string[] Label = new string[ip + 1 ];
-            string transTemp5 = responseVariable.Title;
-            Label[0] = transTemp5.Trim();
-            for (j = 1; j <= M; j++)
-            {
-                string transTemp6 = predictorsFrame.Variables[j - 1].Title;
-                Label[j] = transTemp6.Trim();
-            }
-            for (j = 1; j <= N; j++)
+            string[] label = new string[ip + 1 ];
+            label[0] = responseVariable.Title.Trim();
+            for (int j = 1; j <= M; j++)
+                label[j] = predictorsFrame.Variables[j - 1].Title.Trim();
+            for (int j = 1; j <= N; j++)
             {
                 bool ok = tt[j] != Constant.MISSING;
                 if (tr[j] == Constant.MISSING)
-                {
                     ok = false;
-                }
                 if (Weight && tw[j] == Constant.MISSING)
-                {
                     ok = false;
-                }
-                for (k = 0; k <= M - 1; k++)
+                for (int k = 0; k <= M - 1; k++)
                 {
                     if (pt[k, j] == Constant.MISSING)
-                    {
                         ok = false;
-                    }
                 }
                 if (ok)
                 {
@@ -3244,25 +3234,15 @@ namespace StatsDirect.Builtins
                     t[cnt] = tt[j];
                     y[cnt] = tr[j];
                     if (y[cnt] == 0.0)
-                    {
                         y[cnt] = Constant.EPSNEG;
-                    }
                     if (y[cnt] == t[cnt])
-                    {
                         y[cnt] = y[cnt] - Constant.EPSNEG;
-                    }
                     if (Weight)
-                    {
                         wt[cnt] = tw[j];
-                    }
                     else
-                    {
                         wt[cnt] = 1.0;
-                    }
-                    for (k = 1; k <= M; k++)
-                    {
+                    for (int k = 1; k <= M; k++)
                         x[cnt, k] = pt[k - 1, j];
-                    }
                 }
             }
             if (N != cnt)
@@ -3272,7 +3252,7 @@ namespace StatsDirect.Builtins
             }
             //  get intercept deviance - drop predictors
             double[,] x2 = new double[N + 1, 1 + 1];
-            for (j = 1; j <= N; j++)
+            for (int j = 1; j <= N; j++)
             {
                 x2[j, 0] = 1;
                 x2[j, 1] = 1;
@@ -3302,7 +3282,7 @@ namespace StatsDirect.Builtins
             }
             //  calculate full model
             isx = new int[ip + 1];
-            for (j = 1; j <= ip; j++)
+            for (int j = 1; j <= ip; j++)
             {
                 isx[j] = j;
             }
@@ -3354,7 +3334,7 @@ namespace StatsDirect.Builtins
             }
             if (irank != ip)
             {
-                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0)
+                if (warn.Length > 0)
                 {
                     warn = warn + Formatting.RTFCRLF;
                 }
@@ -3362,15 +3342,15 @@ namespace StatsDirect.Builtins
             }
             if (idf <= 0)
             {
-                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0)
+                if (warn.Length > 0)
                 {
                     warn = warn + Formatting.RTFCRLF;
                 }
                 warn = warn + Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)";
             }
-            if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ msg.Length > 0)
+            if (msg.Length > 0)
             {
-                if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ warn.Length > 0)
+                if (warn.Length > 0)
                 {
                     warn = warn + Formatting.RTFCRLF + msg;
                 }
@@ -3406,7 +3386,7 @@ namespace StatsDirect.Builtins
                                            : Formatting.ASTERISK);
             IList<ParameterBag> varList = new List<ParameterBag>();
             outputParameters.AddOutput("*var", varList);
-            for (i = 1; i <= ip; i++)
+            for (int i = 1; i <= ip; i++)
             {
                 if (se[i] == 0)
                 {
@@ -3420,12 +3400,12 @@ namespace StatsDirect.Builtins
                 varList.Add(varParameters);
                 if (mean)
                 {
-                    varParameters.AddOutput("lab", i == 1 ? "Intercept" : Label[i - 1]);
+                    varParameters.AddOutput("lab", i == 1 ? "Intercept" : label[i - 1]);
                     varParameters.AddOutput("idx", (i - 1).ToString());
                 }
                 else
                 {
-                    varParameters.AddOutput("lab", Label[i]);
+                    varParameters.AddOutput("lab", label[i]);
                     varParameters.AddOutput("idx", i.ToString());
                 }
                 varParameters.AddOutput("res", host.RoundU(b[i]));
@@ -3444,21 +3424,20 @@ namespace StatsDirect.Builtins
                 }
             }
             string tx = "logit ";
-            string transTemp7 = Label[0];
-            if (transTemp7.Length > 0)
+            if (label[0].Length > 0)
             {
-                tx = tx + Label[0];
+                tx = tx + label[0];
             }
             else { tx = tx + "Y"; }
             tx += " = ";
-            for (j = 1; j <= ip; j++)
+            for (int j = 1; j <= ip; j++)
             {
                 if (j > 1 & b[j] >= 0.0)
                 {
                     tx = tx + "+";
                 }
                 tx = tx + host.RoundU(b[j]);
-                string Q = mean ? (j > 1 ? Label[j - 1] : " ") : Label[j];
+                string Q = mean ? (j > 1 ? label[j - 1] : " ") : label[j];
                 if (Q.Length == 0)
                 {
                     tx = tx + " X" + j.ToString();
@@ -3479,7 +3458,7 @@ namespace StatsDirect.Builtins
             context.V1 = var;
             context.N = N;
             context.DoC = mean;
-            context.Label = Label;
+            context.Label = label;
             context.P = ip;
             context.COV = cov;
             context.WT = wt;
@@ -3497,7 +3476,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         private static double x_loglik_p(bool weight, int N, double[] wt, double[] y, double[] fvl)
         {
             double ll = 0;
@@ -3510,7 +3488,6 @@ namespace StatsDirect.Builtins
             }
             return ll;
         }
-
 
         private static double x_loglik_l(bool weight, int N, double[] wt, double[] y, double[] t, double[] fvl)
         {
@@ -3527,12 +3504,10 @@ namespace StatsDirect.Builtins
             return ll;
         }
 
-
-        private static void x_dropper(ITemplateHost host, long Q, string Caption)
+        private static void x_dropper(ITemplateHost host, long Q, string caption)
         {
-            host.Warning(Q.ToString() + " observations dropped due to missing data." + "\r\n" + "Make sure that observations with missing data are not a subgroup.", Caption);
+            host.Warning(Q.ToString() + " observations dropped due to missing data." + "\r\n" + "Make sure that observations with missing data are not a subgroup.", caption);
         }
-
 
         public static StepResult RptLogisticRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
@@ -3545,126 +3520,179 @@ namespace StatsDirect.Builtins
             // double[] var = context.V1; 
             int nx = context.N;
             bool DoC = context.DoC;
-            string[] Label = context.Label;
+            string[] label = context.Label;
             int P = context.P;
             double[] cov = context.COV;
             double[] wt = context.WT;
-            bool Weight = context.WEIGHT;
+            bool weight = context.WEIGHT;
             double[,] x = context.X;
-            int j;
-            double xi;
-            double ww;
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> predictorsList = new List<ParameterBag>();
-            outputParameters.AddOutput("*predictors", predictorsList);
-            for (int i = 1; i <= Label.Length - 2; i++)
+            double[] ry = new double[nx + 1];
+            double[] fit = new double[nx + 1];
+            double[] PP = new double[nx + 1];
+            double[] ww = new double[nx + 1];
+            double[] pxi = new double[nx + 1];
+            double[] xis = new double[nx + 1];
+            double[] cbar = new double[nx + 1];
+            double[] c = new double[nx + 1];
+            double[] d = new double[nx + 1];
+            double[] dc = new double[nx + 1];
+            for (int i = 1; i <= nx; i++)
             {
-                ParameterBag predictorsParameters = new ParameterBag();
-                predictorsList.Add(predictorsParameters);
-                predictorsParameters.AddOutput("lab", Label[i]);
-            }
-            List<ParameterBag> predictorValuesList = new List<ParameterBag>();
-            outputParameters.AddOutput("*predictorValues", predictorValuesList);
-            for (j = 1; j <= nx; j++)
-            {
-                ParameterBag predictorValuesParameters = new ParameterBag();
-                predictorValuesList.Add(predictorValuesParameters);
-                predictorValuesParameters.AddOutput("idx", j);
-                List<ParameterBag> predictorsList2 = new List<ParameterBag>();
-                predictorValuesParameters.AddOutput("*pred", predictorsList2);
-                for (int i = 1; i <= Label.Length - 2; i++)
-                {
-                    ParameterBag predictorsParameters = new ParameterBag();
-                    predictorsList2.Add(predictorsParameters);
-                    predictorsParameters.AddOutput("val", x[j, i].ToString());
-                }
-            }
+                // Deviance
+                ry[i] = y[i] <= Constant.EPSNEG ? 0.0 : y[i];
+                fit[i] = t[i] != 0.0 ? fvl[i] / t[i] : Constant.MISSING;
 
-            IList<ParameterBag> devianceList = new List<ParameterBag>();
-            outputParameters.AddOutput("*deviance", devianceList);
-            for (int i = 1; i <= nx; i++)
-            {
-                ParameterBag devianceParameters = new ParameterBag();
-                devianceList.Add(devianceParameters);
-                devianceParameters.AddOutput("idx", i.ToString());
-                devianceParameters.AddOutput("sub", host.RoundU(t[i]));
-                double ry = y[i] <= Constant.EPSNEG ? 0.0 : y[i];
-                devianceParameters.AddOutput("res", host.RoundU(ry));
-                ry = fvl[i];
-                ry = t[i] != 0.0 ? ry / t[i] : Constant.MISSING;
-                devianceParameters.AddOutput("fit", host.RoundU(ry));
-                devianceParameters.AddOutput("dev", host.RoundU(dr[i]));
-            }
-            IList<ParameterBag> pearsonList = new List<ParameterBag>();
-            outputParameters.AddOutput("*pearson", pearsonList);
-            for (int i = 1; i <= nx; i++)
-            {
-                ParameterBag pearsonParameters = new ParameterBag();
-                pearsonList.Add(pearsonParameters);
-                pearsonParameters.AddOutput("idx", i.ToString());
-                double PP = fvl[i] / t[i];
-                ww = Weight ? wt[i] : 1.0;
-                if (PP != 0.0)
+                // Pearson
+                PP[i] = fvl[i] / t[i];
+                ww[i] = weight ? wt[i] : 1.0;
+                pxi[i] = (PP[i] != 0.0) ? ((y[i] - t[i] * PP[i]) * Math.Sqrt(ww[i])) / Math.Sqrt(t[i] * PP[i] * (1.0 - PP[i])) : Constant.MISSING;
+                xis[i] = (1.0 - hi[i] > 0.0 && pxi[i] != Constant.MISSING) ? pxi[i] / Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
+
+                // Delta beta et al.  IEB July 2009
+                if (PP[i] * (1.0 - PP[i]) != 0.0)
                 {
-                    xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
-                }
-                else { xi = Constant.MISSING; }
-                pearsonParameters.AddOutput("res", host.RoundU(xi));
-                pearsonParameters.AddOutput("lev", host.RoundU(hi[i]));
-                double xis;
-                if (1.0 - hi[i] > 0.0 & xi != Constant.MISSING)
-                {
-                    xis = xi / Math.Sqrt(1.0 - hi[i]);
-                }
-                else { xis = Constant.MISSING; }
-                pearsonParameters.AddOutput("sres", host.RoundU(xis));
-            }
-            IList<ParameterBag> deltaList = new List<ParameterBag>();
-            outputParameters.AddOutput("*delta", deltaList);
-            for (int i = 1; i <= nx; i++)
-            {
-                ParameterBag deltaParameters = new ParameterBag();
-                deltaList.Add(deltaParameters);
-                deltaParameters.AddOutput("idx", i.ToString());
-                double PP = fvl[i] / t[i];
-                ww = Weight ? wt[i] : 1.0;
-                // IEB July 2009
-                double c;
-                double cbar;
-                double d;
-                double dc;
-                if (PP * (1.0 - PP) != 0.0)
-                {
-                    xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
-                    c = (Math.Pow(xi, 2.0) * hi[i]) / Math.Pow((1.0 - hi[i]), 2.0);
-                    cbar = (Math.Pow(xi, 2.0) * hi[i]) / (1.0 - hi[i]);
-                    d = Math.Pow(dr[i], 2.0) + cbar;
-                    dc = cbar / hi[i];
+                    double xi = ((y[i] - t[i] * PP[i]) * Math.Sqrt(ww[i])) / Math.Sqrt(t[i] * PP[i] * (1.0 - PP[i]));
+                    c[i] = (Math.Pow(xi, 2.0) * hi[i]) / Math.Pow((1.0 - hi[i]), 2.0);
+                    cbar[i] = (Math.Pow(xi, 2.0) * hi[i]) / (1.0 - hi[i]);
+                    d[i] = Math.Pow(dr[i], 2.0) + cbar[i];
+                    dc[i] = cbar[i] / hi[i];
                 }
                 else
                 {
-                    xi = Constant.MISSING;
-                    c = Constant.MISSING;
-                    cbar = Constant.MISSING;
-                    d = Constant.MISSING;
-                    dc = Constant.MISSING;
+                    c[i] = Constant.MISSING;
+                    cbar[i] = Constant.MISSING;
+                    d[i] = Constant.MISSING;
+                    dc[i] = Constant.MISSING;
                 }
-                deltaParameters.AddOutput("c", host.RoundU(cbar));
-                deltaParameters.AddOutput("bar", host.RoundU(c));
-                deltaParameters.AddOutput("dev", host.RoundU(d));
-                deltaParameters.AddOutput("chi", host.RoundU(dc));
             }
+
+            ParameterBag outputParameters = new ParameterBag();
+
+            // Output is individual if the user selected individual rows in the original regression *and* chose to preserve them in this call
+            bool isGrouped = !("individual".Equals(parameters["grouping"].AsString) && "individual".Equals(parameters["row_type"].AsString));
+
+            // Make up all variables for a possible future output of a frame containing all or part of these.
+            // DO NOT change this order without looking at MakeLogisticRegressionFitRow and GridLogisticRegressionFit, which assume these indices.
+            int variableLength = isGrouped ? nx : parameters["predictors"].AsDataFrame.MaxRows;
+            DataFrame outputFrame = new DataFrame();
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Trials"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Events"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Event Probability"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Deviance Residual"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Pearson Residual"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Leverage"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Std Pearson Residual"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Delta Beta"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Std Delta Beta"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Delta Deviance"));
+            outputFrame.Variables.Add(new DoubleVariable(variableLength, "Delta Chi-Square"));
+            outputParameters.AddOutput("fitsDump", outputFrame);
+
+            if (isGrouped)
+            {
+                List<ParameterBag> groupedList = new List<ParameterBag>();
+                outputParameters.AddOutput("*grouped", groupedList);
+                ParameterBag groupedParameters = new ParameterBag();
+                groupedList.Add(groupedParameters);
+
+                List<ParameterBag> predictorsList = new List<ParameterBag>();
+                groupedParameters.AddOutput("*predictors", predictorsList);
+                for (int i = 1; i <= label.Length - 2; i++)
+                {
+                    ParameterBag predictorsParameters = new ParameterBag();
+                    predictorsList.Add(predictorsParameters);
+                    predictorsParameters.AddOutput("lab", label[i]);
+                }
+                List<ParameterBag> predictorValuesList = new List<ParameterBag>();
+                groupedParameters.AddOutput("*predictorValues", predictorValuesList);
+                for (int i = 1; i <= nx; i++)
+                {
+                    ParameterBag bag = MakeLogisticRegressionFitRow(host, t, y, dr, hi, label, x, ry, fit, pxi, xis, cbar, c, d, dc, i, true, outputFrame, i - 1);
+                    predictorValuesList.Add(bag);
+                }
+            }
+            else
+            {
+                List<ParameterBag> individualList = new List<ParameterBag>();
+                outputParameters.AddOutput("*individual", individualList);
+                ParameterBag individualParameters = new ParameterBag();
+                individualList.Add(individualParameters);
+
+                List<ParameterBag> predictorValuesList = new List<ParameterBag>();
+                individualParameters.AddOutput("*predictorValues", predictorValuesList);
+
+                double[] responses = parameters["response"].AsDataFrame.Variables[0].AsDoubleVariable.Data;
+                DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
+                // Process each (known individual) predictor
+                int vars = predictorsFrame.VariableCount;
+                int rows = predictorsFrame.MaxRows;
+                for (int predictorRow = 0; predictorRow < rows; predictorRow++)
+                {
+                    // Gather the predictor values for this row
+                    double[] thisRow = new double[vars];
+                    bool atLeastOneMissing = false;
+                    for (int v = 0; v < vars; v++)
+                    {
+                        double value = predictorsFrame.Variables[v].AsDoubleVariable.Data[predictorRow];
+                        if (value == Constant.MISSING)
+                        {
+                            atLeastOneMissing = true;
+                            break;
+                        }
+                        thisRow[v] = value;
+                    }
+                    // If we have missing data, this row will never have a group so there's no point looking
+                    ParameterBag bag = null;
+                    if (atLeastOneMissing)
+                    {
+                        bag = MakeLogisticRegressionFitRow(host, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0, false, outputFrame, predictorRow);
+                    }
+                    else
+                    {
+                        // Find that predictor pattern in our grouped data; once found, emit the matching values
+                        bool snapped = false;
+                        for (int i = 1; i <= nx; i++)
+                        {
+                            for (int xindex = 0; xindex <= nx; xindex++)
+                            {
+                                bool snap = true;
+                                for (int predIndex = 0; predIndex < vars; predIndex++)
+                                {
+                                    if (x[i, predIndex + 1] != thisRow[predIndex])
+                                    {
+                                        snap = false;
+                                        break;
+                                    }
+                                }
+                                if (snap)
+                                {
+                                    bag = MakeLogisticRegressionFitRow(host, t, y, dr, hi, label, x, ry, fit, pxi, xis, cbar, c, d, dc, i, false, outputFrame, predictorRow);
+                                    snapped = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!snapped)
+                            throw new Exception("Should never happen: Couldn't find an individual predictor pattern in the processed groups.");
+                    }
+                    bag.AddOutput("resbool", host.RoundU(responses[predictorRow]));
+                    bag.AddOutput("resnum", (predictorRow + 1).ToString());
+                    predictorValuesList.Add(bag);
+                }
+            }
+
+            // Covariance
             IList<ParameterBag> covarList = new List<ParameterBag>();
             outputParameters.AddOutput("*covar", covarList);
             for (int i = 1; i <= P; i++)
             {
-                for (j = i; j <= P; j++)
+                for (int j = i; j <= P; j++)
                 {
                     ParameterBag covarParameters = new ParameterBag();
                     covarList.Add(covarParameters);
-                    string x1 = qlbli(Label, i, DoC);
-                    string x2 = qlbli(Label, j, DoC);
+                    string x1 = qlbli(label, i, DoC);
+                    string x2 = qlbli(label, j, DoC);
                     covarParameters.AddOutput("lab", x1 + " vs. " + x2);
                     covarParameters.AddOutput("cov", host.RoundU(cov[((int)(Math.Floor((double)j * (j - 1) / 2 + i)))]));
                 }
@@ -3672,197 +3700,108 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
+        private static ParameterBag MakeLogisticRegressionFitRow(ITemplateHost host, double[] t, double[] y, double[] dr, double[] hi, string[] label, double[,] x, double[] ry, double[] fit, double[] pxi, double[] xis, double[] cbar, double[] c, double[] d, double[] dc, int arrayOffset, bool includePredictors, DataFrame outputFrame, int outputRow)
+        {
+            ParameterBag predictorValuesParameters = new ParameterBag();
+            predictorValuesParameters.AddOutput("idx", arrayOffset);
+            predictorValuesParameters.AddOutput("sub", null == t ? Formatting.ASTERISK : host.RoundU(t[arrayOffset]));
+            predictorValuesParameters.AddOutput("res", null == ry ? Formatting.ASTERISK : host.RoundU(ry[arrayOffset]));
+            predictorValuesParameters.AddOutput("fit", null == fit ? Formatting.ASTERISK : host.RoundU(fit[arrayOffset]));
+            predictorValuesParameters.AddOutput("dev", null == dr ? Formatting.ASTERISK : host.RoundU(dr[arrayOffset]));
+
+            predictorValuesParameters.AddOutput("pres", null == pxi ? Formatting.ASTERISK : host.RoundU(pxi[arrayOffset]));
+            predictorValuesParameters.AddOutput("lev", null == hi ? Formatting.ASTERISK : host.RoundU(hi[arrayOffset]));
+            predictorValuesParameters.AddOutput("spres", null == xis ? Formatting.ASTERISK : host.RoundU(xis[arrayOffset]));
+
+            predictorValuesParameters.AddOutput("deltac", null == cbar ? Formatting.ASTERISK : host.RoundU(cbar[arrayOffset]));
+            predictorValuesParameters.AddOutput("deltabar", null == c ? Formatting.ASTERISK : host.RoundU(c[arrayOffset]));
+            predictorValuesParameters.AddOutput("deltadev", null == d ? Formatting.ASTERISK : host.RoundU(d[arrayOffset]));
+            predictorValuesParameters.AddOutput("deltachi", null == dc ? Formatting.ASTERISK : host.RoundU(dc[arrayOffset]));
+
+            outputFrame.Variables[0].AsDoubleVariable.Data[outputRow] = null == t ? Constant.MISSING : t[arrayOffset]; // Trials
+            outputFrame.Variables[1].AsDoubleVariable.Data[outputRow] = null == y ? Constant.MISSING : y[arrayOffset]; // Events
+            outputFrame.Variables[2].AsDoubleVariable.Data[outputRow] = null == fit ? Constant.MISSING : fit[arrayOffset]; // Event Probability
+            outputFrame.Variables[3].AsDoubleVariable.Data[outputRow] = null == dr ? Constant.MISSING : dr[arrayOffset]; // Deviance Residual
+            outputFrame.Variables[4].AsDoubleVariable.Data[outputRow] = null == pxi ? Constant.MISSING : pxi[arrayOffset]; // Pearson Residual
+            outputFrame.Variables[5].AsDoubleVariable.Data[outputRow] = null == hi ? Constant.MISSING : hi[arrayOffset]; // Leverage
+            outputFrame.Variables[6].AsDoubleVariable.Data[outputRow] = null == xis ? Constant.MISSING : xis[arrayOffset]; // Std Pearson Residual
+            outputFrame.Variables[7].AsDoubleVariable.Data[outputRow] = null == cbar ? Constant.MISSING : cbar[arrayOffset]; // Delta Beta
+            outputFrame.Variables[8].AsDoubleVariable.Data[outputRow] = null == c ? Constant.MISSING : c[arrayOffset]; // Std Delta Beta
+            outputFrame.Variables[9].AsDoubleVariable.Data[outputRow] = null == d ? Constant.MISSING : d[arrayOffset]; // Delta Deviance
+            outputFrame.Variables[10].AsDoubleVariable.Data[outputRow] = null == dc ? Constant.MISSING : dc[arrayOffset]; // Delta Chi-Square
+
+            if (includePredictors)
+            {
+                List<ParameterBag> predictorsList2 = new List<ParameterBag>();
+                predictorValuesParameters.AddOutput("*pred", predictorsList2);
+                for (int j = 1; j < label.Length - 1; j++)
+                {
+                    ParameterBag predictorsParameters = new ParameterBag();
+                    predictorsList2.Add(predictorsParameters);
+                    predictorsParameters.AddOutput("val", x[arrayOffset, j].ToString());
+                }
+            }
+
+            return predictorValuesParameters;
+        }
 
         public static StepResult GridLogisticRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
-            double[] t = context.T;
-            double[] y = context.Y;
-            double[] fvl = context.FV;
-            double[] dr = context.R;
-            double[] hi = context.H1;
-            int nx = context.N;
-            double[] wt = context.WT;
-            bool Weight = context.WEIGHT;
-
-            bool trials = parameters["trials"].AsBoolean;
-            bool events = parameters["events"].AsBoolean;
-            bool eventProbability = parameters["eventProbability"].AsBoolean;
-            bool devianceResidual = parameters["devianceResidual"].AsBoolean;
-            bool pearsonResidual = parameters["pearsonResidual"].AsBoolean;
-            bool leverage = parameters["leverage"].AsBoolean;
-            bool stdPearsonResidual = parameters["stdPearsonResidual"].AsBoolean;
-            bool deltaBeta = parameters["deltaBeta"].AsBoolean;
-            bool stdDeltaBeta = parameters["stdDeltaBeta"].AsBoolean;
-            bool deltaDeviance = parameters["deltaDeviance"].AsBoolean;
-            bool deltaChiSquare = parameters["deltaChiSquare"].AsBoolean;
+            bool doTrials = parameters["trials"].AsBoolean;
+            bool doEvents = parameters["events"].AsBoolean;
+            bool doEventProbability = parameters["eventProbability"].AsBoolean;
+            bool doDevianceResidual = parameters["devianceResidual"].AsBoolean;
+            bool doPearsonResidual = parameters["pearsonResidual"].AsBoolean;
+            bool doLeverage = parameters["leverage"].AsBoolean;
+            bool doStdPearsonResidual = parameters["stdPearsonResidual"].AsBoolean;
+            bool doDeltaBeta = parameters["deltaBeta"].AsBoolean;
+            bool doStdDeltaBeta = parameters["stdDeltaBeta"].AsBoolean;
+            bool doDeltaDeviance = parameters["deltaDeviance"].AsBoolean;
+            bool doDeltaChiSquare = parameters["deltaChiSquare"].AsBoolean;
+            DataFrame fitsDump = parameters["fitsDump"].AsDataFrame;
             ParameterBag outputParameters = new ParameterBag();
-            if (trials || events || eventProbability || devianceResidual || pearsonResidual || leverage || stdPearsonResidual || deltaBeta || stdDeltaBeta || deltaDeviance || deltaChiSquare)
+            if (doTrials || doEvents || doEventProbability || doDevianceResidual || doPearsonResidual || doLeverage || doStdPearsonResidual || doDeltaBeta || doStdDeltaBeta || doDeltaDeviance || doDeltaChiSquare)
             {
-                //  Make up all the variables (it's fast!) then only include the ones we need
-                DoubleVariable trialsVariable = new DoubleVariable(nx, "Trials");
-                DoubleVariable eventsVariable = new DoubleVariable(nx, "Events");
-                DoubleVariable eventProbabilityVariable = new DoubleVariable(nx, "Event Probability");
-                DoubleVariable devianceResidualVariable = new DoubleVariable(nx, "Deviance Residual");
-                DoubleVariable pearsonResidualVariable = new DoubleVariable(nx, "Pearson Residual");
-                DoubleVariable leverageVariable = new DoubleVariable(nx, "Leverage");
-                DoubleVariable stdPearsonResidualVariable = new DoubleVariable(nx, "Std Pearson Residual");
-                DoubleVariable deltaBetaVariable = new DoubleVariable(nx, "Delta Beta");
-                DoubleVariable stdDeltaBetaVariable = new DoubleVariable(nx, "Std Delta Beta");
-                DoubleVariable deltaDevianceVariable = new DoubleVariable(nx, "Delta Deviance");
-                DoubleVariable deltaChiSquareVariable = new DoubleVariable(nx, "Delta Chi-Square");
-                for (int i = 1; i <= nx; i++)
-                {
-                    // Check for each save option
-                    if (trials)
-                    { // Trials
+                // Retrieve all the variables (it's fast!) then only include the ones we need
+                DoubleVariable trialsVariable = fitsDump.Variables[0].AsDoubleVariable;
+                DoubleVariable eventsVariable = fitsDump.Variables[1].AsDoubleVariable;
+                DoubleVariable eventProbabilityVariable = fitsDump.Variables[2].AsDoubleVariable;
+                DoubleVariable devianceResidualVariable = fitsDump.Variables[3].AsDoubleVariable;
+                DoubleVariable pearsonResidualVariable = fitsDump.Variables[4].AsDoubleVariable;
+                DoubleVariable leverageVariable = fitsDump.Variables[5].AsDoubleVariable;
+                DoubleVariable stdPearsonResidualVariable = fitsDump.Variables[6].AsDoubleVariable;
+                DoubleVariable deltaBetaVariable = fitsDump.Variables[7].AsDoubleVariable;
+                DoubleVariable stdDeltaBetaVariable = fitsDump.Variables[8].AsDoubleVariable;
+                DoubleVariable deltaDevianceVariable = fitsDump.Variables[9].AsDoubleVariable;
+                DoubleVariable deltaChiSquareVariable = fitsDump.Variables[10].AsDoubleVariable;
 
-                        trialsVariable.set_Data(i - 1, t[i]);
-                    }
-                    double ry;
-                    if (events)
-                    {
-                        // Events
-
-                        ry = y[i] <= Constant.EPSNEG ? 0.0 : y[i];
-                        eventsVariable.set_Data(i - 1, ry);
-                    }
-                    if (eventProbability)
-                    { // Fitted pi
-
-                        ry = fvl[i];
-                        ry = t[i] != 0.0 ? ry / t[i] : Constant.MISSING;
-                        eventProbabilityVariable.set_Data(i - 1, ry);
-                    }
-                    if (devianceResidual)
-                    { // Deviance residuals
-
-                        devianceResidualVariable.set_Data(i - 1, dr[i]);
-                    }
-                    double PP = fvl[i] / t[i];
-                    double ww = Weight ? wt[i] : 1.0;
-                    double xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
-                    double xis = 1.0 - hi[i] > 0.0 ? xi / Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
-                    if (pearsonResidual)
-                    { // Pearson residuals
-
-                        pearsonResidualVariable.set_Data(i - 1, xi);
-                    }
-                    if (leverage)
-                    { // Leverage HI
-
-                        leverageVariable.set_Data(i - 1, hi[i]);
-                    }
-                    if (stdPearsonResidual)
-                    { // Standardised Pearson residual
-
-                        stdPearsonResidualVariable.set_Data(i - 1, xis);
-                    }
-                    PP = fvl[i] / t[i];
-                    ww = Weight ? wt[i] : 1.0;
-                    // IEB July 2009
-                    double C;
-                    double cbar;
-                    double D;
-                    double dc;
-                    if (PP * (1.0 - PP) != 0.0)
-                    {
-                        xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
-                        C = (Math.Pow(xi, 2.0) * hi[i]) / Math.Pow((1.0 - hi[i]), 2.0);
-                        cbar = (Math.Pow(xi, 2.0) * hi[i]) / (1.0 - hi[i]);
-                        D = Math.Pow(dr[i], 2.0) + cbar;
-                        dc = cbar / hi[i];
-                    }
-                    else
-                    {
-                        xi = Constant.MISSING;
-                        C = Constant.MISSING;
-                        cbar = Constant.MISSING;
-                        D = Constant.MISSING;
-                        dc = Constant.MISSING;
-                    }
-                    if (deltaBeta)
-                    { // delta beta
-
-                        deltaBetaVariable.set_Data(i - 1, cbar);
-                    }
-                    if (stdDeltaBeta)
-                    { // std delta beta
-
-                        stdDeltaBetaVariable.set_Data(i - 1, C);
-                    }
-                    if (deltaDeviance)
-                    { // delta dev
-
-                        deltaDevianceVariable.set_Data(i - 1, D);
-                    }
-                    if (deltaChiSquare)
-                    { // delta chisq
-
-                        deltaChiSquareVariable.set_Data(i - 1, dc);
-                    }
-                }
                 DataFrame resultsFrame = new DataFrame();
-                if (trials)
-                { // Trials
-
+                if (doTrials)
                     resultsFrame.Variables.Add(trialsVariable);
-                }
-                if (events)
-                { // Events
-
+                if (doEvents)
                     resultsFrame.Variables.Add(eventsVariable);
-                }
-                if (eventProbability)
-                { // Fitted pi
-
+                if (doEventProbability)
                     resultsFrame.Variables.Add(eventProbabilityVariable);
-                }
-                if (devianceResidual)
-                { // Deviance residuals
-
+                if (doDevianceResidual)
                     resultsFrame.Variables.Add(devianceResidualVariable);
-                }
-                if (pearsonResidual)
-                { // Pearson residuals
-
+                if (doPearsonResidual)
                     resultsFrame.Variables.Add(pearsonResidualVariable);
-                }
-                if (leverage)
-                { // Leverage HI
-
+                if (doLeverage)
                     resultsFrame.Variables.Add(leverageVariable);
-                }
-                if (stdPearsonResidual)
-                { // Standardised Pearson residual
-
+                if (doStdPearsonResidual)
                     resultsFrame.Variables.Add(stdPearsonResidualVariable);
-                }
-                if (deltaBeta)
-                { // delta beta
-
+                if (doDeltaBeta)
                     resultsFrame.Variables.Add(deltaBetaVariable);
-                }
-                if (stdDeltaBeta)
-                { // std delta beta
-
+                if (doStdDeltaBeta)
                     resultsFrame.Variables.Add(stdDeltaBetaVariable);
-                }
-                if (deltaDeviance)
-                { // delta dev
-
+                if (doDeltaDeviance)
                     resultsFrame.Variables.Add(deltaDevianceVariable);
-                }
-                if (deltaChiSquare)
-                { // delta chisq
-
+                if (doDeltaChiSquare)
                     resultsFrame.Variables.Add(deltaChiSquareVariable);
-                }
                 outputParameters.AddOutput("results", resultsFrame);
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
 
         private static string qlbli(string[] label, int i, bool DoC)
         {
@@ -4645,11 +4584,10 @@ namespace StatsDirect.Builtins
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 ch.SetBox0To1();
-                outputParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, rx, ry, "1-specificity", "sensitivity", "", false, -99, false));
+                outputParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, rx, ry, "1-specificity", "sensitivity", "", false, DataMinMax.XPreset_YPreset, false));
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
 
         public static StepResult RptLogisticRegressionBootstrap(ITemplateHost host, ParameterBag parameters)
         {

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>ContractFrequencies</name>
+	<friendly-name lang="en-GB">Contract</friendly-name>
+  <help chm-id="1397" />
+  <steps>
+    <settings>
+      <parameters>
+        <frame>
+          <name>observations</name>
+          <prompt>Select observations</prompt>
+          <mode>CategoryReplaceMissing</mode>
+        </frame>
+      </parameters>
+    </settings>
+    <builtin function-name="shtContractFrequencies" />
+    <output-frame frame-name="output" />
+	</steps>
+</operation>

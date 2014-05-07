@@ -1,25 +1,44 @@
 <report>
 <line><title>Logistic regression - fits and residuals</title></line>
-<line></line>
+<block name="grouped">
 <table>
+<line></line>
 <tr><th>Index</th><block name="predictors"><th><in>lab</in></th></block></tr>
 <block name="predictorValues"><tr><td><in>idx</in></td><block name="pred"><td><in>val</in></td></block></tr>
 </block></table>
 <line></line>
 <table>
 <tr><th>Index</th><th>Trials</th><th>Events</th><th>Event Probability</th><th>Deviance Residual</th></tr>
-<block name="deviance"><tr><td><in>idx</in></td><td><in>sub</in></td><td><in>res</in></td><td><in>fit</in></td><td><in>dev</in></td></tr>
+<block name="predictorValues"><tr><td><in>idx</in></td><td><in>sub</in></td><td><in>res</in></td><td><in>fit</in></td><td><in>dev</in></td></tr>
 </block></table>
 <line></line>
 <table>
 <tr><th>Index</th><th>Pearson Residual</th><th>Leverage</th><th>Std Pearson Residual</th></tr>
-<block name="pearson"><tr><td><in>idx</in></td><td><in>res</in></td><td><in>lev</in></td><td><in>sres</in></td></tr>
+<block name="predictorValues"><tr><td><in>idx</in></td><td><in>pres</in></td><td><in>lev</in></td><td><in>spres</in></td></tr>
 </block></table>
 <line></line>
 <table>
 <tr><th>Index</th><th>Delta Beta</th><th>Std Delta Beta</th><th>Delta Deviance</th><th>Delta Chi-square</th></tr>
-<block name="delta"><tr><td><in>idx</in></td><td><in>c</in></td><td><in>bar</in></td><td><in>dev</in></td><td><in>chi</in></td></tr>
+<block name="predictorValues"><tr><td><in>idx</in></td><td><in>deltac</in></td><td><in>deltabar</in></td><td><in>deltadev</in></td><td><in>deltachi</in></td></tr>
 </block></table>
+</block>
+<block name="individual">
+<line></line>
+<table>
+<tr><th>Index</th><th>Response</th><th>Event Probability</th><th>Deviance Residual</th></tr>
+<block name="predictorValues"><tr><td><in>resnum</in></td><td><in>resbool</in></td><td><in>fit</in></td><td><in>dev</in></td></tr>
+</block></table>
+<line></line>
+<table>
+<tr><th>Index</th><th>Pearson Residual</th><th>Leverage</th><th>Std Pearson Residual</th></tr>
+<block name="predictorValues"><tr><td><in>resnum</in></td><td><in>pres</in></td><td><in>lev</in></td><td><in>spres</in></td></tr>
+</block></table>
+<line></line>
+<table>
+<tr><th>Index</th><th>Delta Beta</th><th>Std Delta Beta</th><th>Delta Deviance</th><th>Delta Chi-square</th></tr>
+<block name="predictorValues"><tr><td><in>resnum</in></td><td><in>deltac</in></td><td><in>deltabar</in></td><td><in>deltadev</in></td><td><in>deltachi</in></td></tr>
+</block></table>
+</block>
 <line></line>
 <table>
 <tr><th>Parameters</th><th>Covariance</th></tr>

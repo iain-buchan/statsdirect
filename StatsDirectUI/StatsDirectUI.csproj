@@ -209,6 +209,7 @@
     <Compile Include="Charting\ChartRenderer.cs" />
     <Compile Include="Charting\ComparisonValue.cs" />
     <Compile Include="Charting\ControlOptions.cs" />
+    <Compile Include="Charting\DataMinMax.cs" />
     <Compile Include="Charting\DoubleSeries.cs" />
     <Compile Include="Charting\ErrorBarOptions.cs" />
     <Compile Include="Charting\FillStyle.cs" />
@@ -266,6 +267,10 @@
       <DependentUpon>RResults.g4</DependentUpon>
     </Compile>
     <Compile Include="R\RResultsParserPartial.cs" />
+    <Compile Include="Templates\AxisScaleParameters.cs" />
+    <Compile Include="Templates\LabelDirection.cs" />
+    <Compile Include="Templates\ScaleParameters.cs" />
+    <Compile Include="Templates\ScaleType.cs" />
     <Compile Include="UI\frmInstallStatsDirect2.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -321,7 +326,6 @@
     <Compile Include="Templates\GroupedCovarianceParameter.cs" />
     <Compile Include="Templates\HelpContext.cs" />
     <Compile Include="Templates\HelpTip.cs" />
-    <Compile Include="Templates\IChartHost.cs" />
     <Compile Include="Templates\IFillable.cs" />
     <Compile Include="Templates\IMightRequireInput.cs" />
     <Compile Include="Templates\IntegerParameter.cs" />
@@ -406,12 +410,6 @@
     </Compile>
     <Compile Include="UI\ctlDummyOptions.Designer.cs">
       <DependentUpon>ctlDummyOptions.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\frmScale.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmScale.Designer.cs">
-      <DependentUpon>frmScale.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\frmUpdateCheck.cs">
       <SubType>Form</SubType>
@@ -803,10 +801,6 @@
       <DependentUpon>ctlBarOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmScale.resx">
-      <DependentUpon>frmScale.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\frmTextPreview.resx">
       <DependentUpon>frmTextPreview.cs</DependentUpon>
     </EmbeddedResource>
@@ -1083,7 +1077,6 @@
     <None Include="Assets\Template\INTPROBX.rtf" />
     <None Include="Assets\Template\INTPROBY.rtf" />
     <None Include="Assets\Template\irdmeta.rtf" />
-    <None Include="Assets\Template\irdmeta~2.rtf" />
     <None Include="Assets\Template\irrmeta.rtf" />
     <None Include="Assets\Template\kappa.rtf" />
     <None Include="Assets\Template\kappa2.rtf" />
@@ -1207,6 +1200,8 @@
     </Content>
     <Content Include="Assets\Operations\ConvertUnits.xml" />
     <Content Include="Assets\Operations\ConvertUnitsScreen.xml" />
+    <Content Include="Assets\Operations\ContractFrequencies.xml" />
+    <Content Include="Assets\Operations\ExpandFrequencies.xml" />
     <Content Include="Assets\Operations\MethodComparisonRegression.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1314,7 +1309,9 @@
     <Content Include="Assets\Operations\BoxWhiskerPlot.xml" />
     <Content Include="Assets\Operations\ChiSquareGoodnessOfFit.xml" />
     <Content Include="Assets\Operations\CiMeanY.xml" />
-    <Content Include="Assets\Operations\CochranePlot.xml" />
+    <Content Include="Assets\Operations\CochranePlot.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\ConditionalLogisticRegression.xml" />
     <Content Include="Assets\Operations\ControlPlot.xml" />
     <Content Include="Assets\Operations\ChiWoolfScreen.xml" />
@@ -1525,7 +1522,9 @@
     <Content Include="Assets\Operations\Mantel.xml" />
     <Content Include="Assets\Operations\MetaIncidenceRateDifference.xml" />
     <Content Include="Assets\Operations\MetaIncidenceRateRatio.xml" />
-    <Content Include="Assets\Operations\MetaSummary.xml" />
+    <Content Include="Assets\Operations\MetaSummary.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\MultipleLinearRegression.xml" />
     <Content Include="Assets\Operations\MultipleLinearRegressionAnova.xml" />
     <Content Include="Assets\Operations\MultipleLinearRegressionBestSubset.xml" />
@@ -1564,7 +1563,9 @@
     <Content Include="Assets\Operations\ProbitInterpolateY.xml" />
     <Content Include="Assets\Operations\ProbitMore.xml" />
     <Content Include="Assets\Operations\ProbitPlot.xml" />
-    <Content Include="Assets\Operations\ProportionMeta.xml" />
+    <Content Include="Assets\Operations\ProportionMeta.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\PyramidPlot.xml" />
     <Content Include="Assets\Operations\Quantile.xml" />
     <Content Include="Assets\Operations\Ranv.xml" />

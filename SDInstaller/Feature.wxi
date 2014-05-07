@@ -66,6 +66,7 @@
     <ComponentRef Id="CochranQ.xml" />
     <ComponentRef Id="Combine.xml" />
     <ComponentRef Id="ConditionalLogisticRegression.xml" />
+    <ComponentRef Id="ContractFrequencies.xml" />
     <ComponentRef Id="ControlPlot.xml" />
     <ComponentRef Id="ConvertUnits.xml" />
     <ComponentRef Id="ConvertUnitsScreen.xml" />
@@ -107,6 +108,7 @@
     <ComponentRef Id="ExactMcNamarChi.xml" />
     <ComponentRef Id="ExactORCML.xml" />
     <ComponentRef Id="ExactSign.xml" />
+    <ComponentRef Id="ExpandFrequencies.xml" />
     <ComponentRef Id="ExploreContinuousDistributions.xml" />
     <ComponentRef Id="ExportWorksheet.xml" />
     <ComponentRef Id="FillSeries.xml" />

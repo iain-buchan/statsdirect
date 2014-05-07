@@ -1,5 +1,5 @@
 #define RELEASE_EXCEPTIONS
-// #define WATCH_EXCEPTIONS
+//#define WATCH_EXCEPTIONS
 
 // If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
 // Current uses:
@@ -2659,24 +2659,24 @@ namespace StatsDirect.UI
             Control ctl;
             switch (chartOptions.OptionType)
             {
-                case Charting.ChartOptions.OptionTypes.Bar:
-                case Charting.ChartOptions.OptionTypes.BoxWhisker:
-                case Charting.ChartOptions.OptionTypes.Control:
-                case Charting.ChartOptions.OptionTypes.ErrorBars:
-                case Charting.ChartOptions.OptionTypes.Forest:
-                case Charting.ChartOptions.OptionTypes.Histogram:
-                case Charting.ChartOptions.OptionTypes.Ladder:
-                case Charting.ChartOptions.OptionTypes.Normal:
-                case Charting.ChartOptions.OptionTypes.Pyramid:
-                case Charting.ChartOptions.OptionTypes.ROC:
-                case Charting.ChartOptions.OptionTypes.ScatterXY:
-                case Charting.ChartOptions.OptionTypes.Spread:
-                case Charting.ChartOptions.OptionTypes.Survival:
+                case Charting.ChartOptionType.Bar:
+                case Charting.ChartOptionType.BoxWhisker:
+                case Charting.ChartOptionType.Control:
+                case Charting.ChartOptionType.ErrorBars:
+                case Charting.ChartOptionType.Forest:
+                case Charting.ChartOptionType.Histogram:
+                case Charting.ChartOptionType.Ladder:
+                case Charting.ChartOptionType.Normal:
+                case Charting.ChartOptionType.Pyramid:
+                case Charting.ChartOptionType.ROC:
+                case Charting.ChartOptionType.ScatterXY:
+                case Charting.ChartOptionType.Spread:
+                case Charting.ChartOptionType.Survival:
                     ctl = new ctlChartOptions(chartDefinition);
                     break;
-                case Charting.ChartOptions.OptionTypes.Agreement:
-                case Charting.ChartOptions.OptionTypes.Gini:
-                case Charting.ChartOptions.OptionTypes.LinearRegression:
+                case Charting.ChartOptionType.Agreement:
+                case Charting.ChartOptionType.Gini:
+                case Charting.ChartOptionType.LinearRegression:
                     // Do nothing - there are no options to fill
                     return new FilledParameter(true, parameter.ChartDefinition);
                 default:

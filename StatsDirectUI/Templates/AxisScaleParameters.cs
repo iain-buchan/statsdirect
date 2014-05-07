@@ -1,0 +1,37 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace StatsDirect.Templates
+{
+    [Serializable]
+    public class AxisScaleParameters
+    {
+        public double Min { get; set; }
+        public double Max { get; set; }
+        public ICollection<ScaleType> AllowedScaleTypes { get; set; }
+        public ScaleType ScaleType { get; set; }
+
+        // Scale
+        public bool HasAxisScale { get; set; }
+        public double QMin { get; set; }
+        public double QMax { get; set; }
+        public int Div { get; set; }
+        public double ZMin { get; set; }
+        public double ZInt { get; set; }
+        public int MinorTicsPerMajorTic { get; set; }
+        public string Mask { get; set; }
+        public LabelDirection LabelDirection { get; set; }
+
+        // Grid lines
+        public bool HasGridLines { get; set; }
+        public System.Drawing.Drawing2D.DashStyle GridLineDashStyle { get; set; }
+
+        // Marker line
+        public double? MarkerLineValue { get; set; }
+
+        public AxisScaleParameters Clone()
+        {
+            return (AxisScaleParameters)MemberwiseClone();
+        }
+    }
+}

@@ -339,7 +339,7 @@ namespace StatsDirect.UI
                 double zint = 0;
                 double min = sx.Minimum;
                 double max = sx.Maximum;
-                Charting.AxisScaler.v_axis(ref min, ref max, ref nsteps, ref zmin, ref zint);
+                Charting.AxisScaler.v_axis(ref min, ref max, ref nsteps, out zmin, out zint);
                 txtIntervals.Text = nsteps.ToString();
                 txtMinimum.Text = Math.Round(zmin, 14).ToString();
                 txtInterval.Text = Math.Round(zint, 14).ToString();

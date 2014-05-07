@@ -12,12 +12,22 @@ namespace StatsDirect.Charting
     ///  <remarks></remarks>
     public class ChartDefinition : IFillable
     {
-        private double dataMinX;
-        private double dataMaxX;
-        private double dataMinY;
-        private double dataMaxY;
-
         private ScaleParameters scaleParameters;
+
+        public List<Series> XSeries { get; set; }
+        public List<Series> YSeries { get; set; }
+
+        public double DataMinX { get; private set; }
+        public double DataMaxX { get; private set; }
+        public double DataMinY { get; private set; }
+        public double DataMaxY { get; private set; }
+
+        ///  <summary>
+        ///  The type of chart to be plotted.
+        ///  </summary>
+        public ChartType ChartType { get; set; }
+
+        public ChartOptions ChartOptions { get; set; }
 
         ///  <summary>
         ///  A default ChartDefinition with no values set.
@@ -25,21 +35,19 @@ namespace StatsDirect.Charting
         ///  <remarks>TODO: This shouldn't be needed as even the one-liners should set most of their options in the definition.</remarks>
         private static ChartDefinition _Empty;
 
-        // TRANSMISSINGCOMMENT: Method Empty
         public static ChartDefinition Empty()
         {
             return _Empty ?? (_Empty = new ChartDefinition());
         }
 
-
         public ChartDefinition()
         {
             YSeries = new List<Series>();
             XSeries = new List<Series>();
-            dataMaxX = double.MinValue;
-            dataMinX = double.MaxValue;
-            dataMaxY = double.MinValue;
-            dataMinY = double.MaxValue;
+            DataMaxX = double.MinValue;
+            DataMinX = double.MaxValue;
+            DataMaxY = double.MinValue;
+            DataMinY = double.MaxValue;
         }
 
         ///  <summary>
@@ -60,58 +68,6 @@ namespace StatsDirect.Charting
             return copy;
         }
 
-
-        ///  <summary>
-        ///  The type of chart to be plotted.
-        ///  </summary>
-        public ChartType ChartType { get; set; }
-
-        // TRANSMISSINGCOMMENT: Property ChartOptions
-        public ChartOptions ChartOptions { get; set; }
-
-        // TRANSMISSINGCOMMENT: Property DataMinX
-        public double DataMinX
-        {
-            get
-            {
-                return dataMinX;
-            }
-        }
-
-        // TRANSMISSINGCOMMENT: Property DataMaxX
-        public double DataMaxX
-        {
-            get
-            {
-                return dataMaxX;
-            }
-        }
-
-        // TRANSMISSINGCOMMENT: Property DataMinY
-        public double DataMinY
-        {
-            get
-            {
-                return dataMinY;
-            }
-        }
-
-        // TRANSMISSINGCOMMENT: Property DataMaxY
-        public double DataMaxY
-        {
-            get
-            {
-                return dataMaxY;
-            }
-        }
-
-        // TRANSMISSINGCOMMENT: Property XSeries
-        public List<Series> XSeries { get; set; }
-
-        // TRANSMISSINGCOMMENT: Property YSeries
-        public List<Series> YSeries { get; set; }
-
-        // TRANSMISSINGCOMMENT: Method AddXSeries
         public void AddXSeries(double[] data, string title)
         {
             DoubleSeries s = new DoubleSeries { Data = new double[data.Length] };
@@ -121,8 +77,6 @@ namespace StatsDirect.Charting
             CheckXSeriesData(s);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method AddXSeriesAt
         public void AddXSeriesAt(Series newSeries, int index)
         {
             while (XSeries.Count <= index)
@@ -133,7 +87,6 @@ namespace StatsDirect.Charting
             CheckXSeriesData(newSeries.AsDoubleSeries);
         }
 
-
         public void AddYSeries(double[] data, string title)
         {
             DoubleSeries s = new DoubleSeries { Data = new double[data.Length] };
@@ -143,8 +96,6 @@ namespace StatsDirect.Charting
             CheckYSeriesData(s);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method AddYSeriesAt
         public void AddYSeriesAt(Series newSeries, int index)
         {
             while (YSeries.Count <= index)
@@ -155,8 +106,6 @@ namespace StatsDirect.Charting
             CheckYSeriesData(newSeries.AsDoubleSeries);
         }
 
-
-        // TRANSMISSINGCOMMENT: Property HasScaleParameters
         public bool HasScaleParameters
         {
             get
@@ -165,14 +114,10 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property ScaleParameters
         public virtual ScaleParameters ScaleParameters
         {
             get { return scaleParameters ?? (scaleParameters = GetScaleParameters()); }
-            set
-            {
-                scaleParameters = value;
-            }
+            set { scaleParameters = value; }
         }
 
         private ScaleParameters GetScaleParameters()
@@ -189,46 +134,33 @@ namespace StatsDirect.Charting
             {
                 if (q != Constant.MISSING)
                 {
-                    if (q < dataMinX)
-                        dataMinX = q;
-                    if (q > dataMaxX)
-                        dataMaxX = q;
+                    if (q < DataMinX)
+                        DataMinX = q;
+                    if (q > DataMaxX)
+                        DataMaxX = q;
                 }
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method CheckYSeriesData
         private void CheckYSeriesData(DoubleSeries S)
         {
             foreach (double q in S.Data)
             {
                 if (q != Constant.MISSING)
                 {
-                    if (q < dataMinY)
-                        dataMinY = q;
-                    if (q > dataMaxY)
-                        dataMaxY = q;
+                    if (q < DataMinY)
+                        DataMinY = q;
+                    if (q > DataMaxY)
+                        DataMaxY = q;
                 }
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Property FillerToUse
         public string FillerToUse
         {
             get
             {
                 return "ChartOptions";
-            }
-        }
-
-        // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
             }
         }
     }

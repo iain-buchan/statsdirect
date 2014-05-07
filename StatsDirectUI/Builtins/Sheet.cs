@@ -153,8 +153,8 @@ namespace StatsDirect.Builtins
             }
             if (aMin < 0)
             {
-                double zmin = 0; double zstep = 0;
-                Charting.AxisScaler.Axis(ref aMin, ref aMax, 20, ref zmin, ref zstep);
+                double zmin; double zstep;
+                Charting.AxisScaler.Axis(ref aMin, ref aMax, 20, out zmin, out zstep);
                 minimumC = Math.Abs(aMin);
                 suggestedC = Math.Abs(zmin);
             }
@@ -2064,6 +2064,76 @@ namespace StatsDirect.Builtins
             //  A gross hack - this just hands off to the UI.
             host.Amend(new ToggleFiltersOptions(), parameters);
             return new StepResult(StepSuccess.Success, new ParameterBag());
+        }
+
+        internal static StepResult ShtContractFrequencies(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame observationsFrame = parameters["observations"].AsDataFrame;
+            ClassifierVariable observationsVariable = observationsFrame.Variables[0].AsClassifierVariable;
+            IList<Group> groups = observationsVariable.Groups;
+
+            string[] outputValues = new string[groups.Count];
+            double[] outputFrequencies = new double[groups.Count];
+            for (int i = 0; i < groups.Count; i++)
+            {
+                outputValues[i] = groups[i].Label;
+                outputFrequencies[i] = groups[i].NBin;
+            }
+            string valuesTitle = observationsVariable.Title;
+            if (valuesTitle.EndsWith("_Individual"))
+                valuesTitle = valuesTitle.Replace("_Individual", "");
+            else
+                valuesTitle += "_Grouped";
+            string frequenciesTitle = observationsVariable.Title;
+            if (frequenciesTitle.EndsWith("_Individual"))
+                frequenciesTitle = frequenciesTitle.Replace("_Individual", "");
+            frequenciesTitle += "_Counts";
+            StringVariable valuesVariable = new StringVariable(outputValues, valuesTitle);
+            DoubleVariable frequenciesVariable = new DoubleVariable(outputFrequencies, frequenciesTitle);
+            DataFrame outputFrame = new DataFrame();
+            outputFrame.Variables.Add(valuesVariable);
+            outputFrame.Variables.Add(frequenciesVariable);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("output", outputFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+        internal static StepResult ShtExpandFrequencies(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame uniquesFrame = parameters["uniques"].AsDataFrame;
+            StringVariable uniquesVariable = uniquesFrame.Variables[0].AsStringVariable;
+            string[] uniques = uniquesVariable.Data;
+            DataFrame frequenciesFrame = parameters["frequencies"].AsDataFrame;
+            DoubleVariable frequenciesVariable = frequenciesFrame.Variables[0].AsDoubleVariable;
+
+            // Rough defence against overflowing the grid.  Could still be overcome by someone deliberately introducing negative numbers, but this will catch thoughtlessness.
+            if (frequenciesVariable.Sum > 1000000)
+            {
+                host.Error("The output would require " + frequenciesVariable.Sum.ToString() + " rows, which will not fit into the spreadsheet", "Expand");
+                throw new TemplateOperationCancelledException();
+            }
+            double[] frequencies = frequenciesVariable.Data;
+
+            string[] outputValues = new string[(int)Math.Ceiling(frequenciesVariable.Sum)];
+            int nextOutputOffset = 0;
+            for (int i = 0; i < uniques.Length; i++)
+            {
+                // Defend against non-integer and negative numbers: Round to nearest integer and set negatives to 0.
+                int thisFrequency = (int)Math.Max(0, Math.Round(frequencies[i], 0));
+
+                for (int j = 0; j < thisFrequency; j++)
+                    outputValues[nextOutputOffset++] = uniques[i];
+            }
+            string title = uniquesVariable.Title;
+            if (title.EndsWith("_Grouped"))
+                title = title.Replace("_Grouped", "");
+            else
+                title += "_Individual";
+            StringVariable outputVariable = new StringVariable(outputValues, title);
+            DataFrame outputFrame = new DataFrame(outputVariable);
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("output", outputFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
         }
     }
 }

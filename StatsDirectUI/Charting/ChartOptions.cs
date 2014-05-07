@@ -6,42 +6,13 @@ namespace StatsDirect.Charting
     [ Serializable ]
     public abstract class ChartOptions  
     { 
-        
-        public enum OptionTypes 
-        { 
-            Agreement,
-            ///  <summary>
-            ///  Bar, stacked bar and 100% stacked bar
-            ///  </summary>
-            Bar,
-            BoxWhisker,
-            Control,
-            ///  <summary>
-            ///  Markers with error bars
-            ///  </summary>
-            ///  <remarks>Should really be Error, but that's a reserved word in VB.Net</remarks>
-            ErrorBars,
-            Forest,
-            Gini,
-            Histogram,
-            Ladder,
-            LinearRegression,
-            Normal,
-            Pyramid,
-            ROC,
-            ScatterXY,
-            Spread,
-            Survival,
-        } 
-        
-        
-        public string Title; 
-        public string XAxisTitle; 
-        public string YAxisTitle; 
-        public float AxisLineThickness; 
-        public bool ShowLegend; 
-        private bool useColour; 
-        private IList<MarkerType> markerTypes; 
+        public string Title { get; set; }
+        public string XAxisTitle { get; set; }
+        public string YAxisTitle { get; set; }
+        public float AxisLineThickness { get; set; }
+        public bool ShowLegend { get; set; }
+        public bool UseColour { get; set; }
+        private IList<MarkerType> markerTypes;
         
         ///  <summary>
         ///  Given a series index (13 for the 14th series, for example) return the marker that should be used for that series.
@@ -79,25 +50,11 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UseColour
-        public bool UseColour 
-        { 
-            get 
-            { 
-                return useColour; 
-            } 
-            set 
-            { 
-                useColour = value; 
-            } 
-        }
-
         protected ChartOptions( bool useColour ) 
         { 
-            this.useColour = useColour; 
+            UseColour = useColour; 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisLineThickness
         public virtual bool UsesAxisLineThickness 
         { 
             get 
@@ -106,7 +63,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesColour
         public virtual bool UsesColour 
         { 
             get 
@@ -115,7 +71,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesShowLegend
         public virtual bool UsesShowLegend 
         { 
             get 
@@ -124,7 +79,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesXAxisTitle
         public virtual bool UsesXAxisTitle 
         { 
             get 
@@ -141,7 +95,7 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        public abstract OptionTypes OptionType { get; }
+        public abstract ChartOptionType OptionType { get; }
         
         public abstract bool ShowLegendIsRelevant { get; }
 
@@ -152,5 +106,32 @@ namespace StatsDirect.Charting
                 theClone.MarkerTypes = new List<MarkerType>(MarkerTypes);
             return theClone;
         }
-    } 
+    }
+
+    public enum ChartOptionType
+    {
+        Agreement,
+        ///  <summary>
+        ///  Bar, stacked bar and 100% stacked bar
+        ///  </summary>
+        Bar,
+        BoxWhisker,
+        Control,
+        ///  <summary>
+        ///  Markers with error bars
+        ///  </summary>
+        ///  <remarks>Should really be Error, but that's a reserved word in VB.Net</remarks>
+        ErrorBars,
+        Forest,
+        Gini,
+        Histogram,
+        Ladder,
+        LinearRegression,
+        Normal,
+        Pyramid,
+        ROC,
+        ScatterXY,
+        Spread,
+        Survival,
+    }
 } 

@@ -10,14 +10,6 @@
           <name>gamma</name>
         </confidence-interval>
         <frame>
-          <name>a</name>
-          <prompt>Select numbers of CASES in EXPOSED groups</prompt>
-          <mode>NumericSkipMissing</mode>
-          <min-columns>1</min-columns>
-          <max-columns>1</max-columns>
-          <clear-selection-first>true</clear-selection-first>
-        </frame>
-        <frame>
           <name>pt1</name>
           <prompt>Select PERSON-TIME for EXPOSED groups</prompt>
           <same-length-as>a</same-length-as>
@@ -27,9 +19,8 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
         <frame>
-          <name>b</name>
-          <prompt>Select number of CASES in NON-EXPOSED groups</prompt>
-          <same-length-as>a</same-length-as>
+          <name>a</name>
+          <prompt>Select numbers of CASES in EXPOSED groups</prompt>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -38,6 +29,15 @@
         <frame>
           <name>pt2</name>
           <prompt>Select PERSON-TIME for NON-EXPOSED groups</prompt>
+          <same-length-as>a</same-length-as>
+          <mode>NumericSkipMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>b</name>
+          <prompt>Select number of CASES in NON-EXPOSED groups</prompt>
           <same-length-as>a</same-length-as>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>

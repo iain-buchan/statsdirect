@@ -151,6 +151,9 @@
     <Component Id="ConditionalLogisticRegression.xml">
       <File Id="ConditionalLogisticRegression.xml" Name="ConditionalLogisticRegression.xml" KeyPath="yes" />
     </Component>
+    <Component Id="ContractFrequencies.xml">
+      <File Id="ContractFrequencies.xml" Name="ContractFrequencies.xml" KeyPath="yes" />
+    </Component>
     <Component Id="ControlPlot.xml">
       <File Id="ControlPlot.xml" Name="ControlPlot.xml" KeyPath="yes" />
     </Component>
@@ -273,6 +276,9 @@
     </Component>
     <Component Id="ExactSign.xml">
       <File Id="ExactSign.xml" Name="ExactSign.xml" KeyPath="yes" />
+    </Component>
+    <Component Id="ExpandFrequencies.xml">
+      <File Id="ExpandFrequencies.xml" Name="ExpandFrequencies.xml" KeyPath="yes" />
     </Component>
     <Component Id="ExploreContinuousDistributions.xml">
       <File Id="ExploreContinuousDistributions.xml" Name="ExploreContinuousDistributions.xml" KeyPath="yes" />

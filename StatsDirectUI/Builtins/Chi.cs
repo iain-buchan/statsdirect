@@ -101,70 +101,77 @@ namespace StatsDirect.Builtins
                 ParameterBag oddsParameters = new ParameterBag();
                 oddsList.Add(oddsParameters);
                 // Woolf/logit CI
+                double odr=ExactBB.OddsRatio(a,b,c,d);
                 double yodr;
-                double odr;
                 double xodr;
-                if (b * c > 0.0 & a * d > 0.0)
+                if (b * c > 0 && a * d > 0)
                 {
-                    odr = (a * d) / (b * c);
                     double seodr = Math.Sqrt(1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d);
                     yodr = Math.Exp(Math.Log(odr) - cit * seodr);
                     xodr = Math.Exp(Math.Log(odr) + cit * seodr);
                 }
                 else
                 {
-                    odr = Constant.MISSING;
                     yodr = Constant.MISSING;
                     xodr = Constant.MISSING;
+                    if ((a == 0) | (d == 0))
+                    {
+                        yodr = 0;
+                    }
+                    else if ((b == 0) | (c == 0))
+                    {
+                        xodr = double.PositiveInfinity;
+                    }
                 }
                 oddsParameters.AddOutput("odds", host.RoundU(odr));
                 oddsParameters.AddOutput("woolf_ci", host.RoundU(cco * 100.0));
                 oddsParameters.AddOutput("woolf_ci_1", host.RoundU(yodr));
                 oddsParameters.AddOutput("woolf_ci_2", host.RoundU(xodr));
                 // CMLE
-                ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
-                tabl[1].Freq = 1;
-                tabl[1].A = a;
-                tabl[1].M1 = a + b;
-                tabl[1].N1 = a + c;
-                tabl[1].N0 = b + d;
-                tabl[1].Informative = (a * d != 0) | (b * c != 0);
-                bool useLogScale = false;
+                //ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
+                //tabl[1].Freq = 1;
+                //tabl[1].A = a;
+                //tabl[1].M1 = a + b;
+                //tabl[1].N1 = a + c;
+                //tabl[1].N0 = b + d;
+                //tabl[1].Informative = (a * d != 0) | (b * c != 0);
+                //bool useLogScale = false;
                 int ierr;
                 double llm;
                 double ulf;
                 double ulm;
                 double llf;
-                double p2M;
-                double p1M;
-                double p2F;
-                double p1F;
-                new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                double p2m;
+                double p1m;
+                double p2f;
+                double p1f;
+                //new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out ierr);
                 if (ierr != 0)
-                {
+                //{
                     // eor = Constant.MISSING; 
-                    ulf = Constant.MISSING;
-                    llf = Constant.MISSING;
-                    ulm = Constant.MISSING;
-                    llm = Constant.MISSING;
-                    p1F = Constant.MISSING;
-                    p2F = Constant.MISSING;
-                    p1M = Constant.MISSING;
-                    p2M = Constant.MISSING;
-                }
-                else
+                //    ulf = Constant.MISSING;
+                //    llf = Constant.MISSING;
+                //    ulm = Constant.MISSING;
+                //    llm = Constant.MISSING;
+                //    p1F = Constant.MISSING;
+                //    p2F = Constant.MISSING;
+                //    p1M = Constant.MISSING;
+                //    p2M = Constant.MISSING;
+                // }
+                //else
                 {
                     doneExact = true;
                 }
                 oddsParameters.AddOutput("ci", Formatting.XRound(cco * 100.0, 2));
                 oddsParameters.AddOutput("llf", host.RoundU(llf));
                 oddsParameters.AddOutput("ulf", host.RoundU(ulf));
-                oddsParameters.AddOutput("p1f", host.pval(p1F));
-                oddsParameters.AddOutput("p2f", host.pval(p2F));
+                oddsParameters.AddOutput("p1f", host.pval(p1f));
+                oddsParameters.AddOutput("p2f", host.pval(p2f));
                 oddsParameters.AddOutput("llm", host.RoundU(llm));
                 oddsParameters.AddOutput("ulm", host.RoundU(ulm));
-                oddsParameters.AddOutput("p1m", host.pval(p1M));
-                oddsParameters.AddOutput("p2m", host.pval(p2M));
+                oddsParameters.AddOutput("p1m", host.pval(p1m));
+                oddsParameters.AddOutput("p2m", host.pval(p2m));
             }
             else if (isCohort)
             {
@@ -484,24 +491,32 @@ namespace StatsDirect.Builtins
                 orList.Add(orParameters);
                 orParameters.AddOutput("st", i.ToString());
                 orParameters.AddOutput("or", host.RoundU(odr[i]));
+                orParameters.AddOutput("yi", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
+                orParameters.AddOutput("vi", host.RoundU(Meta.VarianceFromCI(odrl[i], odru[i], cit,true)));
                 orParameters.AddOutput("lci", host.RoundU(odrl[i]));
                 orParameters.AddOutput("uci", host.RoundU(odru[i]));
                 orParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
                 orParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
-                orParameters.AddOutput("lb", Meta.GetMetaLabel(host, o, i, false, cced, title));
-                if (host.Preferences.MetaExact & ((i) == Constant.MISSING | odru[i] == Constant.MISSING))
+                //orParameters.AddOutput("lb", Meta.GetMetaLabel(host, o, i, false, cced, title));
+                string tmp = Meta.GetMetaLabel(host, o, i, false, cced, title);
+                if (host.Preferences.DelayContinuityCorrection)
                 {
-                    Meta.OrciCorn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
-                    orParameters = new ParameterBag();
-                    orList.Add(orParameters);
-                    orParameters.AddOutput("st", "* " + i.ToString());
-                    orParameters.AddOutput("or", "");
-                    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
-                    orParameters.AddOutput("uci", host.RoundU(odru[i]));
-                    orParameters.AddOutput("wt", "");
-                    orParameters.AddOutput("dwt", "");
-                    orParameters.AddOutput("lb", " * [Cornfield limits]");
+                    tmp = tmp.Replace("[CC", "[late CC");
                 }
+                orParameters.AddOutput("lb", tmp);
+                //if (host.Preferences.MetaExact & ((i) == Constant.MISSING | odru[i] == Constant.MISSING))
+                //{
+                //    Meta.OrciCorn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
+                //    orParameters = new ParameterBag();
+                //    orList.Add(orParameters);
+                //    orParameters.AddOutput("st", "* " + i.ToString());
+                //    orParameters.AddOutput("or", "");
+                //    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
+                //    orParameters.AddOutput("uci", host.RoundU(odru[i]));
+                //    orParameters.AddOutput("wt", "");
+                //    orParameters.AddOutput("dwt", "");
+                //    orParameters.AddOutput("lb", " * [Cornfield limits]");
+                //}
             }
 
             if (sk == 0)

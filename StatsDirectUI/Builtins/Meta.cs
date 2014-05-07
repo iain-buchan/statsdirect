@@ -100,7 +100,8 @@ namespace StatsDirect.Builtins
             double[,] o = new double[k + 1, 4 + 1];
             double[] oe = new double[k + 1];
             double[] odr = new double[k + 1];
-            double[] odrl = new double[k + 1 ];
+            double[] odrv = new double[k + 1];
+            double[] odrl = new double[k + 1];
             double[] odru = new double[k + 1 ];
             double[] odw = new double[k + 1];
             double[] odz = new double[k + 1];
@@ -108,8 +109,6 @@ namespace StatsDirect.Builtins
             bool[] lerr = new bool[k + 1];
             bool[] uerr = new bool[k + 1];
             bool[] cced = new bool[k + 1 ];
-            double[] standardizedEffect = new double[k + 1];
-            double[] se = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 cced[i] = false;
@@ -148,10 +147,9 @@ namespace StatsDirect.Builtins
                     odx[i] = n;
                     if (v > 0)
                     {
-                        se[i] = v; // TODO: Correct?
-                        standardizedEffect[i] = oe[i]/v;
                         odr[i] = Math.Exp(oe[i] / v);
                         odz[i] = oe[i] / Math.Sqrt(v);
+                        odrv[i] = v;
                         odrl[i] = Math.Exp((oe[i] - cit * Math.Sqrt(v)) / v);
                         odru[i] = Math.Exp((oe[i] + cit * Math.Sqrt(v)) / v);
                     }
@@ -226,12 +224,12 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("st", i.ToString());
                 oddsParameters.AddOutput("oe", host.RoundU(oe[i]));
                 oddsParameters.AddOutput("or", host.RoundU(odr[i]));
+                oddsParameters.AddOutput("yi", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
+                oddsParameters.AddOutput("vi", host.RoundU(odrv[i]));
                 oddsParameters.AddOutput("lci", host.RoundU(odrl[i]));
                 oddsParameters.AddOutput("uci", host.RoundU(odru[i]));
                 oddsParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
                 oddsParameters.AddOutput("lb", GetMetaLabel(host, o, i, stratlab, cced, title));
-                oddsParameters.AddOutput("standardized_effect", host.RoundU(standardizedEffect[i]));
-                oddsParameters.AddOutput("se", host.RoundU(se[i]));
             }
 
             IList<ParameterBag> zList = new List<ParameterBag>();
@@ -657,8 +655,6 @@ namespace StatsDirect.Builtins
             bool[] lerr = new bool[k + 1 ];
             bool[] uerr = new bool[k + 1 ];
             bool[] cced = new bool[k + 1 ];
-            double[] standardizedEffect = new double[k+1];
-            double[] se = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
@@ -675,7 +671,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            Riskdifma(host, k, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, ref qc, ref dsrd, ref dsx2, ref dsll, ref dsul, ref tausq, cced, standardizedEffect, se, out ierr);
+            Riskdifma(host, k, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, ref qc, ref dsrd, ref dsx2, ref dsll, ref dsul, ref tausq, cced, out ierr);
             if (ierr == -1)
             {
                 throw new InvalidDataException();
@@ -722,8 +718,8 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("wt", host.RoundU(100 * rkw[i] / Formatting.dsum(rkw, 1)));
                 differencesParameters.AddOutput("dwt", host.RoundU(100 * dsw[i] / Formatting.dsum(dsw, 1)));
                 differencesParameters.AddOutput("lb", stratlab ? title[i] : "");
-                differencesParameters.AddOutput("standardized_effect", host.RoundU(standardizedEffect[i]));
-                differencesParameters.AddOutput("se", host.RoundU(se[i]));
+                differencesParameters.AddOutput("yi", host.RoundU(rkr[i]));
+                differencesParameters.AddOutput("vi", host.RoundU(VarianceFromCI(rkrl[i], rkru[i], cit,false)));
                 // double a = o[ i, 1 ]; 
                 // double b = o[ i, 2 ]; 
                 // double C = o[ i, 3 ]; 
@@ -951,6 +947,8 @@ namespace StatsDirect.Builtins
                 risksList.Add(risksParameters);
                 risksParameters.AddOutput("st", i.ToString());
                 risksParameters.AddOutput("rr", host.RoundU(rkr[i]));
+                risksParameters.AddOutput("yi", host.RoundU(rkr[i] > 0 ? Math.Log(rkr[i]) : 0));
+                risksParameters.AddOutput("vi", host.RoundU(VarianceFromCI(rkrl[i], rkru[i], cit,true)));
                 risksParameters.AddOutput("lci", host.RoundU(rkrl[i]));
                 risksParameters.AddOutput("uci", host.RoundU(rkru[i]));
                 risksParameters.AddOutput("wt", host.RoundU(100 * rkw[i] / Formatting.dsum(rkw, 1)));
@@ -1871,7 +1869,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void Riskdifma(ITemplateHost host, int k, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2Rmh, ref double sk, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, ref double qc, ref double dsrd, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, bool[] cced, double[] standardizedEffect, double[] sefixed, out int ierr)
+        private static void Riskdifma(ITemplateHost host, int k, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2Rmh, ref double sk, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, ref double qc, ref double dsrd, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, bool[] cced, out int ierr)
         {
             double wt;
             double rkrs;
@@ -1939,7 +1937,6 @@ namespace StatsDirect.Builtins
                 {
                     vark = a * c / Math.Pow((a + c), 3.0) + b * d / Math.Pow((b + d), 3.0);
                     double se = Math.Sqrt(vark);
-                    standardizedEffect[i] = rkr[i];
                     rkrl[i] = rkr[i] - cit * se;
                     rkru[i] = rkr[i] + cit * se;
                 }
@@ -1980,8 +1977,6 @@ namespace StatsDirect.Builtins
                     ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
                 }
                 vark = a * c / Math.Pow((a + c), 3.0) + b * d / Math.Pow((b + d), 3.0);
-                standardizedEffect[i] = rkrs;
-                sefixed[i] = Math.Sqrt(vark);
                 wt = 1.0 / vark;
                 qc += wt * Math.Pow((rkrs - rmh), 2.0);
                 sumwt += wt;
@@ -2143,15 +2138,13 @@ namespace StatsDirect.Builtins
             double[] rkru = new double[k + 1];
             bool[] lerr = new bool[k + 1];
             bool[] uerr = new bool[k + 1];
-            double[] standardizedEffect = new double[k + 1];
-            double se;
             if (index == 1)
             {
-                IrdMeta(k, a, b, pt1, pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsird, out dz, out dsll, out dsul, out realk, out tausq, standardizedEffect, out se, out ierr);
+                IrdMeta(k, a, b, pt1, pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsird, out dz, out dsll, out dsul, out realk, out tausq, out ierr);
             }
             else
             {
-                IrrMeta(k, a, b, pt1, pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsirr, out dz, out dsll, out dsul, out realk, out tausq, standardizedEffect, out se, out ierr);
+                IrrMeta(k, a, b, pt1, pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsirr, out dz, out dsll, out dsul, out realk, out tausq, out ierr);
             }
             if (ierr == -1)
             {
@@ -2230,10 +2223,18 @@ namespace StatsDirect.Builtins
                                            ? host.RoundU(100 * dsw[i] / Formatting.dsum(dsw, 1))
                                            : Formatting.ASTERISK);
                 irParameters.AddOutput("lb", stratlab ? title[i] : "");
-                irParameters.AddOutput("standardized_effect", host.RoundU(standardizedEffect[i]));
-                irParameters.AddOutput("se", host.RoundU(se));
-            }
+                if (index == 1)
+                {
+                    irParameters.AddOutput("yi", host.RoundU(rkr[i]));
+                    irParameters.AddOutput("vi", host.RoundU(VarianceFromCI(rkrl[i], rkru[i], cit, false)));
+                }
+                else
+                {
+                    irParameters.AddOutput("yi", host.RoundU(rkr[i] > 0 ? Math.Log(rkr[i]) : 0));
+                    irParameters.AddOutput("vi", host.RoundU(VarianceFromCI(rkrl[i], rkru[i], cit, true)));
+                }
 
+            }
             outputParameters.AddOutput("rmh", host.RoundU(rmh));
             outputParameters.AddOutput("from", host.RoundU(ll));
             outputParameters.AddOutput("to", host.RoundU(ul));
@@ -2570,9 +2571,8 @@ namespace StatsDirect.Builtins
                 orList.Add(orParameters);
                 orParameters.AddOutput("st", i.ToString());
                 orParameters.AddOutput("or", host.RoundU(odr[i]));
-                orParameters.AddOutput("standardized_effect", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
-                double variance = 1.0 / (odw[i] / Formatting.dsum(odw, 1));
-                orParameters.AddOutput("se", host.RoundU(Math.Sqrt(variance)));
+                orParameters.AddOutput("yi", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
+                orParameters.AddOutput("vi", host.RoundU(VarianceFromCI(odrl[i], odru[i], cit,true)));
                 orParameters.AddOutput("lci", host.RoundU(odrl[i]));
                 orParameters.AddOutput("uci", host.RoundU(odru[i]));
                 orParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
@@ -2583,20 +2583,20 @@ namespace StatsDirect.Builtins
                     tmp = tmp.Replace("[CC", "[late CC");
                 }
                 orParameters.AddOutput("lb", tmp);
-                if (host.Preferences.MetaExact & ((i) == Constant.MISSING || odru[i] == Constant.MISSING))
-                {
-                    OrciCorn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
-                    orParameters = new ParameterBag();
-                    orList.Add(orParameters);
-                    orParameters.AddOutput("st", "* " + i.ToString());
-                    orParameters.AddOutput("or", "");
-                    orParameters.AddOutput("standardized_effect", "");
-                    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
-                    orParameters.AddOutput("uci", host.RoundU(odru[i]));
-                    orParameters.AddOutput("wt", "");
-                    orParameters.AddOutput("dwt", "");
-                    orParameters.AddOutput("lb", " * [Cornfield limits]");
-                }
+                //if (host.Preferences.MetaExact & ((i) == Constant.MISSING || odru[i] == Constant.MISSING))
+                //{
+                //    OrciCorn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
+                //    orParameters = new ParameterBag();
+                //    orList.Add(orParameters);
+                //    orParameters.AddOutput("st", "* " + i.ToString());
+                //    orParameters.AddOutput("or", "");
+                //    orParameters.AddOutput("standardized_effect", "");
+                //    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
+                //    orParameters.AddOutput("uci", host.RoundU(odru[i]));
+                //    orParameters.AddOutput("wt", "");
+                //    orParameters.AddOutput("dwt", "");
+                //    orParameters.AddOutput("lb", " * [Cornfield limits]");
+                //}
             }
 
             if (sk == 0)
@@ -2757,12 +2757,6 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
                 }
 
-                if (host.Preferences.MetaExact)
-                {
-                    double eor = 0;
-                    OrciCmle(host, cco, a, b, c, d, odr[i], ref eor, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
-                }
-
                 if (host.Preferences.DelayContinuityCorrection == false)
                 {
                     rkok = false;
@@ -2805,7 +2799,7 @@ namespace StatsDirect.Builtins
 
                 if (IncludeTable(o, i) == false)
                 {
-                    odr[i] = Constant.MISSING;
+                    odr[i] = 0;
                     odrl[i] = 0;
                     odru[i] = double.PositiveInfinity;
                     lerr[i] = false;
@@ -2828,7 +2822,12 @@ namespace StatsDirect.Builtins
                         }
                     }
                     odr[i] = (a * d) / (b * c);
-                    if (!(host.Preferences.MetaExact))
+                    if ((host.Preferences.MetaExact))
+                    {
+                        double eor = 0;
+                        ExactBB.OddsRatioCI(host, cco, a, b, c, d, ref eor, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
+                    }
+                    else
                     {
                         // go for horrid logit se if you must
                         double se = Math.Sqrt(1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d);
@@ -2838,9 +2837,8 @@ namespace StatsDirect.Builtins
                         uerr[i] = false;
                     }
                 }
-
             }
-
+            
             if (sk == 0)
             {
                 // SATO T. BIOMETRICS 46 71-80
@@ -3025,58 +3023,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        private static void OrciCmle(ITemplateHost host, double cco, double a, double b, double c, double d, double odr, ref double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
-        {
-            if ((((a == 0.0) && (b == 0.0)) || ((a == (a + c)) && (b == (b + d)))))
-            {
-                ulf = double.PositiveInfinity;
-                llf = 0.0;
-                eor = Constant.MISSING;
-                /* Unused
-                p1f = Constant.MISSING; 
-                p2f = Constant.MISSING; 
-                p1m = Constant.MISSING; 
-                p2m = Constant.MISSING; 
-                 */
-            }
-            else
-            {
-                if ((a * d != 0) || (b * c != 0))
-                {
-                    ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
-                    tabl[1].Freq = 1;
-                    tabl[1].A = a;
-                    tabl[1].M1 = a + b;
-                    tabl[1].N1 = a + c;
-                    tabl[1].N0 = b + d;
-                    tabl[1].Informative = (a * d != 0) || (b * c != 0);
-                    bool useLogScale = false;
-                    double ulm;
-                    int ierr;
-                    double llm;
-                    double p1M; double p2M; double p1F; double p2F;
-                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
-                }
-                else
-                {
-                    eor = Constant.MISSING;
-                    llf = Constant.MISSING;
-                    ulf = Constant.MISSING;
-                    /* unused
-                    p1f = Constant.MISSING; 
-                    p2f = Constant.MISSING; 
-                    p1m = Constant.MISSING; 
-                    p2m = Constant.MISSING; 
-                     */
-                }
-            }
-            lerr = (llf == Constant.MISSING);
-            uerr = (ulf == Constant.MISSING);
-        }
-
-
-        private static void IrdMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dz, out double dsll, out double dsul, out double realk, out double tausq, double[] standardizedEffect, out double se, out int ierr)
+        private static void IrdMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
         {
             ierr = -1;
             double sumwt = 0.0;
@@ -3122,7 +3069,6 @@ namespace StatsDirect.Builtins
                         rkru[i] = ird + cit * Math.Sqrt((ird * ird) / xmh);
                     }
                     rkr[i] = ird;
-                    standardizedEffect[i] = ird;
                     //  pooled incidence risk difference
                     double vark = a[i] / (pt1[i] * pt1[i]) + b[i] / (pt2[i] * pt2[i]);
                     rkw[i] = 1.0 / vark;
@@ -3131,7 +3077,7 @@ namespace StatsDirect.Builtins
                 }
             }
             rmh = sumwi / sumwt;
-            se = Math.Sqrt(1.0 / sumwt);
+            double se = Math.Sqrt(1.0 / sumwt);
             ll = rmh - se * cit;
             ul = rmh + se * cit;
             if (ll > ul)
@@ -3199,7 +3145,7 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
-        private static void IrrMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsirr, out double dz, out double dsll, out double dsul, out double realk, out double tausq, double[] standardizedEffect, out double se, out int ierr)
+        private static void IrrMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsirr, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
         {
             ierr = -1;
             double sumwt = 0.0;
@@ -3245,8 +3191,6 @@ namespace StatsDirect.Builtins
                         f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - p);
                         rkru[i] = (pt2[i] / pt1[i]) * ((a[i] + 1.0) / b[i]) * f;
                         rkr[i] = ir1 / ir2;
-                        if (rkr[i] > 0)
-                        standardizedEffect[i] = Math.Log(rkr[i]);
                     }
                     // pooled incidence rate ratio
                     // vark = 1# / a(i) + 1# / b(i) - as expressed in Lau paper on AZT
@@ -3259,7 +3203,7 @@ namespace StatsDirect.Builtins
                 }
             }
             rmh = Math.Exp(sumwi / sumwt);
-            se = Math.Sqrt(1.0 / sumwt);
+            double se = Math.Sqrt(1.0 / sumwt);
             ll = Math.Exp(Math.Log(rmh) - se * cit);
             ul = Math.Exp(Math.Log(rmh) + se * cit);
             if (ll > ul)
@@ -3918,8 +3862,8 @@ namespace StatsDirect.Builtins
                 studiesParameters.AddOutput("wt", host.RoundU(100 * wt[i] / Formatting.dsum(wt, 1)));
                 studiesParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
                 studiesParameters.AddOutput("nwt", host.RoundU(100 * ss[i] / Formatting.dsum(ss, 1)));
-                studiesParameters.AddOutput("standardized_effect", host.RoundU(y[i])); // TODO: Correct?
-                studiesParameters.AddOutput("se", host.RoundU(Math.Sqrt(sumwt))); // TODO: Correct?
+                studiesParameters.AddOutput("yi", host.RoundU(MathDbl.rtoz(y[i])));
+                studiesParameters.AddOutput("vi", host.RoundU(seY[i]*seY[i]));
                 studiesParameters.AddOutput("lb", stratlab ? title[i] : "");
             }
 
@@ -4027,38 +3971,42 @@ namespace StatsDirect.Builtins
         public static void OrciCorn(ITemplateHost host, ref double conflev, ref double a, ref double b, ref double c, ref double d, out double odr, out double ll, out double ul)
         {
             //  ref Alan Agresti R script http://web.stat.ufl.edu/~aa/cda/R/two_sample/R2/
+            double aa;
+            double bb;
+            double cc;
+            double dd;
             if (b * c == 0.0)
             {
-                double aa;
-                double bb;
-                double cc;
-                double dd;
                 ContinuityCorrect(host, a, b, c, d, out aa, out bb, out cc, out dd);
                 odr = (aa * dd) / (bb * cc);
             }
             else
             {
                 odr = (a * d) / (b * c);
+                aa = a;
+                bb = b;
+                cc = c;
+                dd = d;
             }
-            double x1 = a;
-            double n1 = a + c;
-            double x2 = b;
-            double n2 = b + d;
+            double x1 = aa;
+            double n1 = aa + cc;
+            double x2 = bb;
+            double n2 = bb + dd;
             double px = x1 / n1;
             double py = x2 / n2;
             double theta;
-            if ((((x1 == 0.0) & (x2 == 0.0)) | ((x1 == n1) & (x2 == n2))))
+            if ((((aa == 0.0) & (bb == 0.0)) | ((aa == aa+cc) & (bb == bb+dd))))
             {
                 ul = double.PositiveInfinity;
                 ll = 0.0;
             }
-            else if (((x1 == 0.0) | (x2 == n2)))
+            else if (((aa == 0.0) | (bb == n2)))
             {
                 ll = 0.0;
                 theta = 0.01 / n2;
                 ul = CornfieldLimit(x1, n1, x2, n2, conflev, ref theta, 1.0);
             }
-            else if (((x1 == n1) | (x2 == 0.0)))
+            else if (((aa == n1) | (bb == 0.0)))
             {
                 ul = double.PositiveInfinity;
                 theta = 100.0 * n1;
@@ -4096,7 +4044,7 @@ namespace StatsDirect.Builtins
                     double c = -(x + y);
                     double p2D = (-b + Math.Sqrt(Math.Pow(b, 2.0) - 4.0 * a * c)) / (2.0 * a);
                     double p1D = p2D * lim / (1.0 + p2D * (lim - 1.0));
-                    score = (Math.Pow((nx * (px - p1D)), 2.0)) * (1.0 / (nx * p1D * (1 - p1D)) + 1.0 / (ny * p2D * (1.0 - p2D)));
+                    score = Math.Pow(nx * (px - p1D), 2.0) * (1.0 / (nx * p1D * (1.0 - p1D)) + 1.0 / (ny * p2D * (1.0 - p2D)));
                     ci = lim;
                     if ((t == 0.0))
                     {
@@ -4396,12 +4344,11 @@ namespace StatsDirect.Builtins
                 string tmp;
                 MathDbl.binci(sr[i], sn[i], out llY[i], out ulY[i], cco, out tmp);
                 proportionsParameters.AddOutput("from_y", host.RoundU(llY[i]));
-                tmp = "";
-                proportionsParameters.AddOutput("to_y", host.RoundU(ulY[i]) + tmp);
+                proportionsParameters.AddOutput("to_y", host.RoundU(ulY[i]));
                 proportionsParameters.AddOutput("wt", host.RoundU(100 * wt[i] / Formatting.dsum(wt, 1)));
                 proportionsParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
-                proportionsParameters.AddOutput("standardized_effect", host.RoundU(y[i] > 0 ? Math.Log(y[i]) : 0));
-                proportionsParameters.AddOutput("se", host.RoundU(seY[i]));
+                proportionsParameters.AddOutput("yi", host.RoundU(y[i]));
+                proportionsParameters.AddOutput("vi", host.RoundU(seY[i]*seY[i]));
                 if (stratlab)
                 {
                     tmp = title[i] + tmp;
@@ -4409,7 +4356,7 @@ namespace StatsDirect.Builtins
                 proportionsParameters.AddOutput("lb", tmp);
             }
 
-            outputParameters.AddOutput("method", method == VarianceStabilisationMethod.ArcsineSquareRoot ? "Stuart-Ord (inverse double arcsine square root)" : "Miller (exact inverse Freeman-Tukey double arcsine)");
+            outputParameters.AddOutput("methodLabel", method == VarianceStabilisationMethod.ArcsineSquareRoot ? "Stuart-Ord (inverse double arcsine square root)" : "Miller (exact inverse Freeman-Tukey double arcsine)");
 
             outputParameters.AddOutput("rmh", host.RoundU(rmh));
             outputParameters.AddOutput("from", host.RoundU(llrmh));
@@ -4598,18 +4545,34 @@ namespace StatsDirect.Builtins
                         double z;
                         if (method == 3)
                         {
+                            if (b <= 0 || c <= 0)
+                            {
+                                a += 0.5;
+                                b += 0.5;
+                                c += 0.5;
+                            }
                             // relative risk parameters from Whitehead
                             z = a - b * c;
                             v = b * c * (1.0 - c);
                         }
                         else if (method == 2)
                         {
+                            if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
+                            {
+                                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                                n = a + b + c + d;
+                            }
                             // relative risk parameters from Whitehead
                             z = (a * n - (a + b) * (a + c)) / (c + d);
                             v = (b + d) * (a + c) * (a + b) / (n * (c + d));
                         }
                         else
                         {
+                            if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
+                            {
+                                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                                n = a + b + c + d;
+                            }
                             // efficient score
                             z = a - (a + b) * (a + c) / n;
                             // use profile likelihood variance rather than conditional likelihood of Peto method
@@ -4956,6 +4919,21 @@ namespace StatsDirect.Builtins
             while (true);
 
             return b;
+        }
+
+        public static double VarianceFromCI(double ll, double ul, double cit,Boolean logtransform)
+        {
+            double ret=Constant.MISSING;
+            if (cit <= 0) return ret;
+            if (logtransform)
+            {
+                ret = Math.Pow(((Math.Log(ul) - Math.Log(ll)) / 2) / cit, 2);
+            }
+            else
+            {
+                ret = Math.Pow(((ul - ll) / 2) / cit, 2);
+            }
+            return ret;
         }
 
     }

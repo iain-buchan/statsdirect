@@ -48,52 +48,9 @@ namespace StatsDirect.UI
             {
                 options.YAxisTitle = ctlAxisOptions.Y.Title;
             }
-            {
-                ScaleParameters scaleParameters = definition.ScaleParameters;
-                AxisScaleParameters asp = scaleParameters.X;
-                ctlOneAxisOptions ao = ctlAxisOptions.X;
-
-                asp.ScaleType = ao.ScaleType;
-                asp.LabelDirection = ao.LabelDirection;
-
-                asp.QMin = ao.ScaleMin;
-                asp.QMax = ao.ScaleMax;
-                asp.Div = ao.Div;
-                asp.ZMin = ao.ScaleMin;
-                asp.ZInt = ao.ZInt;
-                asp.MinorTicsPerMajorTic = ao.MinorTicsPerMajorTic;
-                asp.Mask = ao.Mask;
-                asp.HasAxisScale = true;
-
-                asp.HasGridLines = ao.HasGridLines;
-                asp.GridLineDashStyle = ao.GridLineDashStyle;
-
-                asp.HasMarkerLine = ao.HasMarkerLine;
-                asp.MarkerLineValue = ao.MarkerLineValue;
-            }
-            {
-                ScaleParameters scaleParameters = definition.ScaleParameters;
-                AxisScaleParameters asp = scaleParameters.Y;
-                ctlOneAxisOptions ao = ctlAxisOptions.Y;
-
-                asp.ScaleType = ao.ScaleType;
-                asp.LabelDirection = ao.LabelDirection;
-
-                asp.QMin = ao.ScaleMin;
-                asp.QMax = ao.ScaleMax;
-                asp.Div = ao.Div;
-                asp.ZMin = ao.ScaleMin;
-                asp.ZInt = ao.ZInt;
-                asp.MinorTicsPerMajorTic = ao.MinorTicsPerMajorTic;
-                asp.Mask = ao.Mask;
-                asp.HasAxisScale = true;
-
-                asp.HasGridLines = ao.HasGridLines;
-                asp.GridLineDashStyle = ao.GridLineDashStyle;
-
-                asp.HasMarkerLine = ao.HasMarkerLine;
-                asp.MarkerLineValue = ao.MarkerLineValue;
-            }
+            ScaleParameters scaleParameters = definition.ScaleParameters;
+            FillAxisScaleParametersFromForm(scaleParameters.X, ctlAxisOptions.X);
+            FillAxisScaleParametersFromForm(scaleParameters.Y, ctlAxisOptions.Y);
             if (options.UsesAxisLabelFontDescriptor)
             {
                 options.AxisLabelFontDescriptor = ChartRenderer.SaveStringFromFont(ctlAxisLabelFont.UserFont);
@@ -164,6 +121,29 @@ namespace StatsDirect.UI
                 options.MarkerTypes = ctlSeriesOptions1.MarkerTypes;
             }
             FillOrientationFromForm();
+        }
+
+        private static void FillAxisScaleParametersFromForm(AxisScaleParameters asp, ctlOneAxisOptions ao)
+        {
+            asp.ScaleType = ao.ScaleType;
+            asp.LabelDirection = ao.LabelDirection;
+
+            asp.QMin = ao.ScaleMin;
+            asp.QMax = ao.ScaleMax;
+            asp.Div = ao.Div;
+            asp.ZMin = ao.ScaleMin;
+            asp.ZInt = ao.ZInt;
+            asp.MinorTicsPerMajorTic = ao.MinorTicsPerMajorTic;
+            asp.Mask = ao.Mask;
+            asp.HasAxisScale = true;
+
+            asp.HasGridLines = ao.HasGridLines;
+            asp.GridLineDashStyle = ao.GridLineDashStyle;
+
+            if (ao.HasMarkerLine)
+                asp.MarkerLineValue = ao.MarkerLineValue;
+            else
+                asp.MarkerLineValue = default(double?);
         }
 
         private void FillOrientationFromForm()
@@ -464,17 +444,19 @@ namespace StatsDirect.UI
         private void FillFormFromScaleParameters()
         {
             ScaleParameters scaleParameters = definition.ScaleParameters;
-            ctlAxisOptions.X.AllowedScaleTypes = scaleParameters.X.AllowedScaleTypes;
-            ctlAxisOptions.X.DataMax = scaleParameters.X.Max;
-            ctlAxisOptions.X.DataMin = scaleParameters.X.Min;
             ctlAxisOptions.X.HasTitle = options.UsesXAxisTitle;
-            ctlAxisOptions.X.LabelDirection = scaleParameters.X.LabelDirection;
-
-            ctlAxisOptions.Y.AllowedScaleTypes = scaleParameters.Y.AllowedScaleTypes;
-            ctlAxisOptions.Y.DataMax = scaleParameters.Y.Max;
-            ctlAxisOptions.Y.DataMin = scaleParameters.Y.Min;
             ctlAxisOptions.Y.HasTitle = options.UsesYAxisTitle;
-            ctlAxisOptions.Y.LabelDirection = scaleParameters.Y.LabelDirection;
+            FillFormFromAxisScaleParameters(scaleParameters.X, ctlAxisOptions.X);
+            FillFormFromAxisScaleParameters(scaleParameters.Y, ctlAxisOptions.Y);
+        }
+
+        private void FillFormFromAxisScaleParameters(AxisScaleParameters asp, ctlOneAxisOptions ao)
+        {
+            ao.AllowedScaleTypes = asp.AllowedScaleTypes;
+            ao.ScaleType = asp.ScaleType;
+            ao.DataMax = asp.Max;
+            ao.DataMin = asp.Min;
+            ao.LabelDirection = asp.LabelDirection;
         }
 
         private void UncacheScaleParameters()
@@ -732,7 +714,12 @@ namespace StatsDirect.UI
                 if (PreviewAsAscii)
                 {
                     renderer.IsAscii = true;
-                    renderer.Plot(null, SdApplication.SoleInstance);
+                    ParameterBag outputParameters = renderer.Plot(null, SdApplication.SoleInstance);
+                    if (null == outputParameters)
+                    {
+                        // Plot failed
+                        return;
+                    }
                     frmTextPreview textPreview = new frmTextPreview();
                     try
                     {
@@ -749,7 +736,12 @@ namespace StatsDirect.UI
                 {
                     using (System.IO.MemoryStream metaStream = new System.IO.MemoryStream())
                     {
-                        renderer.Plot(metaStream, SdApplication.SoleInstance);
+                        ParameterBag outputParameters = renderer.Plot(metaStream, SdApplication.SoleInstance);
+                        if (null == outputParameters)
+                        {
+                            // Plot failed
+                            return;
+                        }
                         metaStream.Position = 0;
                         Image metaImage = Image.FromStream(metaStream);
                         frmImagePreview imagePreview = new frmImagePreview();

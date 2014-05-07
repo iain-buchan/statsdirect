@@ -468,10 +468,10 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptMiscRetroRisk(ITemplateHost host, ParameterBag parameters)
         {
-            double p2M;
-            double p1M;
-            double p2F;
-            double p1F;
+            double p2m;
+            double p1m;
+            double p2f;
+            double p1f;
             double llm = 0;
             double ulm = 0;
             double llf;
@@ -493,10 +493,11 @@ namespace StatsDirect.Builtins
             if (gamma <= 0.0 | gamma >= 1.0)
                 gamma = 0.95;
 
-            if (b * c <= 0 || d * m1 <= 0 || b * m1 <= 0 || d * m2 <= 0 || c + d <= 0)
-                throw new InvalidDataException();
+            //if (b * c <= 0 || d * m1 <= 0 || b * m1 <= 0 || d * m2 <= 0 || c + d <= 0)
+            //    throw new InvalidDataException();
 
-            double odr = (a * d) / (b * c);
+            //double odr = (a * d) / (b * c);
+            double odr = ExactBB.OddsRatio(a, b, c, d);
 
             double p = 1.0 - ((1.0 - gamma) / 2.0);
             int fault;
@@ -508,7 +509,7 @@ namespace StatsDirect.Builtins
             double parUl;
             double parLl;
             double par;
-            if (odr > 1.0)
+            if (odr > 1.0 && !double.IsInfinity(odr))
             {
                 if (parameters.ContainsKey("pe") && null != parameters["pe"] && parameters["pe"].HasData)
                     pe = parameters["pe"].AsDouble;
@@ -535,7 +536,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("cc", c.ToString());
             outputParameters.AddOutput("dd", d.ToString());
 
-            odr = b * c > 0 ? (a * d) / (b * c) : Constant.MISSING;
+            //odr = b * c > 0 ? (a * d) / (b * c) : Constant.MISSING;
             outputParameters.AddOutput("odds", host.RoundU(odr));
             bool dofish = true;
             double power = Power.fishpower(1.0 - gamma, a, b, n1, n2, ref dofish);
@@ -555,39 +556,40 @@ namespace StatsDirect.Builtins
                 powerParameters.AddOutput("ci_2", host.RoundU(Math.Exp(xodr)));
             }
 
-            if ((a * d != 0) || (b * c != 0))
-            {
-                ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* VB to C# conversion */];
-                tabl[1].Freq = 1;
-                tabl[1].A = a;
-                tabl[1].M1 = a + b;
-                tabl[1].N1 = a + c;
-                tabl[1].N0 = b + d;
-                tabl[1].Informative = (a * d != 0) | (b * c != 0);
-                bool useLogScale = false;
-                int ierr;
-                new ExactBB().Exact22K(host, 1, 1, tabl, gamma, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
-            }
-            else
-            {
-                eor = Constant.MISSING;
-                llf = Constant.MISSING;
-                ulf = Constant.MISSING;
-                p1F = Constant.MISSING;
-                p2F = Constant.MISSING;
-                p1M = Constant.MISSING;
-                p2M = Constant.MISSING;
-            }
+            //if ((a * d != 0) || (b * c != 0))
+            //{
+            //    ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* VB to C# conversion */];
+            //    tabl[1].Freq = 1;
+            //    tabl[1].A = a;
+            //    tabl[1].M1 = a + b;
+            //    tabl[1].N1 = a + c;
+            //    tabl[1].N0 = b + d;
+            //    tabl[1].Informative = (a * d != 0) | (b * c != 0);
+            //    bool useLogScale = false;
+            //    int ierr;
+            //    new ExactBB().Exact22K(host, 1, 1, tabl, gamma, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+            //}
+            //else
+            //{
+            //    eor = Constant.MISSING;
+            //    llf = Constant.MISSING;
+            //    ulf = Constant.MISSING;
+            //    p1F = Constant.MISSING;
+            //    p2F = Constant.MISSING;
+            //    p1M = Constant.MISSING;
+            //    p2M = Constant.MISSING;
+            //}
+            ExactBB.OddsRatioCMLE(host, gamma, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out fault);
             outputParameters.AddOutput("eor", host.RoundU(eor));
             outputParameters.AddOutput("pc", Formatting.XRound(gamma * 100.0, 2));
             outputParameters.AddOutput("llf", host.RoundU(llf));
             outputParameters.AddOutput("ulf", host.RoundU(ulf));
-            outputParameters.AddOutput("p1f", host.pval(p1F));
-            outputParameters.AddOutput("p2f", host.pval(p2F));
+            outputParameters.AddOutput("p1f", host.pval(p1f));
+            outputParameters.AddOutput("p2f", host.pval(p2f));
             outputParameters.AddOutput("llm", host.RoundU(llm));
             outputParameters.AddOutput("ulm", host.RoundU(ulm));
-            outputParameters.AddOutput("p1m", host.pval(p1M));
-            outputParameters.AddOutput("p2m", host.pval(p2M));
+            outputParameters.AddOutput("p1m", host.pval(p1m));
+            outputParameters.AddOutput("p2m", host.pval(p2m));
 
             List<ParameterBag> riskList = new List<ParameterBag>();
             outputParameters.AddOutput("*risk", riskList);
@@ -647,7 +649,7 @@ namespace StatsDirect.Builtins
             double ptld;
             double piu;
             double pil;
-            double eor = 0; double ulf; double llf; double ulm; double llm; double p1F; double p2F; double p1M; double p2M;
+            double eor = 0; double ulf; double llf; double ulm; double llm; double p1f; double p2f; double p1m; double p2m;
             int fault;
             string warn;
 
@@ -909,31 +911,32 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("lr_neg_to", host.RoundU(thetau));
 
             // diagnostic odds ratio
-            ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* VB to C# conversion */];
-            tabl[1].Freq = 1;
-            tabl[1].A = a;
-            tabl[1].M1 = a + b;
-            tabl[1].N1 = a + c;
-            tabl[1].N0 = b + d;
-            tabl[1].Informative = (a * d != 0) | (b * c != 0);
-            bool useLogScale = false;
-            new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out fault);
-            if (fault != 0)
-            {
+            //ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1 /* VB to C# conversion */];
+            //tabl[1].Freq = 1;
+            //tabl[1].A = a;
+            //tabl[1].M1 = a + b;
+            //tabl[1].N1 = a + c;
+            //tabl[1].N0 = b + d;
+            //tabl[1].Informative = (a * d != 0) | (b * c != 0);
+            //bool useLogScale = false;
+            //new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out fault);
+            //if (fault != 0)
+            //{
                 // eor = Constant.MISSING; 
-                ulf = Constant.MISSING;
-                llf = Constant.MISSING;
+                //ulf = Constant.MISSING;
+                //llf = Constant.MISSING;
                 // ulm = Constant.MISSING; 
                 // llm = Constant.MISSING; 
                 // p1f = Constant.MISSING; 
                 // p2f = Constant.MISSING; 
                 // p1m = Constant.MISSING; 
                 // p2m = Constant.MISSING; 
-            }
-            if (b * c > 0.0 && a * d > 0.0)
-                eor = (a * d) / (b * c);
-            else
-                eor = Constant.MISSING;
+            //}
+            //if (b * c > 0.0 && a * d > 0.0)
+            //    eor = (a * d) / (b * c);
+            //else
+            //    eor = Constant.MISSING;
+            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out fault);
             outputParameters.AddOutput("odr", host.RoundU(eor));
             outputParameters.AddOutput("odr_from", host.RoundU(llf));
             outputParameters.AddOutput("odr_to", host.RoundU(ulf));
@@ -1243,7 +1246,7 @@ namespace StatsDirect.Builtins
             double rrel; double rreu;
             double rrnel; double rrneu;
             double cl; double cu;
-            double eor = 0; double ulf; double llf; double ulm; double llm; double p1F; double p2F; double p1M; double p2M;
+            double eor = 0; double ulf; double llf; double ulm; double llm; double p1f; double p2f; double p1m; double p2m;
             int ierr;
             string warn;
 
@@ -1345,18 +1348,20 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("rrne_from", host.RoundU(rrnel));
             outputParameters.AddOutput("rrne_to", host.RoundU(rrneu));
 
-            ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[2];
-            tabl[1].Freq = 1;
-            tabl[1].A = t1;
-            tabl[1].M1 = t1 + t2;
-            tabl[1].N1 = t1 + t3;
-            tabl[1].N0 = t2 + t4;
-            tabl[1].Informative = (t1 * t4 != 0) || (t2 * t3 != 0);
-            bool useLogScale = false;
-            new ExactBB().Exact22K(host, 1, 1, tabl, zl, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
-            if (ierr != 0)
-                eor = Constant.MISSING;
-            double oor = t2 * t3 == 0.0 ? Constant.MISSING : (t1 * t4) / (t2 * t3);
+            //ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[2];
+            //tabl[1].Freq = 1;
+            //tabl[1].A = t1;
+            //tabl[1].M1 = t1 + t2;
+            //tabl[1].N1 = t1 + t3;
+            //tabl[1].N0 = t2 + t4;
+            //tabl[1].Informative = (t1 * t4 != 0) || (t2 * t3 != 0);
+            //bool useLogScale = false;
+            //new ExactBB().Exact22K(host,1, 1, tabl, zl, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+            double oor=ExactBB.OddsRatio(t1,t2,t3,t4);
+            ExactBB.OddsRatioCMLE(host, zl, t1, t2, t3, t4, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out ierr); 
+            //if (ierr != 0)
+            //    eor = Constant.MISSING;
+            //double oor = t2 * t3 == 0.0 ? Constant.MISSING : (t1 * t4) / (t2 * t3);
             outputParameters.AddOutput("oor", host.RoundU(oor));
             outputParameters.AddOutput("oor_from", host.RoundU(llf));
             outputParameters.AddOutput("oor_to", host.RoundU(ulf));

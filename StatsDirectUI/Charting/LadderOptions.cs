@@ -65,11 +65,11 @@ namespace StatsDirect.Charting
         } 
         
         // TRANSMISSINGCOMMENT: Property OptionType
-        public override OptionTypes OptionType 
+        public override ChartOptionType OptionType 
         { 
             get 
             { 
-                return OptionTypes.Ladder; 
+                return ChartOptionType.Ladder; 
             } 
         } 
         // TRANSMISSINGCOMMENT: Property UsesAutoscale

@@ -259,7 +259,7 @@ namespace StatsDirect.UI
             double qMin = dataMin;
             double qMax = dataMax;
             ScaleType selectedScaleType = SelectedScaleType();
-            Charting.AxisScaler.Q_Axis(ref qMin, ref qMax, out div, ref zMin, ref zInt, out minorTicsPerMajorTic, selectedScaleType);
+            Charting.AxisScaler.Q_Axis(ref qMin, ref qMax, out div, out zMin, out zInt, out minorTicsPerMajorTic, selectedScaleType);
             mask = Charting.AxisScaler.AxisMask(zInt, zMin, div, minorTicsPerMajorTic, selectedScaleType);
             settingValues = true;
             txtScaleTextMask.Text = mask;

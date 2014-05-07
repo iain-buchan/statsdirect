@@ -99,6 +99,8 @@
             <menu-item label="&amp;Extract Subset of Data" operation="GroupExtract" />
             <menu-item label="&amp;Tabulate" operation="Tabulate" />
             <menu-item label="&amp;Detabulate" operation="Detabulate" />
+            <menu-item label="E&amp;xpand" operation="ExpandFrequencies" />
+            <menu-item label="Co&amp;ntract" operation="ContractFrequencies" />
           </sub-items>
         </menu-item>
       </sub-items>
@@ -380,10 +382,10 @@
             <menu-item label="&amp;Odds Ratio" operation="Mantel" />
             <menu-item label="&amp;Peto Odds Ratio" operation="PetoMeta" />
             <menu-item label="&amp;Relative Risk" operation="RelativeRiskMeta" />
+            <menu-item label="R&amp;isk Difference" operation="RiskDifference" />
             <menu-item label="&amp;Incidence Rate Ratio" operation="MetaIncidenceRateRatio" />
             <menu-item label="&amp;Incidence Rate Difference" operation="MetaIncidenceRateDifference" />
             <menu-item label="&amp;Effect Size" operation="Effect" />
-            <menu-item label="R&amp;isk Difference" operation="RiskDifference" />
             <menu-item label="Pr&amp;oportion" operation="ProportionMeta" />
             <menu-item label="&amp;Correlation" operation="MetaCorrelation" />
             <menu-item label="&amp;Summary" operation="MetaSummary" />

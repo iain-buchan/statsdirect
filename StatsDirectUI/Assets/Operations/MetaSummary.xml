@@ -19,6 +19,7 @@
             <option value="otherRatio">Other Ratio</option>
             <option value="otherDifference">Other Difference</option>
           </options>
+          <default-value>oddsRatio</default-value>
         </option>
         <option>
           <name>use_ci</name>
@@ -27,6 +28,7 @@
             <option value="true">Confidence Interval</option>
             <option value="false">Standard Error</option>
           </options>
+          <default-value>="true"</default-value>
         </option>
       </parameters>
     </settings>

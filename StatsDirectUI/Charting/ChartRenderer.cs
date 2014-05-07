@@ -17,6 +17,10 @@ namespace StatsDirect.Charting
     ///  </summary>
     public class ChartRenderer : IDisposable
     {
+        const float PIXELS_PER_INCH = 96.0f;
+        const float POINTS_PER_INCH = 72.0f;
+        const float PIXELS_PER_POINT = PIXELS_PER_INCH / POINTS_PER_INCH;
+
         // The number of hundredths of millimeters (0.01 mm) in an inch
         // For more information, see GetImagePrefix() method.
         private const int HMM_PER_INCH = 2540;
@@ -100,10 +104,6 @@ namespace StatsDirect.Charting
         private Metafile metaFile;
         private Stream cachedOutputStream;
 
-        private double dataMinX = double.MaxValue;
-        private double dataMaxX = -double.MaxValue;
-        private double dataMinY = double.MaxValue;
-        private double dataMaxY = -double.MaxValue;
         ///  <summary>
         ///  The minimum value for the X-axis that will eventually be drawn (the neat value)
         ///  </summary>
@@ -313,63 +313,25 @@ namespace StatsDirect.Charting
             InitFlags();
         }
 
-        public double DataMinX
-        {
-            get
-            {
-                return dataMinX;
-            }
-            set
-            {
-                dataMinX = value;
-            }
-        }
-
-        public double DataMaxX
-        {
-            get
-            {
-                return dataMaxX;
-            }
-            set
-            {
-                dataMaxX = value;
-            }
-        }
-
-        public double DataMinY
-        {
-            get
-            {
-                return dataMinY;
-            }
-            set
-            {
-                dataMinY = value;
-            }
-        }
-
-        public double DataMaxY
-        {
-            get
-            {
-                return dataMaxY;
-            }
-            set
-            {
-                dataMaxY = value;
-            }
-        }
+        public double DataMinX; //TODO: { get; set; }
+        public double DataMaxX; //TODO: { get; set; }
+        public double DataMinY; //TODO: { get; set; }
+        public double DataMaxY; //TODO: { get; set; }
 
         public ChartRenderer(ChartDefinition Definition)
         {
+            DataMinX = double.MaxValue;
+            DataMaxX = -double.MaxValue;
+            DataMinY = double.MaxValue;
+            DataMaxY = -double.MaxValue;
+
             definition = Definition;
             if (Definition == null)
                 return;
-            dataMinX = Definition.DataMinX;
-            dataMaxX = Definition.DataMaxX;
-            dataMinY = Definition.DataMinY;
-            dataMaxY = Definition.DataMaxY;
+            DataMinX = Definition.DataMinX;
+            DataMaxX = Definition.DataMaxX;
+            DataMinY = Definition.DataMinY;
+            DataMaxY = Definition.DataMaxY;
         }
 
         public ScaleParameters GetScaleParameters()
@@ -459,7 +421,7 @@ namespace StatsDirect.Charting
                     return PlotLadder(outputStream);
                 case ChartType.LineXY:
                 case ChartType.ScatterXY:
-                    return PlotScatter(outputStream);
+                    return PlotScatter(outputStream, host);
                 case ChartType.LinearRegression:
                     return PlotLinearRegression(outputStream);
                 case ChartType.Normal:
@@ -528,9 +490,6 @@ namespace StatsDirect.Charting
         /// </summary>
         public static Font FontFromSaveString(string descriptor)
         {
-            const float PIXELS_PER_INCH = 96.0f;
-            const float POINTS_PER_INCH = 72.0f;
-            const float PIXELS_PER_POINT = PIXELS_PER_INCH / POINTS_PER_INCH;
             string[] fontStrings = descriptor.Split(';');
             string familyName = fontStrings[0];
             FontStyle style = ((FontStyle)(Parsing.Cint_Txt(fontStrings[1])));
@@ -541,21 +500,11 @@ namespace StatsDirect.Charting
 
         public static string SaveStringFromFont(Font f)
         {
-            return f.FontFamily.Name + ";" + (Convert.ToInt32(f.Style)).ToString() + ";" + f.Size.ToString();
+            return f.FontFamily.Name + ";" + (Convert.ToInt32(f.Style)).ToString() + ";" + f.SizeInPoints.ToString();
         }
 
         private static void InitFirstFonts()
         {
-            /*
-            public enum FontStyle
-            {
-                Regular = 0,
-                Bold = 1,
-                Italic = 2,
-                Underline = 4,
-                Strikeout = 8,
-            }
-             */
             //  Default fonts, in case there are no preferences
             DefaultAxisLabelFont = "Calibri;0;15";
             DefaultAxisTitleFont = "Calibri;1;15";
@@ -1158,15 +1107,6 @@ namespace StatsDirect.Charting
                     extraHeightRequired = xShiftFromAxis;
                     return false;
                 }
-                /** Debug lines
-                canvas.DrawLine(new Pen(Color.Black), (float)xAxisCanvas, (float)metafileHeight - ((float)yAxisCanvas - 10), (float)xAxisCanvas, (float)metafileHeight - ((float)yAxisCanvas - 10 - (float)xHeight));
-                canvas.DrawLine(new Pen(Color.Black), (float)xAxisCanvas - 30, (float)metafileHeight - ((float)yAxisCanvas - 10 - (float)xHeight), (float)xAxisCanvas - 30, (float)metafileHeight - ((float)yAxisCanvas - 10 - (float)xHeight - (float)x.ExtraSpace));
-                for (int v = 0; v < metafileHeight; v += 100)
-                {
-                    canvas.DrawLine(new Pen(Color.Black), 0, (float)metafileHeight - v, 30, (float)metafileHeight - v);
-                    canvas.DrawString(v.ToString(), legendFont, new SolidBrush(Color.Black), 40, (float)metafileHeight - v);
-                }
-                 **/
                 DrawYAxisTitle(y.Title, yShift);
             }
 
@@ -1186,7 +1126,7 @@ namespace StatsDirect.Charting
             if (IsAscii || drawLabels)
             {
                 // find a neat axis division
-                Q_AxisOrFromDefinition(ref dataMinX, ref dataMaxX, out xDiv, ref amin, ref aint, out minorTicsPerMajorTic, false, scaleType, useCalculatedScalesEvenWithDefinition);
+                Q_AxisOrFromDefinition(ref DataMinX, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, false, scaleType, useCalculatedScalesEvenWithDefinition);
                 // set the X axis min and max values to fit the scale
                 xInt = aint;
                 axisXMin = amin;
@@ -1201,9 +1141,9 @@ namespace StatsDirect.Charting
                 //  Not ASCII, not drawing our own labels
                 xDiv = 20;
                 minorTicsPerMajorTic = 5;
-                xInt = (dataMaxX - dataMinX) / Convert.ToDouble(xDiv);
-                axisXMin = dataMinX;
-                axisXMax = dataMaxX;
+                xInt = (DataMaxX - DataMinX) / Convert.ToDouble(xDiv);
+                axisXMin = DataMinX;
+                axisXMax = DataMaxX;
             }
 
             if (!(IsAscii))
@@ -1308,7 +1248,7 @@ namespace StatsDirect.Charting
             return labelHeight;
         }
 
-        private void Q_AxisOrFromDefinition(ref double qmin, ref double qmax, out int div, ref double zmin, ref double zint, out int minorTicsPerMajorTic, bool isY, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
+        private void Q_AxisOrFromDefinition(ref double qmin, ref double qmax, out int div, out double zmin, out double zint, out int minorTicsPerMajorTic, bool isY, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
             if ((definition != null) && definition.HasScaleParameters && !(useCalculatedScalesEvenWithDefinition))
             {
@@ -1326,7 +1266,7 @@ namespace StatsDirect.Charting
                 }
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
-            AxisScaler.Q_Axis(ref qmin, ref qmax, out div, ref zmin, ref zint, out minorTicsPerMajorTic, scaleType);
+            AxisScaler.Q_Axis(ref qmin, ref qmax, out div, out zmin, out zint, out minorTicsPerMajorTic, scaleType);
         }
 
         private string AxisMaskOrFromDefinition(double stepp, double znmin, int nstep, int sp, bool IsY, ScaleType ScaleType, bool UseCalculatedScalesEvenWithDefinition)
@@ -1349,8 +1289,8 @@ namespace StatsDirect.Charting
             const double AXIS_LABEL_OFFSET_FROM_BIG_TICK = 8;
 
             // find a neat axis division
-            double aint = 0, amin = 0;
-            Q_AxisOrFromDefinition(ref dataMinY, ref dataMaxY, out yDiv, ref amin, ref aint, out minorTicsPerMajorTic, true, scaleType, useCalculatedScalesEvenWithDefinition);
+            double aint, amin;
+            Q_AxisOrFromDefinition(ref DataMinY, ref DataMaxY, out yDiv, out amin, out aint, out minorTicsPerMajorTic, true, scaleType, useCalculatedScalesEvenWithDefinition);
 
             // set the Y axis min and max values to fit the scale
             yInt = aint;
@@ -1699,15 +1639,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        //		private void AxisDrawStringL( string Txt, double X1, double Y1 ) 
-        //		{ 
-        //			// Draw axis text aligned to the left
-        //			StringFormat AlignTxt = new StringFormat(); 
-        //			AlignTxt.Alignment = StringAlignment.Near; 
-        //			DrawString( Txt, AxisLabelFont, AxisBrush, X1, Y1, AlignTxt ); 
-        //		} 
-        //
-
         ///  <summary>
         ///  Draw legend text aligned to the left
         ///  </summary>
@@ -1716,16 +1647,6 @@ namespace StatsDirect.Charting
         {
             DrawStringLegend(txt, x, y, StringAlignment.Near);
         }
-
-        ///  <summary>
-        ///  Draw legend text aligned to the left
-        ///  </summary>
-        ///  <remarks></remarks>
-        //		private void DrawStringSeriesLabelL( string Txt, double X, double Y ) 
-        //		{ 
-        //			DrawStringSeriesLabel( Txt, X, Y, StringAlignment.Near ); 
-        //		} 
-        //
 
         ///  <summary>
         ///  Draw legend text
@@ -1739,19 +1660,6 @@ namespace StatsDirect.Charting
                 DrawString(txt, legendFont, axisBrush, x, y, alignTxt);
             }
         }
-
-
-        ///  <summary>
-        ///  Draw legend text
-        ///  </summary>
-        ///  <remarks></remarks>
-        //		private void DrawStringSeriesLabel( string Txt, double X, double Y, StringAlignment Alignment ) 
-        //		{ 
-        //			StringFormat AlignTxt = new StringFormat(); 
-        //			AlignTxt.Alignment = Alignment; 
-        //			DrawString( Txt, SeriesLabelFont, AxisBrush, X, Y, AlignTxt ); 
-        //		} 
-        //
 
         ///  <summary>
         ///  Draw label text
@@ -1957,7 +1865,6 @@ namespace StatsDirect.Charting
                                              {
                                                  AllowedScaleTypes =
                                                      new[] { ScaleType.Linear, ScaleType.Log10, ScaleType.LogNatural },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxX,
                                                  Min = DataMinX
                                              },
@@ -1965,14 +1872,13 @@ namespace StatsDirect.Charting
                                              {
                                                  AllowedScaleTypes =
                                                      new[] { ScaleType.Linear, ScaleType.Log10, ScaleType.LogNatural },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxY,
                                                  Min = DataMinY
                                              }
                                      };
         }
 
-        private ParameterBag PlotScatter(Stream outputStream)
+        private ParameterBag PlotScatter(Stream outputStream, ITemplateHost host)
         {
             const int LEGEND_MARKER_X = 12;
             const int LEGEND_MARKER_Y_OFFSET = 14; //  22
@@ -1980,8 +1886,30 @@ namespace StatsDirect.Charting
             const int MINIMUM_X_WHITESPACE = 70;
 
             ScatterXYOptions sOptions = ((ScatterXYOptions)(definition.ChartOptions));
-            bool ShouldDrawMarkers = sOptions.PlotMarkers;
+            bool shouldDrawMarkers = sOptions.PlotMarkers;
             bool joinMarkersWithLines = sOptions.JoinMarkersWithLines;
+
+            // TODO: Fix properly to drop points (see #981): Detect data values that would fail with a log scale and refuse to plot.
+            if (definition.ScaleParameters.X.ScaleType == ScaleType.Log10 || definition.ScaleParameters.X.ScaleType == ScaleType.LogNatural)
+            {
+                foreach (Series s in definition.XSeries)
+                    foreach (double v in s.AsDoubleSeries.Data)
+                        if (v <= 0.0)
+                        {
+                            host.Error("You cannot plot negative or zero values on a log scale. Please check your X values.", "StatsDirect");
+                            return null;
+                        }
+            }
+            if (definition.ScaleParameters.Y.ScaleType == ScaleType.Log10 || definition.ScaleParameters.Y.ScaleType == ScaleType.LogNatural)
+            {
+                foreach (Series s in definition.YSeries)
+                    foreach (double v in s.AsDoubleSeries.Data)
+                        if (v <= 0.0)
+                        {
+                            host.Error("You cannot plot negative or zero values on a log scale. Please check your Y values.", "StatsDirect");
+                            return null;
+                        }
+            }
 
             if (!(IsAscii))
             {
@@ -2039,8 +1967,14 @@ namespace StatsDirect.Charting
                             xys[r].X = -1;
                             xys[r].Y = -1;
                         }
+                        if (Single.IsInfinity(xys[r].X) || Single.IsInfinity(xys[r].Y)
+                            || Single.IsNaN(xys[r].X) || Single.IsNaN(xys[r].Y))
+                        {
+                            xys[r].X = -1;
+                            xys[r].Y = -1;
+                        }
                     }
-                    DrawMarkerSeries(xys, ys.MarkerSize, ys.Shape, ys.IsFilled, ys.UnstyledPen, ys.StyledPen, joinMarkersWithLines, ShouldDrawMarkers);
+                    DrawMarkerSeries(xys, ys.MarkerSize, ys.Shape, ys.IsFilled, ys.UnstyledPen, ys.StyledPen, joinMarkersWithLines, shouldDrawMarkers);
                 }
                 MaybeDrawMarkerLines();
                 EndMetafile();
@@ -2092,14 +2026,12 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxX,
                                                  Min = DataMinX
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxY,
                                                  Min = DataMinY
                                              }
@@ -2989,13 +2921,13 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  Draw the set of markers whose centre device co-ordinates are in xys.
         ///  </summary>
-        private void DrawMarkerSeries(PointF[] xys, double Size, MarkerShape Shape, bool IsFilled, Pen UnstyledPen, Pen StyledPen, bool JoinMarkersWithLines, bool DrawMarkers)
+        private void DrawMarkerSeries(PointF[] xys, double size, MarkerShape shape, bool isFilled, Pen unstyledPen, Pen styledPen, bool joinMarkersWithLines, bool drawMarkers)
         {
             // sort by each of x and y
             Array.Sort(xys, new SortXThenY());
 
             PointF oldXy;
-            if (JoinMarkersWithLines)
+            if (joinMarkersWithLines)
             {
                 // plot joining lines
                 //  Set initial values so that the first line won't be drawn
@@ -3003,12 +2935,12 @@ namespace StatsDirect.Charting
                 foreach (PointF xy in xys)
                 {
                     if (xy.X >= 0 && xy.Y >= 0 && oldXy.X >= 0 && oldXy.Y >= 0 && (xy.X != oldXy.X || xy.Y != oldXy.Y))
-                        DrawLine(StyledPen, xy.X, xy.Y, oldXy.X, oldXy.Y);
+                        DrawLine(styledPen, xy.X, xy.Y, oldXy.X, oldXy.Y);
                     oldXy = xy;
                 }
             }
 
-            if (DrawMarkers)
+            if (drawMarkers)
             {
                 oldXy = new PointF(-1, -1);
                 foreach (PointF xy in xys)
@@ -3016,9 +2948,9 @@ namespace StatsDirect.Charting
                     // ok to compare with element below as we have a zero-based array
                     if (xy.X != oldXy.X || xy.Y != oldXy.Y)
                     {
-                        if (xy.X >= 0 & xy.Y >= 0)
+                        if (xy.X >= 0 && xy.Y >= 0)
                         {
-                            DrawMarker(xy.X, xy.Y, Size, Shape, IsFilled, UnstyledPen);
+                            DrawMarker(xy.X, xy.Y, size, shape, isFilled, unstyledPen);
                         }
                         oldXy = xy;
                     }
@@ -3153,19 +3085,17 @@ namespace StatsDirect.Charting
             List<Series> SeriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
             // sort the array and get the min, max values
-            GetMinMaxSort(SeriesToUse, out dataMinX, out dataMaxX);
+            GetMinMaxSort(SeriesToUse, out DataMinX, out DataMaxX);
 
             ScaleParameters sp = new ScaleParameters
                                      {
                                          X = { AllowedScaleTypes = new[] { ScaleType.Linear } },
                                          Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
                                      };
-            sp.X.ShouldCheck = true;
-            sp.Y.ShouldCheck = false;
             sp.Y.Max = 0;
             sp.Y.Min = 0;
-            sp.X.Min = dataMinX;
-            sp.X.Max = dataMaxX;
+            sp.X.Min = DataMinX;
+            sp.X.Max = DataMaxX;
             return sp;
         }
 
@@ -3202,7 +3132,7 @@ namespace StatsDirect.Charting
             int k = seriesToUse.Count + 1;
             if (k > 10)
             {
-                scaleYAxis = 1 + (k - 10) / 20;
+                scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                 {
                     scaleYAxis = 5;
@@ -3216,7 +3146,7 @@ namespace StatsDirect.Charting
             }
 
             // sort the array and get the min, max values
-            GetMinMaxSort(seriesToUse, out dataMinX, out dataMaxX);
+            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
 
             BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
 
@@ -3545,8 +3475,6 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotBoxWhiskerVertical
         private ParameterBag PlotBoxWhiskerVertical(Stream OutputStream, List<Series> SeriesToUse)
         {
 
@@ -3567,7 +3495,7 @@ namespace StatsDirect.Charting
             }
 
             // sort the array and get the min, max values
-            GetMinMaxSort(SeriesToUse, out dataMinX, out dataMaxX);
+            GetMinMaxSort(SeriesToUse, out DataMinX, out DataMaxX);
 
             BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
 
@@ -3618,9 +3546,9 @@ namespace StatsDirect.Charting
             }
 
             int div;
-            double zmin = 0;
+            double zmin;
             double zint = 0;
-            Q_AxisOrFromDefinition(ref min, ref max, out div, ref zmin, ref zint, out minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
+            Q_AxisOrFromDefinition(ref min, ref max, out div, out zmin, out zint, out minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
             string msk = AxisMaskOrFromDefinition(zint, zmin, div, minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
 
             float xtra = 0;
@@ -3934,7 +3862,7 @@ namespace StatsDirect.Charting
         private ParameterBag PlotBoxWhiskerAscii(List<Series> seriesToUse)
         {
             // sort the array and get the min, max values
-            GetMinMaxSort(seriesToUse, out dataMinX, out dataMaxX);
+            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
 
             BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
 
@@ -4129,7 +4057,6 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Category },
-                                                 ShouldCheck = false,
                                                  Max = 0,
                                                  Min = 0,
                                                  LabelDirection = preferredLabelDirection
@@ -4137,7 +4064,6 @@ namespace StatsDirect.Charting
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxY,
                                                  Min = DataMinY
                                              }
@@ -4438,9 +4364,9 @@ namespace StatsDirect.Charting
                 }
 
                 int div;
-                double zmin = 0;
+                double zmin;
                 double zint = 0;
-                Q_AxisOrFromDefinition(ref min, ref max, out div, ref zmin, ref zint, out minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
+                Q_AxisOrFromDefinition(ref min, ref max, out div, out zmin, out zint, out minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
                 string msk = AxisMaskOrFromDefinition(zint, zmin, div, minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
 
                 double xtra = 0;
@@ -4593,17 +4519,17 @@ namespace StatsDirect.Charting
             {
                 if (definition.ScaleParameters != null)
                 {
-                    if (definition.ScaleParameters.X.HasMarkerLine)
+                    if (definition.ScaleParameters.X.MarkerLineValue.HasValue)
                     {
-                        double x = ToCanvasX(definition.ScaleParameters.X.MarkerLineValue);
+                        double x = ToCanvasX(definition.ScaleParameters.X.MarkerLineValue.Value);
                         using (Pen tenPen = new Pen(grBlack, 1))
                         {
                             DrawLine(tenPen, x, yAxisCanvas, x, yAxisCanvas + yExtCanvas);
                         }
                     }
-                    if (definition.ScaleParameters.Y.HasMarkerLine)
+                    if (definition.ScaleParameters.Y.MarkerLineValue.HasValue)
                     {
-                        double y = ToCanvasY(definition.ScaleParameters.Y.MarkerLineValue);
+                        double y = ToCanvasY(definition.ScaleParameters.Y.MarkerLineValue.Value);
                         using (Pen tenPen = new Pen(grBlack, 1))
                         {
                             DrawLine(tenPen, xAxisCanvas, y, xAxisCanvas + xExtCanvas, y);
@@ -4681,55 +4607,53 @@ namespace StatsDirect.Charting
 
 
         ///  <summary>
-        ///  Sort the data for each series (actually presently only Y series, as that's all this is ever needed for) into ascending order.
+        ///  Sort the data for each series into ascending order.
         ///  Note and return the global minimum and maximum values.
         ///  </summary>
-        /// <param name="SeriesToUse"></param>
-        /// <param name="Min">Filled in with the global minimum value</param>
-        ///  <param name="Max">Filled in with the global maximum value</param>
+        /// <param name="seriesToUse"></param>
+        /// <param name="min">Filled in with the global minimum value</param>
+        ///  <param name="max">Filled in with the global maximum value</param>
         ///  <remarks>STYLE: Wouldn't this be better as a function returning some kind of data structure?</remarks>
-        public void GetMinMaxSort(List<Series> SeriesToUse, out double Min, out double Max)
+        public void GetMinMaxSort(List<Series> seriesToUse, out double min, out double max)
         {
-            Min = double.MaxValue;
-            Max = double.MinValue;
-            foreach (DoubleSeries s in SeriesToUse)
+            min = double.MaxValue;
+            max = double.MinValue;
+            foreach (DoubleSeries s in seriesToUse)
             {
                 Array.Sort(s.Data);
-                if (s.Data[0] < Min)
+                if (s.Data[0] < min)
                 {
-                    Min = s.Data[0];
+                    min = s.Data[0];
                 }
-                if (s.Data[s.Data.Length - 1] > Max)
+                if (s.Data[s.Data.Length - 1] > max)
                 {
-                    Max = s.Data[s.Data.Length - 1];
+                    max = s.Data[s.Data.Length - 1];
                 }
             }
         }
 
 
-        ///  <summary>
-        ///  Detect and return minimum and maximum values in the array.
-        ///  </summary>
+        /// <summary>
+        /// Detect and return minimum and maximum values in the array.
+        /// </summary>
         /// <param name="data"></param>
+        /// <param name="scaleType">THe scale that will use the data.  For log scales, values of 0 or less are ignored.</param>
         /// <param name="Min">Filled in with the global minimum value</param>
-        ///  <param name="Max">Filled in with the global maximum value</param>
-        ///  <remarks>STYLE: Wouldn't this be better as a function returning some kind of data structure?</remarks>
-        private void GetMinMaxArray(double[] data, out double Min, out double Max)
+        /// <param name="Max">Filled in with the global maximum value</param>
+        /// <remarks>STYLE: Wouldn't this be better as a function returning some kind of data structure?</remarks>
+        private void GetMinMaxArray(double[] data, ScaleType scaleType, out double Min, out double Max)
         {
+            bool ignoreZeroOrLess = scaleType == ScaleType.LogNatural || scaleType == ScaleType.Log10;
             Min = double.MaxValue;
             Max = double.MinValue;
             for (int i = data.GetLowerBound(0); i <= data.GetUpperBound(0); i++)
             {
-                if (data[i] != Constant.MISSING)
+                if (data[i] != Constant.MISSING && !(ignoreZeroOrLess && data[i] <= 0))
                 {
                     if (data[i] < Min)
-                    {
                         Min = data[i];
-                    }
                     if (data[i] > Max)
-                    {
                         Max = data[i];
-                    }
                 }
             }
         }
@@ -4977,7 +4901,7 @@ namespace StatsDirect.Charting
             List<Series> SeriesToUse = definition.YSeries;
 
             //  Ensure the data is sorted
-            GetMinMaxSort(SeriesToUse, out dataMinX, out dataMaxX);
+            GetMinMaxSort(SeriesToUse, out DataMinX, out DataMaxX);
 
             //  We're looking over multiple histograms and getting a merged view
             DataMinY = 0.0;
@@ -5036,8 +4960,6 @@ namespace StatsDirect.Charting
                                          X = { AllowedScaleTypes = new[] { ScaleType.Linear } },
                                          Y = { AllowedScaleTypes = new[] { ScaleType.Linear } }
                                      };
-            sp.X.ShouldCheck = false;
-            sp.Y.ShouldCheck = true;
             sp.X.Max = DataMaxX;
             sp.X.Min = DataMinX;
             sp.Y.Max = DataMaxY;
@@ -5055,7 +4977,7 @@ namespace StatsDirect.Charting
             List<string> savedLines = null;
 
             //  Ensure the data is sorted
-            GetMinMaxSort(seriesToUse, out dataMinX, out dataMaxX);
+            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
 
             // get settings for plot
             bool overlayNormalCurve = histOptions.OverlayNormalCurve;
@@ -5147,8 +5069,8 @@ namespace StatsDirect.Charting
                         if (overlayNormalCurve)
                         {
                             double mxy = PlotCurveMax(zmin, zint, mp - 1, s);
-                            if (mxy > dataMaxY)
-                                dataMaxY = mxy;
+                            if (mxy > DataMaxY)
+                                DataMaxY = mxy;
                         }
 
                         divx = xExtCanvas / Math.Max(mp, 1);
@@ -5294,53 +5216,61 @@ namespace StatsDirect.Charting
         }
 
 
-        ///  <summary>
+        /// <summary>
         ///  
-        ///  </summary>
+        /// </summary>
         /// <param name="x">The X co-ordinates of the points to plot.  Zero-based or 1-based.</param>
-        ///  <param name="y">The Y co-ordinates of the points to plot.  Zero-based or 1-based, same length as x.</param>
-        ///  <param name="xtxt">The X-axis title</param>
-        ///  <param name="ytxt">The y-axis title</param>
-        ///  <param name="title">The chart title</param>
-        ///  <param name="ZPlot">If true, draw a line at the smallest Y value</param>
-        ///  <param name="MinMaxY">If -99, use preset min/max X and Y values.  If 0, calculate X and Y min/max values.  Otherwise use preset Y and calculate X min/max values.</param>
+        /// <param name="y">The Y co-ordinates of the points to plot.  Zero-based or 1-based, same length as x.</param>
+        /// <param name="xtxt">The X-axis title</param>
+        /// <param name="ytxt">The y-axis title</param>
+        /// <param name="title">The chart title</param>
+        /// <param name="ZPlot">If true, draw a line at the smallest Y value</param>
+        /// <param name="MinMaxY"></param>
         /// <param name="MarkerSize"></param>
         /// <param name="Shape"></param>
         /// <param name="IsFilled"></param>
         /// <param name="p"></param>
         /// <param name="UseCalculatedScalesEvenWithDefinition"></param>
         /// <remarks></remarks>
-        private void PlotXY(double[] x, double[] y, string xtxt, string ytxt, string title, bool ZPlot, int MinMaxY, double MarkerSize, MarkerShape Shape, bool IsFilled, Pen p, bool UseCalculatedScalesEvenWithDefinition)
+        private void PlotXY(double[] x, double[] y, string xtxt, string ytxt, string title, bool ZPlot, DataMinMax MinMaxY, double MarkerSize, MarkerShape Shape, bool IsFilled, Pen p, bool UseCalculatedScalesEvenWithDefinition)
         {
+            ScaleType scaleTypeX = ScaleType.Linear;
+            ScaleType scaleTypeY = ScaleType.Linear;
+            if (HasScaleParameters)
+            {
+                scaleTypeX = definition.ScaleParameters.X.ScaleType;
+                scaleTypeY = definition.ScaleParameters.Y.ScaleType;
+            }
+
             //  If required, get the Min and Max for the data
             //  This is safe because we're using this function to plot our data.
             switch (MinMaxY)
             {
-                case -99:
+                case DataMinMax.XPreset_YPreset:
                     //  do nothing
                     break;
-                case -98:
+                case DataMinMax.XUseScaleParameters_YUseScaleParameters:
                     //  Take data from scale parameters
                     axisYMax = definition.ScaleParameters.Y.Max;
                     axisYMin = definition.ScaleParameters.Y.Min;
                     axisXMax = definition.ScaleParameters.X.Max;
                     axisXMin = definition.ScaleParameters.X.Min;
                     break;
-                case -97:
+                case DataMinMax.XY_CalcTogether:
                     // X and Y must have the same scale
-                    GetMinMaxArray(x, out axisXMin, out axisXMax);
-                    GetMinMaxArray(y, out axisYMin, out axisYMax);
+                    GetMinMaxArray(x, scaleTypeX, out axisXMin, out axisXMax);
+                    GetMinMaxArray(y, scaleTypeY, out axisYMin, out axisYMax);
                     axisXMin = Math.Min(axisYMin, axisXMin);
                     axisYMin = Math.Min(axisYMin, axisXMin);
                     axisXMax = Math.Max(axisYMax, axisXMax);
                     axisYMax = Math.Max(axisYMax, axisXMax);
                     break;
-                default:
-                    GetMinMaxArray(x, out axisXMin, out axisXMax);
-                    if (MinMaxY == 0)
-                    {
-                        GetMinMaxArray(y, out axisYMin, out axisYMax);
-                    }
+                case DataMinMax.XCalc_YCalc:
+                    GetMinMaxArray(x, scaleTypeX, out axisXMin, out axisXMax);
+                    GetMinMaxArray(y, scaleTypeY, out axisYMin, out axisYMax);
+                    break;
+                case DataMinMax.XCalc_YPreset:
+                    GetMinMaxArray(x, scaleTypeX, out axisXMin, out axisXMax);
                     break;
             }
 
@@ -5349,13 +5279,6 @@ namespace StatsDirect.Charting
             DataMinX = axisXMin;
             DataMaxX = axisXMax;
 
-            ScaleType scaleTypeX = ScaleType.Linear;
-            ScaleType scaleTypeY = ScaleType.Linear;
-            if (HasScaleParameters)
-            {
-                scaleTypeX = definition.ScaleParameters.X.ScaleType;
-                scaleTypeY = definition.ScaleParameters.Y.ScaleType;
-            }
             DrawAxesOrEnlargeCanvas(title, new Axis(xtxt, AxisMode.Scale, 0, scaleTypeX), new Axis(ytxt, AxisMode.Scale, 0, scaleTypeY), false, UseCalculatedScalesEvenWithDefinition);
 
             if (ZPlot)
@@ -5385,9 +5308,7 @@ namespace StatsDirect.Charting
             DrawMarkerSeries(xys, MarkerSize, Shape, IsFilled, p, p, false, true);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotXYAndReturnImage
-        public string PlotXYAndReturnRtf(ITemplateHost host, double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, int minMaxY, bool useCalculatedScalesEvenWithDefinition)
+        public string PlotXYAndReturnRtf(ITemplateHost host, double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
         {
             using (MemoryStream metaStream = new MemoryStream())
             {
@@ -5398,7 +5319,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public string PlotXYZAndReturnRtf(ITemplateHost host, double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, int minMaxY)
+        public string PlotXYZAndReturnRtf(ITemplateHost host, double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY)
         {
             using (MemoryStream metaStream = new MemoryStream())
             {
@@ -5612,8 +5533,6 @@ namespace StatsDirect.Charting
                                          X = { AllowedScaleTypes = new[] { ScaleType.Linear } },
                                          Y = { AllowedScaleTypes = new[] { ScaleType.NotSet } }
                                      };
-            sp.X.ShouldCheck = true;
-            sp.Y.ShouldCheck = false;
             double transTemp72;
             double transTemp73;
             GetMinMaxSort(seriesToUse, out transTemp72, out transTemp73);
@@ -5646,9 +5565,7 @@ namespace StatsDirect.Charting
             return PlotSpreadVertical(outputStream);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotSpreadHorizontal
-        private ParameterBag PlotSpreadHorizontal(Stream OutputStream)
+        private ParameterBag PlotSpreadHorizontal(Stream outputStream)
         {
             double xtra = 0;
 
@@ -5658,7 +5575,7 @@ namespace StatsDirect.Charting
             int k = SeriesToUse.Count;
             if (k > 10)
             {
-                scaleYAxis = 1 + (k - 10) / 20;
+                scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                 {
                     scaleYAxis = 5;
@@ -5671,9 +5588,9 @@ namespace StatsDirect.Charting
                 metafileHeight = DEFAULT_METAFILE_HEIGHT;
             }
 
-            GetMinMaxSort(SeriesToUse, out dataMinX, out dataMaxX);
+            GetMinMaxSort(SeriesToUse, out DataMinX, out DataMaxX);
 
-            StartMetafile(OutputStream);
+            StartMetafile(outputStream);
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
             foreach (Series s in SeriesToUse)
@@ -5785,7 +5702,7 @@ namespace StatsDirect.Charting
                 metafileWidth = DEFAULT_METAFILE_WIDTH;
             }
 
-            GetMinMaxSort(seriesToUse, out dataMinY, out dataMaxY);
+            GetMinMaxSort(seriesToUse, out DataMinY, out DataMaxY);
 
             StartMetafile(outputStream);
             SetFontsAndThicknessesFromOptions(sOptions);
@@ -5805,8 +5722,8 @@ namespace StatsDirect.Charting
             }
 
             // double diamy = diam - 1; 
-            double INC = 2 * diam;
-            double yywid = divy / (yExtCanvas / INC);
+            double inc = 2 * diam;
+            double yywid = divy / (yExtCanvas / inc);
             xgap -= diam * 2;
 
             for (int C = 0; C <= seriesToUse.Count - 1; C++)
@@ -5833,9 +5750,9 @@ namespace StatsDirect.Charting
                 }
 
                 double scl;
-                if (maxcount * INC > xgap)
+                if (maxcount * inc > xgap)
                 {
-                    scl = xgap / (maxcount * INC);
+                    scl = xgap / (maxcount * inc);
                 }
                 else { scl = 1.0; }
                 double xctr = ToCanvasX(C + 0.5);
@@ -5859,7 +5776,7 @@ namespace StatsDirect.Charting
                     double lastx1 = 0;
                     for (int i = 1; i <= count; i++)
                     {
-                        x1 += (INC * scl);
+                        x1 += (inc * scl);
                         if (Math.Abs(lastx1 - x1) > 2)
                         {
                             DrawMarker(x1, y1, mt.MarkerSize, mt);
@@ -5881,14 +5798,12 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = false,
                                                  Max = 1,
                                                  Min = 0
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = false,
                                                  Max = 1,
                                                  Min = 0
                                              }
@@ -6369,8 +6284,6 @@ namespace StatsDirect.Charting
             return a;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method GetNormalScaleParameters
         private ScaleParameters GetNormalScaleParameters()
         {
             NormalOptions nOptions = ((NormalOptions)(definition.ChartOptions));
@@ -6429,19 +6342,19 @@ namespace StatsDirect.Charting
 
             ScaleParameters sp = new ScaleParameters
                                      {
-                                         X = { AllowedScaleTypes = new[] { ScaleType.Linear }, ShouldCheck = true },
-                                         Y = { AllowedScaleTypes = new[] { ScaleType.Linear }, ShouldCheck = true }
+                                         X = { AllowedScaleTypes = new[] { ScaleType.Linear } },
+                                         Y = { AllowedScaleTypes = new[] { ScaleType.Linear } }
                                      };
 
 
             double transTemp66;
             double transTemp67;
-            GetMinMaxArray(x, out transTemp66, out transTemp67);
+            GetMinMaxArray(x, ScaleType.Linear, out transTemp66, out transTemp67);
             sp.Y.Min = transTemp66;
             sp.Y.Max = transTemp67;
             double transTemp64;
             double transTemp65;
-            GetMinMaxArray(y, out transTemp64, out transTemp65);
+            GetMinMaxArray(y, ScaleType.Linear, out transTemp64, out transTemp65);
             sp.X.Min = transTemp64;
             sp.X.Max = transTemp65;
             return sp;
@@ -6592,10 +6505,10 @@ namespace StatsDirect.Charting
             SetFontsAndThicknessesFromOptions(nOptions);
             AssignMarkersToSeries(definition.XSeries, nOptions);
 
-            int Select_MinMaxY = 0;
+            DataMinMax Select_MinMaxY = DataMinMax.XCalc_YCalc;
             if (scaling)
             {
-                Select_MinMaxY = -97;
+                Select_MinMaxY = DataMinMax.XY_CalcTogether;
             }
             PlotXY(x, y, Lab, "Observed (" + definition.XSeries[0].Title + ")", nOptions.Title, false, Select_MinMaxY, MarkerTypes[0].MarkerSize, MarkerTypes[0].Shape, MarkerTypes[0].IsFilled, GetPen(MarkerTypes[0], true), true);
             if (scaling)
@@ -6634,14 +6547,12 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = tmax,
                                                  Min = 0
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Category },
-                                                 ShouldCheck = false,
                                                  Max = 0,
                                                  Min = 0
                                              }
@@ -6755,7 +6666,7 @@ namespace StatsDirect.Charting
 
             if (nmale > 10)
             {
-                scaleYAxis = 1 + (nmale - 10) / 20;
+                scaleYAxis = 1 + (nmale - 10) / 20.0;
                 if (scaleYAxis > 5)
                 {
                     scaleYAxis = 5;
@@ -7033,7 +6944,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        private void PlotXYZ(double[] x, double[] y, double[] z, int LowerBound, int rows, string xtxt, string ytxt, string title, bool ZPlot, int MinMaxY, MarkerShape Shape, bool IsFilled, Pen p, object labbepool)
+        private void PlotXYZ(double[] x, double[] y, double[] z, int LowerBound, int rows, string xtxt, string ytxt, string title, bool ZPlot, DataMinMax MinMaxY, MarkerShape Shape, bool IsFilled, Pen p, object labbepool)
         {
             double rmh = 0;
             bool labbe = labbepool != null;
@@ -7048,12 +6959,12 @@ namespace StatsDirect.Charting
             else
             {
                 // Get the Min and Max for the data
-                if (MinMaxY != -99)
+                if (MinMaxY != DataMinMax.XPreset_YPreset)
                 {
-                    GetMinMaxArray(x, out dataMinX, out dataMaxX);
-                    if (MinMaxY == 0)
+                    GetMinMaxArray(x, definition.ScaleParameters.X.ScaleType, out DataMinX, out DataMaxX);
+                    if (MinMaxY == DataMinMax.XCalc_YCalc)
                     {
-                        GetMinMaxArray(y, out dataMinY, out dataMaxY);
+                        GetMinMaxArray(y, definition.ScaleParameters.Y.ScaleType, out DataMinY, out DataMaxY);
                     }
                 }
             }
@@ -7171,8 +7082,22 @@ namespace StatsDirect.Charting
             double[] w = new double[k + 1];
             for (int i = 1; i <= k; i++)
             {
-                y[i] = o[i, 1] / (o[i, 1] + o[i, 3]);
-                x[i] = o[i, 2] / (o[i, 2] + o[i, 4]);
+                if (o[i, 1] + o[i, 3] == 0)
+                {
+                    y[i] = 0;
+                }
+                else
+                {
+                    y[i] = o[i, 1] / (o[i, 1] + o[i, 3]);
+                }
+                if (o[i, 2] + o[i, 4] == 0)
+                {
+                    x[i] = 0;
+                }
+                else
+                {
+                    x[i] = o[i, 2] / (o[i, 2] + o[i, 4]);
+                }
                 w[i] = o[i, 1] + o[i, 2] + o[i, 3] + o[i, 4];
             }
             PlotXYZ(x, y, w, 1, k, "control percent", "experimental percent", "L'Abbe plot (symbol size represents sample size)", false, 0, _markerTypes[0].Shape, _markerTypes[0].IsFilled, GetPen(_markerTypes[0], true), rmh);
@@ -7187,14 +7112,12 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Category },
-                                                 ShouldCheck = false,
                                                  Max = 0,
                                                  Min = 0
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxY,
                                                  Min = DataMinY
                                              }
@@ -7351,14 +7274,12 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxX,
                                                  Min = DataMinX
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxY,
                                                  Min = DataMinY
                                              }
@@ -7736,14 +7657,12 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxX,
                                                  Min = DataMinX
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = DataMaxY,
                                                  Min = DataMinY
                                              }
@@ -7952,10 +7871,10 @@ namespace StatsDirect.Charting
             {
                 if (pg == null || pg[i] == 0)
                 {
-                    if (gn[i] != Constant.MISSING & gn[i] > max_gn)
+                    if (gn[i] != Constant.MISSING && !double.IsInfinity(gn[i]) && gn[i] > max_gn)
                         max_gn = gn[i];
                 }
-                if (odr[i] != Constant.MISSING)
+                if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
                     kok++;
                     if (odr[i] > ormax)
@@ -7968,9 +7887,9 @@ namespace StatsDirect.Charting
                         odrl[i] = odru[i];
                         odru[i] = tmp;
                     }
-                    if (odrl[i] < orlmin)
+                    if (odrl[i] < orlmin && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
                         orlmin = odrl[i];
-                    if (odru[i] > orumax)
+                    if (odru[i] > orumax && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
                         orumax = odru[i];
                 }
             }
@@ -7978,28 +7897,26 @@ namespace StatsDirect.Charting
             double absmin = double.MaxValue;
             for (int i = 0; i <= k - 1; i++)
             {
-                if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0)
+                if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0 && odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                     absmin = Math.Abs(odr[i]);
-                if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0)
+                if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
                     absmin = Math.Abs(odrl[i]);
-                if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0)
+                if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
                     absmin = Math.Abs(odru[i]);
             }
 
             DataMaxX = ormax;
-            if (DataMaxX < orumax && orumax != Constant.MISSING)
-                dataMaxX = orumax;
             DataMinX = ormin;
-            if (DataMinX > orlmin && orlmin != Constant.MISSING)
-                dataMinX = orlmin;
+            if (DataMaxX < orumax && orumax != Constant.MISSING && !double.IsInfinity(orumax))
+                DataMaxX = orumax;
+            if (DataMinX > orlmin && orlmin != Constant.MISSING && !double.IsInfinity(orlmin))
+                DataMinX = orlmin;
 
             ScaleParameters sp = new ScaleParameters
                                      {
-                                         X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Log10 } },
+                                         X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.LogNatural } },
                                          Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
                                      };
-            sp.X.ShouldCheck = true;
-            sp.Y.ShouldCheck = false;
             sp.X.Max = DataMaxX;
             sp.X.Min = DataMinX;
             return sp;
@@ -8007,7 +7924,7 @@ namespace StatsDirect.Charting
 
         private ParameterBag PlotForest(Stream outputStream)
         {
-            double aint = 0; double amin = 0;
+            //double aint = 0; double amin = 0;
             double tmp; double realamin = 0; double[] tic = null; double realamax = 0;
             int tics = 0; int pbias = 0; double xm;
             double yt = 0;
@@ -8022,8 +7939,7 @@ namespace StatsDirect.Charting
             double[] odru = fOptions.odru;
             double[] pg = fOptions.pg;
             string[] title = fOptions.titles;
-            ScaleType xlogscale = definition.ScaleParameters.X.ScaleType;
-
+            
             if (k > 10)
             {
                 scaleYAxis = 1.0 + (k - 10.0) / 20.0;
@@ -8037,140 +7953,96 @@ namespace StatsDirect.Charting
                 metafileHeight = DEFAULT_METAFILE_HEIGHT;
             }
 
-            bool isLogScale = (xlogscale == ScaleType.Log10);
-
-            StartMetafile(outputStream);
-
-            SetFontsAndThicknessesFromOptions(fOptions);
-
             int kok = 0;
-            double ormax = double.MinValue;
-            double ormin = double.MaxValue;
-            double orumax = double.MinValue;
-            double orlmin = double.MaxValue;
-            double max_gn = double.MinValue;
+            double ormax = double.NegativeInfinity;
+            double ormin = double.PositiveInfinity;
+            double orumax = double.NegativeInfinity;
+            double orlmin = double.PositiveInfinity;
+            double max_gn = double.NegativeInfinity;
 
-            if (isLogScale)
-            {
-                for (int i = 0; i <= k - 1; i++)
-                {
-                    if (pg == null || pg[i] == 0)
-                    {
-                        if (gn[i] != Constant.MISSING && gn[i] > max_gn)
-                            max_gn = gn[i];
-                    }
-                    if (odr[i] != Constant.MISSING)
-                    {
-                        kok++;
-                        if (odr[i] > ormax)
-                            ormax = odr[i];
-                        if (odr[i] < ormin && odr[i] > 0)
-                            ormin = odr[i];
-                        if (odrl[i] > odru[i])
-                        {
-                            tmp = odrl[i];
-                            odrl[i] = odru[i];
-                            odru[i] = tmp;
-                        }
-                        if (odrl[i] < orlmin && odrl[i] > 0)
-                            orlmin = odrl[i];
-                        if (odru[i] > orumax)
-                            orumax = odru[i];
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i <= k - 1; i++)
-                {
-                    if (pg == null || pg[i] == 0)
-                    {
-                        if (gn[i] != Constant.MISSING && gn[i] > max_gn)
-                            max_gn = gn[i];
-                    }
-                    if (odr[i] != Constant.MISSING)
-                    {
-                        kok++;
-                        if (odr[i] > ormax)
-                            ormax = odr[i];
-                        if (odr[i] < ormin)
-                            ormin = odr[i];
-                        if (odrl[i] > odru[i])
-                        {
-                            tmp = odrl[i];
-                            odrl[i] = odru[i];
-                            odru[i] = tmp;
-                        }
-                        if (odrl[i] < orlmin)
-                            orlmin = odrl[i];
-                        if (odru[i] > orumax)
-                            orumax = odru[i];
-                    }
-                }
-            }
-
-            double absmin = double.MaxValue;
             for (int i = 0; i <= k - 1; i++)
             {
-                if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0)
+                if (pg == null || pg[i] == 0)
+                {
+                    if (gn[i] != Constant.MISSING && !double.IsInfinity(gn[i]) && gn[i] > max_gn)
+                        max_gn = gn[i];
+                }
+                if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
+                {
+                    kok++;
+                    if (odr[i] > ormax)
+                        ormax = odr[i];
+                    if (odr[i] < ormin && odr[i] > 0)
+                        ormin = odr[i];
+                    if (odrl[i] > odru[i])
+                    {
+                        tmp = odrl[i];
+                        odrl[i] = odru[i];
+                        odru[i] = tmp;
+                    }
+                    if (odrl[i] < orlmin && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
+                        orlmin = odrl[i];
+                    if (odru[i] > orumax && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
+                        orumax = odru[i];
+                }
+            }
+
+            double absmin = double.PositiveInfinity;
+            for (int i = 0; i <= k - 1; i++)
+            {
+                if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0 && odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                     absmin = Math.Abs(odr[i]);
-                if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0)
+                if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
                     absmin = Math.Abs(odrl[i]);
-                if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0)
+                if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
                     absmin = Math.Abs(odru[i]);
             }
 
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 
             DataMaxX = ormax;
-            if (DataMaxX < orumax && orumax != Constant.MISSING)
-                dataMaxX = orumax;
             DataMinX = ormin;
-            if (DataMinX > orlmin && orlmin != Constant.MISSING)
-                dataMinX = orlmin;
+            if (DataMaxX < orumax && orumax != Constant.MISSING && !double.IsInfinity(orumax))
+                DataMaxX = orumax;
+            if (DataMinX > orlmin && orlmin != Constant.MISSING && !double.IsInfinity(orlmin))
+                DataMinX = orlmin;
 
-            double rgap = 0;
-            double xtra = 0;
-            //  Allow room for right hand labels of effect and CI
-            double w;
-            for (int i = 0; i <= k - 1; i++)
-            {
-                if (odr[i] != Constant.MISSING)
-                {
-                    w = TitleWidth(title[i]) + 30;
-                    if (w > xtra + xAxisCanvas)
-                        xtra = w - xAxisCanvas - 5;
-                    w = LegendWidth(Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")");
-                    if (w > rgap)
-                        rgap = w;
-                }
-            }
-            w = TitleWidth(combo_ti(fOptions.Title)) + 30;
-            if (w > xtra + xAxisCanvas)
-                xtra = w - xAxisCanvas - 5;
-            xExtCanvas = 940 - rgap;
-
+            ScaleType xlogscale = definition.ScaleParameters.X.ScaleType;
+            bool isLogScale = (xlogscale == ScaleType.Log10 || xlogscale == ScaleType.LogNatural);
+            
             if (isLogScale)
             {
-                //  TODO: Use a proper log scale
-                AxisScaler.Q_Axis(ref dataMinX, ref dataMaxX, out xDiv, ref amin, ref aint, out minorTicsPerMajorTic, ScaleType.Linear);
-                tics = 15;
+                /*
+                tics = 27;
                 tic = new double[tics + 1];
                 tic[1] = 0.00000001;
-                tic[2] = 0.00001;
-                tic[3] = 0.001;
-                tic[4] = 0.01;
-                tic[5] = 0.1;
-                tic[6] = 0.2;
-                tic[7] = 0.5;
-                tic[8] = 1;
-                tic[9] = 2;
-                tic[10] = 5;
-                tic[11] = 10;
-                tic[12] = 100;
-                tic[13] = 1000;
-                tic[14] = 100000;
-                tic[15] = 100000000;
+                tic[2] = 0.0000001;
+                tic[3] = 0.000001;
+                tic[4] = 0.00001;
+                tic[5] = 0.0001;
+                tic[6] = 0.001;
+                tic[7] = 0.01;
+                tic[8] = 0.03;
+                tic[9] = 0.05;
+                tic[10] = 0.1;
+                tic[11] = 0.2;
+                tic[12] = 0.3;
+                tic[13] = 0.5;
+                tic[14] = 1;
+                tic[15] = 2;
+                tic[16] = 3;
+                tic[17] = 5;
+                tic[18] = 10;
+                tic[19] = 30;
+                tic[20] = 50;
+                tic[21] = 100;
+                tic[22] = 1000;
+                tic[23] = 10000;
+                tic[24] = 100000;
+                tic[25] = 1000000;
+                tic[26] = 10000000;
+                tic[27] = 100000000;
+
                 realamin = DataMinX;
                 for (int i = 2; i <= tics; i++)
                 {
@@ -8191,13 +8063,51 @@ namespace StatsDirect.Charting
                 }
                 DataMinX = Math.Log(realamin);
                 DataMaxX = Math.Log(realamax);
+                */
+
+                tics = 1;
+                tic = new double[tics + 1];
+                realamin = DataMinX;
+                realamax = DataMaxX;
+                CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
+            }
+            else
+            {
+                DataMinX = axisXMin;
+                DataMaxX = axisXMax;
+            }
+            
+            StartMetafile(outputStream);
+            
+            SetFontsAndThicknessesFromOptions(fOptions);
+
+            double rgap = 0;
+            double xtra = 0;
+            //  Allow room for right hand labels of effect and CI
+            double w;
+            for (int i = 0; i <= k - 1; i++)
+            {
+                if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
+                {
+                    w = TitleWidth(title[i]) + 30;
+                    if (w > xtra + xAxisCanvas)
+                        xtra = w - xAxisCanvas - 5;
+                    w = LegendWidth(Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")");
+                    if (w > rgap)
+                        rgap = w;
+                }
+            }
+            w = TitleWidth(combo_ti(fOptions.Title)) + 30;
+            if (w > xtra + xAxisCanvas)
+                xtra = w - xAxisCanvas - 5;
+            xExtCanvas = 940 - rgap;
+            if (isLogScale)
+            {
                 DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.LineOnly, 0, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
             }
             else
             {
                 DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.Scale, 0, ScaleType.NotSet), new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
-                DataMinX = axisXMin;
-                DataMaxX = axisXMax;
             }
 
             divx = DataMaxX - DataMinX;
@@ -8207,19 +8117,25 @@ namespace StatsDirect.Charting
 
             if (isLogScale)
             {
+                double lastXM = 0;
                 for (int i = 1; i <= tics; i++)
                 {
                     //  The use of tic is safe, as this code is only run if logscale, which is where tic is set above.
                     if (tic[i] >= realamin & tic[i] <= realamax)
                     {
-                        xm = ToCanvasX(Math.Log(tic[i]));
+                        // force ToCanvas to use log on a linear canvas because scatter plot etc. uses different scaling: TODO
+                        xm = ToCanvasX(Math.Log(tic[i]),ScaleType.Linear);
                         string Lab;
-                        if (tic[i] > 1000 || tic[i] < 0.001)
-                            Lab = tic[i].ToString("E");
-                        else
-                            Lab = tic[i].ToString();
-                        DrawStringLabel(Lab, xm, yAxisCanvas - 12, StringAlignment.Center);
-                        DrawLine(axisPen, xm, yAxisCanvas - 12, xm, yAxisCanvas);
+                        //if (tic[i] > 1000 || tic[i] < 0.001)
+                            Lab = tic[i].ToString("G");
+                        //else
+                        //    Lab = tic[i].ToString();
+                        if (lastXM == 0 || canvas.MeasureString(Lab, axisLabelFont).Width < xm - lastXM)
+                        {
+                            DrawStringLabel(Lab, xm, yAxisCanvas - 12, StringAlignment.Center);
+                            DrawLine(axisPen, xm, yAxisCanvas - 12, xm, yAxisCanvas);
+                            lastXM = xm;
+                        }
                     }
                 }
             }
@@ -8236,18 +8152,19 @@ namespace StatsDirect.Charting
 
                         for (int i = k - 1; i >= 0; i--)
                         {
-                            if (odr[i] != Constant.MISSING)
+                            if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                             {
                                 r = r + 1;
                                 double yctr = (r + pbias - 0.5) / divy * yExtCanvas;
                                 double ytop = (r + pbias) / divy * yExtCanvas;
-                                xm = odr[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odr[i]) : odr[i]);
-                                double XL = odrl[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odrl[i]) : odrl[i]);
-                                double XR = ToCanvasX(isLogScale ? Math.Log(odru[i]) : odru[i]);
-                                double Y2 = (ytop - yctr) / 1.5;
+                                xm = odr[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale? Math.Log(odr[i]) : odr[i],ScaleType.Linear);
+                                double xl = odrl[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odrl[i]) : odrl[i], ScaleType.Linear);
+                                double xr = ToCanvasX(isLogScale ? Math.Log(odru[i]) : odru[i], ScaleType.Linear);
+                                double y2 = (ytop - yctr) / 1.5;
+                                double y3 = (ytop - yctr) / 4;
                                 double yc = offy + yctr;
-                                yt = offy + yctr + Y2;
-                                double yb = offy + yctr - Y2;
+                                yt = offy + yctr + y2;
+                                double yb = offy + yctr - y2;
                                 //if ( gn[ i ] == Constant.MISSING ) 
                                 //{ 
                                 //    // ytop = yctr + ( ytop - yctr ) * 0.1 + ( ytop - yctr ) * 0.7; 
@@ -8260,28 +8177,28 @@ namespace StatsDirect.Charting
                                 if (pg == null || pg[i] == 0)
                                 {
                                     // CI line
-                                    DrawLine(ciTenPen, XL, yc, XR, yc);
+                                    DrawLine(ciTenPen, xl, yc, xr, yc);
                                     // Weight blob
                                     // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
                                     double blobSize = (5 + Math.Abs(yt - yb) * (Math.Sqrt(gn[i] / max_gn))) * 0.7;
                                     DrawMarker(xm, yc, blobSize / 2, studyMarkerType);
                                     // Arrow ends if not plottable
-                                    if ((odrl[i] <= 0 & isLogScale) | odrl[i] == Constant.MISSING)
+                                    if ((odrl[i] <= 0 & isLogScale) | odrl[i] == Constant.MISSING | double.IsInfinity(odrl[i]))
                                     {
-                                        DrawLine(tenPen, XL + Y2, yc + Y2, XL, yc);
-                                        DrawLine(tenPen, XL, yc, XL + Y2, yc - Y2);
+                                        DrawLine(tenPen, xl + y3, yc + y3, xl, yc);
+                                        DrawLine(tenPen, xl, yc, xl + y3, yc - y3);
                                     }
-                                    if (odru[i] == Constant.MISSING)
+                                    if (odru[i] == Constant.MISSING | double.IsInfinity(odru[i]))
                                     {
-                                        DrawLine(tenPen, XR - Y2, yc + Y2, XR, yc);
-                                        DrawLine(tenPen, XR, yc, XR - Y2, yb - Y2);
+                                        DrawLine(tenPen, xr - y3, yc + y3, xr, yc);
+                                        DrawLine(tenPen, xr, yc, xr - y3, yc - y3);
                                     }
 
                                 }
                                 else
                                 {
-                                    DrawMarker(xm, yc, Y2, pooledMarkerType);
-                                    DrawLine(ciTenPen, XR, yc, XL, yc);
+                                    DrawMarker(xm, yc, y2, pooledMarkerType);
+                                    DrawLine(ciTenPen, xr, yc, xl, yc);
                                     if (pg[i] < 0)
                                     {
                                         // pooled effect marker
@@ -8297,7 +8214,7 @@ namespace StatsDirect.Charting
                         if (DataMinX <= 0)
                         {
                             // no effect marker
-                            xm = ToCanvasX(isLogScale ? Math.Log(1) : 0);
+                            xm = ToCanvasX(0,ScaleType.Linear);
                             DrawLine(tenPen, xm, yt, xm, yAxisCanvas);
                         }
                     }
@@ -8323,13 +8240,13 @@ namespace StatsDirect.Charting
                 {
                     if (d != Constant.MISSING)
                     {
-                        if (d < dataMinX)
+                        if (d < DataMinX)
                         {
-                            dataMinX = d;
+                            DataMinX = d;
                         }
-                        if (d > dataMaxX)
+                        if (d > DataMaxX)
                         {
-                            dataMaxX = d;
+                            DataMaxX = d;
                         }
                     }
                 }
@@ -8337,10 +8254,10 @@ namespace StatsDirect.Charting
                 {
                     if (d != Constant.MISSING)
                     {
-                        if (d < dataMinY)
-                            dataMinY = d;
-                        if (d > dataMaxY)
-                            dataMaxY = d;
+                        if (d < DataMinY)
+                            DataMinY = d;
+                        if (d > DataMaxY)
+                            DataMaxY = d;
                     }
                 }
             }
@@ -8357,14 +8274,12 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Min = DataMinX,
                                                  Max = DataMaxX
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = false,
                                                  Max = DataMaxY,
                                                  Min = 0
                                              }
@@ -8395,20 +8310,20 @@ namespace StatsDirect.Charting
                 {
                     if (d != Constant.MISSING)
                     {
-                        if (d < dataMinX)
-                            dataMinX = d;
-                        if (d > dataMaxX)
-                            dataMaxX = d;
+                        if (d < DataMinX)
+                            DataMinX = d;
+                        if (d > DataMaxX)
+                            DataMaxX = d;
                     }
                 }
                 foreach (double d in ss.YDat)
                 {
                     if (d != Constant.MISSING)
                     {
-                        if (d < dataMinY)
-                            dataMinY = d;
-                        if (d > dataMaxY)
-                            dataMaxY = d;
+                        if (d < DataMinY)
+                            DataMinY = d;
+                        if (d > DataMaxY)
+                            DataMaxY = d;
                     }
                 }
             }
@@ -8433,9 +8348,9 @@ namespace StatsDirect.Charting
                 StartMetafile(scratchStream);
                 SetFontsAndThicknessesFromOptions(sOptions);
                 DefaultAxes(0);
-                double smallerExt = Math.Min(xExtCanvas, yExtCanvas);
-                xExtCanvas = smallerExt;
-                yExtCanvas = smallerExt;
+                //double smallerExt = Math.Min(xExtCanvas, yExtCanvas);
+                //xExtCanvas = smallerExt;
+                //yExtCanvas = smallerExt;
                 legendFontHeight = legendFont.GetHeight(canvas);
                 EndMetafile();
             }
@@ -8461,7 +8376,8 @@ namespace StatsDirect.Charting
             AssignMarkersToSeries(sOptions);
 
             DrawAxesOrEnlargeCanvas(sOptions.Title, new Axis("Times", AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(sOptions.YAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.Y.ScaleType), false, false);
-            divy = cols + 1;
+            //divy = cols + 1;
+            divy = 1;
             offy = yAxisCanvas;
 
             // Work through the columns
@@ -8566,14 +8482,12 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = false,
                                                  Max = 1,
                                                  Min = 0
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = false,
                                                  Max = 1,
                                                  Min = 0
                                              }
@@ -8638,6 +8552,10 @@ namespace StatsDirect.Charting
             string title;
             bool reverse = false; bool use_ci = false;
             int plotMethod;
+
+            //TODO: check why hangover ScaleParameters from previous chart runs cause this function to have inappropriate log transforms and crash (comment out the following line to re-create the error)
+            definition.ScaleParameters = null;
+            
             get_ma_ordinate(host, out y, yy, yw, cl, cu, ref cco, rows, out title, ref ytx, xtxt, out plotMethod, xform, ref reverse, ref use_ci);
 
             double[] xx = new double[rows + 1];
@@ -8674,8 +8592,8 @@ namespace StatsDirect.Charting
 
 
             // get the Min and Max for the data
-            GetMinMaxArray(xx, out dataMinX, out dataMaxX);
-            GetMinMaxArray(y, out dataMinY, out dataMaxY);
+            GetMinMaxArray(xx, ScaleType.Linear, out DataMinX, out DataMaxX);
+            GetMinMaxArray(y, ScaleType.Linear, out DataMinY, out DataMaxY);
 
             // get complete funnel by extending x axis so the funnel does not cut the y axis
             double pool = 0;
@@ -8694,7 +8612,7 @@ namespace StatsDirect.Charting
 
             double amin = 0;
             double aint = 0;
-            AxisScaler.Q_Axis(ref dataMinY, ref dataMaxY, out yDiv, ref amin, ref aint, out minorTicsPerMajorTic, ScaleType.Linear);
+            AxisScaler.Q_Axis(ref DataMinY, ref DataMaxY, out yDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
             double ymn = amin;
             double ymx = amin + (aint * yDiv);
             double mini = Math.Min(aint, DataMinY);
@@ -8948,7 +8866,7 @@ namespace StatsDirect.Charting
             if (!((definition == null || definition.ChartOptions == null)))
             {
                 AgreementOptions aOptions = ((AgreementOptions)(definition.ChartOptions));
-                GetMinMaxArray(aOptions.mxd, out axisYMin, out axisYMax);
+                GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType, out axisYMin, out axisYMax);
                 if (aOptions.HasLimits)
                 {
                     if (aOptions.lla < axisYMax)
@@ -8960,7 +8878,7 @@ namespace StatsDirect.Charting
                         axisYMax = aOptions.ula;
                     }
                 }
-                GetMinMaxArray(aOptions.av, out axisXMin, out axisXMax);
+                GetMinMaxArray(aOptions.av, definition.ScaleParameters.X.ScaleType, out axisXMin, out axisXMax);
             }
 
             return new ScaleParameters
@@ -8968,27 +8886,23 @@ namespace StatsDirect.Charting
                                          X =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = axisXMax,
                                                  Min = axisXMin
                                              },
                                          Y =
                                              {
                                                  AllowedScaleTypes = new[] { ScaleType.Linear },
-                                                 ShouldCheck = true,
                                                  Max = axisYMax,
                                                  Min = axisYMin
                                              }
                                      };
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotAgreementPair
         private ParameterBag PlotAgreementPair(Stream outputStream)
         {
             AgreementOptions aOptions = ((AgreementOptions)(definition.ChartOptions));
             StartMetafile(outputStream);
-            GetMinMaxArray(aOptions.mxd, out axisYMin, out axisYMax);
+            GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType, out axisYMin, out axisYMax);
             using (Pen p = GetPen(_markerTypes[0], true))
             {
                 if (aOptions.HasLimits)
@@ -9011,7 +8925,7 @@ namespace StatsDirect.Charting
                     {
                         ytxt = "difference";
                     }
-                    PlotXY(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, -1, _markerTypes[0].MarkerSize, _markerTypes[0].Shape, _markerTypes[0].IsFilled, p, false);
+                    PlotXY(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, _markerTypes[0].MarkerSize, _markerTypes[0].Shape, _markerTypes[0].IsFilled, p, false);
                 }
                 else
                 {
@@ -9025,7 +8939,7 @@ namespace StatsDirect.Charting
                     {
                         ytxt = "maximum difference";
                     }
-                    PlotXY(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, -1, _markerTypes[0].MarkerSize, _markerTypes[0].Shape, _markerTypes[0].IsFilled, p, false);
+                    PlotXY(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, _markerTypes[0].MarkerSize, _markerTypes[0].Shape, _markerTypes[0].IsFilled, p, false);
                 }
             }
 
@@ -9366,29 +9280,35 @@ namespace StatsDirect.Charting
             return x;
         }
 
+        /// <summary>
+        /// Convert a value from chart co-ordinates to canvas co-ordinates
+        /// </summary>
+        /// <param name="chartValue"></param>
+        /// <param name="scaleType"></param>
+        /// <returns></returns>
         private double Transform(double chartValue, ScaleType scaleType)
         {
             switch (scaleType)
             {
                 case ScaleType.Log10:
-                    return Math.Log10(chartValue);
+                    return chartValue>0?(Single)Math.Log10(chartValue):0;
                 case ScaleType.LogNatural:
-                    return Math.Log(chartValue) / LOG2;
+                    return chartValue>0?(Single)(Math.Log(chartValue) / LOG2):0;
                 default:
-                    return chartValue;
+                    return (Single)chartValue;
             }
         }
 
-        private double InverseTransform(double chartValue, ScaleType scaleType)
+        private double InverseTransform(double canvasValue, ScaleType scaleType)
         {
             switch (scaleType)
             {
                 case ScaleType.Log10:
-                    return Math.Pow(10, chartValue);
+                    return Math.Pow(10, canvasValue);
                 case ScaleType.LogNatural:
-                    return Math.Pow(Math.E, chartValue * LOG2);
+                    return Math.Pow(Math.E, canvasValue * LOG2);
                 default:
-                    return chartValue;
+                    return canvasValue;
             }
         }
 
@@ -9412,11 +9332,11 @@ namespace StatsDirect.Charting
             return Transform(chartX, definition.ScaleParameters.X.ScaleType);
         }
 
-        private double InverseTransformX(double chartX)
+        private double InverseTransformX(double canvasX)
         {
             if ((!HasScaleParameters || definition.ScaleParameters.X == null))
-                return chartX;
-            return InverseTransform(chartX, definition.ScaleParameters.X.ScaleType);
+                return canvasX;
+            return InverseTransform(canvasX, definition.ScaleParameters.X.ScaleType);
         }
 
         private double ToCanvasY(double chartY)
@@ -9439,11 +9359,11 @@ namespace StatsDirect.Charting
             return Transform(chartY, definition.ScaleParameters.Y.ScaleType);
         }
 
-        private double InverseTransformY(double chartY)
+        private double InverseTransformY(Single canvasY)
         {
             if ((!HasScaleParameters || definition.ScaleParameters.Y == null))
-                return chartY;
-            return InverseTransform(chartY, definition.ScaleParameters.Y.ScaleType);
+                return canvasY;
+            return InverseTransform(canvasY, definition.ScaleParameters.Y.ScaleType);
         }
 
         public void DrawLineInChartCoordinates(Color Color, double x1, double y1, double x2, double y2)
@@ -9590,7 +9510,7 @@ namespace StatsDirect.Charting
                         DataMaxY = 1;
                         DataMinY = 0;
                     }
-                    DrawAxesOrEnlargeCanvas(vt, new Axis(vx, AxisMode.Scale, 0, ScaleType.Linear), new Axis(vy, AxisMode.Scale, 0, ScaleType.Linear), boxAxes, false);
+                    DrawAxesOrEnlargeCanvas(vt, new Axis(vx, AxisMode.Scale, 0, ScaleType.Linear), new Axis(vy, AxisMode.Scale, 0, ScaleType.Linear), false, false);
 
                     // Plot the legends
                     int size2 = labelFont.Height * 2;
@@ -9689,7 +9609,7 @@ namespace StatsDirect.Charting
 
             if (k > 10)
             {
-                scaleYAxis = 1 + (k - 10) / 20;
+                scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                 {
                     scaleYAxis = 5;
@@ -9723,17 +9643,17 @@ namespace StatsDirect.Charting
                     }
                     gw[i] = odw[i];
                 }
-                if (odr[i] != Constant.MISSING && include_table(o, i))
+                if (odr[i] != Constant.MISSING && include_table(o, i) && !double.IsInfinity(odr[i]))
                 {
                     if (odr[i] > ormax)
                     {
                         ormax = odr[i];
                     }
-                    if (odru[i] > orumax && odru[i] != Constant.MISSING)
+                    if (odru[i] > orumax && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
                     {
                         orumax = odru[i];
                     }
-                    if (odru[i] < orlmin && odru[i] > 0 && odru[i] != Constant.MISSING)
+                    if (odru[i] < orlmin && odru[i] > 0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
                     {
                         orlmin = odru[i];
                     }
@@ -9743,7 +9663,7 @@ namespace StatsDirect.Charting
                         {
                             ormin = odr[i];
                         }
-                        if (odrl[i] < orlmin && odrl[i] > 0 && odrl[i] != Constant.MISSING)
+                        if (odrl[i] < orlmin && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
                         {
                             orlmin = odrl[i];
                         }
@@ -9752,11 +9672,11 @@ namespace StatsDirect.Charting
                     {
                         absmin = Math.Abs(odr[i]);
                     }
-                    if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING)
+                    if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
                     {
                         absmin = Math.Abs(odrl[i]);
                     }
-                    if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && odru[i] != Constant.MISSING)
+                    if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
                     {
                         absmin = Math.Abs(odru[i]);
                     }
@@ -9769,32 +9689,47 @@ namespace StatsDirect.Charting
             {
                 DataMaxX = rmh;
             }
-            if (DataMaxX < ul && ul != Constant.MISSING)
+            if (DataMaxX < ul && ul != Constant.MISSING && !double.IsInfinity(ul))
             {
                 DataMaxX = ul;
             }
-            if (DataMaxX < orumax && orumax != Constant.MISSING)
+            if (DataMaxX < orumax && orumax != Constant.MISSING && !double.IsInfinity(orumax))
             {
                 DataMaxX = orumax;
             }
 
-            const int tics = 15;
+            /*const int tics = 29;
             double[] tic = new double[tics + 1];
             tic[1] = 0.00000001;
-            tic[2] = 0.00001;
-            tic[3] = 0.001;
-            tic[4] = 0.01;
-            tic[5] = 0.1;
-            tic[6] = 0.2;
-            tic[7] = 0.5;
-            tic[8] = 1;
-            tic[9] = 2;
-            tic[10] = 5;
-            tic[11] = 10;
-            tic[12] = 100;
-            tic[13] = 1000;
-            tic[14] = 100000;
-            tic[15] = 100000000;
+            tic[2] = 0.0000001;
+            tic[3] = 0.000001;
+            tic[4] = 0.00001;
+            tic[5] = 0.0001;
+            tic[6] = 0.001;
+            tic[7] = 0.01;
+            tic[8] = 0.02;
+            tic[9] = 0.03;
+            tic[10] = 0.05;
+            tic[11] = 0.1;
+            tic[12] = 0.2;
+            tic[13] = 0.3;
+            tic[14] = 0.5;
+            tic[15] = 1;
+            tic[16] = 2;
+            tic[17] = 3;
+            tic[18] = 5;
+            tic[19] = 10;
+            tic[20] = 20;
+            tic[21] = 30;
+            tic[22] = 50;
+            tic[23] = 100;
+            tic[24] = 1000;
+            tic[25] = 10000;
+            tic[26] = 100000;
+            tic[27] = 1000000;
+            tic[28] = 10000000;
+            tic[29] = 100000000;
+
 
             double realamin = DataMinX;
             for (i = 2; i <= tics; i++)
@@ -9816,6 +9751,12 @@ namespace StatsDirect.Charting
             }
             DataMinX = Math.Log(realamin);
             DataMaxX = Math.Log(realamax);
+            */
+
+            int tics = 1;
+            double[] tic = new double[tics + 1];
+            double realamin = DataMinX, realamax = DataMaxX;
+            CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
 
             StartMetafile(outputStream);
             double rgap = 0;
@@ -9823,7 +9764,7 @@ namespace StatsDirect.Charting
             // allow room for right hand labels of effect and CI
             for (i = 1; i <= k; i++)
             {
-                if (odr[i] != Constant.MISSING)
+                if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
                     w = canvas.MeasureString(title[i], legendFont).Width + 30;
                     if (w > xtra + xAxisCanvas)
@@ -9849,22 +9790,27 @@ namespace StatsDirect.Charting
                 using (Pen tenPenFalse = GetPen(_markerTypes[10], false))
                 {
                     double XM;
+                    double lastXM=0;
                     for (i = 1; i <= tics; i++)
                     {
-                        if (tic[i] >= realamin & tic[i] <= realamax)
+                        if (tic[i] >= realamin && tic[i] <= realamax)
                         {
                             XM = ToCanvasX(Math.Log(tic[i]));
                             string Lab;
-                            if (tic[i] > 1000 | tic[i] < 0.001)
+                            //if (tic[i] > 1000 | tic[i] < 0.001)
+                            //{
+                                Lab = tic[i].ToString("G");
+                            //}
+                            //else
+                            //{
+                            //    Lab = tic[i].ToString("F");
+                            //}
+                            if (lastXM==0 || canvas.MeasureString(Lab, axisLabelFont).Width < XM - lastXM)
                             {
-                                Lab = tic[i].ToString("E");
+                                DrawStringLabel(Lab, XM, yAxisCanvas - 12, StringAlignment.Center);
+                                DrawLine(tenPenTrue, XM, yAxisCanvas - 12, XM, yAxisCanvas);
+                                lastXM = XM;
                             }
-                            else
-                            {
-                                Lab = tic[i].ToString();
-                            }
-                            DrawStringLabel(Lab, XM, yAxisCanvas - 12, StringAlignment.Center);
-                            DrawLine(tenPenTrue, XM, yAxisCanvas - 12, XM, yAxisCanvas);
                         }
                     }
 
@@ -9873,20 +9819,23 @@ namespace StatsDirect.Charting
                     double ytop;
                     double xl;
                     double xr;
-                    double Y2;
+                    double y2;
+                    double y3;
+                    double yb;
                     double yctr;
                     for (i = k; i >= 1; i--)
                     {
                         r = r + 1;
                         yctr = (r + pbias - 0.5) / divy * yExtCanvas;
                         ytop = (r + pbias) / divy * yExtCanvas;
-                        Y2 = (ytop - yctr) / 1.5;
+                        y2 = (ytop - yctr) / 1.5;
+                        y3 = (ytop - yctr) / 4;
                         yc = offy + yctr;
-                        yt = offy + yctr + Y2;
-                        double yb = offy + yctr - Y2;
+                        yt = offy + yctr + y2;
+                        yb = offy + yctr - y2;
                         // ytop = yctr + ( ytop - yctr ) * 0.1 + ( ytop - yctr ) * 0.9 * ( gw[ i ] / max_gw ); 
                         // ytop = yctr + ( ytop - yctr ) * 0.8; 
-                        if (odr[i] != Constant.MISSING & include_table(o, i))
+                        if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]) && include_table(o, i))
                         {
                             if (odr[i] <= 0 | odr[i] < realamin)
                             {
@@ -9896,7 +9845,7 @@ namespace StatsDirect.Charting
                             {
                                 XM = ToCanvasX(Math.Log(odr[i]));
                             }
-                            if (odrl[i] <= 0 | odrl[i] < realamin | odrl[i] == Constant.MISSING)
+                            if (odrl[i] <= 0 | odrl[i] < realamin | odrl[i] == Constant.MISSING | double.IsInfinity(odrl[i]))
                             {
                                 xl = xAxisCanvas;
                             }
@@ -9904,7 +9853,7 @@ namespace StatsDirect.Charting
                             {
                                 xl = ToCanvasX(Math.Log(odrl[i]));
                             }
-                            if (double.IsInfinity(odru[i]) | odru[i] == Constant.MISSING)
+                            if (double.IsInfinity(odru[i]) | odru[i] == Constant.MISSING | double.IsInfinity(odru[i]))
                             {
                                 xr = ToCanvasX(Math.Log(realamax));
                             }
@@ -9917,15 +9866,15 @@ namespace StatsDirect.Charting
                             // Weight blob
                             DrawSquare(tenPenTrue, XM, yc, (5 + Math.Abs(yt - yb) * (gw[i] / max_gw)) * 0.7, true);
                             // Arrow ends if not plottable
-                            if (odrl[i] < 0 | lerr[i] | odrl[i] < orlmin | odrl[i] == Constant.MISSING)
+                            if (odrl[i] <= 0 | lerr[i] | odrl[i] < orlmin | odrl[i] == Constant.MISSING | double.IsInfinity(odrl[i]))
                             {
-                                DrawLine(tenPenTrue, xl + Y2, yc + Y2, xl, yc);
-                                DrawLine(tenPenTrue, xl, yc, xl + Y2, yc - Y2);
+                                DrawLine(tenPenTrue, xl + y3, yc + y3, xl, yc);
+                                DrawLine(tenPenTrue, xl, yc, xl + y3, yc - y3);
                             }
                             if (uerr[i] | double.IsInfinity(odru[i]) | odru[i] == Constant.MISSING)
                             {
-                                DrawLine(tenPenTrue, xr - Y2, yc + Y2, xr, yc);
-                                DrawLine(tenPenTrue, xr, yc, xr - Y2, yb - Y2);
+                                DrawLine(tenPenTrue, xr - y3, yc + y3, xr, yc);
+                                DrawLine(tenPenTrue, xr, yc, xr - y3, yc - y3);
                             }
                             DrawStringLabel(title[i], xAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
                             DrawStringLabel(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", xAxisCanvas + xExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
@@ -9940,7 +9889,7 @@ namespace StatsDirect.Charting
                     if (DataMinX <= 0)
                     {
                         // zero effect marker
-                        XM = ToCanvasX(Math.Log(1));
+                        XM = ToCanvasX(0);
                         DrawLine(tenPenTrue, XM, yt, XM, yAxisCanvas);
                     }
 
@@ -9953,11 +9902,11 @@ namespace StatsDirect.Charting
                         XM = ToCanvasX(Math.Log(rmh));
                         xl = ToCanvasX(Math.Log(ll));
                         xr = ToCanvasX(Math.Log(ul));
-                        Y2 = (ytop - yctr) / 1.5;
+                        y2 = (ytop - yctr) / 1.5;
                         yc = offy + yctr;
-                        yt = offy + yctr + Y2;
+                        yt = offy + yctr + y2;
                         // yb = offy + yctr - Y2; 
-                        DrawDiamond(tenPenTrue, XM, yc, Y2 * 2, false);
+                        DrawDiamond(tenPenTrue, XM, yc, y2 * 2, false);
                         DrawLine(tenPenTrue, xr, yc, xl, yc);
                         // pooled effect marker
                         DrawLine(tenPenFalse, XM, save_yc, XM, yt);
@@ -9975,18 +9924,78 @@ namespace StatsDirect.Charting
             ifault = false;
         }
 
+        private void CreateRatioLogScale(out int tics, ref double[] tic,ref double min, ref double max, out double scalemin, out double scalemax)
+        {
+           
+            double top=max, bot=min;
+            if (max <= 0) top = 100000000;
+            if (min <= 0) bot = 0.00000001;
+
+            double tmp=bot;
+            int i = 1;
+            double z;
+            do
+            {
+                z = Math.Pow(10, Math.Floor(Math.Log10(tmp)));
+                tmp = z;
+                if (tmp >= bot) i++;
+                if (tmp >= top) break;
+                tmp += z;
+                if (tmp >= bot) i++;
+                if (tmp >= top) break;
+                tmp += z;
+                if (tmp >= bot) i++;
+                if (tmp >= top) break;
+                tmp += z * 2;
+                if (tmp >= bot) i++;
+                if (tmp >= top) break;
+                tmp += z * 5;
+            } while (tmp < top*2);
+
+            tics = i;
+            Array.Resize(ref tic, tics+1);
+
+            tmp = bot;
+            i = 1;
+            int dp;
+            do
+            {
+                z = Math.Pow(10, Math.Floor(Math.Log10(tmp)));
+                tmp = z;
+                if (tmp >= bot) i++;
+                tic[i] = tmp;
+                if (tmp >= top) break;
+                tmp += z;
+                if (tmp >= bot) i++;
+                tic[i] = tmp;
+                if (tmp >= top) break;
+                tmp += z;
+                if (tmp >= bot) i++;
+                tic[i] = tmp;
+                if (tmp >= top) break;
+                tmp += z * 2;
+                if (tmp >= bot) i++;
+                tic[i] = tmp;
+                if (tmp >= top) break;
+                tmp += z * 5;
+            }while(tmp<top*2);
+            
+            scalemin = tic[1];
+            scalemax = tmp;
+            min = Math.Log(scalemin);
+            max = Math.Log(scalemax);
+        }
+
         public string PlotMHRDAndReturnRtf(ITemplateHost host, int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
         {
             using (MemoryStream metaStream = new MemoryStream())
             {
-                StartMetafile(metaStream);
-                Plot_MHRD(k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
-                EndMetafile();
+                Plot_MHRD(metaStream, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
                 return ImageStreamToRtf(metaStream);
             }
         }
 
-        private void Plot_MHRD(int k, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
+        private void Plot_MHRD(Stream outputStream, int k, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
         {
             double aint = 0; double amin = 0;
             double w;
@@ -9995,7 +10004,7 @@ namespace StatsDirect.Charting
 
             if (k > 10)
             {
-                scaleYAxis = 1 + (k - 10) / 20;
+                scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                 {
                     scaleYAxis = 5;
@@ -10007,7 +10016,7 @@ namespace StatsDirect.Charting
                 scaleYAxis = 1;
                 metafileHeight = DEFAULT_METAFILE_HEIGHT;
             }
-            DefaultAxes(0);
+            StartMetafile(outputStream);
 
             double[] gw = new double[k + 1];
             double ormax = double.NegativeInfinity;
@@ -10034,64 +10043,38 @@ namespace StatsDirect.Charting
                 if (odr[i] != Constant.MISSING)
                 {
                     if (odr[i] > ormax)
-                    {
                         ormax = odr[i];
-                    }
                     if (odr[i] < ormin)
-                    {
                         ormin = odr[i];
-                    }
-                    if (odrl[i] < orlmin & odrl[i] != Constant.MISSING)
-                    {
+                    if (odrl[i] < orlmin && odrl[i] != Constant.MISSING)
                         orlmin = odrl[i];
-                    }
-                    if (odru[i] > orumax & odru[i] != Constant.MISSING)
-                    {
+                    if (odru[i] > orumax && odru[i] != Constant.MISSING)
                         orumax = odru[i];
-                    }
-                    if (Math.Abs(odr[i]) < absmin & odr[i] != 0.0)
-                    {
+                    if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0)
                         absmin = Math.Abs(odr[i]);
-                    }
-                    if (Math.Abs(odrl[i]) < absmin & odrl[i] != 0.0 & odrl[i] != Constant.MISSING)
-                    {
+                    if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 & odrl[i] != Constant.MISSING)
                         absmin = Math.Abs(odrl[i]);
-                    }
-                    if (Math.Abs(odru[i]) < absmin & odru[i] != 0.0 & odru[i] != Constant.MISSING)
-                    {
+                    if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 & odru[i] != Constant.MISSING)
                         absmin = Math.Abs(odru[i]);
-                    }
                 }
             }
 
             DataMaxX = ormax;
             DataMinX = ormin;
             if (DataMaxX < rmh)
-            {
                 DataMaxX = rmh;
-            }
-            if (DataMaxX < ul & ul != Constant.MISSING)
-            {
+            if (DataMaxX < ul && ul != Constant.MISSING)
                 DataMaxX = ul;
-            }
-            if (DataMaxX < orumax & orumax != Constant.MISSING)
-            {
+            if (DataMaxX < orumax && orumax != Constant.MISSING)
                 DataMaxX = orumax;
-            }
             if (DataMinX > rmh)
-            {
                 DataMinX = rmh;
-            }
-            if (DataMinX > ll & ll != Constant.MISSING)
-            {
+            if (DataMinX > ll && ll != Constant.MISSING)
                 DataMinX = ll;
-            }
-            if (DataMinX > orlmin & orlmin != Constant.MISSING)
-            {
+            if (DataMinX > orlmin && orlmin != Constant.MISSING)
                 DataMinX = orlmin;
-            }
 
-            AxisScaler.Q_Axis(ref dataMinX, ref dataMaxX, out xDiv, ref amin, ref aint, out minorTicsPerMajorTic, ScaleType.Linear);
+            AxisScaler.Q_Axis(ref DataMinX, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
             DataMinX = amin;
             DataMaxX = amin + xDiv * aint;
 
@@ -10104,21 +10087,15 @@ namespace StatsDirect.Charting
                 {
                     w = canvas.MeasureString(title[i], labelFont).Width + 30;
                     if (w > xtra + xAxisCanvas)
-                    {
                         xtra = w - xAxisCanvas - 5;
-                    }
                     w = canvas.MeasureString(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", labelFont).Width;
                     if (w > rgap)
-                    {
                         rgap = w;
-                    }
                 }
             }
             w = canvas.MeasureString(combo_ti(cap), labelFont).Width + 30;
             if (w > xtra + xAxisCanvas)
-            {
                 xtra = w - xAxisCanvas - 5;
-            }
             xExtCanvas = 940 - rgap;
             DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, 0, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
 
@@ -10132,10 +10109,9 @@ namespace StatsDirect.Charting
                 using (Pen tenPenFalse = GetPen(_markerTypes[10], false))
                 {
                     string msk = GetAxisMask(aint, amin, xDiv, minorTicsPerMajorTic);
-                    double XM;
                     for (i = 0; i <= xDiv; i++)
                     {
-                        XM = ToCanvasX(amin + aint * i);
+                        double XM = ToCanvasX(amin + aint * i);
                         if ((i % minorTicsPerMajorTic) != 0)
                         {
                             DrawLine(tenPenTrue, XM, yAxisCanvas - 7, XM, yAxisCanvas);
@@ -10160,7 +10136,7 @@ namespace StatsDirect.Charting
                     double yctr;
                     for (i = k; i >= 1; i--)
                     {
-                        r = r + 1;
+                        r++;
                         yctr = (r + pbias - 0.5) / divy * yExtCanvas;
                         ytop = (r + pbias) / divy * yExtCanvas;
                         Y2 = (ytop - yctr) / 1.5;
@@ -10171,9 +10147,9 @@ namespace StatsDirect.Charting
                         // ytop = yctr + ( ytop - yctr ) * 0.8; 
                         if (odr[i] != Constant.MISSING)
                         {
-                            XM = ToCanvasX(odr[i]);
+                            double XM = ToCanvasX(odr[i]);
                             XL = odrl[i] == Constant.MISSING ? xAxisCanvas : ToCanvasX(odrl[i]);
-                            if (odru[i] == double.PositiveInfinity | odru[i] == Constant.MISSING)
+                            if (odru[i] == double.PositiveInfinity || odru[i] == Constant.MISSING)
                             {
                                 XR = xAxisCanvas + xExtCanvas;
                             }
@@ -10209,7 +10185,7 @@ namespace StatsDirect.Charting
                     if (DataMinX <= 0)
                     {
                         //  no effect marker
-                        XM = offx;
+                        double XM = offx;
                         DrawLine(tenPenTrue, XM, yt, XM, yAxisCanvas - 12);
                         DrawStringLabel("  0  ", XM, yAxisCanvas - 12, StringAlignment.Center);
                     }
@@ -10219,7 +10195,7 @@ namespace StatsDirect.Charting
                         double save_yc = yc;
                         yctr = 0.5 / divy * yExtCanvas;
                         ytop = 1 / divy * yExtCanvas;
-                        XM = ToCanvasX(rmh);
+                        double XM = ToCanvasX(rmh);
                         XL = ToCanvasX(ll);
                         XR = ToCanvasX(ul);
                         Y2 = (ytop - yctr) / 1.5;
@@ -10240,20 +10216,19 @@ namespace StatsDirect.Charting
             }
 
             ifault = false;
+            EndMetafile();
         }
 
         public string PlotEffectAndReturnRtf(ITemplateHost host, int k, double[] cn, double[] En, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
         {
             using (MemoryStream metaStream = new MemoryStream())
             {
-                StartMetafile(metaStream);
-                PlotEffect(host, k, cn, En, title, rmh, ll, ul, cco, odr, odrl, odru, cap, pbias, qid);
-                EndMetafile();
+                PlotEffect(metaStream, host, k, cn, En, title, rmh, ll, ul, cco, odr, odrl, odru, cap, pbias, qid);
                 return ImageStreamToRtf(metaStream);
             }
         }
 
-        private void PlotEffect(ITemplateHost host, int k, double[] cn, double[] En, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
+        private void PlotEffect(Stream outputStream, ITemplateHost host, int k, double[] cn, double[] En, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
         {
             double aint = 0; double amin = 0;
             double xtra = 0;
@@ -10262,7 +10237,7 @@ namespace StatsDirect.Charting
 
             if (k > 10)
             {
-                scaleYAxis = 1 + (k - 10) / 20;
+                scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                 {
                     scaleYAxis = 5;
@@ -10274,7 +10249,7 @@ namespace StatsDirect.Charting
                 scaleYAxis = 1;
                 metafileHeight = DEFAULT_METAFILE_HEIGHT;
             }
-            DefaultAxes(0);
+            StartMetafile(outputStream);
 
             double[] gn = new double[k + 1];
             int kok = 0;
@@ -10339,7 +10314,7 @@ namespace StatsDirect.Charting
                 DataMinX = orlmin;
             }
 
-            AxisScaler.Q_Axis(ref dataMinX, ref dataMaxX, out xDiv, ref amin, ref aint, out minorTicsPerMajorTic, ScaleType.Linear);
+            AxisScaler.Q_Axis(ref DataMinX, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
             DataMinX = amin;
             DataMaxX = amin + xDiv * aint;
 
@@ -10448,15 +10423,14 @@ namespace StatsDirect.Charting
                     DrawStringLabel(lab, xAxisCanvas + xExtCanvas / 2, 50, StringAlignment.Center);
                 }
             }
+            EndMetafile();
         }
 
         public string PlotCPAndReturnRtf(ITemplateHost host, int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform)
         {
             using (MemoryStream metaStream = new MemoryStream())
             {
-                StartMetafile(metaStream);
-                Plot_CP(k, title, odr, odrl, odru, gn, pg, cap, qid, xform);
-                EndMetafile();
+                Plot_CP(metaStream, k, title, odr, odrl, odru, gn, pg, cap, qid, xform);
                 return ImageStreamToRtf(metaStream);
             }
         }
@@ -10474,11 +10448,11 @@ namespace StatsDirect.Charting
         /// <param name="cap"></param>
         /// <param name="qid"></param>
         /// <param name="xform"></param>
-        private void Plot_CP(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform)
+        private void Plot_CP(Stream outputStream, int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform)
         {
             if (k > 10)
             {
-                scaleYAxis = 1 + (k - 10) / 20;
+                scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                 {
                     scaleYAxis = 5;
@@ -10490,7 +10464,8 @@ namespace StatsDirect.Charting
                 scaleYAxis = 1;
                 metafileHeight = DEFAULT_METAFILE_HEIGHT;
             }
-            DefaultAxes(0);
+
+            StartMetafile(outputStream);
 
             int kok = 0;
             double ormax = double.NegativeInfinity;
@@ -10499,17 +10474,14 @@ namespace StatsDirect.Charting
             double orlmin = double.PositiveInfinity;
             double max_gn = double.NegativeInfinity;
 
+            int tics = 1;
+            double[] tic = new double[tics + 1];
+            double realamin = DataMinX, realamax = DataMaxX;
+
             switch (xform)
             {
                 case Transformation.Log:
-                    // Force log scale parameters
-                    if (null == definition)
-                        definition = new ChartDefinition();
-                    if (!HasScaleParameters)
-                        definition.ScaleParameters = new ScaleParameters();
-                    if (null == definition.ScaleParameters.X)
-                        definition.ScaleParameters.X = new AxisScaleParameters();
-                    definition.ScaleParameters.X.ScaleType = ScaleType.Log10;
+                    // We will be labelling as logs and plotting log-linear values
                     {
                         for (int i = 1; i <= k; i++)
                         {
@@ -10518,7 +10490,7 @@ namespace StatsDirect.Charting
                                 if (gn[i] != Constant.MISSING && gn[i] > max_gn)
                                     max_gn = gn[i];
                             }
-                            if (odr[i] != Constant.MISSING)
+                            if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                             {
                                 kok += 1;
                                 if (odr[i] > ormax)
@@ -10531,9 +10503,9 @@ namespace StatsDirect.Charting
                                     odrl[i] = odru[i];
                                     odru[i] = tmp;
                                 }
-                                if (odrl[i] < orlmin && odrl[i] > 0)
+                                if (odrl[i] < orlmin && odrl[i] > 0 && !double.IsInfinity(odrl[i]) && odrl[i] != Constant.MISSING)
                                     orlmin = odrl[i];
-                                if (odru[i] > orumax)
+                                if (odru[i] > orumax && !double.IsInfinity(odru[i]) && odru[i] != Constant.MISSING)
                                     orumax = odru[i];
                             }
                         }
@@ -10637,12 +10609,12 @@ namespace StatsDirect.Charting
             }
 
             DataMaxX = ormax;
-            if (DataMaxX < orumax & orumax != Constant.MISSING)
+            if (DataMaxX < orumax && orumax != Constant.MISSING)
             {
                 DataMaxX = orumax;
             }
             DataMinX = ormin;
-            if (DataMinX > orlmin & orlmin != Constant.MISSING)
+            if (DataMinX > orlmin && orlmin != Constant.MISSING)
             {
                 DataMinX = orlmin;
             }
@@ -10673,14 +10645,37 @@ namespace StatsDirect.Charting
                 xtra = w - xAxisCanvas - 5;
             }
             xExtCanvas = 940 - rgap;
-
-            double amin = 0;
-            double aint = 0;
-            AxisScaler.Q_Axis(ref dataMinX, ref dataMaxX, out xDiv, ref amin, ref aint, out minorTicsPerMajorTic, xform == Transformation.Log ? ScaleType.Log10 : ScaleType.Linear);
+            
             switch (xform)
             {
                 case Transformation.Log:
-                    DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, 0, ScaleType.Log10), new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
+                    CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
+                    DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, 0, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+                    divx = DataMaxX - DataMinX;
+                    offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
+                    divy = k;
+                    offy = yAxisCanvas;
+                    double XM;
+                    double lastXM=0;
+                    string lab;
+                    int i;
+                    using (Pen tenPenTrue = GetPen(_markerTypes[10], true))
+                    {
+                        for (i = 1; i <= tics; i++)
+                        {
+                            if (tic[i] >= realamin && tic[i] <= realamax)
+                            {
+                                XM = ToCanvasX(Math.Log(tic[i]));
+                                lab = tic[i].ToString("G");
+                                if (lastXM == 0 || canvas.MeasureString(lab, axisLabelFont).Width < XM - lastXM)
+                                {
+                                    DrawStringLabel(lab, XM, yAxisCanvas - 12, StringAlignment.Center);
+                                    DrawLine(tenPenTrue, XM, yAxisCanvas - 12, XM, yAxisCanvas);
+                                    lastXM = XM;
+                                }
+                            }
+                        }
+                    }
                     break;
                 default:
                     if (cap.IndexOf("Correlation (", StringComparison.Ordinal) >= 0)
@@ -10688,13 +10683,15 @@ namespace StatsDirect.Charting
                         DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
                         DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
                     }
+                    double amin;
+                    double aint = 0;
+                    AxisScaler.Q_Axis(ref DataMinX, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
                     DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, 0, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
                     DataMinX = axisXMin;
                     DataMaxX = axisXMax;
                     break;
             }
-
-
+            
             divy = kok;
             offy = yAxisCanvas;
 
@@ -10727,8 +10724,10 @@ namespace StatsDirect.Charting
                                         XM = ToCanvasX(MathDbl.rtoz(odr[i]));
                                         break;
                                     case Transformation.None:
-                                    case Transformation.Log:
                                         XM = ToCanvasX(odr[i]);
+                                        break;
+                                    case Transformation.Log:
+                                        XM = ToCanvasX(Math.Log(odr[i]));
                                         break;
                                 }
 
@@ -10743,7 +10742,7 @@ namespace StatsDirect.Charting
                                 switch (xform)
                                 {
                                     case Transformation.Log:
-                                        XL = ToCanvasX(odrl[i]);
+                                        XL = ToCanvasX(Math.Log(odrl[i]));
                                         break;
                                     case Transformation.Z:
                                         XL = ToCanvasX(MathDbl.rtoz(odrl[i]));
@@ -10758,7 +10757,7 @@ namespace StatsDirect.Charting
                             switch (xform)
                             {
                                 case Transformation.Log:
-                                    XR = ToCanvasX(odru[i]);
+                                    XR = ToCanvasX(Math.Log(odru[i]));
                                     break;
                                 case Transformation.Z:
                                     XR = ToCanvasX(MathDbl.rtoz(odru[i]));
@@ -10818,7 +10817,8 @@ namespace StatsDirect.Charting
                             // Don't care
                             break;
                         case Transformation.Log:
-                            noEffectPosition = 1;
+                            //used to be 1 but now we are plotting on log-linear scale
+                            noEffectPosition = 0;
                             break;
                         case Transformation.None:
                             noEffectPosition = 0;
@@ -10846,6 +10846,8 @@ namespace StatsDirect.Charting
                     }
                 }
             }
+
+            EndMetafile();
         }
 
         private void PlotSeCiOrPredictionInterval(double pert, double slope, double yIntercept, int nx, double ms, double sumx, double ssx, bool isPredictionInterval)

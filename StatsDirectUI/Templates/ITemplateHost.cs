@@ -83,7 +83,6 @@ namespace StatsDirect.Templates
 
         int MetaPlotMethod { get; }
 
-        bool CheckScale(ScaleParameters scaleParameters);
         /// <summary>
         /// Cause the report to be output in some way, for example by asking the user where to render it, then rendering it.
         /// </summary>

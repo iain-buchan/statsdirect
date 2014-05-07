@@ -502,18 +502,18 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptExactORCML(ITemplateHost host, ParameterBag parameters)
         {
-            double obsOr;
+            double odr;
             int ierr;
-            double p2M;
-            double p1M;
-            double p2F;
-            double p1F;
+            double p2m;
+            double p1m;
+            double p2f;
+            double p1f;
             double llm;
             double ulm;
             double llf;
             double ulf;
             double eor = 0;
-            double[] table = new double[5];
+            double a,b,c,d;
             // Gart replaced by CML in May 2001
 
             double cco = parameters["gamma"].AsDouble;
@@ -522,65 +522,66 @@ namespace StatsDirect.Builtins
                 cco = 0.95;
             }
 
-            table[1] = parameters["a"].AsDouble;
-            table[2] = parameters["b"].AsDouble;
-            table[3] = parameters["c"].AsDouble;
-            table[4] = parameters["d"].AsDouble;
+            a = parameters["a"].AsDouble;
+            b = parameters["b"].AsDouble;
+            c = parameters["c"].AsDouble;
+            d = parameters["d"].AsDouble;
 
             //  RTF_LoadTemplate("orci.rtf")
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("tab_a1", table[1].ToString());
-            outputParameters.AddOutput("tab_b1", table[2].ToString());
-            outputParameters.AddOutput("tab_a2", table[3].ToString());
-            outputParameters.AddOutput("tab_b2", table[4].ToString());
+            outputParameters.AddOutput("tab_a1", a.ToString());
+            outputParameters.AddOutput("tab_b1", b.ToString());
+            outputParameters.AddOutput("tab_a2", c.ToString());
+            outputParameters.AddOutput("tab_b2", d.ToString());
 
-            ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
-            tabl[1].Freq = 1;
-            tabl[1].A = table[1];
-            tabl[1].M1 = table[1] + table[2];
-            tabl[1].N1 = table[1] + table[3];
-            tabl[1].N0 = table[2] + table[4];
-            tabl[1].Informative = (table[1] * table[4] != 0) | (table[2] * table[3] != 0);
-            bool useLogScale = false;
-            new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+            //ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
+            //tabl[1].Freq = 1;
+            //tabl[1].A = table[1];
+            //tabl[1].M1 = table[1] + table[2];
+            //tabl[1].N1 = table[1] + table[3];
+            //tabl[1].N0 = table[2] + table[4];
+            //tabl[1].Informative = (table[1] * table[4] != 0) | (table[2] * table[3] != 0);
+            //bool useLogScale = false;
+            //new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
 
-            if (table[2] * table[3] > 0)
-            {
-                obsOr = (table[1] * table[4]) / (table[2] * table[3]);
-            }
-            else
-            {
-                obsOr = double.PositiveInfinity;
-            }
-            outputParameters.AddOutput("odds", host.RoundU(obsOr));
+            //if (table[2] * table[3] > 0)
+            //{
+            //    obsOr = (table[1] * table[4]) / (table[2] * table[3]);
+            //}
+            //else
+            //{
+            //    obsOr = double.PositiveInfinity;
+            //}
+            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out ierr);
+            odr = ExactBB.OddsRatio(a, b, c, d);
+            outputParameters.AddOutput("odds", host.RoundU(odr));
 
-            if (ierr != 0)
-            {
-                eor = Constant.MISSING;
-                llf = Constant.MISSING;
-                ulf = Constant.MISSING;
-                p1F = Constant.MISSING;
-                p2F = Constant.MISSING;
-                llm = Constant.MISSING;
-                ulm = Constant.MISSING;
-                p1M = Constant.MISSING;
-                p2M = Constant.MISSING;
-            }
+            //if (ierr != 0)
+            //{
+            //    eor = Constant.MISSING;
+            //    llf = Constant.MISSING;
+            //    ulf = Constant.MISSING;
+            //    p1f = Constant.MISSING;
+            //    p2f = Constant.MISSING;
+            //    llm = Constant.MISSING;
+            //    ulm = Constant.MISSING;
+            //    p1m = Constant.MISSING;
+            //    p2m = Constant.MISSING;
+            //}
 
             outputParameters.AddOutput("eor", host.RoundU(eor));
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
             outputParameters.AddOutput("llf", host.RoundU(llf));
             outputParameters.AddOutput("ulf", host.RoundU(ulf));
-            outputParameters.AddOutput("p1f", host.pval(p1F));
-            outputParameters.AddOutput("p2f", host.pval(p2F));
+            outputParameters.AddOutput("p1f", host.pval(p1f));
+            outputParameters.AddOutput("p2f", host.pval(p2f));
             outputParameters.AddOutput("llm", host.RoundU(llm));
             outputParameters.AddOutput("ulm", host.RoundU(ulm));
-            outputParameters.AddOutput("p1m", host.pval(p1M));
-            outputParameters.AddOutput("p2m", host.pval(p2M));
+            outputParameters.AddOutput("p1m", host.pval(p1m));
+            outputParameters.AddOutput("p2m", host.pval(p2m));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
-
+        
         public static StepResult RptRatePoissonCI(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;

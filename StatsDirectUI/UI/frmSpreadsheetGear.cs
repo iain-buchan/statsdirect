@@ -1038,6 +1038,7 @@ namespace StatsDirect.UI
 
                             // is the top row unique (i.e. not duplicated in the column data) and long?  Works out min and max lengths as a side-effect
                             bool isUnique = true;
+                            bool isUniqueLength = true;
                             bool isShort = false;
                             int minRowCount = int.MaxValue;
                             int maxRowCount = int.MinValue;
@@ -1052,7 +1053,8 @@ namespace StatsDirect.UI
 
                                 int gridColumn = columnSelection.ColumnIndex;
                                 string qtitle = GetCellText(columnSelection.RowIndex, gridColumn).Trim();
-                                if (qtitle.Length < 3)
+                                int qtitleLength = qtitle.Length;
+                                if (qtitleLength < 3)
                                     isShort = true;
                                 int nonHiddenRowCount;
                                 string[] columnArray = GetCellTexts(gridColumn,
@@ -1062,14 +1064,18 @@ namespace StatsDirect.UI
                                 for (int i = 0; i < nonHiddenRowCount; i++)
                                 {
                                     string candidate = columnArray[i];
-                                    string bufr = (null == candidate) ? "" : candidate.Trim();
-                                    if (bufr.Length > 0)
+                                    if (!string.IsNullOrWhiteSpace(candidate))
                                     {
-                                        if (bufr.Equals(qtitle))
+                                        candidate = candidate.Trim();
+                                        if (candidate.Equals(qtitle))
                                         {
                                             isUnique = false;
-                                            break;
+                                            isUniqueLength = false;
                                         }
+                                        else if (candidate.Length == qtitleLength)
+                                            isUniqueLength = false;
+                                        if (!(isUnique || isUniqueLength))
+                                            break;
                                     }
                                 }
                                 // If we have duplicate names, there's no point looking further
@@ -1085,28 +1091,33 @@ namespace StatsDirect.UI
                                 topRow = 0;
                             else if (minRowCount == maxRowCount && minRowCount == rowLengthHint + 1)
                                 topRow = 1;
-                            else if (isShort && isUnique)
-                            {
-                                PointNormal();
-                                switch (
-                                    SdApplication.SoleInstance.MsgboxX(
-                                        "Does the top row of your selection contain titles?",
-                                        MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question,
-                                        "Worksheet Categorical Data Selection", true))
-                                {
-                                    case DialogResult.Yes:
-                                        topRow = 1;
-                                        break;
-                                    case DialogResult.Cancel:
-                                        return null;
-                                    default:
-                                        topRow = 0;
-                                        break;
-                                }
-                            }
+                            else if (TopRowIsFormattedLikeTitles(cellSelection))
+                                topRow = 1;
                             else if (isUnique)
                             {
-                                topRow = 1;
+                                if (isShort && !isUniqueLength)
+                                {
+                                    PointNormal();
+                                    switch (
+                                        SdApplication.SoleInstance.MsgboxX(
+                                            "Does the top row of your selection contain titles?",
+                                            MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question,
+                                            "Worksheet Categorical Data Selection", true))
+                                    {
+                                        case DialogResult.Yes:
+                                            topRow = 1;
+                                            break;
+                                        case DialogResult.Cancel:
+                                            return null;
+                                        default:
+                                            topRow = 0;
+                                            break;
+                                    }
+                                }
+                                else
+                                {
+                                    topRow = 1;
+                                }
                             }
                             else
                             {
@@ -1665,6 +1676,43 @@ namespace StatsDirect.UI
                 PointNormal();
                 SdApplication.SoleInstance.FriendlyError("Internal error reading data from worksheet", ex, false);
                 throw; // TODO: What is the correct behaviour here?  Merely returning null causes a infinite loop
+            }
+        }
+
+        private bool TopRowIsFormattedLikeTitles(CellSelection cellSelection)
+        {
+            foreach (CellColumnSelection probe in cellSelection.ColumnSelections)
+            {
+                if (!CellIsFormattedLikeATitle(probe.WorkbookPath, probe.WorksheetName, probe.ColumnIndex, probe.RowIndex))
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// At present, this checks for bold, underline, or quotes.
+        /// </summary>
+        /// <param name="workbookPath"></param>
+        /// <param name="worksheetName"></param>
+        /// <param name="columnIndex"></param>
+        /// <param name="rowIndex"></param>
+        /// <returns></returns>
+        private bool CellIsFormattedLikeATitle(string workbookPath, string worksheetName, int columnIndex, int rowIndex)
+        {
+            // TODO: Cross-workbook cell selections
+            workbookView.GetLock();
+            try
+            {
+                IWorksheet worksheet = workbookView.ActiveWorkbookSet.Workbooks[workbookPath].Worksheets[worksheetName];
+                IRange cell = worksheet.Range[rowIndex, columnIndex];
+                if (cell.Font.Bold || (cell.Font.Underline != UnderlineStyle.None))
+                    return true;
+                string v = cell.Value.ToString();
+                return v.StartsWith("\"") || v.StartsWith("'");
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
             }
         }
 

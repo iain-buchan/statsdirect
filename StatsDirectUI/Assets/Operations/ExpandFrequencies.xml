@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>ExpandFrequencies</name>
+	<friendly-name lang="en-GB">Expand</friendly-name>
+  <help chm-id="1398" />
+  <steps>
+    <settings>
+      <parameters>
+        <frame>
+          <name>uniques</name>
+          <prompt>Select unique observations</prompt>
+          <clear-selection-first>true</clear-selection-first>
+          <mode>Text</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+        </frame>
+        <frame>
+          <name>frequencies</name>
+          <prompt>Select frequencies</prompt>
+          <clear-selection-first>true</clear-selection-first>
+          <same-length-as>uniques</same-length-as>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+        </frame>
+      </parameters>
+    </settings>
+    <builtin function-name="shtExpandFrequencies" />
+    <output-frame frame-name="output" />
+	</steps>
+</operation>

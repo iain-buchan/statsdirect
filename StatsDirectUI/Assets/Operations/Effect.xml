@@ -17,6 +17,7 @@
             <option value="g">Standardized effect size (d) from g and n</option>
             <option value="m">Weighted mean difference from mean, n and sd</option>
           </options>
+          <default-value>d</default-value>
         </option>
         <frame>
           <name>en</name>

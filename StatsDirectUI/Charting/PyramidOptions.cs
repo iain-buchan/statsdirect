@@ -7,7 +7,6 @@ using StatsDirect.Data;
 
 namespace StatsDirect.Charting
 {
-    // TRANSMISSINGCOMMENT: Class PyramidOptions
     [ Serializable ]
     public class PyramidOptions : GenericOptions 
     { 
@@ -19,10 +18,8 @@ namespace StatsDirect.Charting
         
         public PyramidOptions( bool useColour ) : base( useColour ) 
         { 
-            
         } 
         
-        // TRANSMISSINGCOMMENT: Method SetOptions
         public void SetOptions() 
         { 
             DataFrame f = new DataFrame(); 
@@ -72,24 +69,21 @@ namespace StatsDirect.Charting
             ScaleMaximum = maxRow; 
             double qmin = 0; 
             int div; 
-            double zmin = 0; 
-            double zint = 0; 
+            double zmin; 
+            double zint; 
             int JmpDiv; 
-            AxisScaler.Q_Axis( ref qmin, ref maxRow, out div, ref zmin, ref zint, out JmpDiv, Templates.ScaleType.Linear ); 
+            AxisScaler.Q_Axis( ref qmin, ref maxRow, out div, out zmin, out zint, out JmpDiv, Templates.ScaleType.Linear ); 
             ScaleMaximum = zmin + div * zint; 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Property OptionType
-        public override OptionTypes OptionType 
+        public override ChartOptionType OptionType 
         { 
             get 
             { 
-                return OptionTypes.Pyramid; 
+                return ChartOptionType.Pyramid; 
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
         public override bool UsesChartTitle 
         { 
             get 
@@ -98,7 +92,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesShowLegend
         public override bool UsesShowLegend 
         { 
             get 
@@ -107,7 +100,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisLineThickness
         public override bool UsesAxisLineThickness 
         { 
             get 
@@ -116,7 +108,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisLabelFontDescriptor
         public override bool UsesAxisLabelFontDescriptor 
         { 
             get 
@@ -125,7 +116,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property ShowPyramidOptions
         public override bool ShowPyramidOptions 
         { 
             get 
@@ -134,7 +124,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
         public override bool ShowLegendIsRelevant 
         { 
             get 
@@ -143,6 +132,4 @@ namespace StatsDirect.Charting
             } 
         } 
     } 
-    
-    
 } 

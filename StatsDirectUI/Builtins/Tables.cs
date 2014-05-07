@@ -2617,13 +2617,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("rscore", rscores);
             outputParameters.AddOutput("cscore", cscores);
             outputParameters.AddOutput("x21", host.RoundU(x21));
-            outputParameters.AddOutput("df1", Convert.ToInt64(df1).ToString());
+            outputParameters.AddOutput("df1", df1 == Constant.MISSING ? "*" : Convert.ToInt64(df1).ToString());
             outputParameters.AddOutput("p1", host.pval(p1));
             outputParameters.AddOutput("x22", host.RoundU(x22));
-            outputParameters.AddOutput("df2", Convert.ToInt64(df2).ToString());
+            outputParameters.AddOutput("df2", df2 == Constant.MISSING ? "*" : Convert.ToInt64(df2).ToString());
             outputParameters.AddOutput("p2", host.pval(p2));
             outputParameters.AddOutput("x23", host.RoundU(x23));
-            outputParameters.AddOutput("df3", Convert.ToInt64(df3).ToString());
+            outputParameters.AddOutput("df3", df3 == Constant.MISSING ? "*" : Convert.ToInt64(df3).ToString());
             outputParameters.AddOutput("p3", host.pval(p3));
             outputParameters.AddOutput("nt", Convert.ToInt64(ntot).ToString());
             return outputParameters;
@@ -2711,6 +2711,8 @@ namespace StatsDirect.Builtins
                 risksList.Add(risksParameters);
                 risksParameters.AddOutput("st", i.ToString());
                 risksParameters.AddOutput("rr", host.RoundU(rkr[i]));
+                risksParameters.AddOutput("yi", host.RoundU(rkr[i] > 0 ? Math.Log(rkr[i]) : 0));
+                risksParameters.AddOutput("vi", host.RoundU(Meta.VarianceFromCI(rkrl[i], rkru[i], cit,true)));
                 risksParameters.AddOutput("lci", host.RoundU(rkrl[i]));
                 risksParameters.AddOutput("uci", host.RoundU(rkru[i]));
                 risksParameters.AddOutput("wt", host.RoundU(100 * rkw[i] / Formatting.dsum(rkw, 1)));
@@ -2779,24 +2781,21 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            if (sk != 0)
+            bool scrap;
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                bool scrap;
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-                {
-                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap, null);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+                string rtf = ch.PlotMHAndReturnRtf(host, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap, null);
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
+            }
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-                {
-                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out scrap, null);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            {
+                string rtf = ch.PlotMHAndReturnRtf(host, k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out scrap, null);
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
             }
             return outputParameters;
         }
@@ -3558,24 +3557,33 @@ namespace StatsDirect.Builtins
                 orList.Add(orParameters);
                 orParameters.AddOutput("st", i.ToString());
                 orParameters.AddOutput("or", host.RoundU(odr[i]));
+                orParameters.AddOutput("yi", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
+                orParameters.AddOutput("vi", host.RoundU(Meta.VarianceFromCI(odrl[i], odru[i], cit,true)));
                 orParameters.AddOutput("lci", host.RoundU(odrl[i]));
                 orParameters.AddOutput("uci", host.RoundU(odru[i]));
                 orParameters.AddOutput("wt", Formatting.XRound(100 * odw[i] / Formatting.dsum(odw, 1), 2));
                 orParameters.AddOutput("dwt", Formatting.XRound(100 * dswt[i] / Formatting.dsum(dswt, 1), 2));
-                orParameters.AddOutput("lb", Meta.GetMetaLabel(host, o, i, true, cced, title));
-                if (host.Preferences.MetaExact & ((i) == Constant.MISSING | odru[i] == Constant.MISSING))
+                string tmp = Meta.GetMetaLabel(host, o, i, true, cced, title);
+                if (host.Preferences.DelayContinuityCorrection)
                 {
-                    Meta.OrciCorn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
-                    orParameters = new ParameterBag();
-                    orList.Add(orParameters);
-                    orParameters.AddOutput("st", "* " + i.ToString());
-                    orParameters.AddOutput("or", "");
-                    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
-                    orParameters.AddOutput("uci", host.RoundU(odru[i]));
-                    orParameters.AddOutput("wt", "");
-                    orParameters.AddOutput("dwt", "");
-                    orParameters.AddOutput("lb", " * [Cornfield limits]");
+                    tmp = tmp.Replace("[CC", "[late CC");
                 }
+                orParameters.AddOutput("lb", tmp);
+                
+                //orParameters.AddOutput("lb", Meta.GetMetaLabel(host, o, i,  true, cced, title));
+                //if (host.Preferences.MetaExact & ((i) == Constant.MISSING | odru[i] == Constant.MISSING))
+                //{
+                //    Meta.OrciCorn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
+                //    orParameters = new ParameterBag();
+                //    orList.Add(orParameters);
+                //    orParameters.AddOutput("st", "* " + i.ToString());
+                //    orParameters.AddOutput("or", "");
+                //    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
+                //    orParameters.AddOutput("uci", host.RoundU(odru[i]));
+                //    orParameters.AddOutput("wt", "");
+                //    orParameters.AddOutput("dwt", "");
+                //    orParameters.AddOutput("lb", " * [Cornfield limits]");
+                //}
             }
 
             if (sk == 0)
@@ -3700,14 +3708,14 @@ namespace StatsDirect.Builtins
         {
             if (strict)
             {
-                if (xcats != ycats)
-                    return false;
+
+                for (int i = 1; i <= Math.Min(xcats, ycats); i++)
+                {
+                    if (xcat[i].Ti != ycat[i].Ti)
+                        return false;
+                }
             }
-            for (int i = 1; i <= Math.Min(xcats, ycats); i++)
-            {
-                if (xcat[i].Ti != ycat[i].Ti)
-                    return false;
-            }
+            if (xcats != ycats) return false;
             return true;
         }
 

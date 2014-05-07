@@ -809,7 +809,7 @@ namespace StatsDirect.Builtins
             int midl; int midu;
             ParameterBag outputParameters = new ParameterBag();
 
-            if (k > Int32.MaxValue | k == -99)
+            if (k > Int32.MaxValue || k == -99)
             {
                 host.Error("Sample is too large for exact confidence interval calculation.", "Mann-Whitney"); // , ACTIVE_HELP_ID
                 outputParameters.AddOutput("median", Formatting.ASTERISK);

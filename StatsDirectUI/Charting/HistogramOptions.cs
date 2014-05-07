@@ -87,11 +87,11 @@ namespace StatsDirect.Charting
             }
         }
 
-        public override OptionTypes OptionType
+        public override ChartOptionType OptionType
         {
             get
             {
-                return OptionTypes.Histogram;
+                return ChartOptionType.Histogram;
             }
         }
 
@@ -112,7 +112,7 @@ namespace StatsDirect.Charting
             //  Work out the values
             double min;
             double max;
-            double zmin = 0;
+            double zmin;
             double zint = 0;
             int bins;
             if (PoolVariablesForBins)
@@ -131,7 +131,7 @@ namespace StatsDirect.Charting
                         max = s.Max;
                     }
                 }
-                Calculate(series, binsFromUser, full, ref min, ref max, ref zmin, ref zint, out bins);
+                Calculate(series, binsFromUser, full, ref min, ref max, out zmin, out zint, out bins);
             }
             else
             {
@@ -139,7 +139,7 @@ namespace StatsDirect.Charting
                 List<Series> justOneSeries = new List<Series> { s };
                 min = s.Min;
                 max = s.Max;
-                Calculate(justOneSeries, binsFromUser, full, ref min, ref max, ref zmin, ref zint, out bins);
+                Calculate(justOneSeries, binsFromUser, full, ref min, ref max, out zmin, out zint, out bins);
             }
 
             //  Write the values
@@ -169,13 +169,11 @@ namespace StatsDirect.Charting
             if (null != ScaleChanged) ScaleChanged(this, EventArgs.Empty);
         }
 
-
-        // TRANSMISSINGCOMMENT: Method v_axis
-        public void v_axis(ref double qmin, ref double qmax, int cm, ref double zmin, ref double zint)
+        public void v_axis(ref double qmin, ref double qmax, int cm, out double zmin, out double zint)
         {
             if (cm > 0)
             {
-                AxisScaler.Axis(ref qmin, ref qmax, cm, ref zmin, ref zint);
+                AxisScaler.Axis(ref qmin, ref qmax, cm, out zmin, out zint);
             }
             else
             {
@@ -197,7 +195,7 @@ namespace StatsDirect.Charting
         ///  <param name="zint"></param>
         /// <param name="outputBins"></param>
         /// <remarks></remarks>
-        public void Calculate(List<Series> oneOrMoreSeries, int binsFromUser, bool full, ref double min, ref double max, ref double zmin, ref double zint, out int outputBins)
+        public void Calculate(List<Series> oneOrMoreSeries, int binsFromUser, bool full, ref double min, ref double max, out double zmin, out double zint, out int outputBins)
         {
             Debug.Assert(oneOrMoreSeries.Count > 0);
 
@@ -217,11 +215,11 @@ namespace StatsDirect.Charting
             //  Assume there's at least one column, and therefore longestSoFar is never Nothing
             double[] xx = new double[maxRows + 1 ];
             int actualRows = 0;
-            for (int C = 0; C <= maxRows - 1; C++)
+            for (int c = 0; c <= maxRows - 1; c++)
             {
-                if (longestSoFar.Data[C] != Numerics.Constant.MISSING)
+                if (longestSoFar.Data[c] != Numerics.Constant.MISSING)
                 {
-                    xx[actualRows] = longestSoFar.Data[C];
+                    xx[actualRows] = longestSoFar.Data[c];
                     actualRows += 1;
                 }
             }
@@ -246,16 +244,12 @@ namespace StatsDirect.Charting
                 int mpp = 0;
                 for (int cm = 1; cm <= maxcm; cm++)
                 {
-                    v_axis(ref min, ref max, cm - 1, ref zmin, ref zint);
+                    v_axis(ref min, ref max, cm - 1, out zmin, out zint);
                     int nmp = cm < 10 ? cm + 1 : cm - 1;
-                    double nzmin = 0;
-                    double nzint = 0;
-                    v_axis(ref min, ref max, nmp - 1, ref nzmin, ref nzint);
-                    string transTemp0 = nzint.ToString();
-                    string transTemp1 = nzmin.ToString();
-                    string transTemp2 = zint.ToString();
-                    string transTemp3 = zmin.ToString();
-                    if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp0.Length +  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp1.Length <  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp2.Length +  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp3.Length)
+                    double nzmin;
+                    double nzint;
+                    v_axis(ref min, ref max, nmp - 1, out nzmin, out nzint);
+                    if (nzint.ToString().Length + nzmin.ToString().Length < zint.ToString().Length + zmin.ToString().Length)
                     {
                         zint = nzint;
                         zmin = nzmin;
@@ -275,7 +269,7 @@ namespace StatsDirect.Charting
                         {
                             if (xx[c1] > high)
                             {
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                         }
                         int bin = c1 - C2;
@@ -306,7 +300,7 @@ namespace StatsDirect.Charting
                 mp = 20;
             }
 
-            v_axis(ref min, ref max, mp - 1, ref zmin, ref zint);
+            v_axis(ref min, ref max, mp - 1, out zmin, out zint);
             if (force)
             {
                 for (int C = 1; C <= 2; C++)
@@ -316,33 +310,25 @@ namespace StatsDirect.Charting
                     double nzint = 0;
                     if (nmp > 3)
                     {
-                        v_axis(ref min, ref max, nmp - 1, ref nzmin, ref nzint);
-                        string transTemp4 = nzint.ToString();
-                        string transTemp5 = nzmin.ToString();
-                        string transTemp6 = zint.ToString();
-                        string transTemp7 = zmin.ToString();
-                        if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp4.Length +  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp5.Length <  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp6.Length +  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp7.Length)
+                        v_axis(ref min, ref max, nmp - 1, out nzmin, out nzint);
+                        if (nzint.ToString().Length + nzmin.ToString().Length < zint.ToString().Length + zmin.ToString().Length)
                         {
                             zint = nzint;
                             zmin = nzmin;
                             mp = nmp;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     nmp = mp + C;
                     if (nmp <= 20)
                     {
-                        v_axis(ref min, ref max, nmp - 1, ref nzmin, ref nzint);
-                        string transTemp8 = nzint.ToString();
-                        string transTemp9 = nzmin.ToString();
-                        string transTemp10 = zint.ToString();
-                        string transTemp11 = zmin.ToString();
-                        if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp8.Length +  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp9.Length <  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp10.Length +  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp11.Length)
+                        v_axis(ref min, ref max, nmp - 1, out nzmin, out nzint);
+                        if (nzint.ToString().Length + nzmin.ToString().Length < zint.ToString().Length + zmin.ToString().Length)
                         {
                             zint = nzint;
                             zmin = nzmin;
                             mp = nmp;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                 }
@@ -359,7 +345,7 @@ namespace StatsDirect.Charting
                         {
                             OK = true;
                             C2 = C1;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     if (!(OK))
@@ -368,12 +354,12 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
 
                 // use from first occupied bin
-                int budge = 0; //  TODO: This doesn't seem appropriate - what have I missed?
+                int budge = 0; // TODO: This doesn't seem appropriate - what have I missed?
                 C2 = 1;
                 for (int C = 1; C <= mp; C++)
                 {
@@ -385,7 +371,7 @@ namespace StatsDirect.Charting
                         {
                             OK = true;
                             C2 = C1 + 1;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     if (!(OK))
@@ -395,7 +381,7 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 zmin = zmin + zint * budge;
@@ -403,8 +389,6 @@ namespace StatsDirect.Charting
             outputBins = mp;
         }
 
-
-        // TRANSMISSINGCOMMENT: Property ShowHistogramOptions
         public override bool ShowHistogramOptions
         {
             get
@@ -413,7 +397,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
         public override bool ShowLegendIsRelevant
         {
             get
@@ -422,6 +405,4 @@ namespace StatsDirect.Charting
             }
         }
     }
-
-
 }
