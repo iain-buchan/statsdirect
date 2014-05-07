@@ -219,6 +219,7 @@
     <Compile Include="Charting\GenericOptions.cs" />
     <Compile Include="Charting\GiniOptions.cs" />
     <Compile Include="Charting\HistogramOptions.cs" />
+    <Compile Include="Charting\IStatsDirectCanvas.cs" />
     <Compile Include="Charting\LadderOptions.cs" />
     <Compile Include="Charting\LinearRegressionOptions.cs" />
     <Compile Include="Charting\MarkerShape.cs" />
@@ -1653,7 +1654,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.1.0-alpha003\build\Antlr4.targets')" />

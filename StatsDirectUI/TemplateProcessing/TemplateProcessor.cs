@@ -951,8 +951,8 @@ namespace StatsDirect.Templates
             {
                 if (step.IsAscii)
                 {
-                    results = ch.Plot(null, host);
-                    results.Add(step.ChartName, new FilledParameter(false, ch.AsAsciiRTF));
+                    results = ch.Plot(host);
+                    results.Add(step.ChartName, new FilledParameter(false, ch.GetAsciiRTF()));
                 }
                 else
                 {

@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using StatsDirect.Numerics;
 using StatsDirect.Charting;
@@ -662,14 +663,10 @@ namespace StatsDirect.UI
 #endif
         }
 
-        #region IOkable Members
-
         void IOkable.OkClicked()
         {
             FillOptionsFromForm();
         }
-
-        #endregion
 
         private void cmdPreview_Click(object sender, EventArgs e)
         {
@@ -716,46 +713,33 @@ namespace StatsDirect.UI
                 if (PreviewAsAscii)
                 {
                     renderer.IsAscii = true;
-                    ParameterBag outputParameters = renderer.Plot(null, SdApplication.SoleInstance);
+                    ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance);
                     if (null == outputParameters)
                     {
                         // Plot failed
                         return;
                     }
-                    frmTextPreview textPreview = new frmTextPreview();
-                    try
+                    using (frmTextPreview textPreview = new frmTextPreview())
                     {
-                        string rtf = "{\\rtf1\\ansi " + renderer.AsAsciiRTF + "}";
+                        string rtf = "{\\rtf1\\ansi " + renderer.GetAsciiRTF() + "}";
                         textPreview.Rtf = rtf;
                         textPreview.ShowDialog(SdApplication.SoleInstance.MainWindow);
-                    }
-                    finally
-                    {
-                        textPreview.Dispose();
                     }
                 }
                 else
                 {
-                    using (System.IO.MemoryStream metaStream = new System.IO.MemoryStream())
+                    ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance);
+                    if (null == outputParameters)
                     {
-                        ParameterBag outputParameters = renderer.Plot(metaStream, SdApplication.SoleInstance);
-                        if (null == outputParameters)
-                        {
-                            // Plot failed
-                            return;
-                        }
-                        metaStream.Position = 0;
-                        Image metaImage = Image.FromStream(metaStream);
-                        frmImagePreview imagePreview = new frmImagePreview();
-                        try
-                        {
-                            imagePreview.Image = metaImage;
-                            imagePreview.ShowDialog(SdApplication.SoleInstance.MainWindow);
-                        }
-                        finally
-                        {
-                            imagePreview.Dispose();
-                        }
+                        // Plot failed
+                        return;
+                    }
+                    Stream imageStream = renderer.GetImageStream();
+                    Image metaImage = Image.FromStream(imageStream);
+                    using (frmImagePreview imagePreview = new frmImagePreview())
+                    {
+                        imagePreview.Image = metaImage;
+                        imagePreview.ShowDialog(SdApplication.SoleInstance.MainWindow);
                     }
                 }
             }

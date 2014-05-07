@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace StatsDirect.UI
@@ -35,7 +32,7 @@ namespace StatsDirect.UI
             bool wasCreated; // We don't use this but, if wasCreated is true, no other process presently knows about that mutex.  If wasCreated is false, some other process has got a handle on it (which shouldn't happen unless we happen to be created at the same time as another SD instance is trying to get hold of the mutex).
             waitSemaphore = new Semaphore(0, 1, WAIT_SEMAPHORE_NAME, out wasCreated);
             memoryMappedFile = MemoryMappedFile.CreateNew(MEMORY_FILE_NAME, MAXIMUM_PATH_LENGTH);
-            (new Thread(new ThreadStart(ListenThreadTop)) {Name = "IPC Listener" }).Start();
+            (new Thread(ListenThreadTop) {Name = "IPC Listener" }).Start();
         }
 
         /// <summary>

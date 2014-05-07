@@ -9,11 +9,13 @@ namespace StatsDirect.Charting
     /// <summary>
     /// A chart drawing surface that is backed with an Enhanced Metafile.
     /// </summary>
-    class EmfCanvas : IDisposable
+    class EmfCanvas : IStatsDirectCanvas
     {
         private Metafile metaFile;
         private Graphics canvas;
-        private Stream cachedOutputStream;
+        private Stream outputStream;
+        private double width;
+        private double height;
 
         public void Dispose()
         {
@@ -22,47 +24,46 @@ namespace StatsDirect.Charting
                 canvas.Dispose();
                 canvas = null;
             }
-            if ((metaFile != null))
+            if (null != metaFile)
             {
                 metaFile.Dispose();
                 metaFile = null;
             }
-            cachedOutputStream = null;
+            outputStream = null;
         }
 
         public EmfCanvas(double width, double height)
         {
-            cachedOutputStream = new MemoryStream();
             SetupGraphics((float)width, (float)height);
         }
 
-        private void SetupGraphics(float width, float height)
+        private void SetupGraphics(float w, float h)
         {
-            if (cachedOutputStream != null)
+            width = w;
+            height = h;
+            outputStream = new MemoryStream();
+            //  Create temporary graphics object for metafile creation and get handle to its device context.
+            using (Bitmap b = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
             {
-                //  Create temporary graphics object for metafile creation and get handle to its device context.
-                using (Bitmap b = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
+                b.SetResolution(96.0f, 96.0f);
+                using (Graphics newGraphics = Graphics.FromImage(b))
                 {
-                    b.SetResolution(96.0f, 96.0f);
-                    using (Graphics newGraphics = Graphics.FromImage(b))
-                    {
-                        IntPtr hdc = newGraphics.GetHdc();
-                        cachedOutputStream.Position = 0; //  Just in case we're resetting an earlier metafile output
-                        //  Create metafile object to do the recording.
-                        metaFile = new Metafile(cachedOutputStream, hdc, new RectangleF(0, 0, width, height), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
-                        //  Create graphics object as our interface to the recording metaFile.
-                        canvas = Graphics.FromImage(metaFile);
-                        canvas.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                        //  Release handle to scratch device context.
-                        newGraphics.ReleaseHdc(hdc);
-                    }
+                    IntPtr hdc = newGraphics.GetHdc();
+                    outputStream.Position = 0; //  Just in case we're resetting an earlier metafile output
+                    //  Create metafile object to do the recording.
+                    metaFile = new Metafile(outputStream, hdc, new RectangleF(0, 0, w, h), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
+                    //  Create graphics object as our interface to the recording metaFile.
+                    canvas = Graphics.FromImage(metaFile);
+                    canvas.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    //  Release handle to scratch device context.
+                    newGraphics.ReleaseHdc(hdc);
                 }
             }
         }
 
-        public void DrawString(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, ChartRenderer chartRenderer)
+        public void DrawString(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat)
         {
-            canvas.DrawString(s, font, brush, Convert.ToSingle(x), Convert.ToSingle(chartRenderer.MetafileHeight - y), txtFormat);
+            canvas.DrawString(s, font, brush, Convert.ToSingle(x), Convert.ToSingle(height - y), txtFormat);
         }
 
         ///  <summary>
@@ -77,9 +78,8 @@ namespace StatsDirect.Charting
         ///  <param name="y"></param>
         ///  <param name="txtFormat"></param>
         ///  <param name="direction"></param>
-        /// <param name="chartRenderer"></param>
         /// <remarks></remarks>
-        public SizeF DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction, ChartRenderer chartRenderer)
+        public SizeF DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {
             //  Work out how to fiddle the text alignment
             if (txtFormat.LineAlignment == StringAlignment.Center && txtFormat.Alignment == StringAlignment.Far)
@@ -115,7 +115,7 @@ namespace StatsDirect.Charting
                 }
             }
             float angle = DirectionToAngle(direction);
-            canvas.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(chartRenderer.MetafileHeight - y));
+            canvas.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(height - y));
             canvas.RotateTransform(angle);
             canvas.DrawString(s, font, brush, 0, 0, txtFormat);
             canvas.ResetTransform();
@@ -124,9 +124,9 @@ namespace StatsDirect.Charting
             return boundingSize;
         }
 
-        public float DirectionToAngle(LabelDirection Direction)
+        private static float DirectionToAngle(LabelDirection direction)
         {
-            switch (Direction)
+            switch (direction)
             {
                 case LabelDirection.Across:
                     return 0.0F;
@@ -161,76 +161,85 @@ namespace StatsDirect.Charting
             return new SizeF();
         }
 
-        public void DrawVerticalAxisLabel(string text, StringAlignment alignment, double x, double y, ChartRenderer chartRenderer)
+        public SizeF MeasureString(string s, Font font)
         {
-            using (StringFormat txtFormat = new StringFormat())
-            {
-                txtFormat.Alignment = alignment; // StringAlignment.Near;
-                canvas.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(chartRenderer.MetafileHeight - y));
-                canvas.RotateTransform(-90.0F);
-                canvas.DrawString(text, chartRenderer.AxisLabelFont, Brushes.Black, 0, 0, txtFormat);
-                canvas.ResetTransform();
-            }
+            return canvas.MeasureString(s, font);
         }
 
-        internal SizeF MeasureString(string s, Font axisLabelFont)
+        public Stream DetachAndReturnImageStream()
         {
-            return canvas.MeasureString(s, axisLabelFont);
+            if (null != canvas)
+            {
+                canvas.Dispose();
+                canvas = null;
+            }
+            if (null != metaFile)
+            {
+                metaFile.Dispose();
+                metaFile = null;
+            }
+            if (null == outputStream)
+                return null;
+            Stream temp = outputStream;
+            outputStream = null;
+            temp.Position = 0;
+            return temp;
         }
 
         ///  <summary>
-        ///  Draw a square of side size, centred on (x, y)
+        ///  Draw a square of side size, centred on (x, y).
         ///  </summary>
-        ///  <param name="p"></param>
+        ///  <param name="p">The pen with which to draw the outline and, if filled, from which to take the fill colour.</param>
         ///  <param name="x"></param>
         ///  <param name="y"></param>
         ///  <param name="size"></param>
-        ///  <param name="fill"></param>
+        ///  <param name="fill">If true, fill the square; if false, merely draw the outline.</param>
         ///  <remarks></remarks>
-        public void DrawSquare(Pen p, double x, double y, double size, bool fill, ChartRenderer chartRenderer)
+        public void DrawSquare(Pen p, double x, double y, double size, bool fill)
         {
             double size2 = size / 2;
             PointF[] pt = new PointF[5];
             pt[0].X = Convert.ToSingle(x - size2);
-            pt[0].Y = Convert.ToSingle(chartRenderer.MetafileHeight - (y - size2));
+            pt[0].Y = Convert.ToSingle(height - (y - size2));
             pt[1].X = Convert.ToSingle(x - size2);
-            pt[1].Y = Convert.ToSingle(chartRenderer.MetafileHeight - (y + size2));
+            pt[1].Y = Convert.ToSingle(height - (y + size2));
             pt[2].X = Convert.ToSingle(x + size2);
-            pt[2].Y = Convert.ToSingle(chartRenderer.MetafileHeight - (y + size2));
+            pt[2].Y = Convert.ToSingle(height - (y + size2));
             pt[3].X = Convert.ToSingle(x + size2);
-            pt[3].Y = Convert.ToSingle(chartRenderer.MetafileHeight - (y - size2));
+            pt[3].Y = Convert.ToSingle(height - (y - size2));
             pt[4].X = Convert.ToSingle(x - size2);
-            pt[4].Y = Convert.ToSingle(chartRenderer.MetafileHeight - (y - size2));
-            if (fill)
-            {
-                canvas.FillPolygon(chartRenderer.BlackBrush, pt);
-            }
-            canvas.DrawPolygon(p, pt);
+            pt[4].Y = Convert.ToSingle(height - (y - size2));
+            DrawAndOrFillPolygon(p, fill, pt);
         }
 
         ///  <summary>
         ///  Draw a diamond of diameter size, centred on (x, y)
         ///  </summary>
-        ///  <param name="p"></param>
+        ///  <param name="p">The pen with which to draw the outline and, if filled, from which to take the fill colour.</param>
         ///  <param name="x"></param>
         ///  <param name="y"></param>
         ///  <param name="size"></param>
-        ///  <param name="fill"></param>
-        ///  <remarks></remarks>
-        public void DrawDiamond(Pen p, double x, double y, double size, bool fill, ChartRenderer chartRenderer)
+        ///  <param name="fill">If true, fill the square; if false, merely draw the outline.</param>
+        /// <remarks></remarks>
+        public void DrawDiamond(Pen p, double x, double y, double size, bool fill)
         {
             double size2 = size / 2;
             PointF[] pt = new PointF[5];
             pt[0].X = Convert.ToSingle(x - size2);
-            pt[0].Y = Convert.ToSingle(chartRenderer.MetafileHeight - y);
+            pt[0].Y = Convert.ToSingle(height - y);
             pt[1].X = Convert.ToSingle(x);
-            pt[1].Y = Convert.ToSingle(chartRenderer.MetafileHeight - (y - size2));
+            pt[1].Y = Convert.ToSingle(height - (y - size2));
             pt[2].X = Convert.ToSingle(x + size2);
-            pt[2].Y = Convert.ToSingle(chartRenderer.MetafileHeight - y);
+            pt[2].Y = Convert.ToSingle(height - y);
             pt[3].X = Convert.ToSingle(x);
-            pt[3].Y = Convert.ToSingle(chartRenderer.MetafileHeight - (y + size2));
+            pt[3].Y = Convert.ToSingle(height - (y + size2));
             pt[4].X = Convert.ToSingle(x - size2);
-            pt[4].Y = Convert.ToSingle(chartRenderer.MetafileHeight - y);
+            pt[4].Y = Convert.ToSingle(height - y);
+            DrawAndOrFillPolygon(p, fill, pt);
+        }
+
+        private void DrawAndOrFillPolygon(Pen p, bool fill, PointF[] pt)
+        {
             if (fill)
             {
                 using (Brush b = new SolidBrush(p.Color))
@@ -242,7 +251,7 @@ namespace StatsDirect.Charting
             canvas.DrawPolygon(p, pt);
         }
 
-        public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, Pen p, ChartRenderer chartRenderer)
+        public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, Pen p)
         {
             double size2 = size * 2;
 
@@ -254,12 +263,12 @@ namespace StatsDirect.Charting
                     {
                         using (Brush b = new SolidBrush(p.Color))
                         {
-                            chartRenderer.EmfCanvas.FillEllipse(b, x - size, y + size, size2, size2, chartRenderer);
+                            FillEllipse(b, x - size, y + size, size2, size2);
                         }
                     }
                     else
                     {
-                        chartRenderer.EmfCanvas.DrawEllipse(p, x - size, y + size, size2, size2, chartRenderer);
+                        DrawEllipse(p, x - size, y + size, size2, size2);
                     }
                 }
                     break;
@@ -269,18 +278,18 @@ namespace StatsDirect.Charting
                     {
                         using (Brush b = new SolidBrush(p.Color))
                         {
-                            chartRenderer.EmfCanvas.FillRectangle(b, x - size, y + size, size2, size2, chartRenderer);
+                            FillRectangle(b, x - size, y + size, size2, size2);
                         }
                     }
                     else
                     {
-                        chartRenderer.EmfCanvas.DrawRectangle(p, x - size, y + size, size2, size2, chartRenderer);
+                        DrawRectangle(p, x - size, y + size, size2, size2);
                     }
                 }
                     break;
                 case MarkerShape.Triangle:
                 {
-                    PointF[] points = { new PointF(Convert.ToSingle(x - size), Convert.ToSingle(chartRenderer.MetafileHeight2 - (y - size))), new PointF(Convert.ToSingle(x), Convert.ToSingle(chartRenderer.MetafileHeight2 - (y + size))), new PointF(Convert.ToSingle(x + size), Convert.ToSingle(chartRenderer.MetafileHeight2 - (y - size))) };
+                    PointF[] points = { new PointF(Convert.ToSingle(x - size), Convert.ToSingle(height - (y - size))), new PointF(Convert.ToSingle(x), Convert.ToSingle(height - (y + size))), new PointF(Convert.ToSingle(x + size), Convert.ToSingle(height - (y - size))) };
                     if (isFilled)
                     {
                         using (Brush b = new SolidBrush(p.Color))
@@ -296,13 +305,13 @@ namespace StatsDirect.Charting
                     break;
                 case MarkerShape.Plus:
                     //  Same filled or unfilled
-                    chartRenderer.EmfCanvas.DrawLine(p, x - size, y, x + size, y, chartRenderer);
-                    chartRenderer.EmfCanvas.DrawLine(p, x, y - size, x, y + size, chartRenderer);
+                    DrawLine(p, x - size, y, x + size, y);
+                    DrawLine(p, x, y - size, x, y + size);
                     break;
                 case MarkerShape.Cross:
                     //  Same filled or unfilled
-                    chartRenderer.EmfCanvas.DrawLine(p, x - size, y - size, x + size, y + size, chartRenderer);
-                    chartRenderer.EmfCanvas.DrawLine(p, x - size, y + size, x + size, y - size, chartRenderer);
+                    DrawLine(p, x - size, y - size, x + size, y + size);
+                    DrawLine(p, x - size, y + size, x + size, y - size);
                     break;
                 case MarkerShape.CircleLine:
                 {
@@ -310,14 +319,14 @@ namespace StatsDirect.Charting
                     {
                         using (Brush b = new SolidBrush(p.Color))
                         {
-                            chartRenderer.EmfCanvas.FillEllipse(b, x - size, y + size, size2, size2, chartRenderer);
+                            FillEllipse(b, x - size, y + size, size2, size2);
                         }
-                        chartRenderer.EmfCanvas.DrawLine(Pens.White, x, y - size, x, y + size, chartRenderer);
+                        DrawLine(Pens.White, x, y - size, x, y + size);
                     }
                     else
                     {
-                        chartRenderer.EmfCanvas.DrawEllipse(p, x - size, y + size, size2, size2, chartRenderer);
-                        chartRenderer.EmfCanvas.DrawLine(p, x, y - size, x, y + size, chartRenderer);
+                        DrawEllipse(p, x - size, y + size, size2, size2);
+                        DrawLine(p, x, y - size, x, y + size);
                     }
                 }
                     break;
@@ -326,14 +335,14 @@ namespace StatsDirect.Charting
                     {
                         using (Brush b = new SolidBrush(p.Color))
                         {
-                            chartRenderer.EmfCanvas.FillRectangle(b, x - size, y + size, size2, size2, chartRenderer);
+                            FillRectangle(b, x - size, y + size, size2, size2);
                         }
-                        chartRenderer.EmfCanvas.DrawLine(Pens.White, x - size, y + size, x + size, y - size, chartRenderer);
+                        DrawLine(Pens.White, x - size, y + size, x + size, y - size);
                     }
                     else
                     {
-                        chartRenderer.EmfCanvas.DrawRectangle(p, x - size, y + size, size2, size2, chartRenderer);
-                        chartRenderer.EmfCanvas.DrawLine(p, x - size, y + size, x + size, y - size, chartRenderer);
+                        DrawRectangle(p, x - size, y + size, size2, size2);
+                        DrawLine(p, x - size, y + size, x + size, y - size);
                     }
                     break;
                 case MarkerShape.SquareCross:
@@ -341,76 +350,52 @@ namespace StatsDirect.Charting
                     {
                         using (Brush b = new SolidBrush(p.Color))
                         {
-                            chartRenderer.EmfCanvas.FillRectangle(b, x - size, y + size, size2, size2, chartRenderer);
+                            FillRectangle(b, x - size, y + size, size2, size2);
                         }
-                        chartRenderer.EmfCanvas.DrawLine(Pens.White, x - size, y - size, x + size, y + size, chartRenderer);
-                        chartRenderer.EmfCanvas.DrawLine(Pens.White, x - size, y + size, x + size, y - size, chartRenderer);
+                        DrawLine(Pens.White, x - size, y - size, x + size, y + size);
+                        DrawLine(Pens.White, x - size, y + size, x + size, y - size);
                     }
                     else
                     {
-                        chartRenderer.EmfCanvas.DrawRectangle(p, x - size, y + size, size2, size2, chartRenderer);
-                        chartRenderer.EmfCanvas.DrawLine(p, x - size, y - size, x + size, y + size, chartRenderer);
-                        chartRenderer.EmfCanvas.DrawLine(p, x - size, y + size, x + size, y - size, chartRenderer);
+                        DrawRectangle(p, x - size, y + size, size2, size2);
+                        DrawLine(p, x - size, y - size, x + size, y + size);
+                        DrawLine(p, x - size, y + size, x + size, y - size);
                     }
                     break;
                 case MarkerShape.Diamond:
-                    DrawDiamond(p, x, y, size2, isFilled, chartRenderer);
+                    DrawDiamond(p, x, y, size2, isFilled);
                     break;
                 default:
                     throw new ArgumentException("Don't know how to draw style's shape", "shape");
             }
-
         }
 
-        public void FillEllipse(Brush b, double x, double y, double width, double height, ChartRenderer chartRenderer)
+        private void FillEllipse(Brush b, double x, double y, double w, double h)
         {
-            canvas.FillEllipse(b, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(chartRenderer.MetafileHeight - y)), Convert.ToInt32(Convert.ToSingle(width)), Convert.ToInt32(Convert.ToSingle(height)));
+            canvas.FillEllipse(b, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
         }
 
-        public void DrawEllipse(Pen p, double x, double y, double width, double height, ChartRenderer chartRenderer)
+        private void DrawEllipse(Pen p, double x, double y, double w, double h)
         {
-            canvas.DrawEllipse(p, Convert.ToSingle(x), Convert.ToSingle(chartRenderer.MetafileHeight - y), Convert.ToSingle(width), Convert.ToSingle(height));
+            canvas.DrawEllipse(p, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
-        public void FillRectangle(Brush b, double x, double y, double width, double height, ChartRenderer chartRenderer)
+        public void FillRectangle(Brush b, double x, double y, double w, double h)
         {
-            canvas.FillRectangle(b, Convert.ToSingle(x), Convert.ToSingle(chartRenderer.MetafileHeight - y), Convert.ToSingle(width), Convert.ToSingle(height));
+            canvas.FillRectangle(b, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
-        public void DrawRectangle(Pen p, double x, double y, double width, double height, ChartRenderer chartRenderer)
+        public void DrawRectangle(Pen p, double x, double y, double w, double h)
         {
-            canvas.DrawRectangle(p, Convert.ToSingle(x), Convert.ToSingle(chartRenderer.MetafileHeight - y), Convert.ToSingle(width), Convert.ToSingle(height));
+            canvas.DrawRectangle(p, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
-        public void DrawLine(Pen p, double x1, double y1, double x2, double y2, ChartRenderer chartRenderer)
+        public void DrawLine(Pen p, double x1, double y1, double x2, double y2)
         {
-            canvas.DrawLine(p, Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(chartRenderer.MetafileHeight - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(chartRenderer.MetafileHeight - y2, 0)));
+            canvas.DrawLine(p, Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(height - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(height - y2, 0)));
         }
 
-        public void DrawRotatedTitle(string title, double x, double y, ChartRenderer chartRenderer)
-        {
-            if (!(string.IsNullOrEmpty(title)))
-            {
-                using (StringFormat txtFormat = new StringFormat())
-                {
-                    txtFormat.Alignment = StringAlignment.Center;
-                    canvas.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(y));
-                    canvas.RotateTransform(-90.0F);
-                    canvas.DrawString(title, chartRenderer.AxisTitleFont, Brushes.Black, 0, 0, txtFormat);
-                    canvas.ResetTransform();
-                }
-            }
-        }
-
-        public void DrawRotatedLabel(double xPos, double yPos, float angle, string title, StringFormat txtFormat, ChartRenderer chartRenderer)
-        {
-            canvas.TranslateTransform(Convert.ToSingle(xPos), Convert.ToSingle(yPos));
-            canvas.RotateTransform(angle);
-            canvas.DrawString(title, chartRenderer.AxisLabelFont1, chartRenderer.AxisBrush, 0, 0, txtFormat);
-            canvas.ResetTransform();
-        }
-
-        internal double GetFontHeight(Font f)
+        public double GetFontHeight(Font f)
         {
             return f.GetHeight(canvas);
         }
