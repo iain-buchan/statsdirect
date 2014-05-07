@@ -1,5 +1,5 @@
-#define RELEASE_EXCEPTIONS
-//#define WATCH_EXCEPTIONS
+// #define RELEASE_EXCEPTIONS
+#define WATCH_EXCEPTIONS
 
 // If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
 // Current uses:
@@ -477,8 +477,8 @@ namespace StatsDirect.UI
             try
             {
 #endif
-                Operation operation = TemplateFactory.Operations[operationName];
-                SdApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
+            Operation operation = TemplateFactory.Operations[operationName];
+            SdApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
 #if RELEASE_EXCEPTIONS
             }
             catch (Exception ex)
@@ -695,7 +695,7 @@ namespace StatsDirect.UI
                 if (null == e.TabPage)
                     return;
 
-                WindowInformation info = (WindowInformation) e.TabPage.Tag;
+                WindowInformation info = (WindowInformation)e.TabPage.Tag;
                 // The tab may be asked to activate while it is still being set up, hence before it has an associated window.  Handle that case.
                 if (null != info && info.HasWindow && !activatingViaWindow)
                 {
@@ -840,7 +840,7 @@ namespace StatsDirect.UI
                 bool cancel = false;
                 foreach (Form child in MdiChildren)
                 {
-                    if (child is StatsDirectForm && !((StatsDirectForm) child).SafeToClose)
+                    if (child is StatsDirectForm && !((StatsDirectForm)child).SafeToClose)
                         cancel = true;
                 }
                 if (cancel)
@@ -1443,38 +1443,44 @@ namespace StatsDirect.UI
         /// <remarks>Even if the panel is already shown, this re-shows; this is because the panel sometimes requires resizing.</remarks>
         private void ShowPanel(PanelType panelType, bool enforceHeightOnOperations)
         {
-            pnlTop.SuspendLayout();
-            pnlOperations.Visible = PanelType.Operations == panelType;
-            pnlSelection.Visible = PanelType.Selection == panelType;
-            pnlDefault.Visible = PanelType.Default == panelType;
-            pnlProgress.Visible = PanelType.Progress == panelType;
-            pnlModalMessage.Visible = PanelType.ModalMessage == panelType;
-            switch (panelType)
+            try
             {
-                case PanelType.Default:
-                    pnlDefault.BringToFront();
-                    pnlTop.Height = pnlDefault.Height;
-                    break;
-                case PanelType.ModalMessage:
-                    pnlModalMessage.BringToFront();
-                    pnlTop.Height = Math.Max(pnlModalMessage.PreferredSize.Height, 58);
-                    break;
-                case PanelType.Operations:
-                    pnlOperations.BringToFront();
-                    ResizeContainer(enforceHeightOnOperations);
-                    break;
-                case PanelType.Progress:
-                    pnlProgress.BringToFront();
-                    pnlTop.Height = pnlProgress.Height;
-                    break;
-                case PanelType.Selection:
-                    pnlSelection.BringToFront();
-                    pnlTop.Height = pnlSelection.Height;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("panelType", panelType, "Unknown panel type to be shown");
+                pnlTop.SuspendLayout();
+                pnlOperations.Visible = PanelType.Operations == panelType;
+                pnlSelection.Visible = PanelType.Selection == panelType;
+                pnlDefault.Visible = PanelType.Default == panelType;
+                pnlProgress.Visible = PanelType.Progress == panelType;
+                pnlModalMessage.Visible = PanelType.ModalMessage == panelType;
+                switch (panelType)
+                {
+                    case PanelType.Default:
+                        pnlDefault.BringToFront();
+                        pnlTop.Height = pnlDefault.Height;
+                        break;
+                    case PanelType.ModalMessage:
+                        pnlModalMessage.BringToFront();
+                        pnlTop.Height = Math.Max(pnlModalMessage.PreferredSize.Height, 58);
+                        break;
+                    case PanelType.Operations:
+                        pnlOperations.BringToFront();
+                        ResizeContainer(enforceHeightOnOperations);
+                        break;
+                    case PanelType.Progress:
+                        pnlProgress.BringToFront();
+                        pnlTop.Height = pnlProgress.Height;
+                        break;
+                    case PanelType.Selection:
+                        pnlSelection.BringToFront();
+                        pnlTop.Height = pnlSelection.Height;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("panelType", panelType, "Unknown panel type to be shown");
+                }
             }
-            pnlTop.ResumeLayout();
+            finally
+            {
+                pnlTop.ResumeLayout();
+            }
             currentPanelType = panelType;
         }
 
@@ -2250,94 +2256,58 @@ namespace StatsDirect.UI
                     switch (parameter.Type)
                     {
                         case ParameterType.Boolean:
-                            {
-                                fp = PrepareCombinedParameter(processor, (BooleanParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (BooleanParameter)parameter, context);
+                            break;
                         case ParameterType.ConfidenceInterval:
-                            {
-                                fp = PrepareCombinedParameter(processor, (ConfidenceIntervalParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (ConfidenceIntervalParameter)parameter, context);
+                            break;
                         case ParameterType.Custom:
-                            {
-                                if (typeof(ChartOptionsParameter) == parameter.GetType())
-                                {
-                                    fp = PrepareCombinedParameter((ChartOptionsParameter)parameter);
-                                }
-                                else if (typeof(FillableParameter) == parameter.GetType())
-                                {
-                                    fp = PrepareCombinedParameter(host, (FillableParameter)parameter);
-                                }
-                                else
-                                    throw new ArgumentOutOfRangeException("processor", "Must be a ChartOptionsParameter or FillableParameter if it is a custom parameter");
-                                break;
-                            }
+                            if (typeof(ChartOptionsParameter) == parameter.GetType())
+                                fp = PrepareCombinedParameter((ChartOptionsParameter)parameter);
+                            else if (typeof(FillableParameter) == parameter.GetType())
+                                fp = PrepareCombinedParameter(host, (FillableParameter)parameter);
+                            else
+                                throw new ArgumentOutOfRangeException("processor", "Must be a ChartOptionsParameter or FillableParameter if it is a custom parameter");
+                            break;
                         case ParameterType.Date:
-                            {
-                                fp = PrepareCombinedParameter(processor, (DateParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (DateParameter)parameter, context);
+                            break;
                         case ParameterType.Double:
-                            {
-                                fp = PrepareCombinedParameter(processor, (DoubleParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (DoubleParameter)parameter, context);
+                            break;
                         case ParameterType.Double2By2:
-                            {
-                                fp = PrepareCombinedParameter(processor, (Double2By2Parameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (Double2By2Parameter)parameter, context);
+                            break;
                         case ParameterType.Double2By2ByK:
-                            {
-                                fp = PrepareCombinedParameter(processor, (Double2By2ByKParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (Double2By2ByKParameter)parameter, context);
+                            break;
                         case ParameterType.EditGrid:
-                            {
-                                fp = PrepareCombinedParameter(processor, (EditGridParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (EditGridParameter)parameter, context);
+                            break;
                         case ParameterType.Grid:
-                            {
-                                fp = PrepareCombinedParameter(processor, (GridParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (GridParameter)parameter, context);
+                            break;
                         case ParameterType.Integer:
-                            {
-                                fp = PrepareCombinedParameter(processor, (IntegerParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (IntegerParameter)parameter, context);
+                            break;
                         case ParameterType.Option:
-                            {
-                                fp = PrepareCombinedParameter(processor, (OptionParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (OptionParameter)parameter, context);
+                            break;
                         case ParameterType.Options:
-                            {
-                                fp = PrepareCombinedParameter(processor, (OptionsParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (OptionsParameter)parameter, context);
+                            break;
                         case ParameterType.PickFromList:
-                            {
-                                fp = PrepareCombinedParameter(processor, (PickFromListParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (PickFromListParameter)parameter, context);
+                            break;
                         case ParameterType.PickVariables:
-                            {
-                                fp = PrepareCombinedParameter(processor, (PickVariablesParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (PickVariablesParameter)parameter, context);
+                            break;
                         case ParameterType.Special:
-                            {
-                                fp = PrepareCombinedParameter(processor, (SpecialParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (SpecialParameter)parameter, context);
+                            break;
                         case ParameterType.String:
-                            {
-                                fp = PrepareCombinedParameter(processor, (StringParameter)parameter, context);
-                                break;
-                            }
+                            fp = PrepareCombinedParameter(processor, (StringParameter)parameter, context);
+                            break;
                         default:
                             throw new Exception("parameter.Type: Only Boolean, ConfidenceInterval, Double, Integer parameters may be combined");
                     }
@@ -2373,6 +2343,16 @@ namespace StatsDirect.UI
             }
             finally
             {
+                // Make absolutely certain we haven't suspended layout on pnlUser and not fixed that.
+                pnlUser.ResumeLayout();
+                TableLayoutPanel tlp = GetUserInputTable();
+                if (null != tlp)
+                {
+                    tlp.ResumeLayout(true);
+                    foreach (Control col in tlp.Controls)
+                        col.ResumeLayout();
+                }
+
                 // Make absolutely certain a parameter doesn't survive between operations on the confidence interval drop-down
                 cboConfidenceInterval.Tag = null;
 
@@ -2381,6 +2361,11 @@ namespace StatsDirect.UI
             }
         }
 
+        /// <summary>
+        /// Return the i'th column in the user input table, creating it and any prior columns if necessary.  The columns are created with layout suspended.
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
         private TableLayoutPanel GetUserInputTableForColumn(int column)
         {
             TableLayoutPanel tlp = GetUserInputTable();
@@ -2539,16 +2524,15 @@ namespace StatsDirect.UI
                 GrowStyle = TableLayoutPanelGrowStyle.AddColumns,
                 Width = pnlUser.Width,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                Tag = "TopLevelUserTable"
+                Tag = "TopLevelUserTable",
+                Location = new Point(0, 0),
+                Margin = new Padding(0, 0, 0, 0)
             };
             tlp.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            tlp.Location = new Point(0, 0);
-            tlp.Margin = new Padding(0, 0, 0, 0);
 
             // Expect to use at least one column if we're being created at all
             TableLayoutPanel col0 = CreateUserInputColumn();
             tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            // col0.SuspendLayout();
             tlp.Controls.Add(col0);
             tlp.SetCellPosition(col0, new TableLayoutPanelCellPosition(tlp.ColumnCount - 1, 0));
 
@@ -3111,69 +3095,69 @@ namespace StatsDirect.UI
         {
             try
             {
-            // Find our control and get tag data
-            Button cmdPrevious = (Button)sender;
-            FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)cmdPrevious.Parent;
-            Label lblStratum = (Label)pnlNavigation.Controls[1];
-            Button cmdNext = (Button)pnlNavigation.Controls[2];
-            TableLayoutPanel panel2By2ByK = (TableLayoutPanel)pnlNavigation.Parent;
-            TextBox txtTl = (TextBox)panel2By2ByK.GetControlFromPosition(0, 2);
-            TextBox txtTr = (TextBox)panel2By2ByK.GetControlFromPosition(1, 2);
-            TextBox txtBl = (TextBox)panel2By2ByK.GetControlFromPosition(0, 3);
-            TextBox txtBr = (TextBox)panel2By2ByK.GetControlFromPosition(1, 3);
+                // Find our control and get tag data
+                Button cmdPrevious = (Button)sender;
+                FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)cmdPrevious.Parent;
+                Label lblStratum = (Label)pnlNavigation.Controls[1];
+                Button cmdNext = (Button)pnlNavigation.Controls[2];
+                TableLayoutPanel panel2By2ByK = (TableLayoutPanel)pnlNavigation.Parent;
+                TextBox txtTl = (TextBox)panel2By2ByK.GetControlFromPosition(0, 2);
+                TextBox txtTr = (TextBox)panel2By2ByK.GetControlFromPosition(1, 2);
+                TextBox txtBl = (TextBox)panel2By2ByK.GetControlFromPosition(0, 3);
+                TextBox txtBr = (TextBox)panel2By2ByK.GetControlFromPosition(1, 3);
 
-            int stratum = (int)lblStratum.Tag;
-            List<double>[] newData = (List<double>[])pnlNavigation.Tag;
-            List<double> var1Data = newData[0];
-            List<double> var2Data = newData[1];
+                int stratum = (int)lblStratum.Tag;
+                List<double>[] newData = (List<double>[])pnlNavigation.Tag;
+                List<double> var1Data = newData[0];
+                List<double> var2Data = newData[1];
 
-            // Fill the stored data from the text boxes
-            int offset = (stratum - 1) * 2;
-            double tl = Parsing.Cdbl_Txt(txtTl.Text);
-            double tr = Parsing.Cdbl_Txt(txtTr.Text);
-            double bl = Parsing.Cdbl_Txt(txtBl.Text);
-            double br = Parsing.Cdbl_Txt(txtBr.Text);
-            while (var1Data.Count < stratum * 2)
-            {
-                var1Data.Add(Constant.MISSING);
-                var2Data.Add(Constant.MISSING);
-            }
-            var1Data[offset] = tl;
-            var2Data[offset] = tr;
-            var1Data[offset + 1] = bl;
-            var2Data[offset + 1] = br;
+                // Fill the stored data from the text boxes
+                int offset = (stratum - 1) * 2;
+                double tl = Parsing.Cdbl_Txt(txtTl.Text);
+                double tr = Parsing.Cdbl_Txt(txtTr.Text);
+                double bl = Parsing.Cdbl_Txt(txtBl.Text);
+                double br = Parsing.Cdbl_Txt(txtBr.Text);
+                while (var1Data.Count < stratum * 2)
+                {
+                    var1Data.Add(Constant.MISSING);
+                    var2Data.Add(Constant.MISSING);
+                }
+                var1Data[offset] = tl;
+                var2Data[offset] = tr;
+                var1Data[offset + 1] = bl;
+                var2Data[offset + 1] = br;
 
-            // #744: Test for all-missing in the end stratum; delete it if so
-            int strata = newData[0].Count / 2;
-            int lastOffset = (strata - 1) * 2;
-            if (var1Data[lastOffset] == Constant.MISSING && var2Data[lastOffset] == Constant.MISSING && var1Data[lastOffset + 1] == Constant.MISSING && var2Data[lastOffset + 1] == Constant.MISSING)
-            {
-                --strata;
-                var1Data.RemoveAt(lastOffset + 1);
-                var1Data.RemoveAt(lastOffset);
-                var2Data.RemoveAt(lastOffset + 1);
-                var2Data.RemoveAt(lastOffset);
-            }
+                // #744: Test for all-missing in the end stratum; delete it if so
+                int strata = newData[0].Count / 2;
+                int lastOffset = (strata - 1) * 2;
+                if (var1Data[lastOffset] == Constant.MISSING && var2Data[lastOffset] == Constant.MISSING && var1Data[lastOffset + 1] == Constant.MISSING && var2Data[lastOffset + 1] == Constant.MISSING)
+                {
+                    --strata;
+                    var1Data.RemoveAt(lastOffset + 1);
+                    var1Data.RemoveAt(lastOffset);
+                    var2Data.RemoveAt(lastOffset + 1);
+                    var2Data.RemoveAt(lastOffset);
+                }
 
 
-            if (stratum > 1)
-                --stratum;
-            lblStratum.Tag = stratum;
+                if (stratum > 1)
+                    --stratum;
+                lblStratum.Tag = stratum;
 
-            // Fill the text boxes from the stored data
-            offset = (stratum - 1) * 2;
-            txtTl.BackColor = SystemColors.Window;
-            txtTr.BackColor = SystemColors.Window;
-            txtBl.BackColor = SystemColors.Window;
-            txtBr.BackColor = SystemColors.Window;
-            txtTl.Text = Formatting.XUnrounded(var1Data[offset]);
-            txtTr.Text = Formatting.XUnrounded(var2Data[offset]);
-            txtBl.Text = Formatting.XUnrounded(var1Data[offset + 1]);
-            txtBr.Text = Formatting.XUnrounded(var2Data[offset + 1]);
-            lblStratum.Text = "Stratum " + stratum + " of " + strata;
+                // Fill the text boxes from the stored data
+                offset = (stratum - 1) * 2;
+                txtTl.BackColor = SystemColors.Window;
+                txtTr.BackColor = SystemColors.Window;
+                txtBl.BackColor = SystemColors.Window;
+                txtBr.BackColor = SystemColors.Window;
+                txtTl.Text = Formatting.XUnrounded(var1Data[offset]);
+                txtTr.Text = Formatting.XUnrounded(var2Data[offset]);
+                txtBl.Text = Formatting.XUnrounded(var1Data[offset + 1]);
+                txtBr.Text = Formatting.XUnrounded(var2Data[offset + 1]);
+                lblStratum.Text = "Stratum " + stratum + " of " + strata;
 
-            cmdPrevious.Enabled = stratum > 1;
-            cmdNext.Enabled = true;
+                cmdPrevious.Enabled = stratum > 1;
+                cmdNext.Enabled = true;
             }
             catch (Exception ex)
             {
@@ -3185,67 +3169,67 @@ namespace StatsDirect.UI
         {
             try
             {
-            // Find our control and get tag data
-            Button cmdNext = (Button)sender;
-            FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)cmdNext.Parent;
-            Label lblStratum = (Label)pnlNavigation.Controls[1];
-            Button cmdPrevious = (Button)pnlNavigation.Controls[0];
-            TableLayoutPanel panel2By2ByK = (TableLayoutPanel)pnlNavigation.Parent;
-            TextBox txtTL = (TextBox)panel2By2ByK.GetControlFromPosition(0, 2);
-            TextBox txtTR = (TextBox)panel2By2ByK.GetControlFromPosition(1, 2);
-            TextBox txtBL = (TextBox)panel2By2ByK.GetControlFromPosition(0, 3);
-            TextBox txtBR = (TextBox)panel2By2ByK.GetControlFromPosition(1, 3);
+                // Find our control and get tag data
+                Button cmdNext = (Button)sender;
+                FlowLayoutPanel pnlNavigation = (FlowLayoutPanel)cmdNext.Parent;
+                Label lblStratum = (Label)pnlNavigation.Controls[1];
+                Button cmdPrevious = (Button)pnlNavigation.Controls[0];
+                TableLayoutPanel panel2By2ByK = (TableLayoutPanel)pnlNavigation.Parent;
+                TextBox txtTL = (TextBox)panel2By2ByK.GetControlFromPosition(0, 2);
+                TextBox txtTR = (TextBox)panel2By2ByK.GetControlFromPosition(1, 2);
+                TextBox txtBL = (TextBox)panel2By2ByK.GetControlFromPosition(0, 3);
+                TextBox txtBR = (TextBox)panel2By2ByK.GetControlFromPosition(1, 3);
 
-            int stratum = (int)lblStratum.Tag;
-            List<double>[] newData = (List<double>[])pnlNavigation.Tag;
-            List<double> var1Data = newData[0];
-            List<double> var2Data = newData[1];
+                int stratum = (int)lblStratum.Tag;
+                List<double>[] newData = (List<double>[])pnlNavigation.Tag;
+                List<double> var1Data = newData[0];
+                List<double> var2Data = newData[1];
 
-            // Fill the stored data from the text boxes
-            int offset = (stratum - 1) * 2;
-            int strata = newData[0].Count / 2;
-            double tl = Parsing.Cdbl_Txt(txtTL.Text);
-            double tr = Parsing.Cdbl_Txt(txtTR.Text);
-            double bl = Parsing.Cdbl_Txt(txtBL.Text);
-            double br = Parsing.Cdbl_Txt(txtBR.Text);
-            while (var1Data.Count < stratum * 2)
-            {
-                var1Data.Add(Constant.MISSING);
-                var2Data.Add(Constant.MISSING);
-            }
-            var1Data[offset] = tl;
-            var2Data[offset] = tr;
-            var1Data[offset + 1] = bl;
-            var2Data[offset + 1] = br;
+                // Fill the stored data from the text boxes
+                int offset = (stratum - 1) * 2;
+                int strata = newData[0].Count / 2;
+                double tl = Parsing.Cdbl_Txt(txtTL.Text);
+                double tr = Parsing.Cdbl_Txt(txtTR.Text);
+                double bl = Parsing.Cdbl_Txt(txtBL.Text);
+                double br = Parsing.Cdbl_Txt(txtBR.Text);
+                while (var1Data.Count < stratum * 2)
+                {
+                    var1Data.Add(Constant.MISSING);
+                    var2Data.Add(Constant.MISSING);
+                }
+                var1Data[offset] = tl;
+                var2Data[offset] = tr;
+                var1Data[offset + 1] = bl;
+                var2Data[offset + 1] = br;
 
-            stratum++;
-            lblStratum.Tag = stratum;
+                stratum++;
+                lblStratum.Tag = stratum;
 
-            // Fill the text boxes from the stored data
-            offset = (stratum - 1) * 2;
-            if (offset < var1Data.Count)
-            {
-                txtTL.Text = Formatting.XUnrounded(var1Data[offset]);
-                txtTR.Text = Formatting.XUnrounded(var2Data[offset]);
-                txtBL.Text = Formatting.XUnrounded(var1Data[offset + 1]);
-                txtBR.Text = Formatting.XUnrounded(var2Data[offset + 1]);
-            }
-            else
-            {
-                // New stratum
-                txtTL.Clear();
-                txtTR.Clear();
-                txtBL.Clear();
-                txtBR.Clear();
-            }
-            lblStratum.Text = "Stratum " + stratum + " of " + (Math.Max(strata, stratum));
-            txtTL.BackColor = SystemColors.Window;
-            txtTR.BackColor = SystemColors.Window;
-            txtBL.BackColor = SystemColors.Window;
-            txtBR.BackColor = SystemColors.Window;
+                // Fill the text boxes from the stored data
+                offset = (stratum - 1) * 2;
+                if (offset < var1Data.Count)
+                {
+                    txtTL.Text = Formatting.XUnrounded(var1Data[offset]);
+                    txtTR.Text = Formatting.XUnrounded(var2Data[offset]);
+                    txtBL.Text = Formatting.XUnrounded(var1Data[offset + 1]);
+                    txtBR.Text = Formatting.XUnrounded(var2Data[offset + 1]);
+                }
+                else
+                {
+                    // New stratum
+                    txtTL.Clear();
+                    txtTR.Clear();
+                    txtBL.Clear();
+                    txtBR.Clear();
+                }
+                lblStratum.Text = "Stratum " + stratum + " of " + (Math.Max(strata, stratum));
+                txtTL.BackColor = SystemColors.Window;
+                txtTR.BackColor = SystemColors.Window;
+                txtBL.BackColor = SystemColors.Window;
+                txtBR.BackColor = SystemColors.Window;
 
-            cmdPrevious.Enabled = true;
-            cmdNext.Enabled = true; // Can always Next to create another stratum
+                cmdPrevious.Enabled = true;
+                cmdNext.Enabled = true; // Can always Next to create another stratum
             }
             catch (Exception ex)
             {
@@ -3327,7 +3311,7 @@ namespace StatsDirect.UI
                     ctl = new ctlDummyOptions((Builtins.DummyOptions)fillable);
                     break;
                 case "Extraction":
-                    Builtins.ExtractionOptions f = (Builtins.ExtractionOptions) fillable;
+                    Builtins.ExtractionOptions f = (Builtins.ExtractionOptions)fillable;
                     if (null == f.IdentifiersFrame)
                         ctl = new ctlFindAndReplaceData(f);
                     else
@@ -3385,7 +3369,7 @@ namespace StatsDirect.UI
             foreach (Control child in root.Controls)
             {
                 if (child is WorkbookView)
-                    return (WorkbookView) child;
+                    return (WorkbookView)child;
                 if (child.Controls.Count > 0)
                 {
                     WorkbookView found = FindGridOrNull(child);
@@ -3813,37 +3797,43 @@ namespace StatsDirect.UI
             bool layoutSuspended = false;
             bool atLeastOneVisibilityChange = false;
 
-            foreach (Control column in tlp.Controls)
+            try
             {
-                foreach (Control control in column.Controls)
+                foreach (Control column in tlp.Controls)
                 {
-                    if (null != control.Tag)
+                    foreach (Control control in column.Controls)
                     {
-                        Parameter parameter = (Parameter)control.Tag;
-                        if (parameter.HasAcquireIfTrue)
+                        if (null != control.Tag)
                         {
-                            if (null == processor)
-                                processor = new TemplateProcessor(SdApplication.SoleInstance);
-                            bool shouldAcquire = parameter.AcquireIfTrue(processor, ambientParameters);
-                            if (control.Visible != shouldAcquire)
-                                atLeastOneVisibilityChange = true;
-                            if (!layoutSuspended)
+                            Parameter parameter = (Parameter)control.Tag;
+                            if (parameter.HasAcquireIfTrue)
                             {
-                                tlp.SuspendLayout();
-                                foreach (Control col in tlp.Controls)
-                                    col.SuspendLayout();
-                                layoutSuspended = true;
+                                if (null == processor)
+                                    processor = new TemplateProcessor(SdApplication.SoleInstance);
+                                bool shouldAcquire = parameter.AcquireIfTrue(processor, ambientParameters);
+                                if (control.Visible != shouldAcquire)
+                                    atLeastOneVisibilityChange = true;
+                                if (!layoutSuspended)
+                                {
+                                    tlp.SuspendLayout();
+                                    foreach (Control col in tlp.Controls)
+                                        col.SuspendLayout();
+                                    layoutSuspended = true;
+                                }
+                                control.Visible = shouldAcquire;
                             }
-                            control.Visible = shouldAcquire;
                         }
                     }
                 }
             }
-            if (layoutSuspended)
+            finally
             {
-                tlp.ResumeLayout(true);
-                foreach (Control col in tlp.Controls)
-                    col.ResumeLayout();
+                if (layoutSuspended)
+                {
+                    tlp.ResumeLayout(true);
+                    foreach (Control col in tlp.Controls)
+                        col.ResumeLayout();
+                }
             }
             return atLeastOneVisibilityChange;
         }
@@ -3907,7 +3897,7 @@ namespace StatsDirect.UI
                               {
                                   Padding = new Padding(3, 6, 3, 3),
                                   AutoSize = true,
-                                  Text = "Variable " + (v + 1).ToString()
+                                  Text = parameter.LabelAs(processor, context, v)
                               };
                 holder.Controls.Add(l);
             }
@@ -4796,7 +4786,7 @@ namespace StatsDirect.UI
                                 {
                                     if (var1Data[i] == Constant.MISSING || var2Data[i] == Constant.MISSING)
                                     {
-                                        int failedStratum = i/2; // Deliberately truncate - if i = 3, it's stratum (3/2) = 1.
+                                        int failedStratum = i / 2; // Deliberately truncate - if i = 3, it's stratum (3/2) = 1.
                                         tl = var1Data[failedStratum * 2];
                                         tr = var2Data[failedStratum * 2];
                                         bl = var1Data[failedStratum * 2 + 1];

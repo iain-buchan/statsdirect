@@ -8,24 +8,26 @@ namespace StatsDirect.Charting
     ///  <remarks></remarks>
     [Serializable]
     public class SeriesOptionsDescriptor  
-    { 
-        public string SeriesName; 
-        public bool AllowChangeToMarkerType; 
-        public bool AllowChangeToMarkerSize; 
-        public bool AllowChangeToMarkerColour; 
-        public bool AllowChangeToLineThickness; 
-        public bool AllowChangeToDashStyle; 
-        public bool AllowChangeToFill; 
+    {
+        public string SeriesName { get; set; }
+        public bool AllowChangeToMarkerType { get; set; }
+        public bool AllowChangeToMarkerSize { get; set; }
+        public bool AllowChangeToMarkerColour { get; set; }
+        public bool AllowChangeToLineColour { get; set; }
+        public bool AllowChangeToLineThickness { get; set; }
+        public bool AllowChangeToDashStyle { get; set; }
+        public bool AllowChangeToFill { get; set; }
         ///  <summary>
         ///  The index of the marker that this descriptor will affect.  This is designed to allow multiple descriptors to affect the same marker.
         ///  </summary>
-        public int MarkerIndex; 
+        public int MarkerIndex { get; set; }
         
         public SeriesOptionsDescriptor() 
         { 
             AllowChangeToDashStyle = true; 
             AllowChangeToLineThickness = true; 
-            AllowChangeToMarkerColour = true; 
+            AllowChangeToMarkerColour = true;
+            AllowChangeToLineColour = true;
             AllowChangeToMarkerSize = true; 
             AllowChangeToMarkerType = true; 
             AllowChangeToFill = false; 

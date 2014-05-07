@@ -10,10 +10,10 @@ namespace StatsDirect.Charting
         public double[] Data { get; set; }
 
         //  Similar to markers
-        internal Pen UnstyledPen { get; set; }
-        internal Pen StyledPen { get; set; }
-        internal MarkerShape Shape { get; set; }
-        internal bool IsFilled { get; set; }
+        internal Pen MarkerPen { get; set; }
+        internal Pen LinePen { get; set; }
+        internal MarkerShape MarkerShape { get; set; }
+        internal bool IsMarkerFilled { get; set; }
         internal double MarkerSize { get; set; }
 
         private bool hasSum;
@@ -35,7 +35,6 @@ namespace StatsDirect.Charting
             Title = title;
         }
 
-        // TRANSMISSINGCOMMENT: Property Points
         public int Points
         {
             get
@@ -44,7 +43,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property Sum
         public double Sum
         {
             get
@@ -66,7 +64,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property StdDev
         public double StdDev
         {
             get
@@ -90,7 +87,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property Min
         public double Min
         {
             get
@@ -103,7 +99,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property Max
         public double Max
         {
             get
@@ -116,7 +111,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Method CalcMinMax
         private void CalcMinMax()
         {
             double mn = double.MaxValue;
@@ -141,7 +135,6 @@ namespace StatsDirect.Charting
         }
 
 
-        // TRANSMISSINGCOMMENT: Property AsDoubleSeries
         public override DoubleSeries AsDoubleSeries
         {
             get

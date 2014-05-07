@@ -5,13 +5,14 @@ namespace StatsDirect.UI
     public partial class ctlOneSeriesOptions : UserControl
     {
         Charting.MarkerType markerType;
-        bool useColour;
-        bool showMarkerStyle;
-        bool showMarkerSize;
-        bool showMarkerColour;
-        bool showLineThickness;
-        bool showDashStyle;
-        bool showFillStyle;
+        private bool useColour;
+        private bool showMarkerStyle;
+        private bool showMarkerSize;
+        private bool showMarkerColour;
+        private bool showLineColour;
+        private bool showLineThickness;
+        private bool showDashStyle;
+        private bool showFillStyle;
 
         public ctlOneSeriesOptions()
         {
@@ -44,7 +45,17 @@ namespace StatsDirect.UI
             set
             {
                 showMarkerColour = value;
-                grpColour.Visible = value && useColour;
+                grpMarkerColour.Visible = value && useColour;
+            }
+        }
+
+        public bool ShowLineColour
+        {
+            get { return showLineColour; }
+            set
+            {
+                showLineColour = value;
+                grpLineColour.Visible = value && useColour;
             }
         }
 
@@ -102,15 +113,16 @@ namespace StatsDirect.UI
             if (null != markerType)
             {
                 lineThickness.LineThickness = (int)markerType.Width;
-                ctlDashStyle1.DashStyle = markerType.Style;
-                ctlMarkerShape1.MarkerShape = markerType.Shape;
-                colorPanel.Color = markerType.Color;
-                chkFillMarker.Checked = markerType.IsFilled;
+                dashStyler.DashStyle = markerType.LineDashStyle;
+                markerShaper.MarkerShape = markerType.MarkerShape;
+                markerColorPanel.Color = markerType.MarkerColor;
+                lineColorPanel.Color = markerType.LineColor;
+                chkFillMarker.Checked = markerType.IsMarkerFilled;
                 string markerString = markerType.MarkerSize.ToString();
                 cboMarkerSize.Text = markerString;
                 if (cboMarkerSize.Items.Contains(markerString))
                     cboMarkerSize.SelectedValue = markerString;
-                ctlFillStyle1.FillStyle = markerType.FillStyle;
+                fillStyler.FillStyle = markerType.MarkerFillStyle;
             }
         }
 
@@ -118,13 +130,16 @@ namespace StatsDirect.UI
         {
             if (null != markerType)
             {
-                markerType.Color = colorPanel.Color;
-                markerType.IsFilled = chkFillMarker.Checked;
-                double.TryParse(cboMarkerSize.Text, out markerType.MarkerSize);
-                markerType.Shape = ctlMarkerShape1.MarkerShape;
-                markerType.Style = ctlDashStyle1.DashStyle;
+                markerType.MarkerColor = markerColorPanel.Color;
+                markerType.LineColor = lineColorPanel.Color;
+                markerType.IsMarkerFilled = chkFillMarker.Checked;
+                double markerSize;
+                double.TryParse(cboMarkerSize.Text, out markerSize);
+                markerType.MarkerSize = markerSize;
+                markerType.MarkerShape = markerShaper.MarkerShape;
+                markerType.LineDashStyle = dashStyler.DashStyle;
                 markerType.Width = lineThickness.LineThickness;
-                markerType.FillStyle = ctlFillStyle1.FillStyle;
+                markerType.MarkerFillStyle = fillStyler.FillStyle;
             }
         }
 
@@ -132,10 +147,25 @@ namespace StatsDirect.UI
         public void SetColour(bool useColour)
         {
             this.useColour = useColour;
-            grpColour.Visible = showMarkerColour && useColour;
+            grpMarkerColour.Visible = showMarkerColour && useColour;
+            grpLineColour.Visible = showLineColour && useColour;
             pnlDashStyle.Visible = showDashStyle && !useColour;
             pnlFillStyle.Visible = showFillStyle && !useColour;
             chkFillMarker.Visible = !(showFillStyle && !useColour);
+        }
+
+        internal void SetShowLineOptions(bool showLineOptions)
+        {
+            ShowLineColour = showLineOptions;
+            ShowLineThickness = showLineOptions;
+            ShowDashStyle = showLineOptions;
+        }
+
+        internal void SetShowMarkerOptions(bool showMarkerOptions)
+        {
+            ShowMarkerColour = showMarkerOptions;
+            ShowMarkerSize = showMarkerOptions;
+            ShowMarkerStyle = showMarkerOptions;
         }
     }
 }

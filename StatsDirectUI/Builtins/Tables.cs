@@ -4959,7 +4959,7 @@ namespace StatsDirect.Builtins
             int[] icx = new int[ircmax + 1 ];
             int[] irx = new int[ircmin + 1 ];
             // longpath
-            int[,] iiwk1 = new int[ncol + 1, ircmax + 1];
+            int[,] iiwk1 = new int[ircmax + 1, ircmax + 1];
             int[,] iiwk2 = new int[nrow + 1, ircp1 + 1];
             // shortpath
             int[] iwk1 = new int[k + 1 ];

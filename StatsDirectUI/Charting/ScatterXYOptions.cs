@@ -31,6 +31,7 @@ namespace StatsDirect.Charting
                                                                                {
                                                                                    SeriesName = xSeries[i].Title,
                                                                                    AllowChangeToDashStyle = useLines,
+                                                                                   AllowChangeToLineColour = useLines,
                                                                                    AllowChangeToLineThickness = useLines,
                                                                                    MarkerIndex = i
                                                                                };

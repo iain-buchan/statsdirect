@@ -9,7 +9,6 @@ namespace StatsDirect.Templates
         private bool preSelectVariables = true;
         private int minimumVariables = 1;
         private int maximumVariables = Int32.MaxValue;
-        private string parameterName;
 
         [XmlElement(ElementName = "preselect-variables")]
         public bool PreSelectVariables
@@ -33,10 +32,24 @@ namespace StatsDirect.Templates
         }
 
         [XmlElement(ElementName = "parameter-name")]
-        public string ParameterName
+        public string ParameterName { get; set; }
+
+        [XmlElement(ElementName = "label-as")]
+        public Expression LabelAsExpression { get; set; }
+
+        [XmlIgnore]
+        public bool HasLabelAs
         {
-            get { return parameterName; }
-            set { parameterName = value; }
+            get { return null != LabelAsExpression && null != LabelAsExpression.Body; }
+        }
+
+        public string LabelAs(ITemplateProcessor processor, ParameterBag parameters, int zeroBasedVariableNumber)
+        {
+            if (!HasLabelAs)
+                return "Variable " + (zeroBasedVariableNumber + 1).ToString();
+            ParameterBag parametersIncludingVariableNumber = parameters.Copy();
+            parametersIncludingVariableNumber.AddInput("variableNumber", zeroBasedVariableNumber);
+            return (string)processor.Evaluate(LabelAsExpression, parametersIncludingVariableNumber);
         }
 
         public override ParameterType Type

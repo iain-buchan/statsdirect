@@ -123,7 +123,7 @@
 Please copy the error message below and mail it to support@statsdirect.com.
 This helps us to make StatsDirect more reliable for everyone.
 
-Once you click "Close StatsDirect", this windows will close and StatsDirect will exit.</value>
+Once you click "Close StatsDirect", this window will close and StatsDirect will exit.</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">

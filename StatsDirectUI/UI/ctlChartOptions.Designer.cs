@@ -34,7 +34,7 @@ namespace StatsDirect.UI
             this.pnlSeriesLabelFont = new System.Windows.Forms.Panel();
             this.ctlSeriesLabelFont = new StatsDirect.UI.ctlFont();
             this.pnlSeriesOptions = new System.Windows.Forms.Panel();
-            this.ctlSeriesOptions1 = new StatsDirect.UI.ctlSeriesOptions();
+            this.seriesOptions = new StatsDirect.UI.ctlSeriesOptions();
             this.pnlColour = new System.Windows.Forms.Panel();
             this.grpColour = new System.Windows.Forms.GroupBox();
             this.rdoMonochrome = new System.Windows.Forms.RadioButton();
@@ -104,8 +104,7 @@ namespace StatsDirect.UI
             this.ctlBarOptions = new StatsDirect.UI.ctlBarOptions();
             this.pnlForestOptions = new System.Windows.Forms.Panel();
             this.grpForestOptions = new System.Windows.Forms.GroupBox();
-            this.lblStudyConfidenceIntervalLineThickness = new System.Windows.Forms.Label();
-            this.ctlForestStudyCiLineThickness = new StatsDirect.UI.ctlLineThickness();
+            this.chkForestMarkCentres = new System.Windows.Forms.CheckBox();
             this.lblForestDecimalPlaces = new System.Windows.Forms.Label();
             this.lblForestLabelEffectSizesTo = new System.Windows.Forms.Label();
             this.cboForestDecimalPlaces = new System.Windows.Forms.ComboBox();
@@ -120,7 +119,6 @@ namespace StatsDirect.UI
             this.pnlPyramidOptions = new System.Windows.Forms.Panel();
             this.txtPyramidScaleMaximum = new System.Windows.Forms.TextBox();
             this.lblPyramidScaleMaximum = new System.Windows.Forms.Label();
-            this.chkScatterXYPlotMarkers = new System.Windows.Forms.CheckBox();
             this.pnlRocOptions = new System.Windows.Forms.Panel();
             this.grpRocOptions = new System.Windows.Forms.GroupBox();
             this.cboRocWeight = new System.Windows.Forms.ComboBox();
@@ -142,6 +140,7 @@ namespace StatsDirect.UI
             this.ctlBoxWhiskerOptions1 = new StatsDirect.UI.ctlBoxWhiskerOptions();
             this.ctlHistogramOptions1 = new StatsDirect.UI.ctlHistogramOptions();
             this.tlpScatterXYOptions = new System.Windows.Forms.TableLayoutPanel();
+            this.chkScatterXYPlotMarkers = new System.Windows.Forms.CheckBox();
             this.chkScatterXYPlotLines = new System.Windows.Forms.CheckBox();
             this.tlpDisplay.SuspendLayout();
             this.pnlLegendFont.SuspendLayout();
@@ -203,7 +202,7 @@ namespace StatsDirect.UI
             this.tlpDisplay.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpDisplay.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpDisplay.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpDisplay.Size = new System.Drawing.Size(206, 351);
+            this.tlpDisplay.Size = new System.Drawing.Size(206, 429);
             this.tlpDisplay.TabIndex = 1;
             // 
             // pnlLegendFont
@@ -255,28 +254,28 @@ namespace StatsDirect.UI
             // pnlSeriesOptions
             // 
             this.pnlSeriesOptions.AutoSize = true;
-            this.pnlSeriesOptions.Controls.Add(this.ctlSeriesOptions1);
+            this.pnlSeriesOptions.Controls.Add(this.seriesOptions);
             this.pnlSeriesOptions.Location = new System.Drawing.Point(0, 153);
             this.pnlSeriesOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlSeriesOptions.Name = "pnlSeriesOptions";
-            this.pnlSeriesOptions.Size = new System.Drawing.Size(197, 198);
+            this.pnlSeriesOptions.Size = new System.Drawing.Size(203, 276);
             this.pnlSeriesOptions.TabIndex = 11;
             // 
-            // ctlSeriesOptions1
+            // seriesOptions
             // 
-            this.ctlSeriesOptions1.AutoSize = true;
-            this.ctlSeriesOptions1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ctlSeriesOptions1.ForcedFillStyle = StatsDirect.Charting.FillStyle.None;
-            this.ctlSeriesOptions1.ForcedIsFilled = false;
-            this.ctlSeriesOptions1.Location = new System.Drawing.Point(0, 0);
-            this.ctlSeriesOptions1.Margin = new System.Windows.Forms.Padding(0);
-            this.ctlSeriesOptions1.MarkerTypes = null;
-            this.ctlSeriesOptions1.Name = "ctlSeriesOptions1";
-            this.ctlSeriesOptions1.SeriesOptionsDescriptors = null;
-            this.ctlSeriesOptions1.ShouldForceFillStyle = false;
-            this.ctlSeriesOptions1.ShouldForceIsFilled = false;
-            this.ctlSeriesOptions1.Size = new System.Drawing.Size(197, 198);
-            this.ctlSeriesOptions1.TabIndex = 0;
+            this.seriesOptions.AutoSize = true;
+            this.seriesOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.seriesOptions.ForcedFillStyle = StatsDirect.Charting.FillStyle.None;
+            this.seriesOptions.ForcedIsFilled = false;
+            this.seriesOptions.Location = new System.Drawing.Point(0, 0);
+            this.seriesOptions.Margin = new System.Windows.Forms.Padding(0);
+            this.seriesOptions.MarkerTypes = null;
+            this.seriesOptions.Name = "seriesOptions";
+            this.seriesOptions.SeriesOptionsDescriptors = null;
+            this.seriesOptions.ShouldForceFillStyle = false;
+            this.seriesOptions.ShouldForceIsFilled = false;
+            this.seriesOptions.Size = new System.Drawing.Size(203, 276);
+            this.seriesOptions.TabIndex = 0;
             // 
             // pnlColour
             // 
@@ -831,7 +830,7 @@ namespace StatsDirect.UI
             this.tlpOuter.Name = "tlpOuter";
             this.tlpOuter.RowCount = 1;
             this.tlpOuter.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlpOuter.Size = new System.Drawing.Size(857, 1521);
+            this.tlpOuter.Size = new System.Drawing.Size(857, 1530);
             this.tlpOuter.TabIndex = 1;
             // 
             // tlpFunction
@@ -917,7 +916,7 @@ namespace StatsDirect.UI
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpCustom.Size = new System.Drawing.Size(405, 1521);
+            this.tlpCustom.Size = new System.Drawing.Size(405, 1530);
             this.tlpCustom.TabIndex = 2;
             // 
             // pnlPreview
@@ -925,7 +924,7 @@ namespace StatsDirect.UI
             this.pnlPreview.AutoSize = true;
             this.pnlPreview.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlPreview.Controls.Add(this.cmdPreview);
-            this.pnlPreview.Location = new System.Drawing.Point(0, 1491);
+            this.pnlPreview.Location = new System.Drawing.Point(0, 1500);
             this.pnlPreview.Margin = new System.Windows.Forms.Padding(0);
             this.pnlPreview.Name = "pnlPreview";
             this.pnlPreview.Size = new System.Drawing.Size(82, 30);
@@ -1070,43 +1069,32 @@ namespace StatsDirect.UI
             this.pnlForestOptions.Location = new System.Drawing.Point(0, 428);
             this.pnlForestOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlForestOptions.Name = "pnlForestOptions";
-            this.pnlForestOptions.Size = new System.Drawing.Size(338, 69);
+            this.pnlForestOptions.Size = new System.Drawing.Size(305, 59);
             this.pnlForestOptions.TabIndex = 16;
             // 
             // grpForestOptions
             // 
-            this.grpForestOptions.Controls.Add(this.lblStudyConfidenceIntervalLineThickness);
-            this.grpForestOptions.Controls.Add(this.ctlForestStudyCiLineThickness);
+            this.grpForestOptions.Controls.Add(this.chkForestMarkCentres);
             this.grpForestOptions.Controls.Add(this.lblForestDecimalPlaces);
             this.grpForestOptions.Controls.Add(this.lblForestLabelEffectSizesTo);
             this.grpForestOptions.Controls.Add(this.cboForestDecimalPlaces);
             this.grpForestOptions.Location = new System.Drawing.Point(0, 0);
             this.grpForestOptions.Margin = new System.Windows.Forms.Padding(0);
             this.grpForestOptions.Name = "grpForestOptions";
-            this.grpForestOptions.Size = new System.Drawing.Size(338, 69);
+            this.grpForestOptions.Size = new System.Drawing.Size(305, 59);
             this.grpForestOptions.TabIndex = 0;
             this.grpForestOptions.TabStop = false;
             this.grpForestOptions.Text = "Forest plot options";
             // 
-            // lblStudyConfidenceIntervalLineThickness
+            // chkForestMarkCentres
             // 
-            this.lblStudyConfidenceIntervalLineThickness.AutoSize = true;
-            this.lblStudyConfidenceIntervalLineThickness.Location = new System.Drawing.Point(9, 43);
-            this.lblStudyConfidenceIntervalLineThickness.Name = "lblStudyConfidenceIntervalLineThickness";
-            this.lblStudyConfidenceIntervalLineThickness.Size = new System.Drawing.Size(194, 13);
-            this.lblStudyConfidenceIntervalLineThickness.TabIndex = 28;
-            this.lblStudyConfidenceIntervalLineThickness.Text = "Study confidence interval line thickness";
-            // 
-            // ctlForestStudyCiLineThickness
-            // 
-            this.ctlForestStudyCiLineThickness.LineThickness = 1;
-            this.ctlForestStudyCiLineThickness.Location = new System.Drawing.Point(209, 40);
-            this.ctlForestStudyCiLineThickness.Margin = new System.Windows.Forms.Padding(0);
-            this.ctlForestStudyCiLineThickness.MaximumSize = new System.Drawing.Size(10000, 21);
-            this.ctlForestStudyCiLineThickness.MinimumSize = new System.Drawing.Size(100, 21);
-            this.ctlForestStudyCiLineThickness.Name = "ctlForestStudyCiLineThickness";
-            this.ctlForestStudyCiLineThickness.Size = new System.Drawing.Size(118, 21);
-            this.ctlForestStudyCiLineThickness.TabIndex = 27;
+            this.chkForestMarkCentres.AutoSize = true;
+            this.chkForestMarkCentres.Location = new System.Drawing.Point(9, 37);
+            this.chkForestMarkCentres.Name = "chkForestMarkCentres";
+            this.chkForestMarkCentres.Size = new System.Drawing.Size(88, 17);
+            this.chkForestMarkCentres.TabIndex = 27;
+            this.chkForestMarkCentres.Text = "Mark centres";
+            this.chkForestMarkCentres.UseVisualStyleBackColor = true;
             // 
             // lblForestDecimalPlaces
             // 
@@ -1156,7 +1144,7 @@ namespace StatsDirect.UI
             this.pnlNormalOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlNormalOptions.Controls.Add(this.grpNormalScaling);
             this.pnlNormalOptions.Controls.Add(this.grpNormalOptions);
-            this.pnlNormalOptions.Location = new System.Drawing.Point(0, 497);
+            this.pnlNormalOptions.Location = new System.Drawing.Point(0, 487);
             this.pnlNormalOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlNormalOptions.Name = "pnlNormalOptions";
             this.pnlNormalOptions.Size = new System.Drawing.Size(314, 100);
@@ -1253,7 +1241,7 @@ namespace StatsDirect.UI
             this.pnlPyramidOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlPyramidOptions.Controls.Add(this.txtPyramidScaleMaximum);
             this.pnlPyramidOptions.Controls.Add(this.lblPyramidScaleMaximum);
-            this.pnlPyramidOptions.Location = new System.Drawing.Point(0, 597);
+            this.pnlPyramidOptions.Location = new System.Drawing.Point(0, 587);
             this.pnlPyramidOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlPyramidOptions.Name = "pnlPyramidOptions";
             this.pnlPyramidOptions.Size = new System.Drawing.Size(158, 26);
@@ -1275,22 +1263,12 @@ namespace StatsDirect.UI
             this.lblPyramidScaleMaximum.TabIndex = 0;
             this.lblPyramidScaleMaximum.Text = "Scale maximum";
             // 
-            // chkScatterXYPlotMarkers
-            // 
-            this.chkScatterXYPlotMarkers.AutoSize = true;
-            this.chkScatterXYPlotMarkers.Location = new System.Drawing.Point(3, 3);
-            this.chkScatterXYPlotMarkers.Name = "chkScatterXYPlotMarkers";
-            this.chkScatterXYPlotMarkers.Size = new System.Drawing.Size(123, 17);
-            this.chkScatterXYPlotMarkers.TabIndex = 0;
-            this.chkScatterXYPlotMarkers.Text = "Show series markers";
-            this.chkScatterXYPlotMarkers.UseVisualStyleBackColor = true;
-            // 
             // pnlRocOptions
             // 
             this.pnlRocOptions.AutoSize = true;
             this.pnlRocOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlRocOptions.Controls.Add(this.grpRocOptions);
-            this.pnlRocOptions.Location = new System.Drawing.Point(0, 669);
+            this.pnlRocOptions.Location = new System.Drawing.Point(0, 659);
             this.pnlRocOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlRocOptions.Name = "pnlRocOptions";
             this.pnlRocOptions.Size = new System.Drawing.Size(338, 124);
@@ -1469,7 +1447,7 @@ namespace StatsDirect.UI
             this.pnlSurvivalOptions.AutoSize = true;
             this.pnlSurvivalOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlSurvivalOptions.Controls.Add(this.grpSurvivalOptions);
-            this.pnlSurvivalOptions.Location = new System.Drawing.Point(0, 793);
+            this.pnlSurvivalOptions.Location = new System.Drawing.Point(0, 783);
             this.pnlSurvivalOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlSurvivalOptions.Name = "pnlSurvivalOptions";
             this.pnlSurvivalOptions.Size = new System.Drawing.Size(267, 65);
@@ -1522,9 +1500,9 @@ namespace StatsDirect.UI
             // 
             this.ctlBoxWhiskerOptions1.AutoSize = true;
             this.ctlBoxWhiskerOptions1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ctlBoxWhiskerOptions1.Location = new System.Drawing.Point(3, 861);
+            this.ctlBoxWhiskerOptions1.Location = new System.Drawing.Point(3, 851);
             this.ctlBoxWhiskerOptions1.Name = "ctlBoxWhiskerOptions1";
-            this.ctlBoxWhiskerOptions1.Size = new System.Drawing.Size(282, 227);
+            this.ctlBoxWhiskerOptions1.Size = new System.Drawing.Size(282, 246);
             this.ctlBoxWhiskerOptions1.TabIndex = 22;
             this.ctlBoxWhiskerOptions1.XAxisTitleChanged += new System.EventHandler(this.ctlBoxWhiskerOptions1_XAxisTitleChanged);
             // 
@@ -1532,7 +1510,7 @@ namespace StatsDirect.UI
             // 
             this.ctlHistogramOptions1.AutoSize = true;
             this.ctlHistogramOptions1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ctlHistogramOptions1.Location = new System.Drawing.Point(3, 1094);
+            this.ctlHistogramOptions1.Location = new System.Drawing.Point(3, 1103);
             this.ctlHistogramOptions1.Name = "ctlHistogramOptions1";
             this.ctlHistogramOptions1.Size = new System.Drawing.Size(322, 394);
             this.ctlHistogramOptions1.TabIndex = 23;
@@ -1546,7 +1524,7 @@ namespace StatsDirect.UI
             this.tlpScatterXYOptions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tlpScatterXYOptions.Controls.Add(this.chkScatterXYPlotMarkers, 0, 0);
             this.tlpScatterXYOptions.Controls.Add(this.chkScatterXYPlotLines, 0, 1);
-            this.tlpScatterXYOptions.Location = new System.Drawing.Point(0, 623);
+            this.tlpScatterXYOptions.Location = new System.Drawing.Point(0, 613);
             this.tlpScatterXYOptions.Margin = new System.Windows.Forms.Padding(0);
             this.tlpScatterXYOptions.Name = "tlpScatterXYOptions";
             this.tlpScatterXYOptions.RowCount = 2;
@@ -1554,6 +1532,17 @@ namespace StatsDirect.UI
             this.tlpScatterXYOptions.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpScatterXYOptions.Size = new System.Drawing.Size(129, 46);
             this.tlpScatterXYOptions.TabIndex = 25;
+            // 
+            // chkScatterXYPlotMarkers
+            // 
+            this.chkScatterXYPlotMarkers.AutoSize = true;
+            this.chkScatterXYPlotMarkers.Location = new System.Drawing.Point(3, 3);
+            this.chkScatterXYPlotMarkers.Name = "chkScatterXYPlotMarkers";
+            this.chkScatterXYPlotMarkers.Size = new System.Drawing.Size(123, 17);
+            this.chkScatterXYPlotMarkers.TabIndex = 0;
+            this.chkScatterXYPlotMarkers.Text = "Show series markers";
+            this.chkScatterXYPlotMarkers.UseVisualStyleBackColor = true;
+            this.chkScatterXYPlotMarkers.CheckedChanged += new System.EventHandler(this.chkScatterXYPlotMarkers_CheckedChanged);
             // 
             // chkScatterXYPlotLines
             // 
@@ -1564,6 +1553,7 @@ namespace StatsDirect.UI
             this.chkScatterXYPlotLines.TabIndex = 1;
             this.chkScatterXYPlotLines.Text = "Plot lines";
             this.chkScatterXYPlotLines.UseVisualStyleBackColor = true;
+            this.chkScatterXYPlotLines.CheckedChanged += new System.EventHandler(this.chkScatterXYPlotLines_CheckedChanged);
             // 
             // ctlChartOptions
             // 
@@ -1575,7 +1565,7 @@ namespace StatsDirect.UI
             this.Margin = new System.Windows.Forms.Padding(0);
             this.MinimumSize = new System.Drawing.Size(405, 40);
             this.Name = "ctlChartOptions";
-            this.Size = new System.Drawing.Size(857, 1521);
+            this.Size = new System.Drawing.Size(857, 1530);
             this.tlpDisplay.ResumeLayout(false);
             this.tlpDisplay.PerformLayout();
             this.pnlLegendFont.ResumeLayout(false);
@@ -1691,7 +1681,7 @@ namespace StatsDirect.UI
         private System.Windows.Forms.Panel pnlAxisTitleFont;
         private System.Windows.Forms.Panel pnlLegendFont;
         private System.Windows.Forms.Panel pnlSeriesOptions;
-        private ctlSeriesOptions ctlSeriesOptions1;
+        private ctlSeriesOptions seriesOptions;
         private System.Windows.Forms.Panel pnlForestOptions;
         private System.Windows.Forms.GroupBox grpForestOptions;
         private System.Windows.Forms.Label lblForestDecimalPlaces;
@@ -1699,7 +1689,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.ComboBox cboForestDecimalPlaces;
         private System.Windows.Forms.Panel pnlAxisLineThickness;
         private ctlLineThickness ctlAxisLineThickness;
-        private ctlLineThickness ctlForestStudyCiLineThickness;
         private System.Windows.Forms.Panel pnlSeriesLabelFont;
         private System.Windows.Forms.Panel pnlNormalOptions;
         private System.Windows.Forms.GroupBox grpNormalScaling;
@@ -1743,7 +1732,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.TableLayoutPanel tlpCustom;
         private ctlAxisOptions ctlAxisOptions;
         private System.Windows.Forms.Label lblAxisLineThickness;
-        private System.Windows.Forms.Label lblStudyConfidenceIntervalLineThickness;
         private ctlFont ctlTitleFont;
         private ctlFont ctlLegendFont;
         private ctlFont ctlSeriesLabelFont;
@@ -1763,6 +1751,7 @@ namespace StatsDirect.UI
         private System.Windows.Forms.CheckBox chkRocShowCutOffCalculator;
         private System.Windows.Forms.TableLayoutPanel tlpScatterXYOptions;
         private System.Windows.Forms.CheckBox chkScatterXYPlotLines;
+        private System.Windows.Forms.CheckBox chkForestMarkCentres;
 
 
     }

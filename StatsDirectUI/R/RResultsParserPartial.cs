@@ -22,7 +22,7 @@ namespace StatsDirect.R
             }
             using (Stream s = File.OpenRead(path))
             {
-                return ChartRenderer.MetastreamToRtf(s, width, height);
+                return RtfImageConverter.MetastreamToRtf(s, width, height);
             }
         }
 

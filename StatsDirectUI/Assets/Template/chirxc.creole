@@ -54,6 +54,6 @@
 <line>Kendall tau-b = <in>taub</in></line>
 <table>
 <tr><td>Approximate test of tau-b = 0:</td><td>SE = <in>setaub</in></td><td><pval><in>ptaub</in></pval></td><td><ci><in>pc</in>% CI = <in>lltaub</in> to <in>ultaub</in></ci></td></tr>
-<tr><td>Approximate test of independence:</td><td>SE = <in>setaubi</in></td><td><pval><in>ptaubi</in></pval></td><ci><in>pc</in>% CI = <in>lltaubi</in> to <in>ultaubi</in></ci></td></tr>
+<tr><td>Approximate test of independence:</td><td>SE = <in>setaubi</in></td><td><pval><in>ptaubi</in></pval></td><td><ci><in>pc</in>% CI = <in>lltaubi</in> to <in>ultaubi</in></ci></td></tr>
 </table>
 </report>

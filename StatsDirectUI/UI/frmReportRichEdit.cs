@@ -4,9 +4,10 @@
 using System.Drawing;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Windows.Forms;
 using System.IO;
-
+using StatsDirect.Charting;
 using StatsDirect.Templates;
 using DevExpress.XtraRichEdit;
 using DevExpress.XtraRichEdit.API.Native;
@@ -214,9 +215,9 @@ namespace StatsDirect.UI
             {
                 new PrintPreviewCommand(richEditControl1).Execute();
             }
-            catch
+            catch (Exception ex)
             {
-                // Do nothing - errors in Print Preview and the like
+                SdApplication.SoleInstance.FriendlyError("Couldn't print preview", ex, false);
             }
         }
 
@@ -295,7 +296,7 @@ namespace StatsDirect.UI
             document.BeginUpdate();
 
             // Append the text, surrounding it with the specified help context if required
-            document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!help!-> " + helpContextId.ToString() + @" <-!help!! }}");
+            document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!help!-> " + helpContextId + @" <-!help!! }}");
             // Add redo information if present
             if (!string.IsNullOrEmpty(redoInformation))
             {
@@ -360,7 +361,7 @@ namespace StatsDirect.UI
             int helpId;
             if (int.TryParse(helpString, out helpId))
             {
-                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.MainWindow, helpId.ToString());
+                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.MainWindow, helpId.ToString(CultureInfo.InvariantCulture));
             }
             else
             {
@@ -424,7 +425,7 @@ namespace StatsDirect.UI
             {
                 return SaveAsContents();
             }
-            string strExt = System.IO.Path.GetExtension(currentFile) ?? "";
+            string strExt = System.IO.Path.GetExtension(currentFile);
             strExt = strExt.ToUpper();
             richEditControl1.SaveDocument(currentFile,
                                           ".RTF".Equals(strExt) ? DocumentFormat.Rtf : DocumentFormat.PlainText);
@@ -582,113 +583,7 @@ namespace StatsDirect.UI
             if (0 == trimmedRtf.Length)
                 return null;
 
-            return ParseRtfToImage(trimmedRtf, out rawBytes);
-        }
-
-        private Image ParseRtfToImage(string rtf, out byte[] rawBytes)
-        {
-            string[] parts = rtf.Split(new[] { '\\', '\r', '\n', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            ImageFormat imageFormat = null;
-            using (MemoryStream bytes = new MemoryStream())
-            {
-                foreach (string s in parts)
-                {
-                    if (s.StartsWith("wmetafile"))
-                    {
-                        imageFormat = ImageFormat.Emf;
-                        int wmetafileVersion;
-                        int.TryParse(s.Substring(9), out wmetafileVersion);
-                    }
-                    else if (s.StartsWith("pngblip"))
-                        imageFormat = ImageFormat.Png;
-                    else if (s.StartsWith("picwgoal"))
-                    {
-                        int wGoal;
-                        int.TryParse(s.Substring(8), out wGoal);
-                    }
-                    else if (s.StartsWith("pichgoal"))
-                    {
-                        int hGoal;
-                        int.TryParse(s.Substring(8), out hGoal);
-                    }
-                    else if (s.StartsWith("picw"))
-                    {
-                        int w;
-                        int.TryParse(s.Substring(4), out w);
-                    }
-                    else if (s.StartsWith("pich"))
-                    {
-                        int h;
-                        int.TryParse(s.Substring(4), out h);
-                    }
-                    else if (s.StartsWith("emfblip"))
-                    {
-                        imageFormat = ImageFormat.Emf;
-                    }
-                    else if (s.StartsWith("picscale"))
-                    {
-                        // Do nothing
-                    }
-                    else if (s.Length < 16)
-                    {
-                        if (IsHex(s))
-                        {
-                            AccumulateHex(bytes, s);
-                        }
-                        else
-                        {
-                            // Not a header value we know, and less than an 8-byte hex value - so a very small image!
-                            // Assume another header value that we don't yet know about.
-                            // On the principle of "be liberal in what you accept", ignore it.
-                        }
-                    }
-                    else
-                    {
-                        // Assume bytes encoded as hex
-                        AccumulateHex(bytes, s);
-                    }
-                }
-                rawBytes = bytes.ToArray();
-                bytes.Position = 0;
-                Image img = null;
-                if (imageFormat == ImageFormat.Emf)
-                {
-                    img = Image.FromStream(bytes);
-                }
-                else if (imageFormat == ImageFormat.Png)
-                {
-                    img = Image.FromStream(bytes);
-                }
-                return img;
-            }
-        }
-
-        private static bool IsHex(string s)
-        {
-            foreach (char c in s)
-                if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')))
-                    return false;
-            return true;
-        }
-
-        private static void AccumulateHex(MemoryStream bytes, string s)
-        {
-            for (int i = 0; i < s.Length; i += 2)
-            {
-                int hiChar = s[i] - 48; // 48 is ASCII '0'
-                if (hiChar > 9) hiChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
-                if (hiChar > 15) hiChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
-                if (hiChar > 15 || hiChar < 0)
-                    throw new ArgumentException("Unexpected non-hex character '" + s[i] + "' in hex string");
-
-                int loChar = s[i + 1] - 48; // 48 is ASCII '0'
-                if (loChar > 9) loChar -= 7; // 65 is ASCII 'A' = 10.  48 already subtracted, so need to subtract (65 - 10 - 48) = 7.
-                if (loChar > 15) loChar -= 32; // 97 is ASCII 'a' = 10.  65 already subtracted, so need to subtract (97 - 65) = 32.
-                if (loChar > 15 || loChar < 0)
-                    throw new ArgumentException("Unexpected non-hex character '" + s[i + 1] + "' in hex string");
-                byte b = (byte)(hiChar * 16 + loChar);
-                bytes.WriteByte(b);
-            }
+            return RtfImageConverter.ParseRtfToImage(trimmedRtf, out rawBytes);
         }
 
         private void EditToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -948,16 +843,5 @@ namespace StatsDirect.UI
         {
             richEditControl1.Document.InsertText(richEditControl1.Document.CaretPosition, DateTime.Now.ToString("dd MMMM yyyy @ hh:MM:ss"));
         }
-        /*
-        public new void Dispose()
-        {
-            base.Dispose();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-        }
-         */
     }
 }

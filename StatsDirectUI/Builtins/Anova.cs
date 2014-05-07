@@ -1631,6 +1631,8 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
+            int[] indexvariable = ((int[])(parameters["indexvariable"].Data));
+            int ic = indexvariable[0];
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
             int[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
@@ -1655,9 +1657,14 @@ namespace StatsDirect.Builtins
             }
             double pse = Math.Sqrt(mserr);
 
-            for (int i = 1; i <= k; i++)
+            int ctr = 0;
+            for (int i = 0; i <= k; i++)
             {
-                lam[i] = Math.Pow(1 + tnx[0] / tnx[i], -0.5);
+                if (i != ic)
+                {
+                    ctr++;
+                    lam[ctr] = Math.Pow(1 + Convert.ToDouble(tnx[ic]) / Convert.ToDouble(tnx[i]), -0.5);
+                }
             }
 
             double cc = 1.0 - dalpha;
@@ -1674,30 +1681,33 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("d", host.RoundU(d));
             outputParameters.AddOutput("psd", host.RoundU(pse));
-            outputParameters.AddOutput("control", frame.Variables[0].Title);
-            outputParameters.AddOutput("cn", tnx[0].ToString());
+            outputParameters.AddOutput("control", frame.Variables[ic].Title);
+            outputParameters.AddOutput("cn", tnx[ic].ToString());
             outputParameters.AddOutput("pc", Formatting.XRound(100.0 * cc, 1));
 
-            int ctr = 0;
-            for (int i = 1; i <= k; i++)
+            ctr = 0;
+            for (int i = 0; i <= k; i++)
             {
-                ctr = ctr + 1;
-                double delta = mean[i] - mean[0];
-                hold[ctr] = new Contraster
-                                {
-                                    Delta = delta,
-                                    Absdelta = Math.Abs(delta),
-                                    Lab1 = frame.Variables[i].Title,
-                                    Gps = tnx[i]
-                                };
-                double lci = delta - d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[0]) + 1.0 / Convert.ToDouble(tnx[i]));
-                hold[ctr].Ll = lci;
-                double uci = delta + d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[0]) + 1.0 / Convert.ToDouble(tnx[i]));
-                hold[ctr].Ul = uci;
-                double px;
-                ExFortran.ppd2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[0]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
-                px = 1.0 - Math.Abs(px);
-                hold[ctr].P = px;
+                if (i != ic)
+                {
+                    ctr ++;
+                    double delta = mean[i] - mean[ic];
+                    hold[ctr] = new Contraster
+                                    {
+                                        Delta = delta,
+                                        Absdelta = Math.Abs(delta),
+                                        Lab1 = frame.Variables[i].Title,
+                                        Gps = tnx[i]
+                                    };
+                    double lci = delta - d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]));
+                    hold[ctr].Ll = lci;
+                    double uci = delta + d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]));
+                    hold[ctr].Ul = uci;
+                    double px;
+                    ExFortran.ppd2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
+                    px = 1.0 - Math.Abs(px);
+                    hold[ctr].P = px;
+                }
             }
 
             //  sort descending on |diff| between means

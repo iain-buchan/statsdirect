@@ -46,11 +46,6 @@ namespace StatsDirect.Charting
 
                 SeriesOptionsDescriptor sod = new SeriesOptionsDescriptor
                                                   {
-                                                      AllowChangeToDashStyle = true,
-                                                      AllowChangeToLineThickness = true,
-                                                      AllowChangeToMarkerColour = true,
-                                                      AllowChangeToMarkerSize = true,
-                                                      AllowChangeToMarkerType = true,
                                                       MarkerIndex = seriesIndex,
                                                       SeriesName = SeriesTitles[seriesIndex]
                                                   };
@@ -63,9 +58,6 @@ namespace StatsDirect.Charting
 
             SeriesOptionsDescriptor cisod = new SeriesOptionsDescriptor
                                                 {
-                                                    AllowChangeToDashStyle = true,
-                                                    AllowChangeToLineThickness = true,
-                                                    AllowChangeToMarkerColour = true,
                                                     AllowChangeToMarkerSize = false,
                                                     AllowChangeToMarkerType = false,
                                                     MarkerIndex = SeriesTitles.Length,

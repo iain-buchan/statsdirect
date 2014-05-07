@@ -38,16 +38,18 @@ namespace StatsDirect.Charting
             { 
                 Variable v = f.Variables[ seriesIndex ];
 
-                MarkerType marker = new MarkerType {Color = Color.Gray, IsFilled = false};
+                MarkerType marker = new MarkerType {MarkerColor = Color.Gray, LineColor = Color.Gray, IsMarkerFilled = false};
 
 
                 if ( Regex.Match( v.Title, @"\b(male|males|men)\b", RegexOptions.IgnoreCase ).Success ) 
                 { 
-                    marker.Color = Color.Blue; 
+                    marker.MarkerColor = Color.Blue;
+                    marker.LineColor = Color.Blue;
                 } 
                 else if ( Regex.Match( v.Title, @"\b(female|females|women)\b", RegexOptions.IgnoreCase ).Success ) 
                 { 
-                    marker.Color = Color.Magenta; 
+                    marker.MarkerColor = Color.Magenta;
+                    marker.LineColor = Color.Magenta;
                 } 
                 MarkerTypes.Add( marker );
 

@@ -27,6 +27,7 @@ namespace StatsDirect.Charting
                                                               SeriesName = "Left hand markers",
                                                               AllowChangeToDashStyle = false,
                                                               AllowChangeToLineThickness = false,
+                                                              AllowChangeToLineColour = false,
                                                               MarkerIndex = 0
                                                           };
 
@@ -55,6 +56,7 @@ namespace StatsDirect.Charting
                                                                SeriesName = "Right hand markers",
                                                                AllowChangeToDashStyle = false,
                                                                AllowChangeToLineThickness = false,
+                                                               AllowChangeToLineColour = false,
                                                                MarkerIndex = 1
                                                            };
 
@@ -64,7 +66,6 @@ namespace StatsDirect.Charting
             SeriesOptions.Add( rightHandOptions ); 
         } 
         
-        // TRANSMISSINGCOMMENT: Property OptionType
         public override ChartOptionType OptionType 
         { 
             get 
@@ -72,7 +73,7 @@ namespace StatsDirect.Charting
                 return ChartOptionType.Ladder; 
             } 
         } 
-        // TRANSMISSINGCOMMENT: Property UsesAutoscale
+
         public override bool UsesAutoscale 
         { 
             get 
@@ -81,7 +82,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesBoxAxes
         public override bool UsesBoxAxes 
         { 
             get 
@@ -90,7 +90,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
         public override bool UsesChartTitle 
         { 
             get 
@@ -99,7 +98,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesSeriesLabels
         public override bool UsesSeriesLabels 
         { 
             get 
@@ -108,7 +106,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesYAxisTitle
         public override bool UsesYAxisTitle 
         { 
             get 
@@ -117,7 +114,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisTitleFontDescriptor
         public override bool UsesAxisTitleFontDescriptor 
         { 
             get 
@@ -126,7 +122,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisLabelFontDescriptor
         public override bool UsesAxisLabelFontDescriptor 
         { 
             get 
@@ -135,7 +130,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
         public override bool ShowLegendIsRelevant 
         { 
             get 

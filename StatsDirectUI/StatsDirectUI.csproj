@@ -49,6 +49,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -79,55 +80,55 @@
     <Reference Include="Antlr4.Runtime.v4.0">
       <HintPath>..\packages\Antlr4.Runtime.4.1.0-alpha003\lib\net40\Antlr4.Runtime.v4.0.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Data.v13.2, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Data.v13.2, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Docs.v13.2, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Docs.v13.2, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Office.v13.2.Core, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Office.v13.2.Core, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Printing.v13.2.Core, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Printing.v13.2.Core, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.RichEdit.v13.2.Core, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.RichEdit.v13.2.Core, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Sparkline.v13.2.Core, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Sparkline.v13.2.Core, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Utils.v13.2, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Utils.v13.2, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraBars.v13.2, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraBars.v13.2, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraEditors.v13.2, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraEditors.v13.2, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraPrinting.v13.2, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraPrinting.v13.2, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v13.2, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v13.2, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v13.2.Extensions, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v13.2.Extensions, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraTreeList.v13.2, Version=13.2.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraTreeList.v13.2, Version=13.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
@@ -211,6 +212,7 @@
     <Compile Include="Charting\ControlOptions.cs" />
     <Compile Include="Charting\DataMinMax.cs" />
     <Compile Include="Charting\DoubleSeries.cs" />
+    <Compile Include="Charting\EmfCanvas.cs" />
     <Compile Include="Charting\ErrorBarOptions.cs" />
     <Compile Include="Charting\FillStyle.cs" />
     <Compile Include="Charting\ForestOptions.cs" />
@@ -226,6 +228,7 @@
     <Compile Include="Charting\ROCCutoff.cs" />
     <Compile Include="Charting\ROCOptions.cs" />
     <Compile Include="Charting\ROCSeriesRecord.cs" />
+    <Compile Include="Charting\RtfImageConverter.cs" />
     <Compile Include="Charting\ScatterXYOptions.cs" />
     <Compile Include="Charting\SDGlobalStub.cs" />
     <Compile Include="Charting\Series.cs" />
@@ -806,6 +809,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmErrorMessage.resx">
       <DependentUpon>frmErrorMessage.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlROCCutoff.resx">
       <DependentUpon>ctlROCCutoff.cs</DependentUpon>
@@ -1305,7 +1309,9 @@
     <Content Include="Graphics\WORKBOOK.ICO" />
     <Content Include="Assets\Operations\AbridgedLifetable.xml" />
     <Content Include="Assets\Operations\Agreement.xml" />
-    <Content Include="Assets\Operations\Bonferroni.xml" />
+    <Content Include="Assets\Operations\Bonferroni.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\BoxWhiskerPlot.xml" />
     <Content Include="Assets\Operations\ChiSquareGoodnessOfFit.xml" />
     <Content Include="Assets\Operations\CiMeanY.xml" />
@@ -1485,7 +1491,9 @@
     <Content Include="Assets\Operations\Crossover.xml" />
     <Content Include="Assets\Operations\Cuzick.xml" />
     <Content Include="Assets\Operations\Diversity.xml" />
-    <Content Include="Assets\Operations\Dunnett.xml" />
+    <Content Include="Assets\Operations\Dunnett.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\Effect.xml" />
     <Content Include="Assets\Operations\EqualityOfVariance.xml" />
     <Content Include="Assets\Operations\FollowUpLifeTable.xml" />
@@ -1531,10 +1539,14 @@
     <Content Include="Assets\Operations\MultipleLinearRegressionPrediction.xml" />
     <Content Include="Assets\Operations\MultipleLinearRegressionParameterDetail.xml" />
     <Content Include="Assets\Operations\MultipleLinearRegressionResiduals.xml" />
-    <Content Include="Assets\Operations\NewmanKeuls.xml" />
+    <Content Include="Assets\Operations\NewmanKeuls.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\NonparametricLinearRegression.xml" />
     <Content Include="Assets\Operations\NormalPlot.xml" />
-    <Content Include="Assets\Operations\OneWay.xml" />
+    <Content Include="Assets\Operations\OneWay.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\PCRCoefficients.xml" />
     <Content Include="Assets\Operations\PCRCorrelation.xml" />
     <Content Include="Assets\Operations\PCRCovariance.xml" />
@@ -1571,7 +1583,9 @@
     <Content Include="Assets\Operations\Ranv.xml" />
     <Content Include="Assets\Operations\ReferenceRange.xml" />
     <Content Include="Assets\Operations\RelativeRiskMeta.xml" />
-    <Content Include="Assets\Operations\ReplicateTwoWay.xml" />
+    <Content Include="Assets\Operations\ReplicateTwoWay.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\RiskDifference.xml" />
     <Content Include="Assets\Operations\ROCPlot.xml" />
     <Content Include="Assets\Operations\ScatterPlot.xml" />
@@ -1586,7 +1600,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Assets\Operations\Tukey.xml" />
-    <Content Include="Assets\Operations\TwoWay.xml" />
+    <Content Include="Assets\Operations\TwoWay.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\TwoWayNested.xml" />
     <Content Include="Assets\Operations\TwoWayNestedMeans.xml" />
     <Content Include="Assets\Operations\VarianceRatio.xml" />

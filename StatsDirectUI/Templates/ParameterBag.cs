@@ -170,6 +170,17 @@ namespace StatsDirect.Templates
         #endregion
 
         /// <summary>
+        /// Returns a new ParameterBag containing the existing parameters.  This is a shallow copy, so while parameters may be added or removed users should be cautious about changing parameter values.
+        /// </summary>
+        public ParameterBag Copy()
+        {
+            ParameterBag copy = new ParameterBag();
+            foreach (KeyValuePair<string, FilledParameter> filledParameterPair in filledParameters)
+                copy.Add(filledParameterPair);
+            return copy;
+        }
+
+        /// <summary>
         /// Returns a new ParameterBag containing only the input parameters.
         /// </summary>
         /// <returns>a new ParameterBag containing only the input parameters</returns>

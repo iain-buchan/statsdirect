@@ -4185,5 +4185,42 @@ namespace StatsDirect.UI
                 workbookView.ReleaseLock();
             }
         }
+
+        private void renameWorksheetContextMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string currentWorksheetName = null;
+                workbookView.GetLock();
+                try
+                {
+                    currentWorksheetName = workbookView.ActiveSheet.Name;
+                }
+                finally
+                {
+                    workbookView.ReleaseLock();
+                }
+                if (null != currentWorksheetName)
+                {
+                    string newWorksheetName = SdApplication.SoleInstance.GetString("Enter new name for worksheet", "Rename Worksheet", currentWorksheetName);
+                    if (!string.IsNullOrWhiteSpace(newWorksheetName))
+                    {
+                        workbookView.GetLock();
+                        try
+                        {
+                            workbookView.ActiveSheet.Name = newWorksheetName;
+                        }
+                        finally
+                        {
+                            workbookView.ReleaseLock();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't rename worksheet", ex, false);
+            }
+        }
     }
 }

@@ -96,7 +96,7 @@ namespace StatsDirect.UI
                 {
                     for (int i = 0; i < picMarkerTypes.Length; i++)
                         if (sender == picMarkerTypes[i])
-                            mt.Shape = (MarkerShape)(i + 1);
+                            mt.MarkerShape = (MarkerShape)(i + 1);
                 }
             }
         }
@@ -115,7 +115,7 @@ namespace StatsDirect.UI
                 {
                     for (int i = 0; i < picStyles.Length; i++)
                         if (sender == picStyles[i])
-                            mt.Style = (System.Drawing.Drawing2D.DashStyle)i;
+                            mt.LineDashStyle = (System.Drawing.Drawing2D.DashStyle)i;
                 }
             }
         }
@@ -181,10 +181,10 @@ namespace StatsDirect.UI
             MarkerType mt = GetSelectedMarkerType();
             if (null != mt)
             {
-                picMarkerTypes[(int)mt.Shape - 1].Selected = true;
+                picMarkerTypes[(int)mt.MarkerShape - 1].Selected = true;
                 picWidths[(int)mt.Width - 1].Selected = true;
-                picStyles[(int)mt.Style].Selected = true;
-                colorPanel.Color = mt.Color;
+                picStyles[(int)mt.LineDashStyle].Selected = true;
+                colorPanel.Color = mt.MarkerColor;
             }
         }
 
@@ -192,7 +192,10 @@ namespace StatsDirect.UI
         {
             MarkerType mt = GetSelectedMarkerType();
             if (null != mt)
-                mt.Color = colorPanel.Color;
+            {
+                mt.MarkerColor = colorPanel.Color;
+                mt.LineColor = colorPanel.Color;
+            }
         }
 
         private MarkerType GetSelectedMarkerType()

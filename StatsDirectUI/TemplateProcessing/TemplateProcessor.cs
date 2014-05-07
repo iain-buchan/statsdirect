@@ -591,13 +591,13 @@ namespace StatsDirect.Templates
                         ? "Forest plot"
                         : "Forest plot from " + dataName,
                 k = parameters["odds"].AsDataFrame.Variables[0].Length,
-                odr =
+                OddsRatios =
                     parameters["odds"].AsDataFrame.Variables[0].
                     AsDoubleVariable.Data,
-                odrl =
+                OddsRatioLcis =
                     parameters["lci"].AsDataFrame.Variables[0].AsDoubleVariable
                     .Data,
-                odru =
+                OddsRatioUcis =
                     parameters["uci"].AsDataFrame.Variables[0].AsDoubleVariable
                     .Data
             };
@@ -619,7 +619,7 @@ namespace StatsDirect.Templates
             fOptions.XAxisTitle = parameters["odds"].AsDataFrame.Variables[0].Title + " (95% confidence interval)";
             if (parameters.ContainsKey("title") && null != parameters["title"])
             {
-                fOptions.titles = parameters["title"].AsDataFrame.Variables[0].AsStringVariable.Data;
+                fOptions.Titles = parameters["title"].AsDataFrame.Variables[0].AsStringVariable.Data;
             }
             else
             {
@@ -628,19 +628,19 @@ namespace StatsDirect.Templates
                 {
                     titles[i] = "stratum " + (i + 1).ToString();
                 }
-                fOptions.titles = titles;
+                fOptions.Titles = titles;
             }
 
             // Sort out candidate decimal places
             double absmin = Double.MaxValue;
             for (int i = 0; i < fOptions.k; i++)
             {
-                if (Math.Abs(fOptions.odr[i]) < absmin && fOptions.odr[i] != 0.0)
-                    absmin = Math.Abs(fOptions.odr[i]);
-                if (Math.Abs(fOptions.odrl[i]) < absmin && fOptions.odrl[i] != 0.0)
-                    absmin = Math.Abs(fOptions.odrl[i]);
-                if (Math.Abs(fOptions.odru[i]) < absmin && fOptions.odru[i] != 0.0)
-                    absmin = Math.Abs(fOptions.odru[i]);
+                if (Math.Abs(fOptions.OddsRatios[i]) < absmin && fOptions.OddsRatios[i] != 0.0)
+                    absmin = Math.Abs(fOptions.OddsRatios[i]);
+                if (Math.Abs(fOptions.OddsRatioLcis[i]) < absmin && fOptions.OddsRatioLcis[i] != 0.0)
+                    absmin = Math.Abs(fOptions.OddsRatioLcis[i]);
+                if (Math.Abs(fOptions.OddsRatioUcis[i]) < absmin && fOptions.OddsRatioUcis[i] != 0.0)
+                    absmin = Math.Abs(fOptions.OddsRatioUcis[i]);
             }
             int decpm = 2;
             try

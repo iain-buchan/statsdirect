@@ -117,8 +117,8 @@ namespace StatsDirect.UI
             }
             if (null != options.SeriesOptions)
             {
-                ctlSeriesOptions1.Save();
-                options.MarkerTypes = ctlSeriesOptions1.MarkerTypes;
+                seriesOptions.Save();
+                options.MarkerTypes = seriesOptions.MarkerTypes;
             }
             FillOrientationFromForm();
         }
@@ -227,8 +227,10 @@ namespace StatsDirect.UI
         private void FillForestOptionsFromForm()
         {
             ForestOptions forestOptions = (ForestOptions)options;
-            int.TryParse(cboForestDecimalPlaces.Text, out forestOptions.EffectSizeAndIntervalDecimalPlaces);
-            forestOptions.StudyCiLineThickness = ctlForestStudyCiLineThickness.LineThickness;
+            int effectSizeAndIntervalDecimalPlaces;
+            int.TryParse(cboForestDecimalPlaces.Text, out effectSizeAndIntervalDecimalPlaces);
+            forestOptions.EffectSizeAndIntervalDecimalPlaces = effectSizeAndIntervalDecimalPlaces;
+            forestOptions.MarkCentres = chkForestMarkCentres.Checked;
         }
 
         private void FillNormalOptionsFromForm()
@@ -422,14 +424,14 @@ namespace StatsDirect.UI
             }
             if (pnlSeriesOptions.Visible)
             {
-                ctlSeriesOptions1.ShouldForceIsFilled = options.ShouldForceIsFilled;
-                ctlSeriesOptions1.ForcedIsFilled = options.ForcedIsFilled;
-                ctlSeriesOptions1.ShouldForceFillStyle = options.ShouldForceFillStyle;
-                ctlSeriesOptions1.ForcedFillStyle = options.ForcedFillStyle;
-                ctlSeriesOptions1.MarkerTypes = options.MarkerTypes;
+                seriesOptions.ShouldForceIsFilled = options.ShouldForceIsFilled;
+                seriesOptions.ForcedIsFilled = options.ForcedIsFilled;
+                seriesOptions.ShouldForceFillStyle = options.ShouldForceFillStyle;
+                seriesOptions.ForcedFillStyle = options.ForcedFillStyle;
+                seriesOptions.MarkerTypes = options.MarkerTypes;
 
                 // Set this last as it creates the marker types if they're not already created - so it must have all possible information.
-                ctlSeriesOptions1.SeriesOptionsDescriptors = options.SeriesOptions;
+                seriesOptions.SeriesOptionsDescriptors = options.SeriesOptions;
             }
             if (options.UsesOrientation)
             {
@@ -544,7 +546,7 @@ namespace StatsDirect.UI
         {
             ForestOptions forestOptions = (ForestOptions)options;
             cboForestDecimalPlaces.Text = forestOptions.EffectSizeAndIntervalDecimalPlaces.ToString();
-            ctlForestStudyCiLineThickness.LineThickness = (int)forestOptions.StudyCiLineThickness;
+            chkForestMarkCentres.Checked = forestOptions.MarkCentres;
         }
 
         private void FillFormFromNormalOptions()
@@ -771,7 +773,7 @@ namespace StatsDirect.UI
 
         private void SetColour(bool useColour)
         {
-            ctlSeriesOptions1.SetColour(useColour);
+            seriesOptions.SetColour(useColour);
         }
 
         private void ctlHistogramOptions1_ScaleChanged(object sender, EventArgs e)
@@ -912,6 +914,40 @@ namespace StatsDirect.UI
             {
                 OrientationChanged();
             }
+        }
+
+        private void chkScatterXYPlotLines_CheckedChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                SetShowLineOptions(chkScatterXYPlotLines.Checked);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Error while changing line options", ex, false);
+            }
+        }
+
+        private void SetShowLineOptions(bool showLineOptions)
+        {
+            seriesOptions.SetShowLineOptions(showLineOptions);
+        }
+
+        private void chkScatterXYPlotMarkers_CheckedChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                SetShowMarkerOptions(chkScatterXYPlotMarkers.Checked);
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Error while changing line options", ex, false);
+            }
+        }
+
+        private void SetShowMarkerOptions(bool showMarkerOptions)
+        {
+            seriesOptions.SetShowMarkerOptions(showMarkerOptions);
         }
     }
 }

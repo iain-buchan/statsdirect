@@ -17,34 +17,38 @@ namespace StatsDirect.Charting
 
         public double[] gn;
         public int k;
-        public double[] odr;
-        public double[] odrl;
-        public double[] odru;
-        public double[] pg; //  Should really be Integer but assigning a double variable is as efficient
-        public string[] titles;
-        public int EffectSizeAndIntervalDecimalPlaces;
-        public float StudyCiLineThickness;
+        public double[] OddsRatios { get; set; }
+        public double[] OddsRatioLcis { get; set; }
+        public double[] OddsRatioUcis { get; set; }
+        public double[] pg; // Should really be integer or bool but assigning a double variable is as efficient
+        public string[] Titles { get; set; }
+        public int EffectSizeAndIntervalDecimalPlaces { get; set; }
+        public bool MarkCentres { get; set; }
 
         public ForestOptions(bool useColour)
             : base(useColour)
         {
+            MarkCentres = true;
+
             //  A forest plot has one marker for the study and a second for the pooled effect
             MarkerTypes = new List<MarkerType>();
             MarkerType studyMarkerType = new MarkerType
                                              {
-                                                 Color = Color.Black,
-                                                 IsFilled = true,
-                                                 Shape = MarkerShape.Square,
-                                                 Style = System.Drawing.Drawing2D.DashStyle.Solid,
+                                                 MarkerColor = Color.Gray,
+                                                 LineColor = Color.Black,
+                                                 IsMarkerFilled = true,
+                                                 MarkerShape = MarkerShape.Square,
+                                                 LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid,
                                                  Width = 1
                                              };
             MarkerTypes.Add(studyMarkerType);
             MarkerType pooledMarkerType = new MarkerType
                                               {
-                                                  Color = Color.Black,
-                                                  IsFilled = false,
-                                                  Shape = MarkerShape.Diamond,
-                                                  Style = System.Drawing.Drawing2D.DashStyle.Solid,
+                                                  MarkerColor = Color.Gray,
+                                                  LineColor = Color.Black,
+                                                  IsMarkerFilled = true,
+                                                  MarkerShape = MarkerShape.Diamond,
+                                                  LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid,
                                                   Width = 1
                                               };
             MarkerTypes.Add(pooledMarkerType);
@@ -53,8 +57,8 @@ namespace StatsDirect.Charting
                                                        {
                                                            SeriesName = "Study",
                                                            AllowChangeToDashStyle = false,
-                                                           AllowChangeToLineThickness = false,
                                                            AllowChangeToMarkerSize = false,
+                                                           AllowChangeToLineThickness = false,
                                                            MarkerIndex = 0
                                                        };
             SeriesOptions.Add(studyOptions);
@@ -63,8 +67,8 @@ namespace StatsDirect.Charting
                                                         {
                                                             SeriesName = "Pooled effect",
                                                             AllowChangeToDashStyle = false,
-                                                            AllowChangeToLineThickness = false,
                                                             AllowChangeToMarkerSize = false,
+                                                            AllowChangeToLineThickness = false,
                                                             MarkerIndex = 1
                                                         };
             SeriesOptions.Add(pooledOptions);

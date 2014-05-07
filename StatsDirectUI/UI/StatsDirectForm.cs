@@ -5,9 +5,10 @@ using System.Windows.Forms;
 namespace StatsDirect.UI
 {
     /// <summary>
-    /// An abstract superclass of the concrete forms that may be displayed in StatsDirect.
+    /// A theoretically abstract superclass of the concrete forms that may be displayed in StatsDirect.
+    /// In reality, as the form designer can't cope with abstract superclasses, this is concrete with a whole load of "subclass should have implemented" exceptions.
     /// </summary>
-    public abstract class StatsDirectForm: Form, IForm
+    public class StatsDirectForm: Form, IForm
     {
         /// <summary>
         /// If true, changes have been made to the form since it was last saved.
@@ -45,13 +46,13 @@ namespace StatsDirect.UI
         /// Request the form to save its contents, over existing storage if it has that or to new storage if not.
         /// </summary>
         /// <returns>true if the content was saved, false if not</returns>
-        internal abstract bool SaveContents();
+        internal /* abstract */ virtual bool SaveContents() { throw new NotImplementedException("Subclass should have implemented"); }
 
         /// <summary>
         /// Request the form to save its contents to new storage.
         /// </summary>
         /// <returns>true if the content was saved, false if not</returns>
-        internal abstract bool SaveAsContents();
+        internal /* abstract */ virtual bool SaveAsContents() { throw new NotImplementedException("Subclass should have implemented"); }
 
         internal bool Dirty
         {
@@ -113,7 +114,7 @@ namespace StatsDirect.UI
         }
 
         /// <param name="nameToDisplay">If null or isTempFile is false (the normal case), use the filename.  If non-null and isTempFile is true, use this as the name to be shown for the file.</param>
-        public abstract bool OpenFile(string filename, bool isTempFile, string nameToDisplay);
+        public /* abstract */ virtual bool OpenFile(string filename, bool isTempFile, string nameToDisplay) { throw new NotImplementedException("Subclass should have implemented"); }
 
         internal virtual void ShowHelp()
         {
@@ -136,14 +137,14 @@ namespace StatsDirect.UI
             get { return false; }
         }
 
-        public abstract IList<Pane> AvailablePanes
+        public /* abstract */ virtual IList<Pane> AvailablePanes
         {
-            get;
+            get { throw new NotImplementedException("Subclass should have implemented"); }
         }
 
-        public abstract Pane SelectedPane
+        public /* abstract */ virtual Pane SelectedPane
         {
-            get;
+            get { throw new NotImplementedException("Subclass should have implemented"); }
         }
 
         /// <summary>
@@ -165,13 +166,13 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        internal abstract void EditCopy();
+        internal /* abstract */ virtual void EditCopy() { throw new NotImplementedException("Subclass should have implemented"); }
 
-        internal abstract void EditCut();
+        internal /* abstract */ virtual void EditCut() { throw new NotImplementedException("Subclass should have implemented"); }
 
-        internal abstract void EditPaste();
+        internal /* abstract */ virtual void EditPaste() { throw new NotImplementedException("Subclass should have implemented"); }
 
-        internal abstract void Print();
+        internal /* abstract */ virtual void Print() { throw new NotImplementedException("Subclass should have implemented"); }
 
         internal WindowInformation WindowInformation
         {

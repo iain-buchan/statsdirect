@@ -71,6 +71,7 @@ namespace StatsDirect.UI
                 ctlOneSeriesOptions1.ShowDashStyle = sod.AllowChangeToDashStyle;
                 ctlOneSeriesOptions1.ShowLineThickness = sod.AllowChangeToLineThickness;
                 ctlOneSeriesOptions1.ShowMarkerColour = sod.AllowChangeToMarkerColour;
+                ctlOneSeriesOptions1.ShowLineColour = sod.AllowChangeToLineColour;
                 ctlOneSeriesOptions1.ShowMarkerSize = sod.AllowChangeToMarkerSize;
                 ctlOneSeriesOptions1.ShowMarkerStyle = sod.AllowChangeToMarkerType;
                 ctlOneSeriesOptions1.ShowFillStyle = sod.AllowChangeToFill;
@@ -115,6 +116,16 @@ namespace StatsDirect.UI
         public void SetColour(bool useColour)
         {
             ctlOneSeriesOptions1.SetColour(useColour);
+        }
+
+        public void SetShowLineOptions(bool showLineOptions)
+        {
+            ctlOneSeriesOptions1.SetShowLineOptions(showLineOptions);
+        }
+
+        internal void SetShowMarkerOptions(bool showMarkerOptions)
+        {
+            ctlOneSeriesOptions1.SetShowMarkerOptions(showMarkerOptions);
         }
     }
 }
