@@ -85,7 +85,7 @@
           <default-value>false</default-value>
         </boolean>
         <special>
-          <name>solo</name>
+          <name>statsdirect-frame-pane</name>
           <prompt>Pick the sheet in which you want the output to appear</prompt>
           <acquire-if-true>=parameters.ContainsKey("output-to-frame") &amp;&amp; parameters["output-to-frame"].AsBoolean</acquire-if-true>
           <type>frame</type>

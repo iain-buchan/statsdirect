@@ -524,7 +524,6 @@ namespace StatsDirect.UI
                 Pane selectedPane = null;
                 if (availableWindows.Count > 0)
                 {
-                    // selectedPane = PickAWindow(availableWindows, AllowNew ? "New data" : null, mostRecentlySelectedGrid);
                     const string KEY = "solo";
                     SpecialParameter parameter = new SpecialParameter
                                                      {

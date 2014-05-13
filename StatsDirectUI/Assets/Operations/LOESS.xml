@@ -144,7 +144,7 @@ if (exists("returning.to.statsdirect")) {
         <settings>
           <parameters>
             <special>
-              <name>solo</name>
+              <name>statsdirect-frame-pane</name>
               <prompt>Pick the sheet in which you want the fits and standard errors to appear</prompt>
               <type>frame</type>
             </special>

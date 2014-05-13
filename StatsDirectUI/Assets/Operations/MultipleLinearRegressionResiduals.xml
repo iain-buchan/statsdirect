@@ -26,7 +26,7 @@
         <settings>
           <parameters>
             <special>
-              <name>solo</name>
+              <name>statsdirect-frame-pane</name>
               <prompt>Pick the sheet in which you want the output to appear</prompt>
               <type>frame</type>
             </special>

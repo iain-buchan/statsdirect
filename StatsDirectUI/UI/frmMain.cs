@@ -8,14 +8,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
+using System.Reflection;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
+using System.Xml.Serialization;
+using SpreadsheetGear.Advanced.Cells;
+using StatsDirect.Builtins;
+using StatsDirect.Configuration;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using StatsDirect.UI.Properties;
 using StatsDirect.Utilities;
 using System.Security.Permissions;
 using System.Diagnostics;
@@ -28,6 +36,7 @@ using Color = System.Drawing.Color;
 using SystemColors = System.Drawing.SystemColors;
 using StatsDirect.R;
 using StatsDirect.Charting;
+using InvalidDataException = StatsDirect.Templates.InvalidDataException;
 
 namespace StatsDirect.UI
 {
@@ -170,7 +179,7 @@ namespace StatsDirect.UI
 
         private void AddTemplates()
         {
-            SDMenuItem rootItem = LoadMenuItems(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, Properties.Settings.Default.MenuFileName));
+            SDMenuItem rootItem = LoadMenuItems(Path.Combine(SDConfiguration.InstallationDirectory, Settings.Default.MenuFileName));
             foreach (SDMenuItem sdMenuItem in rootItem.SubItems)
             {
                 ToolStripItem menuItem = MakeMenuItem(sdMenuItem);
@@ -187,7 +196,7 @@ namespace StatsDirect.UI
             }
 
             // #844: Templates can be loaded with windows open (for example from the Excel add-in).  Make sure that menus are set up for the active window if there is one.
-            if (null != ActiveMdiChild && ActiveMdiChild is StatsDirectForm)
+            if (ActiveMdiChild is StatsDirectForm)
                 SdApplication.SoleInstance.NoteFormActivated((WindowInformation)ActiveMdiChild.Tag);
             else
                 SetMenuVisibility(false);
@@ -345,7 +354,7 @@ namespace StatsDirect.UI
 
         public SDMenuItem LoadMenuItems(string pathName)
         {
-            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(SDMenuItem));
+            XmlSerializer s = new XmlSerializer(typeof(SDMenuItem));
             using (TextReader r = new StreamReader(pathName))
             {
                 return (SDMenuItem)s.Deserialize(r);
@@ -384,7 +393,7 @@ namespace StatsDirect.UI
             if (null != menuItem.Tag)
                 Debug.Print((string)menuItem.Tag);
             object tagObject = ToTagObject(menuItem);
-            if (null == tagObject || !(tagObject is Dictionary<string, string>))
+            if (!(tagObject is Dictionary<string, string>))
                 return;
             Dictionary<string, string> tags = (Dictionary<string, string>)tagObject;
             if (tags.Count > 1)
@@ -871,7 +880,7 @@ namespace StatsDirect.UI
             const double FRACTION_OF_PRIMARY = 0.75;
 
             // If our settings have previously been saved, load them now.  Otherwise, default to 75% width and height, centred, on the primary screen.
-            if (Properties.Settings.Default.MainWidth <= 0)
+            if (Settings.Default.MainWidth <= 0)
             {
                 foreach (Screen screen in Screen.AllScreens)
                 {
@@ -888,10 +897,10 @@ namespace StatsDirect.UI
             {
                 try
                 {
-                    Top = Properties.Settings.Default.MainTop;
-                    Left = Properties.Settings.Default.MainLeft;
-                    Width = Properties.Settings.Default.MainWidth;
-                    Height = Properties.Settings.Default.MainHeight;
+                    Top = Settings.Default.MainTop;
+                    Left = Settings.Default.MainLeft;
+                    Width = Settings.Default.MainWidth;
+                    Height = Settings.Default.MainHeight;
 
                     // Check against current screen settings - on remote desktops, for example, a user may now have a smaller screen.
                     // If the window's title bar is completely invisible, force it onto the main screen.
@@ -929,7 +938,7 @@ namespace StatsDirect.UI
                 {
                     // The window was saved maximised, so we don't have sizes
                 }
-                WindowState = Properties.Settings.Default.MainWindowState;
+                WindowState = Settings.Default.MainWindowState;
                 // Prevent starting in a minimised state
                 if (FormWindowState.Minimized == WindowState)
                     WindowState = FormWindowState.Normal;
@@ -944,12 +953,12 @@ namespace StatsDirect.UI
             // No point saving maximised or minimised settings, they're 0,0 when minimised or screen size when maximised
             if (FormWindowState.Normal == WindowState)
             {
-                Properties.Settings.Default.MainTop = Top;
-                Properties.Settings.Default.MainLeft = Left;
-                Properties.Settings.Default.MainWidth = Width;
-                Properties.Settings.Default.MainHeight = Height;
+                Settings.Default.MainTop = Top;
+                Settings.Default.MainLeft = Left;
+                Settings.Default.MainWidth = Width;
+                Settings.Default.MainHeight = Height;
             }
-            Properties.Settings.Default.MainWindowState = WindowState;
+            Settings.Default.MainWindowState = WindowState;
         }
 
         /// <summary>
@@ -958,7 +967,7 @@ namespace StatsDirect.UI
         private void SaveApplicationState()
         {
             SaveWindowState();
-            Properties.Settings.Default.Save();
+            Settings.Default.Save();
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -1017,7 +1026,7 @@ namespace StatsDirect.UI
             do
             {
                 Application.DoEvents(); // HACK: Force an inner event loop
-                System.Threading.Thread.Sleep(5);
+                Thread.Sleep(5);
             } while (selectingData);
             if (null != puntedException)
             {
@@ -1332,7 +1341,7 @@ namespace StatsDirect.UI
                         throw new Exception("The converted file does not exist");
 
                     // If we get here, the file should exist
-                    StatsDirectForm grid = CreateGrid(convertedPath, true, Path.GetFileNameWithoutExtension(convertedPath).Replace("~fromsd2", ""));
+                    CreateGrid(convertedPath, true, Path.GetFileNameWithoutExtension(convertedPath).Replace("~fromsd2", ""));
                     File.Delete(convertedPath);
                     // If we couldn't write, we copied the file for conversion.  Delete that copied file.
                     // As a paranoia check, NEVER delete the original - the code should never get here if the two were the same, but even so.
@@ -1358,11 +1367,7 @@ namespace StatsDirect.UI
 
         private bool FindStatsDirect2(out string sd2Path)
         {
-            string programFilesFolder;
-            if (Environment.Is64BitOperatingSystem)
-                programFilesFolder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            else
-                programFilesFolder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string programFilesFolder = Environment.GetFolderPath(Environment.Is64BitOperatingSystem ? Environment.SpecialFolder.ProgramFilesX86 : Environment.SpecialFolder.ProgramFiles);
             string statsDirectFolder = Path.Combine(programFilesFolder, "StatsDirect");
             if (!Directory.Exists(statsDirectFolder))
             {
@@ -1642,7 +1647,7 @@ namespace StatsDirect.UI
                     Text = "StatsDirect: " + operation;
                     return DoOperationInternal(operation, inputParameters, isRedo);
                 }
-                catch (Templates.InvalidDataException ex)
+                catch (InvalidDataException ex)
                 {
                     string errorMessage = ex.Message;
                     SdApplication.SoleInstance.MsgboxX(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
@@ -1735,7 +1740,7 @@ namespace StatsDirect.UI
         /// <remarks>This is decorated with HandlesChangedOperationAttribute to mark that its *caller* will catch that.  DO NOT allow this to be called by anything that doesn't catch SelectedOperationChangedException and CancelCurrentOperationAndDoException!
         /// Similarly, it's decorated in such a way that the compiler won't inline it, even though the method is only called in one place.  This ensures the attribute is preserved for the stack walk we do in InOperation.</remarks>
         [CallerHandlesChangedOperation]
-        [MethodImplAttribute(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private Operation DoOperationInternal(Operation operation, ParameterBag inputParameters, bool isRedo)
         {
             using (new WaitCursor())
@@ -2205,9 +2210,9 @@ namespace StatsDirect.UI
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // There's really not a lot we can do here.  TODO: Log?
+                EatException(ex);
             }
         }
 
@@ -2637,30 +2642,30 @@ namespace StatsDirect.UI
 
         private FilledParameter PrepareCombinedParameter(ChartOptionsParameter parameter)
         {
-            Charting.ChartDefinition chartDefinition = parameter.ChartDefinition;
-            Charting.ChartOptions chartOptions = chartDefinition.ChartOptions;
+            ChartDefinition chartDefinition = parameter.ChartDefinition;
+            ChartOptions chartOptions = chartDefinition.ChartOptions;
             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             Control ctl;
             switch (chartOptions.OptionType)
             {
-                case Charting.ChartOptionType.Bar:
-                case Charting.ChartOptionType.BoxWhisker:
-                case Charting.ChartOptionType.Control:
-                case Charting.ChartOptionType.ErrorBars:
-                case Charting.ChartOptionType.Forest:
-                case Charting.ChartOptionType.Histogram:
-                case Charting.ChartOptionType.Ladder:
-                case Charting.ChartOptionType.Normal:
-                case Charting.ChartOptionType.Pyramid:
-                case Charting.ChartOptionType.ROC:
-                case Charting.ChartOptionType.ScatterXY:
-                case Charting.ChartOptionType.Spread:
-                case Charting.ChartOptionType.Survival:
+                case ChartOptionType.Bar:
+                case ChartOptionType.BoxWhisker:
+                case ChartOptionType.Control:
+                case ChartOptionType.ErrorBars:
+                case ChartOptionType.Forest:
+                case ChartOptionType.Histogram:
+                case ChartOptionType.Ladder:
+                case ChartOptionType.Normal:
+                case ChartOptionType.Pyramid:
+                case ChartOptionType.ROC:
+                case ChartOptionType.ScatterXY:
+                case ChartOptionType.Spread:
+                case ChartOptionType.Survival:
                     ctl = new ctlChartOptions(chartDefinition);
                     break;
-                case Charting.ChartOptionType.Agreement:
-                case Charting.ChartOptionType.Gini:
-                case Charting.ChartOptionType.LinearRegression:
+                case ChartOptionType.Agreement:
+                case ChartOptionType.Gini:
+                case ChartOptionType.LinearRegression:
                     // Do nothing - there are no options to fill
                     return new FilledParameter(true, parameter.ChartDefinition);
                 default:
@@ -3299,19 +3304,19 @@ namespace StatsDirect.UI
             switch (fillerToUse)
             {
                 case "ChiSquareGoodnessOfFit":
-                    ctl = new ctlChiGFOptions((Builtins.ChiSquareGoodnessOfFitOptions)fillable);
+                    ctl = new ctlChiGFOptions((ChiSquareGoodnessOfFitOptions)fillable);
                     break;
                 case "ConvertUnits":
                     ctl = new ctlConvertUnits(host);
                     break;
                 case "Distribution":
-                    ctl = new ctlPDF((Builtins.DistributionOptions)fillable, host);
+                    ctl = new ctlPDF((DistributionOptions)fillable, host);
                     break;
                 case "Dummy":
-                    ctl = new ctlDummyOptions((Builtins.DummyOptions)fillable);
+                    ctl = new ctlDummyOptions((DummyOptions)fillable);
                     break;
                 case "Extraction":
-                    Builtins.ExtractionOptions f = (Builtins.ExtractionOptions)fillable;
+                    ExtractionOptions f = (ExtractionOptions)fillable;
                     if (null == f.IdentifiersFrame)
                         ctl = new ctlFindAndReplaceData(f);
                     else
@@ -3338,7 +3343,7 @@ namespace StatsDirect.UI
                     ctl = new ctlSort(range, gearForm.workbookView);
                     break;
                 case "Scores":
-                    ctl = new ctlScores((Builtins.ScoresOptions)fillable);
+                    ctl = new ctlScores((ScoresOptions)fillable);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("parameter", fillable.FillerToUse, "fillableParameter.Fillable.FillerToUse: Unknown option");
@@ -3351,7 +3356,7 @@ namespace StatsDirect.UI
 
         public void ToggleFilters()
         {
-            if (null != ActiveMdiChild && ActiveMdiChild is IGrid)
+            if (ActiveMdiChild is IGrid)
                 ((frmSpreadsheetGear)ActiveMdiChild).ToggleFilters();
         }
 
@@ -3748,9 +3753,9 @@ namespace StatsDirect.UI
             {
                 CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Eat the exception.  TODO: Log
+                EatException(ex);
             }
         }
 
@@ -4048,11 +4053,11 @@ namespace StatsDirect.UI
                         DataFrame sourceFrame = context[parameter.Name].AsDataFrame;
                         if (sourceFrame.VariableCount >= 2 && sourceFrame.Variables[0].IsDoubleVariable && sourceFrame.Variables[1].IsDoubleVariable)
                         {
-                            DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0].AsDoubleVariable);
-                            DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 1, sourceFrame.Variables[1].AsDoubleVariable);
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0].AsDoubleVariable);
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, sourceFrame.Variables[1].AsDoubleVariable);
                             if (has3Columns && sourceFrame.VariableCount >= 3 && sourceFrame.Variables[0].IsDoubleVariable)
                             {
-                                DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2].AsDoubleVariable);
+                                DumpIntoSsg((IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2].AsDoubleVariable);
                             }
                         }
                     }
@@ -4104,7 +4109,7 @@ namespace StatsDirect.UI
                         DataFrame sourceFrame = context[parameter.Name].AsDataFrame;
                         for (int col = 0; col < sourceFrame.VariableCount; col++)
                             if (sourceFrame.Variables[col].IsDoubleVariable)
-                                DumpIntoSsg((SpreadsheetGear.Advanced.Cells.IValues)grid.ActiveWorksheet, col, sourceFrame.Variables[col].AsDoubleVariable);
+                                DumpIntoSsg((IValues)grid.ActiveWorksheet, col, sourceFrame.Variables[col].AsDoubleVariable);
                     }
                     grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
@@ -4128,7 +4133,7 @@ namespace StatsDirect.UI
                 double suggestedC;
                 DataFrame frame = context["data"].AsDataFrame;
                 DoubleVariable dv = frame.Variables[0].AsDoubleVariable;
-                Builtins.Sheet.XConstant(dv.Length, 0, dv.Data, out minimumC, out suggestedC);
+                Sheet.XConstant(dv.Length, 0, dv.Data, out minimumC, out suggestedC);
                 context.AddOutput("a_min", minimumC);
 
                 if (minimumC != Constant.MISSING)
@@ -4190,37 +4195,7 @@ namespace StatsDirect.UI
             throw new ArgumentOutOfRangeException("parameter", parameter.SpecialType, "parameter.SpecialType: Unknown option");
         }
 
-        void grid_KeyUp(object sender, KeyEventArgs e)
-        {
-            enterPressed = e.KeyCode == Keys.Enter;
-        }
-
-        IRange mostRecentActiveCell;
-        bool enterPressed;
-
-        void grid_RangeSelectionChanging(object sender, RangeSelectionChangingEventArgs e)
-        {
-            if (mostRecentActiveCell != null && enterPressed)
-            {
-                // Cancel event...
-                e.Cancel = true;
-
-                // ...and move range selection one cell to the right of mostRecentActiveCell, instead of down
-                mostRecentActiveCell[0, 1].Select();
-                mostRecentActiveCell = null;
-                enterPressed = false;
-            }
-        }
-
-        /// <summary>
-        /// Remember where the most recently edited cell was.  Used to implement enter-moves-across in 2-column and 3-column grids.
-        /// </summary>
-        void grid_CellEndEdit(object sender, CellEndEditEventArgs e)
-        {
-            mostRecentActiveCell = e.ActiveCell;
-        }
-
-        static void DumpIntoSsg(SpreadsheetGear.Advanced.Cells.IValues values, int column, DoubleVariable variable)
+        static void DumpIntoSsg(IValues values, int column, DoubleVariable variable)
         {
             double[] data = variable.Data;
             if (null != data)
@@ -4454,7 +4429,7 @@ namespace StatsDirect.UI
             do
             {
                 Application.DoEvents(); // HACK: Force an inner event loop
-                System.Threading.Thread.Sleep(5);
+                Thread.Sleep(5);
             } while (inputtingData);
             if (null != puntedException)
             {
@@ -5115,9 +5090,9 @@ namespace StatsDirect.UI
                 if (SdApplication.HasInstance)
                     SdApplication.SoleInstance.Shutdown();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Eat the exception
+                EatException(ex);
             }
 
             // HACK: There are occasions when the main window is closed when we're in a DoEvents loop many levels down the stack.  This deals with the problem that the process can stick around.
@@ -5142,9 +5117,9 @@ namespace StatsDirect.UI
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Eat the exception.  TODO: Log.
+                EatException(ex);
             }
         }
 
@@ -5256,8 +5231,8 @@ namespace StatsDirect.UI
                 }
                 toolsMenuItems.Clear();
             }
-            System.Collections.Specialized.StringCollection names = Properties.Settings.Default.ToolsNames;
-            System.Collections.Specialized.StringCollection paths = Properties.Settings.Default.ToolsPrograms;
+            StringCollection names = Settings.Default.ToolsNames;
+            StringCollection paths = Settings.Default.ToolsPrograms;
             for (int i = 0; i < names.Count; i++)
             {
                 string name = names[i];
@@ -5302,7 +5277,7 @@ namespace StatsDirect.UI
                     commandLine = commandLine.Substring(0, firstSpace);
                 }
                 // Perform any required substitutions
-                System.Reflection.Assembly mainAssembly = GetType().Assembly;
+                Assembly mainAssembly = GetType().Assembly;
                 string mainFileName = mainAssembly.Location;
                 string installPath = Path.GetDirectoryName(mainFileName);
                 commandLine = commandLine.Replace("%STATSDIRECT%", installPath);
@@ -5731,9 +5706,9 @@ namespace StatsDirect.UI
             {
                 renameContextMenuToolStripTextBox.Focus();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Eat the exception
+                EatException(ex);
             }
         }
 
@@ -5754,9 +5729,9 @@ namespace StatsDirect.UI
 
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Eat the exception
+                EatException(ex);
             }
         }
 
@@ -5777,10 +5752,17 @@ namespace StatsDirect.UI
                     mostRecentlySelectedWindow = null;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Eat the error
+                EatException(ex);
             }
+        }
+
+        /// <summary>
+        /// An exception has occurred that we don't want to present to the user.  Silently discard it.  A future implementation might log it for later debug purposes.
+        /// </summary>
+        private void EatException(Exception ex)
+        {
         }
 
         private void cutContextMenuItem1_Click(object sender, EventArgs e)
@@ -6220,7 +6202,7 @@ namespace StatsDirect.UI
             do
             {
                 Application.DoEvents(); // HACK: Force an inner event loop
-                System.Threading.Thread.Sleep(5);
+                Thread.Sleep(5);
             } while (waitingForModalMessage);
             mnuMain.Enabled = true;
             foreach (Form f in MdiChildren)
@@ -6437,7 +6419,7 @@ namespace StatsDirect.UI
                     preferredVersion = RController.PreferredRVersion(RController.CheckR());
                 }
                 string guiPath = preferredVersion.GuiPath;
-                System.Diagnostics.Process.Start(guiPath);
+                Process.Start(guiPath);
             }
             catch (Exception ex)
             {
