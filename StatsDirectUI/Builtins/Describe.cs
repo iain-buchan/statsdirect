@@ -572,7 +572,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*fields", fieldsList);
             foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
             {
-                fieldsList.Add(FillField(host, s, sx, cols, shouldOutput[s], titles[(int)s], isWeighted));
+                if (shouldOutput[s])
+                    fieldsList.Add(FillField(host, s, sx, cols, shouldOutput[s], titles[(int)s], isWeighted));
             }
 
             // Fill the worksheet if required
