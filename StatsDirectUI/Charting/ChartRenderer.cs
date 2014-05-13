@@ -5105,7 +5105,7 @@ namespace StatsDirect.Charting
             ScaleParameters sp = new ScaleParameters
                                      {
                                          X = { AllowedScaleTypes = new[] { ScaleType.Linear } },
-                                         Y = { AllowedScaleTypes = new[] { ScaleType.NotSet } }
+                                         Y = { AllowedScaleTypes = new[] { ScaleType.Linear } }
                                      };
             double transTemp72;
             double transTemp73;
