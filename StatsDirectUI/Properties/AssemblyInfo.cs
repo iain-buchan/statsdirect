@@ -29,6 +29,6 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.0.115.0")]
-[assembly: AssemblyFileVersion("3.0.115.0")]
+[assembly: AssemblyVersion("3.0.116.0")]
+[assembly: AssemblyFileVersion("3.0.116.0")]
 [assembly: CLSCompliant(false)]
