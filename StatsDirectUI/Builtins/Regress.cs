@@ -204,9 +204,7 @@ namespace StatsDirect.Builtins
 
             double REGGAMMA = parameters["gamma"].AsDouble;
             if (REGGAMMA <= 0.0)
-            {
                 throw new Exception("GAMMA must be greater than zero");
-            }
 
             int nx = context.X.Length - 1;
             x_lsm(out perf, out sumx, out ssx, out ssy, out SDX, out ssreg, out mnsqr, out r, out seest, context);
