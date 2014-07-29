@@ -34,16 +34,16 @@ namespace StatsDirect.Charting
             
             //  A normal plot has a single series with no lines.
             SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
-                                                      {
-                                                          SeriesName = "Markers",
-                                                          AllowChangeToDashStyle = false,
-                                                          AllowChangeToLineThickness = false,
-                                                          MarkerIndex = 0
-                                                      };
+            {
+                SeriesName = "Markers",
+                AllowChangeToDashStyle = false,
+                AllowChangeToLineThickness = false,
+                AllowChangeToLineColour = false,
+                MarkerIndex = 0
+            };
             SeriesOptions.Add( soleOptions ); 
         } 
         
-        // TRANSMISSINGCOMMENT: Property OptionType
         public override ChartOptionType OptionType 
         { 
             get 
@@ -51,7 +51,7 @@ namespace StatsDirect.Charting
                 return ChartOptionType.Normal; 
             } 
         } 
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
+
         public override bool UsesChartTitle 
         { 
             get 
@@ -60,7 +60,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAutoscale
         public override bool UsesAutoscale 
         { 
             get 
@@ -69,7 +68,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesBoxAxes
         public override bool UsesBoxAxes 
         { 
             get 
@@ -78,7 +76,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisLabelFontDescriptor
         public override bool UsesAxisLabelFontDescriptor 
         { 
             get 
@@ -87,7 +84,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesAxisTitleFontDescriptor
         public override bool UsesAxisTitleFontDescriptor 
         { 
             get 
@@ -96,7 +92,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property ShowNormalOptions
         public override bool ShowNormalOptions 
         { 
             get 
@@ -105,7 +100,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesShowLegend
         public override bool UsesShowLegend 
         { 
             get 
@@ -114,7 +108,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
         public override bool ShowLegendIsRelevant 
         { 
             get 
@@ -122,8 +115,5 @@ namespace StatsDirect.Charting
                 return false; 
             } 
         } 
-        
     } 
-    
-    
 } 

@@ -12,19 +12,19 @@
     <ComponentRef Id="ProductComponent" />
 
     <!-- DevExpress -->
-    <ComponentRef Id="DevExpress.Data.v13.2.dll" />
-    <ComponentRef Id="DevExpress.Docs.v13.2.dll" />
-    <ComponentRef Id="DevExpress.Office.v13.2.Core.dll" />
-    <ComponentRef Id="DevExpress.Printing.v13.2.Core.dll" />
-    <ComponentRef Id="DevExpress.RichEdit.v13.2.Core.dll" />
-    <ComponentRef Id="DevExpress.Sparkline.v13.2.Core.dll" />
-    <ComponentRef Id="DevExpress.Utils.v13.2.dll" />
-    <ComponentRef Id="DevExpress.XtraBars.v13.2.dll" />
-    <ComponentRef Id="DevExpress.XtraEditors.v13.2.dll" />
-    <ComponentRef Id="DevExpress.XtraPrinting.v13.2.dll" />
-    <ComponentRef Id="DevExpress.XtraRichEdit.v13.2.dll" />
-    <ComponentRef Id="DevExpress.XtraRichEdit.v13.2.Extensions.dll" />
-    <ComponentRef Id="DevExpress.XtraTreeList.v13.2.dll" />
+    <ComponentRef Id="DevExpress.Data.v14.1.dll" />
+    <ComponentRef Id="DevExpress.Docs.v14.1.dll" />
+    <ComponentRef Id="DevExpress.Office.v14.1.Core.dll" />
+    <ComponentRef Id="DevExpress.Printing.v14.1.Core.dll" />
+    <ComponentRef Id="DevExpress.RichEdit.v14.1.Core.dll" />
+    <ComponentRef Id="DevExpress.Sparkline.v14.1.Core.dll" />
+    <ComponentRef Id="DevExpress.Utils.v14.1.dll" />
+    <ComponentRef Id="DevExpress.XtraBars.v14.1.dll" />
+    <ComponentRef Id="DevExpress.XtraEditors.v14.1.dll" />
+    <ComponentRef Id="DevExpress.XtraPrinting.v14.1.dll" />
+    <ComponentRef Id="DevExpress.XtraRichEdit.v14.1.dll" />
+    <ComponentRef Id="DevExpress.XtraRichEdit.v14.1.Extensions.dll" />
+    <ComponentRef Id="DevExpress.XtraTreeList.v14.1.dll" />
 
     <!-- SpreadsheetGear -->
     <ComponentRef Id="SpreadsheetGear2012.Core.dll" />

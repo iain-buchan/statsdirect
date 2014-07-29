@@ -29,26 +29,32 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmUpdateCheck));
-            this.button1 = new System.Windows.Forms.Button();
+            this.cmdUpdateStatsDirect = new System.Windows.Forms.Button();
             this.cmdClose = new System.Windows.Forms.Button();
-            this.lblStatus = new System.Windows.Forms.Label();
+            this.lblStatsDirectStatus = new System.Windows.Forms.Label();
             this.lblWhatsNew = new System.Windows.Forms.Label();
+            this.lblRStatus = new System.Windows.Forms.Label();
+            this.grpStatsDirect = new System.Windows.Forms.GroupBox();
+            this.grpR = new System.Windows.Forms.GroupBox();
+            this.cmdDownloadR = new System.Windows.Forms.Button();
+            this.grpStatsDirect.SuspendLayout();
+            this.grpR.SuspendLayout();
             this.SuspendLayout();
             // 
-            // button1
+            // cmdUpdateStatsDirect
             // 
-            this.button1.Location = new System.Drawing.Point(12, 89);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(158, 23);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "&Close StatsDirect and update";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Visible = false;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.cmdUpdateStatsDirect.Location = new System.Drawing.Point(9, 94);
+            this.cmdUpdateStatsDirect.Name = "cmdUpdateStatsDirect";
+            this.cmdUpdateStatsDirect.Size = new System.Drawing.Size(246, 23);
+            this.cmdUpdateStatsDirect.TabIndex = 0;
+            this.cmdUpdateStatsDirect.Text = "&Close StatsDirect and update";
+            this.cmdUpdateStatsDirect.UseVisualStyleBackColor = true;
+            this.cmdUpdateStatsDirect.Visible = false;
+            this.cmdUpdateStatsDirect.Click += new System.EventHandler(this.button1_Click);
             // 
             // cmdClose
             // 
-            this.cmdClose.Location = new System.Drawing.Point(176, 89);
+            this.cmdClose.Location = new System.Drawing.Point(197, 274);
             this.cmdClose.Name = "cmdClose";
             this.cmdClose.Size = new System.Drawing.Size(75, 23);
             this.cmdClose.TabIndex = 1;
@@ -56,13 +62,13 @@
             this.cmdClose.UseVisualStyleBackColor = true;
             this.cmdClose.Click += new System.EventHandler(this.cmdClose_Click);
             // 
-            // lblStatus
+            // lblStatsDirectStatus
             // 
-            this.lblStatus.Location = new System.Drawing.Point(13, 13);
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(238, 49);
-            this.lblStatus.TabIndex = 2;
-            this.lblStatus.Text = "Checking for updates...";
+            this.lblStatsDirectStatus.Location = new System.Drawing.Point(10, 16);
+            this.lblStatsDirectStatus.Name = "lblStatsDirectStatus";
+            this.lblStatsDirectStatus.Size = new System.Drawing.Size(238, 51);
+            this.lblStatsDirectStatus.TabIndex = 2;
+            this.lblStatsDirectStatus.Text = "Checking for updates to StatsDirect...";
             // 
             // lblWhatsNew
             // 
@@ -70,7 +76,7 @@
             this.lblWhatsNew.Cursor = System.Windows.Forms.Cursors.Hand;
             this.lblWhatsNew.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblWhatsNew.ForeColor = System.Drawing.SystemColors.Highlight;
-            this.lblWhatsNew.Location = new System.Drawing.Point(13, 62);
+            this.lblWhatsNew.Location = new System.Drawing.Point(10, 67);
             this.lblWhatsNew.Name = "lblWhatsNew";
             this.lblWhatsNew.Size = new System.Drawing.Size(69, 13);
             this.lblWhatsNew.TabIndex = 3;
@@ -78,15 +84,56 @@
             this.lblWhatsNew.Visible = false;
             this.lblWhatsNew.Click += new System.EventHandler(this.lblWhatsNew_Click);
             // 
+            // lblRStatus
+            // 
+            this.lblRStatus.Location = new System.Drawing.Point(9, 16);
+            this.lblRStatus.Name = "lblRStatus";
+            this.lblRStatus.Size = new System.Drawing.Size(246, 75);
+            this.lblRStatus.TabIndex = 4;
+            this.lblRStatus.Text = "Checking for updates to R...";
+            // 
+            // grpStatsDirect
+            // 
+            this.grpStatsDirect.Controls.Add(this.cmdUpdateStatsDirect);
+            this.grpStatsDirect.Controls.Add(this.lblWhatsNew);
+            this.grpStatsDirect.Controls.Add(this.lblStatsDirectStatus);
+            this.grpStatsDirect.Location = new System.Drawing.Point(12, 12);
+            this.grpStatsDirect.Name = "grpStatsDirect";
+            this.grpStatsDirect.Size = new System.Drawing.Size(261, 125);
+            this.grpStatsDirect.TabIndex = 5;
+            this.grpStatsDirect.TabStop = false;
+            this.grpStatsDirect.Text = "StatsDirect";
+            // 
+            // grpR
+            // 
+            this.grpR.Controls.Add(this.cmdDownloadR);
+            this.grpR.Controls.Add(this.lblRStatus);
+            this.grpR.Location = new System.Drawing.Point(12, 143);
+            this.grpR.Name = "grpR";
+            this.grpR.Size = new System.Drawing.Size(261, 125);
+            this.grpR.TabIndex = 6;
+            this.grpR.TabStop = false;
+            this.grpR.Text = "R";
+            // 
+            // cmdDownloadR
+            // 
+            this.cmdDownloadR.Location = new System.Drawing.Point(9, 94);
+            this.cmdDownloadR.Name = "cmdDownloadR";
+            this.cmdDownloadR.Size = new System.Drawing.Size(246, 23);
+            this.cmdDownloadR.TabIndex = 0;
+            this.cmdDownloadR.Text = "&Download R";
+            this.cmdDownloadR.UseVisualStyleBackColor = true;
+            this.cmdDownloadR.Visible = false;
+            this.cmdDownloadR.Click += new System.EventHandler(this.cmdDownloadR_Click);
+            // 
             // frmUpdateCheck
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(263, 124);
-            this.Controls.Add(this.lblWhatsNew);
-            this.Controls.Add(this.lblStatus);
+            this.ClientSize = new System.Drawing.Size(284, 306);
             this.Controls.Add(this.cmdClose);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.grpR);
+            this.Controls.Add(this.grpStatsDirect);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -96,16 +143,22 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Check for updates";
             this.Shown += new System.EventHandler(this.frmUpdateCheck_Shown);
+            this.grpStatsDirect.ResumeLayout(false);
+            this.grpStatsDirect.PerformLayout();
+            this.grpR.ResumeLayout(false);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button cmdUpdateStatsDirect;
         private System.Windows.Forms.Button cmdClose;
-        private System.Windows.Forms.Label lblStatus;
+        private System.Windows.Forms.Label lblStatsDirectStatus;
         private System.Windows.Forms.Label lblWhatsNew;
+        private System.Windows.Forms.Label lblRStatus;
+        private System.Windows.Forms.GroupBox grpStatsDirect;
+        private System.Windows.Forms.GroupBox grpR;
+        private System.Windows.Forms.Button cmdDownloadR;
     }
 }

@@ -412,6 +412,7 @@ namespace StatsDirect.UI
 
                 IRange range = worksheet.Range[0, firstColumnOfData, rawRange.Row + rawRange.RowCount + offsetForTitles - 1, firstColumnOfData + frame.VariableCount - 1];
                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert data", () => { WriteDataFrameInternal(frame, isFormulae, missingIndicator, range, shouldMove, offsetForTitles); return true; }));
+                workbookView.Focus();
             }
             finally
             {
@@ -1640,9 +1641,7 @@ namespace StatsDirect.UI
                                         cv.EnsureLength(variable.Data.Length);
                                         cv.EnsureGroups(groupsByLabel.Count);
                                         foreach (Group group in groupsByLabel.Values)
-                                        {
                                             cv.set_Group((int)group.Id, group);
-                                        }
                                         DataFrame dummyFrame;
                                         try
                                         {
@@ -1825,7 +1824,7 @@ namespace StatsDirect.UI
                     {
                         xtra = "\r\n\r\nThe rows must contain numeric data not text.";
                     }
-                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all columns selected must be " + requiredRows.ToString() + " rows long." + xtra, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all columns selected must be the same length (" + requiredRows.ToString() + " rows)." + xtra, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                 }
                 ((IGrid)this).ClearSelection();
             }

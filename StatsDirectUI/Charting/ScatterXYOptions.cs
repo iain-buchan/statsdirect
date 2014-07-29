@@ -40,7 +40,6 @@ namespace StatsDirect.Charting
             showLegendIsRelevant = xSeries.Count > 1;
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
         public override bool UsesChartTitle
         {
             get
@@ -49,7 +48,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesXAxisTitle
         public override bool UsesXAxisTitle
         {
             get
@@ -58,7 +56,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesYAxisTitle
         public override bool UsesYAxisTitle
         {
             get
@@ -67,7 +64,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesAutoscale
         public override bool UsesAutoscale
         {
             get
@@ -76,7 +72,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesAxisLabelFontDescriptor
         public override bool UsesAxisLabelFontDescriptor
         {
             get
@@ -85,7 +80,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesAxisTitleFontDescriptor
         public override bool UsesAxisTitleFontDescriptor
         {
             get
@@ -94,7 +88,14 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property OptionType
+        public override bool UsesSeriesLabels
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         public override ChartOptionType OptionType
         {
             get
@@ -103,7 +104,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property ShowScatterXYOptions
         public override bool ShowScatterXYOptions
         {
             get
@@ -112,16 +112,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesShowLegend
-        public override bool UsesShowLegend
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
         public override bool ShowLegendIsRelevant
         {
             get

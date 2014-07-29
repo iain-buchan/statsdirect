@@ -1,4 +1,6 @@
-﻿using System;
+﻿using StatsDirect.R;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -9,7 +11,9 @@ namespace StatsDirect.UI
 {
     public partial class frmUpdateCheck : Form
     {
-        private WebClient client;
+        private WebClient statsDirectClient;
+        private WebClient rClient;
+
         public frmUpdateCheck()
         {
             InitializeComponent();
@@ -18,65 +22,108 @@ namespace StatsDirect.UI
 
         private void cmdClose_Click(object sender, EventArgs e)
         {
-            if (null != client)
-                client.CancelAsync();
+            if (null != statsDirectClient)
+                statsDirectClient.CancelAsync();
             Close();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (null != client)
-                client.CancelAsync();
+            if (null != statsDirectClient)
+                statsDirectClient.CancelAsync();
             Close();
             SdApplication.SoleInstance.CloseAndUpdate();
         }
 
         private void frmUpdateCheck_Shown(object sender, EventArgs e)
         {
-            StartCheck();
+            StartStatsDirectCheck();
+            StartRCheck();
         }
 
-        private void StartCheck()
+        private void StartStatsDirectCheck()
         {
             Application.UseWaitCursor = true;
             // Just using DownloadStringAsync can block on DNS resolution; so perform async DNS resolution for www.statsdirect.com
-            Dns.BeginGetHostAddresses("www.statsdirect.com", DnsCompleted, null);
+            Dns.BeginGetHostAddresses("www.statsdirect.com", StatsDirectDnsCompleted, null);
         }
 
-        private void DnsCompleted(IAsyncResult ar)
+        private void StartRCheck()
+        {
+            Application.UseWaitCursor = true;
+            // Just using DownloadStringAsync can block on DNS resolution; so perform async DNS resolution for cran.r-project.org
+            Dns.BeginGetHostAddresses("cran.r-project.org", RDnsCompleted, null);
+        }
+
+        private void StatsDirectDnsCompleted(IAsyncResult ar)
         {
             if (!ar.IsCompleted)
             {
-                UpdateStatus("Could not resolve www.statsdirect.com; are you connected to a network?");
+                UpdateStatsDirectStatus("Could not resolve www.statsdirect.com; are you connected to a network?");
                 return;
             }
             try
             {
                 var addresses = Dns.EndGetHostAddresses(ar);
-                client = new WebClient();
-                client.DownloadStringCompleted += client_DownloadStringCompleted;
-                client.DownloadStringAsync(new Uri(string.Format("http://{0}/update.aspx", addresses[0])));
+                UpdateStatsDirectStatus("Contacting www.statsdirect.com...");
+                statsDirectClient = new WebClient();
+                statsDirectClient.DownloadStringCompleted += DownloadStatsDirectStringCompleted;
+                statsDirectClient.DownloadStringAsync(new Uri(string.Format("http://{0}/update.aspx", addresses[0])));
             }
             catch (SocketException)
             {
-                UpdateStatus("Could not resolve www.statsdirect.com; are you connected to a network?");
+                UpdateStatsDirectStatus("Could not resolve www.statsdirect.com; are you connected to a network?");
             }
         }
 
-        private void UpdateStatus(string status)
+        private void RDnsCompleted(IAsyncResult ar)
+        {
+            if (!ar.IsCompleted)
+            {
+                UpdateRStatus("Could not resolve cran.r-project.org; are you connected to a network?");
+                return;
+            }
+            try
+            {
+                var addresses = Dns.EndGetHostAddresses(ar);
+                UpdateRStatus("Contacting cran.r-project.org...");
+                rClient = new WebClient();
+                rClient.DownloadStringCompleted += DownloadRStringCompleted;
+                rClient.DownloadStringAsync(new Uri("http://cran.r-project.org/bin/windows/base/release.htm"));
+            }
+            catch (SocketException)
+            {
+                UpdateStatsDirectStatus("Could not resolve www.statsdirect.com; are you connected to a network?");
+            }
+        }
+
+        private void UpdateStatsDirectStatus(string status)
         {
             Application.UseWaitCursor = false;
-            if (lblStatus.InvokeRequired)
+            if (lblStatsDirectStatus.InvokeRequired)
             {
-                lblStatus.Invoke(new MethodInvoker(delegate { lblStatus.Text = status; }));
+                lblStatsDirectStatus.Invoke(new MethodInvoker(delegate { lblStatsDirectStatus.Text = status; }));
             }
             else
             {
-                lblStatus.Text = status;
+                lblStatsDirectStatus.Text = status;
             }
         }
 
-        private void client_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        private void UpdateRStatus(string status)
+        {
+            Application.UseWaitCursor = false;
+            if (lblRStatus.InvokeRequired)
+            {
+                lblRStatus.Invoke(new MethodInvoker(delegate { lblRStatus.Text = status; }));
+            }
+            else
+            {
+                lblRStatus.Text = status;
+            }
+        }
+
+        private void DownloadStatsDirectStringCompleted(object sender, DownloadStringCompletedEventArgs e)
         {
             Application.UseWaitCursor = false;
             const string prefix = "Current version";
@@ -84,7 +131,7 @@ namespace StatsDirect.UI
                 return;
             if (null != e.Error)
             {
-                UpdateStatus("Could not check for updates. Please check your Internet connection.");
+                UpdateStatsDirectStatus("Could not check for StatsDirect updates. Please check your Internet connection.");
                 return;
             }
 
@@ -93,37 +140,87 @@ namespace StatsDirect.UI
             int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.Ordinal);
             if (latestVersionPos < 0)
             {
-                UpdateStatus("Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx");
+                UpdateStatsDirectStatus("Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/update.aspx");
                 return;
             }
             string latestVersionLine = downloadedPage.Substring(latestVersionPos + prefix.Length);
             int versionsEndPos = latestVersionLine.IndexOf("<br");
             if (versionsEndPos < 0)
             {
-                UpdateStatus("Could not locate version on update page. Please check manually at www.statsdirect.com/update.aspx");
+                UpdateStatsDirectStatus("Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/update.aspx");
                 return;
             }
             latestVersionLine = latestVersionLine.Substring(0, versionsEndPos - 1);
             MajorMinorPoint availableVersion = GetVersion3(latestVersionLine);
             if (null == availableVersion || !availableVersion.IsValid)
             {
-                UpdateStatus("Could not locate a version of StatsDirect 3 on update page. Please check manually at www.statsdirect.com/update.aspx");
+                UpdateStatsDirectStatus("Could not locate a version of StatsDirect 3 on update page. Please check manually at www.statsdirect.com/update.aspx");
                 return;
             }
             MajorMinorPoint installedVersion = new MajorMinorPoint(Application.ProductVersion);
             // isNewer = true; // useful for testing without updating the web site!
             if (installedVersion < availableVersion)
             {
-                lblStatus.Text = "You are presently running version " + installedVersion + ". Version " + availableVersion.ToString() +
+                lblStatsDirectStatus.Text = "You are presently running StatsDirect version " + installedVersion + ". Version " + availableVersion.ToString() +
                                     " is available. Would you like to close StatsDirect and install the new version?";
-                cmdClose.Text = "Cancel";
-                button1.Visible = true;
+                cmdUpdateStatsDirect.Visible = true;
                 lblWhatsNew.Visible = true;
             }
             else
             {
-                lblStatus.Text = "You are presently running version " + installedVersion +
+                lblStatsDirectStatus.Text = "You are presently running StatsDirect version " + installedVersion +
                                     ". You have the latest version of StatsDirect.";
+            }
+        }
+
+        private void DownloadRStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        {
+            Application.UseWaitCursor = false;
+            const string prefix = "URL=R-";
+            if (e.Cancelled)
+                return;
+            if (null != e.Error)
+            {
+                UpdateRStatus("Could not check for R updates. Please check your Internet connection.");
+                return;
+            }
+            // Success - look for the version
+            string downloadedPage = e.Result;
+            int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.Ordinal);
+            if (latestVersionPos < 0)
+            {
+                UpdateRStatus("Could not locate R version on download page. Please check manually at http://cran.r-project.org");
+                return;
+            }
+            string latestVersionLine = downloadedPage.Substring(latestVersionPos + prefix.Length);
+            int versionsEndPos = latestVersionLine.IndexOf("-win");
+            if (versionsEndPos < 0)
+            {
+                UpdateRStatus("Could not locate R version on download page. Please check manually at http://cran.r-project.org");
+                return;
+            }
+            latestVersionLine = latestVersionLine.Substring(0, versionsEndPos);
+
+            MajorMinorPoint downloadableVersion = new MajorMinorPoint(latestVersionLine);
+            bool downloadableIsNewer = true;
+            MajorMinorPoint latestInstalledVersion = null;
+            foreach (RVersion version in RController.CheckR())
+            {
+                MajorMinorPoint installedVersion = new MajorMinorPoint(version.Version);
+                if (!(downloadableVersion > installedVersion))
+                    downloadableIsNewer = false;
+                if (null == latestInstalledVersion || installedVersion > latestInstalledVersion)
+                    latestInstalledVersion = installedVersion;
+            }
+            if (downloadableIsNewer)
+            {
+                string currentR = null == latestInstalledVersion ? "You do not have R installed." : "You are presently running R version " + latestInstalledVersion.ToString() + ".";
+                lblRStatus.Text = currentR + " Version " + latestVersionLine + " is available. Would you like to download it?";
+                cmdDownloadR.Visible = true;
+            }
+            else
+            {
+                lblRStatus.Text = "You are presently running the latest R version.";
             }
         }
 
@@ -145,6 +242,11 @@ namespace StatsDirect.UI
         private void lblWhatsNew_Click(object sender, EventArgs e)
         {
             Process.Start("http://www.statsdirect.com/Revisions.aspx");
+        }
+
+        private void cmdDownloadR_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://cran.r-project.org/bin/windows/base/release.htm");
         }
     }
 

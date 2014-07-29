@@ -708,6 +708,7 @@ namespace StatsDirect.UI
 
         private void PreviewChart()
         {
+            ChartOptionProcessor.PostProcessFilledChartOptions(definition);
             using (ChartRenderer renderer = new ChartRenderer(definition))
             {
                 if (PreviewAsAscii)

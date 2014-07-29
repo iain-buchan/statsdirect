@@ -6,7 +6,6 @@ namespace StatsDirect.Charting
     [Serializable]
     public class ErrorBarOptions : GenericOptions
     {
-
         public bool PlotMarkers { get; set; }
         public Data.DataFrame ydat { get; set; }
         public Data.DataFrame xdat { get; set; }
@@ -23,7 +22,7 @@ namespace StatsDirect.Charting
         public void SetMarkers()
         {
             MarkerTypes = new List<MarkerType>();
-            for (int i = 0; i <= ydat.VariableCount - 1; i++)
+            for (int i = 0; i < ydat.VariableCount; i++)
             {
                 int mkr = SeriesNumberToMarkerNumber(i);
                 MarkerType markerType = ChartRenderer.MarkerTypes[mkr].Clone();
@@ -32,18 +31,16 @@ namespace StatsDirect.Charting
 
                 //  An error plot has series with possible lines.
                 SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
-                                                          {
-                                                              SeriesName = ydat.Variables[i].Title,
-                                                              AllowChangeToDashStyle = true,
-                                                              AllowChangeToLineThickness = true,
-                                                              MarkerIndex = i
-                                                          };
+                {
+                    SeriesName = ydat.Variables[i].Title,
+                    AllowChangeToDashStyle = true,
+                    AllowChangeToLineThickness = true,
+                    MarkerIndex = i
+                };
                 SeriesOptions.Add(soleOptions);
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
         public override bool UsesChartTitle
         {
             get
@@ -52,7 +49,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesXAxisTitle
         public override bool UsesXAxisTitle
         {
             get
@@ -61,7 +57,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesYAxisTitle
         public override bool UsesYAxisTitle
         {
             get
@@ -70,7 +65,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesAutoscale
         public override bool UsesAutoscale
         {
             get
@@ -79,7 +73,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesAxisLabelFontDescriptor
         public override bool UsesAxisLabelFontDescriptor
         {
             get
@@ -88,7 +81,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesAxisTitleFontDescriptor
         public override bool UsesAxisTitleFontDescriptor
         {
             get
@@ -97,7 +89,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesBoxAxes
         public override bool UsesBoxAxes
         {
             get
@@ -106,7 +97,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesSeriesLabels
         public override bool UsesSeriesLabels
         {
             get
@@ -115,7 +105,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property OptionType
         public override ChartOptionType OptionType
         {
             get
@@ -124,7 +113,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property ShowErrorBarOptions
         public override bool ShowErrorBarOptions
         {
             get
@@ -133,7 +121,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
         public override bool ShowLegendIsRelevant
         {
             get
@@ -142,7 +129,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property UsesLegendFontDescriptor
         public override bool UsesLegendFontDescriptor
         {
             get
@@ -151,6 +137,4 @@ namespace StatsDirect.Charting
             }
         }
     }
-
-
 }

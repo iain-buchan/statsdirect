@@ -1078,7 +1078,7 @@ namespace StatsDirect.Numerics
             }
             if (r == 0.0 | r == N)
             {
-                warn = " [" + Utilities.Formatting.XRound(100.0 * (cco + (1.0 - cco) / 2.0), 1) + "% one-sided CI]";
+                warn = " [" + StatsDirect.Utilities.Formatting.XRound(100.0 * (cco + (1.0 - cco) / 2.0), 1) + "% one-sided CI]";
             }
             else { warn = ""; }
         }

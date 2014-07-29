@@ -5,13 +5,19 @@ namespace StatsDirect.Builtins
 {
     public class DummyOptions : IFillable
     {
-        public string MaxCatTi { get; set; }
-        public List<string> Names { get; set; }
+        public string LargestCategoryTitle { get; set; }
+        public List<string> CategoryNames { get; set; }
+        public string VariableName { get; set; }
 
         ///  <summary>
-        ///  The name that the user selected, or Nothing if no &lt;none> was selected.
+        ///  The name that the user selected, or Nothing if &lt;none> was selected.
         ///  </summary>
         public int JDrop { get; set; }
+
+        /// <summary>
+        /// True if the user selected to treat the variable as continuous.
+        /// </summary>
+        public bool TreatAsContinuous { get; set; }
 
         public string FillerToUse
         {

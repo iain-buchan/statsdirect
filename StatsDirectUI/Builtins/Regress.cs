@@ -112,14 +112,12 @@ namespace StatsDirect.Builtins
             DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
             DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
+            double[][] copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { vy.Data, vx.Data }, 0, vy.Length, 1);
             SimpleLinearRegressionContext context = new SimpleLinearRegressionContext
-                                                        {
-                                                            Y = new double[vy.Length + 1],
-                                                            X = new double[vx.Length + 1]
-                                                        };
-
-            Array.Copy(vy.Data, 0, context.Y, 1, vy.Length);
-            Array.Copy(vx.Data, 0, context.X, 1, vx.Length);
+            {
+                Y = copiesRemovingMissingRows[0],
+                X = copiesRemovingMissingRows[1]
+            };
             return context;
         }
 
@@ -3190,52 +3188,55 @@ namespace StatsDirect.Builtins
             Debug.Assert(targetRow == newrows + 1);
             //  At this point, tt, tr, tw and pt contain valid data from row 1 to row newrows inclusive
 
-            bool Weight = false; int irank = 0; int idf = 0;
+            bool weight = false; int irank = 0; int idf = 0;
             double dev = 0; double devx; double llx;
             string warn;
             const int maxit = 200;
-            int cnt = 0;
             int fault;
             int N = newrows;
-            double[] t = new double[N + 1];
-            double[] y = new double[N + 1 ];
-            double[] wt = new double[N + 1];
             int[] rxi = new int[1 + 1];
             int M = predictorsFrame.VariableCount;
             int ip = M;
             bool mean = shouldCalculateIntercept;
             if (mean)
-            {
-                ip = ip + 1;
-            }
+                ip++;
+
             double tol = accuracy;
-            double[,] x = new double[N + 1, ip + 1];
             string[] label = new string[ip + 1 ];
             label[0] = responseVariable.Title.Trim();
             for (int j = 1; j <= M; j++)
                 label[j] = predictorsFrame.Variables[j - 1].Title.Trim();
+
+            // Copy tt to t, tr yo y, tw to wt, pt to x.  Check for missing data; if any is present for a row, do not copy the row.
+            int cnt = 0;
+            double[] t = new double[N + 1];
+            double[] y = new double[N + 1];
+            double[] wt = new double[N + 1];
+            double[,] x = new double[N + 1, ip + 1];
             for (int j = 1; j <= N; j++)
             {
-                bool ok = tt[j] != Constant.MISSING;
-                if (tr[j] == Constant.MISSING)
+                bool ok = tt[j] != Constant.MISSING
+                    && tr[j] != Constant.MISSING;
+                if (weight && tw[j] == Constant.MISSING)
                     ok = false;
-                if (Weight && tw[j] == Constant.MISSING)
-                    ok = false;
-                for (int k = 0; k <= M - 1; k++)
+                for (int k = 0; k < M; k++)
                 {
                     if (pt[k, j] == Constant.MISSING)
+                    {
                         ok = false;
+                        break;
+                    }
                 }
                 if (ok)
                 {
-                    cnt = cnt + 1;
+                    cnt++;
                     t[cnt] = tt[j];
                     y[cnt] = tr[j];
                     if (y[cnt] == 0.0)
                         y[cnt] = Constant.EPSNEG;
                     if (y[cnt] == t[cnt])
                         y[cnt] = y[cnt] - Constant.EPSNEG;
-                    if (Weight)
+                    if (weight)
                         wt[cnt] = tw[j];
                     else
                         wt[cnt] = 1.0;
@@ -3266,7 +3267,7 @@ namespace StatsDirect.Builtins
             double[] h = new double[N + 1];
             double[] offst = new double[N + 1 ];
             string msg = "";
-            Regress1.X_LOGIREG(false, false, ref Weight, N, x2, 1, isx, 1, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
+            Regress1.X_LOGIREG(false, false, ref weight, N, x2, 1, isx, 1, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
             int idfx = idf;
             if (mean == false)
             {
@@ -3275,7 +3276,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                llx = x_loglik_l(Weight, N, wt, y, t, fvl);
+                llx = x_loglik_l(weight, N, wt, y, t, fvl);
                 devx = dev;
             }
             //  calculate full model
@@ -3287,13 +3288,13 @@ namespace StatsDirect.Builtins
             b = new double[ip + 1];
             se = new double[N + 1];
             cov = new double[((int)(Math.Floor((double)ip * (ip + 1) / 2))) + 1];
-            fvl = new double[N + 1 ];
-            var = new double[N + 1 ];
+            fvl = new double[N + 1];
+            var = new double[N + 1];
             dr = new double[N + 1];
             h = new double[N + 1];
-            offst = new double[N + 1 ];
+            offst = new double[N + 1];
             msg = "";
-            Regress1.X_LOGIREG(mean, false, ref Weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
+            Regress1.X_LOGIREG(mean, false, ref weight, N, x, M, isx, ip, y, t, wt, ref dev, ref idf, b, ref irank, se, cov, tol, maxit, fvl, var, dr, h, offst, out fault, ref msg);
             if (fault != 0 & fault != 10 & fault != 9)
             {
                 switch (fault)
@@ -3314,7 +3315,7 @@ namespace StatsDirect.Builtins
                         msg = "not enough memory for this calculation";
                         break;
                     default:
-                        msg = "Logit_err " + fault + 1.ToString();
+                        msg = "Logit_err " + (fault + 1).ToString();
                         break;
                 }
 
@@ -3334,23 +3335,23 @@ namespace StatsDirect.Builtins
             {
                 if (warn.Length > 0)
                 {
-                    warn = warn + Formatting.RTFCRLF;
+                    warn += Formatting.RTFCRLF;
                 }
-                warn = warn + Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model";
+                warn += Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model";
             }
             if (idf <= 0)
             {
                 if (warn.Length > 0)
                 {
-                    warn = warn + Formatting.RTFCRLF;
+                    warn += Formatting.RTFCRLF;
                 }
-                warn = warn + Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)";
+                warn += Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)";
             }
             if (msg.Length > 0)
             {
                 if (warn.Length > 0)
                 {
-                    warn = warn + Formatting.RTFCRLF + msg;
+                    warn += Formatting.RTFCRLF + msg;
                 }
                 else
                 {
@@ -3461,7 +3462,7 @@ namespace StatsDirect.Builtins
             context.COV = cov;
             context.WT = wt;
             context.RXI = rxi;
-            context.WEIGHT = Weight;
+            context.WEIGHT = weight;
             context.RANK = irank;
             context.DF = idf;
             context.TOL = tol;
@@ -3510,6 +3511,7 @@ namespace StatsDirect.Builtins
         public static StepResult RptLogisticRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+
             double[] t = context.T;
             double[] y = context.Y;
             double[] fvl = context.FV;

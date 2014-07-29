@@ -102,7 +102,6 @@ mulop returns [string builtExpression]
 explicitParameterName
 	: IDENTIFIER
 	;
-
 // Anything below here is lexical analysis
 
 INTEGER :	DIGITSANDTHOUSANDS

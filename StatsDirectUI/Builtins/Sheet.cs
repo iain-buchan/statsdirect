@@ -372,16 +372,17 @@ namespace StatsDirect.Builtins
             // sort categories by label to be consistent with Stata xi etc.
             Array.Sort(gcat, 0, ng);
 
-            DummyOptions dm = new DummyOptions { MaxCatTi = maxcatti, Names = new List<string>() };
+            DummyOptions dm = new DummyOptions { LargestCategoryTitle = maxcatti, CategoryNames = new List<string>(), VariableName = categoryVariable.Title };
             for (int j = 0; j < ng; j++)
-                dm.Names.Add(gcat[j].Title);
+                dm.CategoryNames.Add(gcat[j].Title);
             bool wasOk = null != host.Amend(dm, new ParameterBag());
             if (!(wasOk))
-            {
                 throw new TemplateOperationCancelledException();
-            }
 
             DataFrame outputFrame = new DataFrame();
+            if (dm.TreatAsContinuous)
+                return null;
+            // Split to multiple dummies
             for (int j = 0; j < ng; j++)
             {
                 if (j != dm.JDrop)

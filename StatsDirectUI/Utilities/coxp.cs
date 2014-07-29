@@ -3,15 +3,15 @@
     /// <summary>
     /// Used in coxreg and sdchart, so has to be somewhere central.
     /// </summary>
-    public class coxp
+    public class CoxP
     {
-        public int strat;
-        public double TM;
-        public int id;
-        public int cens;
-        public double s;
-        public double h;
-        public double exb;
-        public int Index;
+        public int Stratum { get; set; }
+        public double Time { get; set; }
+        public int Id { get; set; }
+        public int Censor { get; set; }
+        public double S { get; set; }
+        public double H { get; set; }
+        public double Exb { get; set; }
+        public int Index { get; set; }
     }
 }

@@ -11,33 +11,33 @@ namespace StatsDirect.Builtins
 {
     public class Coxreg
     {
-        private class CoxpByStratTmThenExb : IComparer<coxp>
+        private class CoxpByStratumTimeThenExb : IComparer<CoxP>
         {
-            private int Compare(coxp x, coxp y)
+            private int Compare(CoxP x, CoxP y)
             {
-                //  First check strat
-                if (x.strat > y.strat)
+                //  First check Stratum
+                if (x.Stratum > y.Stratum)
                     return 1;
-                if (x.strat < y.strat)
+                if (x.Stratum < y.Stratum)
                     return -1;
 
-                //  Next check TM
-                if (x.TM > y.TM)
+                //  Next check Time
+                if (x.Time > y.Time)
                     return 1;
-                if (x.TM < y.TM)
+                if (x.Time < y.Time)
                     return -1;
 
                 //  Next check Exb (negated)
-                if (x.exb > y.exb)
+                if (x.Exb > y.Exb)
                     return -1;
-                if (x.exb < y.exb)
+                if (x.Exb < y.Exb)
                     return 1;
 
                 //  If we get here, there are no meaningful differences
                 return 0;
             }
             // interface methods implemented by Compare
-            int IComparer<coxp>.Compare(coxp x, coxp y)
+            int IComparer<CoxP>.Compare(CoxP x, CoxP y)
             {
                 return Compare(x, y);
             }
@@ -45,27 +45,27 @@ namespace StatsDirect.Builtins
         }
 
 
-        private class CoxpByStratThenTm : IComparer<coxp>
+        private class CoxpByStratumThenTime : IComparer<CoxP>
         {
-            private int Compare(coxp x, coxp y)
+            private int Compare(CoxP x, CoxP y)
             {
-                //  First check strat
-                if (x.strat > y.strat)
+                //  First check stratum
+                if (x.Stratum > y.Stratum)
                     return 1;
-                if (x.strat < y.strat)
+                if (x.Stratum < y.Stratum)
                     return -1;
 
-                //  Next check TM
-                if (x.TM > y.TM)
+                //  Next check time
+                if (x.Time > y.Time)
                     return 1;
-                if (x.TM < y.TM)
+                if (x.Time < y.Time)
                     return -1;
 
                 //  If we get here, there are no meaningful differences
                 return 0;
             }
             // interface methods implemented by Compare
-            int IComparer<coxp>.Compare(coxp x, coxp y)
+            int IComparer<CoxP>.Compare(CoxP x, CoxP y)
             {
                 return Compare(x, y);
             }
@@ -73,58 +73,58 @@ namespace StatsDirect.Builtins
         }
 
 
-        private class CoxpByIdThenTm : IComparer<coxp>
+        private class CoxpByIdThenTm : IComparer<CoxP>
         {
-            private int Compare(coxp x, coxp y)
+            private int Compare(CoxP x, CoxP y)
             {
                 //  First check id
-                if (x.id > y.id)
+                if (x.Id > y.Id)
                     return 1;
-                if (x.id < y.id)
+                if (x.Id < y.Id)
                     return -1;
 
                 //  Next check TM
-                if (x.TM > y.TM)
+                if (x.Time > y.Time)
                     return 1;
-                if (x.TM < y.TM)
+                if (x.Time < y.Time)
                     return -1;
 
                 //  If we get here, there are no meaningful differences
                 return 0;
             }
             // interface methods implemented by Compare
-            int IComparer<coxp>.Compare(coxp x, coxp y)
+            int IComparer<CoxP>.Compare(CoxP x, CoxP y)
             {
                 return Compare(x, y);
             }
 
         }
 
-        private class CoxpByIndex : IComparer<coxp>
+        private class CoxpByIndex : IComparer<CoxP>
         {
-            private int Compare(coxp x, coxp y)
+            private int Compare(CoxP x, CoxP y)
             {
                 return x.Index - y.Index;
             }
             // interface methods implemented by Compare
-            int IComparer<coxp>.Compare(coxp x, coxp y)
+            int IComparer<CoxP>.Compare(CoxP x, CoxP y)
             {
                 return Compare(x, y);
             }
         }
 
-        private class CoxpByTm : IComparer<coxp>
+        private class CoxpByTm : IComparer<CoxP>
         {
-            private int Compare(coxp x, coxp y)
+            private int Compare(CoxP x, CoxP y)
             {
-                if (x.TM > y.TM)
+                if (x.Time > y.Time)
                     return 1;
-                if (x.TM < y.TM)
+                if (x.Time < y.Time)
                     return -1;
                 return 0;
             }
             // interface methods implemented by Compare
-            int IComparer<coxp>.Compare(coxp x, coxp y)
+            int IComparer<CoxP>.Compare(CoxP x, CoxP y)
             {
                 return Compare(x, y);
             }
@@ -136,7 +136,7 @@ namespace StatsDirect.Builtins
             int istrat; int icov = 0;
             int ncov; int nrmiss = 0;
             int[] indef;
-            int r; int c;
+            int c;
             int ifrq;
             double algl = 0;
             double xbar = 0;
@@ -144,40 +144,34 @@ namespace StatsDirect.Builtins
             int ic = 0;
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
-            ic = ic + 1;
+            ic++;
             int irt = ic;
             int rows = timesVariable.Length;
             double[] x = new double[rows * ic + 1 ];
             bool ok = true;
             int ik = 0;
             double adjt = 0.0;
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
-                ik = ik + 1;
+                ik++;
                 x[ik] = timesVariable.Data[r - 1];
                 if (x[ik] <= 0.0)
                 {
                     ok = false;
                     if (Math.Abs(x[ik]) + 1 > adjt)
-                    {
                         adjt = Math.Abs(x[ik]) + 1;
-                    }
                 }
             }
             if (!(ok))
             {
-                if (host.Query("Times must be >0: Do you want to add " + adjt.ToString() + " to all of your times?", "Cox Regression"))
+                if (host.Query("Times must be > 0: Do you want to add " + adjt.ToString() + " to all of your times?", "Cox Regression"))
                 {
-                    for (r = 1; r <= rows; r++)
-                    {
+                    for (int r = 1; r <= rows; r++)
                         x[r] = x[r] + adjt;
-                    }
                     ok = true;
                 }
                 else
-                {
                     throw new TemplateOperationCancelledException();
-                }
             }
 
             DataFrame eventsFrame = parameters["events"].AsDataFrame;
@@ -190,23 +184,17 @@ namespace StatsDirect.Builtins
             x = transTemp3;
             ok = false;
             double dead = 0;
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
-                ik = ik + 1;
+                ik++;
                 x[ik] = eventsVariable.Data[r - 1];
                 dead = dead + x[ik];
                 if (x[ik] > 1)
-                {
                     ok = true;
-                }
                 if (x[ik] > 0)
-                {
                     x[ik] = 0;
-                }
                 else if (x[ik] <= 0)
-                {
                     x[ik] = 1;
-                }
             }
             // use the frequency variable if data are grouped
             if (ok)
@@ -217,17 +205,13 @@ namespace StatsDirect.Builtins
                 double[] transTemp4 = new double[rows * ic + 1 ];
                 Array.Copy(x, transTemp4, Math.Min(x.Length, transTemp4.Length));
                 x = transTemp4;
-                for (r = 1; r <= rows; r++)
+                for (int r = 1; r <= rows; r++)
                 {
-                    ik = ik + 1;
+                    ik++;
                     if (eventsVariable.Data[r - 1] > 1)
-                    {
                         x[ik] = eventsVariable.Data[r - 1];
-                    }
                     else
-                    {
                         x[ik] = 1;
-                    }
                 }
             }
             else
@@ -243,7 +227,7 @@ namespace StatsDirect.Builtins
                 double[,] xx = new double[predictorsFrame.VariableCount - 1 + 1, rows + 1];
                 for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
                 {
-                    for (r = 1; r <= rows; r++)
+                    for (int r = 1; r <= rows; r++)
                     {
                         xx[c, r] = predictorsFrame.Variables[c].AsDoubleVariable.Data[r - 1];
                     }
@@ -259,7 +243,7 @@ namespace StatsDirect.Builtins
                 for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
                 {
                     indef[c + 1] = ic + c + 1;
-                    for (r = 1; r <= rows; r++)
+                    for (int r = 1; r <= rows; r++)
                     {
                         ik = ik + 1;
                         x[ik] = predictorsFrame.Variables[c].AsDoubleVariable.Data[r - 1];
@@ -279,7 +263,7 @@ namespace StatsDirect.Builtins
             {
                 // If we get here, ncov must be at least 1, so predictorsFrame cannot be null.
                 Debug.Assert(null != predictorsFrame);
-                for (r = 1; r <= rows; r++)
+                for (int r = 1; r <= rows; r++)
                 {
                     holdx[r, c] = predictorsFrame.Variables[c - 1].AsDoubleVariable.Data[r - 1];
                 }
@@ -323,7 +307,7 @@ namespace StatsDirect.Builtins
                 double[] transTemp6 = new double[rows * ic + 1 ];
                 Array.Copy(x, transTemp6, Math.Min(x.Length, transTemp6.Length));
                 x = transTemp6;
-                for (r = 1; r <= rows; r++)
+                for (int r = 1; r <= rows; r++)
                 {
                     ik = ik + 1;
                     x[ik] = strataVariable.Data[r - 1];
@@ -342,10 +326,8 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             }
             int[] nvef = new int[nef + 1];
-            for (r = 1; r <= nef; r++)
-            {
+            for (int r = 1; r <= nef; r++)
                 nvef[r] = 1;
-            }
 
             double eps = parameters["accuracy"].AsDouble;
             int ifix = 0;
@@ -364,12 +346,12 @@ namespace StatsDirect.Builtins
                 {
                     if (xd[i - 1].Groups == null || xd[i - 1].Groups.Count > 2)
                     {
-                        for (r = 1; r <= rows; r++)
+                        for (int r = 1; r <= rows; r++)
                         {
                             xbar = xbar + holdx[r, i];
                         }
                         xbar = xbar / Convert.ToDouble(rows);
-                        for (r = 1; r <= rows; r++)
+                        for (int r = 1; r <= rows; r++)
                         {
                             holdx[r, i] = holdx[r, i] - xbar;
                             x[icov + (i - 1) * rows + r] = holdx[r, i];
@@ -385,22 +367,14 @@ namespace StatsDirect.Builtins
             double[] GR = new double[ldcoef + 1 ];
             double[] xmean = new double[ldcoef + 1];
             coxreg(ref nobs, ref nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
-            // double[,] ARR2 = new double[nobs + 2, 6 + 1];
-            // double[, ,] ARR3 = new double[2 + 1, ncoef + 2, 4 + 1]; 
             if (ifault != 0)
             {
                 if (ifault == 3)
-                {
                     host.Error("Calculation failed to converge, try again with a lower precision or fewer predictors.", "Cox Regression");
-                }
                 else if (ifault > 99)
-                {
                     host.Error("Singularity in Hessian: try dropping predictor " + (ifault - 100).ToString() + ": " + predictorsFrame.Variables[Math.Max(ifault - 101, 0)].Title, "Cox Regression");
-                }
                 else
-                {
                     host.Error("Error in calculation (" + ifault.ToString() + ")", "Cox Regression");
-                }
                 throw new TemplateOperationCancelledException();
             }
             ColumnData[] CDAT1 = new ColumnData[ncoef + 1 ];
@@ -539,16 +513,10 @@ namespace StatsDirect.Builtins
                 }
             }
             if (ifault != 0)
-            {
                 return;
-            }
             for (i = 1; i <= lindef; i++)
-            {
-                if (indef[i] <= 0 | indef[i] > nCol)
-                {
+                if (indef[i] <= 0 || indef[i] > nCol)
                     ifault = 3;
-                }
-            }
             if (ifault != 0)
             {
                 return;
@@ -611,7 +579,6 @@ namespace StatsDirect.Builtins
             }
             nrmiss = nrmiss + misval;
         }
-
 
         private static void coxreg(ref int nRow, ref int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref int ifault)
         {
@@ -2509,51 +2476,51 @@ namespace StatsDirect.Builtins
 
             //  baseline S and H and S and H values at mean covariate
             int iobs = Convert.ToInt32(ARR2[0, 0]);
-            coxp[] z = new coxp[iobs + 2 ];
-            z[0] = new coxp();
+            CoxP[] z = new CoxP[iobs + 2 ];
+            z[0] = new CoxP();
             for (i = 1; i <= iobs; i++)
             {
                 //  use estimates as starting values if needed
-                z[i] = new coxp
+                z[i] = new CoxP
                            {
-                               strat = Convert.ToInt32(ARR2[i, 9]),
-                               TM = ARR2[i, 6],
-                               cens = Convert.ToInt32(ARR2[i, 7]),
-                               s = ARR2[i, 1],
-                               h = ARR2[i, 4],
-                               exb = ARR2[i, 10],
+                               Stratum = Convert.ToInt32(ARR2[i, 9]),
+                               Time = ARR2[i, 6],
+                               Censor = Convert.ToInt32(ARR2[i, 7]),
+                               S = ARR2[i, 1],
+                               H = ARR2[i, 4],
+                               Exb = ARR2[i, 10],
                                Index = i
                            };
             }
 
-            Array.Sort(z, 1, iobs, new CoxpByStratTmThenExb());
+            Array.Sort(z, 1, iobs, new CoxpByStratumTimeThenExb());
             // int istart = 1; 
-            int lastStratum = z[1].strat;
+            int lastStratum = z[1].Stratum;
             double alpha_product = 1.0;
             double alpha_productx = 1.0;
             int istrata = 1;
 
             for (i = 1; i <= iobs; i++)
             {
-                if (z[i].strat != lastStratum)
+                if (z[i].Stratum != lastStratum)
                 {
                     //  new stratum
                     alpha_product = 1.0;
                     alpha_productx = 1.0;
-                    lastStratum = z[i].strat;
+                    lastStratum = z[i].Stratum;
                     istrata = istrata + 1;
                 }
-                watch_time = z[i].TM;
+                watch_time = z[i].Time;
                 double[] dead_theta = new double[30 + 1 ];
                 double dead = 0.0;
                 int iinc = 0;
                 for (int j = i; j <= iobs; j++)
                 {
-                    if (z[i].strat != z[j].strat)
+                    if (z[i].Stratum != z[j].Stratum)
                         break;
-                    if (z[j].TM != watch_time)
+                    if (z[j].Time != watch_time)
                         break;
-                    if (z[j].cens != 0.0)
+                    if (z[j].Censor != 0.0)
                     {
                         dead = dead + 1.0;
                         Array transTemp0 = dead_theta;
@@ -2564,7 +2531,7 @@ namespace StatsDirect.Builtins
                             Array.Copy(dead_theta, transTemp7, Math.Min(dead_theta.Length, transTemp7.Length));
                             dead_theta = transTemp7;
                         }
-                        dead_theta[Convert.ToInt32(dead)] = z[j].exb;
+                        dead_theta[Convert.ToInt32(dead)] = z[j].Exb;
                     }
                     iinc = iinc + 1;
                 }
@@ -2572,11 +2539,11 @@ namespace StatsDirect.Builtins
                 double risk_theta = 0.0;
                 for (int j = i; j <= iobs; j++)
                 {
-                    if (z[i].strat != z[j].strat)
+                    if (z[i].Stratum != z[j].Stratum)
                     {
                         break;
                     }
-                    risk_theta = risk_theta + z[j].exb;
+                    risk_theta = risk_theta + z[j].Exb;
                 }
                 bool erra = false;
                 double alpha_i;
@@ -2588,7 +2555,7 @@ namespace StatsDirect.Builtins
                 }
                 else if (dead == 1.0)
                 {
-                    alpha_i = Math.Pow((1.0 - z[i].exb / risk_theta), (1.0 / z[i].exb));
+                    alpha_i = Math.Pow((1.0 - z[i].Exb / risk_theta), (1.0 / z[i].Exb));
                     alpha_ix = Math.Exp(-dead / risk_theta);
                 }
                 else
@@ -2606,10 +2573,10 @@ namespace StatsDirect.Builtins
                     {
                         if (z[j] == null)
                         {
-                            z[j] = new coxp();
+                            z[j] = new CoxP();
                         }
-                        z[j].s = alpha_product;
-                        z[j].h = -Math.Log(alpha_productx);
+                        z[j].S = alpha_product;
+                        z[j].H = -Math.Log(alpha_productx);
                     }
                 }
                 i = i + iinc - 1;
@@ -2625,15 +2592,15 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*time", timeList);
                 for (i = 1; i <= iobs; i++)
                 {
-                    if (z[i].cens != 0.0 & watch_time != z[i].TM)
+                    if (z[i].Censor != 0.0 & watch_time != z[i].Time)
                     {
-                        watch_time = z[i].TM;
+                        watch_time = z[i].Time;
                         ParameterBag timeParameters = new ParameterBag();
                         timeList.Add(timeParameters);
-                        timeParameters.AddOutput("time", host.RoundU(z[i].TM));
-                        timeParameters.AddOutput("sur", host.RoundU(z[i].s));
-                        timeParameters.AddOutput("haz", host.RoundU(z[i].h));
-                        timeParameters.AddOutput("hr", host.RoundU(z[i].exb));
+                        timeParameters.AddOutput("time", host.RoundU(z[i].Time));
+                        timeParameters.AddOutput("sur", host.RoundU(z[i].S));
+                        timeParameters.AddOutput("haz", host.RoundU(z[i].H));
+                        timeParameters.AddOutput("hr", host.RoundU(z[i].Exb));
                     }
                 }
             }
@@ -2661,9 +2628,9 @@ namespace StatsDirect.Builtins
                 resultsFrame.Variables.Add(hazardRatioVariable);
                 for (i = 1; i <= iobs; i++)
                 {
-                    survivalVariable.set_Data(i - 1, z[i].s);
-                    hazardVariable.set_Data(i - 1, z[i].h);
-                    hazardRatioVariable.set_Data(i - 1, z[i].exb);
+                    survivalVariable.set_Data(i - 1, z[i].S);
+                    hazardVariable.set_Data(i - 1, z[i].H);
+                    hazardRatioVariable.set_Data(i - 1, z[i].Exb);
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
@@ -2671,7 +2638,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void CoxPlot(ITemplateHost host, ParameterBag parameters, coxp[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
+        private static void CoxPlot(ITemplateHost host, ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
         {
             int j3; int i;
             int igroups;
@@ -2688,7 +2655,7 @@ namespace StatsDirect.Builtins
             int[] gn = new int[3 + 1];
 
             int ncoef = Convert.ToInt32(ARR2[1, 0]);
-            IComparer<coxp> comparer;
+            IComparer<CoxP> comparer;
             switch (groupVar.ToLower())
             {
                 case "none":
@@ -2702,7 +2669,7 @@ namespace StatsDirect.Builtins
                     stratified = true;
                     grouped = false;
                     igroups = 0;
-                    comparer = new CoxpByStratThenTm();
+                    comparer = new CoxpByStratumThenTime();
                     break;
                 default:
                     stratified = false;
@@ -2736,14 +2703,14 @@ namespace StatsDirect.Builtins
             {
                 for (i = 1; i <= iobs; i++)
                 {
-                    z[i].id = Convert.ToInt32(holdx[i, groupid]);
+                    z[i].Id = Convert.ToInt32(holdx[i, groupid]);
                 }
             }
             else
             {
                 for (i = 1; i <= iobs; i++)
                 {
-                    z[i].id = 1;
+                    z[i].Id = 1;
                 }
             }
 
@@ -2778,10 +2745,10 @@ namespace StatsDirect.Builtins
                             ch.DataMinY = 0;
                             for (i = 1; i <= iobs; i++)
                             {
-                                if (z[i].TM > ch.DataMaxX)
-                                    ch.DataMaxX = z[i].TM;
-                                if (z[i].TM < ch.DataMinX)
-                                    ch.DataMinX = z[i].TM;
+                                if (z[i].Time > ch.DataMaxX)
+                                    ch.DataMaxX = z[i].Time;
+                                if (z[i].Time < ch.DataMinX)
+                                    ch.DataMinX = z[i].Time;
                             }
                             break;
                         case 2:
@@ -2790,25 +2757,25 @@ namespace StatsDirect.Builtins
                             vt = "Hazard Plot (Cox regression)";
                             for (i = 1; i <= iobs; i++)
                             {
-                                if (z[i].TM > ch.DataMaxX)
+                                if (z[i].Time > ch.DataMaxX)
                                 {
-                                    ch.DataMaxX = z[i].TM;
+                                    ch.DataMaxX = z[i].Time;
                                 }
-                                if (z[i].TM < ch.DataMinX)
+                                if (z[i].Time < ch.DataMinX)
                                 {
-                                    ch.DataMinX = z[i].TM;
+                                    ch.DataMinX = z[i].Time;
                                 }
                                 double haz;
                                 if (grouped)
                                 {
-                                    haz = Math.Pow(z[i].s, Math.Exp(Convert.ToDouble(z[i].id) * ARR3[1, groupid, 1]));
+                                    haz = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
                                     haz = haz > 0.0 ? -Math.Log(haz) : Constant.MISSING;
                                 }
                                 else
-                                    haz = z[i].h;
-                                if (haz != Constant.MISSING & haz > ch.DataMaxY & z[i].cens != 0)
+                                    haz = z[i].H;
+                                if (haz != Constant.MISSING & haz > ch.DataMaxY & z[i].Censor != 0)
                                     ch.DataMaxY = haz;
-                                if (haz != Constant.MISSING & haz < ch.DataMinY & z[i].cens != 0)
+                                if (haz != Constant.MISSING & haz < ch.DataMinY & z[i].Censor != 0)
                                     ch.DataMinY = haz;
                             }
                             break;
@@ -2832,8 +2799,8 @@ namespace StatsDirect.Builtins
                 yp[0] = Constant.MISSING;
                 for (i = 1; i <= iobs; i++)
                 {
-                    double surv = Math.Pow(z[i].s, Math.Exp(Convert.ToDouble(z[i].id) * ARR3[1, groupid, 1]));
-                    xp[i] = Math.Log(z[i].TM);
+                    double surv = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
+                    xp[i] = Math.Log(z[i].Time);
                     yp[i] = -Math.Log(-Math.Log(surv));
                 }
                 // Plot a metafile version
@@ -2857,7 +2824,6 @@ namespace StatsDirect.Builtins
             int istrata = 0;
             int lastStratum = 0;
             double alpha_product = 0; double alpha_productx = 0;
-            double xf; double rd; double rm; double rc;
 
             double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
 
@@ -2865,48 +2831,48 @@ namespace StatsDirect.Builtins
 
             int iobs = Convert.ToInt32(ARR2[0, 0]);
             jcoef = Convert.ToInt32(ARR2[1, 0]);
-            coxp[] z = new coxp[iobs + 2];
+            CoxP[] z = new CoxP[iobs + 2];
             for (i = 1; i <= iobs; i++)
             {
-                z[i] = new coxp
+                z[i] = new CoxP
                            {
-                               strat = Convert.ToInt32(ARR2[i, 9]),
-                               TM = ARR2[i, 6],
-                               id = Convert.ToInt32(ARR2[i, 8]),
-                               cens = Convert.ToInt32(ARR2[i, 7]),
+                               Stratum = Convert.ToInt32(ARR2[i, 9]),
+                               Time = ARR2[i, 6],
+                               Id = Convert.ToInt32(ARR2[i, 8]),
+                               Censor = Convert.ToInt32(ARR2[i, 7]),
                                //  use estimates as starting values if needed
-                               s = ARR2[i, 1],
-                               h = ARR2[i, 4],
+                               S = ARR2[i, 1],
+                               H = ARR2[i, 4],
                                //  baseline sum(exp(bz))
-                               exb = ARR2[i, 10],
+                               Exb = ARR2[i, 10],
                                Index = i
                            };
             }
 
-            Array.Sort(z, 1, iobs, new CoxpByStratTmThenExb());
+            Array.Sort(z, 1, iobs, new CoxpByStratumTimeThenExb());
 
             for (i = 1; i <= iobs; i++)
             {
-                if (z[i].strat != lastStratum)
+                if (z[i].Stratum != lastStratum)
                 {
                     //  new stratum
                     alpha_product = 1.0;
                     alpha_productx = 1.0;
-                    lastStratum = z[i].strat;
+                    lastStratum = z[i].Stratum;
                     istrata = istrata + 1;
                 }
-                double watch_time = z[i].TM;
+                double watch_time = z[i].Time;
                 double[] dead_theta = new double[30 + 1];
                 double dead = 0.0;
                 int iinc = 0;
                 int j;
                 for (j = i; j <= iobs; j++)
                 {
-                    if (z[i].strat != z[j].strat)
+                    if (z[i].Stratum != z[j].Stratum)
                         break;
-                    if (z[j].TM != watch_time)
+                    if (z[j].Time != watch_time)
                         break;
-                    if (z[j].cens != 0.0)
+                    if (z[j].Censor != 0.0)
                     {
                         dead = dead + 1.0;
                         if (dead > dead_theta.GetUpperBound(0))
@@ -2916,7 +2882,7 @@ namespace StatsDirect.Builtins
                             Array.Copy(dead_theta, transTemp8, Math.Min(dead_theta.Length, transTemp8.Length));
                             dead_theta = transTemp8;
                         }
-                        dead_theta[Convert.ToInt32(dead)] = z[j].exb;
+                        dead_theta[Convert.ToInt32(dead)] = z[j].Exb;
                     }
                     iinc = iinc + 1;
                 }
@@ -2924,11 +2890,11 @@ namespace StatsDirect.Builtins
                 double risk_theta = 0.0;
                 for (j = i; j <= iobs; j++)
                 {
-                    if (z[i].strat != z[j].strat)
+                    if (z[i].Stratum != z[j].Stratum)
                     {
                         break;
                     }
-                    risk_theta = risk_theta + z[j].exb;
+                    risk_theta = risk_theta + z[j].Exb;
                 }
                 bool erra = false;
                 double alpha_i;
@@ -2940,7 +2906,7 @@ namespace StatsDirect.Builtins
                 }
                 else if (dead == 1.0)
                 {
-                    alpha_i = Math.Pow((1.0 - z[i].exb / risk_theta), (1.0 / z[i].exb));
+                    alpha_i = Math.Pow((1.0 - z[i].Exb / risk_theta), (1.0 / z[i].Exb));
                     alpha_ix = Math.Exp(-dead / risk_theta);
                 }
                 else
@@ -2957,34 +2923,33 @@ namespace StatsDirect.Builtins
                     for (j = i; j <= i + iinc; j++)
                     {
                         if (z[j] == null)
-                        {
-                            z[j] = new coxp();
-                        }
-                        z[j].s = alpha_product;
-                        z[j].h = -Math.Log(alpha_productx);
+                            z[j] = new CoxP();
+                        z[j].S = alpha_product;
+                        z[j].H = -Math.Log(alpha_productx);
                     }
                 }
-                i = i + iinc - 1;
+                i += iinc - 1;
             }
 
             int ictr = 0;
             double[] xp = new double[iobs + 1 ];
             double[] yp = new double[iobs + 1 ];
-            double[] XR = new double[iobs + 1 ];
+            double[] xr = new double[iobs + 1 ];
             for (i = 1; i <= iobs; i++)
             {
-                if (z[i].s != 0.0)
+                if (z[i].S != 0.0)
                 {
-                    rc = z[i].exb * z[i].h;
-                    rm = z[i].cens - rc;
-                    rd = Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].cens * Math.Log(z[i].cens - rm)));
-                    ictr = ictr + 1;
+                    double rc = z[i].Exb * z[i].H;
+                    double rm = z[i].Censor - rc;
+                    double rd = (z[i].Censor - rm <= 0) ? Constant.MISSING : Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
+                    ictr++;
                     yp[ictr] = rd;
                 }
-                xp[i] = z[i].TM;
+                xp[i] = z[i].Time;
             }
 
-            ExFortran.Rank(xp, XR, 1, ictr, 1, out xf);
+            double xf;
+            ExFortran.Rank(xp, xr, 1, ictr, 1, out xf);
             yp[0] = Constant.MISSING; //  Ensure charts don't have bogus (0,0) points
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
@@ -3001,7 +2966,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, XR, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, 0, false));
+                chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, 0, false));
             }
 
             // save to worksheet if requested
@@ -3028,9 +2993,9 @@ namespace StatsDirect.Builtins
                     leverageVariable.set_Data(i - 1, ARR2[i, 2]);
                     proportionalityVariable.set_Data(i - 1, ARR2[i, 5]);
                     coxOakesResidualVariable.set_Data(i - 1, ARR2[i, 3]);
-                    rc = z[i].exb * z[i].h;
-                    rm = z[i].cens - rc;
-                    rd = Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].cens * Math.Log(z[i].cens - rm)));
+                    double rc = z[i].Exb * z[i].H;
+                    double rm = z[i].Censor - rc;
+                    double rd = Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
                     coxSnellResidualVariable.set_Data(i - 1, rc);
                     martingaleResidualVariable.set_Data(i - 1, rm);
                     devianceResidualVariable.set_Data(i - 1, rd);

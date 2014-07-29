@@ -16,18 +16,22 @@ namespace StatsDirect.UI
 
         private void FillControlFromOptions()
         {
-            lblRubric.Text = "You are about to create " + options.Names.Count.ToString() + ", or " + (options.Names.Count + 1).ToString() + " if you select <none>, dummy (indicator) variables to represent the " + (options.Names.Count + 1).ToString() + " categories in your data.\n\nBy convention, the smallest value category is dropped. Alternatively, you might choose to drop the most prevalent category, which is " + options.MaxCatTi + ".\n\nChoose the category to drop from the list below:";
-            foreach (string ti in options.Names)
+            lblRubric.Text = "StatsDirect has detected that variable '" + options.VariableName + "' might be a categorical variable that needs to be converted to " + options.CategoryNames.Count.ToString() + " or " + (options.CategoryNames.Count + 1).ToString() + " dummy variables for use in regression.\n\nClick \"Treat as continuous\" if you want to ignore this and treat the variable as continuous or select a reference category if you want to create dummy variables. By convention the category with the smallest value is dropped and becomes the reference category, but you can choose another reference/index category if you like.\n\nSelect the reference category from the list below.";
+            // Old text: "You are about to create " + options.CategoryNames.Count.ToString() + ", or " + (options.CategoryNames.Count + 1).ToString() + " if you select <none>, dummy (indicator) variables to represent the " + (options.CategoryNames.Count + 1).ToString() + " categories in your data.\n\nBy convention, the smallest value category is dropped. Alternatively, you might choose to drop the most prevalent category, which is " + options.LargestCategoryTitle + ".\n\nChoose the category to drop from the list below:";
+            foreach (string ti in options.CategoryNames)
             {
                 lstVariables.Items.Add(ti);
             }
-            lstVariables.Items.Add("<none>");
+            lstVariables.Items.Add("Keep all categories as dummies");
+            lstVariables.Items.Add("Treat as continuous"); // Change FillOptionsFromControl if this is ever not the last item
             lstVariables.SelectedIndex = 0;
         }
 
         private void FillOptionsFromControl()
         {
             options.JDrop = lstVariables.SelectedIndex;
+            // ASSUME: "Treat as continuous" is last option
+            options.TreatAsContinuous = lstVariables.SelectedIndex == lstVariables.Items.Count - 1;
         }
 
         public void OkClicked()
