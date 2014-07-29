@@ -2307,7 +2307,7 @@ namespace StatsDirect.Charting
             MathDbl.civ(nx - P, out cit, gamma, out P0);
             double rdf = Convert.ToDouble((nx - 1) - (P - 1));
             double rms = rss / rdf;
-            double[] px = new double[P];
+            double[] px = new double[P + 1];
             px[1] = 1.0;
             double xstep = xInt / 2;
 
@@ -8333,7 +8333,7 @@ namespace StatsDirect.Charting
             if (!((definition == null || definition.ChartOptions == null)))
             {
                 AgreementOptions aOptions = ((AgreementOptions)(definition.ChartOptions));
-                GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType, out axisYMin, out axisYMax);
+                GetMinMaxArray(aOptions.mxd, ScaleType.Linear, out axisYMin, out axisYMax);
                 if (aOptions.HasLimits)
                 {
                     if (aOptions.lla < axisYMax)
@@ -8345,7 +8345,7 @@ namespace StatsDirect.Charting
                         axisYMax = aOptions.ula;
                     }
                 }
-                GetMinMaxArray(aOptions.av, definition.ScaleParameters.X.ScaleType, out axisXMin, out axisXMax);
+                GetMinMaxArray(aOptions.av, ScaleType.Linear, out axisXMin, out axisXMax);
             }
 
             return new ScaleParameters
