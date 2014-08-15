@@ -74,10 +74,11 @@ namespace StatsDirect.Charting
         ///  <param name="s"></param>
         ///  <param name="font"></param>
         ///  <param name="brush"></param>
-        ///  <param name="x">The </param>
+        ///  <param name="x"></param>
         ///  <param name="y"></param>
         ///  <param name="txtFormat"></param>
         ///  <param name="direction"></param>
+        ///  <returns>The bounding size of s drawn in direction with txtFormat</returns>
         /// <remarks></remarks>
         public SizeF DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {

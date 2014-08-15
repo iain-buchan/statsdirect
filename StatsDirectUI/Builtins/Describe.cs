@@ -5,6 +5,7 @@ using StatsDirect.Utilities;
 using StatsDirect.Data;
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 namespace StatsDirect.Builtins
 {
@@ -909,6 +910,322 @@ namespace StatsDirect.Builtins
                 resultsList[resultsList.Count - 1]["result"] = new FilledParameter(false, s);
             }
             return fieldParameters;
+        }
+
+        public static StepResult RptTimeSeriesSummary(ITemplateHost host, ParameterBag parameters)
+        {
+            // Extract our variables from the input
+            DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable observationsVariable = parameters["observations"].AsDataFrame.Variables[0].AsDoubleVariable;
+            ClassifierVariable subjectIdsVariable = parameters["subjectIds"].AsDataFrame.Variables[0].AsClassifierVariable;
+            bool hasGroups = parameters.ContainsKey("groups") && parameters["groups"] != null && parameters["groups"].IsDataFrame;
+            ClassifierVariable groupsVariable = null;
+            if (hasGroups)
+                groupsVariable = parameters["groups"].AsDataFrame.Variables[0].AsClassifierVariable;
+            double ci = parameters["ci"].AsDouble;
+            bool addZeroObservationsAtZeroTime = parameters.ContainsKey("addZeroObservationAtZeroTime") && parameters["addZeroObservationAtZeroTime"] != null && parameters["addZeroObservationAtZeroTime"].IsBoolean && parameters["addZeroObservationAtZeroTime"].AsBoolean;
+
+            // Data preparation: Construct our values
+            List<TimeSeriesSummaryStore> groups = new List<TimeSeriesSummaryStore>();
+            if (hasGroups)
+                foreach (Group group in groupsVariable.Groups)
+                {
+                    int gid = (int)group.Id;
+                    while (groups.Count <= gid)
+                        groups.Add(new TimeSeriesSummaryStore());
+                    groups[gid].Group = group;
+                }
+            else
+                groups.Add(new TimeSeriesSummaryStore() { Group = new Group("all", 0) });
+
+            // Pass 1: Allow the data structures to size themselves
+            for (int row = 0; row < timesVariable.Length; row++)
+            {
+                int group = 0;
+                if (hasGroups)
+                    group = (int)groupsVariable.Data[row];
+                groups[group].NoteRowPass1(timesVariable.Data[row], observationsVariable.Data[row], subjectIdsVariable.Data[row]);
+            }
+            foreach (TimeSeriesSummaryStore store in groups)
+                store.NoteEndOfPass1(addZeroObservationsAtZeroTime);
+            // Pass 2: Allow the data structures to accumulate observations
+            for (int row = 0; row < timesVariable.Length; row++)
+            {
+                int group = 0;
+                if (hasGroups)
+                    group = (int)groupsVariable.Data[row];
+                groups[group].NoteRowPass2(timesVariable.Data[row], observationsVariable.Data[row], subjectIdsVariable.Data[row]);
+            }
+
+            // Allow the summaries to claculate their values
+            foreach (TimeSeriesSummaryStore store in groups)
+                store.Calculate(ci);
+
+            // Output preparation
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("ciOutput", ci * 100);
+            List<ParameterBag> groupList = new List<ParameterBag>();
+            outputParameters.AddOutput("*group", groupList);
+            foreach (TimeSeriesSummaryStore store in groups)
+            {
+                ParameterBag groupParameters = new ParameterBag();
+                groupList.Add(groupParameters);
+                // Per-group
+                groupParameters.AddOutput("groupName", store.Group.Label);
+                groupParameters.AddOutput("subjects", store.N);
+                groupParameters.AddOutput("totalObservations", store.nObservations);
+                groupParameters.AddOutput("meanObservationsPerTimePoint", store.MeanObservationsPerTimePoint);
+                groupParameters.AddOutput("aucMean", store.AucMean);
+                groupParameters.AddOutput("aucSd", store.AucSd);
+                groupParameters.AddOutput("aucTLcl", store.tLclAucBar);
+                groupParameters.AddOutput("aucTUcl", store.tUclAucBar);
+                groupParameters.AddOutput("aucZLcl", store.zLclAucBar);
+                groupParameters.AddOutput("aucZUcl", store.zUclAucBar);
+
+                // Per-subject in this group
+                List<ParameterBag> subjectList = new List<ParameterBag>();
+                groupParameters.AddOutput("*subject", subjectList);
+                foreach (SubjectSummary subject in store.SubjectToSummaryMap.Values)
+                {
+                    ParameterBag subjectParameters = new ParameterBag();
+                    subjectList.Add(subjectParameters);
+                    subjectParameters.AddOutput("subjectId", subjectIdsVariable.GroupWithId(subject.SubjectId).Label);
+                    subjectParameters.AddOutput("baseline", subject.Baseline);
+                    subjectParameters.AddOutput("min", subject.MinObservation);
+                    subjectParameters.AddOutput("max", subject.MaxObservation);
+                    subjectParameters.AddOutput("timeToMax", subject.TimeToMax);
+                    subjectParameters.AddOutput("slopeToMax", subject.SlopeToMax);
+                    subjectParameters.AddOutput("auc", subject.Auc);
+                }
+
+                // Per-time point in this group
+                List<ParameterBag> timeList = new List<ParameterBag>();
+                groupParameters.AddOutput("*time", timeList);
+                foreach (TimeSummary time in store.TimeToSummaryMap.Values)
+                {
+                    ParameterBag timeParameters = new ParameterBag();
+                    timeList.Add(timeParameters);
+                    timeParameters.AddOutput("time", time.Time);
+                    timeParameters.AddOutput("observations", time.N);
+                    timeParameters.AddOutput("mean", time.Mean);
+                    timeParameters.AddOutput("sd", time.Sd);
+                    timeParameters.AddOutput("se", time.Se);
+                    timeParameters.AddOutput("median", time.Median);
+                    timeParameters.AddOutput("iqr", time.UpperQuartile - time.LowerQuartile);
+                }
+            }
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+        private class TimeSeriesSummaryStore
+        {
+            public Group Group { get; set; }
+            private SortedSet<double> SortedTimes { get; set; }
+            private SortedSet<double> SortedSubjectIds { get; set; }
+            public double[,] Observations { get; private set; }
+            public int nObservations { get; private set; }
+            private double[,] AreasUnderCurve { get; set; }
+            public SortedDictionary<double, TimeSummary> TimeToSummaryMap { get; private set; }
+            public double[] IndexToTimeMap { get; private set; }
+            public SortedDictionary<double, SubjectSummary> SubjectToSummaryMap { get; private set; }
+            public double[] IndexToSubjectMap { get; private set; }
+            public int AucN { get; private set; }
+            public double AucSum { get; private set; }
+            public double AucMean { get; private set; }
+            public double VarAucMean { get; private set; }
+            public double Se { get; private set; }
+            public double zLclAucBar { get; private set; }
+            public double zUclAucBar { get; private set; }
+            public double DfNumerator { get; private set; }
+            public double DfDenominator { get; private set; }
+            public double Df { get; private set; }
+            public double CriticalT { get; private set; }
+            public double tLclAucBar { get; private set; }
+            public double tUclAucBar { get; private set; }
+            public double MeanObservationsPerTimePoint { get; private set; }
+
+            public TimeSeriesSummaryStore()
+            {
+                SortedTimes = new SortedSet<double>();
+                SortedSubjectIds = new SortedSet<double>();
+            }
+
+            public int N { get { return SortedSubjectIds.Count; } }
+
+            public double AucSd { get { return VarAucMean == Constant.MISSING ? Constant.MISSING : Math.Sqrt(VarAucMean); } }
+
+            internal void NoteRowPass1(double time, double observation, double subjectId)
+            {
+                SortedSubjectIds.Add(subjectId);
+                SortedTimes.Add(time);
+            }
+
+            /// <summary>
+            /// First pass complete; the list of time points and subject IDs is complete.  Do anything required before pass 2.
+            /// </summary>
+            internal void NoteEndOfPass1(bool addZeroObservationsAtZeroTime)
+            {
+                // If we need to, ensure that there's space for zero time.
+                if (addZeroObservationsAtZeroTime)
+                    SortedTimes.Add(0);
+
+                // Finalise any sort structures we need
+                IndexToTimeMap = SortedTimes.ToArray();
+                TimeToSummaryMap = new SortedDictionary<double, TimeSummary>();
+                for (int i = 0; i < IndexToTimeMap.Length; i++)
+                    TimeToSummaryMap.Add(IndexToTimeMap[i], new TimeSummary() { Index = i, Time = IndexToTimeMap[i] });
+                IndexToSubjectMap = SortedSubjectIds.ToArray();
+                SubjectToSummaryMap = new SortedDictionary<double, SubjectSummary>();
+                for (int i = 0; i < IndexToSubjectMap.Length; i++)
+                    SubjectToSummaryMap.Add(IndexToSubjectMap[i], new SubjectSummary() { Index = i, SubjectId = IndexToSubjectMap[i] });
+
+                // Allocate our array of observations by time by subject.  First index is time point, then subject; this aids locality of reference later.
+                Observations = new double[IndexToTimeMap.Length, SortedSubjectIds.Count];
+                for (int time = 0; time < IndexToTimeMap.Length; time++)
+                    for (int subject = 0; subject < SortedSubjectIds.Count; subject++)
+                        Observations[time, subject] = Constant.MISSING;
+                AreasUnderCurve = new double[IndexToTimeMap.Length, SortedSubjectIds.Count];
+            }
+
+            internal void NoteRowPass2(double time, double observation, double subjectId)
+            {
+                int timeIndex = TimeToSummaryMap[time].Index;
+                int subjectIndex = SubjectToSummaryMap[subjectId].Index;
+                if (Observations[timeIndex, subjectIndex] != Constant.MISSING)
+                    throw new Exception("Your data contains multiple, non-identical observations for the same subject and time point; time series summary cannot interpret this. Please remove the duplicate(s).");
+                Observations[timeIndex, subjectIndex] = observation;
+                nObservations++;
+            }
+
+            internal void Calculate(double ci)
+            {
+                // By time point, across subjects in this group
+                for (int timeIndex = 0; timeIndex < IndexToTimeMap.Length; timeIndex++)
+                {
+                    TimeSummary summary = TimeToSummaryMap[IndexToTimeMap[timeIndex]];
+                    summary.N = 0;
+                    summary.Sum = 0;
+
+                    for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
+                    {
+                        double observation = Observations[timeIndex, subjectIndex];
+                        if (observation != Constant.MISSING)
+                        {
+                            summary.N++;
+                            summary.Sum += observation;
+                        }
+                    }
+                    summary.Mean = summary.N == 0 ? Constant.MISSING : summary.Sum / summary.N;
+                    summary.Variance = 0;
+                    if (summary.Mean == Constant.MISSING)
+                        summary.Variance = Constant.MISSING;
+                    else
+                    {
+                        for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
+                        {
+                            double observation = Observations[timeIndex, subjectIndex];
+                            if (observation != Constant.MISSING)
+                                summary.Variance += (observation - summary.Mean) * (observation - summary.Mean);
+                        }
+                        summary.Variance /= (summary.N - 1); // Sample variance
+                    }
+                    summary.Sd = summary.Variance == Constant.MISSING ? Constant.MISSING : Math.Sqrt(summary.Variance);
+                    summary.Se = summary.Sd == Constant.MISSING ? Constant.MISSING : summary.Sd / Math.Sqrt(summary.N);
+
+                    int weightLowerIndex = Math.Max(0, timeIndex - 1);
+                    int weightUpperIndex = Math.Min(IndexToTimeMap.Length - 1, timeIndex + 1);
+                    summary.Weight = (IndexToTimeMap[weightUpperIndex] - IndexToTimeMap[weightLowerIndex]) / 2.0;
+                    summary.MeanTimesWeight = summary.Mean * summary.Weight;
+                    summary.VarTWeighted = summary.Weight * summary.Weight * summary.Variance / summary.N;
+                    summary.DfDenominator = Math.Pow(summary.Weight, 4) * Math.Pow(summary.Sd, 4) / (summary.N * summary.N * (summary.N - 1));
+                    double[] values = new double[IndexToSubjectMap.Length + 1];
+                    for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
+                    {
+                        AreasUnderCurve[timeIndex, subjectIndex] = (summary.Weight == Constant.MISSING || Observations[timeIndex, subjectIndex] == Constant.MISSING) ? Constant.MISSING : summary.Weight * Observations[timeIndex, subjectIndex];
+                        values[subjectIndex + 1] = Observations[timeIndex, subjectIndex];
+                    }
+
+                    Summary sx = new Summary();
+                    sx.FullSummaryFromX(values, values.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                    summary.UpperQuartile = sx.UpperQuartile;
+                    summary.Median = sx.Median;
+                    summary.LowerQuartile = sx.LowerQuartile;
+                }
+
+                // By subject, areas under curve etc.
+                for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
+                {
+                    SubjectSummary summary = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]];
+                    summary.Auc = 0;
+                    for (int timeIndex = 0; timeIndex < IndexToTimeMap.Length; timeIndex++)
+                    {
+                        double auc = AreasUnderCurve[timeIndex, subjectIndex];
+                        if (auc != Constant.MISSING)
+                        {
+                            summary.Auc += AreasUnderCurve[timeIndex, subjectIndex];
+                        }
+                    }
+                    AucN++;
+                    AucSum += summary.Auc;
+                    summary.Baseline = Observations[0, subjectIndex];
+                    summary.MinObservation = double.MaxValue;
+                    summary.MaxObservation = double.MinValue;
+                    int maxIndex = -1;
+                    for (int timeIndex = 0; timeIndex < IndexToTimeMap.Length; timeIndex++)
+                    {
+                        summary.MinObservation = Math.Min(summary.MinObservation, Observations[timeIndex, subjectIndex]);
+                        if (Observations[timeIndex, subjectIndex] > summary.MaxObservation)
+                        {
+                            summary.MaxObservation = Observations[timeIndex, subjectIndex];
+                            summary.TimeToMax = IndexToTimeMap[timeIndex];
+                            maxIndex = timeIndex;
+                        }
+                    }
+
+                    // If we have a max, get the slope
+                    if (maxIndex > -1)
+                    {
+                        double[] observations = new double[maxIndex + 1];
+                        for (int timeIndex = 0; timeIndex <= maxIndex; timeIndex++)
+                            observations[timeIndex] = Observations[timeIndex, subjectIndex];
+                        summary.SlopeToMax = GetProcessedContext(observations, IndexToTimeMap, maxIndex + 1).Slope;
+                    }
+                }
+
+                AucMean = (AucN == 0 || AucSum == Constant.MISSING) ? Constant.MISSING : AucSum / AucN;
+                VarAucMean = 0;
+                DfDenominator = 0;
+                foreach (TimeSummary ts in TimeToSummaryMap.Values)
+                {
+                    VarAucMean += ts.VarTWeighted == Constant.MISSING ? 0 : ts.VarTWeighted;
+                    DfDenominator += ts.DfDenominator;
+                }
+                Se = Math.Sqrt(VarAucMean);
+                double gamma = 1.0 - ((1.0 - ci) / 2.0);
+                double zd = Se * PDF.gauinv(gamma);
+                zLclAucBar = AucMean - zd;
+                zUclAucBar = AucMean + zd;
+                DfNumerator = VarAucMean * VarAucMean;
+                Df = DfNumerator / DfDenominator;
+                CriticalT = Math.Abs(PDF.tfromp(gamma, Df));
+                double td = Se * CriticalT;
+                tLclAucBar = AucMean - td;
+                tUclAucBar = AucMean + td;
+                MeanObservationsPerTimePoint = nObservations / (double)IndexToTimeMap.Length;
+            }
+
+            private SimpleLinearRegressionContext GetProcessedContext(double[] y, double[] x, int length)
+            {
+                double[][] copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { y, x }, 0, length, 1);
+                SimpleLinearRegressionContext context = new SimpleLinearRegressionContext
+                {
+                    Y = copiesRemovingMissingRows[0],
+                    X = copiesRemovingMissingRows[1]
+                };
+                double ssy; double sdX; double ssreg; double mnsqr; double seest; double r; double perf;
+                context.CalculateLeastSquaresMethod(out perf, out ssy, out sdX, out ssreg, out mnsqr, out r, out seest);
+                return context;
+            }
         }
     }
 }

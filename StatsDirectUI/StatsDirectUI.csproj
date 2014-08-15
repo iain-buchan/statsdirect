@@ -163,6 +163,8 @@
     <Compile Include="Builtins\ChartExplorer.cs" />
     <Compile Include="Builtins\Chi.cs" />
     <Compile Include="Builtins\ConvertUnitsOptions.cs" />
+    <Compile Include="Builtins\SubjectSummary.cs" />
+    <Compile Include="Builtins\TimeSummary.cs" />
     <Compile Include="Builtins\ToggleFiltersOptions.cs" />
     <Compile Include="Builtins\Coxreg.cs" />
     <Compile Include="Builtins\Describe.cs" />
@@ -1208,6 +1210,7 @@
     <Content Include="Assets\Operations\ConvertUnits.xml" />
     <Content Include="Assets\Operations\ConvertUnitsScreen.xml" />
     <Content Include="Assets\Operations\ContractFrequencies.xml" />
+    <Content Include="Assets\Operations\TimeSeriesSummary.xml" />
     <Content Include="Assets\Operations\ExpandFrequencies.xml" />
     <Content Include="Assets\Operations\MethodComparisonRegression.xml">
       <SubType>Designer</SubType>
@@ -1656,7 +1659,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

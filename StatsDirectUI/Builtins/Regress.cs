@@ -11,32 +11,6 @@ namespace StatsDirect.Builtins
 {
     public class Regress
     {
-        [Serializable]
-        private class SimpleLinearRegressionContext
-        {
-            ///  <summary>
-            ///  Y-axis intercept
-            ///  </summary>
-            public double YInt { get; set; }
-            public double Slope { get; set; }
-            ///  <remarks>1-based</remarks>
-            public double[] X { get; set; }
-            ///  <remarks>1-based</remarks>
-            public double[] Y { get; set; }
-            public int DF { get; set; }
-            public double CIT { get; set; }
-            public double P0 { get; set; }
-            public double SUMX { get; set; }
-            public double SSX { get; set; }
-            public double SSY { get; set; }
-            public double SSREG { get; set; }
-            public double MS { get; set; }
-            public double PERT { get; set; }
-            public double A { get; set; }
-            public double G { get; set; }
-            public int N { get; set; }
-        }
-
         ///  <summary>
         ///  The equivalent of the PASS_* variables in SD2, so PASS_X is X in this class
         ///  </summary>
@@ -139,7 +113,7 @@ namespace StatsDirect.Builtins
             DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
             double newx = parameters["newx"].AsDouble;
-            double newy = newx * context.Slope + context.YInt;
+            double newy = newx * context.Slope + context.YIntercept;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("v1", vx.Title + " = " + newx.ToString());
             outputParameters.AddOutput("v2", vy.Title + " = " + host.RoundU(newy));
@@ -155,7 +129,7 @@ namespace StatsDirect.Builtins
             DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0].AsDoubleVariable;
             double newy = parameters["newy"].AsDouble;
-            double newx = (newy - context.YInt) / context.Slope;
+            double newx = (newy - context.YIntercept) / context.Slope;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("v1", vy.Title + " = " + newy.ToString());
             outputParameters.AddOutput("v2", vx.Title + " = " + host.RoundU(newx));
@@ -191,7 +165,7 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptSimpleLinearRegression(ITemplateHost host, ParameterBag parameters)
         {
-            double P0; double cit; double sumx; double ssx; double ssy; double SDX; double ssreg; double mnsqr; double seest; double r; double perf;
+            double P0; double cit; double ssy; double SDX; double ssreg; double mnsqr; double seest; double r; double perf;
 
             DataFrame fy = parameters["y"].AsDataFrame;
             DoubleVariable vy = fy.Variables[0].AsDoubleVariable;
@@ -205,13 +179,13 @@ namespace StatsDirect.Builtins
                 throw new Exception("GAMMA must be greater than zero");
 
             int nx = context.X.Length - 1;
-            x_lsm(out perf, out sumx, out ssx, out ssy, out SDX, out ssreg, out mnsqr, out r, out seest, context);
+            context.CalculateLeastSquaresMethod(out perf, out ssy, out SDX, out ssreg, out mnsqr, out r, out seest);
             ParameterBag outputParameters = new ParameterBag();
             int degf = nx - 2;
             MathDbl.civ(degf, out cit, REGGAMMA, out P0);
             outputParameters.AddOutput("eq_y", vy.Title + " = " + host.RoundU(context.Slope));
-            string lnk = context.YInt < 0.0 ? " " : " + ";
-            outputParameters.AddOutput("eq_x", vx.Title + lnk + host.RoundU(context.YInt));
+            string lnk = context.YIntercept < 0.0 ? " " : " + ";
+            outputParameters.AddOutput("eq_x", vx.Title + lnk + host.RoundU(context.YIntercept));
             if (perf != 1)
             {
                 IList<ParameterBag> seList = new List<ParameterBag>();
@@ -281,8 +255,6 @@ namespace StatsDirect.Builtins
             context.DF = degf;
             context.CIT = cit;
             context.P0 = P0;
-            context.SUMX = sumx;
-            context.SSX = ssx;
             context.SSY = ssy;
             context.SSREG = ssreg;
             context.MS = mnsqr;
@@ -301,7 +273,7 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("mdnValue", context.Slope);
-            outputParameters.AddOutput("interceptValue", context.YInt);
+            outputParameters.AddOutput("interceptValue", context.YIntercept);
             outputParameters.AddOutput("xtitle", vx.Title);
             outputParameters.AddOutput("ytitle", vy.Title);
             outputParameters.AddOutput("chartIsFullWidth", true);
@@ -323,7 +295,7 @@ namespace StatsDirect.Builtins
             double[] r = new double[nx - 1 + 1];
             for (int j = 0; j <= nx - 1; j++)
             {
-                z[j] = vx.Data[j] * context.Slope + context.YInt;
+                z[j] = vx.Data[j] * context.Slope + context.YIntercept;
                 r[j] = vy.Data[j] - z[j];
             }
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
@@ -333,7 +305,7 @@ namespace StatsDirect.Builtins
 
             for (int j = 0; j <= nx - 1; j++)
             {
-                z[j] = vx.Data[j] * context.Slope + context.YInt;
+                z[j] = vx.Data[j] * context.Slope + context.YIntercept;
                 r[j] = vy.Data[j] - z[j];
                 z[j] = vx.Data[j];
             }
@@ -394,8 +366,8 @@ namespace StatsDirect.Builtins
                     double calcx;
                     for (calcx = ch.DataMinX; calcx <= ch.DataMaxX; calcx += (ch.DataMaxX - ch.DataMinX) / 20.0)
                     {
-                        double calcy = context.Slope * calcx + context.YInt;
-                        double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX));
+                        double calcy = context.Slope * calcx + context.YIntercept;
+                        double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX));
                         double pconu = calcy + (sey * context.PERT);
                         double pconl = calcy - (sey * context.PERT);
                         if (pconu > maxpcon)
@@ -409,7 +381,7 @@ namespace StatsDirect.Builtins
                 if (minpcon < ch.DataMinY)
                     ch.DataMinY = minpcon;
 
-                string rtf = ch.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(host, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YInt, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SUMX, context.SSX, false);
+                string rtf = ch.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(host, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, false);
                 outputParameters.AddOutput("chart", rtf);
             }
             return new StepResult(StepSuccess.Success, outputParameters);
@@ -442,8 +414,8 @@ namespace StatsDirect.Builtins
                     double calcx;
                     for (calcx = ch.DataMinX; calcx <= ch.DataMaxX; calcx += (ch.DataMaxX - ch.DataMinX) / 20.0)
                     {
-                        double calcy = context.Slope * calcx + context.YInt;
-                        double sey = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
+                        double calcy = context.Slope * calcx + context.YIntercept;
+                        double sey = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
                         double pconu = calcy + (sey * context.PERT);
                         double pconl = calcy - (sey * context.PERT);
                         if (pconu > maxpcon)
@@ -465,7 +437,7 @@ namespace StatsDirect.Builtins
                     ch.DataMinY = minpcon;
                 }
 
-                string rtf = ch.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(host, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YInt, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SUMX, context.SSX, true);
+                string rtf = ch.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(host, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, true);
 
                 outputParameters.AddOutput("chart", rtf);
             }
@@ -486,8 +458,8 @@ namespace StatsDirect.Builtins
             double REGGAMMA = parameters["reggamma"].AsDouble;
             CalcRcia(context, nx, REGGAMMA);
             double XA = parameters["xa"].AsDouble;
-            double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX));
-            double ya = context.Slope * XA + context.YInt;
+            double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX));
+            double ya = context.Slope * XA + context.YIntercept;
             double pcon = ya + (sey * context.PERT);
             double ncon = ya - (sey * context.PERT);
             ParameterBag outputParameters = new ParameterBag();
@@ -497,7 +469,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pci", Formatting.XRound(100 * (1.0 - context.P0), 1));
             outputParameters.AddOutput("fromi", host.RoundU(ncon));
             outputParameters.AddOutput("toi", host.RoundU(pcon));
-            double spred = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
+            double spred = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
             pcon = ya + (spred * context.PERT);
             ncon = ya - (spred * context.PERT);
             outputParameters.AddOutput("s_pred", host.RoundU(spred));
@@ -535,10 +507,10 @@ namespace StatsDirect.Builtins
             lci.EnsureLength(nx);
             outputFrame.Variables.Add(lci);
 
-            for (int j = 0; j <= nx - 1; j++)
+            for (int j = 0; j < nx; j++)
             {
-                double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((vy.Data[j] - (context.SUMX / Convert.ToDouble(nx))), 2.0) / context.SSX));
-                double ya = context.Slope * vx.Data[j] + context.YInt;
+                double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((vy.Data[j] - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX));
+                double ya = context.Slope * vx.Data[j] + context.YIntercept;
                 double pcon = ya + (sey * context.PERT);
                 double ncon = ya - (sey * context.PERT);
                 reg.set_Data(j, ya);
@@ -833,43 +805,6 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_lsm(out double perf, out double sumx, out double ssx, out double ssy, out double sdx, out double ssreg, out double mnsqr, out double r, out double seest, SimpleLinearRegressionContext context)
-        {
-            int nx = context.X.Length - 1;
-            sumx = 0.0;
-            double sumy = 0.0;
-            double sumxy = 0.0;
-            context.Slope = 0.0;
-            context.YInt = 0.0;
-            double sys = 0.0;
-            double sxs = 0.0;
-            perf = 0.0;
-            for (int n = 1; n <= nx; n++)
-            {
-                double x = context.X[n];
-                double y = context.Y[n];
-                sumx += x;
-                sxs += (x * x);
-                sumy += y;
-                sys += (y * y);
-                sumxy += (x * y);
-            }
-            ssx = sxs - ((sumx * sumx) / Convert.ToDouble(nx));
-            ssy = sys - ((sumy * sumy) / Convert.ToDouble(nx));
-            sdx = Math.Sqrt(ssx / Convert.ToDouble(nx - 1));
-            double xy = sumxy - (sumx * sumy / Convert.ToDouble(nx));
-            context.Slope = xy / ssx;
-            context.YInt = (sumy / Convert.ToDouble(nx)) - context.Slope * (sumx / Convert.ToDouble(nx));
-            r = xy / Math.Sqrt(ssx * ssy);
-            if (Math.Abs(r) >= 1)
-            {
-                perf = 1.0;
-            }
-            ssreg = (xy * xy) / ssx;
-            double ssres = ssy - ssreg;
-            mnsqr = ssres / Convert.ToDouble(nx - 2);
-            seest = mnsqr > 0.0 ? Math.Sqrt(mnsqr) : Constant.MISSING;
-        }
 
 
         public static StepResult RptMultipleLinearRegression(ITemplateHost host, ParameterBag parameters)
@@ -2511,7 +2446,7 @@ namespace StatsDirect.Builtins
             context.Y = new double[nx + 1 ];
             ParameterBag outputParameters = new ParameterBag();
             double perf; double mnsqr; double r = 0; double seest = 0;
-            double sumx, ssx, sdx, ssy, ssreg;
+            double sdx, ssy, ssreg;
             switch (model)
             {
                 case 0:
@@ -2520,11 +2455,11 @@ namespace StatsDirect.Builtins
                         context.X[N] = vX.Data[N - 1];
                         context.Y[N] = Math.Log(vY.Data[N - 1]);
                     }
-                    x_lsm(out perf, out sumx, out ssx, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest, context);
+                    context.CalculateLeastSquaresMethod(out perf, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest);
                     outputParameters.AddOutput("modelDescription", "(Exponential)  Y = a * exp(b * x)");
                     context.SSY = ssy;
                     context.SSREG = ssreg;
-                    context.A = Math.Exp(context.YInt);
+                    context.A = Math.Exp(context.YIntercept);
                     context.G = context.Slope;
                     break;
                 case 1:
@@ -2533,11 +2468,11 @@ namespace StatsDirect.Builtins
                         context.X[N] = Math.Log(vX.Data[N - 1]);
                         context.Y[N] = Math.Log(vY.Data[N - 1]);
                     }
-                    x_lsm(out perf, out sumx, out ssx, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest, context);
+                    context.CalculateLeastSquaresMethod(out perf, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest);
                     outputParameters.AddOutput("modelDescription", "(Geometric / Power)  Y = a * x^b");
                     context.SSY = ssy;
                     context.SSREG = ssreg;
-                    context.A = Math.Exp(context.YInt);
+                    context.A = Math.Exp(context.YIntercept);
                     context.G = context.Slope;
                     break;
                 case 2:
@@ -2546,12 +2481,12 @@ namespace StatsDirect.Builtins
                         context.X[N] = 1.0 / vX.Data[N - 1];
                         context.Y[N] = 1.0 / vY.Data[N - 1];
                     }
-                    x_lsm(out perf, out sumx, out ssx, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest, context);
+                    context.CalculateLeastSquaresMethod(out perf, out ssy, out sdx, out ssreg, out mnsqr, out r, out seest);
                     outputParameters.AddOutput("modelDescription", "(Hyperbolic)  Y = x / (a + b * x)");
                     context.SSY = ssy;
                     context.SSREG = ssreg;
                     context.A = context.Slope;
-                    context.G = context.YInt;
+                    context.G = context.YIntercept;
                     break;
             }
 
@@ -2584,13 +2519,13 @@ namespace StatsDirect.Builtins
             switch (model)
             {
                 case 0:
-                    newy = Math.Exp(context.YInt) * Math.Exp(context.Slope * newx);
+                    newy = Math.Exp(context.YIntercept) * Math.Exp(context.Slope * newx);
                     break;
                 case 1:
-                    newy = Math.Exp(context.YInt) * Math.Pow(newx, context.Slope);
+                    newy = Math.Exp(context.YIntercept) * Math.Pow(newx, context.Slope);
                     break;
                 case 2:
-                    double denom = context.Slope + newx * context.YInt;
+                    double denom = context.Slope + newx * context.YIntercept;
                     if (denom == 0.0)
                     {
                         denom = 0.0000001;
@@ -6923,9 +6858,65 @@ namespace StatsDirect.Builtins
             }
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
-
     }
 
+    [Serializable]
+    public class SimpleLinearRegressionContext
+    {
+        public double YIntercept { get; set; }
+        public double Slope { get; set; }
+        /// <remarks>1-based</remarks>
+        public double[] X { get; set; }
+        /// <remarks>1-based</remarks>
+        public double[] Y { get; set; }
+        public int DF { get; set; }
+        public double CIT { get; set; }
+        public double P0 { get; set; }
+        public double SumX { get; set; }
+        public double SSX { get; set; }
+        public double SSY { get; set; }
+        public double SSREG { get; set; }
+        public double MS { get; set; }
+        public double PERT { get; set; }
+        public double A { get; set; }
+        public double G { get; set; }
+        public int N { get; set; }
 
+        public void CalculateLeastSquaresMethod(out double perf, out double ssy, out double sdx, out double ssreg, out double mnsqr, out double r, out double seEst)
+        {
+            int nx = X.Length - 1;
+            SumX = 0.0;
+            double sumy = 0.0;
+            double sumxy = 0.0;
+            Slope = 0.0;
+            YIntercept = 0.0;
+            double sys = 0.0;
+            double sxs = 0.0;
+            perf = 0.0;
+            for (int n = 1; n <= nx; n++)
+            {
+                double x = X[n];
+                double y = Y[n];
+                SumX += x;
+                sxs += (x * x);
+                sumy += y;
+                sys += (y * y);
+                sumxy += (x * y);
+            }
+            SSX = sxs - (SumX * SumX) / nx;
+            ssy = sys - (sumy * sumy) / nx;
+            sdx = Math.Sqrt(SSX / (nx - 1));
+            double xy = sumxy - (SumX * sumy / nx);
+            Slope = xy / SSX;
+            YIntercept = (sumy / nx) - Slope * (SumX / nx);
+            r = xy / Math.Sqrt(SSX * ssy);
+            if (Math.Abs(r) >= 1)
+                perf = 1.0;
+            ssreg = (xy * xy) / SSX;
+            double ssres = ssy - ssreg;
+            mnsqr = ssres / Convert.ToDouble(nx - 2);
+            seEst = mnsqr > 0.0 ? Math.Sqrt(mnsqr) : Constant.MISSING;
+
+        }
+    }
 }

@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 namespace StatsDirect.Data
 {
-    // TRANSMISSINGCOMMENT: Class ClassifierVariable
     [Serializable]
     public class ClassifierVariable : DoubleVariable
     {
@@ -17,7 +16,6 @@ namespace StatsDirect.Data
             _groups = new List<Group>();
         }
 
-        // TRANSMISSINGCOMMENT: Property IsClassifier
         public override bool IsClassifier
         {
             get
@@ -26,7 +24,6 @@ namespace StatsDirect.Data
             }
         }
 
-        // TRANSMISSINGCOMMENT: Method SameSizeForResults
         public override Variable SameSizeForResults()
         {
             Variable newVariable = new DoubleVariable();
@@ -34,8 +31,6 @@ namespace StatsDirect.Data
             return newVariable;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method StealDataFrom
         public override void StealDataFrom(Variable victim)
         {
             if (!(victim.IsClassifier))
@@ -47,8 +42,6 @@ namespace StatsDirect.Data
             _groups = cVictim._groups;
         }
 
-
-        // TRANSMISSINGCOMMENT: Property Groups
         [XmlIgnore]
         public IList<Group> Groups
         {
@@ -62,23 +55,17 @@ namespace StatsDirect.Data
             }
         }
 
-        // TRANSWARNING: Automatically generated because of properties with parameter(s) 
-        // TRANSMISSINGCOMMENT: Method get_Group
         public Group get_Group(int Index)
         {
             return _groups[Index];
         }
 
-        // TRANSWARNING: Automatically generated because of properties with parameter(s) 
-        // TRANSMISSINGCOMMENT: Method set_Group
         public void set_Group(int Index, Group value)
         {
             EnsureGroups(Index + 1);
             _groups[Index] = value;
         }
 
-
-        // TRANSMISSINGCOMMENT: Property GroupCount
         public int GroupCount
         {
             get
@@ -87,7 +74,6 @@ namespace StatsDirect.Data
             }
         }
 
-        // TRANSMISSINGCOMMENT: Method EnsureGroups
         public void EnsureGroups(int MinimumSize)
         {
             while (_groups.Count < MinimumSize)
@@ -96,8 +82,6 @@ namespace StatsDirect.Data
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Property AsClassifierVariable
         public override ClassifierVariable AsClassifierVariable
         {
             get
@@ -106,7 +90,6 @@ namespace StatsDirect.Data
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property VariableType
         public override VariableType VariableType
         {
             get
@@ -115,7 +98,6 @@ namespace StatsDirect.Data
             }
         }
 
-        // TRANSMISSINGCOMMENT: Method CopyAndStripForRedo
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
             ClassifierVariable copy = new ClassifierVariable();
@@ -128,8 +110,6 @@ namespace StatsDirect.Data
             return copy;
         }
 
-
-        // TRANSMISSINGCOMMENT: Property CommaSeparatedCategoryNames
         public string CommaSeparatedCategoryNames
         {
             get
@@ -149,7 +129,6 @@ namespace StatsDirect.Data
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property SortedCategoryNames
         public string[] SortedCategoryNames
         {
             get
@@ -164,13 +143,22 @@ namespace StatsDirect.Data
             }
         }
 
-        // TRANSMISSINGCOMMENT: Property HasData
         protected override bool HasData
         {
             get
             {
                 return base.HasData && _groups != null;
             }
+        }
+
+        public Group GroupWithId(double id)
+        {
+            foreach (Group group in _groups)
+            {
+                if (group.Id == id)
+                    return group;
+            }
+            return null;
         }
     }
 

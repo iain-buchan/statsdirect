@@ -191,6 +191,7 @@ namespace StatsDirect.Builtins
                 new Builtin("rptSmirnov", Nonparametric.RptSmirnov, InputDuringStep.Never),
                 new Builtin("rptScheffe", Anova.RptScheffe, InputDuringStep.Never),
                 new Builtin("rptSqRank", Nonparametric.RptSqRank, InputDuringStep.Never),
+                new Builtin("rptTimeSeriesSummary", Describe.RptTimeSeriesSummary, InputDuringStep.Never),
                 new Builtin("rptStdrr", Rates.RptStdrr, InputDuringStep.Never),
                 new Builtin("rptTPaired", Parametric.RptTPaired, InputDuringStep.Never),
                 new Builtin("rptTSingle", Parametric.RptTSingle, InputDuringStep.Never),

@@ -12,7 +12,7 @@ namespace StatsDirect.Numerics
         /// </summary>
         /// <param name="inputs">Array of double[] that are to be checked for missing data.  These arrays are unchanged at end of method.</param>
         /// <param name="inputBase">The lowest index of each array in inputs.  Typically 0 or 1.</param>
-        /// <param name="inputLength">The number of valid rows in each array in inputs.  Precondition: inputLength + inputBase <= inputs[i].Length for all valid i</param>
+        /// <param name="inputLength">The number of valid rows in each array in inputs.  Precondition: inputLength + inputBase &lt;= inputs[i].Length for all valid i</param>
         /// <param name="outputBase">The index at which the first row with non-missing data will be emitted in the returns.  Typically 0 or 1; often used for re-basing 0-based inputs from the UI to 1-based outputs for SD functions.</param>
         /// <returns></returns>
         public static double[][] RemoveMissingRows(double[][] inputs, int inputBase, int inputLength, int outputBase)

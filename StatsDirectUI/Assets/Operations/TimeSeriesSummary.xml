@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>TimeSeriesSummary</name>
+	<friendly-name lang="en-GB">Time Series Summary</friendly-name>
+  <help chm-id="1399" />
+  <steps>
+    <settings>
+      <parameters>
+        <frame>
+          <name>times</name>
+          <prompt>Select Data for Times of Observation</prompt>
+          <validators>
+            <validator>NoMissingData</validator>
+            <validator>NonNegative</validator>
+          </validators>
+          <mode>NumericReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <ask-for-group-id>false</ask-for-group-id>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>observations</name>
+          <prompt>Select Data for Observations</prompt>
+          <mode>NumericReplaceMissing</mode>
+          <same-length-as>times</same-length-as>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <ask-for-group-id>false</ask-for-group-id>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>subjectIds</name>
+          <prompt>Select Subject/Participant Identifier</prompt>
+          <mode>CategoryReplaceMissing</mode>
+          <validators>
+            <validator>NoMissingData</validator>
+          </validators>
+          <same-length-as>times</same-length-as>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <ask-for-group-id>false</ask-for-group-id>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+        <frame>
+          <name>groups</name>
+          <prompt>Select Groups (skip if only one group)</prompt>
+          <cancel-skips-parameter>Skip</cancel-skips-parameter>
+          <same-length-as>times</same-length-as>
+          <mode>CategoryReplaceMissing</mode>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <ask-for-group-id>false</ask-for-group-id>
+          <clear-selection-first>true</clear-selection-first>
+        </frame>
+      </parameters>
+    </settings>
+    <script language="CSharp"><![CDATA[
+    bool hasZeroTime = false;
+    foreach (double v in parameters["times"].AsDataFrame.Variables[0].AsDoubleVariable.Data)
+      if (v == 0)
+      {
+        hasZeroTime = true;
+        break;
+      }
+    ParameterBag outputParameters = new ParameterBag();
+    outputParameters.AddOutput("hasZeroTime", hasZeroTime);
+    return outputParameters;
+    ]]></script>
+    <test>
+      <condition>=!(parameters["hasZeroTime"].AsBoolean)</condition>
+      <iftrue>
+        <settings>
+          <parameters>
+            <boolean>
+              <name>addZeroObservationAtZeroTime</name>
+              <prompt>Treat observation value at time zero as zero?</prompt>
+            </boolean>
+          </parameters>
+        </settings>
+      </iftrue>
+    </test>
+    <settings>
+      <parameters>
+        <confidence-interval>
+          <name>ci</name>
+        </confidence-interval>
+      </parameters>
+    </settings>
+    <builtin function-name="rptTimeSeriesSummary"/>
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[
+<report>
+<line><title>Time series summary</title></line>
+<block name="group">
+<line></line>
+<line><subtitle>Group: <in>groupName</in></subtitle></line>
+<line></line>
+<table>
+<tr><th>Time</th><th>Observations</th><th>Mean</th><th>SD</th><th>SE</th><th>Median</th><th>IQR</th></tr>
+<block name="time">
+<tr><td><in>time</in></td><td><in>observations</in></td><td><inx>mean</inx></td><td><inx>sd</inx></td><td><inx>se</inx></td><td><inx>median</inx></td><td><inx>iqr</inx></td></tr>
+</block>
+</table>
+<line></line>
+<table>
+<tr><th>Subject ID</th><th>Baseline</th><th>Min. observation</th><th>Max. observation</th><th>Time to max.</th><th>Slope to max.</th><th>AUC</th></tr>
+<block name="subject">
+<tr><td><in>subjectId</in></td><td><inx>baseline</inx></td><td><inx>min</inx></td><td><inx>max</inx></td><td><inx>timeToMax</inx></td><td><inx>slopeToMax</inx></td><td><inx>auc</inx></td></tr>
+</block>
+</table>
+<line></line>
+<line>Subjects: <in>subjects</in></line>
+<line>Total (mean per time point) observations: <in>totalObservations</in> (<inx>meanObservationsPerTimePoint</inx>)</line>
+<line>Mean (SD) area under curve (AUC): <inx>aucMean</inx> (<inx>aucSd</inx>)</line>
+<line><in>ciOutput</in>% t-interval for AUC: <inx>aucTLcl</inx> to <inx>aucTUcl</inx></line>
+<block name="bootstrap">
+<line><in>ciOutput</in>% bootstrap t-interval for AUC: <inx>aucTLclBoot</inx> to <inx>aucTUclBoot</inx></line>
+</block>
+<line><in>ciOutput</in>% z-interval for AUC: <inx>aucZLcl</inx> to <inx>aucZUcl</inx></line>
+<line>Median (IQR) area under curve: <inx>medianAuc</inx> (<inx>iqrAuc</inx>)</line>
+<line>Median (IQR) time to maximum: <inx>medianTimeToMax</inx> (<inx>iqrTimeToMax</inx>)</line>
+<line>Median (IQR) slope to maximum: <inx>medianSlopeToMax</inx> (<inx>iqrSlopeToMax</inx>)</line>
+</block>
+</report>
+]]>
+    </report>
+  </steps>
+</operation>

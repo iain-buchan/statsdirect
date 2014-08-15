@@ -257,6 +257,7 @@
             <menu-item label="&amp;Univariate Summary" operation="UnivariateSummary" />
             <menu-item label="&amp;Weighted Univariate Summary" operation="WeightedUnivariateSummary" />
             <menu-item label="&amp;Quick Univariate Summary" operation="QuickSummary" />
+            <menu-item label="&amp;Time Series Summary" operation="TimeSeriesSummary" />
           </sub-items>
         </menu-item>
         <menu-item label="P&amp;arametric">

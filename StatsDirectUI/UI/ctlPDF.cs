@@ -25,6 +25,10 @@ namespace StatsDirect.UI
         private bool inverseAvailable;
         private string lastCalculationAsString;
         private readonly ITemplateHost host;
+        /// <summary>
+        /// The box that was hit prior to lastTouchedValue - needed for some inversions.
+        /// </summary>
+        private TouchedValue priorTouchedValue = TouchedValue.NotSet;
         private TouchedValue lastTouchedValue = TouchedValue.NotSet;
 
         public ctlPDF(DistributionOptions options, ITemplateHost host)
@@ -49,19 +53,29 @@ namespace StatsDirect.UI
         private void DoubleClickTextbox(object sender, EventArgs e)
         {
             Control ctl = (Control)sender;
-            lastTouchedValue = (TouchedValue)ctl.Tag;
+            NoteHistory((TouchedValue)ctl.Tag);
             CalculateOrInvert();
         }
 
         private void EnterTextbox(object sender, EventArgs e)
         {
             Control ctl = (Control)sender;
-            lastTouchedValue = (TouchedValue)ctl.Tag;
+            NoteHistory((TouchedValue)ctl.Tag);
+        }
+
+        private void NoteHistory(TouchedValue tv)
+        {
+            if (tv != lastTouchedValue)
+            {
+                if (priorTouchedValue != lastTouchedValue)
+                    priorTouchedValue = lastTouchedValue;
+                lastTouchedValue = tv;
+            }
         }
 
         private void LeaveTextbox(object sender, EventArgs e)
         {
-            // TODO: Put back textbox leaves as command triggers
+            // TODO: Put back textbox leaves as command triggers.  This causes a problem as a leave fires before a button click - is there a better way to handle this using a different event?
             /*
             Control ctl = (Control)sender;
             lastTouchedValue = (TouchedValue)ctl.Tag;
@@ -150,7 +164,7 @@ namespace StatsDirect.UI
         {
             // Each detects whether it should run
             Calculate();
-            Invert();
+            Invert(false);
         }
 
         private void Calculate()
@@ -172,9 +186,14 @@ namespace StatsDirect.UI
             }
         }
 
-        private void Invert()
+        private void Invert(bool invertIfDfChanged)
         {
-            switch (lastTouchedValue)
+            InvertOn(lastTouchedValue, true);
+        }
+
+        private void InvertOn(TouchedValue tv, bool invertIfDfChanged)
+        {
+            switch (tv)
             {
                 case TouchedValue.Lp:
                     lblError.Text = "";
@@ -187,6 +206,12 @@ namespace StatsDirect.UI
                 case TouchedValue.P2:
                     lblError.Text = "";
                     Calculate2P();
+                    break;
+                case TouchedValue.Df:
+                    if (!invertIfDfChanged)
+                        break;
+                    // There's a use case where the user enters PDF, DF, clicks Calculate, changes DF, clicks Invert.  In this case, any of LP, UP or 2P are suitable sources for the p-value; we choose LP.
+                    InvertOn(priorTouchedValue == TouchedValue.Pdf ? TouchedValue.Lp : priorTouchedValue, false);
                     break;
             }
         }
@@ -961,7 +986,7 @@ namespace StatsDirect.UI
 
         private void cmdInvert_Click(object sender, EventArgs e)
         {
-            Invert();
+            Invert(true);
         }
     }
 }

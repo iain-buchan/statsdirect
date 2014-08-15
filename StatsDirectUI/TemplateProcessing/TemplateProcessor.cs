@@ -947,7 +947,7 @@ namespace StatsDirect.Templates
                                 {
                                     if (value == Constant.MISSING)
                                     {
-                                        return failedValidationMessage ?? "Operation cannot take missing data";
+                                        return failedValidationMessage ?? "Data with missing values cannot be used here";
                                     }
                                 }
                             }

@@ -835,8 +835,11 @@
     <Component Id="TextCode.xml">
       <File Id="TextCode.xml" Name="TextCode.xml" KeyPath="yes" />
     </Component>
+    <Component Id="TimeSeriesSummary.xml">
+      <File Id="TextCode.xml" Name="TextCode.xml" KeyPath="yes" />
+    </Component>
     <Component Id="ToggleFilters.xml">
-      <File Id="ToggleFilters.xml" Name="ToggleFilters.xml" KeyPath="yes" />
+      <File Id="TimeSeriesSummary.xml" Name="TimeSeriesSummary.xml" KeyPath="yes" />
     </Component>
     <Component Id="TPaired.xml">
       <File Id="TPaired.xml" Name="TPaired.xml" KeyPath="yes" />
