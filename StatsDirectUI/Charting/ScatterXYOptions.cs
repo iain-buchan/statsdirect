@@ -19,7 +19,7 @@ namespace StatsDirect.Charting
             PlotMarkers = true;
 
             MarkerTypes = new List<MarkerType>();
-            for (int i = 0; i <= xSeries.Count - 1; i++)
+            for (int i = 0; i < xSeries.Count; i++)
             {
                 int mkr = SeriesNumberToMarkerNumber(i);
                 MarkerType markerType = ChartRenderer.MarkerTypes[mkr].Clone();
@@ -28,13 +28,13 @@ namespace StatsDirect.Charting
 
                 //  A scatter plot has series with no lines.
                 SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
-                                                                               {
-                                                                                   SeriesName = xSeries[i].Title,
-                                                                                   AllowChangeToDashStyle = useLines,
-                                                                                   AllowChangeToLineColour = useLines,
-                                                                                   AllowChangeToLineThickness = useLines,
-                                                                                   MarkerIndex = i
-                                                                               };
+                {
+                    SeriesName = xSeries[i].Title,
+                    AllowChangeToDashStyle = useLines,
+                    AllowChangeToLineColour = useLines,
+                    AllowChangeToLineThickness = useLines,
+                    MarkerIndex = i
+                };
                 SeriesOptions.Add(soleOptions);
             }
             showLegendIsRelevant = xSeries.Count > 1;

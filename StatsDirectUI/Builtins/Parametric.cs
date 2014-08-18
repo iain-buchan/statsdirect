@@ -1276,11 +1276,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("error", host.RoundU(cset));
             outputParameters.AddOutput("df", degf.ToString());
             outputParameters.AddOutput("t", host.RoundU(tstat));
-            double P = PDF.tvalp(Math.Abs(tstat), Convert.ToDouble(degf));
+            double P = PDF.tvalp(Math.Abs(tstat), degf);
             if (P > 1.0 - P)
-            {
                 P = 1.0 - P;
-            }
             outputParameters.AddOutput("p_1", host.pval(P));
             outputParameters.AddOutput("p_2", host.pval(P * 2.0));
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1 - P0), 2));

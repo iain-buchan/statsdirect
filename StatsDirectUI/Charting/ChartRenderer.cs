@@ -5909,11 +5909,9 @@ namespace StatsDirect.Charting
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
 
-            double[] y = new double[rows - 1 + 1];
-            for (int j = 0; j <= rows - 1; j++)
-            {
+            double[] y = new double[rows];
+            for (int j = 0; j < rows; j++)
                 y[j] = xs0.Data[j];
-            }
 
             StartMetafile();
             Plot_Normal(y);
@@ -5941,13 +5939,11 @@ namespace StatsDirect.Charting
             int rows = y.Length;
 
             double sy = 0;
-            for (int j = 0; j <= rows - 1; j++)
-            {
+            for (int j = 0; j < rows; j++)
                 sy += y[j];
-            }
             double ybar = sy / rows;
             double ssy = 0;
-            for (int j = 0; j <= rows - 1; j++)
+            for (int j = 0; j < rows; j++)
             {
                 double d = y[j] - ybar;
                 ssy += d * d;
@@ -5955,18 +5951,13 @@ namespace StatsDirect.Charting
             double vary = ssy / rows;
             double sdy = Math.Sqrt(vary);
 
-
-            double[] x = new double[rows - 1 + 1];
+            double[] x = new double[rows];
             double transTemp63;
             ExFortran.Rank(y, x, 0, rows, 0, out transTemp63);
 
             if (method == NormalOptions.ScoreMethod.ExpectedNormalOrder)
-            {
                 if (rows > 4000)
-                {
                     method = NormalOptions.ScoreMethod.VanDerWaerden;
-                }
-            }
             string Lab;
             if (scaling)
             {
@@ -5990,7 +5981,7 @@ namespace StatsDirect.Charting
             }
 
             int nn = y.Length;
-            for (int j = 0; j <= rows - 1; j++)
+            for (int j = 0; j < rows; j++)
             {
                 int ifault;
                 switch (method)
@@ -6005,9 +5996,7 @@ namespace StatsDirect.Charting
                         else
                         {
                             if (scaling)
-                            {
                                 x[j] = x[j] * sdy + ybar;
-                            }
                         }
                         break;
                     case NormalOptions.ScoreMethod.Blom:

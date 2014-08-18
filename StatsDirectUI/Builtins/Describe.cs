@@ -7,6 +7,7 @@ using StatsDirect.Data;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using StatsDirect.Charting;
 namespace StatsDirect.Builtins
 {
     public class Describe
@@ -924,6 +925,16 @@ namespace StatsDirect.Builtins
                 groupsVariable = parameters["groups"].AsDataFrame.Variables[0].AsClassifierVariable;
             double ci = parameters["ci"].AsDouble;
             bool addZeroObservationsAtZeroTime = parameters.ContainsKey("addZeroObservationAtZeroTime") && parameters["addZeroObservationAtZeroTime"] != null && parameters["addZeroObservationAtZeroTime"].IsBoolean && parameters["addZeroObservationAtZeroTime"].AsBoolean;
+            // Bootstrap variables
+            bool doBootstrap = parameters.ContainsKey("doExactP") && parameters["doExactP"] != null && parameters["doExactP"].IsBoolean && parameters["doExactP"].AsBoolean;
+            MersenneTwister mt;
+            if (doBootstrap && parameters.ContainsKey("seed") && parameters["seed"] != null && parameters["seed"].IsInt32)
+                mt = new MersenneTwister(parameters["seed"].AsInt32);
+            else
+                mt = new MersenneTwister();
+            int iterations = 100000;
+            if (doBootstrap && parameters.ContainsKey("iterations") && parameters["iterations"] != null && parameters["iterations"].IsInt32)
+                iterations = parameters["iterations"].AsInt32;
 
             // Data preparation: Construct our values
             List<TimeSeriesSummaryStore> groups = new List<TimeSeriesSummaryStore>();
@@ -959,33 +970,52 @@ namespace StatsDirect.Builtins
 
             // Allow the summaries to claculate their values
             foreach (TimeSeriesSummaryStore store in groups)
-                store.Calculate(ci);
+            {
+                store.Calculate(ci, false);
+                if (doBootstrap)
+                {
+                    BootstrappingTimeSeriesSummaryStore bst = new BootstrappingTimeSeriesSummaryStore(store);
+                    bst.Bootstrap(host, iterations, mt, ci, groups.Count == 2);
+                    store.tLclAucBarBootstrap = store.AucMean + bst.TLcl * store.Se;
+                    store.tUclAucBarBootstrap = store.AucMean + bst.TUcl * store.Se;
+                    store.CompletedIterations = bst.CompletedIterations;
+                    store.AucMeans = bst.AucMeans;
+                    store.VarAucMeans = bst.VarAucMeans;
+                }
+            }
 
             // Output preparation
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("ciOutput", ci * 100);
             List<ParameterBag> groupList = new List<ParameterBag>();
             outputParameters.AddOutput("*group", groupList);
-            foreach (TimeSeriesSummaryStore store in groups)
+            for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
             {
+                TimeSeriesSummaryStore group = groups[groupIndex];
                 ParameterBag groupParameters = new ParameterBag();
                 groupList.Add(groupParameters);
                 // Per-group
-                groupParameters.AddOutput("groupName", store.Group.Label);
-                groupParameters.AddOutput("subjects", store.N);
-                groupParameters.AddOutput("totalObservations", store.nObservations);
-                groupParameters.AddOutput("meanObservationsPerTimePoint", store.MeanObservationsPerTimePoint);
-                groupParameters.AddOutput("aucMean", store.AucMean);
-                groupParameters.AddOutput("aucSd", store.AucSd);
-                groupParameters.AddOutput("aucTLcl", store.tLclAucBar);
-                groupParameters.AddOutput("aucTUcl", store.tUclAucBar);
-                groupParameters.AddOutput("aucZLcl", store.zLclAucBar);
-                groupParameters.AddOutput("aucZUcl", store.zUclAucBar);
+                groupParameters.AddOutput("groupName", group.Group.Label);
+                groupParameters.AddOutput("subjects", group.N);
+                groupParameters.AddOutput("totalObservations", group.nObservations);
+                groupParameters.AddOutput("meanObservationsPerTimePoint", group.MeanObservationsPerTimePoint);
+                groupParameters.AddOutput("aucMean", group.AucMean);
+                groupParameters.AddOutput("aucSd", group.AucSd);
+                groupParameters.AddOutput("aucTLcl", group.tLclAucBar);
+                groupParameters.AddOutput("aucTUcl", group.tUclAucBar);
+                groupParameters.AddOutput("aucZLcl", group.zLclAucBar);
+                groupParameters.AddOutput("aucZUcl", group.zUclAucBar);
+                groupParameters.AddOutput("medianAuc", group.MedianAuc);
+                groupParameters.AddOutput("iqrAuc", group.UpperQuartileAuc - group.LowerQuartileAuc);
+                groupParameters.AddOutput("medianTimeToMax", group.MedianTimeToMax);
+                groupParameters.AddOutput("iqrTimeToMax", group.UpperQuartileTimeToMax - group.LowerQuartileTimeToMax);
+                groupParameters.AddOutput("medianSlopeToMax", group.MedianSlopeToMax);
+                groupParameters.AddOutput("iqrSlopeToMax", group.UpperQuartileSlopeToMax - group.LowerQuartileSlopeToMax);
 
                 // Per-subject in this group
                 List<ParameterBag> subjectList = new List<ParameterBag>();
                 groupParameters.AddOutput("*subject", subjectList);
-                foreach (SubjectSummary subject in store.SubjectToSummaryMap.Values)
+                foreach (SubjectSummary subject in group.SubjectToSummaryMap.Values)
                 {
                     ParameterBag subjectParameters = new ParameterBag();
                     subjectList.Add(subjectParameters);
@@ -1001,7 +1031,7 @@ namespace StatsDirect.Builtins
                 // Per-time point in this group
                 List<ParameterBag> timeList = new List<ParameterBag>();
                 groupParameters.AddOutput("*time", timeList);
-                foreach (TimeSummary time in store.TimeToSummaryMap.Values)
+                foreach (TimeSummary time in group.TimeToSummaryMap.Values)
                 {
                     ParameterBag timeParameters = new ParameterBag();
                     timeList.Add(timeParameters);
@@ -1013,15 +1043,152 @@ namespace StatsDirect.Builtins
                     timeParameters.AddOutput("median", time.Median);
                     timeParameters.AddOutput("iqr", time.UpperQuartile - time.LowerQuartile);
                 }
+
+                // Bootstrap (if present)
+                if (doBootstrap)
+                {
+                    List<ParameterBag> bootstrapList = new List<ParameterBag>();
+                    groupParameters.AddOutput("*bootstrap", bootstrapList);
+                    ParameterBag bootstrapParameters = new ParameterBag();
+                    bootstrapList.Add(bootstrapParameters);
+                    bootstrapParameters.AddOutput("aucTLclBoot", group.tLclAucBarBootstrap);
+                    bootstrapParameters.AddOutput("aucTUclBoot", group.tUclAucBarBootstrap);
+                    bootstrapParameters.AddOutput("completedIterations", group.CompletedIterations);
+                }
+
+                // Line plot, one line per subject with x-axis = time, y-axis = observation
+                Charting.ChartDefinition cd = new Charting.ChartDefinition() { ChartType = Templates.ChartType.ScatterXY, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                double[] times = group.IndexToTimeMap;
+                for (int subjectIndex = 0; subjectIndex < group.IndexToSubjectMap.Length; subjectIndex++)
+                {
+                    double[] subjectObservations = new double[times.Length];
+                    for (int timeIndex = 0; timeIndex < group.IndexToTimeMap.Length; timeIndex++)
+                        subjectObservations[timeIndex] = group.Observations[timeIndex, subjectIndex];
+                    cd.AddXSeries(times, null);
+                    cd.AddYSeries(subjectObservations, null);
+                }
+                Charting.ScatterXYOptions options = new Charting.ScatterXYOptions(host.Preferences.ShouldUseColour, cd.XSeries, true);
+                options.Title = group.Group.Label;
+                options.XAxisTitle = timesVariable.Title;
+                options.YAxisTitle = observationsVariable.Title;
+                for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
+                    options.MarkerTypes[marker] = ChartRenderer.MarkerTypes[Charting.ScatterXYOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
+                cd.ChartOptions = options;
+                Charting.ChartRenderer chart = new Charting.ChartRenderer(cd);
+                string rtf;
+                ParameterBag scrap = chart.PlotAndReturnRtf(host, out rtf);
+                groupParameters.AddOutput("chart", rtf);
             }
+
+            // Normal plots for AUC and log10(AUC) across all groups
+            {
+                ChartDefinition cd = new ChartDefinition { ChartType = Templates.ChartType.Normal, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                List<double> values = new List<double>();
+                foreach (TimeSeriesSummaryStore group in groups)
+                    foreach (SubjectSummary subject in group.SubjectToSummaryMap.Values)
+                        values.Add(subject.Auc);
+                double[] points = values.ToArray();
+                cd.AddXSeries(points, "Area Under Curve");
+
+                NormalOptions options = new NormalOptions(host.Preferences.ShouldUseColour);
+                options.Title = "Normal Plot for AUC";
+                options.XAxisTitle = "Area Under Curve";
+                options.YAxisTitle = "Normal scores";
+                options.Scaling = true;
+                cd.ChartOptions = options;
+                ChartRenderer chart = new Charting.ChartRenderer(cd);
+                string rtf;
+                chart.PlotAndReturnRtf(host, out rtf);
+                outputParameters.AddOutput("aucNormalChart", rtf);
+
+                for (int i = 0; i < points.Length; i++)
+                    points[i] = Math.Log10(points[i]);
+                cd.XSeries.Clear();
+                cd.AddXSeries(points, "Log Area Under Curve");
+                options.Title = "Normal Plot for Log(AUC)";
+                options.XAxisTitle = "Log Area Under Curve";
+                chart = new ChartRenderer(cd);
+                chart.PlotAndReturnRtf(host, out rtf);
+                outputParameters.AddOutput("aucLogNormalChart", rtf);
+            }
+
+
+            // Group comparison (if two groups)
+            if (groups.Count == 2)
+            {
+                List<ParameterBag> groupComparisonList = new List<ParameterBag>();
+                outputParameters.AddOutput("*groupComparison", groupComparisonList);
+                ParameterBag groupComparisonParameters = new ParameterBag();
+                groupComparisonList.Add(groupComparisonParameters);
+
+                groupComparisonParameters.AddOutput("group1Title", groups[0].Group.Label);
+                groupComparisonParameters.AddOutput("group2Title", groups[1].Group.Label);
+
+                double dfNumerator = Math.Pow(Math.Sqrt(groups[0].DfNumerator) + Math.Sqrt(groups[1].DfNumerator), 2);
+                double dfDenominator = groups[0].DfDenominator + groups[1].DfDenominator;
+                double df = dfNumerator / dfDenominator;
+                double gamma = 1.0 - ((1.0 - ci) / 2.0);
+                double criticalT = Math.Abs(PDF.tfromp(gamma, df));
+                double aucDifference = groups[0].AucMean - groups[1].AucMean;
+                double se = Math.Sqrt(groups[0].VarAucMean + groups[1].VarAucMean);
+                double t = aucDifference / se;
+                double p = PDF.tvalp(t, df);
+                if (p > 1.0 - p)
+                    p = 1.0 - p;
+
+                groupComparisonParameters.AddOutput("t", t);
+                groupComparisonParameters.AddOutput("se", se);
+                groupComparisonParameters.AddOutput("df", df);
+                groupComparisonParameters.AddOutput("p2", p * 2.0);
+                groupComparisonParameters.AddOutput("aucDifference", aucDifference);
+                groupComparisonParameters.AddOutput("aucDifferenceLcl", aucDifference - se * criticalT);
+                groupComparisonParameters.AddOutput("aucDifferenceUcl", aucDifference + se * criticalT);
+
+                // Bootstrap (if present)
+
+                if (doBootstrap)
+                {
+                    int bothBoots = (int)Math.Min(groups[0].CompletedIterations, groups[1].CompletedIterations);
+                    double[] tBootstraps = new double[bothBoots + 1];
+                    int k = 0;
+                    for (int i = 0; i < bothBoots; i++)
+                    {
+                        double aucDifferenceBootstrap = aucDifference-(groups[0].AucMeans[i] - groups[1].AucMeans[i]);
+                        double seBootstrap = Math.Sqrt(groups[0].VarAucMeans[i] + groups[1].VarAucMeans[i]);
+                        double tBootstrap = aucDifferenceBootstrap / seBootstrap;
+                        tBootstraps[i + 1] = tBootstrap;
+                        if (Math.Abs(tBootstrap) >= Math.Abs(t))
+                            k++;
+                    }
+                    // 2-sided p-value
+                    double pBootstrap = (double)(k + 1) / (double)(bothBoots + 1);
+
+                    Summary s = new Summary();
+                    double edge = (1.0 - ci) / 2.0;
+                    s.FullSummaryFromX(tBootstraps, bothBoots, null, ci, edge * 100.0, (1.0 - edge) * 100.0, 1);
+                    double tBootstrapLcl = aucDifference + s.UserCentileL * se;
+                    double tBootstrapUcl = aucDifference + s.UserCentileU * se;
+
+                    List<ParameterBag> bootstrapList = new List<ParameterBag>();
+                    groupComparisonParameters.AddOutput("*bootstrap", bootstrapList);
+                    ParameterBag bootstrapParameters = new ParameterBag();
+                    bootstrapList.Add(bootstrapParameters);
+                    bootstrapParameters.AddOutput("pBootstrap", pBootstrap);
+                    bootstrapParameters.AddOutput("iterations", bothBoots);
+                    bootstrapParameters.AddOutput("tBootstrapLcl", tBootstrapLcl);
+                    bootstrapParameters.AddOutput("tBootstrapUcl", tBootstrapUcl);
+                }
+
+            }
+
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
         private class TimeSeriesSummaryStore
         {
             public Group Group { get; set; }
-            private SortedSet<double> SortedTimes { get; set; }
-            private SortedSet<double> SortedSubjectIds { get; set; }
+            public SortedSet<double> SortedTimes { get; set; }
+            public SortedSet<double> SortedSubjectIds { get; set; }
             public double[,] Observations { get; private set; }
             public int nObservations { get; private set; }
             private double[,] AreasUnderCurve { get; set; }
@@ -1043,6 +1210,21 @@ namespace StatsDirect.Builtins
             public double tLclAucBar { get; private set; }
             public double tUclAucBar { get; private set; }
             public double MeanObservationsPerTimePoint { get; private set; }
+            public double MedianAuc { get; private set; }
+            public double UpperQuartileAuc { get; private set; }
+            public double LowerQuartileAuc { get; private set; }
+            public double MedianTimeToMax { get; private set; }
+            public double UpperQuartileTimeToMax { get; private set; }
+            public double LowerQuartileTimeToMax { get; private set; }
+            public double MedianSlopeToMax { get; private set; }
+            public double UpperQuartileSlopeToMax { get; private set; }
+            public double LowerQuartileSlopeToMax { get; private set; }
+            // Bootstrapping
+            public double tLclAucBarBootstrap { get; set; }
+            public double tUclAucBarBootstrap { get; set; }
+            public double CompletedIterations { get; set; }
+            public double[] AucMeans { get; set; }
+            public double[] VarAucMeans { get; set; }
 
             public TimeSeriesSummaryStore()
             {
@@ -1097,7 +1279,12 @@ namespace StatsDirect.Builtins
                 nObservations++;
             }
 
-            internal void Calculate(double ci)
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="ci"></param>
+            /// <param name="isBootstrap">If true, this is a calculation for bootstrapping and therefore we can elide much of the calculation.</param>
+            internal void Calculate(double ci, bool isBootstrap)
             {
                 // By time point, across subjects in this group
                 for (int timeIndex = 0; timeIndex < IndexToTimeMap.Length; timeIndex++)
@@ -1138,21 +1325,26 @@ namespace StatsDirect.Builtins
                     summary.MeanTimesWeight = summary.Mean * summary.Weight;
                     summary.VarTWeighted = summary.Weight * summary.Weight * summary.Variance / summary.N;
                     summary.DfDenominator = Math.Pow(summary.Weight, 4) * Math.Pow(summary.Sd, 4) / (summary.N * summary.N * (summary.N - 1));
-                    double[] values = new double[IndexToSubjectMap.Length + 1];
                     for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
-                    {
                         AreasUnderCurve[timeIndex, subjectIndex] = (summary.Weight == Constant.MISSING || Observations[timeIndex, subjectIndex] == Constant.MISSING) ? Constant.MISSING : summary.Weight * Observations[timeIndex, subjectIndex];
-                        values[subjectIndex + 1] = Observations[timeIndex, subjectIndex];
-                    }
 
-                    Summary sx = new Summary();
-                    sx.FullSummaryFromX(values, values.Length - 1, null, ci, 5, 95, 1); // 1-based data array
-                    summary.UpperQuartile = sx.UpperQuartile;
-                    summary.Median = sx.Median;
-                    summary.LowerQuartile = sx.LowerQuartile;
+                    if (!isBootstrap)
+                    {
+                        double[] values = new double[IndexToSubjectMap.Length + 1];
+                        for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
+                            values[subjectIndex + 1] = Observations[timeIndex, subjectIndex];
+
+                        Summary sx = new Summary();
+                        sx.FullSummaryFromX(values, values.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                        summary.UpperQuartile = sx.UpperQuartile;
+                        summary.Median = sx.Median;
+                        summary.LowerQuartile = sx.LowerQuartile;
+                    }
                 }
 
                 // By subject, areas under curve etc.
+                AucN = 0;
+                AucSum = 0;
                 for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
                 {
                     SubjectSummary summary = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]];
@@ -1161,34 +1353,36 @@ namespace StatsDirect.Builtins
                     {
                         double auc = AreasUnderCurve[timeIndex, subjectIndex];
                         if (auc != Constant.MISSING)
-                        {
-                            summary.Auc += AreasUnderCurve[timeIndex, subjectIndex];
-                        }
+                            summary.Auc += auc;
                     }
                     AucN++;
                     AucSum += summary.Auc;
-                    summary.Baseline = Observations[0, subjectIndex];
-                    summary.MinObservation = double.MaxValue;
-                    summary.MaxObservation = double.MinValue;
-                    int maxIndex = -1;
-                    for (int timeIndex = 0; timeIndex < IndexToTimeMap.Length; timeIndex++)
-                    {
-                        summary.MinObservation = Math.Min(summary.MinObservation, Observations[timeIndex, subjectIndex]);
-                        if (Observations[timeIndex, subjectIndex] > summary.MaxObservation)
-                        {
-                            summary.MaxObservation = Observations[timeIndex, subjectIndex];
-                            summary.TimeToMax = IndexToTimeMap[timeIndex];
-                            maxIndex = timeIndex;
-                        }
-                    }
 
-                    // If we have a max, get the slope
-                    if (maxIndex > -1)
+                    if (!isBootstrap)
                     {
-                        double[] observations = new double[maxIndex + 1];
-                        for (int timeIndex = 0; timeIndex <= maxIndex; timeIndex++)
-                            observations[timeIndex] = Observations[timeIndex, subjectIndex];
-                        summary.SlopeToMax = GetProcessedContext(observations, IndexToTimeMap, maxIndex + 1).Slope;
+                        summary.Baseline = Observations[0, subjectIndex];
+                        summary.MinObservation = double.MaxValue;
+                        summary.MaxObservation = double.MinValue;
+                        int maxIndex = -1;
+                        for (int timeIndex = 0; timeIndex < IndexToTimeMap.Length; timeIndex++)
+                        {
+                            summary.MinObservation = Math.Min(summary.MinObservation, Observations[timeIndex, subjectIndex]);
+                            if (Observations[timeIndex, subjectIndex] > summary.MaxObservation)
+                            {
+                                summary.MaxObservation = Observations[timeIndex, subjectIndex];
+                                summary.TimeToMax = IndexToTimeMap[timeIndex];
+                                maxIndex = timeIndex;
+                            }
+                        }
+
+                        // If we have a max, get the slope
+                        if (maxIndex > -1)
+                        {
+                            double[] observations = new double[maxIndex + 1];
+                            for (int timeIndex = 0; timeIndex <= maxIndex; timeIndex++)
+                                observations[timeIndex] = Observations[timeIndex, subjectIndex];
+                            summary.SlopeToMax = GetProcessedContext(observations, IndexToTimeMap, maxIndex + 1).Slope;
+                        }
                     }
                 }
 
@@ -1201,17 +1395,49 @@ namespace StatsDirect.Builtins
                     DfDenominator += ts.DfDenominator;
                 }
                 Se = Math.Sqrt(VarAucMean);
-                double gamma = 1.0 - ((1.0 - ci) / 2.0);
-                double zd = Se * PDF.gauinv(gamma);
-                zLclAucBar = AucMean - zd;
-                zUclAucBar = AucMean + zd;
-                DfNumerator = VarAucMean * VarAucMean;
-                Df = DfNumerator / DfDenominator;
-                CriticalT = Math.Abs(PDF.tfromp(gamma, Df));
-                double td = Se * CriticalT;
-                tLclAucBar = AucMean - td;
-                tUclAucBar = AucMean + td;
-                MeanObservationsPerTimePoint = nObservations / (double)IndexToTimeMap.Length;
+                if (!isBootstrap)
+                {
+                    DfNumerator = VarAucMean * VarAucMean;
+                    Df = DfNumerator / DfDenominator;
+                    double gamma = 1.0 - ((1.0 - ci) / 2.0);
+                    CriticalT = Math.Abs(PDF.tfromp(gamma, Df));
+                    double td = Se * CriticalT;
+                    tLclAucBar = AucMean - td;
+                    tUclAucBar = AucMean + td;
+                    double zd = Se * PDF.gauinv(gamma);
+                    zLclAucBar = AucMean - zd;
+                    zUclAucBar = AucMean + zd;
+                    MeanObservationsPerTimePoint = nObservations / (double)IndexToTimeMap.Length;
+
+                    // AUC, time to max and slope to max medians and IQRs
+                    double[] aucs = new double[IndexToSubjectMap.Length + 1];
+                    double[] timesToMax = new double[IndexToSubjectMap.Length + 1];
+                    double[] slopesToMax = new double[IndexToSubjectMap.Length + 1];
+                    for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
+                    {
+                        aucs[subjectIndex + 1] = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]].Auc;
+                        timesToMax[subjectIndex + 1] = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]].TimeToMax;
+                        slopesToMax[subjectIndex + 1] = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]].SlopeToMax;
+                    }
+
+                    Summary sAuc = new Summary();
+                    sAuc.FullSummaryFromX(aucs, aucs.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                    UpperQuartileAuc = sAuc.UpperQuartile;
+                    MedianAuc = sAuc.Median;
+                    LowerQuartileAuc = sAuc.LowerQuartile;
+
+                    Summary sTimeToMax = new Summary();
+                    sTimeToMax.FullSummaryFromX(timesToMax, timesToMax.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                    UpperQuartileTimeToMax = sTimeToMax.UpperQuartile;
+                    MedianTimeToMax = sTimeToMax.Median;
+                    LowerQuartileTimeToMax = sTimeToMax.LowerQuartile;
+
+                    Summary sSlopeToMax = new Summary();
+                    sSlopeToMax.FullSummaryFromX(slopesToMax, slopesToMax.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                    UpperQuartileSlopeToMax = sSlopeToMax.UpperQuartile;
+                    MedianSlopeToMax = sSlopeToMax.Median;
+                    LowerQuartileSlopeToMax = sSlopeToMax.LowerQuartile;
+                }
             }
 
             private SimpleLinearRegressionContext GetProcessedContext(double[] y, double[] x, int length)
@@ -1225,6 +1451,81 @@ namespace StatsDirect.Builtins
                 double ssy; double sdX; double ssreg; double mnsqr; double seest; double r; double perf;
                 context.CalculateLeastSquaresMethod(out perf, out ssy, out sdX, out ssreg, out mnsqr, out r, out seest);
                 return context;
+            }
+        }
+
+        private class BootstrappingTimeSeriesSummaryStore
+        {
+            private TimeSeriesSummaryStore original;
+            private TimeSeriesSummaryStore resampled;
+            public int CompletedIterations { get; private set; }
+            public double TLcl { get; private set; }
+            public double TUcl { get; private set; }
+            public double[] AucMeans { get; private set; }
+            public double[] VarAucMeans { get; private set; }
+
+            public BootstrappingTimeSeriesSummaryStore(TimeSeriesSummaryStore original)
+            {
+                this.original = original;
+            }
+
+            public void Bootstrap(ITemplateHost host, int iterations, MersenneTwister mt, double ci, bool keepAucs)
+            {
+                if (keepAucs)
+                {
+                    AucMeans = new double[iterations];
+                    VarAucMeans = new double[iterations];
+                }
+
+                CompletedIterations = iterations; // Will be overwritten if we abandon partway.
+                resampled = new TimeSeriesSummaryStore() { Group = original.Group, SortedTimes = original.SortedTimes, SortedSubjectIds = original.SortedSubjectIds };
+                resampled.NoteEndOfPass1(false);
+                double[] tValues = new double[iterations + 1];
+                host.StartProgress("Bootstrapping " + original.Group.Label, true);
+                for (int iteration = 0; iteration < iterations; iteration++)
+                {
+                    Shuffle(mt, original.Observations, resampled.Observations);
+                    resampled.Calculate(ci, true);
+                    double aucDifference = original.AucMean - resampled.AucMean;
+                    double t = aucDifference / resampled.Se;
+                    if (keepAucs)
+                    {
+                        AucMeans[iteration] = resampled.AucMean;
+                        VarAucMeans[iteration] = resampled.VarAucMean;
+                    }
+                    tValues[iteration + 1] = t;
+                    if (iteration % 5000 == 0)
+                    {
+                        if (host.UpdateProgress(iteration / (double)iterations))
+                        {
+                            // Abandon
+                            CompletedIterations = iteration;
+                            break;
+                        }
+                    }
+                }
+                // If we got here, we either completed fully or completedIterations will be set for the partial completion.
+                Summary s = new Summary();
+                double edge = (1.0 - ci) / 2.0;
+                s.FullSummaryFromX(tValues, CompletedIterations, null, ci, edge * 100.0, (1.0 - edge) * 100.0, 1);
+                TLcl = s.UserCentileL;
+                TUcl = s.UserCentileU;
+                host.FinishProgress();
+            }
+
+            /// <summary>
+            /// Resample the observations for each time point from input into output, with replacement.
+            /// </summary>
+            /// <param name="mt"></param>
+            /// <param name="p"></param>
+            /// <returns></returns>
+            private void Shuffle(MersenneTwister mt, double[,] input, double[,] output)
+            {
+                int tub = input.GetUpperBound(0);
+                int sub = input.GetUpperBound(1);
+                for (int timeIndex = 0; timeIndex <= tub; timeIndex++)
+                    for (int subjectIndex = 0; subjectIndex <= sub; subjectIndex++)
+                        output[timeIndex, subjectIndex] = input[timeIndex, mt.NextInteger(sub)];
             }
         }
     }

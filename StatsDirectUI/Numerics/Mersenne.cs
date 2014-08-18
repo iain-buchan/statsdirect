@@ -144,7 +144,7 @@ namespace StatsDirect.Numerics
 		}
 
 		/// <summary>
-		/// Returns a positive random integer less than the specified maximum.
+		/// Returns a positive random integer less than or equal to the specified maximum.
 		/// </summary>
 		/// <param name="maxValue">The maximum value. Must be greater than zero.</param>
 		/// <returns>A positive random integer less than or equal to <c>maxValue</c>.</returns>

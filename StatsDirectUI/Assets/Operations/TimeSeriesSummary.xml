@@ -85,6 +85,27 @@
         <confidence-interval>
           <name>ci</name>
         </confidence-interval>
+        <boolean>
+          <name>doExactP</name>
+          <prompt>Bootstrap confidence intervals?</prompt>
+          <must-request>true</must-request>
+        </boolean>
+        <integer>
+          <name>iterations</name>
+          <prompt>Iterations</prompt>
+          <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
+          <must-request>true</must-request>
+          <minimum-value>1</minimum-value>
+          <default-value>100000</default-value>
+        </integer>
+        <integer>
+          <name>seed</name>
+          <prompt>Seed</prompt>
+          <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
+          <must-request>true</must-request>
+          <force-default>true</force-default>
+          <default-value>=Base.DefaultSeed()</default-value>
+        </integer>
       </parameters>
     </settings>
     <builtin function-name="rptTimeSeriesSummary"/>
@@ -113,14 +134,34 @@
 <line>Subjects: <in>subjects</in></line>
 <line>Total (mean per time point) observations: <in>totalObservations</in> (<inx>meanObservationsPerTimePoint</inx>)</line>
 <line>Mean (SD) area under curve (AUC): <inx>aucMean</inx> (<inx>aucSd</inx>)</line>
-<line><in>ciOutput</in>% t-interval for AUC: <inx>aucTLcl</inx> to <inx>aucTUcl</inx></line>
+<line><ci><in>ciOutput</in>% t-interval for AUC: <inx>aucTLcl</inx> to <inx>aucTUcl</inx></ci></line>
 <block name="bootstrap">
-<line><in>ciOutput</in>% bootstrap t-interval for AUC: <inx>aucTLclBoot</inx> to <inx>aucTUclBoot</inx></line>
+<line><ci><in>ciOutput</in>% bootstrap-t interval for AUC (<in>completedIterations</in> iterations, seed <in>seed</in>): <inx>aucTLclBoot</inx> to <inx>aucTUclBoot</inx></ci></line>
 </block>
-<line><in>ciOutput</in>% z-interval for AUC: <inx>aucZLcl</inx> to <inx>aucZUcl</inx></line>
+<line><ci><in>ciOutput</in>% z-interval for AUC: <inx>aucZLcl</inx> to <inx>aucZUcl</inx></ci></line>
 <line>Median (IQR) area under curve: <inx>medianAuc</inx> (<inx>iqrAuc</inx>)</line>
 <line>Median (IQR) time to maximum: <inx>medianTimeToMax</inx> (<inx>iqrTimeToMax</inx>)</line>
 <line>Median (IQR) slope to maximum: <inx>medianSlopeToMax</inx> (<inx>iqrSlopeToMax</inx>)</line>
+<line></line>
+<line><in>chart</in></line>
+</block>
+<line></line>
+<line><in>aucNormalChart</in></line>
+<line></line>
+<line><in>aucLogNormalChart</in></line>
+<block name="groupComparison">
+<line></line>
+<line><subtitle>Group comparison: <in>group1Title</in> vs. <in>group2Title</in></subtitle></line>
+<line></line>
+<line>t (SE): <inx>t</inx> (<inx>se</inx>)</line>
+<line>DF: <inx>df</inx></line>
+<line><pval>Two sided <inp>p2</inp></pval></line>
+<line><ci>AUC difference (<in>ciOutput</in>% CI): <inx>aucDifference</inx> (<inx>aucDifferenceLcl</inx> to <inx>aucDifferenceUcl</inx>)</ci></line>
+<block name="bootstrap">
+<line>Bootstrapped with <in>iterations</in> iterations, seed <in>seed</in></line>
+<line><pval>Two sided bootstrap <inp>pBootstrap</inp></pval></line>
+<line><ci><in>ciOutput</in>% bootstrap-t interval: <inx>tBootstrapLcl</inx> to <inx>tBootstrapUcl</inx></ci></line>
+</block>
 </block>
 </report>
 ]]>

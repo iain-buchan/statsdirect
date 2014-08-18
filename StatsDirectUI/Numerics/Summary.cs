@@ -213,7 +213,7 @@ namespace StatsDirect.Numerics
                     MeanUCL = Mean + bit;
                 }
                 GeometricMean = gmok == false ? Math.Exp(slog / nnx) : Constant.MISSING;
-                if (Sd != Constant.MISSING & Mean != Constant.MISSING & Mean != 0.0)
+                if (Sd != Constant.MISSING && Mean != Constant.MISSING && Mean != 0.0)
                 {
                     VarianceCoefficient = Sd / Mean;
                 }
@@ -264,6 +264,8 @@ namespace StatsDirect.Numerics
                 return true;
 
             }
+
+            // If we get here, there's no more than one row of valid data.
             if (ValidData == 1)
             {
                 Skewness = Constant.MISSING;
@@ -284,6 +286,8 @@ namespace StatsDirect.Numerics
                 MeanUCL = Constant.MISSING;
                 return true;
             }
+
+            // If we get here, there's no valid data.
             Skewness = Constant.MISSING;
             Kurtosis = Constant.MISSING;
             LowerQuartile = Constant.MISSING;
@@ -310,55 +314,42 @@ namespace StatsDirect.Numerics
         ///  
         ///  </summary>
         ///  <param name="x">x() is assumed to be an array from 1 to n with all elements valid</param>
-        ///  <param name="N"></param>
+        ///  <param name="n"></param>
         ///  <param name="centile"></param>
         ///  <returns></returns>
         ///  <remarks>see Gleason JR. Univariate summaries with boxplots. Stata Technical Bulletin sg67, 1997 and sg67.1, 1999.</remarks>
-        private double GetCentile(VarAndWt[] x, int N, double centile)
+        private double GetCentile(VarAndWt[] x, int n, double centile)
         {
             double index;
             double lastcumsum = 0;
 
-            if (centile < 0.0 | centile > 1.0)
-            {
+            if (centile < 0.0 || centile > 1.0)
                 return Constant.MISSING;
-            }
             if (centile == 0.0)
-            {
                 return x[1].Data;
-            }
             if (centile == 1.0)
-            {
-                return x[N].Data;
-            }
+                return x[n].Data;
             if (CentileType == 2)
             {
-                index = Math.Floor(centile * (N + 1));
-                double h = centile * (N + 1) - index;
+                index = Math.Floor(centile * (n + 1));
+                double h = centile * (n + 1) - index;
                 int bottom = index < 1 ? 1 : Convert.ToInt32(index);
-                int top;
-                if (index + 1 > N)
-                {
-                    top = N;
-                }
-                else { top = Convert.ToInt32(index) + 1; }
+                int top = (index + 1 > n) ? n : Convert.ToInt32(index) + 1;
                 return (1.0 - h) * x[bottom].Data + h * x[top].Data;
             }
 
-            index = centile * Convert.ToDouble(N);
+            index = centile * Convert.ToDouble(n);
             double cumsum = 0.0;
             int i;
-            for (i = 1; i <= N; i++)
+            for (i = 1; i <= n; i++)
             {
-                cumsum = cumsum + x[i].wt;
+                cumsum += x[i].wt;
                 if (cumsum > index)
                     break;
                 lastcumsum = cumsum;
             }
-            if (i > N)
-            {
-                i = N;
-            }
+            if (i > n)
+                i = n;
             if (lastcumsum == index)
                 return (x[i - 1].Data + x[i].Data) / 2.0;
             return x[i].Data;
@@ -399,20 +390,19 @@ namespace StatsDirect.Numerics
         public bool FullSummaryFromX(double[] x, int rows, string ti, double UserCL, double UserCentL, double UserCentU, int CentileDef)
         {
             Title = ti;
-            double[] v = new double[rows + 1 /* VB to C# conversion */ ];
+            double[] v = new double[rows + 1];
             for (int i = 1; i <= rows; i++)
                 v[i] = 1.0;
             CentileType = CentileDef;
             VarAndWt[] xs;
-            bool fullSummaryFromXReturn = FullSummary(x, v, 1, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out xs);
-            return fullSummaryFromXReturn;
+            return FullSummary(x, v, 1, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out xs);
         }
 
         public bool FullSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
         {
             Title = ti;
-            double[] z = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] v = new double[rows + 1 /* VB to C# conversion */ ];
+            double[] z = new double[rows + 1];
+            double[] v = new double[rows + 1];
             for (int i = 1; i <= rows; i++)
             {
                 z[i] = x[k, i];
@@ -420,8 +410,7 @@ namespace StatsDirect.Numerics
             }
             CentileType = centileDef;
             VarAndWt[] xs;
-            bool fullSummaryFromXKReturn = FullSummary(z, v, 1, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
-            return fullSummaryFromXKReturn;
+            return FullSummary(z, v, 1, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
         }
 
     }
