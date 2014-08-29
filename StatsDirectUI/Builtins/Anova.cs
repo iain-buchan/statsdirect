@@ -827,13 +827,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
-        ///  <summary>
-        ///  
-        ///  </summary>
-        ///  <param name="host"></param>
-        ///  <param name="parameters"></param>
-        ///  <returns></returns>
         ///  <remarks>Precondition: the frame passed in has equal-length columns.</remarks>
         public static StepResult RptTwoWay(ITemplateHost host, ParameterBag parameters)
         {
@@ -842,45 +835,38 @@ namespace StatsDirect.Builtins
 
             int nc = frame.VariableCount;
             int nr = 0;
-            double[] mean = new double[nc + 1 ];
-            int[] tnx = new int[nc + 1 ];
-            double[, ,] y = new double[2, v0.Length + 1, nc + 1];
+            double[] mean = new double[nc + 1];
+            int[] tnx = new int[nc + 1];
+            double[,,] y = new double[2, v0.Length + 1, nc + 1];
 
             int skipped = 0;
-            for (int N = 0; N <= v0.Length - 1; N++)
+            for (int N = 0; N < v0.Length; N++)
             {
                 bool skip = false;
-                for (int D = 0; D <= frame.VariableCount - 1; D++)
+                for (int d = 0; d < frame.VariableCount; d++)
                 {
-                    if (frame.Variables[D].AsDoubleVariable.Data[N] == Constant.MISSING)
+                    if (frame.Variables[d].AsDoubleVariable.Data[N] == Constant.MISSING)
                     {
                         skip = true;
-                        skipped = skipped + 1;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        skipped++;
+                        break;
                     }
                 }
                 if (!(skip))
                 {
-                    nr += 1;
-                    for (int D = 0; D <= frame.VariableCount - 1; D++)
-                    {
-                        y[1, nr, D + 1] = frame.Variables[D].AsDoubleVariable.Data[N];
-                    }
+                    nr++;
+                    for (int d = 0; d < frame.VariableCount; d++)
+                        y[1, nr, d + 1] = frame.Variables[d].AsDoubleVariable.Data[N];
                 }
             }
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
-            {
-                tnx[D] = nr;
-            }
+            for (int d = 0; d < frame.VariableCount; d++)
+                tnx[d] = nr;
+
             string wrn;
             if (skipped != 0)
-            {
                 wrn = "   (" + Formatting.WRNCOLON + skipped.ToString() + " out of " + (skipped + nr).ToString() + " rows were skipped due to missing values)";
-            }
             else
-            {
                 wrn = "";
-            }
 
             double sscol;
             double sstot;
@@ -896,22 +882,16 @@ namespace StatsDirect.Builtins
             XTwoWay(y, ref mean, nr, nc, 1, out ssrow, out sscol, out scrap, out sstot, out ssres, out dfrow, out dfcol, out iscrap, out dftot, out dfres, out fault);
 
             if (fault != 0)
-            {
                 throw new Exception("Invalid calculation");
-            }
 
             string tlist = "";
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
                 //  Col(0).AddItem(frame.Variables(D).Title & " (" & Formatting.XRound(mean(D), 4) & ")")
-                if (D == 0)
-                {
-                    tlist = frame.Variables[D].Title;
-                }
+                if (d == 0)
+                    tlist = frame.Variables[d].Title;
                 else
-                {
-                    tlist = tlist + ", " + frame.Variables[D].Title;
-                }
+                    tlist = tlist + ", " + frame.Variables[d].Title;
             }
 
             double msrow = ssrow / Convert.ToDouble(dfrow);
@@ -919,9 +899,7 @@ namespace StatsDirect.Builtins
             double msres = ssres / Convert.ToDouble(dfres);
 
             if (wrn.Length > 0)
-            {
                 tlist = tlist + "\r\n" + wrn;
-            }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tlist", tlist);
             outputParameters.AddOutput("sub_sum", host.RoundU(ssrow));
@@ -967,13 +945,13 @@ namespace StatsDirect.Builtins
             DataFrame outputFrame = new DataFrame();
             outputFrame.EnsureVariables(frame.VariableCount);
 
-            for (int D = 0; D < nc; D++)
+            for (int d = 0; d < nc; d++)
             {
                 for (int N = 1; N <= nr; N++)
                 {
                     int adit = 0;
                     double adsum = 0;
-                    Variable candidate = frame.Variables[N - 1][D]; //  There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
+                    Variable candidate = frame.Variables[N - 1][d]; //  There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
                     if (candidate != null)
                     {
                         DoubleVariable v = candidate.AsDoubleVariable;
@@ -998,13 +976,13 @@ namespace StatsDirect.Builtins
                         for (int Q = 0; Q < nm; Q++)
                         {
                             double item = v.Data[Q] == Constant.MISSING ? spare : v.Data[Q];
-                            y[Q + 1, N, D + 1] = item;
+                            y[Q + 1, N, d + 1] = item;
                         }
                     }
                 }
-                tnx[D] = nr;
-                string title = "Treatment " + (1 + D).ToString();
-                outputFrame.Variables[D] = new DoubleVariable(null, title);
+                tnx[d] = nr;
+                string title = "Treatment " + (1 + d).ToString();
+                outputFrame.Variables[d] = new DoubleVariable(null, title);
             }
 
             int dfcol;
