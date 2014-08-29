@@ -14,6 +14,7 @@
           <min-columns>2</min-columns>
           <max-columns>200</max-columns>
           <ask-for-group-id>true</ask-for-group-id>
+          <group-id-mode>TreatmentAndBlock</group-id-mode>
         </frame>
       </parameters>
     </settings>

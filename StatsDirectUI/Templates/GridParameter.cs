@@ -16,6 +16,7 @@ namespace StatsDirect.Templates
         private DataAcquisitionMode dataAcquisitionMode;
         private bool shouldClearSelectionFirst;
         private bool shouldAskForGroupId;
+        private GroupIdentifierMode groupIdentifierMode;
         private string appendToFrame;
         private bool canSelect = true;
 
@@ -171,6 +172,16 @@ namespace StatsDirect.Templates
         {
             get { return shouldAskForGroupId; }
             set { shouldAskForGroupId = value; }
+        }
+
+        /// <summary>
+        /// If ShouldAskForGroupId is true, how should groups be selected?
+        /// </summary>
+        [XmlElement(ElementName = "group-id-mode")]
+        public GroupIdentifierMode GroupIdentifierMode
+        {
+            get { return groupIdentifierMode; }
+            set { groupIdentifierMode = value; }
         }
 
         public override bool RequiresGrid
