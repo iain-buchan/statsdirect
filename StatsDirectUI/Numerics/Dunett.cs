@@ -661,30 +661,22 @@ namespace StatsDirect.Numerics
         public static double nchi2( double df, double elambda, double xx ) 
         { 
             if ( ( xx <= 0.0 ) ) 
-            { 
                 return 0.0; 
-            } 
             double x = 0.5 * xx; 
             double del = 0.5 * elambda; 
-            int k = ( ( int )(  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor(del) ) ); 
+            int k = (int)Math.Floor(del); 
             double a = 0.5 * df + k; 
-            double gamkf = gamf( ref x, ref a ); 
+            double gamkf = gamf(x, a); 
             if ( ( gamkf == Constant.MISSING ) ) 
-            { 
                 return Constant.MISSING; 
-            } 
             double gamkb = gamkf; 
             if ( ( del == 0.0 ) ) 
-            { 
                 return gamkf; 
-            } 
             double poikf = poipro( ref k, ref del ); 
             double poikb = poikf; 
             double gl = PDF.alogam( a ); 
             if ( ( gl == Constant.MISSING ) ) 
-            { 
                 return Constant.MISSING; 
-            } 
             double xtermf = Math.Exp( ( a - 1.0 ) * Math.Log( x ) - x - gl ); 
             double xtermb = xtermf * x / a; 
             double sum = poikf * gamkf; 
@@ -703,9 +695,7 @@ namespace StatsDirect.Numerics
                 if ( ( i > k ) ) 
                 { 
                     if ( ( error <= 0.000000000001 || i > 5000 ) )
-                    { 
                         break;
-                    } 
                 } 
                 else 
                 { 
@@ -738,15 +728,12 @@ namespace StatsDirect.Numerics
             return Math.Exp( -el + ek * Math.Log( el ) - gl ); 
         } 
         
-        
-        // TRANSMISSINGCOMMENT: Method gamf
-        private static double gamf( ref double x, ref double a ) 
+        private static double gamf(double x, double a) 
         { 
             double gl = PDF.alogam( a + 1.0 ); 
             if ( ( gl == Constant.MISSING ) ) 
-            { 
                 return Constant.MISSING; 
-            } 
+
             double com = Math.Exp( a * Math.Log( x ) - gl - x ); 
             double term = 1.0; 
             double sum = 1.0; 
@@ -762,12 +749,7 @@ namespace StatsDirect.Numerics
                 one = one + 1.0; 
             } 
             while ( true ); 
-            double gamfReturn = com * sum; 
-            if ( ( gamfReturn >= 1.0 ) )
-            { 
-                gamfReturn = 1.0; 
-            } 
-            return gamfReturn;
+            return Math.Min(com * sum, 1.0); 
         } 
         
         

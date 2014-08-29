@@ -3266,30 +3266,22 @@ namespace StatsDirect.UI
                                 }
                                 if (ok)
                                 {
-                                    for (int C = 0; C < cols; C++)
+                                    for (int c = 0; c < cols; c++)
                                     {
-                                        DoubleVariable v = repeatFrame.Variables[C].AsDoubleVariable;
+                                        DoubleVariable v = repeatFrame.Variables[c].AsDoubleVariable;
                                         // 'CDAT2(rpt, c) = CDAT1(c)
                                         for (int r = 0; r < rows; r++)
-                                        {
-                                            frame.Variables[r][C].AsDoubleVariable.Data[rpt - 1] = v.Data[r];
-                                        }
-                                        if (0 == C)
-                                        {
-                                            frame.Name += repeatFrame.Variables[C].Title;
-                                        }
+                                            frame.Variables[r][c].AsDoubleVariable.Data[rpt - 1] = v.Data[r];
+                                        if (0 == c)
+                                            frame.Name += repeatFrame.Variables[c].Title;
                                         else
-                                        {
-                                            frame.Name += ", " + repeatFrame.Variables[C].Title;
-                                        }
+                                            frame.Name += ", " + repeatFrame.Variables[c].Title;
                                     }
                                 }
                                 frame.Name += ")";
                             }
                             if (!startAgain)
-                            {
                                 return frame;
-                            }
                         }
                         break;
                     default:

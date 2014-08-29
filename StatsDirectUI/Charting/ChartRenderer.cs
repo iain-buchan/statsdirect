@@ -7412,10 +7412,10 @@ namespace StatsDirect.Charting
                 DataMinX = orlmin;
 
             ScaleParameters sp = new ScaleParameters
-                                     {
-                                         X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.LogNatural } },
-                                         Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
-                                     };
+            {
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.LogNatural } },
+                Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
+            };
             sp.X.Max = DataMaxX;
             sp.X.Min = DataMinX;
             return sp;
@@ -7458,7 +7458,7 @@ namespace StatsDirect.Charting
             double orlmin = double.PositiveInfinity;
             double max_gn = double.NegativeInfinity;
 
-            for (int i = 0; i <= k - 1; i++)
+            for (int i = 0; i < k; i++)
             {
                 if (pg == null || pg[i] == 0)
                 {
@@ -7486,7 +7486,7 @@ namespace StatsDirect.Charting
             }
 
             double absmin = double.PositiveInfinity;
-            for (int i = 0; i <= k - 1; i++)
+            for (int i = 0; i < k; i++)
             {
                 if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0 && odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                     absmin = Math.Abs(odr[i]);
@@ -7591,7 +7591,7 @@ namespace StatsDirect.Charting
                 {
                     if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                     {
-                        r = r + 1;
+                        r++;
                         double yctr = (r + pbias - 0.5) / divy * yExtCanvas;
                         double ytop = (r + pbias) / divy * yExtCanvas;
                         xm = odr[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odr[i]) : odr[i], ScaleType.Linear);
@@ -9814,9 +9814,9 @@ namespace StatsDirect.Charting
             EndMetafile();
         }
 
-        public string PlotCPAndReturnRtf(ITemplateHost host, int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform)
+        public string PlotCPAndReturnRtf(ITemplateHost host, int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
-            Plot_CP(k, title, odr, odrl, odru, gn, pg, cap, qid, xform);
+            Plot_CP(k, title, odr, odrl, odru, gn, pg, cap, qid, xform, isDifference);
             return ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream());
         }
 
@@ -9833,15 +9833,13 @@ namespace StatsDirect.Charting
         /// <param name="cap"></param>
         /// <param name="qid"></param>
         /// <param name="xform"></param>
-        private void Plot_CP(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform)
+        private void Plot_CP(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
             if (k > 10)
             {
                 scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
-                {
                     scaleYAxis = 5;
-                }
                 metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
             }
             else
@@ -9902,21 +9900,15 @@ namespace StatsDirect.Charting
                             if (pg[i] == 0)
                             {
                                 if (gn[i] != Constant.MISSING & gn[i] > max_gn)
-                                {
                                     max_gn = gn[i];
-                                }
                             }
                             if (odr[i] != Constant.MISSING)
                             {
                                 kok += 1;
                                 if (odr[i] > ormax)
-                                {
                                     ormax = odr[i];
-                                }
                                 if (odr[i] < ormin && odr[i] > 0)
-                                {
                                     ormin = odr[i];
-                                }
                                 if (odrl[i] > odru[i])
                                 {
                                     double tmp = odrl[i];
@@ -9924,13 +9916,9 @@ namespace StatsDirect.Charting
                                     odru[i] = tmp;
                                 }
                                 if (odrl[i] < orlmin && odrl[i] > 0)
-                                {
                                     orlmin = odrl[i];
-                                }
                                 if (odru[i] > orumax)
-                                {
                                     orumax = odru[i];
-                                }
                             }
                         }
                     }
@@ -9941,21 +9929,15 @@ namespace StatsDirect.Charting
                         if (pg[i] == 0)
                         {
                             if (gn[i] != Constant.MISSING && gn[i] > max_gn)
-                            {
                                 max_gn = gn[i];
-                            }
                         }
                         if (odr[i] != Constant.MISSING)
                         {
                             kok += 1;
                             if (odr[i] > ormax)
-                            {
                                 ormax = odr[i];
-                            }
                             if (odr[i] < ormin)
-                            {
                                 ormin = odr[i];
-                            }
                             if (odrl[i] > odru[i])
                             {
                                 double tmp = odrl[i];
@@ -9963,13 +9945,9 @@ namespace StatsDirect.Charting
                                 odru[i] = tmp;
                             }
                             if (odrl[i] < orlmin)
-                            {
                                 orlmin = odrl[i];
-                            }
                             if (odru[i] > orumax)
-                            {
                                 orumax = odru[i];
-                            }
                         }
                     }
                     break;
@@ -9979,29 +9957,19 @@ namespace StatsDirect.Charting
             for (int i = 1; i <= k; i++)
             {
                 if (Math.Abs(odr[i]) < absmin & odr[i] != 0.0)
-                {
                     absmin = Math.Abs(odr[i]);
-                }
                 if (Math.Abs(odrl[i]) < absmin & odrl[i] != 0.0)
-                {
                     absmin = Math.Abs(odrl[i]);
-                }
                 if (Math.Abs(odru[i]) < absmin & odru[i] != 0.0)
-                {
                     absmin = Math.Abs(odru[i]);
-                }
             }
 
             DataMaxX = ormax;
             if (DataMaxX < orumax && orumax != Constant.MISSING)
-            {
                 DataMaxX = orumax;
-            }
             DataMinX = ormin;
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
-            {
                 DataMinX = orlmin;
-            }
 
             double rgap = 0;
             double xtra = 0;
@@ -10013,21 +9981,15 @@ namespace StatsDirect.Charting
                 {
                     w = statsDirectCanvas.MeasureString(title[i], labelFont).Width + 30;
                     if (w > xtra + xAxisCanvas)
-                    {
                         xtra = w - xAxisCanvas - 5;
-                    }
                     w = statsDirectCanvas.MeasureString(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", labelFont).Width;
                     if (w > rgap)
-                    {
                         rgap = w;
-                    }
                 }
             }
             w = statsDirectCanvas.MeasureString(combo_ti(cap), labelFont).Width + 30;
             if (w > xtra + xAxisCanvas)
-            {
                 xtra = w - xAxisCanvas - 5;
-            }
             xExtCanvas = 940 - rgap;
             
             switch (xform)
@@ -10152,7 +10114,7 @@ namespace StatsDirect.Charting
                                         xl = ToCanvasX(MathDbl.rtoz(odrl[i]));
                                         break;
                                     case Transformation.None:
-                                        xl = ToCanvasX(Math.Max(odrl[i], -1));
+                                        xl = ToCanvasX(Math.Max(odrl[i], isDifference ? double.MinValue : -1));
                                         break;
                                 }
 
@@ -10167,7 +10129,7 @@ namespace StatsDirect.Charting
                                     xr = ToCanvasX(MathDbl.rtoz(odru[i]));
                                     break;
                                 case Transformation.None:
-                                    xr = ToCanvasX(Math.Min(odru[i], 1));
+                                    xr = ToCanvasX(Math.Min(odru[i], isDifference ? double.MaxValue : 1));
                                     break;
                             }
 
@@ -10223,7 +10185,7 @@ namespace StatsDirect.Charting
                             // Don't care
                             break;
                         case Transformation.Log:
-                            //used to be 1 but now we are plotting on log-linear scale
+                            // Used to be 1 but now we are plotting on log-linear scale
                             noEffectPosition = 0;
                             break;
                         case Transformation.None:

@@ -3319,13 +3319,8 @@ namespace StatsDirect.Builtins
             {
                 y[i] = yVariable.Data[i - 1];
                 pg[i] = 0;
-                if (useRatio)
-                {
-                    if (y[i] <= 0.0)
-                    {
-                        throw new InvalidDataException();
-                    }
-                }
+                if (useRatio && y[i] <= 0.0)
+                    throw new InvalidDataException();
             }
             // pooled indicator for last element - needed by plot_cp
             pg[k + 1] = -1;
@@ -3349,32 +3344,20 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= k; i++)
                 {
                     if (llY[i] == Constant.MISSING)
-                    {
                         llY[i] = 0.0;
-                    }
                     if (ulY[i] == Constant.MISSING)
                     {
                         if (useRatio)
-                        {
                             ulY[i] = 1.0;
-                        }
                         else
-                        {
                             throw new InvalidDataException();
-                        }
                     }
                     if (llY[i] > ulY[i])
-                    {
                         Utilities.Utilities.Swap(ref llY[i], ref ulY[i]);
-                    }
                     if (useRatio)
-                    {
                         seY[i] = ((Math.Log(ulY[i]) - Math.Log(llY[i])) / 2.0) / cit;
-                    }
                     else
-                    {
                         seY[i] = ((ulY[i] - llY[i]) / 2.0) / cit;
-                    }
                 }
             }
             else
@@ -3409,24 +3392,18 @@ namespace StatsDirect.Builtins
                     if (buf.Length > 0)
                     {
                         if (buf.Length > 50)
-                        {
                             buf = buf.Substring(0, 50);
-                        }
                         title[i] = buf;
                     }
                     else
-                    {
                         title[i] = "study " + i.ToString();
-                    }
                 }
             }
             else
             {
                 stratlab = false;
                 for (i = 1; i <= k; i++)
-                {
                     title[i] = "study " + i.ToString();
-                }
             }
             title[k + 1] = ChartRenderer.combo_ti("");
 
@@ -3439,20 +3416,14 @@ namespace StatsDirect.Builtins
             for (i = 1; i <= k; i++)
             {
                 if (seY[i] == 0.0)
-                {
                     throw new InvalidDataException();
-                }
                 wt[i] = 1.0 / (seY[i] * seY[i]);
-                sumwt = sumwt + wt[i];
-                sumsqwt = sumsqwt + wt[i] * wt[i];
+                sumwt += wt[i];
+                sumsqwt += wt[i] * wt[i];
                 if (useRatio)
-                {
-                    sumywt = sumywt + Math.Log(y[i]) * wt[i];
-                }
+                    sumywt += Math.Log(y[i]) * wt[i];
                 else
-                {
-                    sumywt = sumywt + y[i] * wt[i];
-                }
+                    sumywt += y[i] * wt[i];
             }
             wt[k + 1] = Constant.MISSING;
             dswt[k + 1] = Constant.MISSING;
@@ -3463,9 +3434,7 @@ namespace StatsDirect.Builtins
                 llrmh = Math.Exp(Math.Log(rmh) - sermh * cit);
                 ulrmh = Math.Exp(Math.Log(rmh) + sermh * cit);
                 if (llrmh > ulrmh)
-                {
                     Utilities.Utilities.Swap(ref llrmh, ref ulrmh);
-                }
                 zrmh = Math.Log(rmh) / sermh;
             }
             else
@@ -3480,28 +3449,18 @@ namespace StatsDirect.Builtins
             for (i = 1; i <= k; i++)
             {
                 if (useRatio)
-                {
-                    qc = qc + wt[i] * Math.Pow((Math.Log(y[i]) - Math.Log(rmh)), 2.0);
-                }
+                    qc += wt[i] * Math.Pow((Math.Log(y[i]) - Math.Log(rmh)), 2.0);
                 else
-                {
-                    qc = qc + wt[i] * Math.Pow((y[i] - rmh), 2.0);
-                }
+                    qc += wt[i] * Math.Pow((y[i] - rmh), 2.0);
             }
 
             // DerSimonian-Laird random effects
             if ((sumwt - sumsqwt / sumwt) == 0.0)
-            {
                 tausq = 0.0;
-            }
             else
-            {
                 tausq = (qc - Convert.ToDouble(k - 1)) / (sumwt - sumsqwt / sumwt);
-            }
             if (tausq < 0.0)
-            {
                 tausq = 0.0;
-            }
             double wlrr = 0.0;
             sumwt = 0.0;
             // sumsqwt = 0.0; - unused
@@ -3511,13 +3470,9 @@ namespace StatsDirect.Builtins
                 dswt[i] = weight;
                 sumwt += weight;
                 if (useRatio)
-                {
                     wlrr += Math.Log(y[i]) * weight;
-                }
                 else
-                {
                     wlrr += y[i] * weight;
-                }
             }
             if (useRatio)
             {
@@ -3593,9 +3548,7 @@ namespace StatsDirect.Builtins
             biasList.Add(biasParameters);
             Transformation xform = Transformation.None;
             if (useRatio)
-            {
                 xform = Transformation.Log;
-            }
             Metabias(host, biasParameters, y, llY, ulY, k, ref cco, xform);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
@@ -3618,7 +3571,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform);
+                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3629,7 +3582,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = dsul;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform);
+                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3936,7 +3889,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None);
+                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3947,7 +3900,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = dsul;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None);
+                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3958,7 +3911,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = wmrUcl;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None);
+                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -4410,7 +4363,7 @@ namespace StatsDirect.Builtins
 
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None);
+                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -4421,7 +4374,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = dsul;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None);
+                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -4697,9 +4650,7 @@ namespace StatsDirect.Builtins
             ul = 100.0 * ubI2;
 
             if (!(host.Preferences.MetaExact))
-            {
                 return;
-            }
 
             //  Iterative solution to seek CI for non-centrality parameter (and then for H and I2)
             //  non-centrality (nc) parameter = (Q-df)
@@ -4713,14 +4664,14 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                minLbNc = IsquareBrentRoot(0, endp, ref nc, ref df, ref clevelci, ref ierr);
+                minLbNc = IsquareBrentRoot(0, endp, nc, df, clevelci, ref ierr);
                 if (ierr != 0)
                 {
                     minLbNc = Constant.MISSING;
                 }
             }
 
-            double minUbNc = IsquareBrentRoot(0, endp, ref nc, ref df, ref levelci, ref ierr);
+            double minUbNc = IsquareBrentRoot(0, endp, nc, df, levelci, ref ierr);
             if (ierr != 0)
             {
                 minUbNc = Constant.MISSING;
@@ -4779,7 +4730,7 @@ namespace StatsDirect.Builtins
         /// <param name="clev"></param>
         /// <param name="ierr"></param>
         /// <returns></returns>
-        private static double IsquareBrentRoot(double xl, double xu, ref double nc, ref double df, ref double clev, ref int ierr)
+        private static double IsquareBrentRoot(double xl, double xu, double nc, double df, double clev, ref int ierr)
         {
             double d = 0;
             const double tolerance = 0.000001;
@@ -4838,9 +4789,7 @@ namespace StatsDirect.Builtins
                 double xm = 0.5 * (c - b);
 
                 if ((Math.Abs(xm) <= tol1 | fb == 0.0))
-                {
-                    break; /* TRANSWARNING: check that break is in correct scope */
-                }
+                    break;
 
                 if ((Math.Abs(e) >= tol1 & Math.Abs(fa) > Math.Abs(fb)))
                 {
@@ -4935,9 +4884,5 @@ namespace StatsDirect.Builtins
             }
             return ret;
         }
-
     }
-
-
-
 }
