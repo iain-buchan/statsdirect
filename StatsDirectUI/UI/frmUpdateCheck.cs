@@ -247,6 +247,7 @@ namespace StatsDirect.UI
         private void cmdDownloadR_Click(object sender, EventArgs e)
         {
             Process.Start("http://cran.r-project.org/bin/windows/base/release.htm");
+            Close(); // See #1031; no point leaving the form here.
         }
     }
 
