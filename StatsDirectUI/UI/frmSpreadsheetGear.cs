@@ -663,6 +663,7 @@ namespace StatsDirect.UI
                     }
                     frame = GetCellEqual(requiredLength,
                         gridParameter.DataAcquisitionMode,
+                        gridParameter.GroupIdentifierMode,
                         gridParameter.MinimumColumns(processor, parameters),
                         gridParameter.MaximumColumns(processor, parameters),
                         gridParameter.Prompt(processor, parameters),
@@ -682,7 +683,17 @@ namespace StatsDirect.UI
                         bool wasPivoted;
                         if (gridParameter.ShouldAskForGroupId && SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                         {
-                            frame = Gidx(gridParameter.DataAcquisitionMode, minimumColumns, maximumColumns, -1, null, out userCancelled, out wasPivoted);
+                            switch (gridParameter.GroupIdentifierMode)
+                            {
+                                case GroupIdentifierMode.GroupIdentifier:
+                                    frame = Gidx(gridParameter.DataAcquisitionMode, minimumColumns, maximumColumns, out userCancelled, out wasPivoted);
+                                    break;
+                                case GroupIdentifierMode.TreatmentAndBlock:
+                                    frame = Gidx2(minimumColumns, maximumColumns, out userCancelled, out wasPivoted);
+                                    break;
+                                default:
+                                    throw new Exception("Unknown mode when asking for group identifiers");
+                            }
                         }
                         else
                         {
@@ -1731,12 +1742,12 @@ namespace StatsDirect.UI
         /// <param name="userCancelled">Output. If true, the user explicitly cancelled the operation; if false, the data is valid or the user selected no data but did not explicitly cancel.</param>
         /// <returns></returns>
         /// <remarks>This version doesn't care about the user pivoting - it will always just go round again.</remarks>
-        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled)
+        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, GroupIdentifierMode groupIdentifierMode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled)
         {
             while (true)
             {
                 bool wasPivoted;
-                DataFrame frame = GetCellEqual(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, width, mightBeBatching, out userCancelled, out wasPivoted);
+                DataFrame frame = GetCellEqual(requiredRows, mode, groupIdentifierMode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, width, mightBeBatching, out userCancelled, out wasPivoted);
                 if (wasPivoted)
                     continue;
                 return frame;
@@ -1759,7 +1770,7 @@ namespace StatsDirect.UI
         /// <param name="userCancelled">Output. If true, the user explicitly cancelled the operation; if false, the data is valid or the user selected no data but did not explicitly cancel.</param>
         /// <param name="wasPivoted">If true, the user switched from selecting groups by column to by identifier or vice versa.</param>
         /// <returns></returns>
-        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
+        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, GroupIdentifierMode groupIdentifierMode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
         {
             while (true)
             {
@@ -1778,9 +1789,23 @@ namespace StatsDirect.UI
                     default:
                         throw new ArgumentOutOfRangeException("width");
                 }
-                DataFrame frame = isLong
-                                      ? Gidx(mode, minimumColumns, maximumColumns, -1, null, out userCancelled, out wasPivoted)
-                                      : GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, mightBeBatching, out userCancelled, out wasPivoted);
+                DataFrame frame;
+                if (isLong)
+                {
+                    switch (groupIdentifierMode)
+                    {
+                        case GroupIdentifierMode.GroupIdentifier:
+                            frame = Gidx(mode, minimumColumns, maximumColumns, out userCancelled, out wasPivoted);
+                            break;
+                        case GroupIdentifierMode.TreatmentAndBlock:
+                            frame = Gidx2(minimumColumns, maximumColumns, out userCancelled, out wasPivoted);
+                            break;
+                        default:
+                            throw new Exception("Unknown group identifier mode");
+                    }
+                }
+                else
+                    frame = GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, mightBeBatching, out userCancelled, out wasPivoted);
                 if (wasPivoted)
                     return null;
 
@@ -1841,15 +1866,10 @@ namespace StatsDirect.UI
         /// <param name="userCancelled"></param>
         /// <param name="wasPivoted"></param>
         /// <returns></returns>
-        private DataFrame Gidx(DataAcquisitionMode mode, int minimumColumns, int maximumColumns, int neq, string lab, out bool userCancelled, out bool wasPivoted)
+        private DataFrame Gidx(DataAcquisitionMode mode, int minimumColumns, int maximumColumns, out bool userCancelled, out bool wasPivoted)
         {
             string labd = "Select DATA";
             string labg = "Select GROUP IDENTIFIERS";
-            if (!string.IsNullOrEmpty(lab))
-            {
-                labd += " for " + lab;
-                labg += " for " + lab;
-            }
 
             while (true)
             {
@@ -1879,7 +1899,7 @@ namespace StatsDirect.UI
 
                 // call for data
                 ClearSelection();
-                DataFrame dataFrame = GetCellEqual(groupIdVariable.Length, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd, null, true, DataAcquisitionWidth.Wide, true, out userCancelled, out wasPivoted);
+                DataFrame dataFrame = GetCellEqual(groupIdVariable.Length, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, labd, null, true, DataAcquisitionWidth.Wide, true, out userCancelled, out wasPivoted);
                 if (userCancelled || wasPivoted)
                     return null;
 
@@ -1922,6 +1942,92 @@ namespace StatsDirect.UI
             }
         }
 
+        private DataFrame Gidx2(int min, int max, out bool userCancelled, out bool wasPivoted)
+        {
+            string msg_ti = "StatsDirect Data Selection";
+            string labd = "Select DATA";
+            string labt = "Select FACTOR (TREATMENT) IDENTIFIER";
+            string labb = "Select FACTOR (BLOCK) IDENTIFIER";
+
+            while (true)
+            {
+                // BEWARE: Are group ID numbers being 0-based going to trip us up?
+                // call for treatment ID
+                ClearSelection();
+                DataFrame treatmentFrame = GetCellArray(0, DataAcquisitionMode.GroupIdentifiers, 1, 1, labt, null, true, false, out userCancelled, out wasPivoted);
+                if (userCancelled || wasPivoted)
+                    return null;
+                ClassifierVariable treatmentVariable = treatmentFrame.Variables[0].AsClassifierVariable;
+                int treatment_cats = treatmentVariable.GroupCount;
+                double[] treatment_gid = treatmentVariable.Data;
+                string[] treatment_gcat = new string[treatment_cats];
+                int[] treatment_gin = new int[treatment_cats];
+                double[] treatment_g = new double[treatment_cats];
+                int treatment_maxgn = 0;
+                for (int i = 0; i < treatment_cats; i++)
+                {
+                    treatment_gcat[i] = treatmentVariable.Groups[i].Label;
+                    treatment_gin[i] = treatmentVariable.Groups[i].NBin;
+                    if (treatment_maxgn < treatment_gin[i])
+                        treatment_maxgn = treatment_gin[i];
+                    treatment_g[i] = i;
+                }
+
+                if (treatment_cats < min || treatment_cats > max)
+                {
+                    SelNumWarn(min, max, treatment_cats, msg_ti);
+                    continue;
+                }
+
+                if (!EqGpWarn(-1, treatment_gin, 0, treatment_cats, msg_ti))
+                    continue;
+
+                // call for block ID
+                ClearSelection();
+                DataFrame blockFrame = GetCellArray(0, DataAcquisitionMode.GroupIdentifiers, 1, 1, labb, null, true, false, out userCancelled, out wasPivoted);
+                ClassifierVariable blockVariable = blockFrame.Variables[0].AsClassifierVariable;
+                if (userCancelled || wasPivoted)
+                    return null;
+                double[] block_gid = blockVariable.Data;
+                int block_maxgn = 0;
+                for (int i = 0; i < blockVariable.GroupCount; i++)
+                    if (block_maxgn < blockVariable.Groups[i].NBin)
+                        block_maxgn = blockVariable.Groups[i].NBin;
+
+                if (block_maxgn > treatment_cats)
+                {
+                    PointNormal();
+                    SdApplication.SoleInstance.Error("Two way ANOVA requires only one observation per block - you entered " + (block_maxgn / (double)treatment_cats) + ".\r\n\r\nPlease use a repeated/replicate measures method or a regression model instead.", msg_ti);
+                    continue;
+                }
+
+                int rows = (treatmentVariable.Length < blockVariable.Length) ? treatmentVariable.Length : blockVariable.Length;
+
+                // call for data
+                ClearSelection();
+                DataFrame dataFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.TreatmentAndBlock, 1, 1, labd, null, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted);
+                if (userCancelled || wasPivoted)
+                    return null;
+
+                DoubleVariable dataVariable = dataFrame.Variables[0].AsDoubleVariable;
+                double[] dt = dataVariable.Data;
+
+                DataFrame outputFrame = new DataFrame();
+                // fill the transport matrix with data arranged in treatments (columns) and blocks (rows)
+                for (int i = 0; i < treatment_cats; i++)
+                {
+                    double[] data = new double[treatment_maxgn];
+                    for (int j = 0; j < treatment_maxgn; j++)
+                        data[j] = Constant.MISSING;
+                    for (int j = 0; j < rows; j++)
+                        if (treatment_gid[j] == treatment_g[i])
+                            data[(int)block_gid[j]] = dt[j];
+                    string title = dataVariable.Title + ((treatment_cats > 1) ? "_" + treatmentVariable.Title + "_" + treatment_gcat[i] : "");
+                    outputFrame.Variables.Add(new DoubleVariable(data, title));
+                }
+                return outputFrame;
+            }
+        }
 /*
         private DataFrame GIDXW(DataAcquisitionMode mode, int min, int max, int neq, string lab, out double[,] wt, ref string wtlab, ref double sumwt, out bool userCancelled)
         {
@@ -2537,7 +2643,7 @@ namespace StatsDirect.UI
                 minMax.MinY = double.MaxValue;
                 minMax.MaxY = double.MinValue;
                 ((IGrid)this).ClearSelection();
-                DataFrame replicatesFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 200, labd + " for Y (VERTICAL AXIS) REPLICATES", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
+                DataFrame replicatesFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 200, labd + " for Y (VERTICAL AXIS) REPLICATES", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
                 if (cancelled || wasPivoted)
                     break;
 
@@ -2572,7 +2678,7 @@ namespace StatsDirect.UI
                 minMax.MinX = double.MaxValue;
                 minMax.MaxX = double.MinValue;
                 ((IGrid)this).ClearSelection();
-                DataFrame xFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 1, labd + " for X (HORIZONTAL AXIS)", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
+                DataFrame xFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, labd + " for X (HORIZONTAL AXIS)", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
                 if (cancelled || wasPivoted)
                     break;
                 DoubleVariable xVariable = xFrame.Variables[0].AsDoubleVariable;
@@ -2804,7 +2910,7 @@ namespace StatsDirect.UI
                                         yNew[i0, i1, i2] = y[i0, i1, i2];
                             y = yNew;
                             ((IGrid)this).ClearSelection();
-                            DataFrame outcomeFrame = GetCellEqual(nx, DataAcquisitionMode.NumericSkipMissing, 1, 1, "Select Data for OUTCOME (Y) for PREDICTOR " + g + " {" + cx[g].Title.Substring(0, Math.Min(20, cx[g].Title.Length)) + "}", null, false, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
+                            DataFrame outcomeFrame = GetCellEqual(nx, DataAcquisitionMode.NumericSkipMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, "Select Data for OUTCOME (Y) for PREDICTOR " + g + " {" + cx[g].Title.Substring(0, Math.Min(20, cx[g].Title.Length)) + "}", null, false, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted);
                             if (cancelled || wasPivoted)
                                 break; // Failed selection, go round again
                             DoubleVariable outcomeVariable = outcomeFrame.Variables[0].AsDoubleVariable;
@@ -2851,14 +2957,9 @@ namespace StatsDirect.UI
             throw new TemplateOperationCancelledException();
         }
 
-
-        private DataFrame2D Gidx3(int min, int max, int neq, string subGroupSelectionLabel, DataAcquisitionMode2D mode, out bool wasPivoted)
+        private DataFrame2D Gidx3(int min, int max, int neq, string subGroupSelectionLabel, DataAcquisitionMode2D mode, out bool userCancelled, out bool wasPivoted)
         {
-            if (null == subGroupSelectionLabel)
-                subGroupSelectionLabel = "Select SUB-GROUP IDENTIFIER";
-            ((IGrid)this).ClearSelection();
-
-            bool userCancelled;
+            ClearSelection();
             DataFrame groupFrame = GetCellArray(0, DataAcquisitionMode.GroupIdentifiers, 1, 1, "Select GROUP IDENTIFIER", null, true, false, out userCancelled, out wasPivoted);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
@@ -2868,112 +2969,93 @@ namespace StatsDirect.UI
             ClassifierVariable groupVariable = groupFrame.Variables[0].AsClassifierVariable;
             int rows = groupVariable.Length;
             int cats = groupVariable.GroupCount;
-            string catlab = groupVariable.Title;
-            double[] gid = new double[rows + 1];
-            double[] sgid = new double[rows + 1];
-            double[] dt = new double[rows + 1];
-            string[] gcat = new string[cats + 1];
-            double[] g = new double[cats + 1];
-            int[] gin = new int[cats + 1];
+            double[] gid = groupVariable.Data;
+            string[] gcat = new string[cats];
+            double[] g = new double[cats];
+            int[] gin = new int[cats];
 
-            for (int i = 1; i <= rows; i++)
+            for (int i = 0; i < cats; i++)
             {
-                gid[i] = groupVariable.Data[i - 1];
-            }
-
-            for (int i = 1; i <= cats; i++)
-            {
-                gcat[i] = groupVariable.Groups[i - 1].Label;
-                gin[i] = groupVariable.Groups[i - 1].NBin;
-                g[i] = (double)i - 1;
+                gcat[i] = groupVariable.Groups[i].Label;
+                gin[i] = groupVariable.Groups[i].NBin;
+                g[i] = i;
             }
             int numberOfGroups = cats;
-            bool proceed = true;
             if (numberOfGroups < min || numberOfGroups > max)
             {
                 SelNumWarn(min, max, numberOfGroups, "StatsDirect Data Selection");
-                proceed = false;
+                return null;
             }
             int mingn = int.MaxValue;
             int maxgn = int.MinValue;
-            for (int i = 1; i <= numberOfGroups; i++)
+            for (int i = 0; i < numberOfGroups; i++)
             {
-                if (gin[i] > maxgn) maxgn = gin[i];
-                if (gin[i] < mingn) mingn = gin[i];
+                if (gin[i] > maxgn)
+                    maxgn = gin[i];
+                if (gin[i] < mingn)
+                    mingn = gin[i];
             }
 
-            proceed &= EqGpWarn(neq, gin, numberOfGroups, "StatsDirect Data Selection");
-            if (!proceed)
+            if (!EqGpWarn(neq, gin, 0, numberOfGroups, "StatsDirect Data Selection"))
                 return null;
 
-            ((IGrid)this).ClearSelection();
-
-            DataFrame subGroupFrame = GetCellEqual(rows, DataAcquisitionMode.GroupIdentifiers, 1, 1, subGroupSelectionLabel, null, true, DataAcquisitionWidth.Wide, false, out userCancelled);
+            ClearSelection();
+            if (null == subGroupSelectionLabel)
+                subGroupSelectionLabel = "Select SUB-GROUP IDENTIFIER";
+            DataFrame subGroupFrame = GetCellEqual(rows, DataAcquisitionMode.GroupIdentifiers, GroupIdentifierMode.GroupIdentifier, 1, 1, subGroupSelectionLabel, null, true, DataAcquisitionWidth.Wide, false, out userCancelled);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
             ClassifierVariable subGroupVariable = subGroupFrame.Variables[0].AsClassifierVariable;
 
             int scats = subGroupVariable.GroupCount;
             string scatlab = subGroupVariable.Title;
-            string[] sgcat = new string[scats + 1];
-            double[] sg = new double[scats + 1];
-            int[] sgin = new int[scats + 1];
+            double[] sgid = subGroupVariable.Data;
+            string[] sgcat = new string[scats];
+            double[] sg = new double[scats];
 
-            for (int i = 1; i <= rows; i++)
-            {
-                sgid[i] = subGroupVariable.Data[i - 1];
-            }
-            for (int i = 1; i <= scats; i++)
-            {
-                sgcat[i] = subGroupVariable.Groups[i - 1].Label;
-                sgin[i] = subGroupVariable.Groups[i - 1].NBin;
-                sg[i] = (double)i - 1;
-            }
             int numberOfSubGroups = scats;
             int minsgn = int.MaxValue;
             int maxsgn = int.MinValue;
-            for (int i = 1; i <= numberOfSubGroups; i++)
+            for (int i = 0; i < scats; i++)
             {
-                if (sgin[i] > maxsgn) maxsgn = sgin[i];
-                if (sgin[i] < minsgn) minsgn = sgin[i];
+                sgcat[i] = subGroupVariable.Groups[i].Label;
+                sg[i] = (double)i;
+                int sgin = subGroupVariable.Groups[i].NBin;
+                if (sgin > maxsgn)
+                    maxsgn = sgin;
+                if (sgin < minsgn)
+                    minsgn = sgin;
             }
 
-            ((IGrid)this).ClearSelection();
-            DataFrame dataFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 1, 1, "Select DATA column", null, true, DataAcquisitionWidth.Wide, false, out userCancelled);
+            ClearSelection();
+            DataFrame dataFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, "Select DATA column", null, true, DataAcquisitionWidth.Wide, false, out userCancelled);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
             DoubleVariable dataVariable = dataFrame.Variables[0].AsDoubleVariable;
 
             string dlab = dataVariable.Title;
-            for (int i = 1; i <= rows; i++)
-            {
-                dt[i] = dataVariable.Data[i - 1];
-            }
+            double[] dt = dataVariable.Data;
 
             if (DataAcquisitionMode2D.Mode1 == mode)
             {
                 DataFrame2D resultFrame = new DataFrame2D();
-                for (int groupNumber = 1; groupNumber <= numberOfGroups; groupNumber++)
+                for (int groupNumber = 0; groupNumber < numberOfGroups; groupNumber++)
                 {
-                    for (int subGroupNumber = 1; subGroupNumber <= numberOfSubGroups; subGroupNumber++)
+                    for (int subGroupNumber = 0; subGroupNumber < numberOfSubGroups; subGroupNumber++)
                     {
                         int cnt = 0;
                         double[] data = new double[maxgn];
-                        for (int j = 1; j <= rows; j++)
-                        {
+                        for (int j = 0; j < rows; j++)
                             if (gid[j] == g[groupNumber] && sgid[j] == sg[subGroupNumber])
-                            {
                                 data[cnt++] = dt[j];
-                            }
-                        }
                         // Skip entering variables with no members - typically found at the end of jagged sources
                         if (cnt > 0)
                         {
-                            string title = catlab + "_" + gcat[groupNumber] + " (" + scatlab + "_" + sgcat[subGroupNumber] + ")";
+                            string title = groupVariable.Title + "_" + gcat[groupNumber] + " (" + scatlab + "_" + sgcat[subGroupNumber] + ")";
                             Variable variable = new DoubleVariable(data, title);
                             variable.TruncateDataToLength(cnt);
-                            resultFrame.EnsureVariablesJagged(groupNumber, subGroupNumber);
-                            resultFrame.Variables[groupNumber - 1][subGroupNumber - 1] = variable;
+                            resultFrame.EnsureVariablesJagged(groupNumber + 1, subGroupNumber + 1);
+                            resultFrame.Variables[groupNumber][subGroupNumber] = variable;
                         }
                     }
                 }
@@ -2985,24 +3067,23 @@ namespace StatsDirect.UI
                 resultFrame.EnsureVariablesSquare(maxgn, numberOfGroups);
 
                 int highestCnt = 0;
-                for (int i = 1; i <= numberOfGroups; i++)
+                for (int i = 0; i < numberOfGroups; i++)
                 {
-                    for (int k = 1; k <= numberOfSubGroups; k++)
+                    for (int k = 0; k < numberOfSubGroups; k++)
                     {
                         int cnt = 0;
-                        for (int j = 1; j <= rows; j++)
+                        for (int j = 0; j < rows; j++)
                         {
                             if (gid[j] == g[i] && sgid[j] == sg[k])
                             {
-                                if (null == resultFrame.Variables[cnt][i - 1])
-                                    resultFrame.Variables[cnt][i - 1] = new DoubleVariable();
-                                DoubleVariable variable = resultFrame.Variables[cnt][i - 1].AsDoubleVariable;
+                                if (null == resultFrame.Variables[cnt][i])
+                                    resultFrame.Variables[cnt][i] = new DoubleVariable();
+                                DoubleVariable variable = resultFrame.Variables[cnt][i].AsDoubleVariable;
                                 variable.EnsureLength(numberOfSubGroups, Constant.MISSING);
-                                variable.Data[k - 1] = dt[j];
+                                variable.Data[k] = dt[j];
                                 cnt++;
                             }
                         }
-                        // ADAT1[i - 1].Cols += gotsg;
                         // Titles are not used in anything that calls this
                         // CDAT2[i - 1, k - 1].Title = catlab + "_" + gcat[(int)g[i]] + " (" + scatlab + "_" + sgcat[(int)sg[k]] + ")";
                         // CDAT2[0, 0].Rows = nsg;
@@ -3011,20 +3092,29 @@ namespace StatsDirect.UI
                     // ADAT1[i - 1].Cols--;
                 }
                 resultFrame.TruncateToLength(highestCnt);
-                resultFrame.Name = " " + dlab + " (data), " + catlab + " (group), " + scatlab + " (sub-group)";
+                resultFrame.Name = " " + dlab + " (data), " + groupVariable.Title + " (group), " + scatlab + " (sub-group)";
                 return resultFrame;
             }
         }
 
-        private static bool EqGpWarn(int neq, int[] gin, int ng, string msg_ti)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="neq">If 0, this routine does nothing.  If -1, all elements in gin must be equal.  Otherwise, all elements in gin must equal neq.</param>
+        /// <param name="gin"></param>
+        /// <param name="lowerBound"></param>
+        /// <param name="ng"></param>
+        /// <param name="msg_ti"></param>
+        /// <returns></returns>
+        private static bool EqGpWarn(int neq, int[] gin, int lowerBound, int ng, string msg_ti)
         {
             if (0 == neq)
                 return true;
 
             if (-1 == neq)
-                neq = gin[1];
+                neq = gin[lowerBound];
 
-            for (int i = 0; i < ng; i++)
+            for (int i = lowerBound; i < lowerBound + ng; i++)
             {
                 if (gin[i] != neq)
                 {
@@ -3044,13 +3134,17 @@ namespace StatsDirect.UI
             {
                 if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
+                    bool userCancelled;
                     bool wasPivoted;
                     DataFrame2D frame = Gidx3(gridParameter.MinimumColumns(processor, parameters),
                         gridParameter.MaximumColumns(processor, parameters),
                         0,
                         gridParameter.SubPrompt(processor, parameters),
                         gridParameter.DataAcquisitionMode,
+                        out userCancelled,
                         out wasPivoted);
+                    if (userCancelled)
+                        throw new TemplateOperationCancelledException();
                     if (wasPivoted)
                         continue;
                     return frame;
@@ -3129,7 +3223,7 @@ namespace StatsDirect.UI
                                 frame.Name += " (";
                                 ((IGrid)this).ClearSelection();
                                 bool wasPivoted;
-                                DataFrame repeatFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, 2, 200, "Select subject (row) by treatment (column) data for repeat " + rpt, parameter.CancelSkipsParameter, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted);
+                                DataFrame repeatFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 2, 200, "Select subject (row) by treatment (column) data for repeat " + rpt, parameter.CancelSkipsParameter, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted);
                                 // No frame was returned, either because the user cancelled or because of an error.  Distinguish the two cases!
                                 if (userCancelled)
                                 {
