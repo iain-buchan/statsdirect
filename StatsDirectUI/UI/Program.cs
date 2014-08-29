@@ -117,7 +117,7 @@ namespace StatsDirect.UI
             Application.ThreadException += Application_ThreadException;
         }
 
-        private static void CurrentDomain_UnhandledException (object sender, UnhandledExceptionEventArgs e)
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             try
             {
@@ -135,7 +135,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private static void Application_ThreadException (object sender, System.Threading.ThreadExceptionEventArgs e)
+        private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
             try
             {
@@ -180,9 +180,9 @@ namespace StatsDirect.UI
                 string distTestXlsx = DistTestXlsx();
                 if (null != distTestXlsx)
                 {
-                    DateTime distCreated = new FileInfo(distTestXlsx).CreationTimeUtc;
+                    DateTime distModified = new FileInfo(distTestXlsx).LastWriteTimeUtc;
                     DateTime mineModified = new FileInfo(myTestXlsx).LastWriteTimeUtc;
-                    if (distCreated > mineModified)
+                    if (distModified > mineModified)
                     {
                         string extension = Path.GetExtension(myTestXlsx);
                         string prefix = Path.Combine(Path.GetDirectoryName(myTestXlsx), Path.GetFileNameWithoutExtension(myTestXlsx));
@@ -216,7 +216,15 @@ namespace StatsDirect.UI
             }
             else
             {
-                CopyTestFileTo(myTestXlsx);
+                try
+                {
+                    CopyTestFileTo(myTestXlsx);
+                }
+                catch (Exception)
+                {
+                    // Do nothing
+                    // SdApplication.SoleInstance.FriendlyError("Couldn't copy the StatsDirect test file to your own copy; will try again next time you start StatsDirect", ex, false);
+                }
             }
         }
 
