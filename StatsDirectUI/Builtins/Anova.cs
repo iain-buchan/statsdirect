@@ -136,7 +136,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void XTwoWay(double[, ,] y, ref double[] Col, int nr, int nc, int nm, out double ssrow, out double sscol, out double ssint, out double sstot, out double ssres, out int dfrow, out int dfcol, out int dfint, out int dftot, out int dfres, out int fault)
+        private static void XTwoWay(double[,,] y, out double[] col, int nr, int nc, int nm, out double ssrow, out double sscol, out double ssint, out double sstot, out double ssres, out int dfrow, out int dfcol, out int dfint, out int dftot, out int dfres, out int fault)
         {
             fault = 1;
             if (nr <= 1 || nc <= 1 || nm < 1)
@@ -151,6 +151,7 @@ namespace StatsDirect.Builtins
                 dfint = 0;
                 dftot = 0;
                 dfres = 0;
+                col = null;
                 return;
             }
             double dnr = Convert.ToDouble(nr);
@@ -159,7 +160,7 @@ namespace StatsDirect.Builtins
             double yt = 0.0;
             double[,] cell = new double[nr + 1, nc + 1];
             double[] row = new double[nr + 1 ];
-            Col = new double[nc + 1 ];
+            col = new double[nc + 1 ];
             for (int i = 1; i <= nr; i++)
             {
                 double yr = 0.0;
@@ -188,15 +189,15 @@ namespace StatsDirect.Builtins
                 {
                     yt = yt + cell[i, j];
                 }
-                Col[j] = yt / dnr;
-                sscol = sscol + (Col[j] - gm) * (Col[j] - gm);
+                col[j] = yt / dnr;
+                sscol = sscol + (col[j] - gm) * (col[j] - gm);
             }
             for (int i = 1; i <= nr; i++)
             {
                 ssrow = ssrow + (row[i] - gm) * (row[i] - gm);
                 for (int j = 1; j <= nc; j++)
                 {
-                    ssint = ssint + (cell[i, j] - (row[i] - gm) - Col[j]) * (cell[i, j] - (row[i] - gm) - Col[j]);
+                    ssint = ssint + (cell[i, j] - (row[i] - gm) - col[j]) * (cell[i, j] - (row[i] - gm) - col[j]);
                     for (int k = 1; k <= nm; k++)
                     {
                         sstot = sstot + (y[k, i, j] - gm) * (y[k, i, j] - gm);
@@ -234,7 +235,7 @@ namespace StatsDirect.Builtins
             }
             for (int j = 1; j <= nc; j++)
             {
-                Col[j - 1] = Col[j];
+                col[j - 1] = col[j];
             }
             fault = 0;
         }
@@ -835,7 +836,6 @@ namespace StatsDirect.Builtins
 
             int nc = frame.VariableCount;
             int nr = 0;
-            double[] mean = new double[nc + 1];
             int[] tnx = new int[nc + 1];
             double[,,] y = new double[2, v0.Length + 1, nc + 1];
 
@@ -868,6 +868,7 @@ namespace StatsDirect.Builtins
             else
                 wrn = "";
 
+            double[] mean;
             double sscol;
             double sstot;
             int dfres;
@@ -879,7 +880,7 @@ namespace StatsDirect.Builtins
             double ssrow;
             double scrap;
             int iscrap;
-            XTwoWay(y, ref mean, nr, nc, 1, out ssrow, out sscol, out scrap, out sstot, out ssres, out dfrow, out dfcol, out iscrap, out dftot, out dfres, out fault);
+            XTwoWay(y, out mean, nr, nc, 1, out ssrow, out sscol, out scrap, out sstot, out ssres, out dfrow, out dfcol, out iscrap, out dftot, out dfres, out fault);
 
             if (fault != 0)
                 throw new Exception("Invalid calculation");
@@ -929,7 +930,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptTwoMulti(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame2D frame = parameters["data2d"].AsDataFrame2D;
@@ -937,9 +937,8 @@ namespace StatsDirect.Builtins
             int nc = frame.Variables[0].Count;
             int nr = frame.VariableCount;
             int nm = frame.MaxRows;
-            double[] mean = new double[nc + 1 ];
-            int[] tnx = new int[nc + 1 ];
-            double[, ,] y = new double[nm + 1, nr + 1, nc + 1];
+            int[] tnx = new int[nc + 1];
+            double[,,] y = new double[nm + 1, nr + 1, nc + 1];
             int absconders = 0;
 
             DataFrame outputFrame = new DataFrame();
@@ -947,24 +946,24 @@ namespace StatsDirect.Builtins
 
             for (int d = 0; d < nc; d++)
             {
-                for (int N = 1; N <= nr; N++)
+                for (int n = 1; n <= nr; n++)
                 {
                     int adit = 0;
                     double adsum = 0;
-                    Variable candidate = frame.Variables[N - 1][d]; //  There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
+                    Variable candidate = frame.Variables[n - 1][d]; // There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
                     if (candidate != null)
                     {
                         DoubleVariable v = candidate.AsDoubleVariable;
-                        for (int Q = 0; Q <= nm - 1; Q++)
+                        for (int q = 0; q < nm; q++)
                         {
-                            if (v.Data[Q] != Constant.MISSING)
+                            if (v.Data[q] != Constant.MISSING)
                             {
-                                adit = adit + 1;
-                                adsum = adsum + v.Data[Q];
+                                adit++;
+                                adsum += v.Data[q];
                             }
                             else
                             {
-                                absconders = absconders + 1;
+                                absconders++;
                             }
                         }
                         if (adit <= 0)
@@ -972,11 +971,11 @@ namespace StatsDirect.Builtins
                             host.Error("Invalid data: a few repeat observations can be missing but not whole cells.", "Replicated Two Way ANOVA");
                             throw new TemplateOperationCancelledException();
                         }
-                        double spare = adsum / Convert.ToDouble(adit);
-                        for (int Q = 0; Q < nm; Q++)
+                        double spare = adsum / adit;
+                        for (int q = 0; q < nm; q++)
                         {
-                            double item = v.Data[Q] == Constant.MISSING ? spare : v.Data[Q];
-                            y[Q + 1, N, d + 1] = item;
+                            double item = v.Data[q] == Constant.MISSING ? spare : v.Data[q];
+                            y[q + 1, n, d + 1] = item;
                         }
                     }
                 }
@@ -985,6 +984,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables[d] = new DoubleVariable(null, title);
             }
 
+            double[] mean;
             int dfcol;
             int dfrow;
             int dfint;
@@ -996,26 +996,20 @@ namespace StatsDirect.Builtins
             double ssint;
             double sscol;
             double ssrow;
-            XTwoWay(y, ref mean, nr, nc, nm, out ssrow, out sscol, out ssint, out sstot, out ssres, out dfrow, out dfcol, out dfint, out dftot, out dfres, out fault);
+            XTwoWay(y, out mean, nr, nc, nm, out ssrow, out sscol, out ssint, out sstot, out ssres, out dfrow, out dfcol, out dfint, out dftot, out dfres, out fault);
 
             string tlist = "";
             for (int d = 0; d < nc; d++)
             {
                 //  Col(0).AddItem(CDAT1(D).title & " (" & Formatting.XRound(mean(D), 4) & ")")
                 if (d == 0)
-                {
                     tlist = outputFrame.Variables[d].Title;
-                }
                 else
-                {
                     tlist = tlist + ", " + outputFrame.Variables[d].Title;
-                }
             }
 
             if (fault != 0)
-            {
-                throw new Exception("Invalid calculation"); //  Me.Caption, App.helpfile, ACTIVE_HELP_ID, Me)
-            }
+                throw new Exception("Invalid calculation");
 
             double msrow = ssrow / Convert.ToDouble(dfrow);
             double mscol = sscol / Convert.ToDouble(dfcol);
@@ -1086,33 +1080,27 @@ namespace StatsDirect.Builtins
             DataFrame2D frame = parameters["data2d"].AsDataFrame2D;
 
             int ivar = 0;
-            for (int j = 0; j <= frame.VariableCount - 1; j++)
-            {
+            for (int j = 0; j < frame.VariableCount; j++)
                 ivar += frame.Variables[j].Count;
-            }
             int[] nobs = new int[ivar + 1 ];
             double[] sgbar = new double[ivar + 1 ];
             ivar = 0;
             int ctr = 0;
             string tlist = "";
             double[] y = new double[1 + 1 ];
-            for (int j = 0; j <= frame.VariableCount - 1; j++)
+            for (int j = 0; j < frame.VariableCount; j++)
             {
                 tlist += " (";
-                for (int i = 0; i <= frame.Variables[j].Count - 1; i++)
+                for (int i = 0; i < frame.Variables[j].Count; i++)
                 {
                     //  Input variables may be jagged; ensure that null variables don't cause issues
                     Variable v = frame.Variables[j][i];
                     if (v != null)
                     {
                         if (i == 0)
-                        {
                             tlist += v.Title;
-                        }
                         else
-                        {
                             tlist += ", " + v.Title;
-                        }
                         ivar += 1;
                         int eobs = 0;
                         DoubleVariable dv = v.AsDoubleVariable;
@@ -1256,15 +1244,11 @@ namespace StatsDirect.Builtins
             double pse = Math.Sqrt(mserr);
 
             for (int i = 1; i <= k; i++)
-            {
                 lam[i] = 1.0 / Math.Sqrt(2.0);
-            }
 
             double dalpha = 1.0 - gamma;
             if (dalpha <= 0.0 || dalpha > 1.0)
-            {
                 dalpha = 0.05;
-            }
             double cc = 1.0 - dalpha;
 
             int ifault;
@@ -1288,7 +1272,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", Formatting.XRound(100 * cc, 1));
 
             int ctr = 0;
-            for (int i = 0; i <= k - 1; i++)
+            for (int i = 0; i < k; i++)
             {
                 for (int j = i + 1; j <= k; j++)
                 {

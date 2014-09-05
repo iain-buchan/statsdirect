@@ -8,9 +8,9 @@
       <parameters>
         <frame2d>
           <name>data2d</name>
-          <sub-prompt>Select SUB-GROUP (REPEAT) identifier</sub-prompt>
+          <sub-prompt>Select block/row identifier</sub-prompt>
           <same-length>true</same-length>
-          <mode>Mode2</mode>
+          <mode>BlockThenGroup</mode>
           <min-columns>2</min-columns>
           <max-columns>100</max-columns>
         </frame2d>

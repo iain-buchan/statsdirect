@@ -288,8 +288,8 @@
   <xs:simpleType name="DataAcquisitionMode2D">
     <xs:restriction base="xs:string">
       <xs:enumeration value="NotSet" />
-      <xs:enumeration value="Mode1" />
-      <xs:enumeration value="Mode2" />
+      <xs:enumeration value="GroupThenBlock" />
+      <xs:enumeration value="BlockThenGroup" />
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="FrameParameter">

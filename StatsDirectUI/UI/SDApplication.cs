@@ -118,6 +118,15 @@ namespace StatsDirect.UI
             Process.Start(DOWNLOAD_URL);
         }
 
+        /// <summary>
+        /// Ensure the cursor is reset to normal from whatever it may presently be.
+        /// </summary>
+        public void PointNormal()
+        {
+            if (Application.UseWaitCursor)
+                Application.UseWaitCursor = false;
+        }
+
         private void SavePersistentValues()
         {
             try
@@ -778,8 +787,8 @@ namespace StatsDirect.UI
                                 FriendlyError("There are no workbooks open from which to select data. Please create or open a workbook containing your data, then run the operation again.", null, false);
                                 throw new TemplateOperationCancelledException();
                             }
-                            frmSpreadsheetGear gearWindow = (frmSpreadsheetGear) ActiveGrid.Window;
-                            outputParameters = gearWindow.FillGridParameter(parameter, processor, this, context);
+                            IGrid grid = (IGrid) ActiveGrid.Window;
+                            outputParameters = new GridSelectionProcessor(grid).FillGridParameter(parameter, processor, this, context);
                         }
                         break;
                     case ParameterType.Grid2D:
@@ -789,8 +798,8 @@ namespace StatsDirect.UI
                                 FriendlyError("There are no workbooks open from which to select data. Please create or open a workbook containing your data, then run the operation again.", null, false);
                                 throw new TemplateOperationCancelledException();
                             }
-                            frmSpreadsheetGear gearWindow = (frmSpreadsheetGear)ActiveGrid.Window;
-                            DataFrame2D frame = gearWindow.FillGridParameter2D(parameter, processor, this, context);
+                            IGrid grid = (IGrid)ActiveGrid.Window;
+                            DataFrame2D frame = new GridSelectionProcessor(grid).FillGridParameter2D(parameter, processor, this, context);
                             outputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(true, frame));
                         }
                         break;
@@ -877,8 +886,8 @@ namespace StatsDirect.UI
 
         ParameterBag FillParameter(GroupedCovarianceParameter Parameter)
         {
-            frmSpreadsheetGear gearWindow = (frmSpreadsheetGear)ActiveGrid.Window;
-            Builtins.GroupedCovarianceData data = gearWindow.FillGroupedCovarianceParameter();
+            IGrid grid = (IGrid)ActiveGrid.Window;
+            Builtins.GroupedCovarianceData data = new GridSelectionProcessor(grid).FillGroupedCovarianceParameter();
             if (null == data)
                 return null;
             return new ParameterBag(Parameter.Name, new FilledParameter(true, data));
@@ -1170,25 +1179,25 @@ namespace StatsDirect.UI
         {
             const string key = "solo";
             IntegerParameter parameter = new IntegerParameter
-                                             {
-                                                 Name = key,
-                                                 PromptExpression = new Expression(prompt),
-                                                 DefaultValueExpression = new Expression(defaultValue.ToString()),
-                                                 CancelSkipsParameter = "Skip"
-                                             };
+            {
+                Name = key,
+                PromptExpression = new Expression(prompt),
+                DefaultValueExpression = new Expression(defaultValue.ToString()),
+                CancelSkipsParameter = "Skip"
+            };
             ParameterBag results = FillSingleParameter(parameter);
             cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
             return cancelled ? 0 : results[key].AsInt32;
         }
 
-        public string GetString(string Prompt, string Caption, string DefaultValue)
+        public string GetString(string prompt, string caption, string defaultValue)
         {
-            return this.Prompt(Prompt, Caption, DefaultValue);
+            return this.Prompt(prompt, caption, defaultValue);
         }
 
-        public void Error(string Message, string Caption)
+        public void Error(string message, string caption)
         {
-            MsgboxX(Message, MessageBoxButtons.OK, MessageBoxIcon.Error, Caption, true);
+            MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Error, caption, true);
         }
 
         public void StartProgress(string operationDescription, bool provideProgress)
@@ -1521,13 +1530,13 @@ namespace StatsDirect.UI
         /// <summary>
         /// Prompts the user for the specified information.  Returns null if they cancelled, otherwise the entered value.
         /// </summary>
-        /// <param name="Prompt"></param>
-        /// <param name="Caption"></param>
-        /// <param name="DefaultValue"></param>
+        /// <param name="prompt"></param>
+        /// <param name="caption"></param>
+        /// <param name="defaultValue"></param>
         /// <returns>null if the user cancelled, otherwise the entered value.</returns>
-        internal string Prompt(string Prompt, string Caption, string DefaultValue)
+        private string Prompt(string prompt, string caption, string defaultValue)
         {
-            using (frmInputBox ib = new frmInputBox(Prompt, Caption, DefaultValue))
+            using (frmInputBox ib = new frmInputBox(prompt, caption, defaultValue))
             {
                 ib.ShowDialog(mainWindow);
                 if (ib.UserCancelled)
@@ -1546,7 +1555,7 @@ namespace StatsDirect.UI
             get { return false; }
         }
 
-        public string zvalp1(double xz)
+        string ITemplateHost.zvalp1(double xz)
         {
             double P = 1 - Numerics.PDF.alnorm(xz);
             if (P > 1 - P)
@@ -1554,7 +1563,7 @@ namespace StatsDirect.UI
             return pval(P);
         }
 
-        public string zvalp2(double xz)
+        string ITemplateHost.zvalp2(double xz)
         {
             double P = 1 - Numerics.PDF.alnorm(xz);
             if (P > 1 - P)
@@ -1565,8 +1574,7 @@ namespace StatsDirect.UI
         internal void NoteRecentFile(string path, bool openedOk)
         {
             // Ensure the path is the most recently used and appears no more than once; ensure no more than MAX_RECENT_FILES files are kept
-            System.Collections.Specialized.StringCollection recentFiles = Properties.Settings.Default.RecentFileList ??
-                                                                          new System.Collections.Specialized.StringCollection();
+            System.Collections.Specialized.StringCollection recentFiles = Properties.Settings.Default.RecentFileList ?? new System.Collections.Specialized.StringCollection();
             if (recentFiles.Contains(path))
                 recentFiles.Remove(path);
             if (openedOk)
@@ -1720,54 +1728,6 @@ namespace StatsDirect.UI
         public bool ClosingForUpgrade
         {
             get { return closingForUpgrade; }
-        }
-    }
-
-    /// <summary>
-    /// A shim to allow chart options to be passed around as Parameters, and hence filled in by the UI
-    /// </summary>
-    internal class ChartOptionsParameter : Parameter
-    {
-        private readonly Charting.ChartDefinition chartDefinition;
-
-        public ChartOptionsParameter(string name, Charting.ChartDefinition chartDefinition)
-        {
-            Name = name;
-            this.chartDefinition = chartDefinition;
-        }
-
-        public Charting.ChartDefinition ChartDefinition
-        {
-            get { return chartDefinition; }
-        }
-
-        public override ParameterType Type
-        {
-            get { return ParameterType.Custom; }
-        }
-    }
-
-    /// <summary>
-    /// A shim to allow fillables to be passed around as Parameters, and hence filled in by the UI.
-    /// </summary>
-    internal class FillableParameter : Parameter
-    {
-        private readonly IFillable fillable;
-
-        public FillableParameter(string name, IFillable fillable)
-        {
-            Name = name;
-            this.fillable = fillable;
-        }
-
-        public IFillable Fillable
-        {
-            get { return fillable; }
-        }
-
-        public override ParameterType Type
-        {
-            get { return ParameterType.Custom; }
         }
     }
 }

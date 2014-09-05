@@ -6,8 +6,8 @@ namespace StatsDirect.Templates
     public enum DataAcquisitionMode2D
     {
         NotSet = 0,
-        Mode1 = 1,
-        Mode2 = 2,
+        GroupThenBlock,
+        BlockThenGroup
     }
 
     [Serializable]

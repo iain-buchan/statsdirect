@@ -280,6 +280,8 @@
     <Compile Include="Templates\LabelDirection.cs" />
     <Compile Include="Templates\ScaleParameters.cs" />
     <Compile Include="Templates\ScaleType.cs" />
+    <Compile Include="UI\ChartOptionsParameter.cs" />
+    <Compile Include="UI\FillableParameter.cs" />
     <Compile Include="UI\frmInstallStatsDirect2.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -292,6 +294,7 @@
     <Compile Include="UI\frmInstallR.Designer.cs">
       <DependentUpon>frmInstallR.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\GridSelectionProcessor.cs" />
     <Compile Include="UI\IpcSender.cs" />
     <Compile Include="UI\IpcListener.cs" />
     <Compile Include="Numerics\BetaRNG.cs" />

@@ -11,7 +11,7 @@
           <prompt></prompt>
           <sub-prompt></sub-prompt>
           <same-length>true</same-length>
-          <mode>Mode1</mode>
+          <mode>GroupThenBlock</mode>
           <min-columns>2</min-columns>
           <max-columns>10</max-columns>
         </frame2d>

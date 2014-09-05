@@ -1727,7 +1727,7 @@ namespace StatsDirect.UI
             // We may have had one or more parameters displayed
             ClearCombinedParameters();
             SdApplication.SoleInstance.EraseAnyOutstandingParameters();
-            Application.UseWaitCursor = false;
+            SdApplication.SoleInstance.PointNormal();
         }
 
         /// <summary>
