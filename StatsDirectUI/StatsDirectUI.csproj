@@ -363,7 +363,6 @@
     <Compile Include="Templates\ITemplateProcessor.cs" />
     <Compile Include="Templates\IterationStep.cs" />
     <Compile Include="Templates\Operation.cs" />
-    <Compile Include="Templates\OptionDescriptor.cs" />
     <Compile Include="Templates\OptionsParameter.cs" />
     <Compile Include="Templates\OutputFrameStep.cs" />
     <Compile Include="Templates\Parameter.cs" />
@@ -1679,7 +1678,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
