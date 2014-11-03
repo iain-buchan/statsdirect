@@ -48,13 +48,6 @@ namespace StatsDirect.Templates
     /// </summary>
     public interface ITemplateHost
     {
-        /// <summary>
-        /// Presents the specified options to the user in some appropriate way; modifies the options in-place with the user's selections.
-        /// </summary>
-        /// <param name="descriptor"></param>
-        /// <returns>a parameter bag if the options are to be used, null if the user cancelled the option selection.</returns>
-        ParameterBag DisplayOptions(OptionDescriptor descriptor);
-
         string RoundU(double amount);
 
         /// <summary>
@@ -71,6 +64,7 @@ namespace StatsDirect.Templates
         bool GetBoolean(string prompt, string Title, bool InitialValue, int HelpIndex, out bool cancelled);
         double GetDouble(string prompt, string Title, double InitialValue, out bool cancelled);
         int GetInteger(string prompt, string Title, int initialValue, out bool cancelled);
+        int GetOption(string prompt, string title, List<string> options, int selectedIndex, out bool cancelled);
 
         /// <summary>
         /// Prompt the user for a string; return the user-entered string, or Nothing if the user cancels.

@@ -89,12 +89,15 @@
           <name>doExactP</name>
           <prompt>Bootstrap confidence intervals?</prompt>
           <must-request>true</must-request>
+          <lifetime>SessionForThisOperation</lifetime>
+          <default-value>true</default-value>
         </boolean>
         <integer>
           <name>iterations</name>
           <prompt>Iterations</prompt>
           <acquire-if-true>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</acquire-if-true>
           <must-request>true</must-request>
+          <lifetime>SessionForThisOperation</lifetime>
           <minimum-value>1</minimum-value>
           <default-value>100000</default-value>
         </integer>

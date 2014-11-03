@@ -412,7 +412,7 @@ namespace StatsDirect.UI
             this.setupToolsToolStripMenuItem.Name = "setupToolsToolStripMenuItem";
             this.setupToolsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.setupToolsToolStripMenuItem.Tag = "#{help=1153}";
-            this.setupToolsToolStripMenuItem.Text = "Set Up Tools...";
+            this.setupToolsToolStripMenuItem.Text = "Setup Tools...";
             this.setupToolsToolStripMenuItem.Click += new System.EventHandler(this.setupToolsToolStripMenuItem_Click);
             // 
             // checkForUpdatesToolStripMenuItem

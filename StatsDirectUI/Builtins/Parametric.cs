@@ -39,7 +39,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void para(DataFrame Frame, ref double[] mean, ref double[] ss, ref double[] var, ref double[] sd, ref double[] sem, ref int[] tnx)
+        private static void para(DataFrame Frame, double[] mean, double[] ss, double[] var, double[] sd, double[] sem, int[] tnx)
         {
             for (int D = 0; D <= Frame.VariableCount - 1; D++)
             {
@@ -97,7 +97,7 @@ namespace StatsDirect.Builtins
             int[] tnx = new int[1 + 1 /* VB to C# conversion */ ];
             DataFrame data = parameters["data"].AsDataFrame;
             // RTF_LoadTemplate("variance.rtf")
-            para(data, ref mean, ref ss, ref var, ref sd, ref sem, ref tnx);
+            para(data, mean, ss, var, sd, sem, tnx);
             if (Math.Abs(var[0]) > Math.Abs(var[1]))
             {
                 top = 0;
@@ -127,7 +127,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptReferenceRange(ITemplateHost host, ParameterBag parameters)
         {
             double cover = 0; double ul; double ll; double xq = 0;
@@ -137,12 +136,12 @@ namespace StatsDirect.Builtins
             int fault;
             bool capUpper = false; bool capLower = false;
 
-            double[] mean = new double[1 + 1 /* VB to C# conversion */ ];
-            double[] ss = new double[1 + 1 /* VB to C# conversion */ ];
-            double[] var = new double[1 + 1 /* VB to C# conversion */ ];
-            double[] sd = new double[1 + 1 /* VB to C# conversion */ ];
-            double[] sem = new double[1 + 1 /* VB to C# conversion */ ];
-            int[] tnx = new int[1 + 1 /* VB to C# conversion */ ];
+            double[] mean = new double[2];
+            double[] ss = new double[2];
+            double[] var = new double[2];
+            double[] sd = new double[2];
+            double[] sem = new double[2];
+            int[] tnx = new int[2];
 
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable variable = data.Variables[0].AsDoubleVariable;
@@ -151,38 +150,22 @@ namespace StatsDirect.Builtins
                 host.Error("Too few data for this method (minimum 8)", "Reference Range");
                 throw new TemplateOperationCancelledException();
             }
-            OptionDescriptor opts = new OptionDescriptor { Title = "Reference Range/Interval" };
-            opts.SelectionBoxes.Add(new SelectionBoxDescriptor());
-            opts.SelectionBoxes[0].Title = "Reference interval (%)";
-            opts.SelectionBoxes[0].SetAsConfidence();
-            opts.SelectionBoxes.Add(new SelectionBoxDescriptor());
-            opts.SelectionBoxes[1].Title = "Confidence interval (%)";
-            opts.SelectionBoxes[1].SetAsConfidence();
-            opts.CheckBoxes.Add(new CheckBoxDescriptor("conservative", "Conservative CI", false, false));
-            if (null == host.DisplayOptions(opts))
-            {
-                throw new TemplateOperationCancelledException();
-            }
-            bool do_conservative = opts.CheckBoxes[0].Checked;
-            double GAMMA = Parsing.Cdbl_Txt(opts.SelectionBoxes[1].Value) / 100.0;
-            if (GAMMA <= 0.0 | GAMMA >= 1.0)
+            bool do_conservative = parameters["do_conservative"].AsBoolean;
+            double GAMMA = parameters["gamma"].AsDouble;
+            if (GAMMA <= 0.0 || GAMMA >= 1.0)
             {
                 GAMMA = 0.95;
             }
-            double qrr = Parsing.Cdbl_Txt(opts.SelectionBoxes[0].Value);
-            if (qrr > 1.0)
-            {
-                qrr = qrr / 100.0;
-            }
+            double qrr = parameters["reference-interval"].AsDouble;
             double qrz = Math.Abs(PDF.gauinv((1.0 - qrr) / 2.0, out fault));
-            if (fault != 0 | qrr < 0.0 | qrr > 1.0)
+            if (fault != 0 || qrr < 0.0 || qrr > 1.0)
             {
                 host.Error("Coverage not possible.", "Reference Range");
                 throw new TemplateOperationCancelledException();
             }
             //  RTF_LoadTemplate("refrange.rtf")
             MathDbl.civ(0, out z, GAMMA, out P0);
-            para(data, ref mean, ref ss, ref var, ref sd, ref sem, ref tnx);
+            para(data, mean, ss, var, sd, sem, tnx);
             double xbar = mean[0];
             double s = sd[((int)(Math.Floor(o)))];
             int N = tnx[0];
@@ -471,7 +454,7 @@ namespace StatsDirect.Builtins
                 DataFrame Data = parameters["data"].AsDataFrame;
                 //  RTF_LoadTemplate("z_norm2.rtf")
                 MathDbl.civ(0, out cit, GAMMA, out P0);
-                para(Data, ref mean, ref ss, ref var, ref sd, ref sem, ref tnx);
+                para(Data, mean, ss, var, sd, sem, tnx);
                 ParameterBag outputParameters = new ParameterBag();
                 IList<ParameterBag> sampleList = new List<ParameterBag>();
                 outputParameters.AddOutput("*sample", sampleList);
@@ -521,7 +504,7 @@ namespace StatsDirect.Builtins
                                  : Constant.MISSING;
                 //  RTF_LoadTemplate("z_norm1.rtf")
                 MathDbl.civ(0, out cit, GAMMA, out P0);
-                para(Data, ref mean, ref ss, ref var, ref sd, ref sem, ref tnx);
+                para(Data, mean, ss, var, sd, sem, tnx);
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("name", v0.Title);
                 outputParameters.AddOutput("mean", host.RoundU(mean[0]));
@@ -1249,7 +1232,7 @@ namespace StatsDirect.Builtins
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
             //  RTF_LoadTemplate("m_unpair.rtf")
-            para(data, ref mean, ref ss, ref var, ref sd, ref sem, ref tnx);
+            para(data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] + tnx[1] - 2;
             MathDbl.civ(degf, out cit, GAMMA, out P0);
             double um1 = mean[0];
@@ -1336,34 +1319,20 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptTSingle(ITemplateHost host, ParameterBag parameters)
         {
-            double[] mean = new double[0 + 1 /* VB to C# conversion */ ];
-            double[] ss = new double[0 + 1 /* VB to C# conversion */ ];
-            double[] var = new double[0 + 1 /* VB to C# conversion */ ];
-            double[] sd = new double[0 + 1 /* VB to C# conversion */ ];
-            double[] sem = new double[0 + 1 /* VB to C# conversion */ ];
-            int[] tnx = new int[0 + 1 /* VB to C# conversion */ ];
+            double[] mean = new double[1];
+            double[] ss = new double[1];
+            double[] var = new double[1];
+            double[] sd = new double[1];
+            double[] sem = new double[1];
+            int[] tnx = new int[1];
 
             DataFrame Data = parameters["data"].AsDataFrame;
-            OptionDescriptor options = new OptionDescriptor { Title = "Single sample t test" };
-            options.SelectionBoxes.Add(new SelectionBoxDescriptor());
-            SelectionBoxDescriptor transTemp1 = options.SelectionBoxes[0];
-            transTemp1.Title = "Confidence (%)";
-            transTemp1.SetAsConfidence();
+            double mu0 = parameters["population-mean"].AsDouble;
+            double GAMMA = parameters["gamma"].AsDouble;
 
-            options.SelectionBoxes.Add(new SelectionBoxDescriptor());
-            SelectionBoxDescriptor transTemp2 = options.SelectionBoxes[1];
-            transTemp2.Title = "Population mean";
-            transTemp2.FillFactor(0, 0, 1, "", 0);
-
-            if (null == host.DisplayOptions(options))
-            {
-                throw new TemplateOperationCancelledException();
-            }
             //  RTF_LoadTemplate("m_single.rtf")
-            para(Data, ref mean, ref ss, ref var, ref sd, ref sem, ref tnx);
+            para(Data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] - 1;
-            double mu0 = Parsing.Cdbl_Txt(options.SelectionBoxes[1].Value);
-            double GAMMA = Parsing.Cdbl_Txt(options.SelectionBoxes[0].Value) / 100.0;
             double P0; double cit;
             MathDbl.civ(degf, out cit, GAMMA, out P0);
             ParameterBag outputParameters = new ParameterBag();

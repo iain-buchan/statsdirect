@@ -277,10 +277,26 @@
     <Compile Include="R\RResultsParserPartial.cs" />
     <Compile Include="Templates\AxisScaleParameters.cs" />
     <Compile Include="Templates\GroupIdentifierMode.cs" />
+    <Compile Include="Templates\IDefaultParameter.cs" />
     <Compile Include="Templates\LabelDirection.cs" />
+    <Compile Include="Templates\OptionParameter.cs" />
     <Compile Include="Templates\ScaleParameters.cs" />
     <Compile Include="Templates\ScaleType.cs" />
     <Compile Include="UI\ChartOptionsParameter.cs" />
+    <Compile Include="UI\ctlUpdateStatsDirectCheck.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlUpdateStatsDirectCheck.Designer.cs">
+      <DependentUpon>ctlUpdateStatsDirectCheck.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ctlUpdateRCheck.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlUpdateRCheck.Designer.cs">
+      <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\UpdateChecker.cs" />
+    <Compile Include="UI\RUpdateChecker.cs" />
     <Compile Include="UI\FillableParameter.cs" />
     <Compile Include="UI\frmInstallStatsDirect2.cs">
       <SubType>Form</SubType>
@@ -348,7 +364,6 @@
     <Compile Include="Templates\IterationStep.cs" />
     <Compile Include="Templates\Operation.cs" />
     <Compile Include="Templates\OptionDescriptor.cs" />
-    <Compile Include="Templates\OptionParameter.cs" />
     <Compile Include="Templates\OptionsParameter.cs" />
     <Compile Include="Templates\OutputFrameStep.cs" />
     <Compile Include="Templates\Parameter.cs" />
@@ -429,6 +444,7 @@
     <Compile Include="UI\frmUpdateCheck.Designer.cs">
       <DependentUpon>frmUpdateCheck.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\MajorMinorPoint.cs" />
     <Compile Include="UI\PortableSettingsProvider.cs" />
     <Compile Include="UI\ComboBoxEx.cs">
       <SubType>Component</SubType>
@@ -543,12 +559,6 @@
     </Compile>
     <Compile Include="UI\ctlPickAWindow.Designer.cs">
       <DependentUpon>ctlPickAWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\ctlOptions.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\ctlOptions.Designer.cs">
-      <DependentUpon>ctlOptions.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\ctlChiGFOptions.cs">
       <SubType>UserControl</SubType>
@@ -733,8 +743,10 @@
     <Compile Include="UI\StatsDirectToolStripRenderer.cs" />
     <Compile Include="TemplateProcessing\ScriptEngine.cs" />
     <Compile Include="TemplateProcessing\TemplateProcessor.cs" />
+    <Compile Include="UI\StatsDirectUpdateChecker.cs" />
     <Compile Include="UI\SuggestionTime.cs" />
     <Compile Include="UI\TextRuler.cs" />
+    <Compile Include="UI\UpdateCheckerEventArgs.cs" />
     <Compile Include="UI\VerticalLabel.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -767,6 +779,12 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlUpdateStatsDirectCheck.resx">
+      <DependentUpon>ctlUpdateStatsDirectCheck.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlUpdateRCheck.resx">
+      <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInstallStatsDirect2.resx">
       <DependentUpon>frmInstallStatsDirect2.cs</DependentUpon>
@@ -866,10 +884,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlPickAWindow.resx">
       <DependentUpon>ctlPickAWindow.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlOptions.resx">
-      <DependentUpon>ctlOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlChiGFOptions.resx">
@@ -1665,7 +1679,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

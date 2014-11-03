@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 namespace StatsDirect.Templates
 {
     [Serializable]
-    public sealed class DoubleParameter: RangeParameter
+    public sealed class DoubleParameter: RangeParameter, IDefaultParameter<double>
     {
         private Expression defaultValue;
         private Expression minimumValue;
@@ -24,6 +24,14 @@ namespace StatsDirect.Templates
             if (o is int)
                 return (int)o;
             return (double?)o;
+        }
+
+        /// <summary>
+        /// true iff the parameter defines a default.
+        /// </summary>
+        public bool HasDefaultValue
+        {
+            get { return null != defaultValue; }
         }
 
         public double MinimumValue(ITemplateProcessor processor, ParameterBag parameters)

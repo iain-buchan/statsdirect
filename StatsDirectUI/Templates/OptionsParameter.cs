@@ -7,34 +7,18 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class OptionsOption
     {
-        private string name;
-        private string label;
-        private bool selected;
-
         [XmlAttribute(AttributeName = "name")]
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
+        public string Name { get; set; }
 
         [XmlText]
-        public string Label
-        {
-            get { return label; }
-            set { label = value; }
-        }
+        public string Label { get; set; }
 
         [XmlAttribute(AttributeName = "selected")]
-        public bool Selected
-        {
-            get { return selected; }
-            set { selected = value; }
-        }
+        public bool Selected { get; set; }
     }
 
     /// <summary>
-    /// A parameter allowing selection of one or more options from a list.
+    /// A parameter allowing selection of zero or more options from a list.
     /// </summary>
     [Serializable]
     public sealed class OptionsParameter: Parameter

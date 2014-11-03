@@ -38,6 +38,7 @@
             <option name="report-uq" selected="true">Upper quartile</option>
             <option name="report-median" selected="true">Median</option>
             <option name="report-lq" selected="true">Lower quartile</option>
+            <option name="report-iqr" selected="true">Interquartile range</option>
             <option name="report-minimum" selected="true">Minimum</option>
             <option name="report-range" selected="true">Range</option>
             <option name="report-udc" selected="true">User defined centiles</option>

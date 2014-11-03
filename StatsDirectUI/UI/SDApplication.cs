@@ -704,7 +704,7 @@ namespace StatsDirect.UI
             }
         }
 
-        bool ITemplateHost.CanCombine(Parameter parameter)
+        public bool CanCombine(Parameter parameter)
         {
             switch (parameter.Type)
             {
@@ -810,11 +810,9 @@ namespace StatsDirect.UI
                         outputParameters = FillParameter(processor, (IntegerParameter) parameter, context);
                         break;
                     case ParameterType.Option:
-                        outputParameters = FillParameter(processor, (OptionParameter) parameter, context);
-                        break;
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Option should always be filled inline");
                     case ParameterType.Options:
-                        outputParameters = FillParameter(processor, (OptionsParameter) parameter, context);
-                        break;
+                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Options should always be filled inline");
                     case ParameterType.PickFromList:
                         throw new ArgumentOutOfRangeException("parameter", parameter.Type, "PickFromList should always be filled inline");
                     case ParameterType.PickVariables:
@@ -909,12 +907,12 @@ namespace StatsDirect.UI
             }
             while (true)
             {
-                int defaultValue = 0;
+                int? defaultValue = 0;
                 if (Parameter.HasDefaultValue)
                 {
                     defaultValue = Parameter.DefaultValue(processor, context);
                 }
-                string response = Prompt(Parameter.Prompt(processor, context) + suffix, "StatsDirect", defaultValue.ToString());
+                string response = Prompt(Parameter.Prompt(processor, context) + suffix, "StatsDirect", defaultValue.HasValue ? defaultValue.Value.ToString() : string.Empty);
                 if (string.IsNullOrEmpty(response))
                 {
                     if (null != Parameter.CancelSkipsParameter)
@@ -965,7 +963,7 @@ namespace StatsDirect.UI
                 string defaultValueString = "";
                 double? defaultValue = Parameter.DefaultValue(processor, context);
                 if (defaultValue.HasValue && !double.IsNaN(defaultValue.Value))
-                    defaultValueString = defaultValue.ToString();
+                    defaultValueString = defaultValue.Value.ToString();
                 string response = Prompt(Parameter.Prompt(processor, context) + suffix, "StatsDirect", defaultValueString);
                 if (string.IsNullOrEmpty(response))
                 {
@@ -980,64 +978,6 @@ namespace StatsDirect.UI
                     return new ParameterBag(Parameter.Name, new FilledParameter(true, result));
                 // else go round and prompt again
             }
-        }
-
-        ParameterBag FillParameter(ITemplateProcessor processor, OptionParameter Parameter, ParameterBag context)
-        {
-            OptionDescriptor descriptor = new OptionDescriptor { Title = Parameter.Prompt(processor, context) };
-            foreach (OptionOption opt in Parameter.Options)
-            {
-                CheckBoxDescriptor cd = new CheckBoxDescriptor { IsExclusive = true, IsRadio = true, Text = opt.Label };
-                descriptor.CheckBoxes.Add(cd);
-            }
-            if (descriptor.CheckBoxes.Count > 0)
-                descriptor.CheckBoxes[0].Checked = true;
-            if (null == DisplayOptions(descriptor))
-            {
-                if (null != Parameter.CancelSkipsParameter)
-                {
-                    return new ParameterBag();
-                }
-                throw new TemplateOperationCancelledException();
-            }
-            // Find the selected option - TODO: alter DisplayOptions to take values as well as labels!
-            foreach (CheckBoxDescriptor cd in descriptor.CheckBoxes)
-                if (cd.Checked)
-                    foreach (OptionOption opt in Parameter.Options)
-                        if (cd.Text.Equals(opt.Label))
-                            return new ParameterBag(Parameter.Name, new FilledParameter(true, opt.Value));
-            return null;
-        }
-
-        ParameterBag FillParameter(ITemplateProcessor processor, OptionsParameter parameter, ParameterBag context)
-        {
-            OptionDescriptor descriptor = new OptionDescriptor { Title = parameter.Prompt(processor, context) };
-            foreach (OptionsOption opt in parameter.Options)
-            {
-                CheckBoxDescriptor cd = new CheckBoxDescriptor
-                                            {
-                                                IsExclusive = false,
-                                                IsRadio = false,
-                                                Text = opt.Label,
-                                                Checked = opt.Selected
-                                            };
-                descriptor.CheckBoxes.Add(cd);
-            }
-            if (null == DisplayOptions(descriptor))
-            {
-                if (null != parameter.CancelSkipsParameter)
-                {
-                    return new ParameterBag();
-                }
-                throw new TemplateOperationCancelledException();
-            }
-            // Find the selected option - TODO: alter DisplayOptions to take values as well as labels!
-            ParameterBag outputParameters = new ParameterBag();
-            foreach (CheckBoxDescriptor cd in descriptor.CheckBoxes)
-                foreach (OptionsOption opt in parameter.Options)
-                    if (cd.Text.Equals(opt.Label))
-                        outputParameters.Add(opt.Name, new FilledParameter(true, cd.Checked));
-            return outputParameters;
         }
 
         private ParameterBag FillChartOptions(Charting.ChartDefinition ChartDefinition, ParameterBag context)
@@ -1118,11 +1058,6 @@ namespace StatsDirect.UI
             return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
-        public ParameterBag DisplayOptions(OptionDescriptor Descriptor)
-        {
-            return AmendUsingControl(Descriptor);
-        }
-
         public bool MetaPlotCI
         {
             get { return Preferences.MetaPlotCI; }
@@ -1164,12 +1099,12 @@ namespace StatsDirect.UI
         {
             const string key = "solo";
             DoubleParameter parameter = new DoubleParameter
-                                            {
-                                                Name = key,
-                                                PromptExpression = new Expression(Prompt),
-                                                DefaultValueExpression = new Expression(defaultValue.ToString()),
-                                                CancelSkipsParameter = "Skip"
-                                            };
+            {
+                Name = key,
+                PromptExpression = new Expression(Prompt),
+                DefaultValueExpression = new Expression(defaultValue.ToString()),
+                CancelSkipsParameter = "Skip"
+            };
             ParameterBag results = FillSingleParameter(parameter);
             cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
             return cancelled ? 0.0 : results[key].AsDouble;
@@ -1188,6 +1123,22 @@ namespace StatsDirect.UI
             ParameterBag results = FillSingleParameter(parameter);
             cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
             return cancelled ? 0 : results[key].AsInt32;
+        }
+
+        public int GetOption(string prompt, string caption, List<string> options, int selectedIndex, out bool cancelled)
+        {
+            const string key = "solo";
+            OptionParameter parameter = new OptionParameter
+            {
+                Name = key,
+                PromptExpression = new Expression(prompt),
+                CancelSkipsParameter = "Skip"
+            };
+            for (int i = 0; i < options.Count; i++ )
+                parameter.Options.Add(new OptionOption { Label = options[i], Value = i.ToString() });
+            ParameterBag results = FillSingleParameter(parameter);
+            cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
+            return cancelled ? 0 : int.Parse(results[key].AsString);
         }
 
         public string GetString(string prompt, string caption, string defaultValue)
@@ -1710,7 +1661,7 @@ namespace StatsDirect.UI
 
         public void CheckForUpdates()
         {
-            using (Form f = new frmUpdateCheck())
+            using (Form f = new frmUpdateCheck(false))
             {
                 f.ShowDialog(mainWindow);
             }

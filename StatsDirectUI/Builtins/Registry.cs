@@ -140,7 +140,7 @@ namespace StatsDirect.Builtins
                 new Builtin("rptPoissonRegression", Regress.RptPoissonRegression, InputDuringStep.Never),
                 new Builtin("rptPoissonConfidenceInterval", Parametric.rptPoissonConfidenceInterval, InputDuringStep.Never),
                 new Builtin("rptPoissonRegressionFit", Regress.RptPoissonRegressionFit, InputDuringStep.Never),
-                new Builtin("rptPoissonRegressionIRR", Regress.RptPoissonRegressionIrr, InputDuringStep.Never),
+                new Builtin("rptPoissonRegressionIRR", Regress.RptPoissonRegressionIrr, InputDuringStep.Sometimes),
                 new Builtin("rptPoissonRegressionModel", Regress.RptPoissonRegressionModel, InputDuringStep.Never),
                 new Builtin("rptPoissonRegressionResiduals", Regress.RptPoissonRegressionResiduals, InputDuringStep.Never),
                 new Builtin("rptPolynomialRegression", Regress.RptPolynomialRegression, InputDuringStep.Never),

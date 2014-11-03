@@ -8,6 +8,7 @@ namespace StatsDirect.Builtins
         public string LargestCategoryTitle { get; set; }
         public List<string> CategoryNames { get; set; }
         public string VariableName { get; set; }
+        public bool AllowUserToTreatAsContinuous { get; set; }
 
         ///  <summary>
         ///  The name that the user selected, or Nothing if &lt;none> was selected.

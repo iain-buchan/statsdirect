@@ -2,8 +2,8 @@ using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using StatsDirect.UI;
 using StatsDirect.Utilities;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -4232,9 +4232,7 @@ namespace StatsDirect.Builtins
             int nx = context.N;
             string[] Label = context.Label;
             bool DoC = context.DoC;
-            int i;
-            int j; int L;
-            double cit; double rr; double lci; double uci; double P0;
+            double cit; double rr; double P0;
             //  RTF_LoadTemplate("pr_irr.rtf")
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out cit, GAMMA, out P0);
@@ -4250,7 +4248,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> parList = new List<ParameterBag>();
             popParameters.AddOutput("*par", parList);
             int iq = DoC ? 1 : 0;
-            for (i = 1; i <= P; i++)
+            for (int i = 1; i <= P; i++)
             {
                 if (i != 1 || DoC == false)
                 {
@@ -4259,6 +4257,8 @@ namespace StatsDirect.Builtins
                     parParameters.AddOutput("par", Label[i - iq]);
                     parParameters.AddOutput("est", host.RoundU(b[i]));
                     rr = Formatting.SafeExp(b[i]);
+                    double lci;
+                    double uci;
                     if (rr != Constant.MISSING)
                     {
                         lci = Formatting.SafeExp(b[i] - se[i] * cit);
@@ -4276,20 +4276,16 @@ namespace StatsDirect.Builtins
             // relative to dichotomous covariates
             int[] nsel = new int[P + 1];
             int ctr = 0;
-            OptionDescriptor descriptor = new OptionDescriptor { Title = "Select covariate for sub-population relative risk" };
-
-            SelectionBoxDescriptor sb = new SelectionBoxDescriptor();
-            descriptor.SelectionBoxes.Add(sb);
-            sb.Title = "Covariate";
-            for (L = 1; L <= P; L++)
+            List<string> labels = new List<string>();
+            for (int l = 1; l <= P; l++)
             {
                 bool OK = true;
-                if (L > 1 || DoC == false)
+                if (l > 1 || !DoC)
                 {
-                    int k = DoC ? L - 1 : L;
-                    for (j = 1; j <= nx; j++)
+                    int k = DoC ? l - 1 : l;
+                    for (int j = 1; j <= nx; j++)
                     {
-                        if (x[j, k] != 0.0 & x[j, k] != 1.0)
+                        if (x[j, k] != 0.0 && x[j, k] != 1.0)
                         {
                             OK = false;
                             break;
@@ -4297,54 +4293,57 @@ namespace StatsDirect.Builtins
                     }
                     if (OK)
                     {
-                        sb.Labels.Add(Label[L - iq]);
-                        nsel[ctr] = L;
-                        ctr = ctr + 1;
+                        labels.Add(Label[l - iq]);
+                        nsel[ctr] = l;
+                        ctr++;
                     }
                 }
             }
-            if (ctr >= 1 & P - iq > 1)
+            if (ctr >= 1 && P - iq > 1)
             {
-                if (null != host.DisplayOptions(descriptor))
+                bool cancelled;
+                int selectedIndex = host.GetOption("Select covariate for sub-population relative risk", "Covariate", labels, 0, out cancelled);
+                if (cancelled)
+                    throw new TemplateOperationCancelledException();
+                int L = nsel[selectedIndex];
+                for (int j = 2; j >= 1; j--)
                 {
-                    L = nsel[sb.SelectedIndex];
-                    for (j = 2; j >= 1; j--)
+                    double bx = Formatting.SafeExp(b[L]);
+                    if (bx != Constant.MISSING)
                     {
-                        double bx = Formatting.SafeExp(b[L]);
-                        if (bx != Constant.MISSING)
+                        popParameters = new ParameterBag();
+                        popList.Add(popParameters);
+                        popParameters.AddOutput("pop", Label[L - iq] + " = " + (j - 1).ToString());
+                        popParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
+                        parList = new List<ParameterBag>();
+                        popParameters.AddOutput("*par", parList);
+                        if (j == 1)
                         {
-                            popParameters = new ParameterBag();
-                            popList.Add(popParameters);
-                            popParameters.AddOutput("pop", Label[L - iq] + " = " + (j - 1).ToString());
-                            popParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
-                            parList = new List<ParameterBag>();
-                            popParameters.AddOutput("*par", parList);
-                            if (j == 1)
+                            bx = 1.0 / bx;
+                        }
+                        for (int i = 1; i <= P; i++)
+                        {
+                            if ((i != 1 | DoC == false) & i != L)
                             {
-                                bx = 1.0 / bx;
-                            }
-                            for (i = 1; i <= P; i++)
-                            {
-                                if ((i != 1 | DoC == false) & i != L)
+                                ParameterBag parParameters = new ParameterBag();
+                                parList.Add(parParameters);
+                                parParameters.AddOutput("par", Label[i - iq]);
+                                parParameters.AddOutput("est", host.RoundU(b[i]));
+                                rr = Formatting.SafeExp(b[i]) * bx;
+                                double lci;
+                                double uci;
+                                if (rr != Constant.MISSING)
                                 {
-                                    ParameterBag parParameters = new ParameterBag();
-                                    parList.Add(parParameters);
-                                    parParameters.AddOutput("par", Label[i - iq]);
-                                    parParameters.AddOutput("est", host.RoundU(b[i]));
-                                    rr = Formatting.SafeExp(b[i]) * bx;
-                                    if (rr != Constant.MISSING)
-                                    {
-                                        lci = Formatting.SafeExp(b[i] * bx - se[i] * cit * bx);
-                                        uci = Formatting.SafeExp(b[i] * bx + se[i] * cit * bx);
-                                    }
-                                    else
-                                    {
-                                        lci = Constant.MISSING;
-                                        uci = Constant.MISSING;
-                                    }
-                                    parParameters.AddOutput("irr", host.RoundU(rr));
-                                    parParameters.AddOutput("ci", host.RoundU(lci) + "  to  " + host.RoundU(uci));
+                                    lci = Formatting.SafeExp(b[i] * bx - se[i] * cit * bx);
+                                    uci = Formatting.SafeExp(b[i] * bx + se[i] * cit * bx);
                                 }
+                                else
+                                {
+                                    lci = Constant.MISSING;
+                                    uci = Constant.MISSING;
+                                }
+                                parParameters.AddOutput("irr", host.RoundU(rr));
+                                parParameters.AddOutput("ci", host.RoundU(lci) + "  to  " + host.RoundU(uci));
                             }
                         }
                     }

@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 namespace StatsDirect.Templates
 {
     [Serializable]
-    public sealed class BooleanParameter: Parameter
+    public sealed class BooleanParameter: Parameter, IDefaultParameter<bool>
     {
         private Expression defaultValue;
 
@@ -14,8 +14,26 @@ namespace StatsDirect.Templates
             // Lifetime = ParameterLifetime.SessionForThisOperation;
         }
 
+        public bool? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
+        {
+            if (null == defaultValue || null == defaultValue.Body)
+                return null;
+            object o = processor.Evaluate(defaultValue, parameters);
+            if (o is Boolean)
+                return (bool)o;
+            return (bool?)o;
+        }
+
+        /// <summary>
+        /// true iff the parameter defines a default.
+        /// </summary>
+        public bool HasDefaultValue
+        {
+            get { return null != defaultValue; }
+        }
+
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValue
+        public Expression DefaultValueExpression
         {
             get { return defaultValue; }
             set { defaultValue = value; }

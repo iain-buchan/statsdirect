@@ -379,13 +379,35 @@ namespace StatsDirect.Templates
                     if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
                     {
                         IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
-                        if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
+                        switch (parameter.Type)
                         {
-                            ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
-                            if (savedParameters.ContainsKey(parameter.Name))
-                            {
-                                filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
-                            }
+                            case ParameterType.Options:
+                                {
+                                    if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
+                                    {
+                                        ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
+                                        foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
+                                        {
+                                            if (savedParameters.ContainsKey(opt.Name))
+                                            {
+                                                filledParameters.Add(opt.Name, savedParameters[opt.Name]);
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            default:
+                                {
+                                    if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
+                                    {
+                                        ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
+                                        if (savedParameters.ContainsKey(parameter.Name))
+                                        {
+                                            filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
+                                        }
+                                    }
+                                }
+                                break;
                         }
                     }
                     if (parameter.Lifetime == ParameterLifetime.SessionForAllOperations && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
@@ -515,27 +537,57 @@ namespace StatsDirect.Templates
             if (null == parameter || null == parameter.Name)
                 return;
 
-            // Find the parameter to remember.  If it's not present in the bag, do nothing.
-            FilledParameter filledParameterToSave;
-            if (!parameterBag.TryGetValue(parameter.Name, out filledParameterToSave))
-                return;
-
             switch (parameter.Lifetime)
             {
                 case ParameterLifetime.SessionForThisOperation:
                     {
                         IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
                         ParameterBag savedParameterBag;
-                        if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
+                        switch (parameter.Type)
                         {
-                            savedParameterBag = new ParameterBag();
-                            savedParametersPerOperation.Add(parameter.Operation.Name, savedParameterBag);
+                            case ParameterType.Options:
+                                {
+                                    foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
+                                    {
+                                        // Find the parameter to remember.  If it's not present in the bag, do nothing.
+                                        FilledParameter filledParameterToSave;
+                                        if (!parameterBag.TryGetValue(opt.Name, out filledParameterToSave))
+                                            continue;
+
+                                        if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
+                                        {
+                                            savedParameterBag = new ParameterBag();
+                                            savedParametersPerOperation.Add(parameter.Operation.Name, savedParameterBag);
+                                        }
+                                        savedParameterBag[opt.Name] = filledParameterToSave;
+                                    }
+                                }
+                                break;
+                            default:
+                                {
+                                    // Find the parameter to remember.  If it's not present in the bag, do nothing.
+                                    FilledParameter filledParameterToSave;
+                                    if (!parameterBag.TryGetValue(parameter.Name, out filledParameterToSave))
+                                        return;
+
+                                    if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
+                                    {
+                                        savedParameterBag = new ParameterBag();
+                                        savedParametersPerOperation.Add(parameter.Operation.Name, savedParameterBag);
+                                    }
+                                    savedParameterBag[parameter.Name] = filledParameterToSave;
+                                }
+                                break;
                         }
-                        savedParameterBag[parameter.Name] = filledParameterToSave;
                     }
                     break;
                 case ParameterLifetime.SessionForAllOperations:
                     {
+                        // Find the parameter to remember.  If it's not present in the bag, do nothing.
+                        FilledParameter filledParameterToSave;
+                        if (!parameterBag.TryGetValue(parameter.Name, out filledParameterToSave))
+                            return;
+
                         ParameterBag savedParameterBag = host.SessionParametersAcrossOperations;
                         savedParameterBag[parameter.Name] = filledParameterToSave;
                     }

@@ -375,6 +375,7 @@ namespace StatsDirect.Builtins
             sb.AppendLine(Formatting.PadTo("Upper quartile", k) + Formatting.RoundOut(sx.UpperQuartile, flt));
             sb.AppendLine(Formatting.PadTo("Median", k) + Formatting.RoundOut(sx.Median, flt));
             sb.AppendLine(Formatting.PadTo("Lower quartile", k) + Formatting.RoundOut(sx.LowerQuartile, flt));
+            sb.AppendLine(Formatting.PadTo("Interquartile range", k) + Formatting.RoundOut(sx.InterquartileRange, flt));
             sb.AppendLine(Formatting.PadTo("5th percentile", k) + Formatting.RoundOut(sx.UserCentileL, flt));
             sb.AppendLine(Formatting.PadTo("Minimum", k) + Formatting.RoundOut(sx.Minimum, flt));
             sb.AppendLine(Formatting.PadTo("Range", k) + Formatting.RoundOut(sx.Range, flt));
@@ -414,10 +415,11 @@ namespace StatsDirect.Builtins
             UpperQuartile = 14,
             Median = 15,
             LowerQuartile = 16,
-            Minimum = 17,
-            Range = 18,
-            Udc1 = 19,
-            Udc2 = 20
+            InterquartileRange = 17,
+            Minimum = 18,
+            Range = 19,
+            Udc1 = 20,
+            Udc2 = 21
         };
 
         private static StepResult RptDescriptive(ITemplateHost host, ParameterBag parameters, bool isWeighted)
@@ -509,7 +511,7 @@ namespace StatsDirect.Builtins
             double GAMMA = parameters["gamma"].AsDouble;
             string qxcl = " " + Formatting.XRound(GAMMA * 100, 1) + "% CL of mean";
             string sumTitle = isWeighted ? "Sum of weights" : "Sum";
-            string[] titles = { "Valid data", "Missing data", sumTitle, "Mean", "Variance", "Standard deviation", "Variance coefficient", "Standard error of mean", "Upper" + qxcl, "Lower" + qxcl, "Geometric mean", "Skewness", "Kurtosis", "Maximum", "Upper quartile", "Median", "Lower quartile", "Minimum", "Range", "User defined centiles", null };
+            string[] titles = { "Valid data", "Missing data", sumTitle, "Mean", "Variance", "Standard deviation", "Variance coefficient", "Standard error of mean", "Upper" + qxcl, "Lower" + qxcl, "Geometric mean", "Skewness", "Kurtosis", "Maximum", "Upper quartile", "Median", "Lower quartile", "Interquartile range", "Minimum", "Range", "User defined centiles", null };
 
             Dictionary<SummaryType, bool> shouldOutput = new Dictionary<SummaryType, bool>();
             shouldOutput[SummaryType.ValidData] = parameters["report-valid-data"].AsBoolean;
@@ -529,16 +531,15 @@ namespace StatsDirect.Builtins
             shouldOutput[SummaryType.UpperQuartile] = parameters["report-uq"].AsBoolean;
             shouldOutput[SummaryType.Median] = parameters["report-median"].AsBoolean;
             shouldOutput[SummaryType.LowerQuartile] = parameters["report-lq"].AsBoolean;
+            shouldOutput[SummaryType.InterquartileRange] = parameters["report-iqr"].AsBoolean;
             shouldOutput[SummaryType.Minimum] = parameters["report-minimum"].AsBoolean;
             shouldOutput[SummaryType.Range] = parameters["report-range"].AsBoolean;
             shouldOutput[SummaryType.Udc1] = parameters["report-udc"].AsBoolean;
             shouldOutput[SummaryType.Udc2] = parameters["report-udc"].AsBoolean;
 
-            int userCentileA1 = Convert.ToInt32(parameters["report-udca"].AsDouble);
-            int userCentileB1 = Convert.ToInt32(parameters["report-udcb"].AsDouble);
+            double centxl = parameters["report-udca"].AsDouble * 100.0;
+            double centxu = parameters["report-udcb"].AsDouble * 100.0;
             int prevCentileType = Parsing.Cint_Txt(parameters["report-centile-type"].AsString);
-            double centxl = userCentileA1;
-            double centxu = userCentileB1;
             // prevchk1 = true; 
             // If there's no output-to-frame, we're being called from the summary - which always wants this.
             bool shouldSave = !parameters.ContainsKey("output-to-frame") || parameters["output-to-frame"].AsBoolean;
@@ -590,28 +591,12 @@ namespace StatsDirect.Builtins
                         lc += 1;
                     }
                 }
-                int userCentileA2 = userCentileA1;
-                int userCentileB2 = userCentileB1;
-                centxl = userCentileA2;
-                centxu = userCentileB2;
 
-                // recalculate if centiles selected have changed
-                if ((userCentileA2 > 0 && userCentileA2 != userCentileA1) || (userCentileB2 > 0 && userCentileB2 != userCentileB1))
-                {
-                    for (int i = 0; i < cols; i++)
-                    {
-                        if (isWeighted)
-                            sx[i].WeightedSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, w, wti, nsumwt);
-                        else
-                            sx[i].FullSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, prevCentileType);
-                    }
-                }
-
-                if (userCentileA2 > 0)
+                if (centxl > 0)
                 {
                     lc += 1;
                 }
-                if (userCentileB2 > 0)
+                if (centxu > 0)
                 {
                     lc += 1;
                 }
@@ -779,6 +764,9 @@ namespace StatsDirect.Builtins
                 case SummaryType.LowerQuartile:
                     res = sx.LowerQuartile;
                     break;
+                case SummaryType.InterquartileRange:
+                    res = sx.InterquartileRange;
+                    break;
                 case SummaryType.Minimum:
                     res = sx.Minimum;
                     break;
@@ -884,6 +872,9 @@ namespace StatsDirect.Builtins
                             break;
                         case SummaryType.LowerQuartile:
                             res = host.RoundU(sx[i].LowerQuartile);
+                            break;
+                        case SummaryType.InterquartileRange:
+                            res = host.RoundU(sx[i].InterquartileRange);
                             break;
                         case SummaryType.Minimum:
                             res = host.RoundU(sx[i].Minimum);
@@ -1339,6 +1330,7 @@ namespace StatsDirect.Builtins
                         summary.UpperQuartile = sx.UpperQuartile;
                         summary.Median = sx.Median;
                         summary.LowerQuartile = sx.LowerQuartile;
+                        summary.InterquartileRange = sx.InterquartileRange;
                     }
                 }
 

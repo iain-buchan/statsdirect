@@ -22,5 +22,6 @@ namespace StatsDirect.Builtins
         public double Median { get; set; }
         public double LowerQuartile { get; set; }
         public double UpperQuartile { get; set; }
+        public double InterquartileRange { get; set; }
     }
 }

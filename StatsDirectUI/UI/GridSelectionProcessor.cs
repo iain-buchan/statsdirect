@@ -297,7 +297,7 @@ namespace StatsDirect.UI
 
         public GroupedCovarianceData FillGroupedCovarianceParameter()
         {
-            double[, ,] y = null;
+            double[,,] y = null;
             int k = 0;
             int maxr = 0;
             int maxreps = 0;
@@ -308,7 +308,6 @@ namespace StatsDirect.UI
             ClearSelection();
             while (true)
             {
-                double GAMMA;
                 double[,] xt;
                 if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
@@ -334,7 +333,6 @@ namespace StatsDirect.UI
                         ITemplateHost host = SdApplication.SoleInstance;
                         ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter { CanDefault = true, Name = "ci" };
                         ParameterBag filledCi = host.FillParameter(new TemplateProcessor(host), ciParam, new ParameterBag(), false);
-                        GAMMA = filledCi["ci"].AsDouble;
 
                         // If we get here, the operation acquired all its parameters successfully
                         GroupedCovarianceData gcd = new GroupedCovarianceData
@@ -343,7 +341,7 @@ namespace StatsDirect.UI
                             b = b,
                             bnam = bnam,
                             cx = cx,
-                            GAMMA = GAMMA,
+                            GAMMA = filledCi["ci"].AsDouble,
                             k = k,
                             maxr = maxr,
                             maxreps = maxreps,
@@ -401,28 +399,11 @@ namespace StatsDirect.UI
                     }
                     if (xlab.Length > 70)
                         xlab = xlab.Substring(0, 70);
-                    OptionDescriptor descriptor = new OptionDescriptor { Title = "Grouped linear covariance" };
-                    CheckBoxDescriptor useYReplicatesDescriptor = new CheckBoxDescriptor { Text = "Use Y replicates" };
-                    descriptor.CheckBoxes.Add(useYReplicatesDescriptor);
-                    SelectionBoxDescriptor ciDescriptor = null;
-                    if (!SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
-                    {
-                        ciDescriptor = new SelectionBoxDescriptor { Title = "Confidence (%)" };
-                        ciDescriptor.SetAsConfidence();
-                        descriptor.SelectionBoxes.Add(ciDescriptor);
-                    }
-                    if (null == SdApplication.SoleInstance.DisplayOptions(descriptor))
-                        break;
 
-                    bool yrep = useYReplicatesDescriptor.Checked;
-                    if (!SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval && null != ciDescriptor)
-                    {
-                        GAMMA = Parsing.Cdbl_Txt(ciDescriptor.Value) / 100.0;
-                    }
-                    else
-                    {
-                        GAMMA = SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval;
-                    }
+                    ITemplateHost host = SdApplication.SoleInstance;
+                    bool yrep = host.GetBoolean("Use Y replicates", "Grouped linear covariance", false, out cancelled);
+                    if (cancelled)
+                        break;
                     double[] b = new double[k + 1];
                     double[] a = new double[k + 1];
                     string[] bnam = new string[k + 1];
@@ -500,6 +481,9 @@ namespace StatsDirect.UI
                         }
                     }
 
+                    ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter { CanDefault = true, Name = "ci" };
+                    ParameterBag filledCi = host.FillParameter(new TemplateProcessor(host), ciParam, new ParameterBag(), false);
+
                     // If we get here, the operation acquired all its parameters successfully
                     GroupedCovarianceData gcd = new GroupedCovarianceData
                     {
@@ -507,7 +491,7 @@ namespace StatsDirect.UI
                         b = b,
                         bnam = bnam,
                         cx = cx,
-                        GAMMA = GAMMA,
+                        GAMMA = filledCi["ci"].AsDouble,
                         k = k,
                         maxr = maxr,
                         maxreps = maxreps,

@@ -1475,9 +1475,14 @@ namespace StatsDirect.UI
                                 else
                                 {
                                     // Dummies
-                                    DataFrame dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, variable);
-                                    foreach (Variable v in dummyFrame.Variables)
-                                        frame.Variables.Add(v);
+                                    DataFrame dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, variable, true);
+                                    if (null != dummyFrame)
+                                    {
+                                        foreach (Variable v in dummyFrame.Variables)
+                                            frame.Variables.Add(v);
+                                    }
+                                    else
+                                        frame.Variables.Add(variable);
                                 }
                             }
                             else
@@ -1543,7 +1548,7 @@ namespace StatsDirect.UI
                                         DataFrame dummyFrame;
                                         try
                                         {
-                                            dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, cv);
+                                            dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, cv, true);
                                         }
                                         catch (TemplateOperationCancelledException)
                                         {
@@ -2392,21 +2397,32 @@ namespace StatsDirect.UI
 
         private void describeColumnDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // This describes the column.  If there's not a column selection... select it!
-            if (workbookView.RangeSelection.CellCount < 2)
+            try
             {
-                workbookView.GetLock();
-                try
+                // This describes the column.  If there's not a column selection... select it!
+                if (workbookView.RangeSelection.CellCount < 2)
                 {
-                    IRange cellSelection = workbookView.RangeSelection;
-                    cellSelection.EntireColumn.Select();
+                    workbookView.GetLock();
+                    try
+                    {
+                        IRange cellSelection = workbookView.RangeSelection;
+                        cellSelection.EntireColumn.Select();
+                    }
+                    finally
+                    {
+                        workbookView.ReleaseLock();
+                    }
                 }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
+                DoOperation("QuickSummary");
             }
-            DoOperation("QuickSummary");
+            catch (CancelCurrentOperationAndDoException)
+            {
+                // Give up!
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Description failed", ex, false);
+            }
         }
 
         private void fillDownToolStripMenuItem_Click(object sender, EventArgs e)

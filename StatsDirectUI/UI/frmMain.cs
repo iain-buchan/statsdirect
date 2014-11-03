@@ -490,6 +490,17 @@ namespace StatsDirect.UI
             SdApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
 #if RELEASE_EXCEPTIONS
             }
+            catch (CancelCurrentOperationAndDoException ex)
+            {
+                if (InOperation)
+                {
+                    PuntThroughEventLoop(ex);
+                }
+                else
+                {
+                    throw;
+                }
+            }
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.EraseAnyOutstandingParameters();
@@ -1973,12 +1984,12 @@ namespace StatsDirect.UI
                                 else
                                 {
                                     // The CI cannot be defaulted; use our standard decision
-                                    return ((ITemplateHost)SdApplication.SoleInstance).CanCombine(p);
+                                    return SdApplication.SoleInstance.CanCombine(p);
                                 }
                             }
                             else
                             {
-                                return ((ITemplateHost)SdApplication.SoleInstance).CanCombine(p);
+                                return SdApplication.SoleInstance.CanCombine(p);
                             }
                         }
                     }
@@ -2560,8 +2571,12 @@ namespace StatsDirect.UI
             }
             else
             {
-                if (null != parameter.DefaultValue)
-                    cb.Checked = (bool)processor.Evaluate(parameter.DefaultValue, context);
+                bool? defaultValue = parameter.DefaultValue(processor, context);
+                if (defaultValue.HasValue)
+                {
+                    cb.Checked = defaultValue.Value;
+                    context.AddInput(parameter.Name, defaultValue.Value);
+                }
                 else
                     cb.Checked = false;
             }
@@ -2764,12 +2779,12 @@ namespace StatsDirect.UI
             tlp.Controls.Add(txt);
 
             Label lbl = new Label
-                            {
-                                Tag = parameter,
-                                Padding = new Padding(0, 6, 0, 3),
-                                AutoSize = true,
-                                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
-                            };
+            {
+                Tag = parameter,
+                Padding = new Padding(0, 6, 0, 3),
+                AutoSize = true,
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+            };
             tlp.Controls.Add(lbl);
             MaybeAddHelpTip(lbl, parameter);
             return null;
@@ -3018,82 +3033,6 @@ namespace StatsDirect.UI
             tlp.SetColumnSpan(panel2By2ByK, 2);
 
             return null;
-            /* Old version
-            TableLayoutPanel tlp = GetUserInputTable();
-            DataGridView gridEditGrid = new DataGridView();
-            ((ISupportInitialize)gridEditGrid).BeginInit();
-            DataGridViewTextBoxColumn col1 = new DataGridViewTextBoxColumn();
-            DataGridViewTextBoxColumn col2 = new DataGridViewTextBoxColumn();
-            gridEditGrid.Tag = double2By2ByKParameter;
-            gridEditGrid.AllowUserToAddRows = false;
-            gridEditGrid.AllowUserToDeleteRows = false;
-            gridEditGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridEditGrid.ColumnHeadersVisible = false;
-            gridEditGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { col1, col2 });
-            gridEditGrid.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-            gridEditGrid.MultiSelect = false;
-            gridEditGrid.Name = "gridEditGrid";
-            gridEditGrid.RowHeadersVisible = false;
-            gridEditGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            gridEditGrid.Size = new System.Drawing.Size(250, 48);
-            col1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            col1.HeaderText = "Key";
-            col1.Name = "col1";
-            col1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            col1.Width = 100;
-            col2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            col2.Width = 100;
-            col2.Name = "col2";
-            col2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            gridEditGrid.Rows.Add(900);
-            for (int table = 1; table <= 300; table++)
-            {
-                int headerRow = (table - 1) * 3;
-                DataGridViewRow r = gridEditGrid.Rows[headerRow];
-                r.DefaultCellStyle.BackColor = Color.Black;
-                r.DefaultCellStyle.ForeColor = Color.White;
-                r.Cells[0].Value = "Table " + table.ToString();
-                r.ReadOnly = true;
-            }
-            tlp.Controls.Add(gridEditGrid);
-            ((ISupportInitialize)gridEditGrid).EndInit();
-
-            if (context.ContainsKey(double2By2ByKParameter.Name) && null != context[double2By2ByKParameter.Name] && context[double2By2ByKParameter.Name].IsInputParameter && context[double2By2ByKParameter.Name].IsDataFrame)
-            {
-                Data.DataFrame sourceFrame = context[double2By2ByKParameter.Name].AsDataFrame;
-                int tableCount = Math.Min(300, sourceFrame.MinRows / 2);
-                if (sourceFrame.VariableCount == 2 && sourceFrame.Variables[0].IsDoubleVariable && sourceFrame.Variables[1].IsDoubleVariable)
-                {
-                    Data.DoubleVariable var1 = sourceFrame.Variables[0].AsDoubleVariable;
-                    Data.DoubleVariable var2 = sourceFrame.Variables[1].AsDoubleVariable;
-                    for (int table = 0; table < tableCount; table++)
-                    {
-                        int gridBase = table * 3 + 1;
-                        int varBase = table * 2;
-                        gridEditGrid.Rows[gridBase].Cells[0].Value = var1.Data[varBase];
-                        gridEditGrid.Rows[gridBase].Cells[1].Value = var2.Data[varBase];
-                        gridEditGrid.Rows[gridBase + 1].Cells[0].Value = var1.Data[varBase + 1];
-                        gridEditGrid.Rows[gridBase + 1].Cells[1].Value = var2.Data[varBase + 1];
-                    }
-                }
-            }
-            gridEditGrid.Size = new Size(250, 200);
-            gridEditGrid.MaximumSize = new Size(250, 200);
-            gridEditGrid.ScrollBars = ScrollBars.Vertical;
-            gridEditGrid.CurrentCell = gridEditGrid.Rows[1].Cells[0];
-            gridEditGrid.Visible = true;
-
-            Label lbl = new Label();
-            lbl.Tag = double2By2ByKParameter;
-            lbl.Padding = new Padding(3, 6, 3, 3);
-            lbl.AutoSize = true;
-            if (double2By2ByKParameter.HasPrompt)
-                lbl.Text = double2By2ByKParameter.Prompt(processor, context);
-            else
-                lbl.Text = "";
-            tlp.Controls.Add(lbl);
-            return null;
-             */
         }
 
         static void cmdPrevious_KeyPress(object sender, EventArgs e)
@@ -3325,9 +3264,6 @@ namespace StatsDirect.UI
                 case "GraphicsOptions":
                     ctl = new ctlGraphicsOptions();
                     break;
-                case "OptionDescriptor":
-                    ctl = new ctlOptions((OptionDescriptor)fillable);
-                    break;
                 case "ROCCutoff":
                     {
                         ROCCutoff rc = (ROCCutoff)fillable;
@@ -3456,7 +3392,9 @@ namespace StatsDirect.UI
             {
                 if (parameter.HasDefaultValue)
                 {
-                    txt.Text = parameter.DefaultValue(processor, context).ToString();
+                    int? defaultValue = parameter.DefaultValue(processor, context);
+                    if (defaultValue.HasValue)
+                        txt.Text = defaultValue.Value.ToString();
                 }
             }
             AddAppropriateEventHandlersTo(txt);
@@ -3697,17 +3635,16 @@ namespace StatsDirect.UI
             {
                 bool isChecked = optionsOption.Selected;
                 if (context.ContainsKey(optionsOption.Name) && null != context[optionsOption.Name] && context[optionsOption.Name].IsInputParameter)
-                {
                     isChecked = context[optionsOption.Name].AsBoolean;
-                }
+
                 CheckBox chk = new CheckBox
-                                   {
-                                       AutoSize = true,
-                                       Text = optionsOption.Label,
-                                       Checked = isChecked,
-                                       Tag = optionsOption,
-                                       UseVisualStyleBackColor = true
-                                   };
+                {
+                    AutoSize = true,
+                    Text = optionsOption.Label,
+                    Checked = isChecked,
+                    Tag = optionsOption,
+                    UseVisualStyleBackColor = true
+                };
                 panelOptions.Controls.Add(chk);
             }
 

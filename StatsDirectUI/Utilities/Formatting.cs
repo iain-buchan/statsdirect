@@ -30,11 +30,13 @@ namespace StatsDirect.Utilities
             try
             {
                 if (Constant.MISSING == amount || -Constant.MISSING == amount)
-                    return "*";
+                    return ASTERISK;
                 if (Double.IsPositiveInfinity(amount))
                     return INFRES;
                 if (Double.IsNegativeInfinity(amount))
                     return INFRESNEG;
+                if (Double.IsNaN(amount))
+                    return ASTERISK;
             }
             catch
             {
@@ -50,11 +52,13 @@ namespace StatsDirect.Utilities
             try
             {
                 if (Constant.MISSING == amount || -Constant.MISSING == amount)
-                    return "*";
+                    return ASTERISK;
                 if (Double.IsPositiveInfinity(amount))
                     return INFRES;
                 if (Double.IsNegativeInfinity(amount))
                     return INFRESNEG;
+                if (Double.IsNaN(amount))
+                    return ASTERISK;
             }
             catch
             {
@@ -75,11 +79,13 @@ namespace StatsDirect.Utilities
                         decpm = 4;
                 }
                 if (Constant.MISSING == x || -Constant.MISSING == x)
-                    return "*";
+                    return ASTERISK;
                 if (Double.IsPositiveInfinity(x))
                     return INFRES;
                 if (Double.IsNegativeInfinity(x))
                     return INFRESNEG;
+                if (Double.IsNaN(x))
+                    return ASTERISK;
             }
             catch
             {
@@ -101,11 +107,13 @@ namespace StatsDirect.Utilities
         public static string RoundMeta(double x, double min, int decpm)
         {
             if (Constant.MISSING == x || -Constant.MISSING == x)
-                return "*";
+                return ASTERISK;
             if (Double.IsPositiveInfinity(x))
                 return INFRES;
             if (Double.IsNegativeInfinity(x))
                 return INFRESNEG;
+            if (Double.IsNaN(x))
+                return ASTERISK;
             try
             {
                 if (Math.Abs(x) < Math.Pow(10, -decpm) && 0 != x)

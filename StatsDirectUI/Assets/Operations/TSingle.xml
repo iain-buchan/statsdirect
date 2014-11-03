@@ -6,10 +6,6 @@
   <steps>
     <settings>
       <parameters>
-        <confidence-interval>
-          <name>gamma</name>
-          <lifetime>SessionForThisOperation</lifetime>
-        </confidence-interval>
         <frame>
           <name>data</name>
           <prompt>Select DATA</prompt>
@@ -19,6 +15,17 @@
           <max-columns>1</max-columns>
           <ask-for-group-id>false</ask-for-group-id>
         </frame>
+        <confidence-interval>
+          <name>gamma</name>
+          <lifetime>SessionForThisOperation</lifetime>
+        </confidence-interval>
+        <double>
+          <name>population-mean</name>
+          <prompt>Population mean</prompt>
+          <must-request>true</must-request>
+          <lifetime>SessionForThisOperation</lifetime>
+          <default-value>0</default-value>
+        </double>
       </parameters>
     </settings>
 	<builtin function-name="rptTSingle" />

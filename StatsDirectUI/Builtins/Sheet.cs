@@ -293,13 +293,14 @@ namespace StatsDirect.Builtins
         {
             DataFrame data = parameters["data"].AsDataFrame;
             ClassifierVariable categoryVariable = data.Variables[0].AsClassifierVariable;
-            DataFrame outputFrame = ToDummyVariables(host, categoryVariable);
+            DataFrame outputFrame = ToDummyVariables(host, categoryVariable, false);
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-        public static DataFrame ToDummyVariables(ITemplateHost host, ClassifierVariable categoryVariable)
+        /// <returns>null if the user wishes to treat the data as continuous (in which case the caller should probably use the variable that has been passed in), otherwise a frame of dummies.</returns>
+        public static DataFrame ToDummyVariables(ITemplateHost host, ClassifierVariable categoryVariable, bool allowContinuous)
         {
             int rows = categoryVariable.Length;
             int cats = categoryVariable.GroupCount;
@@ -372,7 +373,7 @@ namespace StatsDirect.Builtins
             // sort categories by label to be consistent with Stata xi etc.
             Array.Sort(gcat, 0, ng);
 
-            DummyOptions dm = new DummyOptions { LargestCategoryTitle = maxcatti, CategoryNames = new List<string>(), VariableName = categoryVariable.Title };
+            DummyOptions dm = new DummyOptions { LargestCategoryTitle = maxcatti, CategoryNames = new List<string>(), VariableName = categoryVariable.Title, AllowUserToTreatAsContinuous = allowContinuous };
             for (int j = 0; j < ng; j++)
                 dm.CategoryNames.Add(gcat[j].Title);
             bool wasOk = null != host.Amend(dm, new ParameterBag());

@@ -53,20 +53,18 @@ namespace StatsDirect.UI
             {
                 loader.Show();
                 Application.DoEvents(); // Force display of the show form
-                Debug.WriteLine("After loader show: {0}", sw.ElapsedMilliseconds);
+
+                // Prep a background check for new version, if there is one.  This will tidy up after itself.
+                new frmUpdateCheck(true);
 
                 // Preload and parse XML for operations
                 Templates.TemplateFactory.LoadOperationsAsync();
-                Debug.WriteLine("After async operations start: {0}", sw.ElapsedMilliseconds);
 
                 CheckExcelAddIn();
-                Debug.WriteLine("After CheckExcelAddIn: {0}", sw.ElapsedMilliseconds);
                 SetupInitialFiles();
-                Debug.WriteLine("After SetupInitialFiles: {0}", sw.ElapsedMilliseconds);
 
                 // Preload a report, to ensure all the report libraries are ready to go.
                 PreloadReport();
-                Debug.WriteLine("PreloadReport: {0}", sw.ElapsedMilliseconds);
 
                 // Perform any UI hooks we need to...
                 SetupUserInterface();
@@ -77,7 +75,6 @@ namespace StatsDirect.UI
 
                 // ... and go!
                 loader.Hide();
-                Debug.WriteLine("End: {0}", sw.ElapsedMilliseconds);
             }
 
             if (args.Length >= 2)

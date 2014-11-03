@@ -25,6 +25,7 @@ namespace StatsDirect.Numerics
         public double UpperQuartile { get; set; }
         public double Median { get; set; }
         public double LowerQuartile { get; set; }
+        public double InterquartileRange { get; set; }
         public double Minimum { get; set; }
         public double UserCentileL { get; set; }
         public double UserCentileU { get; set; }
@@ -164,6 +165,7 @@ namespace StatsDirect.Numerics
                 UpperQuartile = GetCentile(xs, ValidData, 0.75);
                 Maximum = GetCentile(xs, ValidData, 1);
                 Range = Maximum - Minimum;
+                InterquartileRange = UpperQuartile - LowerQuartile;
                 UserCentileL = doUserCentL ? GetCentile(xs, ValidData, userCentL / 100.0) : Constant.MISSING;
                 UserCentileU = doUserCentU ? GetCentile(xs, ValidData, userCentU / 100.0) : Constant.MISSING;
 
@@ -271,6 +273,7 @@ namespace StatsDirect.Numerics
                 Skewness = Constant.MISSING;
                 Kurtosis = Constant.MISSING;
                 LowerQuartile = Constant.MISSING;
+                InterquartileRange = Constant.MISSING;
                 UpperQuartile = Constant.MISSING;
                 UserCentileL = Constant.MISSING;
                 UserCentileU = Constant.MISSING;
@@ -291,6 +294,7 @@ namespace StatsDirect.Numerics
             Skewness = Constant.MISSING;
             Kurtosis = Constant.MISSING;
             LowerQuartile = Constant.MISSING;
+            InterquartileRange = Constant.MISSING;
             UpperQuartile = Constant.MISSING;
             UserCentileL = Constant.MISSING;
             UserCentileU = Constant.MISSING;
