@@ -1464,23 +1464,13 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static double OddsRatio(double a, double b, double c, double d)
+        public static double OddsRatio(double diseasedExposed, double healthyExposed, double diseasedNotExposed, double healthyNotExposed)
         {
-            double odr;
-            if ((a == 0) || (d == 0))
-            {
-                odr = 0;
-            }
-            else if ((b == 0) || (c == 0))
-            {
-                odr = double.PositiveInfinity;
-            }
-            else
-            {
-                odr = (a * c) / (b * d);
-            }
-            return odr;
+            if ((diseasedExposed == 0) || (healthyNotExposed == 0))
+                return 0;
+            if ((healthyExposed == 0) || (diseasedNotExposed == 0))
+                return double.PositiveInfinity;
+            return (diseasedExposed * healthyNotExposed) / (healthyExposed * diseasedNotExposed);
         }
-
     }
 }
