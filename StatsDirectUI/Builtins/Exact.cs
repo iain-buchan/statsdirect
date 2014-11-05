@@ -286,17 +286,13 @@ namespace StatsDirect.Builtins
                     for (j = 1; j <= a2; j++)
                     {
                         if (h1[j] > h)
-                        {
                             break;
-                        }
                         f = f1[j];
                     }
 
                     double g2 = 2.0 * g;
                     if (g2 > 1.0)
-                    {
                         g2 = 1.0;
-                    }
                     outputParameters.AddOutput("tail_1", "(upper tail)");
                     outputParameters.AddOutput("p_1", host.RoundU(g));
                     outputParameters.AddOutput("p_1d", host.RoundU(g2));
@@ -305,22 +301,18 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-
                     f = f1[a1];
                     g = 0.0;
                     for (j = a2; j >= 1; j--)
                     {
                         if (h1[j] > h)
-                        {
                             break;
-                        }
                         g = g1[j];
                     }
                     double f2 = 2.0 * f;
                     if (f2 > 1.0)
-                    {
                         f2 = 1.0;
-                    }
+
                     outputParameters.AddOutput("tail_1", "(lower tail)");
                     outputParameters.AddOutput("p_1", host.RoundU(f));
                     outputParameters.AddOutput("p_1d", host.RoundU(f2));
@@ -330,11 +322,9 @@ namespace StatsDirect.Builtins
 
                 double z = f + g;
                 if (z > 1.0)
-                {
                     z = 1.0;
-                }
-                outputParameters.AddOutput("p_2", host.RoundU(z));
 
+                outputParameters.AddOutput("p_2", host.RoundU(z));
                 outputParameters.AddOutput("mid_p", host.RoundU(midP));
                 outputParameters.AddOutput("mid_p_2", host.RoundU(Math.Min(midP * 2.0, 1.0)));
 
@@ -502,30 +492,16 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptExactORCML(ITemplateHost host, ParameterBag parameters)
         {
-            double odr;
-            int ierr;
-            double p2m;
-            double p1m;
-            double p2f;
-            double p1f;
-            double llm;
-            double ulm;
-            double llf;
-            double ulf;
-            double eor = 0;
-            double a,b,c,d;
             // Gart replaced by CML in May 2001
 
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
-            {
                 cco = 0.95;
-            }
 
-            a = parameters["a"].AsDouble;
-            b = parameters["b"].AsDouble;
-            c = parameters["c"].AsDouble;
-            d = parameters["d"].AsDouble;
+            double a = parameters["a"].AsDouble;
+            double b = parameters["b"].AsDouble;
+            double c = parameters["c"].AsDouble;
+            double d = parameters["d"].AsDouble;
 
             //  RTF_LoadTemplate("orci.rtf")
             ParameterBag outputParameters = new ParameterBag();
@@ -552,8 +528,18 @@ namespace StatsDirect.Builtins
             //{
             //    obsOr = double.PositiveInfinity;
             //}
+            int ierr;
+            double p2m;
+            double p1m;
+            double p2f;
+            double p1f;
+            double llm;
+            double ulm;
+            double llf;
+            double ulf;
+            double eor = 0;
             ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out ierr);
-            odr = ExactBB.OddsRatio(a, b, c, d);
+            double odr = ExactBB.OddsRatio(a, b, c, d);
             outputParameters.AddOutput("odds", host.RoundU(odr));
 
             //if (ierr != 0)
@@ -586,10 +572,9 @@ namespace StatsDirect.Builtins
         {
             double cco = parameters["cco"].AsDouble;
             double alpha = 1.0 - cco;
-            if (alpha <= 0.0 | alpha >= 1.0)
-            {
+            if (alpha <= 0.0 || alpha >= 1.0)
                 alpha = 0.05;
-            }
+
             double revents = parameters["revents"].AsDouble;
             double tar = parameters["tar"].AsDouble;
             if (tar <= 0.0)

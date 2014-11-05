@@ -493,10 +493,6 @@ namespace StatsDirect.Builtins
             if (gamma <= 0.0 | gamma >= 1.0)
                 gamma = 0.95;
 
-            //if (b * c <= 0 || d * m1 <= 0 || b * m1 <= 0 || d * m2 <= 0 || c + d <= 0)
-            //    throw new InvalidDataException();
-
-            //double odr = (a * d) / (b * c);
             double odr = ExactBB.OddsRatio(a, b, c, d);
 
             double p = 1.0 - ((1.0 - gamma) / 2.0);
@@ -1274,14 +1270,12 @@ namespace StatsDirect.Builtins
             double t4 = nc - xc;
 
             if (nc < 1.0 || nt < 1.0)
-            {
                 throw new InvalidDataException();
-            }
+
             double zl = parameters["cco"].AsDouble;
-            if (zl <= 0.0 | zl >= 1.0)
-            {
+            if (zl <= 0.0 || zl >= 1.0)
                 zl = 0.95;
-            }
+
             double zc = 1.0 - ((1.0 - zl) / 2.0);
             int ifault;
             zc = PDF.gauinv(zc, out ifault);

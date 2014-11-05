@@ -67,9 +67,8 @@ namespace StatsDirect.Builtins
 
             f = Math.Abs(f) - n / 2;
             if (f < 0)
-            {
                 f = 0;
-            }
+
             double x2C = f * f * n / (p * q * r * s);
             outputParameters.AddOutput("yates_chi", host.RoundU(x2C));
             outputParameters.AddOutput("yates_chi_p", host.pval(PDF.chivalp(x2C, 1.0)));
@@ -101,7 +100,7 @@ namespace StatsDirect.Builtins
                 ParameterBag oddsParameters = new ParameterBag();
                 oddsList.Add(oddsParameters);
                 // Woolf/logit CI
-                double odr=ExactBB.OddsRatio(a,b,c,d);
+                double odr=ExactBB.OddsRatio(a, b, c, d);
                 double yodr;
                 double xodr;
                 if (b * c > 0 && a * d > 0)
