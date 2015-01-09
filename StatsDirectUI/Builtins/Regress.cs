@@ -3051,7 +3051,7 @@ namespace StatsDirect.Builtins
             //  At this point, tt, tr, tw and pt contain valid data from row 1 to row newrows inclusive
 
             bool use_weights = false; int rank = 0; int df = 0;
-            double deviance = 0; double devx; double llx;
+            double deviance; double devx; double llx;
             const int maxit = 200;
             int fault;
             int records = newrows;
@@ -3127,7 +3127,7 @@ namespace StatsDirect.Builtins
             double[] offset = new double[records + 1 ];
             string dropped = "";
             string err_msg = "";
-            Regress1.X_Logistic_Regression(false, false, ref use_weights, records, x2, 1, select_x, 1, y, t, wt, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
+            Regress1.X_Logistic_Regression(false, false, ref use_weights, records, x2, 1, select_x, 1, y, t, wt, out deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
             int idfx = df;
             if (mean == false)
             {
@@ -3154,7 +3154,7 @@ namespace StatsDirect.Builtins
             offset = new double[records + 1];
             dropped = "";
             err_msg = "";
-            Regress1.X_Logistic_Regression(mean, false, ref use_weights, records, x, predictors, select_x, p, y, t, wt, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
+            Regress1.X_Logistic_Regression(mean, false, ref use_weights, records, x, predictors, select_x, p, y, t, wt, out deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
             if (fault != 0 && fault != 3)
             {
                 host.Error(err_msg, "Logistic Regression");
@@ -4343,23 +4343,76 @@ namespace StatsDirect.Builtins
             double[] dr = new double[n + 1];
             double[] h = new double[n + 1];
             double[] offst = new double[n + 1];
-            double dev = 0.0;
+            double dev;
             int df = 0;
             int rank = 0;
             bool iweight = true;
             int fault;
             dropped = "";
             err_msg = "";
-            Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, ref dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
-            LR_ModelSelectionOutput(host, parametersList, fault, label, b, se, mean, dev, devx, p, m, df, dfx, err_msg);
+            host.StartProgress("Checking significance with all predictors", false);
+            Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
+            LR_ModelSelectionOutput(host, parametersList, fault, label, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
+            host.FinishProgress();
 
-            // TODO: Now add variables one at time: select the one variable that gives max Akaike information to the model on each addition, building up to the full model again
+            // Now add predictors one at time: select the predictor that gives max Akaike information to the model on each addition, building up to the full model again
+            host.StartProgress("Selecting most informative predictors. Small models are tested first. Cancel will give interim results.", true);
+            bool[] previousSelection = new bool[p + 1]; // All blank initially; no previous selections.
+            int parms = mean ? 2 : 1;
+            double estimatedRegressionsToRun = m * (m + 1) / 2.0 + m;
+            int regressionsRun = 0;
+            while (true)
+            {
+                selectX = new bool[p + 1];
+                Array.Copy(previousSelection, selectX, p + 1);
+                int bestPredictorIndexSoFar = 0;
+                double minAkaikeInformationSoFar = double.MaxValue;
+                bool abandon = false;
+                for (int candidate = 1; candidate <= m; candidate++)
+                {
+                    // If we've already processed this one, don't do so again
+                    if (previousSelection[candidate])
+                        continue;
 
+                    // Check whether it's better than our best so far this run; if so, note the fact.
+                    // Lower AIC values are better - the value represents the information *lost* if this model is chosen.
+                    selectX[candidate] = true;
+                    Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
+                    if (host.UpdateProgress((++regressionsRun) / estimatedRegressionsToRun))
+                    {
+                        abandon = true;
+                        break;
+                    }
+                    double aic = dev + 2 * (1 + m);
+                    if (aic < minAkaikeInformationSoFar)
+                    {
+                        bestPredictorIndexSoFar = candidate;
+                        minAkaikeInformationSoFar = aic;
+                    }
+                    selectX[candidate] = false;
+                }
+
+                // Have we added all predictors (or has the user given up)?
+                if (bestPredictorIndexSoFar <= 0 || abandon)
+                    break;
+
+                // Re-do the regression with that predictor selected along with any others we may have from previous iterations
+                selectX[bestPredictorIndexSoFar] = true;
+                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
+                LR_ModelSelectionOutput(host, parametersList, fault, label, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
+                if (host.UpdateProgress((++regressionsRun) / estimatedRegressionsToRun))
+                    break;
+
+                // Go round again, remembering the predictor we've chosen this time
+                previousSelection = selectX;
+                parms++;
+            }
+            host.FinishProgress();
 
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-        private static void LR_ModelSelectionOutput(ITemplateHost host, List<ParameterBag> parametersList, int fault,string[] label, double[] b, double[] se, bool mean, double dev, double devx, int p, int m, int df, int dfx, string err_msg)
+        private static void LR_ModelSelectionOutput(ITemplateHost host, List<ParameterBag> parametersList, int fault,string[] label, double[] b, double[] se, bool mean, double dev, double devx, int p, int m, int df, int dfx, string err_msg, bool[] selectX)
         {
             ParameterBag parametersParameters = new ParameterBag();
             parametersList.Add(parametersParameters);
@@ -4370,33 +4423,29 @@ namespace StatsDirect.Builtins
             }
 
             string tx = "logit ";
-            if (label[0].Length > 0)
-                tx += label[0];
-            else
-                tx += "Y";
+            tx += (label[0].Length > 0) ? label[0] : "Y";
             tx += " = ";
-            int scoef = 0;
+            int significantCoefficients = 0;
+            int totalCoefficients = 0;
             for (int j = 1; j <= p; j++)
             {
-                if (j > 1 && b[j] >= 0.0)
+                bool isIntercept = mean && (j == 1);
+                // Only process this part of the model if it is selected
+                if (!isIntercept)
+                {
+                    int selectXIndex = mean ? j - 1 : j;
+                    if (!selectX[selectXIndex])
+                        continue;
+                }
+
+                if ((!isIntercept) && b[j] >= 0.0)
                     tx += "+";
                 tx += host.RoundU(b[j]);
-                double prob;
-                if (se[j] != 0.0)
-                {
-                    prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[j] / se[j])));
-                    if (prob < 0.05)
-                        scoef += 1;
-                    else if (prob >= 0.05 && prob < 0.2)
-                        tx += "~?NS";
-                    else
-                        tx += "~NS";
-                }
-                else
-                {
-                    prob = Constant.MISSING;
-                    tx += "~N/A";
-                }
+                bool isSignificant;
+                tx += SignificanceString(b, se, out isSignificant, j);
+                if (isSignificant)
+                    significantCoefficients++;
+                totalCoefficients++;
                 string q = mean ? (j > 1 ? label[j - 1] : " ") : label[j];
                 if (q.Length == 0)
                     tx += " X" + j.ToString();
@@ -4418,13 +4467,30 @@ namespace StatsDirect.Builtins
                 r2 = x2dev / devx;
             }
             parametersParameters.AddOutput("r2", host.RoundU(r2));
-            parametersParameters.AddOutput("scoef", scoef.ToString());
-            parametersParameters.AddOutput("ncoef", p.ToString());
+            parametersParameters.AddOutput("scoef", significantCoefficients.ToString());
+            parametersParameters.AddOutput("ncoef", totalCoefficients.ToString());
             parametersParameters.AddOutput("x2dev", host.RoundU(x2dev));
             parametersParameters.AddOutput("p_dev",
                                         dfx > 0
                                             ? host.pval(PDF.chivalp(x2dev, dfx - df))
                                             : Formatting.ASTERISK);
+        }
+
+        private static string SignificanceString(double[] b, double[] se, out bool isSignificant, int j)
+        {
+            isSignificant = false;
+            if (se[j] == 0.0)
+                return "~N/A";
+            double prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[j] / se[j])));
+            if (prob < 0.05)
+            {
+                isSignificant = true;
+                return string.Empty;
+            }
+            else if (prob >= 0.05 && prob < 0.2)
+                return "~?NS";
+            else
+                return "~NS";
         }
 
 
@@ -4658,7 +4724,7 @@ namespace StatsDirect.Builtins
                 int fault;
                 dropped = "";
                 err_msg = "";
-                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, ref dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
+                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
                 if (fault == 0)
                 {
                     booted++;
@@ -4741,7 +4807,7 @@ namespace StatsDirect.Builtins
             dropped = "";
             err_msg = "";
             int scrapFault;
-            Regress1.X_Logistic_Regression(mean, false, ref use_weights, n, x, predictors, isx, p, y, t, wt, ref dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out scrapFault, ref dropped, ref err_msg);
+            Regress1.X_Logistic_Regression(mean, false, ref use_weights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out scrapFault, ref dropped, ref err_msg);
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 

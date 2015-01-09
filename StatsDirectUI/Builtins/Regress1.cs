@@ -2500,8 +2500,8 @@ namespace StatsDirect.Builtins
         ///  Errors: Poisson
         ///  Link function: log
         ///  </summary>
-
-        public static void X_Poisson_Regression(bool use_intercept, bool use_offset, ref bool use_weights, int records, double[,] x, int predictors, bool[] select_x, int parameters, double[] y, double[] t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fits, double[] deviance_residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
+        /// <param name="selectX">If the nth element is true, include the nth predictor in the regression; if false, exclude it.</param>
+        public static void X_Poisson_Regression(bool use_intercept, bool use_offset, ref bool use_weights, int records, double[,] x, int predictors, bool[] selectX, int parameters, double[] y, double[] t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fits, double[] deviance_residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
         {
             double ti = 0;
 
@@ -2548,7 +2548,7 @@ namespace StatsDirect.Builtins
                     }
                     if (weight[i] > 0.0)
                     {
-                        observations = observations + 1;
+                        observations++;
                     }
                 }
             }
@@ -2559,7 +2559,7 @@ namespace StatsDirect.Builtins
             int count = 0;
             for (i = 1; i <= predictors; i++)
             {
-                if (select_x[i])
+                if (selectX[i])
                 {
                     count++;
                 }
@@ -2618,11 +2618,11 @@ namespace StatsDirect.Builtins
             X_Poisson_Starting_Values(records, y, fits, eta, weight, observations);
             // iteratively re-weighted least squares by SVD
             int iter;
-            X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, select_x, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
+            X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, selectX, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
             // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
             if (dropped.Length > 0)
             {
-                X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, select_x, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
+                X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, selectX, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
             }
             if (err_level == 2)
             {
@@ -2636,7 +2636,7 @@ namespace StatsDirect.Builtins
             else
             {
                 // get leverages from matrix of derivatives
-                X_Legerage_From_Derivative(use_intercept, records, predictors, x, select_x, parameters, decomposition, rank, wwt, leverage, tmp);
+                X_Legerage_From_Derivative(use_intercept, records, predictors, x, selectX, parameters, decomposition, rank, wwt, leverage, tmp);
             }
             if (use_weights == false)
             {
@@ -2689,8 +2689,9 @@ namespace StatsDirect.Builtins
         ///  Link function: logistic
         ///  Residuals: deviance
         ///  </summary>
+        ///  <param name="selectX">If the nth element is true, include the nth predictor in the regression; if false, exclude it.</param>
         ///  <param name="err_level">0 = no errors; 1 = input data errors; 2 = calculation errors critical; 3 = calculation errors carry on</param>
-        public static void X_Logistic_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int xVariables, bool[] selectX, int parameters, double[] y_r, double[] y_t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fit, double[] residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
+        public static void X_Logistic_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int xVariables, bool[] selectX, int parameters, double[] y_r, double[] y_t, double[] weight, out double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fit, double[] residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
         {
             int observations = 0;
 
@@ -2703,6 +2704,7 @@ namespace StatsDirect.Builtins
             accuracy = accuracy < Constant.EPSNEG ? Constant.EPSNEG * 10.0 : Math.Abs(accuracy);
 
             err_level = 0;
+            deviance = Constant.MISSING;
             if (records < 2)
             {
                 err_level = 1;
@@ -3101,36 +3103,28 @@ namespace StatsDirect.Builtins
                         }
                     }
                     for (i = 1; i <= rank; i++)
-                    {
                         s_diagonals[i] = 1.0 / s_diagonals[i];
-                    }
+
                     for (i = 1; i <= parameters; i++)
                     {
                         if (records > 0)
                         {
                             for (j = 1; j <= rank; j++)
-                            {
                                 decomposition[j, i] = s_diagonals[j] * decomposition[j, i];
-                            }
                         }
                     }
                 }
                 if (final)
-                {
                     return;
-                }
+
                 for (i = 1; i <= parameters; i++)
-                {
                     beta[i] = 0.0;
-                }
                 for (j = 1; j <= rank; j++)
                 {
                     if (fit[j] != 0.0)
                     {
                         for (i = 1; i <= parameters; i++)
-                        {
-                            beta[i] = beta[i] + fit[j] * decomposition[j, i];
-                        }
+                            beta[i] += fit[j] * decomposition[j, i];
                     }
                 }
                 if (use_intercept)
@@ -3141,9 +3135,7 @@ namespace StatsDirect.Builtins
                         if (records > 0)
                         {
                             for (j = 1; j <= records; j++)
-                            {
                                 decomposition[j, i] = 1.0;
-                            }
                         }
                     }
                 }
@@ -3163,22 +3155,16 @@ namespace StatsDirect.Builtins
                 if (records == observations)
                 {
                     for (i = 1; i <= records; i++)
-                    {
                         eta[i] = X_SUMPROD(parameters, beta, decomposition, i) + offset[i];
-                    }
                 }
                 else
                 {
                     for (i = 1; i <= records; i++)
                     {
                         if (weight[i] == 0.0)
-                        {
                             eta[i] = 0.0;
-                        }
                         else
-                        {
                             eta[i] = X_SUMPROD(parameters, beta, decomposition, i) + offset[i];
-                        }
                     }
                 }
                 //  fit response from linear predictor
