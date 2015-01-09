@@ -17,7 +17,7 @@ namespace StatsDirect.UI
         public static void Main(string[] args)
         {
             // Right at the start, cope with as many variants of chaos as we can.
-            // CatchMostErrors();
+            CatchMostErrors();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
