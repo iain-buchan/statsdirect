@@ -2501,7 +2501,7 @@ namespace StatsDirect.Builtins
         ///  Link function: log
         ///  </summary>
 
-        public static void X_Poisson_Regression(bool use_intercept, bool use_offset, ref bool use_weights, int records, double[,] x, int predictors, int[] select_x, int parameters, double[] y, double[] t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fits, double[] deviance_residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
+        public static void X_Poisson_Regression(bool use_intercept, bool use_offset, ref bool use_weights, int records, double[,] x, int predictors, bool[] select_x, int parameters, double[] y, double[] t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fits, double[] deviance_residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
         {
             double ti = 0;
 
@@ -2559,15 +2559,9 @@ namespace StatsDirect.Builtins
             int count = 0;
             for (i = 1; i <= predictors; i++)
             {
-                if (select_x[i] < 0)
+                if (select_x[i])
                 {
-                    err_level = 1;
-                    err_msg = "misspecified predictor indicator";
-                    return;
-                }
-                if (select_x[i] > 0)
-                {
-                    count = count + 1;
+                    count++;
                 }
             }
             if (use_intercept)
@@ -2696,7 +2690,7 @@ namespace StatsDirect.Builtins
         ///  Residuals: deviance
         ///  </summary>
         ///  <param name="err_level">0 = no errors; 1 = input data errors; 2 = calculation errors critical; 3 = calculation errors carry on</param>
-        public static void X_Logistic_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int xVariables, int[] selectX, int parameters, double[] y_r, double[] y_t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fit, double[] residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
+        public static void X_Logistic_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int xVariables, bool[] selectX, int parameters, double[] y_r, double[] y_t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fit, double[] residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
         {
             int observations = 0;
 
@@ -2740,13 +2734,7 @@ namespace StatsDirect.Builtins
             int count = 0;
             for (int i = 1; i <= xVariables; i++)
             {
-                if (selectX[i] < 0)
-                {
-                    err_level = 1;
-                    err_msg = "invalid predictor indicator";
-                    return;
-                }
-                if (selectX[i] > 0)
+                if (selectX[i])
                     count++;
             }
             if (useIntercept)
@@ -2989,7 +2977,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void X_Iterative_Weighted_Least_Squares(int model, bool use_intercept, ref bool use_weights, int records, double[,] x, int predictors, int[] select_x, double[] y, double[] t, double[] weight, ref int observations, ref double deviance, out int rank, double[] beta, int parameters, double[] fit, double[] eta, double[] variance_std, double[] working_weight, double[] offset, double[,] decomposition, double accuracy, int max_iterations, out int iterations, double[] s_diagonals, ref int err_level, ref string dropped, ref string err_msg)
+        private static void X_Iterative_Weighted_Least_Squares(int model, bool use_intercept, ref bool use_weights, int records, double[,] x, int predictors, bool[] select_x, double[] y, double[] t, double[] weight, ref int observations, ref double deviance, out int rank, double[] beta, int parameters, double[] fit, double[] eta, double[] variance_std, double[] working_weight, double[] offset, double[,] decomposition, double accuracy, int max_iterations, out int iterations, double[] s_diagonals, ref int err_level, ref string dropped, ref string err_msg)
         {
             int i; int k;
             int j; int rank1 = 0;
@@ -3020,7 +3008,7 @@ namespace StatsDirect.Builtins
             }
             for (j = 1; j <= predictors; j++)
             {
-                if (select_x[j] > 0)
+                if (select_x[j])
                 {
                     k++;
                     for (i = 1; i <= records; i++)
@@ -3165,13 +3153,11 @@ namespace StatsDirect.Builtins
                 }
                 for (j = 1; j <= predictors; j++)
                 {
-                    if (select_x[j] > 0)
+                    if (select_x[j])
                     {
-                        k = k + 1;
+                        k++;
                         for (i = 1; i <= records; i++)
-                        {
                             decomposition[i, k] = x[i, j];
-                        }
                     }
                 }
                 if (records == observations)
@@ -3308,7 +3294,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void X_Legerage_From_Derivative(bool mean, int n, int m, double[,] x, int[] isx, int ip, double[,] q, int rank, double[] working_weight, double[] h, double[] work)
+        private static void X_Legerage_From_Derivative(bool mean, int n, int m, double[,] x, bool[] isx, int ip, double[,] q, int rank, double[] working_weight, double[] h, double[] work)
         {
             int im = mean ? 1 : 0;
             work[1] = 1.0;
@@ -3318,7 +3304,7 @@ namespace StatsDirect.Builtins
                 int j;
                 for (j = 1; j <= m; j++)
                 {
-                    if (isx[j] > 0)
+                    if (isx[j])
                     {
                         k++;
                         work[k] = x[i, j];

@@ -3116,8 +3116,8 @@ namespace StatsDirect.Builtins
                 x2[j, 0] = 1;
                 x2[j, 1] = 1;
             }
-            int[] select_x = new int[1 + 1 ];
-            select_x[1] = 1;
+            bool[] select_x = new bool[1 + 1 ];
+            select_x[1] = true;
             double[] beta = new double[1 + 1 ];
             double[] se_beta = new double[records + 1 ];
             double[] covariance = new double[1 + 1];
@@ -3139,12 +3139,12 @@ namespace StatsDirect.Builtins
                 llx = x_loglik_l(use_weights, records, wt, y, t, fit);
                 devx = deviance;
             }
+
             //  calculate full model
-            select_x = new int[p + 1];
+            select_x = new bool[p + 1];
             for (int j = 1; j <= p; j++)
-            {
-                select_x[j] = j;
-            }
+                select_x[j] = true;
+
             beta = new double[p + 1];
             se_beta = new double[records + 1];
             covariance = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
@@ -4332,9 +4332,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*parameters", parametersList);
 
             //first show the full model
-            int[] selectX = new int[p + 1];
+            bool[] selectX = new bool[p + 1];
             for (int j = 1; j <= p; j++)
-                selectX[j] = j;
+                selectX[j] = true;
 
             double[] b = new double[p + 1];
             double[] se = new double[n + 1];
@@ -4583,11 +4583,11 @@ namespace StatsDirect.Builtins
 
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out cit, GAMMA, out P0);
-            int[] isx = new int[p + 1];
+            bool[] isx = new bool[p + 1];
             double[] ob = new double[p + 1];
             for (j = 1; j <= p; j++)
             {
-                isx[j] = j;
+                isx[j] = true;
                 ob[j] = Formatting.SafeExp(b[j]);
             }
             int gtot = 0;
@@ -5241,8 +5241,8 @@ namespace StatsDirect.Builtins
                 x2[j, 0] = 1;
                 x2[j, 1] = 1;
             }
-            int[] select_x = new int[1 + 1];
-            select_x[1] = 1;
+            bool[] selectX = new bool[1 + 1];
+            selectX[1] = true;
             double[] beta = new double[1 + 1];
             double[] se_beta = new double[records + 1];
             double[] covariance = new double[1 + 1];
@@ -5260,7 +5260,7 @@ namespace StatsDirect.Builtins
             }
             string dropped = "";
             string err_msg = "";
-            Regress1.X_Poisson_Regression(false, use_offset, ref weighted, records, x2, 1, select_x, 1, y, t, weight, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
+            Regress1.X_Poisson_Regression(false, use_offset, ref weighted, records, x2, 1, selectX, 1, y, t, weight, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
             int idfx = df;
             if (!(mean))
             {
@@ -5273,18 +5273,18 @@ namespace StatsDirect.Builtins
                 devx = deviance;
             }
             //  calculate full model
-            select_x = new int[p + 1 ];
+            selectX = new bool[p + 1];
             for (j = 1; j <= p; j++)
             {
-                select_x[j] = j;
+                selectX[j] = true;
             }
             beta = new double[p + 1];
             se_beta = new double[records + 1];
             covariance = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
             fit = new double[records + 1 ];
-            residual = new double[records + 1 ];
-            leverage = new double[records + 1 ];
-            Regress1.X_Poisson_Regression(mean, use_offset, ref weighted, records, x, predictors, select_x, p, y, t, weight, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
+            residual = new double[records + 1];
+            leverage = new double[records + 1];
+            Regress1.X_Poisson_Regression(mean, use_offset, ref weighted, records, x, predictors, selectX, p, y, t, weight, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
             if (fault != 0 & fault != 3)
             {
                 host.Error(err_msg, "Poisson regression");
