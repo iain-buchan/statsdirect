@@ -110,7 +110,7 @@ namespace StatsDirect.Builtins
                 new Builtin("rptLogisticRegressionClassification", Regress.RptLogisticRegressionClassification, InputDuringStep.Never),
                 new Builtin("rptLogisticRegressionFit", Regress.RptLogisticRegressionFit, InputDuringStep.Never),
                 new Builtin("rptLogisticRegressionModel", Regress.RptLogisticRegressionModel, InputDuringStep.Never),
-                new Builtin("rptLogisticRegressionOdds", Regress.RptLogisticRegressionOdds, InputDuringStep.Never),
+                new Builtin("rptLogisticRegressionModelSelection", Regress.RptLogisticRegressionModelSelection, InputDuringStep.Never),
                 new Builtin("rptLogisticRegressionPrediction", Regress.RptLogisticRegressionPrediction, InputDuringStep.Never),
                 new Builtin("rptLogit", Regress.RptLogit, InputDuringStep.Never),
                 new Builtin("rptLogRank", Survival.RptLogRank, InputDuringStep.Sometimes),

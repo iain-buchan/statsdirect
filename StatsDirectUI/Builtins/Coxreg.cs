@@ -2758,13 +2758,9 @@ namespace StatsDirect.Builtins
                             for (i = 1; i <= iobs; i++)
                             {
                                 if (z[i].Time > ch.DataMaxX)
-                                {
                                     ch.DataMaxX = z[i].Time;
-                                }
                                 if (z[i].Time < ch.DataMinX)
-                                {
                                     ch.DataMinX = z[i].Time;
-                                }
                                 double haz;
                                 if (grouped)
                                 {
@@ -2835,18 +2831,18 @@ namespace StatsDirect.Builtins
             for (i = 1; i <= iobs; i++)
             {
                 z[i] = new CoxP
-                           {
-                               Stratum = Convert.ToInt32(ARR2[i, 9]),
-                               Time = ARR2[i, 6],
-                               Id = Convert.ToInt32(ARR2[i, 8]),
-                               Censor = Convert.ToInt32(ARR2[i, 7]),
-                               //  use estimates as starting values if needed
-                               S = ARR2[i, 1],
-                               H = ARR2[i, 4],
-                               //  baseline sum(exp(bz))
-                               Exb = ARR2[i, 10],
-                               Index = i
-                           };
+                {
+                    Stratum = Convert.ToInt32(ARR2[i, 9]),
+                    Time = ARR2[i, 6],
+                    Id = Convert.ToInt32(ARR2[i, 8]),
+                    Censor = Convert.ToInt32(ARR2[i, 7]),
+                    //  use estimates as starting values if needed
+                    S = ARR2[i, 1],
+                    H = ARR2[i, 4],
+                    //  baseline sum(exp(bz))
+                    Exb = ARR2[i, 10],
+                    Index = i
+                };
             }
 
             Array.Sort(z, 1, iobs, new CoxpByStratumTimeThenExb());

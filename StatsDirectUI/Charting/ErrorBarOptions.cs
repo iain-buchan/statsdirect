@@ -7,11 +7,8 @@ namespace StatsDirect.Charting
     public class ErrorBarOptions : GenericOptions
     {
         public bool PlotMarkers { get; set; }
-        public Data.DataFrame ydat { get; set; }
-        public Data.DataFrame xdat { get; set; }
-        public Data.DataFrame ydatl { get; set; }
-        public Data.DataFrame ydatu { get; set; }
         public bool JoinMarkersWithLines { get; set; }
+        public List<MultiDoubleSeries> Series { get; set; }
 
         public ErrorBarOptions(bool useColour)
             : base(useColour)
@@ -22,7 +19,7 @@ namespace StatsDirect.Charting
         public void SetMarkers()
         {
             MarkerTypes = new List<MarkerType>();
-            for (int i = 0; i < ydat.VariableCount; i++)
+            for (int i = 0; i < Series.Count; i++)
             {
                 int mkr = SeriesNumberToMarkerNumber(i);
                 MarkerType markerType = ChartRenderer.MarkerTypes[mkr].Clone();
@@ -32,7 +29,7 @@ namespace StatsDirect.Charting
                 //  An error plot has series with possible lines.
                 SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
                 {
-                    SeriesName = ydat.Variables[i].Title,
+                    SeriesName = Series[i].Title,
                     AllowChangeToDashStyle = true,
                     AllowChangeToLineThickness = true,
                     MarkerIndex = i
@@ -125,7 +122,7 @@ namespace StatsDirect.Charting
         {
             get
             {
-                return ydat.VariableCount > 1;
+                return Series.Count > 1;
             }
         }
 

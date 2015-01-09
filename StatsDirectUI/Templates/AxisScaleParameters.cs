@@ -7,6 +7,7 @@ namespace StatsDirect.Templates
     public class AxisScaleParameters
     {
         public double Min { get; set; }
+        public double MinGreaterThanZero { get; set; }
         public double Max { get; set; }
         public ICollection<ScaleType> AllowedScaleTypes { get; set; }
         public ScaleType ScaleType { get; set; }

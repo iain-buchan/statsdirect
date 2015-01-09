@@ -291,8 +291,7 @@ namespace StatsDirect.Charting
             {
                 ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
                 Method = parameters.ContainsKey("ScoreMethod")
-                             ? (NormalOptions.ScoreMethod)
-                               Parsing.Cint_Txt(parameters["ScoreMethod"].AsString)
+                             ? (NormalOptions.ScoreMethod)Parsing.Cint_Txt(parameters["ScoreMethod"].AsString)
                              : NormalOptions.ScoreMethod.VanDerWaerden,
                 Title =
                     null == dataName
@@ -489,6 +488,39 @@ namespace StatsDirect.Charting
             if (!parameters.ContainsKey("ydatu"))
                 throw new Exception("Chart expected parameter \"ydatu\", which was not supplied");
 
+            DataFrame xdatFrame = parameters["xdat"].AsDataFrame;
+            DataFrame ydatFrame = parameters["ydat"].AsDataFrame;
+            DataFrame ydatlFrame = parameters["ydatl"].AsDataFrame;
+            DataFrame ydatuFrame = parameters["ydatu"].AsDataFrame;
+
+            List<MultiDoubleSeries> allSeries = new List<MultiDoubleSeries>(xdatFrame.VariableCount);
+
+            for (int sIndex = 0; sIndex < xdatFrame.VariableCount; sIndex++)
+            {
+                DoubleVariable xdat = xdatFrame.Variables[sIndex].AsDoubleVariable;
+                DoubleVariable ydat = ydatFrame.Variables[sIndex].AsDoubleVariable;
+                DoubleVariable ydatl = ydatlFrame.Variables[sIndex].AsDoubleVariable;
+                DoubleVariable ydatu = ydatuFrame.Variables[sIndex].AsDoubleVariable;
+                string seriesTitle =
+                    string.IsNullOrWhiteSpace(ydat.Title)
+                        ? "Series " + (sIndex + 1).ToString()
+                        : ydat.Title;
+                double[][] noMissings = Numerics.Utilities.RemoveMissingRows(new double[][] { xdat.Data, ydat.Data, ydatl.Data, ydatu.Data }, 0, xdat.Length, 0);
+                MultiDoublePoint[] data = new MultiDoublePoint[noMissings[0].Length];
+                for (int i = 0; i < noMissings[0].Length; i++)
+                {
+                    MultiDoublePoint p = new MultiDoublePoint();
+                    // Ordinate
+                    p.X = noMissings[0][i];
+                    // Y values for error bars: [0] is centre, [1] is lower bound, [2] is upper bound.
+                    p.set_Y(0, noMissings[1][i]);
+                    p.set_Y(1, noMissings[2][i]);
+                    p.set_Y(2, noMissings[3][i]);
+                    data[i] = p;
+                }
+                allSeries.Add(new MultiDoubleSeries() { Title = seriesTitle, Data = data });
+            }
+
             ErrorBarOptions errorBarOptions = new ErrorBarOptions(host.Preferences.ShouldUseColour)
             {
                 ShouldAutoscale =
@@ -496,20 +528,17 @@ namespace StatsDirect.Charting
                 Title = null == dataName
                             ? "Error bar plot"
                             : "Error bar plot plot from " + dataName,
-                xdat = parameters["xdat"].AsDataFrame,
-                ydat = parameters["ydat"].AsDataFrame,
-                ydatl = parameters["ydatl"].AsDataFrame,
-                ydatu = parameters["ydatu"].AsDataFrame
+                Series = allSeries
             };
-            errorBarOptions.SeriesTitles = new string[errorBarOptions.ydat.VariableCount];
-            errorBarOptions.YAxisTitle = errorBarOptions.ydat.Variables[0].Title;
-            errorBarOptions.XAxisTitle = errorBarOptions.xdat.Variables[0].Title;
-            for (int i = 0; i < errorBarOptions.ydat.VariableCount; i++)
+            errorBarOptions.SeriesTitles = new string[ydatFrame.VariableCount];
+            errorBarOptions.YAxisTitle = ydatFrame.Variables[0].Title;
+            errorBarOptions.XAxisTitle = xdatFrame.Variables[0].Title;
+            for (int i = 0; i < ydatFrame.VariableCount; i++)
             {
                 errorBarOptions.SeriesTitles[i] =
-                    string.IsNullOrEmpty(errorBarOptions.ydat.Variables[i].Title)
+                    string.IsNullOrEmpty(ydatFrame.Variables[i].Title)
                         ? "Series " + (i + 1).ToString()
-                        : errorBarOptions.ydat.Variables[i].Title;
+                        : ydatFrame.Variables[i].Title;
             }
             errorBarOptions.SetMarkers();
             return errorBarOptions;

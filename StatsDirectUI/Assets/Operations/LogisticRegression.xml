@@ -37,6 +37,9 @@
           <lifetime>SessionForThisOperation</lifetime>
           <default-value>false</default-value>
         </boolean>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
       </parameters>
     </settings>
 	<test>
@@ -120,15 +123,35 @@
         </frame>
       </parameters>
     </settings>
-	<builtin function-name="rptLogisticRegression" />
-	<report type="text/rtf" filename="logreg.rtf" />
-	</steps>
+	  <builtin function-name="rptLogisticRegression" />
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[<report>
+<line><title>Logistic regression</title></line>
+<block name="warn">
+<line></line>
+<line><in>warn</in></line>
+</block>
+<line></line>
+<table>
+<tr><td>Deviance goodness of fit chi-square =</td><td><in>dev</in></td><td>df = <in>df</in></td><td><pval><in>p</in></pval></td><td><warn><in>w</in></warn></td></tr>
+<tr><td>Deviance (likelihood ratio) chi-square =</td><td><in>x2</in></td><td>df = <in>df_lr</in></td><td><pval><in>p_lr</in></pval></td><td></td></tr>
+</table>
+<line></line>
+<table>
+<tr><th>Parameter</th><th>Odds Ratio</th><th><ci>(<in>pc</in>% Conf. Int.)</ci></th><th>Z Value</th><th><pval>P (>|Z|)</pval></th></tr>
+<block name="var"><tr><td><in>par</in></td><td><in>or</in></td><td><ci><in>ci</in></ci></td><td><in>z</in></td><td><pval><in>p_var</in></pval></td></tr>
+</block>
+</table>
+<line></line>
+<line><in>logit</in></line>
+</report>]]></report>
+  </steps>
   <suggested-operations>
     <suggested-operation>LogisticRegressionFitToReport</suggested-operation>
     <suggested-operation>LogisticRegressionFitToWorksheet</suggested-operation>
     <suggested-operation>LogisticRegressionDiagnostics</suggested-operation>
     <suggested-operation>LogisticRegressionModel</suggested-operation>
-    <suggested-operation>LogisticRegressionOdds</suggested-operation>
+    <suggested-operation>LogisticRegressionModelSelection</suggested-operation>
     <suggested-operation>LogisticRegressionClassification</suggested-operation>
     <suggested-operation>LogisticRegressionBootstrap</suggested-operation>
     <suggested-operation>LogisticRegressionPrediction</suggested-operation>

@@ -19,7 +19,7 @@ namespace StatsDirect.Charting
         ///  If false, show z scores as z.
         ///  </summary>
         ///  <remarks></remarks>
-        public bool Scaling { get; set; }
+        public bool ShouldScaleZ { get; set; }
 
         public NormalOptions(bool UseColour)
             : base(UseColour)

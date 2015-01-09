@@ -15,5 +15,6 @@ namespace StatsDirect.Builtins
         public double MaxObservation { get; set; }
         public double TimeToMax { get; set; }
         public double SlopeToMax { get; set; }
+        public double SlopeToMaxVariance { get; set; }
     }
 }

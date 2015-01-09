@@ -10,26 +10,24 @@ namespace StatsDirect.Charting
         public double[] Data { get; set; }
 
         //  Similar to markers
-        internal Pen MarkerPen { get; set; }
-        internal Pen LinePen { get; set; }
-        internal MarkerShape MarkerShape { get; set; }
-        internal bool IsMarkerFilled { get; set; }
-        internal double MarkerSize { get; set; }
+        public MarkerDetails MarkerDetails { get; set; }
 
         private bool hasSum;
         private double sum;
         private bool hasStdDev;
         private double stdDev;
         private double min;
+        private double minGreaterThanZero;
         private double max;
         private bool hasMinMax;
 
         public DoubleSeries()
         {
-            //  Do nothing; this is only here because we also have a custom constructor
+            MarkerDetails = new MarkerDetails();
         }
 
         public DoubleSeries(double[] data, string title)
+            : this()
         {
             Data = data;
             Title = title;
@@ -99,14 +97,22 @@ namespace StatsDirect.Charting
             }
         }
 
+        public double MinGreaterThanZero
+        {
+            get
+            {
+                if (!(hasMinMax))
+                    CalcMinMax();
+                return minGreaterThanZero;
+            }
+        }
+
         public double Max
         {
             get
             {
                 if (!(hasMinMax))
-                {
                     CalcMinMax();
-                }
                 return max;
             }
         }
@@ -114,26 +120,26 @@ namespace StatsDirect.Charting
         private void CalcMinMax()
         {
             double mn = double.MaxValue;
+            double mg0 = double.MaxValue;
             double mx = double.MinValue;
             for (int i = Data.GetLowerBound(0); i <= Data.GetUpperBound(0); i++)
             {
-                if (Data[i] != Constant.MISSING)
+                double v = Data[i];
+                if (v != Constant.MISSING)
                 {
-                    if (Data[i] < mn)
-                    {
-                        mn = Data[i];
-                    }
-                    if (Data[i] > mx)
-                    {
-                        mx = Data[i];
-                    }
+                    if (v < mn)
+                        mn = v;
+                    if (v > 0 && v < mg0)
+                        mg0 = v;
+                    if (v > mx)
+                        mx = v;
                 }
             }
             min = mn;
+            minGreaterThanZero = mg0;
             max = mx;
             hasMinMax = true;
         }
-
 
         public override DoubleSeries AsDoubleSeries
         {

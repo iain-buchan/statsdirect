@@ -212,7 +212,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("p_1d", host.RoundU(zP1 * 2.0));
                     outputParameters.AddOutput("p_2", host.RoundU(ptwo));
                 }
-                const string x = "not calculated";
+                const string x = "not possible, use Monte Carlo";
                 outputParameters.AddOutput("mid_p", x);
                 outputParameters.AddOutput("mid_p_2", x);
             }

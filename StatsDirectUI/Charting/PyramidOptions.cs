@@ -74,7 +74,7 @@ namespace StatsDirect.Charting
             double zmin; 
             double zint; 
             int JmpDiv; 
-            AxisScaler.Q_Axis( ref qmin, ref maxRow, out div, out zmin, out zint, out JmpDiv, Templates.ScaleType.Linear ); 
+            AxisScaler.Q_Axis( ref qmin, 0, ref maxRow, out div, out zmin, out zint, out JmpDiv, Templates.ScaleType.Linear ); 
             ScaleMaximum = zmin + div * zint; 
         } 
         

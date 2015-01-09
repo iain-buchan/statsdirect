@@ -693,7 +693,7 @@ namespace StatsDirect.Builtins
                     variableParameters.AddOutput("result", "Error in calculation");
                 }
 
-                NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour) {Scaling = true, Method = NormalOptions.ScoreMethod.Blom};
+                NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour) {ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom};
                 ChartDefinition cd = new ChartDefinition {ChartOptions = nOptions};
                 cd.XSeries.Add(new DoubleSeries(data, v0.Title));
 

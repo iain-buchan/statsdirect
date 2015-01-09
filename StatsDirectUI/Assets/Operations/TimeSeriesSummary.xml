@@ -145,13 +145,17 @@
 <line>Median (IQR) area under curve: <inx>medianAuc</inx> (<inx>iqrAuc</inx>)</line>
 <line>Median (IQR) time to maximum: <inx>medianTimeToMax</inx> (<inx>iqrTimeToMax</inx>)</line>
 <line>Median (IQR) slope to maximum: <inx>medianSlopeToMax</inx> (<inx>iqrSlopeToMax</inx>)</line>
+<line>Mean (SD) slope to maximum: <inx>meanSlopeToMax</inx> (<inx>meanSlopeToMaxSD</inx>)</line>
 <line></line>
 <line><in>chart</in></line>
 </block>
 <line></line>
-<line><in>aucNormalChart</in></line>
+<line><subtitle>AUC distribution</subtitle></line>
 <line></line>
+<line><in>aucNormalChart</in></line>
+<line>R-square for AUC vs. normal scores: <inx>rSquareNormal</inx></line>
 <line><in>aucLogNormalChart</in></line>
+<line>R-square for log(AUC) vs. normal scores: <inx>rSquareLogNormal</inx></line>
 <block name="groupComparison">
 <line></line>
 <line><subtitle>Group comparison: <in>group1Title</in> vs. <in>group2Title</in></subtitle></line>
@@ -166,6 +170,8 @@
 <line><ci><in>ciOutput</in>% bootstrap-t interval: <inx>tBootstrapLcl</inx> to <inx>tBootstrapUcl</inx></ci></line>
 </block>
 </block>
+<line><in>meanAucChart</in></line>
+<line></line>
 </report>
 ]]>
     </report>

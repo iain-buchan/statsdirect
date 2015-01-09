@@ -11,8 +11,8 @@ namespace StatsDirect.Numerics
         public double Sum { get; set; }
         public double Mean { get; set; }
         public double Variance { get; set; }
-        public double Sd { get; set; }
-        public double Sem { get; set; }
+        public double SD { get; set; }
+        public double SEM { get; set; }
         public double MeanLCL { get; set; }
         public double MeanUCL { get; set; }
         public double ConfidenceLevel { get; set; }
@@ -40,15 +40,15 @@ namespace StatsDirect.Numerics
 
         public int CentileType;
 
-        private struct VarAndWt
+        public struct VarAndWeight
         {
             public double Data;
-            public double wt;
+            public double Weight;
         }
 
-        private class VarAndWtByData : IComparer<VarAndWt>
+        private class VarAndWeightByData : IComparer<VarAndWeight>
         {
-            private int Compare(VarAndWt x, VarAndWt y)
+            private int Compare(VarAndWeight x, VarAndWeight y)
             {
                 //  First check TM
                 if (x.Data > y.Data)
@@ -60,7 +60,7 @@ namespace StatsDirect.Numerics
                 return 0;
             }
             // interface methods implemented by Compare
-            int IComparer<VarAndWt>.Compare(VarAndWt x, VarAndWt y)
+            int IComparer<VarAndWeight>.Compare(VarAndWeight x, VarAndWeight y)
             {
                 return Compare(x, y);
             }
@@ -72,8 +72,8 @@ namespace StatsDirect.Numerics
         ///  </summary>
         ///  <param name="x"></param>
         ///  <param name="v"></param>
-        ///  <param name="start"></param>
-        ///  <param name="finish"></param>
+        ///  <param name="start">Index of the first valid row in x and v</param>
+        ///  <param name="rows">Number of valid rows</param>
         ///  <param name="userCL"></param>
         ///  <param name="userCentL"></param>
         ///  <param name="userCentU"></param>
@@ -81,7 +81,7 @@ namespace StatsDirect.Numerics
         /// <param name="xs"> </param>
         /// <returns></returns>
         ///  <remarks>see Gleason JR. Univariate summaries with boxplots. Stata Technical Bulletin sg67, 1997 and sg67.1, 1999.</remarks>
-        private bool FullSummary(double[] x, double[] v, int start, int finish, double userCL, double userCentL, double userCentU, double nvSum, out VarAndWt[] xs)
+        public bool FullSummary(double[] x, double[] v, int start, int rows, double userCL, double userCentL, double userCentU, double nvSum, out VarAndWeight[] xs)
         {
             // preparatory counting and feeder arrays
             bool doUserCentL;
@@ -106,16 +106,16 @@ namespace StatsDirect.Numerics
                 doUserCentU = false;
                 UserCentileUCaption = "";
             }
-            ValidData = finish - start + 1;
-            xs = new VarAndWt[ValidData + 1];
+            ValidData = rows;
+            xs = new VarAndWeight[ValidData + 1];
             double[] xo = new double[ValidData + 1];
             double[] w = new double[ValidData + 1];
             ValidData = 0;
             double sumv = 0.0;
             int k = 0;
-            for (int i = start; i <= finish; i++)
+            for (int i = start; i < start + rows; i++)
             {
-                if (x[i] != Constant.MISSING & v[i] != Constant.MISSING)
+                if (x[i] != Constant.MISSING && v[i] != Constant.MISSING && !double.IsNaN(x[i]) && !double.IsNaN(v[i]))
                 {
                     k++;
                     xs[k].Data = x[i];
@@ -124,7 +124,7 @@ namespace StatsDirect.Numerics
                     ValidData++;
                 }
             }
-            MissingData = (finish - start) - ValidData + 1;
+            MissingData = rows - ValidData;
             double nnx = Convert.ToDouble(ValidData);
 
             // set up normalised analytical weights
@@ -135,11 +135,11 @@ namespace StatsDirect.Numerics
             else
             {
                 double nsumv = (nvSum != Constant.MISSING) ? nvSum : nnx / sumv;
-                for (int i = 1; i <= ValidData; i++)
+                for (int i = start; i < ValidData + start; i++)
                 {
                     SumOfWeights += v[i];
                     w[i] = v[i] * nsumv;
-                    xs[i].wt = w[i];
+                    xs[i].Weight = w[i];
                     WeightedSum += w[i];
                 }
             }
@@ -156,7 +156,7 @@ namespace StatsDirect.Numerics
             {
                 // nonparametric summary
 
-                Array.Sort(xs, 1, ValidData, new VarAndWtByData());
+                Array.Sort(xs, 1, ValidData, new VarAndWeightByData());
 
                 // get quantiles
                 Minimum = GetCentile(xs, ValidData, 0);
@@ -200,24 +200,24 @@ namespace StatsDirect.Numerics
                     Variance = Constant.MISSING;
                 else
                     Variance = sumsqdev / (ValidData - 1);
-                Sd = Variance < 0.0 ? Constant.MISSING : Math.Sqrt(Variance);
-                if (ValidData <= 0 || Sd == Constant.MISSING)
+                SD = Variance < 0.0 ? Constant.MISSING : Math.Sqrt(Variance);
+                if (ValidData <= 0 || SD == Constant.MISSING)
                 {
-                    Sem = Constant.MISSING;
+                    SEM = Constant.MISSING;
                     MeanLCL = Constant.MISSING;
                     MeanUCL = Constant.MISSING;
                 }
                 else
                 {
-                    Sem = Sd / Math.Sqrt(nnx);
-                    double bit = cit * Sd / Math.Sqrt(nnx);
+                    SEM = SD / Math.Sqrt(nnx);
+                    double bit = cit * SD / Math.Sqrt(nnx);
                     MeanLCL = Mean - bit;
                     MeanUCL = Mean + bit;
                 }
                 GeometricMean = gmok == false ? Math.Exp(slog / nnx) : Constant.MISSING;
-                if (Sd != Constant.MISSING && Mean != Constant.MISSING && Mean != 0.0)
+                if (SD != Constant.MISSING && Mean != Constant.MISSING && Mean != 0.0)
                 {
-                    VarianceCoefficient = Sd / Mean;
+                    VarianceCoefficient = SD / Mean;
                 }
                 else
                 {
@@ -283,8 +283,8 @@ namespace StatsDirect.Numerics
                 Maximum = xo[1];
                 Minimum = xo[1];
                 Sum = xo[1];
-                Sd = Constant.MISSING;
-                Sem = Constant.MISSING;
+                SD = Constant.MISSING;
+                SEM = Constant.MISSING;
                 MeanLCL = Constant.MISSING;
                 MeanUCL = Constant.MISSING;
                 return true;
@@ -305,8 +305,8 @@ namespace StatsDirect.Numerics
             Maximum = Constant.MISSING;
             Minimum = Constant.MISSING;
             Sum = Constant.MISSING;
-            Sd = Constant.MISSING;
-            Sem = Constant.MISSING;
+            SD = Constant.MISSING;
+            SEM = Constant.MISSING;
             VarianceCoefficient = Constant.MISSING;
             MeanLCL = Constant.MISSING;
             MeanUCL = Constant.MISSING;
@@ -322,7 +322,7 @@ namespace StatsDirect.Numerics
         ///  <param name="centile"></param>
         ///  <returns></returns>
         ///  <remarks>see Gleason JR. Univariate summaries with boxplots. Stata Technical Bulletin sg67, 1997 and sg67.1, 1999.</remarks>
-        private double GetCentile(VarAndWt[] x, int n, double centile)
+        private double GetCentile(VarAndWeight[] x, int n, double centile)
         {
             double index;
             double lastcumsum = 0;
@@ -347,7 +347,7 @@ namespace StatsDirect.Numerics
             int i;
             for (i = 1; i <= n; i++)
             {
-                cumsum += x[i].wt;
+                cumsum += x[i].Weight;
                 if (cumsum > index)
                     break;
                 lastcumsum = cumsum;
@@ -362,16 +362,16 @@ namespace StatsDirect.Numerics
         public bool WeightedSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, double[,] wt, string wti, double nvSum)
         {
             Title = ti + " (weight: " + wti + ")";
-            double[] z = new double[rows + 1 /* VB to C# conversion */ ];
-            double[] v = new double[rows + 1 /* VB to C# conversion */ ];
+            double[] z = new double[rows];
+            double[] v = new double[rows];
             for (int i = 1; i <= rows; i++)
             {
-                z[i] = x[k, i];
-                v[i] = wt[k, i];
+                z[i - 1] = x[k, i];
+                v[i - 1] = wt[k, i];
             }
             CentileType = 1;
-            VarAndWt[] xsrt;
-            return FullSummary(z, v, 1, rows, userCL, userCentL, userCentU, nvSum, out xsrt);
+            VarAndWeight[] xsrt;
+            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, nvSum, out xsrt);
         }
 
         public bool FullSummaryFromXSort(double[] x, out double[] xSorted, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
@@ -383,7 +383,7 @@ namespace StatsDirect.Numerics
             for (i = 1; i <= rows; i++)
                 v[i] = 1.0;
             CentileType = centileDef;
-            VarAndWt[] xs;
+            VarAndWeight[] xs;
             bool fullSummaryFromXSortReturn = FullSummary(x, v, 1, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
             xSorted = new double[rows + 1];
             for (i = 1; i <= rows; i++)
@@ -394,27 +394,27 @@ namespace StatsDirect.Numerics
         public bool FullSummaryFromX(double[] x, int rows, string ti, double UserCL, double UserCentL, double UserCentU, int CentileDef)
         {
             Title = ti;
-            double[] v = new double[rows + 1];
-            for (int i = 1; i <= rows; i++)
+            double[] v = new double[rows];
+            for (int i = 0; i < rows; i++)
                 v[i] = 1.0;
             CentileType = CentileDef;
-            VarAndWt[] xs;
-            return FullSummary(x, v, 1, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out xs);
+            VarAndWeight[] xs;
+            return FullSummary(x, v, 0, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out xs);
         }
 
         public bool FullSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
         {
             Title = ti;
-            double[] z = new double[rows + 1];
-            double[] v = new double[rows + 1];
+            double[] z = new double[rows];
+            double[] v = new double[rows];
             for (int i = 1; i <= rows; i++)
             {
-                z[i] = x[k, i];
-                v[i] = 1.0;
+                z[i - 1] = x[k, i];
+                v[i - 1] = 1.0;
             }
             CentileType = centileDef;
-            VarAndWt[] xs;
-            return FullSummary(z, v, 1, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
+            VarAndWeight[] xs;
+            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
         }
 
     }

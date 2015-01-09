@@ -230,7 +230,7 @@ namespace StatsDirect.Builtins
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
             if (datFrame.VariableCount < ((z > 1) ? 3 : 2))
-                throw new InvalidDataException("Please fill in all columns of the data");
+                throw new InvalidDataException("Invalid data: Please fill in the same number of rows in each column without gaps");
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
             DoubleVariable datV2 = null;
@@ -252,8 +252,7 @@ namespace StatsDirect.Builtins
                 double b1 = datV1.Data[r - 1];
                 double t1 = a1 + b1;
                 if (t1 <= 0.0)
-                    throw new InvalidDataException();
-
+                    throw new InvalidDataException("Invalid data: row " + r.ToString() + " total is not greater than zero, which it must be for this calculation");
                 Debug.Assert(z != 2 || datV2 != null);
                 double s1 = z == 2 ? datV2.Data[r - 1] : r;
                 f[r] = a1;
@@ -635,13 +634,23 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException();
 
             bool doExact = parameters["doExact"].AsBoolean;
+            bool doMonteCarlo = parameters["doMonteCarlo"].AsBoolean;
             bool pc = parameters["show_pc"].AsBoolean;
             bool xp = parameters["xp"].AsBoolean;
             bool cs = parameters["cs"].AsBoolean;
             bool xs = parameters["xs"].AsBoolean;
             bool specifyScores = parameters["specify_scores"].AsBoolean;
+            int iterations = 1000000;
+            double mcci = 0.99;
+            int seed = 0;
+            if (doMonteCarlo)
+            {
+                iterations = parameters["iterations"].AsInt32;
+                mcci = parameters["ci"].AsDouble;
+                seed = parameters["seed"].AsInt32;
+            }
 
-            StepResult outputResult = Tables.SChi(host, ref cco, a, rows, cols, doExact, pc, xp, cs, xs, specifyScores);
+            StepResult outputResult = Tables.SChi(host, ref cco, a, rows, cols, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
             return outputResult;
         }
 
@@ -796,8 +805,11 @@ namespace StatsDirect.Builtins
             int maxtot = 5000000;
             bool primed = false;
 
-            double[] fact = new double[1 + 1 ];
-            int[] jwork = new int[1 + 1 ];
+            double[] fact = new double[ncol+1];
+            int[] jwork = new int[ncol+1];
+
+            double x2rep;
+            double tol = Constant.EPSILON * 100.0;
 
             r = 0;
             for (i = 1; i <= iter; i++)
@@ -811,7 +823,10 @@ namespace StatsDirect.Builtins
                     }
                 }
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
-                if (Chi2Trend(x, wt, nrow) >= x2)
+                if (ierror != 0)
+                    throw new InvalidDataException("Montel Carlo simulation not possible: all row and column totals must be be greater than zero");
+                x2rep = Chi2Trend(x, wt, nrow);
+                if (x2rep > x2 || Math.Abs(x2rep-x2)<tol)
                 {
                     r += 1;
                 }
@@ -853,6 +868,228 @@ namespace StatsDirect.Builtins
             return x1 * x1;
         }
 
+        ///  <summary>
+        ///  Simulated exact P for R by C chi-square for independent, for trend, for equality and g-square
+        ///  </summary>
+        ///  <param name="host"></param>
+        ///  <param name="o">(1..nrow,1..ncol) input 2 by k table</param>
+        ///  <param name="rowScore">(1..nrow) row scores for trend test</param>
+        ///  <param name="colScore">(1..nrow) column scores for trend test</param>
+        ///  <param name="nrow">rows</param>
+        ///  <param name="ncol">columns</param>
+        ///  <param name="iter">Monte Carlo iterations</param>
+        ///  <param name="x2">chi-square for independence</param>
+        ///  <param name="rx2">Monte Carlo P numerator for independece chi-square</param>
+        ///  <param name="x2Eq">chi-square for equality</param>
+        ///  <param name="rx2Eq">Monte Carlo P numerator for equality chi-square</param>
+        ///  <param name="x2Trend">chi-square for trend</param>
+        ///  <param name="rx2Trend">Monte Carlo P numerator for trend chi-square</param>
+        ///  <param name="g2">chi-square for g-square</param>
+        ///  <param name="rg2">Monte Carlo P numerator for g-square</param>
+        ///  <param name="actualIterations">The number of Monte Carlo iterations actually performed</param>
+        ///  <param name="iseed">RNG seed (0 for automatic)</param>
+        ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
+        ///  <remarks></remarks>
+        public static void ChiRCResample(ITemplateHost host, double[,] o, double[] rowScore, double[] colScore, int nrow, int ncol, int iter, double x2, out int rx2, double x2Eq, out int rx2Eq, double x2Trend, out int rx2Trend, double g2, out int rg2, out int actualIterations, int iseed, ref int ierror)
+        {
+            int[] ncolt = new int[ncol + 1];
+            int[] nrowt = new int[nrow + 1 ];
+            int[,] x = new int[nrow +1, ncol+1];
+            int ntotal = 0;
+            int i;
+            int j;
+            MersenneTwister rng = new MersenneTwister();
+
+            int bootsDivisor = Math.Max(1, iter / 1000);
+
+            host.StartProgress("Simulating exact P", true);
+
+            if (iseed != 0)
+            {
+                rng.Seed(iseed);
+            }
+            else { rng.Seed(); }
+
+            for (j = 1; j <= nrow; j++)
+            {
+                for (i = 1; i <= ncol; i++)
+                {
+                    x[j,i]=Convert.ToInt32(o[j,i]);
+                    nrowt[j] += x[j, i];
+                    ncolt[i] += x[j, i];
+                }
+            }
+
+            int maxtot = 5000000;
+            bool primed = false;
+
+            double[] fact = new double[ncol + 1 ];
+            int[] jwork = new int[ncol + 1 ];
+
+            rx2 = 0;
+            rg2 = 0;
+            rx2Eq = 0;
+            rx2Trend = 0;
+            double x2rep = 0;
+            double g2rep = 0;
+            double x2Eqrep = 0;
+            double x2Trendrep = 0;
+            bool faultrep = false;
+            double tol = Constant.EPSILON * 100.0;
+            actualIterations = 0;
+
+            for (i = 1; i <= iter; i++)
+            {
+                if (i % bootsDivisor == 0)
+                {
+                    if (host.UpdateProgress(i / (double)iter))
+                    {
+                        ierror = -1; //  Interrupted
+                        break;
+                    }
+                }
+                Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
+                if (ierror != 0)
+                    throw new InvalidDataException("Montel Carlo simulation not possible: all row and column totals must be be greater than zero");
+                ChiRC(x,  nrow, ncol, rowScore, colScore, out x2rep, out x2Trendrep, out x2Eqrep, out g2rep, out faultrep);
+                if (!faultrep)
+                {
+                    actualIterations += 1;
+                    if (x2rep > x2 || Math.Abs(x2rep - x2) < tol)
+                    {
+                        rx2 += 1;
+                    }
+                    if (g2rep > g2 || Math.Abs(g2rep - g2) < tol)
+                    {
+                        rg2 += 1;
+                    }
+                    if (x2Eqrep > x2Eq || Math.Abs(x2Eqrep - x2Eq) < tol)
+                    {
+                        rx2Eq += 1;
+                    }
+                    if (x2Trendrep >= x2Trend || Math.Abs(x2Trendrep - x2Trend) < tol)
+                    {
+                        rx2Trend += 1;
+                    }
+                }
+            }
+            host.FinishProgress();
+        }
+
+        public static string MCResultString(ITemplateHost host, int ierror, int r, int its, int seed, double cco)
+        {
+            double p = 0.0;
+            double ll = 0.0;
+            double ul = 0.0;
+            string warn = "";
+            string res = "";
+            if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
+            {
+                p = Convert.ToDouble(r) / Convert.ToDouble(its);
+                res += "  Monte Carlo " + host.pval(p);
+                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(its), out ll, out ul, cco, out warn);
+                res += " (" + Formatting.XRound(100.0 * cco, 2) + "% CI: ";
+                res += host.RoundU(ll) + " to ";
+                res += host.RoundU(ul) + warn;
+                res += "; iterations: " + its.ToString("N0");
+                res += "; seed: " + seed.ToString() + ")";
+            }
+            return res;
+        }
+
+        private static void ChiRC(int[,] x, int rows, int cols, double[] rowscore, double[] colscore, out double x2, out double x2trend, out double x2eq, out double g2, out bool fault)
+        {
+            double gtot = 0;
+            double sumWeighted = 0;
+            double[] rtot = new double[rows + 1];
+            double[] ctot = new double[cols + 1];
+            for (int r = 1; r <= rows; r++)
+            {
+                for (int c = 1; c <= cols; c++)
+                {
+                    rtot[r] += x[r, c];
+                    ctot[c] += x[r, c];
+                    gtot += x[r, c];
+                    sumWeighted = sumWeighted + x[r, c] * rowscore[r] * colscore[c];
+                }
+            }
+
+            fault = false;
+            x2 = 0.0;
+            g2 = 0.0;
+            x2trend = 0.0;
+            x2eq = 0.0;
+            if (gtot < 1)
+            {
+                fault = true;
+                return;
+            }
+
+            double sumWtCol = 0.0;
+            double sumWtSqCol = 0.0;
+            int nzCols = 0;
+            for (int c = 1; c <= cols; c++)
+            {
+                sumWtCol = sumWtCol + ctot[c] * colscore[c];
+                sumWtSqCol = sumWtSqCol + ctot[c] * colscore[c] * colscore[c];
+                if (ctot[c] > 0.0)
+                {
+                    nzCols = nzCols + 1;
+                }
+            }
+
+            double sumWtRow = 0.0;
+            double sumWtSqRow = 0.0;
+            int nzRows = 0;
+            for (int r = 1; r <= rows; r++)
+            {
+                sumWtRow = sumWtRow + rtot[r] * rowscore[r];
+                sumWtSqRow = sumWtSqRow + rtot[r] * rowscore[r] * rowscore[r];
+                if (rtot[r] > 0.0)
+                {
+                    nzRows = nzRows + 1;
+                }
+            }
+
+            double dsrs = 0.0;
+            double ef;
+            double xi;
+            for (int c = 1; c <= cols; c++)
+            {
+                xi = 0.0;
+                for (int r = 1; r <= rows; r++)
+                {
+                    xi = xi + rowscore[r] * Convert.ToDouble(x[r, c]);
+                    ef = rtot[r] * ctot[c] / gtot;
+                    if (ef != 0.0)
+                    {
+                        x2 += Math.Pow((Convert.ToDouble(x[r, c]) - ef), 2.0) / ef;
+                        if (x[r, c] != 0)
+                        {
+                            g2 += Convert.ToDouble(x[r, c]) * Math.Log(Convert.ToDouble(x[r, c]) / ef);
+                        }
+                    }
+                }
+                if (ctot[c] != 0.0)
+                {
+                    dsrs = dsrs + (xi * xi) / ctot[c];
+                }
+            }
+
+            //  ANOVA style equality of variance test
+            double sxx = sumWtSqRow - ((sumWtRow * sumWtRow) / gtot);
+            x2eq = ((gtot - 1.0) / sxx) * (dsrs - ((sumWtRow * sumWtRow) / gtot));
+
+            //  Chi-square for linear trend
+            double syy = sumWtSqCol - ((sumWtCol * sumWtCol) / gtot);
+            double sxy = sumWeighted - sumWtCol * sumWtRow / gtot;
+            x2trend = (gtot - 1.0) * (sxy * sxy) / (sxx * syy);
+
+            // Chi-square and G-square for independence
+            g2 = 2.0 * g2;
+
+        }
+        
         ///  <remarks>
         ///     WM Patefield,
         ///     Algorithm AS 159:

@@ -244,7 +244,7 @@ namespace StatsDirect.UI
             else if (rdoNormalVanDerWaerden.Checked)
                 normalOptions.Method = NormalOptions.ScoreMethod.VanDerWaerden;
             // Else do nothing.  Should never happen!
-            normalOptions.Scaling = rdoNormalScaled.Checked;
+            normalOptions.ShouldScaleZ = rdoNormalScaled.Checked;
         }
 
         private void FillControlOptionsFromForm()
@@ -457,8 +457,9 @@ namespace StatsDirect.UI
         {
             ao.AllowedScaleTypes = asp.AllowedScaleTypes;
             ao.ScaleType = asp.ScaleType;
-            ao.DataMax = asp.Max;
             ao.DataMin = asp.Min;
+            ao.DataMinGreaterThanZero = asp.MinGreaterThanZero;
+            ao.DataMax = asp.Max;
             ao.LabelDirection = asp.LabelDirection;
         }
 
@@ -569,7 +570,7 @@ namespace StatsDirect.UI
                     rdoNormalVanDerWaerden.Checked = true;
                     break;
             }
-            if (normalOptions.Scaling)
+            if (normalOptions.ShouldScaleZ)
                 rdoNormalScaled.Checked = true;
             else
                 rdoNormalRaw.Checked = true;
@@ -831,6 +832,7 @@ namespace StatsDirect.UI
                 if (bOptions.Stacked100Percent)
                 {
                     yo.DataMin = 0;
+                    yo.DataMinGreaterThanZero = 0;
                     yo.DataMax = 100;
                 }
                 else
@@ -869,12 +871,14 @@ namespace StatsDirect.UI
                         }
                     }
                     yo.DataMin = minValue;
+                    yo.DataMinGreaterThanZero = minValue;
                     yo.DataMax = maxValue;
                 }
             }
             else
             {
                 yo.DataMin = definition.ScaleParameters.Y.Min;
+                yo.DataMinGreaterThanZero = definition.ScaleParameters.Y.MinGreaterThanZero;
                 yo.DataMax = definition.ScaleParameters.Y.Max;
             }
         }

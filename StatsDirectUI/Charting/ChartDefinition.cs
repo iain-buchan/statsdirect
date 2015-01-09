@@ -18,8 +18,10 @@ namespace StatsDirect.Charting
         public List<Series> YSeries { get; set; }
 
         public double DataMinX { get; private set; }
+        public double DataMinGreaterThanZeroX { get; private set; }
         public double DataMaxX { get; private set; }
         public double DataMinY { get; private set; }
+        public double DataMinGreaterThanZeroY { get; private set; }
         public double DataMaxY { get; private set; }
 
         ///  <summary>
@@ -46,8 +48,10 @@ namespace StatsDirect.Charting
             XSeries = new List<Series>();
             DataMaxX = double.MinValue;
             DataMinX = double.MaxValue;
+            DataMinGreaterThanZeroX = double.MaxValue;
             DataMaxY = double.MinValue;
             DataMinY = double.MaxValue;
+            DataMinGreaterThanZeroY = double.MaxValue;
         }
 
         ///  <summary>
@@ -56,11 +60,11 @@ namespace StatsDirect.Charting
         public ChartDefinition Clone()
         {
             ChartDefinition copy = new ChartDefinition
-                                       {
-                                           ChartOptions = ChartOptions.Clone(),
-                                           ChartType = ChartType,
-                                           ScaleParameters = ScaleParameters.Clone()
-                                       };
+            {
+                ChartOptions = ChartOptions.Clone(),
+                ChartType = ChartType,
+                ScaleParameters = ScaleParameters.Clone()
+            };
             foreach (Series s in XSeries)
                 copy.XSeries.Add(s);
             foreach (Series s in YSeries)
@@ -136,20 +140,24 @@ namespace StatsDirect.Charting
                 {
                     if (q < DataMinX)
                         DataMinX = q;
+                    if (q < DataMinGreaterThanZeroX && q > 0)
+                        DataMinGreaterThanZeroX = q;
                     if (q > DataMaxX)
                         DataMaxX = q;
                 }
             }
         }
 
-        private void CheckYSeriesData(DoubleSeries S)
+        private void CheckYSeriesData(DoubleSeries s)
         {
-            foreach (double q in S.Data)
+            foreach (double q in s.Data)
             {
                 if (q != Constant.MISSING)
                 {
                     if (q < DataMinY)
                         DataMinY = q;
+                    if (q < DataMinGreaterThanZeroY && q > 0)
+                        DataMinGreaterThanZeroY = q;
                     if (q > DataMaxY)
                         DataMaxY = q;
                 }

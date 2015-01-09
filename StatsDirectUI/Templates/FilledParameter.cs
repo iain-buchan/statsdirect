@@ -14,7 +14,7 @@ namespace StatsDirect.Templates
         private bool isInputParameter;
         private object data;
 
-        public FilledParameter()
+        private FilledParameter()
         {
         }
 

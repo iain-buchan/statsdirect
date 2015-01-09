@@ -112,7 +112,7 @@ namespace StatsDirect.UI
                 FetchTheUpgrade();
         }
 
-        private static void FetchTheUpgrade()
+        public static void FetchTheUpgrade()
         {
             const string DOWNLOAD_URL = "http://www.statsdirect.com/download/StatsDirectSetup.exe";
             Process.Start(DOWNLOAD_URL);
@@ -1669,7 +1669,12 @@ namespace StatsDirect.UI
 
         internal void CloseAndUpdate()
         {
-            if (null != mainWindow)
+            if (null == mainWindow)
+            {
+                FetchTheUpgrade();
+                Application.Exit();
+            }
+            else
             {
                 closingForUpgrade = true;
                 mainWindow.Close();

@@ -12,19 +12,19 @@
     <ComponentRef Id="ProductComponent" />
 
     <!-- DevExpress -->
-    <ComponentRef Id="DevExpress.Data.v14.1.dll" />
-    <ComponentRef Id="DevExpress.Docs.v14.1.dll" />
-    <ComponentRef Id="DevExpress.Office.v14.1.Core.dll" />
-    <ComponentRef Id="DevExpress.Printing.v14.1.Core.dll" />
-    <ComponentRef Id="DevExpress.RichEdit.v14.1.Core.dll" />
-    <ComponentRef Id="DevExpress.Sparkline.v14.1.Core.dll" />
-    <ComponentRef Id="DevExpress.Utils.v14.1.dll" />
-    <ComponentRef Id="DevExpress.XtraBars.v14.1.dll" />
-    <ComponentRef Id="DevExpress.XtraEditors.v14.1.dll" />
-    <ComponentRef Id="DevExpress.XtraPrinting.v14.1.dll" />
-    <ComponentRef Id="DevExpress.XtraRichEdit.v14.1.dll" />
-    <ComponentRef Id="DevExpress.XtraRichEdit.v14.1.Extensions.dll" />
-    <ComponentRef Id="DevExpress.XtraTreeList.v14.1.dll" />
+    <ComponentRef Id="DevExpress.Data.v14.2.dll" />
+    <ComponentRef Id="DevExpress.Docs.v14.2.dll" />
+    <ComponentRef Id="DevExpress.Office.v14.2.Core.dll" />
+    <ComponentRef Id="DevExpress.Printing.v14.2.Core.dll" />
+    <ComponentRef Id="DevExpress.RichEdit.v14.2.Core.dll" />
+    <ComponentRef Id="DevExpress.Sparkline.v14.2.Core.dll" />
+    <ComponentRef Id="DevExpress.Utils.v14.2.dll" />
+    <ComponentRef Id="DevExpress.XtraBars.v14.2.dll" />
+    <ComponentRef Id="DevExpress.XtraEditors.v14.2.dll" />
+    <ComponentRef Id="DevExpress.XtraPrinting.v14.2.dll" />
+    <ComponentRef Id="DevExpress.XtraRichEdit.v14.2.dll" />
+    <ComponentRef Id="DevExpress.XtraRichEdit.v14.2.Extensions.dll" />
+    <ComponentRef Id="DevExpress.XtraTreeList.v14.2.dll" />
 
     <!-- SpreadsheetGear -->
     <ComponentRef Id="SpreadsheetGear2012.Core.dll" />
@@ -155,7 +155,7 @@
     <ComponentRef Id="LogisticRegressionFitToReport.xml" />
     <ComponentRef Id="LogisticRegressionFitToWorksheet.xml" />
     <ComponentRef Id="LogisticRegressionModel.xml" />
-    <ComponentRef Id="LogisticRegressionOdds.xml" />
+    <ComponentRef Id="LogisticRegressionModelSelection.xml" />
     <ComponentRef Id="LogisticRegressionPrediction.xml" />
     <ComponentRef Id="Logit.xml" />
     <ComponentRef Id="LogRank.xml" />
@@ -403,7 +403,7 @@
     <ComponentRef Id="lr_class.rtf" />
     <ComponentRef Id="lr_det.rtf" />
     <ComponentRef Id="lr_fit.creole" />
-    <ComponentRef Id="lr_odds.rtf" />
+    <ComponentRef Id="lr_model_selection.rtf" />
     <ComponentRef Id="MANNWHIT.rtf" />
     <ComponentRef Id="mantel.rtf" />
     <ComponentRef Id="mcnamar.rtf" />

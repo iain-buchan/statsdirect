@@ -143,8 +143,8 @@
             <menu-item label="Kappa and Ma&amp;xwell">
               <help chm-id="1003" />
               <sub-items>
-                <menu-item label="&amp;Worksheet Data" operation="Kappa" />
-                <menu-item label="&amp;Screen Data" operation="KappaScreen" />
+                <menu-item label="&amp;Worksheet (Individual Observations)" operation="Kappa" />
+                <menu-item label="&amp;Screen (Summary Counts)" operation="KappaScreen" />
               </sub-items>
             </menu-item>
             <menu-item label="Mantel-&amp;Haenszel">
@@ -243,8 +243,8 @@
             <menu-item label="&amp;Kappa and Maxwell">
               <help chm-id="1003" />
               <sub-items>
-                <menu-item label="&amp;Worksheet Data" operation="Kappa" />
-                <menu-item label="&amp;Screen Data" operation="KappaScreen" />
+                <menu-item label="&amp;Worksheet (Individual Observations)" operation="Kappa" />
+                <menu-item label="&amp;Screen (Summary Counts)" operation="KappaScreen" />
               </sub-items>
             </menu-item>
             <menu-item label="Screening &amp;Test Errors" operation="MiscFalseResult" />
@@ -359,7 +359,13 @@
           <help chm-id="1001" />
           <sub-items>
             <menu-item label="&amp;Continuous (Intraclass)..." operation="Agreement" />
-            <menu-item label="C&amp;ategorical (Kappa)..." operation="Kappa" />
+            <menu-item label="C&amp;ategorical (Kappa)...">
+              <help chm-id="1003" />
+              <sub-items>
+                <menu-item label="&amp;Worksheet (Individual Observations)" operation="Kappa" />
+                <menu-item label="&amp;Screen (Summary Counts)" operation="KappaScreen" />
+              </sub-items>
+            </menu-item>
             <menu-item label="&amp;Method Comparison Regression" operation="MethodComparisonRegression" />
             <menu-item label="&amp;Reliability Analysis..." operation="PCRCovarianceNoFollowOns" />
             <menu-item label="&amp;Universal R..." operation="UniversalAgreement" />

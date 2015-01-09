@@ -117,7 +117,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("tail_2", "");
                     outputParameters.AddOutput("p_2", host.pval(ptwo));
                 }
-                const string x = "not calculated";
+                const string x = "not possible, use Monte Carlo";
                 outputParameters.AddOutput("mid_p", x);
                 outputParameters.AddOutput("mid_p_2", x);
             }
@@ -469,7 +469,7 @@ namespace StatsDirect.Builtins
         /// <param name="pegama">Chance-independent agreement for Gwett's AC1</param>
         /// <param name="ierror"></param>
         /// <remarks>The double version</remarks>
-        public static void Kappa(ITemplateHost host, double[,] o, double[,] w, int g, out double k, out double sek, out double kcil, out double kciu, out double kw, out double sekw, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, double cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror)
+        public static void Kappa(ITemplateHost host, double[,] o, double[,] w, int g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, double cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror)
         {
             int i; int j;
 
@@ -491,6 +491,8 @@ namespace StatsDirect.Builtins
                 crtot[i] += pdotj[i] + pidot[i];
             if (gt <= 0.0)
                 throw new InvalidDataException();
+
+            //unweighted kappa
             po = 0.0;
             pe = 0.0;
             double px = 0.0;
@@ -512,9 +514,33 @@ namespace StatsDirect.Builtins
             gama = (po - pegama) / (1.0 - pegama);
             // gama is Gwett's AC1 statistic and pegama is the chance-independent agreement with po as the observed agreement
             k = (po - pe) / (1.0 - pe);
+            // standard error for the z test
             sek = (1.0 / ((1.0 - pe) * Math.Sqrt(gt))) * Math.Sqrt(pe + pe * pe - px);
-            kcil = k - cit * sek;
-            kciu = k + cit * sek;
+            // standard error for the confidence interval: after Fleiss, Cohen and Everitt 1969
+            double sumpa = 0.0;
+            double sumpb = 0.0;
+            for (i = 0; i <= g - 1; i++)
+            {
+                sumpa += (o[i, i] / gt) * Math.Pow((1.0-pe)-(pdotj[i] + pidot[i])*(1.0-po),2.0);
+            }
+            for (i = 0; i <= g - 1; i++)
+            {
+                for (j = 0; j <= g - 1; j++)
+                {
+                    if (i != j)
+                    {
+                        sumpb += (o[i, j] / gt) * Math.Pow(pdotj[j] + pidot[i], 2.0);
+                    }
+                }
+            }
+            sekci = (sumpa + Math.Pow(1.0 - po, 2.0) * sumpb - Math.Pow(po * pe - 2.0 * pe + po, 2.0)) / (gt * Math.Pow(1.0 - pe, 4.0));
+            sekci = Math.Sqrt(sekci);
+            kcil = k - cit * sekci;
+            if (kcil < -1.0) kcil = -1.0;
+            kciu = k + cit * sekci;
+            if (kciu > 1.0) kciu = 1.0;
+
+            //weighted kappa
             pow = 0.0;
             pew = 0.0;
             double soma = 0.0;
@@ -557,9 +583,24 @@ namespace StatsDirect.Builtins
                     px += pidot[i] * pdotj[j] * Math.Pow((w[i, j] - (wibar[i] + wjbar[j])), 2.0);
                 }
             }
+            // standard error for z test
             sekw = sekw * Math.Sqrt(px - Math.Pow(pew, 2.0));
-            kwcil = kw - cit * sekw;
-            kwciu = kw + cit * sekw;
+            // standard error for confidence interval after Fleiss, Cohen and Everitt 1969
+            double sumpw = 0.0;
+            for (i = 0; i <= g - 1; i++)
+            {
+                for (j = 0; j <= g - 1; j++)
+                {
+                    sumpw += (o[i, j] / gt) * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
+                }
+            }
+            sekwci = (sumpw  - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
+            sekwci = Math.Sqrt(sekwci);
+            kwcil = kw - cit * sekwci;
+            if (kwcil < -1.0) kwcil = -1.0;
+            kwciu = kw + cit * sekwci;
+            if (kwciu > 1.0) kwciu = 1.0;
+
             // Scott's pi
             spe = 0.0;
             for (i = 0; i < g; i++)
@@ -594,10 +635,11 @@ namespace StatsDirect.Builtins
         ///  <param name="spi"></param>
         ///  <param name="ierror"></param>
         ///  <remarks>The integer version</remarks>
-        public static void Kappa(ITemplateHost host, int[,] o, double[,] w, int g, ref double k, ref double sek, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror)
+        public static void Kappa(ITemplateHost host, int[,] o, double[,] w, int g, ref double k, ref double sek, ref double sekci, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double sekwci, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror)
         {
-
+            // two rater kappa
             ierror = true;
+            // get row and column totals
             double[] pidot = new double[g - 1 + 1 ];
             double[] pdotj = new double[g - 1 + 1 ];
             double[] crtot = new double[g - 1 + 1 ];
@@ -619,6 +661,8 @@ namespace StatsDirect.Builtins
             {
                 throw new InvalidDataException();
             }
+            
+            // unweighted kappa
             po = 0.0;
             pe = 0.0;
             double px = 0.0;
@@ -631,9 +675,33 @@ namespace StatsDirect.Builtins
                 px += pdotj[i] * pidot[i] * (pdotj[i] + pidot[i]);
             }
             k = (po - pe) / (1.0 - pe);
+            // standard error for the z test
             sek = (1.0 / ((1.0 - pe) * Math.Sqrt(gt))) * Math.Sqrt(pe + pe * pe - px);
-            kcil = k - cit * sek;
-            kciu = k + cit * sek;
+            // standard error for the confidence interval: after Fleiss, Cohen and Everitt 1969
+            double sumpa = 0.0;
+            double sumpb = 0.0;
+            for (int i = 0; i <= g - 1; i++)
+            {
+                sumpa += (o[i, i] / gt) * Math.Pow((1.0 - pe) - (pdotj[i] + pidot[i]) * (1.0 - po), 2.0);
+            }
+            for (int i = 0; i <= g - 1; i++)
+            {
+                for (int j = 0; j <= g - 1; j++)
+                {
+                    if (i != j)
+                    {
+                        sumpb += (o[i, j] / gt) * Math.Pow(pdotj[j] + pidot[i], 2.0);
+                    }
+                }
+            }
+            sekci = (sumpa + Math.Pow(1.0 - po, 2.0) * sumpb - Math.Pow(po * pe - 2.0 * pe + po, 2.0)) / (gt * Math.Pow(1.0 - pe, 4.0));
+            sekci = Math.Sqrt(sekci);
+            kcil = k - cit * sekci;
+            if (kcil < -1.0) kcil = -1.0;
+            kciu = k + cit * sekci;
+            if (kciu > 1.0) kciu = 1.0;
+
+            //weighted kappa
             pow = 0.0;
             pew = 0.0;
             for (int i = 0; i <= g - 1; i++)
@@ -664,9 +732,24 @@ namespace StatsDirect.Builtins
                     px += pidot[i] * pdotj[j] * Math.Pow((w[i, j] - (wibar[i] + wjbar[j])), 2.0);
                 }
             }
+            //standard error for the z test
             sekw = sekw * Math.Sqrt(px - Math.Pow(pew, 2.0));
-            kwcil = kw - cit * sekw;
-            kwciu = kw + cit * sekw;
+            // standard error for confidence interval after Fleiss, Cohen and Everitt 1969
+            double sumpw = 0.0;
+            for (int i = 0; i <= g - 1; i++)
+            {
+                for (int j = 0; j <= g - 1; j++)
+                {
+                    sumpw += (o[i, j] / gt) * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
+                }
+            }
+            sekwci = (sumpw - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
+            sekwci = Math.Sqrt(sekwci);
+            kwcil = kw - cit * sekwci;
+            if (kwcil < -1.0) kwcil = -1.0;
+            kwciu = kw + cit * sekwci;
+            if (kwciu > 1.0) kwciu = 1.0;
+
             // Scott's pi
             spe = 0.0;
             for (int i = 0; i <= g - 1; i++)
@@ -935,10 +1018,12 @@ namespace StatsDirect.Builtins
                 }
                 double k;
                 double sek;
+                double sekci;
                 double kcil;
                 double kciu;
                 double kw;
                 double sekw;
+                double sekwci;
                 double kwcil;
                 double kwciu;
                 double po;
@@ -953,7 +1038,7 @@ namespace StatsDirect.Builtins
                 double gamaciu;
                 double pegama;
                 bool ierror;
-                Kappa(host, o, w, g, out k, out sek, out kcil, out kciu, out kw, out sekw, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out gama, out segama, out gamacil, out gamaciu, out pegama, out ierror);
+                Kappa(host, o, w, g, out k, out sek, out sekci, out kcil, out kciu, out kw, out sekw, out sekwci, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out gama, out segama, out gamacil, out gamaciu, out pegama, out ierror);
                 if (!(ierror))
                 {
                     outputParameters.AddOutput("po", Formatting.XRound(po * 100, 2));
@@ -961,6 +1046,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("kappa", host.RoundU(k));
                     outputParameters.AddInput("kDouble", k);
                     outputParameters.AddOutput("se", host.RoundU(sek));
+                    outputParameters.AddOutput("seci", host.RoundU(sekci));
                     outputParameters.AddOutput("pc", host.RoundU(cco * 100));
                     outputParameters.AddOutput("from", host.RoundU(kcil));
                     outputParameters.AddOutput("to", host.RoundU(kciu));
@@ -1005,6 +1091,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("kappaw", host.RoundU(kw));
                     outputParameters.AddInput("kwDouble", kw);
                     outputParameters.AddOutput("sekw", host.RoundU(sekw));
+                    outputParameters.AddOutput("sekwci", host.RoundU(sekwci));
                     outputParameters.AddOutput("pcw", Formatting.XRound(cco * 100, 1));
                     outputParameters.AddOutput("fromw", host.RoundU(kwcil));
                     outputParameters.AddOutput("tow", host.RoundU(kwciu));
@@ -1539,8 +1626,8 @@ namespace StatsDirect.Builtins
         /// <remarks></remarks>
         private static void KappaResample(ITemplateHost host, int[,] o, double[,] w, int g, double cit, double originalK, double originalKw, int iter, ref int exactR, ref int exactIter, ref int exactRw, ref int exactIterW, int iseed, ref int ierror)
         {
-            int[] ncolt = new int[g - 1 + 1 ];
-            int[] nrowt = new int[g - 1 + 1 ];
+            int[] ncolt = new int[g];
+            int[] nrowt = new int[g];
             int ntotal = 0;
             int i;
             int j;
@@ -1578,6 +1665,7 @@ namespace StatsDirect.Builtins
             int missingSekw = 0;
             int r = 0;
             int rw = 0;
+            double tol = 100.0 * Constant.EPSILON;
             for (i = 1; i <= iter; i++)
             {
                 if (i % bootsDivisor == 0)
@@ -1590,13 +1678,15 @@ namespace StatsDirect.Builtins
                 }
                 Chi.Rcont2(0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
-                    throw new InvalidDataException();
+                    throw new InvalidDataException("Montel Carlo simulation not possible: all row and column totals must be be greater than zero");
                 double k = 0.0;
                 double sek = 0;
+                double sekci = 0;
                 double kcil = 0;
                 double kciu = 0;
                 double kw = 0;
                 double sekw = 0;
+                double sekwci = 0;
                 double kwcil = 0;
                 double kwciu = 0;
                 double po = 0;
@@ -1606,12 +1696,12 @@ namespace StatsDirect.Builtins
                 double spe = 0;
                 double spi = 0;
                 bool wasError;
-                Kappa(host, o, w, g, ref k, ref sek, ref kcil, ref kciu, ref kw, ref sekw, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out wasError);
+                Kappa(host, o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out wasError);
                 if (!(wasError))
                 {
                     if (sek != 0.0)
                     {
-                        if (k >= originalK)
+                        if (k > originalK || Math.Abs(k - originalK) < tol)
                         {
                             r += 1;
                         }
@@ -1623,7 +1713,7 @@ namespace StatsDirect.Builtins
 
                     if (sekw != 0.0)
                     {
-                        if (kw >= originalKw)
+                        if (kw > originalKw || Math.Abs(kw - originalKw) < tol)
                         {
                             rw += 1;
                         }
@@ -2502,14 +2592,24 @@ namespace StatsDirect.Builtins
                         double[,] w;
                         MathDbl.transpose_cr_rc(xt, out w);
                         bool doExact = parameters["doExact"].AsBoolean;
+                        bool doMonteCarlo = parameters["doMonteCarlo"].AsBoolean;
                         bool pc = parameters["show_pc"].AsBoolean;
                         bool xp = parameters["xp"].AsBoolean;
                         bool cs = parameters["cs"].AsBoolean;
                         bool xs = parameters["xs"].AsBoolean;
                         bool specifyScores = parameters["specify_scores"].AsBoolean;
+                        int iterations = 1000000;
+                        double mcci = 0.99;
+                        int seed = 0;
+                        if (doMonteCarlo)
+                        {
+                            iterations = parameters["iterations"].AsInt32;
+                            mcci = parameters["ci"].AsDouble;
+                            seed = parameters["seed"].AsInt32;
+                        }
 
                         // w() was passed to a FORTRAN routine so must redim to (1 to c, 1 to r)
-                        ParameterBag chirxcParameters = SChi(host, ref cco, w, ycats, xcats, doExact, pc, xp, cs, xs, specifyScores).ParameterBag;
+                        ParameterBag chirxcParameters = SChi(host, ref cco, w, ycats, xcats, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed).ParameterBag;
                         chirxcList.Add(chirxcParameters);
                     }
                 } // two factor <-----
@@ -2800,7 +2900,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static StepResult SChi(ITemplateHost host, ref double cco, double[,] o, int rows, int cols, bool doExact, bool pc, bool xp, bool cs, bool xs, bool specifyScores)
+        public static StepResult SChi(ITemplateHost host, ref double cco, double[,] o, int rows, int cols, bool doExact, bool doMonteCarlo, bool pc, bool xp, bool cs, bool xs, bool specifyScores, double mcci, int iterations, int seed)
         {
             int ierr;
             double ul; double ll; double p; double c1;
@@ -3118,17 +3218,16 @@ namespace StatsDirect.Builtins
                 }
 
                 // chi-square calculations
-                double dchi2;
                 for (int c = 1; c <= cols; c++)
                 {
-                    if (ex[r, c] != 0.0)
+                    double ef = (rtot[r] * ctot[c]) / gtot;
+                    if (ef != 0.0)
                     {
-                        dchi2 = Math.Pow((o[r, c] - ex[r, c]), 2.0) / ex[r, c];
-                        x2 = x2 + dchi2;
-                    }
-                    if (o[r, c] != 0.0)
-                    {
-                        g2 = g2 + o[r, c] * Math.Log(o[r, c] / ex[r, c]);
+                        x2 += Math.Pow((o[r, c] - ef), 2.0) / ef;
+                        if (o[r, c] != 0.0)
+                        {
+                            g2 = g2 + o[r, c] * Math.Log(o[r, c] / ef);
+                        }
                     }
                 }
 
@@ -3141,6 +3240,7 @@ namespace StatsDirect.Builtins
                     chisList.Add(chisParameters);
                     List<ParameterBag> chiList = new List<ParameterBag>();
                     chisParameters.AddOutput("*chi", chiList);
+                    double dchi2;
                     for (int c = 1; c <= cols; c++)
                     {
                         if (ex[r, c] != 0.0)
@@ -3204,9 +3304,6 @@ namespace StatsDirect.Builtins
                     rowsParameters.AddOutput("*pcrs", null);
                 }
             }
-
-            g2 = 2.0 * g2;
-
 
             List<ParameterBag> totList = new List<ParameterBag>();
             outputParameters.AddOutput("*tot", totList);
@@ -3282,12 +3379,7 @@ namespace StatsDirect.Builtins
                 warnParameters.AddOutput("warn", Formatting.WRNCOLON + n5.ToString() + " out of " + trueN.ToString() + " cells have EXPECTATION < 5");
             }
 
-            // overall
-            outputParameters.AddOutput("chio", host.RoundU(x2));
-            outputParameters.AddOutput("dfo", n2.ToString());
-            outputParameters.AddOutput("po", host.pval(PDF.chivalp(x2, n2)));
-            outputParameters.AddOutput("g2", host.RoundU(g2));
-            outputParameters.AddOutput("pog2", host.pval(PDF.chivalp(g2, n2)));
+            g2 = 2.0 * g2;
 
             // Fisher's - by network algorithm
             // crashes if non integer observations or too large
@@ -3305,31 +3397,60 @@ namespace StatsDirect.Builtins
                     percnt = 80.0; //  In case reset by first call
                     Rcexact(rows, cols, o, 5.0, percnt, emin, ref p1, ref p2, out ierr);
                 }
+                if (ierr != 0)
+                {
+                    lb = "";
+                    outputParameters.AddOutput("p2", "not possible, use Monte Carlo");
+                }
+                else
+                {
+                    outputParameters.AddOutput("p2", host.pval(p2));
+                }
             }
             else
-            {
-                ierr = -1;
-            }
-            if (ierr != 0)
             {
                 lb = "";
                 outputParameters.AddOutput("p2", "not calculated");
             }
-            else
-            {
-                outputParameters.AddOutput("p2", host.pval(p2));
-            }
             outputParameters.AddOutput("lb", lb);
+            
+            //Monte Carlo if required
+            string pmcx2 = "";
+            string pmcx2trend = "";
+            string pmcx2eq = "";
+            string pmcg2 = "";
+            if (doMonteCarlo)
+            {
+                int ierrormc = 0;
+                int rx2 = 0;
+                int rx2Eq = 0;
+                int rx2Trend = 0;
+                int rg2 = 0;
+                int actualIterations = 0;
+
+                Chi.ChiRCResample(host, o,  rowScore, colScore, rows, cols, iterations, x2, out rx2, x2Eq, out rx2Eq, x2Trend, out rx2Trend, g2, out rg2, out actualIterations, seed, ref ierrormc);
+                pmcx2 = Chi.MCResultString(host, ierrormc, rx2, actualIterations, seed, mcci);
+                pmcx2eq = Chi.MCResultString(host, ierrormc, rx2Eq, actualIterations, seed, mcci);
+                pmcx2trend = Chi.MCResultString(host, ierrormc, rx2Trend, actualIterations, seed, mcci);
+                pmcg2 = Chi.MCResultString(host, ierrormc, rg2, actualIterations, seed, mcci);
+            }
+
+            // overall
+            outputParameters.AddOutput("chio", host.RoundU(x2));
+            outputParameters.AddOutput("dfo", n2.ToString());
+            outputParameters.AddOutput("po", host.pval(PDF.chivalp(x2, n2)) + pmcx2);
+            outputParameters.AddOutput("g2", host.RoundU(g2));
+            outputParameters.AddOutput("pog2", host.pval(PDF.chivalp(g2, n2)) + pmcg2);
 
             // equality ANOVA (see Armitage)
             outputParameters.AddOutput("chie", host.RoundU(x2Eq));
             outputParameters.AddOutput("dfe", (nzCols - 1).ToString());
-            outputParameters.AddOutput("pe", host.pval(PDF.chivalp(x2Eq, nzCols - 1)));
+            outputParameters.AddOutput("pe", host.pval(PDF.chivalp(x2Eq, nzCols - 1))+pmcx2eq);
 
             // linear trend MH type (see Armitage)
             outputParameters.AddOutput("r", host.RoundU(corr));
             outputParameters.AddOutput("chit", host.RoundU(x2Trend));
-            outputParameters.AddOutput("pt", host.pval(PDF.chivalp(x2Trend, 1)));
+            outputParameters.AddOutput("pt", host.pval(PDF.chivalp(x2Trend, 1))+pmcx2trend);
 
             // coefficients
             double phi = Math.Sqrt(x2 / gtot);
@@ -4866,8 +4987,9 @@ namespace StatsDirect.Builtins
                 int[] kyy = new int[nco + 1 ];
                 int[] idif = new int[nro + 1 ];
                 int[] irn = new int[nro + 1 ];
-                int i4 = 2000000;
-                int i5 = 2000000;
+                //IEB 23 Dec 14 increased from 2000000
+                int i4 = 20000000;
+                int i5 = 20000000;
                 if (i4 != i5)
                 {
                     ldkey = (i4 - 17) / 318;
@@ -4900,7 +5022,8 @@ namespace StatsDirect.Builtins
 
                 RcExactGo(nrow, ncol, table, expect, percnt, emin, ref prt, out pre, ref fact, ref ico, ref iro, ref kyy, ref idif, ref irn, ref key, ref ldkey, ref ipoin, ref stp, ref ldstp, ref ifrq, ref dlp, ref dsp, ref tm, ref key2, ref ierr);
             }
-            catch (OverflowException)
+            //IEB 23 Dec 14: don't just catch overflow error so change from catch (OverflowException) to catch (Exception)
+            catch (Exception)
             {
                 ierr = int.MaxValue;
                 prt = Constant.MISSING;
@@ -4959,7 +5082,9 @@ namespace StatsDirect.Builtins
             int[] icx = new int[ircmax + 1 ];
             int[] irx = new int[ircmin + 1 ];
             // longpath
-            int[,] iiwk1 = new int[ircmax + 1, ircmax + 1];
+            // IEB 23 Dec 14: extended workspace as over shoot in long path with Big_Fisher.xls test data second set
+            //int[,] iiwk1 = new int[ircmax + 1, ircmax + 1];
+            int[,] iiwk1 = new int[ircp1 + 1, ircp1 + 1];
             int[,] iiwk2 = new int[nrow + 1, ircp1 + 1];
             // shortpath
             int[] iwk1 = new int[k + 1 ];
@@ -4969,9 +5094,10 @@ namespace StatsDirect.Builtins
             int[] iwk5 = new int[k + 1];
             int[] iwk6 = new int[ircmax + 1];
             int[] iwk7 = new int[ircmax + 1];
-            int[] iwk8 = new int[400 + 1];
-            int[] iwk9 = new int[400 + 1];
-            double[] rwk1 = new double[400 + 1];
+            // IEB 23 Dec 14 extended workspace from 400 to 4000 as example second from end in big Fisher.xls over ran
+            int[] iwk8 = new int[4000 + 1];
+            int[] iwk9 = new int[4000 + 1];
+            double[] rwk1 = new double[4000 + 1];
             double[] rwk2 = new double[k + 1];
 
             double tol = Math.Sqrt(Constant.EPSILON);
@@ -6259,24 +6385,29 @@ namespace StatsDirect.Builtins
                                     itp = 1;
                                 }
                                 ii = ks + itp;
-                                if (ist[ii] < 0)
+                                //IEB 23 Dec 14 avoid situation where ii is negative see sencond from last example in big Fisher.xls
+                                if (ii >= 0)
                                 {
-                                    //                                push onto stack
-                                    ist[ii] = key;
-                                    stv[ii] = v;
-                                    nst = nst + 1;
-                                    ii = nst + ks;
-                                    itc[ii] = itp;
-                                    cycleinner = true;
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    if (ist[ii] < 0)
+                                    {
+                                        //                                push onto stack
+                                        ist[ii] = key;
+                                        stv[ii] = v;
+                                        nst = nst + 1;
+                                        ii = nst + ks;
+                                        itc[ii] = itp;
+                                        cycleinner = true;
+                                        break; /* TRANSWARNING: check that break is in correct scope */
+                                    }
+                                    if (ist[ii] == key)
+                                    {
+                                        //                                marginals already on stack
+                                        stv[ii] = Math.Min(v, stv[ii]);
+                                        cycleinner = true;
+                                        break; /* TRANSWARNING: check that break is in correct scope */
+                                    }
                                 }
-                                if (ist[ii] == key)
-                                {
-                                    //                                marginals already on stack
-                                    stv[ii] = Math.Min(v, stv[ii]);
-                                    cycleinner = true;
-                                    break; /* TRANSWARNING: check that break is in correct scope */
-                                }
+                                //IEB if added
                             }
 
                             if (cycleinner == false)
@@ -6314,7 +6445,8 @@ namespace StatsDirect.Builtins
             ne[1] = iz;
             int ix = icol[ix2 + 1] - nrow * iz;
             m[1] = ix;
-            if (ix != 0)
+            //IEB 23 Dec 14 big Fisher.xls example ix was negative so changed from ix !=0
+            if (ix > 0)
             {
                 nd[ix] = nd[ix] + 1;
             }
@@ -6325,7 +6457,8 @@ namespace StatsDirect.Builtins
                 iz = iz + ix;
                 ix = icol[ix2 + i] - nrow * ix;
                 m[i] = ix;
-                if (ix != 0)
+                //IEB 23 Dec 14 big Fisher.xls example ix was negative so changed from ix !=0
+                if (ix > 0)
                 {
                     nd[ix] = nd[ix] + 1;
                 }

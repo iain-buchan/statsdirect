@@ -10,6 +10,7 @@ namespace StatsDirect.UI
         private bool hasScale;
         private ICollection<ScaleType> allowedScaleTypes;
         private double dataMin;
+        private double dataMinGreaterThanZero;
         private double dataMax;
         private int div;
         private double zMin;
@@ -45,6 +46,17 @@ namespace StatsDirect.UI
             set
             {
                 dataMin = value;
+                SetCandidateScaleValues();
+                SetDataRangeLabel();
+            }
+        }
+
+        public double DataMinGreaterThanZero
+        {
+            get { return dataMinGreaterThanZero; }
+            set
+            {
+                dataMinGreaterThanZero = value;
                 SetCandidateScaleValues();
                 SetDataRangeLabel();
             }
@@ -247,19 +259,19 @@ namespace StatsDirect.UI
 
         private void SetDataRangeLabel()
         {
-            lblDataRange.Text = string.Format("Data range: {0} to {1}", SdApplication.SoleInstance.RoundU(dataMin), SdApplication.SoleInstance.RoundU(dataMax));
+            lblDataRange.Text = string.Format("Data range: {0} to {1}", SdApplication.SoleInstance.RoundU(DataMin), SdApplication.SoleInstance.RoundU(DataMax));
         }
 
         private void SetCandidateScaleValues()
         {
-            // Ensure we have at least some range before trying to set the scale
-            if (dataMax <= dataMin)
+            // Ensure we have at least some range before trying to set the scale - this can be called, for example, when min has been set but max hasn't yet.
+            if (DataMax <= DataMin)
                 return;
 
-            double qMin = dataMin;
-            double qMax = dataMax;
+            double qMin = DataMin;
+            double qMax = DataMax;
             ScaleType selectedScaleType = SelectedScaleType();
-            Charting.AxisScaler.Q_Axis(ref qMin, ref qMax, out div, out zMin, out zInt, out minorTicsPerMajorTic, selectedScaleType);
+            Charting.AxisScaler.Q_Axis(ref qMin, DataMinGreaterThanZero, ref qMax, out div, out zMin, out zInt, out minorTicsPerMajorTic, selectedScaleType);
             mask = Charting.AxisScaler.AxisMask(zInt, zMin, div, minorTicsPerMajorTic, selectedScaleType);
             settingValues = true;
             txtScaleTextMask.Text = mask;

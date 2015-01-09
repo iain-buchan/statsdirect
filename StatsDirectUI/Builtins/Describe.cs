@@ -348,10 +348,8 @@ namespace StatsDirect.Builtins
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable v0 = data.Variables[0].AsDoubleVariable;
-            double[] x = new double[v0.Length + 1 /* VB to C# conversion */ ];
-            Array.Copy(v0.Data, 0, x, 1, v0.Length);
             Summary sx = new Summary();
-            sx.FullSummaryFromX(x, v0.Length, v0.Title, GAMMA, 5, 95, 1);
+            sx.FullSummaryFromX(v0.Data, v0.Length, v0.Title, GAMMA, 5, 95, 1);
             const int flt = 6;
             const int k = 24;
             StringBuilder sb = new StringBuilder();
@@ -362,9 +360,9 @@ namespace StatsDirect.Builtins
             sb.AppendLine(Formatting.PadTo("Sum", k) + Formatting.RoundOut(sx.Sum, flt));
             sb.AppendLine(Formatting.PadTo("Mean", k) + Formatting.RoundOut(sx.Mean, flt));
             sb.AppendLine(Formatting.PadTo("Variance", k) + Formatting.RoundOut(sx.Variance, flt));
-            sb.AppendLine(Formatting.PadTo("Standard deviation", k) + Formatting.RoundOut(sx.Sd, flt));
+            sb.AppendLine(Formatting.PadTo("Standard deviation", k) + Formatting.RoundOut(sx.SD, flt));
             sb.AppendLine(Formatting.PadTo("Variation coefficient", k) + Formatting.RoundOut(sx.VarianceCoefficient, flt));
-            sb.AppendLine(Formatting.PadTo("Standard error of mean", k) + Formatting.RoundOut(sx.Sem, flt));
+            sb.AppendLine(Formatting.PadTo("Standard error of mean", k) + Formatting.RoundOut(sx.SEM, flt));
             sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * GAMMA, 1) + "% Upper CL of mean", k) + Formatting.RoundOut(sx.MeanUCL, flt));
             sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * GAMMA, 1) + "% Lower CL of mean", k) + Formatting.RoundOut(sx.MeanLCL, flt));
             sb.AppendLine(Formatting.PadTo("Geometric mean", k) + Formatting.RoundOut(sx.GeometricMean, flt));
@@ -585,21 +583,13 @@ namespace StatsDirect.Builtins
                 // Find how many columns have been selected
                 int lc = 1;
                 foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
-                {
                     if (shouldOutput[s])
-                    {
                         lc += 1;
-                    }
-                }
 
                 if (centxl > 0)
-                {
                     lc += 1;
-                }
                 if (centxu > 0)
-                {
                     lc += 1;
-                }
                 // prevchk2 = true; 
                 if (lc > 0)
                 {
@@ -629,14 +619,12 @@ namespace StatsDirect.Builtins
                         StringVariable totalsVariable = new StringVariable { Title = "Title" };
                         totalsVariable.EnsureLength(cols);
                         for (int i = 0; i < cols; i++)
-                        {
                             totalsVariable.set_Data(i, sx[i].Title);
-                        }
                         outputFrame.Variables.Add(totalsVariable);
                         foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
                         {
                             if (shouldOutput[s])
-                            outputFrame.Variables.Add(FillCell(s, sx, cols, titles));
+                                outputFrame.Variables.Add(FillCell(s, sx, cols, titles));
                         }
                     }
                 }
@@ -729,13 +717,13 @@ namespace StatsDirect.Builtins
                     res = sx.Variance;
                     break;
                 case SummaryType.Sd:
-                    res = sx.Sd;
+                    res = sx.SD;
                     break;
                 case SummaryType.VarianceCoefficient:
                     res = sx.VarianceCoefficient;
                     break;
                 case SummaryType.Sem:
-                    res = sx.Sem;
+                    res = sx.SEM;
                     break;
                 case SummaryType.MeanUcl:
                     res = sx.MeanUCL;
@@ -838,13 +826,13 @@ namespace StatsDirect.Builtins
                             res = host.RoundU(sx[i].Variance);
                             break;
                         case SummaryType.Sd:
-                            res = host.RoundU(sx[i].Sd);
+                            res = host.RoundU(sx[i].SD);
                             break;
                         case SummaryType.VarianceCoefficient:
                             res = host.RoundU(sx[i].VarianceCoefficient);
                             break;
                         case SummaryType.Sem:
-                            res = host.RoundU(sx[i].Sem);
+                            res = host.RoundU(sx[i].SEM);
                             break;
                         case SummaryType.MeanUcl:
                             res = host.RoundU(sx[i].MeanUCL);
@@ -1002,6 +990,8 @@ namespace StatsDirect.Builtins
                 groupParameters.AddOutput("iqrTimeToMax", group.UpperQuartileTimeToMax - group.LowerQuartileTimeToMax);
                 groupParameters.AddOutput("medianSlopeToMax", group.MedianSlopeToMax);
                 groupParameters.AddOutput("iqrSlopeToMax", group.UpperQuartileSlopeToMax - group.LowerQuartileSlopeToMax);
+                groupParameters.AddOutput("meanSlopeToMax", group.MeanSlopeToMax);
+                groupParameters.AddOutput("meanSlopeToMaxSD", group.MeanSlopeToMaxSD);
 
                 // Per-subject in this group
                 List<ParameterBag> subjectList = new List<ParameterBag>();
@@ -1058,10 +1048,12 @@ namespace StatsDirect.Builtins
                     cd.AddXSeries(times, null);
                     cd.AddYSeries(subjectObservations, null);
                 }
-                Charting.ScatterXYOptions options = new Charting.ScatterXYOptions(host.Preferences.ShouldUseColour, cd.XSeries, true);
-                options.Title = group.Group.Label;
-                options.XAxisTitle = timesVariable.Title;
-                options.YAxisTitle = observationsVariable.Title;
+                Charting.ScatterXYOptions options = new Charting.ScatterXYOptions(host.Preferences.ShouldUseColour, cd.XSeries, true)
+                {
+                    Title = group.Group.Label,
+                    XAxisTitle = timesVariable.Title,
+                    YAxisTitle = observationsVariable.Title
+                };
                 for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
                     options.MarkerTypes[marker] = ChartRenderer.MarkerTypes[Charting.ScatterXYOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
                 cd.ChartOptions = options;
@@ -1081,16 +1073,19 @@ namespace StatsDirect.Builtins
                 double[] points = values.ToArray();
                 cd.AddXSeries(points, "Area Under Curve");
 
-                NormalOptions options = new NormalOptions(host.Preferences.ShouldUseColour);
-                options.Title = "Normal Plot for AUC";
-                options.XAxisTitle = "Area Under Curve";
-                options.YAxisTitle = "Normal scores";
-                options.Scaling = true;
+                NormalOptions options = new NormalOptions(host.Preferences.ShouldUseColour)
+                {
+                    Title = "Normal Plot for AUC",
+                    XAxisTitle = "Area Under Curve",
+                    YAxisTitle = "Normal scores",
+                    ShouldScaleZ = true
+                };
                 cd.ChartOptions = options;
                 ChartRenderer chart = new Charting.ChartRenderer(cd);
                 string rtf;
-                chart.PlotAndReturnRtf(host, out rtf);
+                ParameterBag results = chart.PlotAndReturnRtf(host, out rtf);
                 outputParameters.AddOutput("aucNormalChart", rtf);
+                outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
 
                 for (int i = 0; i < points.Length; i++)
                     points[i] = Math.Log10(points[i]);
@@ -1099,10 +1094,55 @@ namespace StatsDirect.Builtins
                 options.Title = "Normal Plot for Log(AUC)";
                 options.XAxisTitle = "Log Area Under Curve";
                 chart = new ChartRenderer(cd);
-                chart.PlotAndReturnRtf(host, out rtf);
+                results = chart.PlotAndReturnRtf(host, out rtf);
                 outputParameters.AddOutput("aucLogNormalChart", rtf);
+                outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
             }
 
+            // Compare mean AUCs by group with timepoint standard errors
+            // Line plot, one line per group with x-axis = time, y-axis = observation
+            {
+                List<MultiDoubleSeries> errorSeries = new List<MultiDoubleSeries>(groups.Count);
+                string[] seriesTitles = new string[groups.Count];
+                double cit = PDF.gauinv((1.0 - (1.0 - ci) / 2.0));
+                for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
+                {
+                    TimeSeriesSummaryStore group = groups[groupIndex];
+                    seriesTitles[groupIndex] = group.Group.Label;
+                    MultiDoubleSeries s = new MultiDoubleSeries() { Title = group.Group.Label };
+                    errorSeries.Add(s);
+
+                    // Per-time point in this group
+                    s.Data = new MultiDoublePoint[group.TimeToSummaryMap.Count];
+                    int tIndex = 0;
+                    foreach (TimeSummary time in group.TimeToSummaryMap.Values)
+                    {
+                        MultiDoublePoint pt = new MultiDoublePoint() { X = time.Time };
+                        pt.set_Y(0, time.Mean);
+                        pt.set_Y(1, time.Mean - cit * time.Se);
+                        pt.set_Y(2, time.Mean + cit * time.Se);
+                        s.Data[tIndex++] = pt;
+                    }
+                }
+
+                Charting.ChartDefinition cd = new Charting.ChartDefinition() { ChartType = Templates.ChartType.ErrorBar, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                Charting.ErrorBarOptions options = new Charting.ErrorBarOptions(host.Preferences.ShouldUseColour)
+                {
+                    Series = errorSeries,
+                    Title = "Group comparison",
+                    XAxisTitle = timesVariable.Title,
+                    YAxisTitle = observationsVariable.Title,
+                    JoinMarkersWithLines = true,
+                    ShowLegend = true,
+                    SeriesTitles = seriesTitles
+                };
+                options.SetMarkers();
+                cd.ChartOptions = options;
+                Charting.ChartRenderer chart = new Charting.ChartRenderer(cd);
+                string rtf;
+                ParameterBag scrap = chart.PlotAndReturnRtf(host, out rtf);
+                outputParameters.AddOutput("meanAucChart", rtf);
+            }
 
             // Group comparison (if two groups)
             if (groups.Count == 2)
@@ -1140,14 +1180,14 @@ namespace StatsDirect.Builtins
                 if (doBootstrap)
                 {
                     int bothBoots = (int)Math.Min(groups[0].CompletedIterations, groups[1].CompletedIterations);
-                    double[] tBootstraps = new double[bothBoots + 1];
+                    double[] tBootstraps = new double[bothBoots];
                     int k = 0;
                     for (int i = 0; i < bothBoots; i++)
                     {
-                        double aucDifferenceBootstrap = aucDifference-(groups[0].AucMeans[i] - groups[1].AucMeans[i]);
+                        double aucDifferenceBootstrap = aucDifference - (groups[0].AucMeans[i] - groups[1].AucMeans[i]);
                         double seBootstrap = Math.Sqrt(groups[0].VarAucMeans[i] + groups[1].VarAucMeans[i]);
                         double tBootstrap = aucDifferenceBootstrap / seBootstrap;
-                        tBootstraps[i + 1] = tBootstrap;
+                        tBootstraps[i] = tBootstrap;
                         if (Math.Abs(tBootstrap) >= Math.Abs(t))
                             k++;
                     }
@@ -1210,6 +1250,8 @@ namespace StatsDirect.Builtins
             public double MedianSlopeToMax { get; private set; }
             public double UpperQuartileSlopeToMax { get; private set; }
             public double LowerQuartileSlopeToMax { get; private set; }
+            public double MeanSlopeToMax { get; set; }
+            public double MeanSlopeToMaxSD { get; set; }
             // Bootstrapping
             public double tLclAucBarBootstrap { get; set; }
             public double tUclAucBarBootstrap { get; set; }
@@ -1321,12 +1363,12 @@ namespace StatsDirect.Builtins
 
                     if (!isBootstrap)
                     {
-                        double[] values = new double[IndexToSubjectMap.Length + 1];
+                        double[] values = new double[IndexToSubjectMap.Length];
                         for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
-                            values[subjectIndex + 1] = Observations[timeIndex, subjectIndex];
+                            values[subjectIndex] = Observations[timeIndex, subjectIndex];
 
                         Summary sx = new Summary();
-                        sx.FullSummaryFromX(values, values.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                        sx.FullSummaryFromX(values, values.Length, null, ci, 5, 95, 1); // 1-based data array
                         summary.UpperQuartile = sx.UpperQuartile;
                         summary.Median = sx.Median;
                         summary.LowerQuartile = sx.LowerQuartile;
@@ -1373,7 +1415,9 @@ namespace StatsDirect.Builtins
                             double[] observations = new double[maxIndex + 1];
                             for (int timeIndex = 0; timeIndex <= maxIndex; timeIndex++)
                                 observations[timeIndex] = Observations[timeIndex, subjectIndex];
-                            summary.SlopeToMax = GetProcessedContext(observations, IndexToTimeMap, maxIndex + 1).Slope;
+                            SimpleLinearRegressionContext context = GetProcessedContext(observations, IndexToTimeMap, maxIndex + 1);
+                            summary.SlopeToMax = context.Slope;
+                            summary.SlopeToMaxVariance = context.SeEst * context.SeEst;
                         }
                     }
                 }
@@ -1396,52 +1440,52 @@ namespace StatsDirect.Builtins
                     double td = Se * CriticalT;
                     tLclAucBar = AucMean - td;
                     tUclAucBar = AucMean + td;
-                    double zd = Se * PDF.gauinv(gamma);
+                    double invGamma = PDF.gauinv(gamma);
+                    double zd = Se * invGamma;
                     zLclAucBar = AucMean - zd;
                     zUclAucBar = AucMean + zd;
                     MeanObservationsPerTimePoint = nObservations / (double)IndexToTimeMap.Length;
 
                     // AUC, time to max and slope to max medians and IQRs
-                    double[] aucs = new double[IndexToSubjectMap.Length + 1];
-                    double[] timesToMax = new double[IndexToSubjectMap.Length + 1];
-                    double[] slopesToMax = new double[IndexToSubjectMap.Length + 1];
+                    double[] aucs = new double[IndexToSubjectMap.Length];
+                    double[] timesToMax = new double[IndexToSubjectMap.Length];
+                    double[] slopesToMax = new double[IndexToSubjectMap.Length];
                     for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
                     {
-                        aucs[subjectIndex + 1] = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]].Auc;
-                        timesToMax[subjectIndex + 1] = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]].TimeToMax;
-                        slopesToMax[subjectIndex + 1] = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]].SlopeToMax;
+                        SubjectSummary ss = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]];
+                        aucs[subjectIndex] = ss.Auc;
+                        timesToMax[subjectIndex] = ss.TimeToMax;
+                        slopesToMax[subjectIndex] = ss.SlopeToMax;
+                        double weight = 1.0 / ss.SlopeToMaxVariance;
                     }
 
                     Summary sAuc = new Summary();
-                    sAuc.FullSummaryFromX(aucs, aucs.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                    sAuc.FullSummaryFromX(aucs, aucs.Length, null, ci, 5, 95, 1);
                     UpperQuartileAuc = sAuc.UpperQuartile;
                     MedianAuc = sAuc.Median;
                     LowerQuartileAuc = sAuc.LowerQuartile;
 
                     Summary sTimeToMax = new Summary();
-                    sTimeToMax.FullSummaryFromX(timesToMax, timesToMax.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                    sTimeToMax.FullSummaryFromX(timesToMax, timesToMax.Length, null, ci, 5, 95, 1);
                     UpperQuartileTimeToMax = sTimeToMax.UpperQuartile;
                     MedianTimeToMax = sTimeToMax.Median;
                     LowerQuartileTimeToMax = sTimeToMax.LowerQuartile;
 
                     Summary sSlopeToMax = new Summary();
-                    sSlopeToMax.FullSummaryFromX(slopesToMax, slopesToMax.Length - 1, null, ci, 5, 95, 1); // 1-based data array
+                    sSlopeToMax.FullSummaryFromX(slopesToMax, slopesToMax.Length, null, ci, 5, 95, 1);
                     UpperQuartileSlopeToMax = sSlopeToMax.UpperQuartile;
                     MedianSlopeToMax = sSlopeToMax.Median;
                     LowerQuartileSlopeToMax = sSlopeToMax.LowerQuartile;
+                    MeanSlopeToMax = sSlopeToMax.Mean;
+                    MeanSlopeToMaxSD = sSlopeToMax.SD;
                 }
             }
 
             private SimpleLinearRegressionContext GetProcessedContext(double[] y, double[] x, int length)
             {
-                double[][] copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { y, x }, 0, length, 1);
-                SimpleLinearRegressionContext context = new SimpleLinearRegressionContext
-                {
-                    Y = copiesRemovingMissingRows[0],
-                    X = copiesRemovingMissingRows[1]
-                };
-                double ssy; double sdX; double ssreg; double mnsqr; double seest; double r; double perf;
-                context.CalculateLeastSquaresMethod(out perf, out ssy, out sdX, out ssreg, out mnsqr, out r, out seest);
+                double[][] copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { y, x }, 0, length, 0);
+                SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(copiesRemovingMissingRows[1], copiesRemovingMissingRows[0]);
+                context.CalculateLeastSquaresMethod();
                 return context;
             }
         }
@@ -1472,7 +1516,7 @@ namespace StatsDirect.Builtins
                 CompletedIterations = iterations; // Will be overwritten if we abandon partway.
                 resampled = new TimeSeriesSummaryStore() { Group = original.Group, SortedTimes = original.SortedTimes, SortedSubjectIds = original.SortedSubjectIds };
                 resampled.NoteEndOfPass1(false);
-                double[] tValues = new double[iterations + 1];
+                double[] tValues = new double[iterations];
                 host.StartProgress("Bootstrapping " + original.Group.Label, true);
                 for (int iteration = 0; iteration < iterations; iteration++)
                 {
@@ -1485,7 +1529,7 @@ namespace StatsDirect.Builtins
                         AucMeans[iteration] = resampled.AucMean;
                         VarAucMeans[iteration] = resampled.VarAucMean;
                     }
-                    tValues[iteration + 1] = t;
+                    tValues[iteration] = t;
                     if (iteration % 5000 == 0)
                     {
                         if (host.UpdateProgress(iteration / (double)iterations))

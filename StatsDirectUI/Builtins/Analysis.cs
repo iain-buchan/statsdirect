@@ -1030,10 +1030,12 @@ namespace StatsDirect.Builtins
 
             double k;
             double sek;
+            double sekci;
             double kcil;
             double kciu;
             double kw;
             double sekw;
+            double sekwci;
             double kwcil;
             double kwciu;
             double po;
@@ -1048,7 +1050,7 @@ namespace StatsDirect.Builtins
             double gamaciu;
             double pegama;
             bool ierror;
-            Tables.Kappa(host, o, w, g, out k, out sek, out kcil, out kciu, out kw, out sekw, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out gama, out segama, out gamacil, out gamaciu, out pegama, out ierror);
+            Tables.Kappa(host, o, w, g, out k, out sek, out sekci, out kcil, out kciu, out kw, out sekw, out sekwci, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out gama, out segama, out gamacil, out gamaciu, out pegama, out ierror);
             if (ierror)
                 return null;
 
@@ -1059,6 +1061,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("kappa", host.RoundU(k));
             outputParameters.AddInput("kDouble", k);
             outputParameters.AddOutput("se", host.RoundU(sek));
+            outputParameters.AddOutput("seci", host.RoundU(sekci));
             outputParameters.AddOutput("pc", host.RoundU(cco * 100));
             outputParameters.AddOutput("from", host.RoundU(kcil));
             outputParameters.AddOutput("to", host.RoundU(kciu));
@@ -1099,6 +1102,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("kappaw", host.RoundU(kw));
             outputParameters.AddInput("kwDouble", kw);
             outputParameters.AddOutput("sekw", host.RoundU(sekw));
+            outputParameters.AddOutput("sekwci", host.RoundU(sekwci));
             outputParameters.AddOutput("pcw", Formatting.XRound(cco * 100, 1));
             outputParameters.AddOutput("fromw", host.RoundU(kwcil));
             outputParameters.AddOutput("tow", host.RoundU(kwciu));

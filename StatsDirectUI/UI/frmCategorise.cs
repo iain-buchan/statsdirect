@@ -308,9 +308,9 @@ namespace StatsDirect.UI
             sb.AppendLine(Formatting.PadTo("Sum", k) + Formatting.RoundOut(sx.Sum, flt));
             sb.AppendLine(Formatting.PadTo("Mean", k) + Formatting.RoundOut(sx.Mean, flt));
             sb.AppendLine(Formatting.PadTo("Variance", k) + Formatting.RoundOut(sx.Variance, flt));
-            sb.AppendLine(Formatting.PadTo("Std. dev.", k) + Formatting.RoundOut(sx.Sd, flt));
+            sb.AppendLine(Formatting.PadTo("Std. dev.", k) + Formatting.RoundOut(sx.SD, flt));
             sb.AppendLine(Formatting.PadTo("Variation coef.", k) + Formatting.RoundOut(sx.VarianceCoefficient, flt));
-            sb.AppendLine(Formatting.PadTo("Std. err.", k) + Formatting.RoundOut(sx.Sem, flt));
+            sb.AppendLine(Formatting.PadTo("Std. err.", k) + Formatting.RoundOut(sx.SEM, flt));
             sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * gamma, 1) + "% Upper CL", k) + Formatting.RoundOut(sx.MeanUCL, flt));
             sb.AppendLine(Formatting.PadTo(Formatting.XRound(100 * gamma, 1) + "% Lower CL", k) + Formatting.RoundOut(sx.MeanLCL, flt));
             sb.AppendLine(Formatting.PadTo("Geometric mean", k) + Formatting.RoundOut(sx.GeometricMean, flt));

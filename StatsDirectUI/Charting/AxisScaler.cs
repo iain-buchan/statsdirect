@@ -11,6 +11,7 @@ namespace StatsDirect.Charting
         ///  Try to get a neat axis division suitable for values between qmin and qmax.
         ///  </summary>
         ///  <param name="qmin">The smallest value likely to be plotted on the axis. OUTPUT: May be modified if there are no values so that it is 0; will never otherwise be modified.</param>
+        ///  <param name="qmin">The smallest value greater than zero likely to be plotted on the axis. Used for log scales; may be zero if scaleType is known to be Linear.</param>
         ///  <param name="qmax">The largest value likely to be plotted on the axis. OUTPUT: May be modified if there are no values so that it is 1; will never otherwise be modified.</param>
         ///  <param name="div">OUTPUT: The number of equal divisions in the scale.</param>
         ///  <param name="zmin">OUTPUT: The value of the lowest division.</param>
@@ -18,10 +19,8 @@ namespace StatsDirect.Charting
         ///  <param name="minorTicsPerMajorTic">OUTPUT: The number of divisions between major tics.</param>
         ///  <param name="scaleType"></param>
         ///  <remarks></remarks>
-        public static void Q_Axis(ref double qmin, ref double qmax, out int div, out double zmin, out double zint, out int minorTicsPerMajorTic, ScaleType scaleType)
+        public static void Q_Axis(ref double qmin, double qMinGreaterThanZero, ref double qmax, out int div, out double zmin, out double zint, out int minorTicsPerMajorTic, ScaleType scaleType)
         {
-            double nzmin = 0, nzint = 0;
-
             //  If we have no points at all, the choice is irrelevant so we might as well do it the easy way.
             if (qmin > qmax)
             {
@@ -33,9 +32,9 @@ namespace StatsDirect.Charting
             {
                 case ScaleType.Log10:
                     {
-                        //  Start at the first power of 10 smaller than or equal to qmin, stop at the first power of 10 greater than or equal to qmax.
-                        int minPower = qmin <= 0 ? int.MinValue : (int)Math.Floor(Math.Log10(qmin));
-                        int maxPower = qmax <= 0 ? int.MinValue : (int)Math.Ceiling(Math.Log10(qmax));
+                        //  Start at the first power of 10 smaller than or equal to qminGreaterThanZero, stop at the first power of 10 greater than or equal to qmax.
+                        int minPower = (int)Math.Floor(Math.Log10(qMinGreaterThanZero));
+                        int maxPower = qmax <= 0 ? int.MinValue : (int)Math.Ceiling(Math.Log10(Math.Max(qMinGreaterThanZero, qmax)));
                         div = maxPower - minPower;
                         zmin = minPower;
                         zint = 1;
@@ -54,8 +53,8 @@ namespace StatsDirect.Charting
                     {
                         //  Start at the first power of 2 smaller than or equal to qmin, stop at the first power of 2 greater than or equal to qmax.
                         double scaler = 1.0 / Math.Log(2);
-                        int minPower = qmin <= 0 ? int.MinValue : (int)Math.Floor(Math.Log(qmin) * scaler);
-                        int maxPower = qmax <= 0 ? int.MinValue : (int)Math.Ceiling(Math.Log(qmax) * scaler);
+                        int minPower = (int)Math.Floor(Math.Log(qMinGreaterThanZero) * scaler);
+                        int maxPower = qmax <= 0 ? int.MinValue : (int)Math.Ceiling(Math.Log(Math.Max(qmax, qMinGreaterThanZero)) * scaler);
                         div = maxPower - minPower;
                         zmin = minPower;
                         zint = 1;
@@ -87,6 +86,7 @@ namespace StatsDirect.Charting
                     for (i = 1; i <= tries; i++)
                     {
                         int ndiv = trydiv[i];
+                        double nzmin, nzint;
                         Axis(ref qmin, ref qmax, ndiv, out nzmin, out nzint);
                         int npref;
                         Q_Axis_ShiftMin(qmin, qmax, ref nzmin, ref nzint, ref ndiv, out npref);
