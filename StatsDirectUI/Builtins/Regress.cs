@@ -4307,7 +4307,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptLogisticRegressionModelSelection(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
@@ -4322,16 +4321,6 @@ namespace StatsDirect.Builtins
             int p = context.P;
             int m = context.M;
             double tol = context.TOL;
-            int rank;
-            int df;
-            double[] b;
-            double[] se;
-            double[] fv;
-            double[] dr;
-            double[] h;
-            double[] cov;
-            double[] offst;
-            double dev;
             string dropped = "";
             string err_msg = "";
             //intercept deviance and degrees of freedom can be used from original fit
@@ -4345,19 +4334,18 @@ namespace StatsDirect.Builtins
             //first show the full model
             int[] selectX = new int[p + 1];
             for (int j = 1; j <= p; j++)
-            {
                 selectX[j] = j;
-            }
-            b = new double[p + 1];
-            se = new double[n + 1];
-            cov = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
-            fv = new double[n + 1];
-            dr = new double[n + 1];
-            h = new double[n + 1];
-            offst = new double[n + 1];
-            dev = 0.0;
-            df = 0;
-            rank = 0;
+
+            double[] b = new double[p + 1];
+            double[] se = new double[n + 1];
+            double[] cov = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
+            double[] fv = new double[n + 1];
+            double[] dr = new double[n + 1];
+            double[] h = new double[n + 1];
+            double[] offst = new double[n + 1];
+            double dev = 0.0;
+            int df = 0;
+            int rank = 0;
             bool iweight = true;
             int fault;
             dropped = "";
@@ -4365,7 +4353,7 @@ namespace StatsDirect.Builtins
             Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, ref dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
             LR_ModelSelectionOutput(host, parametersList, fault, label, b, se, mean, dev, devx, p, m, df, dfx, err_msg);
 
-            //now add variables one at time: select the one variable that gives max Akaike information to the model on each addition, building up to the full model again
+            // TODO: Now add variables one at time: select the one variable that gives max Akaike information to the model on each addition, building up to the full model again
 
 
             return new StepResult(StepSuccess.Success, outputParameters);
@@ -4375,78 +4363,68 @@ namespace StatsDirect.Builtins
         {
             ParameterBag parametersParameters = new ParameterBag();
             parametersList.Add(parametersParameters);
-            if (fault == 0)
+            if (fault != 0)
             {
+                parametersParameters.AddOutput("model", err_msg);
+                return;
+            }
 
-                string tx = "logit ";
-                if (label[0].Length > 0)
-                    tx += label[0];
-                else
-                    tx += "Y";
-                tx += " = ";
-                int scoef = 0;
-                for (int j = 1; j <= p; j++)
+            string tx = "logit ";
+            if (label[0].Length > 0)
+                tx += label[0];
+            else
+                tx += "Y";
+            tx += " = ";
+            int scoef = 0;
+            for (int j = 1; j <= p; j++)
+            {
+                if (j > 1 && b[j] >= 0.0)
+                    tx += "+";
+                tx += host.RoundU(b[j]);
+                double prob;
+                if (se[j] != 0.0)
                 {
-                    if (j > 1 && b[j] >= 0.0)
-                        tx += "+";
-                    tx += host.RoundU(b[j]);
-                    double prob;
-                    if (se[j] != 0.0)
-                    {
-                        prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[j] / se[j])));
-                        if (prob < 0.05)
-                        {
-                            scoef += 1;
-                        }
-                        else if (prob >= 0.05 && prob < 0.2)
-                        {
-                            tx += "~?NS";
-                        }
-                        else
-                        {
-                            tx += "~NS";
-                        }
-                    }
+                    prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[j] / se[j])));
+                    if (prob < 0.05)
+                        scoef += 1;
+                    else if (prob >= 0.05 && prob < 0.2)
+                        tx += "~?NS";
                     else
-                    {
-                        prob = Constant.MISSING;
-                        tx += "~N/A";
-                    }
-                    string q = mean ? (j > 1 ? label[j - 1] : " ") : label[j];
-                    if (q.Length == 0)
-                        tx += " X" + j.ToString();
-                    else
-                        tx += " " + q + " ";
-                }
-                parametersParameters.AddOutput("model", tx);
-                parametersParameters.AddOutput("aic", host.RoundU(dev + 2 * (1 + m)));
-                double x2dev = devx - dev;
-                double r2;
-                if (devx == Constant.MISSING)
-                {
-                    x2dev = Constant.MISSING;
-                    r2 = Constant.MISSING;
+                        tx += "~NS";
                 }
                 else
                 {
-                    r2 = x2dev / devx;
+                    prob = Constant.MISSING;
+                    tx += "~N/A";
                 }
-                parametersParameters.AddOutput("r2", host.RoundU(r2));
-                parametersParameters.AddOutput("scoef", scoef.ToString());
-                parametersParameters.AddOutput("ncoef", p.ToString());
-                parametersParameters.AddOutput("x2dev", host.RoundU(x2dev));
-                parametersParameters.AddOutput("p_dev",
-                                           dfx > 0
-                                               ? host.pval(PDF.chivalp(x2dev, Convert.ToDouble(dfx - df)))
-                                               : Formatting.ASTERISK);
+                string q = mean ? (j > 1 ? label[j - 1] : " ") : label[j];
+                if (q.Length == 0)
+                    tx += " X" + j.ToString();
+                else
+                    tx += " " + q + " ";
+            }
 
-
+            parametersParameters.AddOutput("model", tx);
+            parametersParameters.AddOutput("aic", host.RoundU(dev + 2 * (1 + m)));
+            double x2dev = devx - dev;
+            double r2;
+            if (devx == Constant.MISSING)
+            {
+                x2dev = Constant.MISSING;
+                r2 = Constant.MISSING;
             }
             else
             {
-
-                parametersParameters.AddOutput("model", err_msg);
+                r2 = x2dev / devx;
             }
+            parametersParameters.AddOutput("r2", host.RoundU(r2));
+            parametersParameters.AddOutput("scoef", scoef.ToString());
+            parametersParameters.AddOutput("ncoef", p.ToString());
+            parametersParameters.AddOutput("x2dev", host.RoundU(x2dev));
+            parametersParameters.AddOutput("p_dev",
+                                        dfx > 0
+                                            ? host.pval(PDF.chivalp(x2dev, dfx - df))
+                                            : Formatting.ASTERISK);
         }
 
 

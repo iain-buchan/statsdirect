@@ -2513,7 +2513,7 @@ namespace StatsDirect.Builtins
 
             max_iterations = max_iterations == 0 ? 10 : Math.Abs(max_iterations);
             accuracy = accuracy < Constant.EPSNEG ? Constant.EPSNEG * 20.0 : Math.Abs(accuracy);
-            
+
             //err_level 0 no errors
             //err_level 1 input data errors
             //err_level 2 calculation errors critical
@@ -2533,77 +2533,64 @@ namespace StatsDirect.Builtins
                 return;
             }
 
-                int i;
-                int observations;
-                if (use_weights)
+            int i;
+            int observations;
+            if (use_weights)
+            {
+                observations = 0;
+                for (i = 1; i <= records; i++)
                 {
-                    observations = 0;
-                    for (i = 1; i <= records; i++)
-                    {
-                        if (weight[i] < 0.0)
-                        {
-                            err_level = 1;
-                            err_msg = "negative weights";
-                            return;
-                        }
-                        if (weight[i] > 0.0)
-                        {
-                            observations = observations + 1;
-                        }
-                    }
-                }
-                else
-                {
-                    observations = records;
-                }
-                int count = 0;
-                for (i = 1; i <= predictors; i++)
-                {
-                    if (select_x[i] < 0)
+                    if (weight[i] < 0.0)
                     {
                         err_level = 1;
-                        err_msg = "misspecified predictor indicator";
+                        err_msg = "negative weights";
                         return;
                     }
-                    if (select_x[i] > 0)
+                    if (weight[i] > 0.0)
                     {
-                        count = count + 1;
+                        observations = observations + 1;
                     }
                 }
-                if (use_intercept)
+            }
+            else
+            {
+                observations = records;
+            }
+            int count = 0;
+            for (i = 1; i <= predictors; i++)
+            {
+                if (select_x[i] < 0)
+                {
+                    err_level = 1;
+                    err_msg = "misspecified predictor indicator";
+                    return;
+                }
+                if (select_x[i] > 0)
                 {
                     count = count + 1;
                 }
-                if (parameters != count)
+            }
+            if (use_intercept)
+            {
+                count = count + 1;
+            }
+            if (parameters != count)
+            {
+                err_level = 1;
+                err_msg = "misspecified predictors";
+                return;
+            }
+            if (parameters > observations)
+            {
+                err_level = 1;
+                err_msg = "more predictors than observations";
+                return;
+            }
+            if (use_weights)
+            {
+                for (i = 1; i <= records; i++)
                 {
-                    err_level = 1;
-                    err_msg = "misspecified predictors";
-                    return;
-                }
-                if (parameters > observations)
-                {
-                    err_level = 1;
-                    err_msg = "more predictors than observations";
-                    return;
-                }
-                if (use_weights)
-                {
-                    for (i = 1; i <= records; i++)
-                    {
-                        if (weight[i] > 0.0)
-                        {
-                            if (y[i] < 0.0)
-                            {
-                                err_level = 1;
-                                err_msg = "misspecified response variable";
-                                return;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (i = 1; i <= records; i++)
+                    if (weight[i] > 0.0)
                     {
                         if (y[i] < 0.0)
                         {
@@ -2613,79 +2600,92 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                if (use_offset == false)
+            }
+            else
+            {
+                for (i = 1; i <= records; i++)
                 {
-                    for (i = 1; i <= records; i++)
+                    if (y[i] < 0.0)
                     {
-                        offset[i] = 0.0;
+                        err_level = 1;
+                        err_msg = "misspecified response variable";
+                        return;
                     }
                 }
-                // get starting values for linear predictor (eta) and fitted values (fvl)
-                X_Poisson_Starting_Values(records, y, fits, eta, weight, observations);
-                // iteratively re-weighted least squares by SVD
-                int iter;
+            }
+            if (use_offset == false)
+            {
+                for (i = 1; i <= records; i++)
+                {
+                    offset[i] = 0.0;
+                }
+            }
+            // get starting values for linear predictor (eta) and fitted values (fvl)
+            X_Poisson_Starting_Values(records, y, fits, eta, weight, observations);
+            // iteratively re-weighted least squares by SVD
+            int iter;
+            X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, select_x, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
+            // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
+            if (dropped.Length > 0)
+            {
                 X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, select_x, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
-                // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
-                if (dropped.Length > 0)
+            }
+            if (err_level == 2)
+            {
+                return;
+            }
+            df = observations - rank;
+            if (df <= 0)
+            {
+                err_level = 3;
+            }
+            else
+            {
+                // get leverages from matrix of derivatives
+                X_Legerage_From_Derivative(use_intercept, records, predictors, x, select_x, parameters, decomposition, rank, wwt, leverage, tmp);
+            }
+            if (use_weights == false)
+            {
+                for (i = 1; i <= records; i++)
                 {
-                    X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, select_x, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
-                }
-                if (err_level == 2)
-                {
-                    return;
-                }
-                df = observations - rank;
-                if (df <= 0)
-                {
-                    err_level = 3;
-                }
-                else
-                {
-                    // get leverages from matrix of derivatives
-                    X_Legerage_From_Derivative(use_intercept, records, predictors, x, select_x, parameters, decomposition, rank, wwt, leverage, tmp);
-                }
-                if (use_weights == false)
-                {
-                    for (i = 1; i <= records; i++)
+                    deviance_residual[i] = Math.Sqrt(X_Poisson_Deviance(fits[i], y[i], ref ti));
+                    if (y[i] < fits[i] | y[i] == 0.0)
                     {
-                        deviance_residual[i] = Math.Sqrt(X_Poisson_Deviance(fits[i], y[i], ref ti));
+                        deviance_residual[i] = -deviance_residual[i];
+                    }
+                }
+            }
+            else
+            {
+                for (i = 1; i <= records; i++)
+                {
+                    if (weight[i] > 0.0)
+                    {
+                        deviance_residual[i] = Math.Sqrt(weight[i] * X_Poisson_Deviance(fits[i], y[i], ref ti));
                         if (y[i] < fits[i] | y[i] == 0.0)
                         {
                             deviance_residual[i] = -deviance_residual[i];
                         }
                     }
+                    else
+                    {
+                        deviance_residual[i] = 0.0;
+                    }
+                }
+            }
+            // get variance-covariance matrix from SVD
+            X_Covariance_From_SVD(parameters, rank, decomposition, covariance, tmp);
+            for (i = 1; i <= parameters; i++)
+            {
+                if ((covariance[((int)(Math.Floor((i * i + i) / 2.0)))] > 0.0))
+                {
+                    se_beta[i] = Math.Sqrt(covariance[((int)(Math.Floor((i * i + i) / 2.0)))]);
                 }
                 else
                 {
-                    for (i = 1; i <= records; i++)
-                    {
-                        if (weight[i] > 0.0)
-                        {
-                            deviance_residual[i] = Math.Sqrt(weight[i] * X_Poisson_Deviance(fits[i], y[i], ref ti));
-                            if (y[i] < fits[i] | y[i] == 0.0)
-                            {
-                                deviance_residual[i] = -deviance_residual[i];
-                            }
-                        }
-                        else
-                        {
-                            deviance_residual[i] = 0.0;
-                        }
-                    }
+                    se_beta[i] = 0.0;
                 }
-                // get variance-covariance matrix from SVD
-                X_Covariance_From_SVD(parameters, rank, decomposition, covariance, tmp);
-                for (i = 1; i <= parameters; i++)
-                {
-                    if ((covariance[((int)(Math.Floor((i * i + i) / 2.0)))] > 0.0))
-                    {
-                        se_beta[i] = Math.Sqrt(covariance[((int)(Math.Floor((i * i + i) / 2.0)))]);
-                    }
-                    else
-                    {
-                        se_beta[i] = 0.0;
-                    }
-                }
+            }
         }
 
 
@@ -2695,7 +2695,8 @@ namespace StatsDirect.Builtins
         ///  Link function: logistic
         ///  Residuals: deviance
         ///  </summary>
-        public static void X_Logistic_Regression(bool use_intercept, bool use_offset, ref bool use_weights, int records, double[,] x, int x_variables, int[] select_x, int parameters, double[] y_r, double[] y_t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fit, double[] residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
+        ///  <param name="err_level">0 = no errors; 1 = input data errors; 2 = calculation errors critical; 3 = calculation errors carry on</param>
+        public static void X_Logistic_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int xVariables, int[] selectX, int parameters, double[] y_r, double[] y_t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fit, double[] residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
         {
             int observations = 0;
 
@@ -2707,125 +2708,96 @@ namespace StatsDirect.Builtins
             max_iterations = max_iterations == 0 ? 20 : Math.Abs(max_iterations);
             accuracy = accuracy < Constant.EPSNEG ? Constant.EPSNEG * 10.0 : Math.Abs(accuracy);
 
-            //err_level 0 no errors
-            //err_level 1 input data errors
-            //err_level 2 calculation errors critical
-            //err_level 3 calculation errors carry on
-
             err_level = 0;
             if (records < 2)
             {
                 err_level = 1;
-                err_msg="insufficient observations";
+                err_msg = "insufficient observations";
                 return;
             }
-            if (x_variables < 1|| parameters<1)
+            if (xVariables < 1 || parameters < 1)
             {
                 err_level = 1;
                 err_msg = "insufficient predictors";
                 return;
             }
-            
-                int i;
-                if (use_weights)
+
+            if (useWeights)
+            {
+                observations = 0;
+                for (int i = 1; i <= records; i++)
                 {
-                    observations = 0;
-                    for (i = 1; i <= records; i++)
-                    {
-                        if (weight[i] < 0.0)
-                        {
-                            err_level = 1;
-                            err_msg = "negative weights";
-                            return;
-                        }
-                        if (weight[i] > 0.0 & y_t[i] > 0.0)
-                        {
-                            observations = observations + 1;
-                        }
-                    }
-                }
-                int count = 0;
-                for (i = 1; i <= x_variables; i++)
-                {
-                    if (select_x[i] < 0)
+                    if (weight[i] < 0.0)
                     {
                         err_level = 1;
-                        err_msg = "invalid predictor indicator";
+                        err_msg = "negative weights";
                         return;
                     }
-                    if (select_x[i] > 0)
-                    {
-                        count = count + 1;
-                    }
+                    if (weight[i] > 0.0 && y_t[i] > 0.0)
+                        observations++;
                 }
-                if (use_intercept)
-                {
-                    count = count + 1;
-                }
-                if (use_weights)
-                {
-                    for (i = 1; i <= records; i++)
-                    {
-                        if (weight[i] > 0.0)
-                        {
-                            if (y_t[i] < 0.0)
-                            {
-                                err_level = 1;
-                                err_msg = "invalid response denominator";
-                                return;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    observations = 0;
-                    for (i = 1; i <= records; i++)
-                    {
-                        if (y_t[i] < 0.0)
-                        {
-                            err_level = 1;
-                            err_msg = "invalid response denominator";
-                            return;
-                        }
-                        if (y_t[i] > 0.0)
-                        {
-                            observations = observations + 1;
-                        }
-                    }
-                }
-                if (parameters != count)
+            }
+            int count = 0;
+            for (int i = 1; i <= xVariables; i++)
+            {
+                if (selectX[i] < 0)
                 {
                     err_level = 1;
-                    err_msg = "invalid number of available predictors";
+                    err_msg = "invalid predictor indicator";
                     return;
                 }
-                if (parameters > observations)
+                if (selectX[i] > 0)
+                    count++;
+            }
+            if (useIntercept)
+                count++;
+
+            if (useWeights)
+            {
+                for (int i = 1; i <= records; i++)
                 {
-                    err_level = 1;
-                    err_msg = "more predictors than observations";
-                    return;
-                }
-                if (use_weights)
-                {
-                    for (i = 1; i <= records; i++)
+                    if (weight[i] > 0.0 && y_t[i] < 0.0)
                     {
-                        if (weight[i] > 0.0)
-                        {
-                            if (y_r[i] < 0.0 | y_r[i] > y_t[i])
-                            {
-                                err_level = 1;
-                                err_msg = "invalid response variable, check for r > n";
-                                return;
-                            }
-                        }
+                        err_level = 1;
+                        err_msg = "invalid response denominator";
+                        return;
                     }
                 }
-                else
+            }
+            else
+            {
+                observations = 0;
+                for (int i = 1; i <= records; i++)
                 {
-                    for (i = 1; i <= records; i++)
+                    if (y_t[i] < 0.0)
                     {
-                        if (y_r[i] < 0.0 | y_r[i] > y_t[i])
+                        err_level = 1;
+                        err_msg = "invalid response denominator";
+                        return;
+                    }
+                    if (y_t[i] > 0.0)
+                        observations++;
+                }
+            }
+            if (parameters != count)
+            {
+                err_level = 1;
+                err_msg = "invalid number of available predictors";
+                return;
+            }
+            if (parameters > observations)
+            {
+                err_level = 1;
+                err_msg = "more predictors than observations";
+                return;
+            }
+            if (useWeights)
+            {
+                for (int i = 1; i <= records; i++)
+                {
+                    if (weight[i] > 0.0)
+                    {
+                        if (y_r[i] < 0.0 || y_r[i] > y_t[i])
                         {
                             err_level = 1;
                             err_msg = "invalid response variable, check for r > n";
@@ -2833,46 +2805,76 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                if (use_offset == false)
+            }
+            else
+            {
+                for (int i = 1; i <= records; i++)
                 {
-                    for (i = 1; i <= records; i++)
+                    if (y_r[i] < 0.0 || y_r[i] > y_t[i])
                     {
-                        offset[i] = 0.0;
+                        err_level = 1;
+                        err_msg = "invalid response variable, check for r > n";
+                        return;
                     }
                 }
+            }
+            if (useOffset == false)
+            {
+                for (int i = 1; i <= records; i++)
+                    offset[i] = 0.0;
+            }
 
-                // get starting values for linear predictor and fitted values
-                X_Logistic_Starting_Values(records, y_r, y_t, fit, eta, weight, observations);
+            // get starting values for linear predictor and fitted values
+            X_Logistic_Starting_Values(records, y_r, y_t, fit, eta, weight, observations);
 
-                // iteratively re-weighted least squares by SVD
-                int iter;
-                X_Iterative_Weighted_Least_Squares(1, use_intercept, ref use_weights, records, x, x_variables, select_x, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
-                // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
-                if (dropped.Length > 0)
+            // iteratively re-weighted least squares by SVD
+            int iter;
+            X_Iterative_Weighted_Least_Squares(1, useIntercept, ref useWeights, records, x, xVariables, selectX, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
+            // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
+            if (dropped.Length > 0)
+            {
+                X_Iterative_Weighted_Least_Squares(1, useIntercept, ref useWeights, records, x, xVariables, selectX, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
+            }
+            if (err_level == 2)
+                return;
+
+            df = observations - rank;
+            if (df <= 0)
+            {
+                err_level = 3;
+            }
+            else
+            {
+                // get leverages from matrix of derivatives
+                X_Legerage_From_Derivative(useIntercept, records, xVariables, x, selectX, parameters, decomposition, rank, wwt, leverage, tmp);
+            }
+            if (useWeights == false)
+            {
+                for (int i = 1; i <= records; i++)
                 {
-                    X_Iterative_Weighted_Least_Squares(1, use_intercept, ref use_weights, records, x, x_variables, select_x, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
+                    if (y_t[i] > 0.0)
+                    {
+                        residual[i] = Math.Sqrt(X_Logistic_Deviance(fit[i], y_r[i], y_t[i]));
+                        if (y_r[i] < fit[i] || y_r[i] == 0.0)
+                        {
+                            residual[i] = -residual[i];
+                        }
+                    }
+                    else
+                    {
+                        residual[i] = 0.0;
+                    }
                 }
-                if (err_level ==2)
+            }
+            else
+            {
+                for (int i = 1; i <= records; i++)
                 {
-                    return;
-                }
-                df = observations - rank;
-                if (df <= 0)
-                {
-                    err_level = 3;
-                }
-                else
-                {
-                    // get leverages from matrix of derivatives
-                    X_Legerage_From_Derivative(use_intercept, records, x_variables, x, select_x, parameters, decomposition, rank, wwt, leverage, tmp);
-                }
-                if (use_weights == false)
-                {
-                    for (i = 1; i <= records; i++)
+                    if (weight[i] > 0.0)
                     {
                         if (y_t[i] > 0.0)
                         {
-                            residual[i] = Math.Sqrt(X_Logistic_Deviance(fit[i], y_r[i], y_t[i]));
+                            residual[i] = Math.Sqrt(weight[i] * X_Logistic_Deviance(fit[i], y_r[i], y_t[i]));
                             if (y_r[i] < fit[i] | y_r[i] == 0.0)
                             {
                                 residual[i] = -residual[i];
@@ -2883,46 +2885,26 @@ namespace StatsDirect.Builtins
                             residual[i] = 0.0;
                         }
                     }
+                    else
+                    {
+                        residual[i] = 0.0;
+                    }
+                }
+            }
+            // get variance-covariance matrix from SVD
+            X_Covariance_From_SVD(parameters, rank, decomposition, covariance, tmp);
+            for (int i = 1; i <= parameters; i++)
+            {
+                int idx = ((int)(Math.Floor((i * i + i) / 2.0)));
+                if ((covariance[idx] > 0.0))
+                {
+                    se_beta[i] = Math.Sqrt(covariance[idx]);
                 }
                 else
                 {
-                    for (i = 1; i <= records; i++)
-                    {
-                        if (weight[i] > 0.0)
-                        {
-                            if (y_t[i] > 0.0)
-                            {
-                                residual[i] = Math.Sqrt(weight[i] * X_Logistic_Deviance(fit[i], y_r[i], y_t[i]));
-                                if (y_r[i] < fit[i] | y_r[i] == 0.0)
-                                {
-                                    residual[i] = -residual[i];
-                                }
-                            }
-                            else
-                            {
-                                residual[i] = 0.0;
-                            }
-                        }
-                        else
-                        {
-                            residual[i] = 0.0;
-                        }
-                    }
+                    se_beta[i] = 0.0;
                 }
-                // get variance-covariance matrix from SVD
-                X_Covariance_From_SVD(parameters, rank, decomposition, covariance, tmp);
-                for (i = 1; i <= parameters; i++)
-                {
-                    int idx = ((int)(Math.Floor((i * i + i) / 2.0)));
-                    if ((covariance[idx] > 0.0))
-                    {
-                        se_beta[i] = Math.Sqrt(covariance[idx]);
-                    }
-                    else
-                    {
-                        se_beta[i] = 0.0;
-                    }
-                }
+            }
         }
 
 
@@ -2992,7 +2974,7 @@ namespace StatsDirect.Builtins
             {
                 for (int i = 1; i <= records; i++)
                 {
-                    if (weight[i] == 0.0 | y_t[i] == 0.0)
+                    if (weight[i] == 0.0 || y_t[i] == 0.0)
                     {
                         fitted_value[i] = 0.0;
                         linear_predictor[i] = 0.0;
@@ -3040,17 +3022,15 @@ namespace StatsDirect.Builtins
             {
                 if (select_x[j] > 0)
                 {
-                    k = k + 1;
+                    k++;
                     for (i = 1; i <= records; i++)
-                    {
                         decomposition[i, k] = x[i, j];
-                    }
                 }
             }
             // working weights and response
             do
             {
-                iterations = iterations + 1;
+                iterations++;
                 // get derivative then variance
                 switch (model)
                 {
@@ -3340,7 +3320,7 @@ namespace StatsDirect.Builtins
                 {
                     if (isx[j] > 0)
                     {
-                        k = k + 1;
+                        k++;
                         work[k] = x[i, j];
                     }
                 }
@@ -3718,7 +3698,7 @@ namespace StatsDirect.Builtins
             int ncolp = n;
             int ierr = 0;
             X_SVD_of_Bidiagonal(n, sv, work, ncolb, b, ncolp, a, m, out ierr);
-            if(ierr!=0)
+            if (ierr != 0)
             {
                 err_level = 2;
                 err_msg = "SVD failed";
@@ -4348,7 +4328,7 @@ namespace StatsDirect.Builtins
                 a[k1 + ist, j + ist] = aij;
             }
         }
-        
+
         ///  <summary>
         ///  Get the angles for the plane rotation
         ///  c = 1/sqrt(1 + t^2) and s = c*t where t = b/a
