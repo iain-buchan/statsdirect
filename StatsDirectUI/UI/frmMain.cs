@@ -656,43 +656,43 @@ namespace StatsDirect.UI
         /// </summary>
         private void SetUpForm(StatsDirectForm child)
         {
-            Cursor = Cursors.WaitCursor;
-            // Make and add the child window
-            child.MdiParent = this;
-
-            // Make and add the corresponding tab(page)
-            TabPage tabPage = new TabPage(child.Text);
-            tabWindows.TabPages.Add(tabPage);
-            tabWindows.SelectedTab = tabPage;
-
-            // Add the report to the drop-down reports list
-            if (child.ImplementsIReport)
+            using (new WaitCursor())
             {
-                ComboFormAdapter cfa = new ComboFormAdapter(child);
-                cboActiveReport.Items.Add(cfa);
-                cboActiveReport.SelectedItem = cfa;
+                // Make and add the child window
+                child.MdiParent = this;
+
+                // Make and add the corresponding tab(page)
+                TabPage tabPage = new TabPage(child.Text);
+                tabWindows.TabPages.Add(tabPage);
+                tabWindows.SelectedTab = tabPage;
+
+                // Add the report to the drop-down reports list
+                if (child.ImplementsIReport)
+                {
+                    ComboFormAdapter cfa = new ComboFormAdapter(child);
+                    cboActiveReport.Items.Add(cfa);
+                    cboActiveReport.SelectedItem = cfa;
+                }
+
+                // Store the information about the window
+                WindowInformation info = new WindowInformation { TabPage = tabPage, Window = child };
+                child.Tag = info;
+                tabPage.Tag = info;
+                SdApplication.SoleInstance.AddWindow(info);
+
+                // Update the display
+                closeToolStripMenuItem.Enabled = (tabWindows.TabPages.Count > 0);
+                child.WindowState = FormWindowState.Maximized;
+                child.Show();
+                // Work around an unpleasant glitch in the framework that stops maximised windows showing their icons when first shown.
+                // From http://www.xtremedotnettalk.com/showthread.php?t=94923
+                if (mnuMain.Items[0].GetType().Name == "SystemMenuItem")
+                {
+                    // int t = mnuMain.Height;
+                    mnuMain.Items[0].Image = child.Icon.ToBitmap();
+                    // mnuMain.Height = t; // otherwise it goes too big.  Fixed by using 16x16 icons only.
+                }
             }
-
-            // Store the information about the window
-            WindowInformation info = new WindowInformation { TabPage = tabPage, Window = child };
-            child.Tag = info;
-            tabPage.Tag = info;
-            SdApplication.SoleInstance.AddWindow(info);
-
-            // Update the display
-            closeToolStripMenuItem.Enabled = (tabWindows.TabPages.Count > 0);
-            child.WindowState = FormWindowState.Maximized;
-            child.Show();
-            // Work around an unpleasant glitch in the framework that stops maximised windows showing their icons when first shown.
-            // From http://www.xtremedotnettalk.com/showthread.php?t=94923
-            if (mnuMain.Items[0].GetType().Name == "SystemMenuItem")
-            {
-                // int t = mnuMain.Height;
-                mnuMain.Items[0].Image = child.Icon.ToBitmap();
-                // mnuMain.Height = t; // otherwise it goes too big.  Fixed by using 16x16 icons only.
-            }
-
-            Cursor = Cursors.Default;
         }
 
         private void newGridToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1022,45 +1022,43 @@ namespace StatsDirect.UI
         {
             bool status;
             bool oldSelectGroupsByIdentifier = SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
-            bool wasWaiting = Application.UseWaitCursor;
-            if (wasWaiting)
-                Application.UseWaitCursor = false;
-            lblSelectionMessage.Text = selectionMessage;
-            ShowPanel(PanelType.Selection, false);
-            string oldCancelText = cmdCancel.Text;
-            if (null != cancelButtonLabel)
-                cmdCancel.Text = cancelButtonLabel;
-            selectingData = true;
-            okPressed = false;
-            cancelPressed = false;
-            // wait here until user presses OK or Cancel, or does something else suitable
-            do
+            using (new DefaultCursor())
             {
-                Application.DoEvents(); // HACK: Force an inner event loop
-                Thread.Sleep(5);
-            } while (selectingData);
-            if (null != puntedException)
-            {
-                Exception ex = puntedException;
-                puntedException = null;
-                throw ex;
+                lblSelectionMessage.Text = selectionMessage;
+                ShowPanel(PanelType.Selection, false);
+                string oldCancelText = cmdCancel.Text;
+                if (null != cancelButtonLabel)
+                    cmdCancel.Text = cancelButtonLabel;
+                selectingData = true;
+                okPressed = false;
+                cancelPressed = false;
+                // wait here until user presses OK or Cancel, or does something else suitable
+                do
+                {
+                    Application.DoEvents(); // HACK: Force an inner event loop
+                    Thread.Sleep(5);
+                } while (selectingData);
+                if (null != puntedException)
+                {
+                    Exception ex = puntedException;
+                    puntedException = null;
+                    throw ex;
+                }
+                if (okPressed)
+                {
+                    status = true;
+                    wasPivoted = false;
+                }
+                else
+                {
+                    status = false;
+                    wasPivoted = (oldSelectGroupsByIdentifier != SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier);
+                }
+                if (!wasPivoted)
+                    ShowPanel(PanelType.Default, false);
+                cmdCancel.Text = oldCancelText;
+                // Wait for the screen to update
             }
-            if (okPressed)
-            {
-                status = true;
-                wasPivoted = false;
-            }
-            else
-            {
-                status = false;
-                wasPivoted = (oldSelectGroupsByIdentifier != SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier);
-            }
-            if (!wasPivoted)
-                ShowPanel(PanelType.Default, false);
-            cmdCancel.Text = oldCancelText;
-            // Wait for the screen to update
-            if (wasWaiting)
-                Application.UseWaitCursor = true;
             return status;
         }
 
@@ -1692,10 +1690,6 @@ namespace StatsDirect.UI
                         // Keep existing input parameters.  TODO: Is this correct, or should we be going back to the originals?
                         inputParameters = ex.InputParameters;
                         // Go round again, processing this operation
-
-                        if (!ShouldRunOperationOnSelection(operation, inputParameters))
-                        {
-                        }
                     }
                 }
                 catch (CloseCurrentOperationException)
@@ -1738,7 +1732,6 @@ namespace StatsDirect.UI
             // We may have had one or more parameters displayed
             ClearCombinedParameters();
             SdApplication.SoleInstance.EraseAnyOutstandingParameters();
-            SdApplication.SoleInstance.PointNormal();
         }
 
         /// <summary>

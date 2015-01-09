@@ -788,7 +788,6 @@ namespace StatsDirect.UI
 
                 if (block_maxgn > treatment_cats)
                 {
-                    PointNormal();
                     SdApplication.SoleInstance.Error("Two way ANOVA requires only one observation per block - you entered " + (block_maxgn / (double)treatment_cats) + ".\r\n\r\nPlease use a repeated/replicate measures method or a regression model instead.", msg_ti);
                     continue;
                 }
@@ -1007,10 +1006,6 @@ namespace StatsDirect.UI
             return true;
         }
 
-        private static void PointNormal()
-        {
-            SdApplication.SoleInstance.PointNormal();
-        }
         /*
                 private DataFrame GIDXW(DataAcquisitionMode mode, int min, int max, int neq, string lab, out double[,] wt, ref string wtlab, ref double sumwt, out bool userCancelled)
                 {
@@ -1340,7 +1335,6 @@ namespace StatsDirect.UI
 
         public static void SelNumWarn(int min, int max, int totcols, string msg_ti)
         {
-            PointNormal();
             if (min == max)
                 SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + min.ToString() + " column" + (min > 1 ? "s" : "") + " but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
             else

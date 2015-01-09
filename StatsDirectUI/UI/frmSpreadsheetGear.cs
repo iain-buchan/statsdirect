@@ -836,7 +836,6 @@ namespace StatsDirect.UI
             if (null == cellSelection)
             {
                 // No selection
-                Application.UseWaitCursor = false;
                 return null;
             }
 
@@ -884,8 +883,10 @@ namespace StatsDirect.UI
 
                             if (size < 1)
                             {
-                                SdApplication.SoleInstance.PointNormal();
-                                SdApplication.SoleInstance.MsgboxX("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                                using (new DefaultCursor())
+                                {
+                                    SdApplication.SoleInstance.MsgboxX("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                                }
                                 return null;
                             }
                             variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered);
@@ -996,21 +997,23 @@ namespace StatsDirect.UI
                             {
                                 if (isShort && !isUniqueLength)
                                 {
-                                    SdApplication.SoleInstance.PointNormal();
-                                    switch (
-                                        SdApplication.SoleInstance.MsgboxX(
-                                            "Does the top row of your selection contain titles?",
-                                            MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question,
-                                            "Worksheet Categorical Data Selection", true))
+                                    using (new DefaultCursor())
                                     {
-                                        case DialogResult.Yes:
-                                            topRow = 1;
-                                            break;
-                                        case DialogResult.Cancel:
-                                            return null;
-                                        default:
-                                            topRow = 0;
-                                            break;
+                                        switch (
+                                            SdApplication.SoleInstance.MsgboxX(
+                                                "Does the top row of your selection contain titles?",
+                                                MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question,
+                                                "Worksheet Categorical Data Selection", true))
+                                        {
+                                            case DialogResult.Yes:
+                                                topRow = 1;
+                                                break;
+                                            case DialogResult.Cancel:
+                                                return null;
+                                            default:
+                                                topRow = 0;
+                                                break;
+                                        }
                                     }
                                 }
                                 else
@@ -1575,7 +1578,6 @@ namespace StatsDirect.UI
             }
             catch (ArithmeticException ex)
             {
-                SdApplication.SoleInstance.PointNormal();
                 SdApplication.SoleInstance.FriendlyError("Internal error reading data from worksheet", ex, false);
                 throw; // TODO: What is the correct behaviour here?  Merely returning null causes a infinite loop
             }

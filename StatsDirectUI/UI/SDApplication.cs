@@ -118,15 +118,6 @@ namespace StatsDirect.UI
             Process.Start(DOWNLOAD_URL);
         }
 
-        /// <summary>
-        /// Ensure the cursor is reset to normal from whatever it may presently be.
-        /// </summary>
-        public void PointNormal()
-        {
-            if (Application.UseWaitCursor)
-                Application.UseWaitCursor = false;
-        }
-
         private void SavePersistentValues()
         {
             try
@@ -1026,13 +1017,16 @@ namespace StatsDirect.UI
 
         public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, bool showHelpButton, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
-            if (showHelpButton)
-                return MsgboxX(text, buttons, icon, caption, SoleInstance.ActiveHelpTopic, defaultButton);
+            using (new DefaultCursor())
+            {
+                if (showHelpButton)
+                    return MsgboxX(text, buttons, icon, caption, SoleInstance.ActiveHelpTopic, defaultButton);
 
-            // Use a Windows message box if our own interface isn't visible; use our own if it is.
-            if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
-                return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0);
-            return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
+                // Use a Windows message box if our own interface isn't visible; use our own if it is.
+                if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
+                    return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0);
+                return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
+            }
         }
 
         private bool ModalDialogShowing()
