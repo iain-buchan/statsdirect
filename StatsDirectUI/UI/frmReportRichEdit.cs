@@ -73,12 +73,26 @@ namespace StatsDirect.UI
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveContents();
+            try
+            {
+                SaveContents();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't save file", ex, false);
+            }
         }
 
         private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveAsContents();
+            try
+            {
+                SaveAsContents();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't save file", ex, false);
+            }
         }
 
         private void SelectAllToolStripMenuItem_Click(object sender, EventArgs e)
