@@ -4768,7 +4768,6 @@ namespace StatsDirect.Builtins
                 ql[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * P1) + 1];
                 qu[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * P2) + 1];
             }
-            // RTF_LoadTemplate("lr_bootstrap.rtf")
             if (boots == booted)
                 outputParameters.AddOutput("boots", booted.ToString());
             else

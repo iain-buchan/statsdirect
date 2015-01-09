@@ -18,6 +18,17 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLogisticRegressionBootstrap" />
-		<report type="text/rtf" filename="lr_bootstrap.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[<report>
+<line><title>Logistic regression - bootstrap odds ratio estimates</title></line>
+<line></line>
+<line>Resampled <in>boots</in> times.</line>
+<line></line>
+<table>
+<tr><th>Parameter</th><th>Observed OR</th><th>Bias</th><th><in>pc</in>% bias-corrected CI</th></tr>
+<block name="parameters"><tr><td><in>par</in></td><td><in>obs</in></td><td><in>bias</in></td><td><ci><in>ci</in></ci></td></tr></block>
+</table>
+</report>]]>
+    </report>
+  </steps>
 </operation>

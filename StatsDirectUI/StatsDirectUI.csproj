@@ -1119,9 +1119,6 @@
     <None Include="Assets\Template\likely.rtf" />
     <None Include="Assets\Template\LINISED.rtf" />
     <None Include="Assets\Template\logrank.rtf" />
-    <None Include="Assets\Template\lpredict.rtf" />
-    <None Include="Assets\Template\lr_bootstrap.rtf" />
-    <None Include="Assets\Template\lr_class.rtf" />
     <None Include="Assets\Template\MANNWHIT.rtf" />
     <None Include="Assets\Template\mantel.rtf" />
     <None Include="Assets\Template\mcnamar.rtf" />

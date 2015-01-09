@@ -19,6 +19,16 @@
       </parameters>
     </settings>
 		<builtin function-name="rptLogisticRegressionPrediction" />
-		<report type="text/rtf" filename="lpredict.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[<report>
+<line><title>Logistic regression - prediction</title></line>
+<line></line>
+<block name="predictors"><line><in>x</in></line></block>
+<line></line>
+<line><in>y</in></line>
+<line></line>
+<line><ci><in>pc</in>% Confidence interval = <in>from</in> to <in>to</in></ci></line>
+</report>]]>
+    </report>
+  </steps>
 </operation>

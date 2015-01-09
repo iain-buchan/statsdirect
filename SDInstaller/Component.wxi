@@ -1142,15 +1142,6 @@
     <Component Id="logrank.rtf">
       <File Id="logrank.rtf" Name="logrank.rtf" KeyPath="yes" />
     </Component>
-    <Component Id="lpredict.rtf">
-      <File Id="lpredict.rtf" Name="lpredict.rtf" KeyPath="yes" />
-    </Component>
-    <Component Id="lr_bootstrap.rtf">
-      <File Id="lr_bootstrap.rtf" Name="lr_bootstrap.rtf" KeyPath="yes" />
-    </Component>
-    <Component Id="lr_class.rtf">
-      <File Id="lr_class.rtf" Name="lr_class.rtf" KeyPath="yes" />
-    </Component>
     <Component Id="MANNWHIT.rtf">
       <File Id="MANNWHIT.rtf" Name="MANNWHIT.rtf" KeyPath="yes" />
     </Component>
