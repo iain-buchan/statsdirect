@@ -397,7 +397,6 @@
     <ComponentRef Id="likely.rtf" />
     <ComponentRef Id="LINISED.rtf" />
     <ComponentRef Id="logrank.rtf" />
-    <ComponentRef Id="LOGREG.rtf" />
     <ComponentRef Id="lpredict.rtf" />
     <ComponentRef Id="lr_bootstrap.rtf" />
     <ComponentRef Id="lr_class.rtf" />

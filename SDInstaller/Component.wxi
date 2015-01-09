@@ -1142,9 +1142,6 @@
     <Component Id="logrank.rtf">
       <File Id="logrank.rtf" Name="logrank.rtf" KeyPath="yes" />
     </Component>
-    <Component Id="LOGREG.rtf">
-      <File Id="LOGREG.rtf" Name="LOGREG.rtf" KeyPath="yes" />
-    </Component>
     <Component Id="lpredict.rtf">
       <File Id="lpredict.rtf" Name="lpredict.rtf" KeyPath="yes" />
     </Component>
