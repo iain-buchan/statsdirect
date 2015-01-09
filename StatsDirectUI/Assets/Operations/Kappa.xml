@@ -47,11 +47,11 @@
             <parameters>
               <frame>
                 <name>weights</name>
-                <prompt>="Select table of WEIGHTS (" + parameters["ycats"] + " rows by " + parameters["xcats"] + " columns)"</prompt>
-                <length>=parameters["ycats"]</length>
+                <prompt>="Select table of WEIGHTS (" + parameters["ycats"].AsInt32 + " rows by " + parameters["xcats"].AsInt32 + " columns)"</prompt>
+                <length>=parameters["ycats"].AsInt32</length>
                 <mode>NumericReplaceMissing</mode>
-                <min-columns>=parameters["xcats"]</min-columns>
-                <max-columns>=parameters["xcats"]</max-columns>
+                <min-columns>=parameters["xcats"].AsInt32</min-columns>
+                <max-columns>=parameters["xcats"].AsInt32</max-columns>
                 <clear-selection-first>true</clear-selection-first>
               </frame>
             </parameters>
