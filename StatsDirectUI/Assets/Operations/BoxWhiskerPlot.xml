@@ -13,6 +13,7 @@
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>100</max-columns>
+          <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
     </settings>
