@@ -400,9 +400,6 @@
     <ComponentRef Id="lpredict.rtf" />
     <ComponentRef Id="lr_bootstrap.rtf" />
     <ComponentRef Id="lr_class.rtf" />
-    <ComponentRef Id="lr_det.rtf" />
-    <ComponentRef Id="lr_fit.creole" />
-    <ComponentRef Id="lr_model_selection.rtf" />
     <ComponentRef Id="MANNWHIT.rtf" />
     <ComponentRef Id="mantel.rtf" />
     <ComponentRef Id="mcnamar.rtf" />

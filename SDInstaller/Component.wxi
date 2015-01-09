@@ -1151,15 +1151,6 @@
     <Component Id="lr_class.rtf">
       <File Id="lr_class.rtf" Name="lr_class.rtf" KeyPath="yes" />
     </Component>
-    <Component Id="lr_det.rtf">
-      <File Id="lr_det.rtf" Name="lr_det.rtf" KeyPath="yes" />
-    </Component>
-    <Component Id="lr_fit.creole">
-      <File Id="lr_fit.creole" Name="lr_fit.creole" KeyPath="yes" />
-    </Component>
-    <Component Id="lr_model_selection.rtf">
-      <File Id="lr_model_selection.rtf" Name="lr_model_selection.rtf" KeyPath="yes" />
-    </Component>
     <Component Id="MANNWHIT.rtf">
       <File Id="MANNWHIT.rtf" Name="MANNWHIT.rtf" KeyPath="yes" />
     </Component>

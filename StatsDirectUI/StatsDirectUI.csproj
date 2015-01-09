@@ -1029,7 +1029,6 @@
     <None Include="Assets\Operations\Operation.xsd" />
     <None Include="Assets\Template\chirxc.creole" />
     <None Include="Assets\Template\fisher.creole" />
-    <None Include="Assets\Template\lr_fit.creole" />
     <None Include="Assets\Template\relrisk.creole" />
     <None Include="Assets\Template\odds.creole" />
     <None Include="Charting\app.config" />
@@ -1123,9 +1122,6 @@
     <None Include="Assets\Template\lpredict.rtf" />
     <None Include="Assets\Template\lr_bootstrap.rtf" />
     <None Include="Assets\Template\lr_class.rtf" />
-    <None Include="Assets\Template\lr_det.rtf" />
-    <None Include="Assets\Template\lr_fit.rtf" />
-    <None Include="Assets\Template\lr_model_selection.rtf" />
     <None Include="Assets\Template\MANNWHIT.rtf" />
     <None Include="Assets\Template\mantel.rtf" />
     <None Include="Assets\Template\mcnamar.rtf" />
@@ -1689,7 +1685,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -5,6 +5,32 @@
   <prerequisite-operation>LogisticRegression</prerequisite-operation>
   <steps>
 		<builtin function-name="rptLogisticRegressionModel" />
-		<report type="text/rtf" filename="lr_det.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[<report>
+<line><title>Logistic regression - model analysis</title></line>
+<line></line>
+<line>Accuracy = <in>acc</in></line>
+<line>Log likelihood with all covariates = <in>ll</in></line>
+<line></line>
+<line>Deviance with all covariates = <in>dev</in>   df = <in>idf</in>   rank = <in>rank</in></line>
+<line>Akaike information criterion = <in>aka</in></line>
+<line>Schwartz information criterion = <in>sch</in></line>
+<line></line>
+<line>Deviance with no covariates = <in>devx</in></line>
+<line>Deviance (likelihood ratio) chi-square = <in>x2dev</in>   df = <in>x2df</in>   <pval><in>x2p</in></pval></line>
+<line>Pseudo (McFadden) R-square = <in>r2</in></line>
+<line>Pseudo (likelihood ratio index) R-square = <in>r2i</in></line>
+<line></line>
+<line>Pearson chi-square goodness of fit = <in>x2</in>   df = <in>idf</in>   <pval><in>p</in></pval></line>
+<line>Deviance goodness of fit = <in>dev_good</in>   df = <in>df_good</in>   <pval><in>p_good</in></pval></line>
+<line>Hosmer-Lemeshow test = <in>hl</in>   df = <in>df_hl</in>   <pval><in>p_hl</in></pval></line>
+<line></line>
+<table>
+<tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</th><th>Z Value</th><th><pval>P(>|Z|)</pval></th></tr>
+<block name="parameters"><tr><td><in>par</in></td><td><in>coef</in></td><td><in>err</in></td><td><in>z</in></td><td><pval><in>p_var</in></pval></td></tr>
+</block>
+</table>
+</report>]]>
+    </report>
+  </steps>
 </operation>

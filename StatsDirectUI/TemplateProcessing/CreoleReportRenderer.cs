@@ -1,6 +1,4 @@
-﻿#define AUTOFIT
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -26,9 +24,6 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         private static string Prettify(string substitutedTemplate)
         {
-#if !AUTOFIT
-            int STANDARD_CELL_WIDTH = 1440; // twips
-#endif
             Dictionary<string, string> substitutions = new Dictionary<string, string>
             {
                 // Colour table entries: 1=black, 2=white, 3=green/blue, 4=strong blue (CI), 5=green (pval), 6=strong red (warn), 7=dark red, 8=dark blue.
@@ -42,42 +37,30 @@ namespace StatsDirect.TemplateProcessing
                 { "</i>", @"}" },
                 { "<line>", @"" },
                 { "</line>", @"\par " },
+                { "<model>", @"{\cf8 " },
+                { "</model>", @"}" },
                 { "<pval>", @"{\cf5 " },
                 { "</pval>", @"}" },
                 { "<subtitle>", @"{\ul " },
                 { "</subtitle>", @"}" },
-#if AUTOFIT
-                { "<td width=\"2\">", @"\pard\intbl " },
-                { "<td width=\"1.5\">", @"\pard\intbl " },
                 { "<td>", @"\pard\intbl " },
-#else
-                // TODO: Add general width parsing - this is a gross hack.
-                { "<td width=\"2\">", @"\pard\intbl!!2!! " },
-                { "<td width=\"1.5\">", @"\pard\intbl!!1.5!! " },
-                { "<td>", @"\pard\intbl " },
-#endif
                 { "</td>", @"\cell " },
-#if AUTOFIT
-                { "<th width=\"2\">", @"\pard\intbl {\ul " },
-                { "<th width=\"1.5\">", @"\pard\intbl {\ul " },
+                { "<tdfirst>", @"\pard\intbl!!FIRST!! " },
+                { "</tdfirst>", @"\cell " },
+                { "<tdspan/>", @"\pard\intbl!!SPAN!!\cell " },
                 { "<th>", @"\pard\intbl {\ul " },
-#else
-                // TODO: Add general width parsing - this is a gross hack.
-                { "<th width=\"2\">", @"\pard\intbl!!2!! {\ul " },
-                { "<th width=\"1.5\">", @"\pard\intbl!!1.5!! {\ul " },
-                { "<th>", @"\pard\intbl {\ul " },
-#endif
                 { "</th>", @"}\cell " },
+                { "<thfirst>", @"\pard\intbl!!FIRST!! {\ul " },
+                { "</thfirst>", @"}\cell " },
+                { "<thspan/>", @"\pard\intbl!!SPAN!!\cell " },
                 { "<table>", @"{" },
                 { "</table>", @"}" },
                 { "<title>", @"{\ul\b " },
                 { "</title>", @"}" },
-#if AUTOFIT
-                { "<tr>", @"\trowd\trgaph135\trleft0\trautofit1!!CELLSHERE!! " },
-#else
-                { "<tr>", @"\trowd\trgaph135\trleft0!!CELLSHERE!! " },
-#endif
+                { "<tr>", @"\trowd\trgaph135\trleft0\trautofit1!!CELLDEFINITION!! " },
                 { "</tr>", @"\row " },
+                { "<u>", @"{\ul " },
+                { "</u>", @"}" },
                 { "<warn>", @"{\cf6 " },
                 { "</warn>", @"}" }
             };
@@ -89,7 +72,7 @@ namespace StatsDirect.TemplateProcessing
             // ASSUMPTION: An entire table row is on one line in the source and hence in the translated data.
             string[] splitResults = afterSubstitutions.Split('\n');
             StringBuilder finalOutput = new StringBuilder();
-            Regex cellFinder = new Regex(@"\\intbl(?:!!(?<width>[0-9.]+)!!)?");
+            Regex cellFinder = new Regex(@"\\intbl(?:!!(?<span>[A-Z]+)!!)?");
             foreach (string unchangedLine in splitResults)
             {
                 // Do not propagate blank lines
@@ -105,25 +88,20 @@ namespace StatsDirect.TemplateProcessing
                     {
                         // If we get here, there are some cells in this line.  We need one \cellx<width> for each \cell, placed at the end of the row data (which we know ends with \!!CELLSHERE!! from the translation of </tr>).
                         StringBuilder cellxs = new StringBuilder();
-#if AUTOFIT
-                        // cellxs.Append(@"\trautofit1");
-#else
-                        double widthsToDate = 0;
-#endif
                         foreach (Match m in matches)
                         {
-#if AUTOFIT
+                            string spanString = m.Groups["span"].Value;
+                            if ("FIRST".Equals(spanString))
+                            {
+                                cellxs.Append(@"\clmgf");
+                            }
+                            else if ("SPAN".Equals(spanString))
+                            {
+                                cellxs.Append(@"\clmrg");
+                            }
                             cellxs.Append(@"\clNoWrap\cellx0");
-#else
-                            string widthString = m.Groups["width"].Value;
-                            double thisWidth = 1;
-                            if (!string.IsNullOrWhiteSpace(widthString))
-                                thisWidth = double.Parse(widthString);
-                            widthsToDate += thisWidth;
-                            cellxs.Append(string.Format(@"\clNoWrap\cellx{0}", widthsToDate * STANDARD_CELL_WIDTH));
-#endif
                         }
-                        finalOutput.AppendLine(line.Replace("!!2!!", "").Replace("!!1.5!!", "").Replace(@"!!CELLSHERE!!", cellxs.ToString()));
+                        finalOutput.AppendLine(line.Replace("!!FIRST!!", "").Replace("!!SPAN!!", "").Replace(@"!!CELLDEFINITION!!", cellxs.ToString()));
                     }
                 }
                 else
