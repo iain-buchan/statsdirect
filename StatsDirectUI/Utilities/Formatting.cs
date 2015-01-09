@@ -128,7 +128,7 @@ namespace StatsDirect.Utilities
 
         public static string pval(double P, int decimalPlaces, bool useScientificNotationForSmallPValues)
         {
-            if (Math.Abs(P) > 10)
+            if (double.IsNaN(P) || double.IsInfinity(P) || Math.Abs(P) > 10)
                 return "P = *";
             if (P < Math.Pow(10D, -decimalPlaces))
             {
@@ -181,9 +181,7 @@ namespace StatsDirect.Utilities
         public static double SafeExp(double x)
         {
             if (Math.Abs(x) > Math.Log(Constant.LMREAL))
-            {
                 return Constant.MISSING;
-            }
             double z = Math.Exp(x);
             if (z > Constant.LMREAL || z < Constant.SPREAL)
                 return Constant.MISSING;
