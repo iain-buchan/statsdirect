@@ -3235,9 +3235,9 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("par", q);
                 if (i > 1 || mean == false)
                 {
-                    double odr = Formatting.SafeExp(se_beta[i]);
-                    double lci = Formatting.SafeExp(se_beta[i] - se_beta[i] * cit);
-                    double uci = Formatting.SafeExp(se_beta[i] + se_beta[i] * cit);
+                    double odr = Formatting.SafeExp(beta[i]);
+                    double lci = Formatting.SafeExp(beta[i] - se_beta[i] * cit);
+                    double uci = Formatting.SafeExp(beta[i] + se_beta[i] * cit);
                     varParameters.AddOutput("or", host.RoundU(odr));
                     varParameters.AddOutput("ci", "("+ host.RoundU(lci) + "  to  " + host.RoundU(uci) + ")");
                 }
