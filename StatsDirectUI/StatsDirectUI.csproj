@@ -133,15 +133,15 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
-    <Reference Include="SpreadsheetGear2012.Core, Version=7.1.2.168, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2012.Core, Version=7.1.2.170, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\SpreadsheetGear2012.Core.dll</HintPath>
     </Reference>
-    <Reference Include="SpreadsheetGear2012.Drawing, Version=7.1.2.168, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2012.Drawing, Version=7.1.2.170, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\SpreadsheetGear2012.Drawing.dll</HintPath>
     </Reference>
-    <Reference Include="SpreadsheetGear2012.Windows.Forms, Version=7.1.2.168, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2012.Windows.Forms, Version=7.1.2.170, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\SpreadsheetGear2012.Windows.Forms.dll</HintPath>
     </Reference>
@@ -1682,7 +1682,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
