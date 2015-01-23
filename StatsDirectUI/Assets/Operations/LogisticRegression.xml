@@ -129,7 +129,7 @@
 <line><title>Logistic regression</title></line>
 <block name="warn">
 <line></line>
-<line><in>warn</in></line>
+<line><warn><in>warn</in></warn></line>
 </block>
 <line></line>
 <table>
