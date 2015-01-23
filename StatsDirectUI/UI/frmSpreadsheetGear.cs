@@ -598,40 +598,43 @@ namespace StatsDirect.UI
             return new Area(grid, range.Row, range.Column, range.Row + range.RowCount - 1, range.Column + range.ColumnCount - 1);
         }
 
-        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DoOrWarn(Action func, string explanation)
         {
             try
             {
-                Close();
+                func();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't close workbook", ex, false);
+                SdApplication.SoleInstance.FriendlyError(explanation, ex, false);
             }
+        }
+
+        private void DoOrSwallow(Action func)
+        {
+            try
+            {
+                func();
+            }
+            catch (Exception)
+            {
+                // TODO: It'd be nice to know that the exception happened for our diagnostic purposes.
+            }
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(Close, "Couldn't close workbook");
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                SaveContents();
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't save workbook", ex, false);
-            }
+            DoOrWarn(() => SaveContents(), "Couldn't save workbook");
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                SaveAsContents();
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't save workbook", ex, false);
-            }
+            DoOrWarn(() => SaveAsContents(), "Couldn't save workbook");
         }
 
         private class CellColumnSelection
@@ -2025,20 +2028,25 @@ namespace StatsDirect.UI
 
         private void cutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            workbookView.Cut();
+            DoOrWarn(workbookView.Cut, "Cut failed");
         }
 
         private void copyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            workbookView.Copy();
+            DoOrWarn(workbookView.Copy, "Copy failed");
         }
 
         private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            workbookView.Paste();
+            DoOrWarn(workbookView.Paste, "Paste failed");
         }
 
         private void pasteSpecialToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(PasteSpecial, "Paste Special failed");
+        }
+
+        private void PasteSpecial()
         {
             using (frmPasteSpecial frm = new frmPasteSpecial())
             {
@@ -2050,15 +2058,20 @@ namespace StatsDirect.UI
 
         private void printToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            workbookView.Print(true);
+            DoOrWarn(Print, "Print failed");
         }
 
         private void printPreviewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            workbookView.PrintPreview();
+            DoOrWarn(workbookView.PrintPreview, "Print preview failed");
         }
 
         private void pageSetupToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(PageSetup, "Page setup failed");
+        }
+
+        private void PageSetup()
         {
             if (null != workbookView && null != workbookView.ActiveWorksheet)
             {
@@ -2118,16 +2131,26 @@ namespace StatsDirect.UI
 
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(Undo, "Undo failed");
+        }
+
+        private void Undo()
+        {
             if (workbookView.ActiveCommandManager.CanUndo)
                 workbookView.ActiveCommandManager.Undo();
         }
 
         private void cellsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowRangeExplorer();
+            DoOrWarn(ShowRangeExplorer, "Format cells failed");
         }
 
         private void sheetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(InsertSheet, "Insert sheet failed");
+        }
+
+        private void InsertSheet()
         {
             workbookView.GetLock();
             try
@@ -2142,6 +2165,11 @@ namespace StatsDirect.UI
         }
 
         private void rowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(InsertRow, "Insert row failed");
+        }
+
+        private void InsertRow()
         {
             workbookView.GetLock();
             try
@@ -2164,6 +2192,11 @@ namespace StatsDirect.UI
 
         private void columnToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(InsertColumn, "Insert column failed");
+        }
+
+        private void InsertColumn()
+        {
             workbookView.GetLock();
             try
             {
@@ -2185,7 +2218,7 @@ namespace StatsDirect.UI
 
         private void cellsToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            InsertCells();
+            DoOrWarn(InsertCells, "Insert cells failed");
         }
 
         private void InsertCells()
@@ -2237,6 +2270,11 @@ namespace StatsDirect.UI
 
         private void sheetSettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(SheetSettings, "Sheet settings failed");
+        }
+
+        private void SheetSettings()
+        {
             workbookView.GetLock();
             try
             {
@@ -2252,6 +2290,11 @@ namespace StatsDirect.UI
 
         private void findToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(EditFind, "Find failed");
+        }
+
+        private void EditFind()
+        {
             // Fix this rather nasty workaround once SpreadsheetGear has API support for its find dialog
             workbookView.Focus();
             SendKeys.Send("^f");
@@ -2259,6 +2302,11 @@ namespace StatsDirect.UI
         }
 
         private void replaceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(EditReplace, "Replace failed");
+        }
+
+        private void EditReplace()
         {
             // Fix this rather nasty workaround once SpreadsheetGear has API support for its replace dialog
             workbookView.Focus();
@@ -2268,7 +2316,7 @@ namespace StatsDirect.UI
 
         private void goToCellToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            GoToCell();
+            DoOrWarn(GoToCell, "Go to cell failed");
         }
 
         private void GoToCell()
@@ -2282,10 +2330,6 @@ namespace StatsDirect.UI
                     workbookView.ActiveWorksheet.Cells[cell].Activate();
                 }
             }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.Warning(ex.Message, "Go to cell");
-            }
             finally
             {
                 workbookView.ReleaseLock();
@@ -2294,6 +2338,11 @@ namespace StatsDirect.UI
 
         private void clearSelectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ClearSelectedCells, "Clear selection failed");
+        }
+
+        private void ClearSelectedCells()
+        {
             workbookView.Focus();
             SendKeys.Send("{DEL}");
             Application.DoEvents(); // Force processing of events, in this case clearing the selection
@@ -2301,7 +2350,7 @@ namespace StatsDirect.UI
 
         private void deleteSpecialToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DeleteSpecial();
+            DoOrWarn(DeleteSpecial, "Delete Special failed");
         }
 
         private void DeleteSpecial()
@@ -2354,6 +2403,11 @@ namespace StatsDirect.UI
 
         private void deleteColumnToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(DeleteColumn, "Delete column failed");
+        }
+
+        private void DeleteColumn()
+        {
             workbookView.GetLock();
             try
             {
@@ -2368,6 +2422,11 @@ namespace StatsDirect.UI
 
         private void deleteRowToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(DeleteRow, "Delete row failed");
+        }
+
+        private void DeleteRow()
+        {
             workbookView.GetLock();
             try
             {
@@ -2381,6 +2440,11 @@ namespace StatsDirect.UI
         }
 
         private void deleteSheetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(DeleteSheet, "Delete sheet failed");
+        }
+
+        private void DeleteSheet()
         {
             bool shouldDelete = SdApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.  Are you sure you want to delete this sheet?", "Delete sheet");
             if (shouldDelete)
@@ -2398,6 +2462,11 @@ namespace StatsDirect.UI
         }
 
         private void describeColumnDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(DescribeColumn, "Description failed");
+        }
+
+        private void DescribeColumn()
         {
             try
             {
@@ -2421,13 +2490,14 @@ namespace StatsDirect.UI
             {
                 // Give up!
             }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Description failed", ex, false);
-            }
         }
 
         private void fillDownToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(EditFillDown, "Fill down failed");
+        }
+
+        private void EditFillDown()
         {
             workbookView.GetLock();
             try
@@ -2442,6 +2512,11 @@ namespace StatsDirect.UI
 
         private void fillRightToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(EditFillRight, "Fill right failed");
+        }
+
+        private void EditFillRight()
+        {
             workbookView.GetLock();
             try
             {
@@ -2454,6 +2529,11 @@ namespace StatsDirect.UI
         }
 
         private void rowHideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(HideRow, "Hide row failed");
+        }
+
+        private void HideRow()
         {
             workbookView.GetLock();
             try
@@ -2469,6 +2549,11 @@ namespace StatsDirect.UI
 
         private void rowUnhideToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(UnhideRow, "Unhide row failed");
+        }
+
+        private void UnhideRow()
+        {
             workbookView.GetLock();
             try
             {
@@ -2482,6 +2567,11 @@ namespace StatsDirect.UI
         }
 
         private void columnHideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(HideColumn, "Hide column failed");
+        }
+
+        private void HideColumn()
         {
             workbookView.GetLock();
             try
@@ -2497,6 +2587,11 @@ namespace StatsDirect.UI
 
         private void columnUnhideToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(UnhideColumn, "Unhide column failed");
+        }
+
+        private void UnhideColumn()
+        {
             workbookView.GetLock();
             try
             {
@@ -2511,6 +2606,11 @@ namespace StatsDirect.UI
 
         private void freezePanesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(FreezePanes, "Freeze panes failed");
+        }
+
+        private void FreezePanes()
+        {
             workbookView.GetLock();
             try
             {
@@ -2524,11 +2624,11 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    int row = workbookView.ActiveCell.Row;
-                    int column = workbookView.ActiveCell.Column;
+                    int row = workbookView.ActiveCell.Row - worksheet.WindowInfo.ScrollRow;
+                    int column = workbookView.ActiveCell.Column - worksheet.WindowInfo.ScrollColumn;
 
-                    worksheet.WindowInfo.SplitColumns = column; // column + 1;
-                    worksheet.WindowInfo.SplitRows = row; // row + 1;
+                    worksheet.WindowInfo.SplitColumns = column;
+                    worksheet.WindowInfo.SplitRows = row;
 
                     // Freeze the panes.
                     info.FreezePanes = true;
@@ -2543,6 +2643,11 @@ namespace StatsDirect.UI
 
         private void autoFitWidthToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(AutoFitWidth, "Auto-fit failed");
+        }
+
+        private void AutoFitWidth()
+        {
             workbookView.GetLock();
             try
             {
@@ -2555,6 +2660,11 @@ namespace StatsDirect.UI
         }
 
         private void defaultFontToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(SetDefaultFont, "Set default font failed");
+        }
+
+        private void SetDefaultFont()
         {
             FontDialog dlg = new FontDialog
             {
@@ -2583,6 +2693,11 @@ namespace StatsDirect.UI
 
         private void lockSheetToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(LockSheet, "Lock sheet failed");
+        }
+
+        private void LockSheet()
+        {
             workbookView.GetLock();
             try
             {
@@ -2597,11 +2712,21 @@ namespace StatsDirect.UI
 
         private void workbookView_ActiveTabChanged(object sender, ActiveTabChangedEventArgs e)
         {
+            DoOrSwallow(NoteActiveTabChanged);
+        }
+
+        private void NoteActiveTabChanged()
+        {
             if (null != workbookView.ActiveWorksheet)
                 lockSheetToolStripMenuItem.Checked = workbookView.ActiveWorksheet.ProtectContents;
         }
 
         private void frmSpreadsheetGear_Shown(object sender, EventArgs e)
+        {
+            DoOrSwallow(NoteShown);
+        }
+
+        private void NoteShown()
         {
             if (null != workbookView.ActiveWorksheet)
             {
@@ -2612,6 +2737,11 @@ namespace StatsDirect.UI
 
         private void importDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ImportData, "Import data failed");
+        }
+
+        private void ImportData()
+        {
             DoOperation("ImportWorksheet");
         }
 
@@ -2621,6 +2751,11 @@ namespace StatsDirect.UI
         }
 
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ExportData, "Export data failed");
+        }
+
+        private void ExportData()
         {
             DoOperation("ExportWorksheet");
         }
@@ -2647,47 +2782,45 @@ namespace StatsDirect.UI
 
         private void cutContextMenuItem1_Click(object sender, EventArgs e)
         {
-            workbookView.Cut();
+            DoOrSwallow(EditCut);
         }
 
         private void copyContextMenuItem_Click(object sender, EventArgs e)
         {
-            workbookView.Copy();
+            DoOrSwallow(EditCopy);
         }
 
         private void pasteContextMenuItem_Click(object sender, EventArgs e)
         {
-            workbookView.Paste();
+            DoOrSwallow(EditPaste);
         }
 
         private void pasteSpecialContextMenuItem_Click(object sender, EventArgs e)
         {
-            using (frmPasteSpecial frm = new frmPasteSpecial())
-            {
-                frm.ShowDialog(this);
-                if (!frm.UserCancelled)
-                    workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
-            }
+            DoOrSwallow(PasteSpecial);
         }
 
         private void insertContextMenuItem_Click(object sender, EventArgs e)
         {
-            InsertCells();
+            DoOrSwallow(InsertCells);
         }
 
         private void deleteContextMenuItem_Click(object sender, EventArgs e)
         {
-            DeleteSpecial();
+            DoOrSwallow(DeleteSpecial);
         }
 
         private void clearContentsContextMenuItem_Click(object sender, EventArgs e)
         {
-            workbookView.Focus();
-            SendKeys.Send("{DEL}");
-            Application.DoEvents(); // Force processing of events, in this case clearing the selection
+            DoOrSwallow(ClearSelectedCells);
         }
 
         private void insertCommentContextMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrSwallow(InsertComment);
+        }
+
+        private void InsertComment()
         {
             workbookView.ActiveWorkbookSet.GetLock();
             try
@@ -2707,15 +2840,12 @@ namespace StatsDirect.UI
 
         private void goToContextMenuItem_Click(object sender, EventArgs e)
         {
-            GoToCell();
+            DoOrWarn(GoToCell, "Go to cell failed");
         }
 
         private void findAndReplaceContextMenuItem_Click(object sender, EventArgs e)
         {
-            // Fix this rather nasty workaround once SpreadsheetGear has API support for its replace dialog
-            workbookView.Focus();
-            SendKeys.Send("^h");
-            Application.DoEvents(); // Force processing of events, in this case showing the replace dialog
+            DoOrSwallow(EditReplace);
         }
 
         private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
@@ -2748,6 +2878,11 @@ namespace StatsDirect.UI
 
         private void deleteCommentContextMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrSwallow(DeleteComment);
+        }
+
+        private void DeleteComment()
+        {
             workbookView.ActiveWorkbookSet.GetLock();
             try
             {
@@ -2763,6 +2898,11 @@ namespace StatsDirect.UI
         }
 
         private void showCommentContextMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrSwallow(ShowComment);
+        }
+
+        private void ShowComment()
         {
             workbookView.ActiveWorkbookSet.GetLock();
             try
@@ -2780,6 +2920,11 @@ namespace StatsDirect.UI
 
         private void editCommentContextMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrSwallow(EditComment);
+        }
+
+        private void EditComment()
+        {
             workbookView.ActiveWorkbookSet.GetLock();
             try
             {
@@ -2796,6 +2941,11 @@ namespace StatsDirect.UI
 
         private void hideCommentContextMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrSwallow(HideComment);
+        }
+
+        private void HideComment()
+        {
             workbookView.ActiveWorkbookSet.GetLock();
             try
             {
@@ -2811,6 +2961,11 @@ namespace StatsDirect.UI
         }
 
         private void redoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(EditRedo, "Couldn't redo");
+        }
+
+        private void EditRedo()
         {
             if (workbookView.ActiveCommandManager.CanRedo)
                 workbookView.ActiveCommandManager.Redo();
@@ -2868,7 +3023,7 @@ namespace StatsDirect.UI
 
         private void formatCellsContextMenuItem_Click(object sender, EventArgs e)
         {
-            ShowRangeExplorer();
+            DoOrWarn(ShowRangeExplorer, "Couldn't format cells");
         }
 
         private void ShowRangeExplorer()
@@ -2889,21 +3044,7 @@ namespace StatsDirect.UI
 
         private void summaryContextMenuItem_Click(object sender, EventArgs e)
         {
-            // This describes the column.  If there's not a column selection... select it!
-            if (workbookView.RangeSelection.CellCount < 2)
-            {
-                workbookView.GetLock();
-                try
-                {
-                    IRange cellSelection = workbookView.RangeSelection;
-                    cellSelection.EntireColumn.Select();
-                }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
-            }
-            DoOperation("QuickSummary");
+            DoOrWarn(DescribeColumn, "Couldn't describe column");
         }
 
         internal void SetUnsavedName(string childName)
@@ -2922,7 +3063,7 @@ namespace StatsDirect.UI
 
         private void exportToRToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ExportSelectionToR();
+            DoOrWarn(ExportSelectionToR, "Couldn't export selection to clipboard in R format");
         }
 
         private void ExportSelectionToR()
@@ -2953,38 +3094,36 @@ namespace StatsDirect.UI
 
         private void renameWorksheetContextMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(RenameWorksheet, "Couldn't rename worksheet");
+        }
+
+        private void RenameWorksheet()
+        {
+            string currentWorksheetName = null;
+            workbookView.GetLock();
             try
             {
-                string currentWorksheetName = null;
-                workbookView.GetLock();
-                try
+                currentWorksheetName = workbookView.ActiveSheet.Name;
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
+            if (null != currentWorksheetName)
+            {
+                string newWorksheetName = SdApplication.SoleInstance.GetString("Enter new name for worksheet", "Rename Worksheet", currentWorksheetName);
+                if (!string.IsNullOrWhiteSpace(newWorksheetName))
                 {
-                    currentWorksheetName = workbookView.ActiveSheet.Name;
-                }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
-                if (null != currentWorksheetName)
-                {
-                    string newWorksheetName = SdApplication.SoleInstance.GetString("Enter new name for worksheet", "Rename Worksheet", currentWorksheetName);
-                    if (!string.IsNullOrWhiteSpace(newWorksheetName))
+                    workbookView.GetLock();
+                    try
                     {
-                        workbookView.GetLock();
-                        try
-                        {
-                            workbookView.ActiveSheet.Name = newWorksheetName;
-                        }
-                        finally
-                        {
-                            workbookView.ReleaseLock();
-                        }
+                        workbookView.ActiveSheet.Name = newWorksheetName;
+                    }
+                    finally
+                    {
+                        workbookView.ReleaseLock();
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't rename worksheet", ex, false);
             }
         }
     }
