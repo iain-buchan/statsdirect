@@ -183,9 +183,7 @@ namespace StatsDirect.UI
             for (int i = 0; i <= (int)ScaleType.Category; i++)
             {
                 if (allowedScaleTypes.Contains((ScaleType)i))
-                {
                     cboScale.Items.Add(printableScaleTypes[i]);
-                }
             }
             if (cboScale.Items.Count > 0)
                 cboScale.SelectedIndex = 0;
@@ -270,6 +268,14 @@ namespace StatsDirect.UI
 
             double qMin = DataMin;
             double qMax = DataMax;
+            if (ShouldShowMarkerLine && HasMarkerLine)
+            {
+                double v = MarkerLineValue;
+                if (v < qMin)
+                    qMin = v;
+                if (v > qMax)
+                    qMax = v;
+            }
             ScaleType selectedScaleType = SelectedScaleType();
             Charting.AxisScaler.Q_Axis(ref qMin, DataMinGreaterThanZero, ref qMax, out div, out zMin, out zInt, out minorTicsPerMajorTic, selectedScaleType);
             mask = Charting.AxisScaler.AxisMask(zInt, zMin, div, minorTicsPerMajorTic, selectedScaleType);
@@ -277,7 +283,7 @@ namespace StatsDirect.UI
             txtScaleTextMask.Text = mask;
             txtMinimum.Text = zMin.ToString(mask);
             txtTics.Text = div.ToString("N0");
-            txtInterval.Text = zInt.ToString(mask);
+            txtInterval.Text = zInt.ToString(/*mask*/); // #1090: Don't use mask as it's calculated for the major tics; minor tics may well require more decimal places.
             settingValues = false;
             lblMaximumValue.Text = (zMin + div * zInt).ToString(mask);
         }
@@ -313,6 +319,11 @@ namespace StatsDirect.UI
                 return;
             mask = txtScaleTextMask.Text;
             lblMaximumValue.Text = ScaleMax.ToString(mask);
+        }
+
+        private void cboMarkerLineAt_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SetCandidateScaleValues();
         }
     }
 }

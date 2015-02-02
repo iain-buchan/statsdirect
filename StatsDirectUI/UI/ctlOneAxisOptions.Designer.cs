@@ -233,6 +233,7 @@
             this.cboMarkerLineAt.Size = new System.Drawing.Size(125, 21);
             this.cboMarkerLineAt.TabIndex = 21;
             this.cboMarkerLineAt.Text = "None";
+            this.cboMarkerLineAt.SelectedIndexChanged += new System.EventHandler(this.cboMarkerLineAt_SelectedIndexChanged);
             // 
             // lblMarkerLineAt
             // 
