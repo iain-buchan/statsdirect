@@ -33,37 +33,30 @@ namespace StatsDirect.UI
 
         public void StartCheck()
         {
+            UseWaitCursor = true;
             statsDirectChecker = new StatsDirectUpdateChecker();
             statsDirectChecker.StartCheck(UpdateStatsDirectStatus);
         }
 
         private void UpdateStatsDirectStatus(object sender, UpdateCheckerEventArgs e)
         {
-            if (e.IsFinal)
-                Application.UseWaitCursor = false;
             if (lblStatsDirectStatus.InvokeRequired)
-            {
-                lblStatsDirectStatus.Invoke(new MethodInvoker(delegate
-                {
-                    lblStatsDirectStatus.Text = e.Message;
-                    if (e.IsFinal)
-                    {
-                        cmdUpdateStatsDirect.Visible = e.NewerVersionAvailable;
-                        lblWhatsNew.Visible = e.NewerVersionAvailable;
-                    }
-                }));
-            }
+                lblStatsDirectStatus.Invoke(new MethodInvoker(delegate { FixupUi(e); }));
             else
-            {
-                if (e.IsFinal)
-                {
-                    lblStatsDirectStatus.Text = e.Message;
-                    cmdUpdateStatsDirect.Visible = e.NewerVersionAvailable;
-                    lblWhatsNew.Visible = e.NewerVersionAvailable;
-                }
-            }
+                FixupUi(e);
             if (e.IsFinal && e.NewerVersionAvailable && null != NewerVersionAvailable)
                 NewerVersionAvailable.Invoke(this, EventArgs.Empty);
+        }
+
+        private void FixupUi(UpdateCheckerEventArgs e)
+        {
+            lblStatsDirectStatus.Text = e.Message;
+            if (e.IsFinal)
+            {
+                cmdUpdateStatsDirect.Visible = e.NewerVersionAvailable;
+                lblWhatsNew.Visible = e.NewerVersionAvailable;
+                UseWaitCursor = false;
+            }
         }
 
         private void lblWhatsNew_Click(object sender, EventArgs e)

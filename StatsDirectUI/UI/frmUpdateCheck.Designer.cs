@@ -30,10 +30,10 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmUpdateCheck));
             this.cmdClose = new System.Windows.Forms.Button();
-            this.ctlUpdateRCheck1 = new StatsDirect.UI.ctlUpdateRCheck();
-            this.ctlUpdateStatsDirectCheck1 = new StatsDirect.UI.ctlUpdateStatsDirectCheck();
             this.tlpOuter = new System.Windows.Forms.TableLayoutPanel();
             this.pnlClose = new System.Windows.Forms.Panel();
+            this.ctlUpdateStatsDirectCheck1 = new StatsDirect.UI.ctlUpdateStatsDirectCheck();
+            this.ctlUpdateRCheck1 = new StatsDirect.UI.ctlUpdateRCheck();
             this.tlpOuter.SuspendLayout();
             this.pnlClose.SuspendLayout();
             this.SuspendLayout();
@@ -49,24 +49,6 @@
             this.cmdClose.Text = "&Close";
             this.cmdClose.UseVisualStyleBackColor = true;
             this.cmdClose.Click += new System.EventHandler(this.cmdClose_Click);
-            // 
-            // ctlUpdateRCheck1
-            // 
-            this.ctlUpdateRCheck1.AutoSize = true;
-            this.ctlUpdateRCheck1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ctlUpdateRCheck1.Location = new System.Drawing.Point(3, 134);
-            this.ctlUpdateRCheck1.Name = "ctlUpdateRCheck1";
-            this.ctlUpdateRCheck1.Size = new System.Drawing.Size(261, 125);
-            this.ctlUpdateRCheck1.TabIndex = 6;
-            // 
-            // ctlUpdateStatsDirectCheck1
-            // 
-            this.ctlUpdateStatsDirectCheck1.AutoSize = true;
-            this.ctlUpdateStatsDirectCheck1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ctlUpdateStatsDirectCheck1.Location = new System.Drawing.Point(3, 3);
-            this.ctlUpdateStatsDirectCheck1.Name = "ctlUpdateStatsDirectCheck1";
-            this.ctlUpdateStatsDirectCheck1.Size = new System.Drawing.Size(261, 125);
-            this.ctlUpdateStatsDirectCheck1.TabIndex = 7;
             // 
             // tlpOuter
             // 
@@ -97,6 +79,24 @@
             this.pnlClose.Size = new System.Drawing.Size(261, 29);
             this.pnlClose.TabIndex = 0;
             // 
+            // ctlUpdateStatsDirectCheck1
+            // 
+            this.ctlUpdateStatsDirectCheck1.AutoSize = true;
+            this.ctlUpdateStatsDirectCheck1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ctlUpdateStatsDirectCheck1.Location = new System.Drawing.Point(3, 3);
+            this.ctlUpdateStatsDirectCheck1.Name = "ctlUpdateStatsDirectCheck1";
+            this.ctlUpdateStatsDirectCheck1.Size = new System.Drawing.Size(261, 125);
+            this.ctlUpdateStatsDirectCheck1.TabIndex = 7;
+            // 
+            // ctlUpdateRCheck1
+            // 
+            this.ctlUpdateRCheck1.AutoSize = true;
+            this.ctlUpdateRCheck1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ctlUpdateRCheck1.Location = new System.Drawing.Point(3, 134);
+            this.ctlUpdateRCheck1.Name = "ctlUpdateRCheck1";
+            this.ctlUpdateRCheck1.Size = new System.Drawing.Size(261, 125);
+            this.ctlUpdateRCheck1.TabIndex = 6;
+            // 
             // frmUpdateCheck
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -114,7 +114,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Check for updates";
-            this.UseWaitCursor = true;
+            this.TopMost = true;
             this.tlpOuter.ResumeLayout(false);
             this.tlpOuter.PerformLayout();
             this.pnlClose.ResumeLayout(false);

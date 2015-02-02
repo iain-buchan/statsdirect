@@ -21,10 +21,6 @@ namespace StatsDirect.UI
                 ctlUpdateStatsDirectCheck1.NewerVersionAvailable += ctlUpdateStatsDirectCheck1_NewerVersionAvailable;
                 ctlUpdateRCheck1.Visible = false;
             }
-            else
-            {
-                Application.UseWaitCursor = true;
-            }
             ctlUpdateRCheck1.StartCheck();
             ctlUpdateStatsDirectCheck1.StartCheck();
         }

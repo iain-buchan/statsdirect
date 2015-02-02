@@ -27,25 +27,27 @@ namespace StatsDirect.UI
 
         public void StartCheck()
         {
+            UseWaitCursor = true;
             checker = new RUpdateChecker();
             checker.StartCheck(UpdateStatus);
         }
 
         private void UpdateStatus(object sender, UpdateCheckerEventArgs e)
         {
-            if (e.IsFinal)
-                Application.UseWaitCursor = false;
             if (lblStatus.InvokeRequired)
-            {
-                lblStatus.Invoke(new MethodInvoker(delegate { lblStatus.Text = e.Message; cmdDownloadR.Visible = e.IsFinal && e.NewerVersionAvailable; }));
-            }
+                lblStatus.Invoke(new MethodInvoker(delegate { FixupUi(e); }));
             else
-            {
-                lblStatus.Text = e.Message;
-                cmdDownloadR.Visible = e.IsFinal && e.NewerVersionAvailable;
-            }
+                FixupUi(e);
             if (e.IsFinal && e.NewerVersionAvailable && null != NewerVersionAvailable)
                 NewerVersionAvailable.Invoke(this, EventArgs.Empty);
+        }
+
+        private void FixupUi(UpdateCheckerEventArgs e)
+        {
+            lblStatus.Text = e.Message;
+            cmdDownloadR.Visible = e.IsFinal && e.NewerVersionAvailable;
+            if (e.IsFinal)
+                UseWaitCursor = false;
         }
 
         private void cmdDownloadR_Click(object sender, EventArgs e)
