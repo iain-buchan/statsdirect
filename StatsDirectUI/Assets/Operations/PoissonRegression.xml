@@ -39,6 +39,7 @@
         </boolean>
         <option>
           <name>has-exposure</name>
+          <lifetime>SessionForThisOperation</lifetime>
           <options>
             <option value="false">Counts of events only</option>
             <option value="true">Counts of events and exposure (person-time)</option>
