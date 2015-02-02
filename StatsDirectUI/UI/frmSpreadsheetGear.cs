@@ -897,40 +897,7 @@ namespace StatsDirect.UI
                         }
                         break;
                     case DataAcquisitionMode.NumericReplaceMissing:
-                        // Read in the cells replacing missing data with Constant.MISSING
-                        for (int c = 0; c < cellSelection.TotalColumns; c++)
-                        {
-                            int dataRows;
-                            int gridColumn;
-                            int gridFirstDataRow;
-                            bool titleIsInData;
-                            bool wasFiltered;
-                            string title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
-                            double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1, out wasFiltered);
-
-                            // If there's no data in the row (for example if it's hidden), ignore the row
-                            if (null == values)
-                                continue;
-
-                            // Find the last row
-                            int lrow;
-                            for (lrow = values.GetUpperBound(0); lrow >= 0; lrow--)
-                                if (values[lrow] != Constant.MISSING)
-                                    break;
-
-                            DoubleVariable variable = new DoubleVariable(lrow + 1, title);
-                            frame.Variables.Add(variable);
-
-                            variable.Data = new double[lrow + 1];
-                            for (int row = 0; row <= lrow; row++)
-                            {
-                                double v = values[row];
-                                if (Constant.MISSING * 10D == v)
-                                    v = Constant.MISSING;
-                                variable.Data[row] = v;
-                            }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered);
-                        }
+                        ProcessCellArrayNumericReplaceMissing(cellSelection, mode, frame);
                         break;
                     case DataAcquisitionMode.GroupIdentifiers:
                     case DataAcquisitionMode.CategoryReplaceMissing:
@@ -1089,312 +1056,24 @@ namespace StatsDirect.UI
                             } // of DataAcquisitionMode.CategoryReplaceMissing
 
                             if (DataAcquisitionMode.Text == mode)
-                            {
-                                for (int c = 0; c < cellSelection.TotalColumns; c++)
-                                {
-                                    int totRows = cellSelection.ColumnSelections[c].RowCount;
-                                    // Remove any trailing blanks from the selection
-                                    while (totRows > topRow && hold[totRows - 1, c].Length == 0)
-                                        totRows--;
-
-                                    string title = 0 == topRow
-                                                       ? GetGridColumnTitle(
-                                                           cellSelection.ColumnSelections[c].ColumnIndex)
-                                                       : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
-                                                                     cellSelection.ColumnSelections[c].ColumnIndex).
-                                                             Trim();
-                                    if (totRows > topRow || !string.IsNullOrEmpty(title))
-                                    {
-                                        StringVariable variable = new StringVariable();
-                                        frame.Variables.Add(variable);
-                                        variable.EnsureLength(totRows - topRow);
-                                        int size = 0;
-                                        for (int r = topRow; r < totRows; r++)
-                                        {
-                                            variable.Data[size++] = hold[r, c];
-                                        }
-
-                                        // Fill in column title
-                                        variable.Title = title;
-                                        variable.Origin = new WorksheetOrigin(
-                                            cellSelection.ColumnSelections[c].WorkbookPath,
-                                            cellSelection.ColumnSelections[c].WorksheetName,
-                                            cellSelection.ColumnSelections[c].ColumnIndex,
-                                            cellSelection.ColumnSelections[c].RowIndex,
-                                            cellSelection.ColumnSelections[c].RowCount, mode,
-                                            topRow > 0,
-                                            wasFiltered);
-                                    }
-                                }
-                            }
+                                ProcessCellArrayText(cellSelection, mode, frame, topRow, hold, wasFiltered);
                             else if (mode == DataAcquisitionMode.CategoryCombineAllColumns)
-                            {
-                                // Categories combined across columns; output as row pattern
-                                int totRows = cellSelection.LongestRowCount;
-                                int totCols = cellSelection.TotalColumns;
-                                string[] foundwhat = new string[totRows];
-                                int[] nbin = new int[totRows];
-                                int found = 0;
-                                int size = 0;
-                                ClassifierVariable variable = new ClassifierVariable();
-                                frame.Variables.Add(variable);
-                                for (int r = topRow; r < totRows; r++)
-                                {
-                                    // Build the pattern for row r
-                                    StringBuilder patternBuilder = new StringBuilder();
-                                    for (int c = 0; c < totCols; c++)
-                                    {
-                                        if (null == hold[r, c] || hold[r, c].Length == 0 || "*".Equals(hold[r, c]))
-                                        {
-                                            // Make the row pattern empty if any data are missing
-                                            patternBuilder.Length = 0;
-                                            break;
-                                        }
-                                        // Allow neat string pattern for later bin naming purposes
-                                        if (c > 0)
-                                            patternBuilder.Append(", ");
-                                        patternBuilder.Append(hold[r, c]);
-                                    }
-                                    string pattern = patternBuilder.ToString();
-
-                                    // Enumerate categories and put results in variable
-                                    if (pattern.Length > 0)
-                                    {
-                                        bool wasFound = false;
-                                        for (int i = 0; i < found; i++)
-                                        {
-                                            if (pattern.Equals(foundwhat[i]))
-                                            {
-                                                wasFound = true;
-                                                size++;
-                                                variable.EnsureLength(size);
-                                                variable.Data[size - 1] = pattern.Contains(Formatting.MISSINGLABEL) ? Constant.MISSING : i;
-                                                nbin[i]++;
-                                                break;
-                                            }
-                                        }
-                                        if (!wasFound)
-                                        {
-                                            nbin[found] = 1;
-                                            foundwhat[found] = pattern;
-                                            size++;
-                                            variable.EnsureLength(size);
-                                            variable.Data[size - 1] = pattern.Contains(Formatting.MISSINGLABEL) ? Constant.MISSING : found;
-                                            found++;
-                                        }
-                                    }
-                                }
-
-                                // fill in column details
-                                for (int i = 0; i < found; i++)
-                                {
-                                    Group group = new Group(foundwhat[i], i);
-                                    group.NBin = nbin[i];
-                                    variable.set_Group(i, group);
-                                }
-
-                                // column title is a hybrid of all columns
-                                StringBuilder titleBuilder = new StringBuilder();
-                                for (int c = 0; c < totCols; c++)
-                                {
-                                    if (c > 0)
-                                        titleBuilder.Append(", ");
-                                    titleBuilder.Append(0 == topRow
-                                                            ? GetGridColumnTitle(
-                                                                cellSelection.ColumnSelections[c].ColumnIndex)
-                                                            : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
-                                                                          cellSelection.ColumnSelections[c].ColumnIndex)
-                                                                  .Trim());
-                                }
-                                variable.Title = titleBuilder.ToString();
-                                // TODO: This origin is incorrect; it should include all the columns that were combined, and it doesn't.
-                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[0].WorkbookPath,
-                                                                      cellSelection.ColumnSelections[0].WorksheetName,
-                                                                      cellSelection.ColumnSelections[0].ColumnIndex,
-                                                                      cellSelection.ColumnSelections[0].RowIndex,
-                                                                      cellSelection.ColumnSelections[0].RowCount, mode,
-                                                                      topRow > 0,
-                                                                      wasFiltered);
-                            }
+                                ProcessCellArrayCategoryCombineAllColumns(cellSelection, mode, frame, topRow, hold, wasFiltered);
                             else
-                            {
-                                // Modes 3, 4 or 6: categories per column
-                                for (int c = 0; c < cellSelection.TotalColumns; c++)
-                                {
-                                    int totRows = cellSelection.ColumnSelections[c].RowCount;
-                                    string[] foundwhat = new string[totRows];
-                                    int[] nbin = new int[totRows];
-                                    int found = 0;
-                                    int size = 0;
-                                    ClassifierVariable variable = new ClassifierVariable();
-                                    frame.Variables.Add(variable);
-                                    for (int r = topRow; r < totRows; r++)
-                                    {
-                                        string pattern = hold[r, c];
-                                        // Ignore missing values
-                                        if (string.IsNullOrEmpty(pattern) || "*".Equals(pattern))
-                                            continue;
-
-                                        // Enumerate categories and put results in variable
-                                        bool wasFound = false;
-                                        for (int i = 0; i < found; i++)
-                                        {
-                                            if (pattern.Equals(foundwhat[i]))
-                                            {
-                                                wasFound = true;
-                                                size++;
-                                                variable.EnsureLength(size);
-                                                if (pattern.Contains(Formatting.MISSINGLABEL))
-                                                    variable.Data[size - 1] = Constant.MISSING;
-                                                else
-                                                    variable.Data[size - 1] = i;
-                                                nbin[i]++;
-                                                break;
-                                            }
-                                        }
-                                        if (!wasFound)
-                                        {
-                                            foundwhat[found] = pattern;
-                                            size++;
-                                            variable.EnsureLength(size);
-                                            if (pattern.Contains(Formatting.MISSINGLABEL))
-                                                variable.Data[size - 1] = Constant.MISSING;
-                                            else
-                                                variable.Data[size - 1] = found;
-                                            nbin[found] = 1;
-                                            found++;
-                                        }
-                                    }
-
-                                    // Fill in column details
-                                    for (int i = 0; i < found; i++)
-                                    {
-                                        Group group = new Group(foundwhat[i], i);
-                                        group.NBin = nbin[i];
-                                        variable.set_Group(i, group);
-                                    }
-
-                                    // Fill in column title
-                                    variable.Title = 0 == topRow
-                                                         ? GetGridColumnTitle(
-                                                             cellSelection.ColumnSelections[c].ColumnIndex)
-                                                         : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
-                                                                       cellSelection.ColumnSelections[c].ColumnIndex).
-                                                               Trim();
-                                    variable.Origin = new WorksheetOrigin(
-                                        cellSelection.ColumnSelections[c].WorkbookPath,
-                                        cellSelection.ColumnSelections[c].WorksheetName,
-                                        cellSelection.ColumnSelections[c].ColumnIndex,
-                                        cellSelection.ColumnSelections[c].RowIndex,
-                                        cellSelection.ColumnSelections[c].RowCount,
-                                        mode,
-                                        topRow > 0,
-                                        wasFiltered);
-                                }
-                            }
+                                ProcessCellArrayCategoriesPerColumn(cellSelection, mode, frame, topRow, hold, wasFiltered);
                         }
                         break;
                     case DataAcquisitionMode.DateReplaceMissing:
-                        // Read in the cells replacing missing data with Constant.MISSING
-                        for (int c = 0; c < cellSelection.TotalColumns; c++)
-                        {
-                            DateVariable variable = new DateVariable();
-                            frame.Variables.Add(variable);
-
-                            int dataRows;
-                            int gridColumn;
-                            int gridFirstDataRow;
-                            bool titleIsInData;
-                            variable.Title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
-                            // mrow isn't required, as GetColumnTitle adjusts rowindexes and totrows to skip the title.
-                            bool wasFiltered;
-                            DateTime[] values = GetCellDateValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1, out wasFiltered);
-
-                            // Find the last row
-                            int lrow;
-                            for (lrow = values.GetUpperBound(0); lrow >= 0; lrow--)
-                                if (values[lrow] != DateTime.MinValue)
-                                    break;
-
-                            int r = 0;
-                            variable.Data = new DateTime[lrow + 1];
-                            for (int row = 0; row <= lrow; row++)
-                            {
-                                variable.Data[r++] = values[row];
-                            }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath,
-                                cellSelection.ColumnSelections[c].WorksheetName,
-                                gridColumn,
-                                cellSelection.ColumnSelections[c].RowIndex,
-                                dataRows,
-                                mode,
-                                titleIsInData,
-                                wasFiltered);
-                        }
+                        ProcessCellArrayDateReplaceMissing(cellSelection, mode, frame);
                         break;
                     case DataAcquisitionMode.TextWithFormulae:
-                        for (int c = 0; c < cellSelection.TotalColumns; c++)
-                        {
-                            int nonHiddenRowCount;
-                            string[] formulae = GetCellFormulae(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1, out nonHiddenRowCount);
-                            // Trim any hidden rows before returning the variable - optimised for the very common case that there aren't any
-                            if (nonHiddenRowCount != formulae.Length)
-                            {
-                                string[] temp = new string[nonHiddenRowCount];
-                                Array.Copy(formulae, temp, nonHiddenRowCount);
-                                formulae = temp;
-                            }
-                            StringVariable variable = new StringVariable(formulae, null);
-                            IOrigin origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false, nonHiddenRowCount != formulae.Length);
-                            variable.Origin = origin;
-                            frame.Variables.Add(variable);
-                        }
+                        ProcessCellArrayTextWithFormulae(cellSelection, mode, frame);
                         break;
                     case DataAcquisitionMode.Variant:
-                        {
-
-                            for (int c = 0; c < cellSelection.TotalColumns; c++)
-                            {
-                                CellColumnSelection cs = cellSelection.ColumnSelections[c];
-                                int dataRows;
-                                int gridColumn;
-                                int gridFirstDataRow;
-                                bool titleIsInData;
-                                string title = GetColumnTitle(cs, out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
-
-                                int nonHiddenRowCount;
-                                object[,] raw = GetCellObjects(cs.ColumnIndex, cs.RowIndex, cs.RowIndex + cs.RowCount - 1, out nonHiddenRowCount);
-                                while (nonHiddenRowCount > 0 && null == raw[nonHiddenRowCount - 1, 0])
-                                    --nonHiddenRowCount;
-                                object[] cooked = new object[nonHiddenRowCount];
-                                for (int i = 0; i < nonHiddenRowCount; i++)
-                                    cooked[i] = raw[i, 0];
-                                VariantVariable variable = new VariantVariable(cooked, title);
-                                IOrigin origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != raw.GetUpperBound(0));
-                                variable.Origin = origin;
-                                frame.Variables.Add(variable);
-                            }
-                        }
+                        ProcessCellArrayVariant(cellSelection, mode, frame);
                         break;
                     case DataAcquisitionMode.TextNoTitles:
-                        for (int c = 0; c < cellSelection.TotalColumns; c++)
-                        {
-                            CellColumnSelection cs = cellSelection.ColumnSelections[c];
-                            int nonHiddenRowCount;
-                            string[] texts = GetCellTexts(cs.ColumnIndex, cs.RowIndex, cs.RowIndex + cs.RowCount - 1, out nonHiddenRowCount);
-                            // Trim any hidden rows before returning the variable - optimised for the very common case that there aren't any
-                            if (nonHiddenRowCount != texts.Length)
-                            {
-                                string[] temp = new string[nonHiddenRowCount];
-                                Array.Copy(texts, temp, nonHiddenRowCount);
-                                texts = temp;
-                            }
-                            StringVariable variable = new StringVariable(texts, null)
-                            {
-                                Origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != texts.Length)
-                            };
-                            frame.Variables.Add(variable);
-                        }
+                        ProcessCellArrayTextNoTitles(cellSelection, mode, frame);
                         break;
                     case DataAcquisitionMode.NumericCodingTextToCategories:
                     case DataAcquisitionMode.NumericCodingTextToDummies:
@@ -1583,6 +1262,358 @@ namespace StatsDirect.UI
             {
                 SdApplication.SoleInstance.FriendlyError("Internal error reading data from worksheet", ex, false);
                 throw; // TODO: What is the correct behaviour here?  Merely returning null causes a infinite loop
+            }
+        }
+
+        private void ProcessCellArrayText(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered)
+        {
+            for (int c = 0; c < cellSelection.TotalColumns; c++)
+            {
+                int totRows = cellSelection.ColumnSelections[c].RowCount;
+                // Remove any trailing blanks from the selection
+                while (totRows > topRow && hold[totRows - 1, c].Length == 0)
+                    totRows--;
+
+                string title = 0 == topRow
+                                   ? GetGridColumnTitle(
+                                       cellSelection.ColumnSelections[c].ColumnIndex)
+                                   : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
+                                                 cellSelection.ColumnSelections[c].ColumnIndex).
+                                         Trim();
+                if (totRows > topRow || !string.IsNullOrEmpty(title))
+                {
+                    StringVariable variable = new StringVariable();
+                    frame.Variables.Add(variable);
+                    variable.EnsureLength(totRows - topRow);
+                    int size = 0;
+                    for (int r = topRow; r < totRows; r++)
+                    {
+                        variable.Data[size++] = hold[r, c];
+                    }
+
+                    // Fill in column title
+                    variable.Title = title;
+                    variable.Origin = new WorksheetOrigin(
+                        cellSelection.ColumnSelections[c].WorkbookPath,
+                        cellSelection.ColumnSelections[c].WorksheetName,
+                        cellSelection.ColumnSelections[c].ColumnIndex,
+                        cellSelection.ColumnSelections[c].RowIndex,
+                        cellSelection.ColumnSelections[c].RowCount, mode,
+                        topRow > 0,
+                        wasFiltered);
+                }
+            }
+        }
+
+        private void ProcessCellArrayCategoryCombineAllColumns(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered)
+        {
+            // Categories combined across columns; output as row pattern
+            int totRows = cellSelection.LongestRowCount;
+            int totCols = cellSelection.TotalColumns;
+            string[] foundwhat = new string[totRows];
+            int[] nbin = new int[totRows];
+            int found = 0;
+            int size = 0;
+            ClassifierVariable variable = new ClassifierVariable();
+            frame.Variables.Add(variable);
+            for (int r = topRow; r < totRows; r++)
+            {
+                // Build the pattern for row r
+                StringBuilder patternBuilder = new StringBuilder();
+                for (int c = 0; c < totCols; c++)
+                {
+                    if (null == hold[r, c] || hold[r, c].Length == 0 || "*".Equals(hold[r, c]))
+                    {
+                        // Make the row pattern empty if any data are missing
+                        patternBuilder.Length = 0;
+                        break;
+                    }
+                    // Allow neat string pattern for later bin naming purposes
+                    if (c > 0)
+                        patternBuilder.Append(", ");
+                    patternBuilder.Append(hold[r, c]);
+                }
+                string pattern = patternBuilder.ToString();
+
+                // Enumerate categories and put results in variable
+                if (pattern.Length > 0)
+                {
+                    bool wasFound = false;
+                    for (int i = 0; i < found; i++)
+                    {
+                        if (pattern.Equals(foundwhat[i]))
+                        {
+                            wasFound = true;
+                            size++;
+                            variable.EnsureLength(size);
+                            variable.Data[size - 1] = pattern.Contains(Formatting.MISSINGLABEL) ? Constant.MISSING : i;
+                            nbin[i]++;
+                            break;
+                        }
+                    }
+                    if (!wasFound)
+                    {
+                        nbin[found] = 1;
+                        foundwhat[found] = pattern;
+                        size++;
+                        variable.EnsureLength(size);
+                        variable.Data[size - 1] = pattern.Contains(Formatting.MISSINGLABEL) ? Constant.MISSING : found;
+                        found++;
+                    }
+                }
+            }
+
+            // fill in column details
+            for (int i = 0; i < found; i++)
+            {
+                Group group = new Group(foundwhat[i], i);
+                group.NBin = nbin[i];
+                variable.set_Group(i, group);
+            }
+
+            // column title is a hybrid of all columns
+            StringBuilder titleBuilder = new StringBuilder();
+            for (int c = 0; c < totCols; c++)
+            {
+                if (c > 0)
+                    titleBuilder.Append(", ");
+                titleBuilder.Append(0 == topRow
+                                        ? GetGridColumnTitle(
+                                            cellSelection.ColumnSelections[c].ColumnIndex)
+                                        : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
+                                                      cellSelection.ColumnSelections[c].ColumnIndex)
+                                              .Trim());
+            }
+            variable.Title = titleBuilder.ToString();
+            // TODO: This origin is incorrect; it should include all the columns that were combined, and it doesn't.
+            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[0].WorkbookPath,
+                                                  cellSelection.ColumnSelections[0].WorksheetName,
+                                                  cellSelection.ColumnSelections[0].ColumnIndex,
+                                                  cellSelection.ColumnSelections[0].RowIndex,
+                                                  cellSelection.ColumnSelections[0].RowCount, mode,
+                                                  topRow > 0,
+                                                  wasFiltered);
+        }
+
+        private void ProcessCellArrayCategoriesPerColumn(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered)
+        {
+            // Modes 3, 4 or 6: categories per column
+            for (int c = 0; c < cellSelection.TotalColumns; c++)
+            {
+                int totRows = cellSelection.ColumnSelections[c].RowCount;
+                string[] foundwhat = new string[totRows];
+                int[] nbin = new int[totRows];
+                int found = 0;
+                int size = 0;
+                ClassifierVariable variable = new ClassifierVariable();
+                frame.Variables.Add(variable);
+                for (int r = topRow; r < totRows; r++)
+                {
+                    string pattern = hold[r, c];
+                    // Ignore missing values
+                    if (string.IsNullOrEmpty(pattern) || "*".Equals(pattern))
+                        continue;
+
+                    // Enumerate categories and put results in variable
+                    bool wasFound = false;
+                    for (int i = 0; i < found; i++)
+                    {
+                        if (pattern.Equals(foundwhat[i]))
+                        {
+                            wasFound = true;
+                            size++;
+                            variable.EnsureLength(size);
+                            if (pattern.Contains(Formatting.MISSINGLABEL))
+                                variable.Data[size - 1] = Constant.MISSING;
+                            else
+                                variable.Data[size - 1] = i;
+                            nbin[i]++;
+                            break;
+                        }
+                    }
+                    if (!wasFound)
+                    {
+                        foundwhat[found] = pattern;
+                        size++;
+                        variable.EnsureLength(size);
+                        if (pattern.Contains(Formatting.MISSINGLABEL))
+                            variable.Data[size - 1] = Constant.MISSING;
+                        else
+                            variable.Data[size - 1] = found;
+                        nbin[found] = 1;
+                        found++;
+                    }
+                }
+
+                // Fill in column details
+                for (int i = 0; i < found; i++)
+                {
+                    Group group = new Group(foundwhat[i], i);
+                    group.NBin = nbin[i];
+                    variable.set_Group(i, group);
+                }
+
+                // Fill in column title
+                variable.Title = 0 == topRow
+                                     ? GetGridColumnTitle(
+                                         cellSelection.ColumnSelections[c].ColumnIndex)
+                                     : GetCellText(cellSelection.ColumnSelections[c].RowIndex,
+                                                   cellSelection.ColumnSelections[c].ColumnIndex).
+                                           Trim();
+                variable.Origin = new WorksheetOrigin(
+                    cellSelection.ColumnSelections[c].WorkbookPath,
+                    cellSelection.ColumnSelections[c].WorksheetName,
+                    cellSelection.ColumnSelections[c].ColumnIndex,
+                    cellSelection.ColumnSelections[c].RowIndex,
+                    cellSelection.ColumnSelections[c].RowCount,
+                    mode,
+                    topRow > 0,
+                    wasFiltered);
+            }
+        }
+
+        private void ProcessCellArrayNumericReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        {
+            // Read in the cells replacing missing data with Constant.MISSING
+            for (int c = 0; c < cellSelection.TotalColumns; c++)
+            {
+                int dataRows;
+                int gridColumn;
+                int gridFirstDataRow;
+                bool titleIsInData;
+                bool wasFiltered;
+                string title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
+                double[] values = GetCellValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1, out wasFiltered);
+
+                // If there's no data in the row (for example if it's hidden), ignore the row
+                if (null == values)
+                    continue;
+
+                // Find the last row
+                int lrow;
+                for (lrow = values.GetUpperBound(0); lrow >= 0; lrow--)
+                    if (values[lrow] != Constant.MISSING)
+                        break;
+
+                DoubleVariable variable = new DoubleVariable(lrow + 1, title);
+                frame.Variables.Add(variable);
+
+                variable.Data = new double[lrow + 1];
+                for (int row = 0; row <= lrow; row++)
+                {
+                    double v = values[row];
+                    if (Constant.MISSING * 10D == v)
+                        v = Constant.MISSING;
+                    variable.Data[row] = v;
+                }
+                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered);
+            }
+        }
+
+        private void ProcessCellArrayDateReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        {
+            // Read in the cells replacing missing data with Constant.MISSING
+            for (int c = 0; c < cellSelection.TotalColumns; c++)
+            {
+                DateVariable variable = new DateVariable();
+                frame.Variables.Add(variable);
+
+                int dataRows;
+                int gridColumn;
+                int gridFirstDataRow;
+                bool titleIsInData;
+                variable.Title = GetColumnTitle(cellSelection.ColumnSelections[c], out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
+                // mrow isn't required, as GetColumnTitle adjusts rowindexes and totrows to skip the title.
+                bool wasFiltered;
+                DateTime[] values = GetCellDateValues(gridColumn, gridFirstDataRow, gridFirstDataRow + dataRows - 1, out wasFiltered);
+
+                // Find the last row
+                int lrow;
+                for (lrow = values.GetUpperBound(0); lrow >= 0; lrow--)
+                    if (values[lrow] != DateTime.MinValue)
+                        break;
+
+                int r = 0;
+                variable.Data = new DateTime[lrow + 1];
+                for (int row = 0; row <= lrow; row++)
+                {
+                    variable.Data[r++] = values[row];
+                }
+                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath,
+                    cellSelection.ColumnSelections[c].WorksheetName,
+                    gridColumn,
+                    cellSelection.ColumnSelections[c].RowIndex,
+                    dataRows,
+                    mode,
+                    titleIsInData,
+                    wasFiltered);
+            }
+        }
+
+        private void ProcessCellArrayTextWithFormulae(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        {
+            for (int c = 0; c < cellSelection.TotalColumns; c++)
+            {
+                int nonHiddenRowCount;
+                string[] formulae = GetCellFormulae(cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowIndex + cellSelection.ColumnSelections[c].RowCount - 1, out nonHiddenRowCount);
+                // Trim any hidden rows before returning the variable - optimised for the very common case that there aren't any
+                if (nonHiddenRowCount != formulae.Length)
+                {
+                    string[] temp = new string[nonHiddenRowCount];
+                    Array.Copy(formulae, temp, nonHiddenRowCount);
+                    formulae = temp;
+                }
+                StringVariable variable = new StringVariable(formulae, null);
+                IOrigin origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false, nonHiddenRowCount != formulae.Length);
+                variable.Origin = origin;
+                frame.Variables.Add(variable);
+            }
+        }
+
+        private void ProcessCellArrayVariant(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        {
+            for (int c = 0; c < cellSelection.TotalColumns; c++)
+            {
+                CellColumnSelection cs = cellSelection.ColumnSelections[c];
+                int dataRows;
+                int gridColumn;
+                int gridFirstDataRow;
+                bool titleIsInData;
+                string title = GetColumnTitle(cs, out dataRows, out gridFirstDataRow, out gridColumn, out titleIsInData);
+
+                int nonHiddenRowCount;
+                object[,] raw = GetCellObjects(cs.ColumnIndex, cs.RowIndex, cs.RowIndex + cs.RowCount - 1, out nonHiddenRowCount);
+                while (nonHiddenRowCount > 0 && null == raw[nonHiddenRowCount - 1, 0])
+                    --nonHiddenRowCount;
+                object[] cooked = new object[nonHiddenRowCount];
+                for (int i = 0; i < nonHiddenRowCount; i++)
+                    cooked[i] = raw[i, 0];
+                VariantVariable variable = new VariantVariable(cooked, title);
+                IOrigin origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != raw.GetUpperBound(0));
+                variable.Origin = origin;
+                frame.Variables.Add(variable);
+            }
+        }
+
+        private void ProcessCellArrayTextNoTitles(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        {
+            for (int c = 0; c < cellSelection.TotalColumns; c++)
+            {
+                CellColumnSelection cs = cellSelection.ColumnSelections[c];
+                int nonHiddenRowCount;
+                string[] texts = GetCellTexts(cs.ColumnIndex, cs.RowIndex, cs.RowIndex + cs.RowCount - 1, out nonHiddenRowCount);
+                // Trim any hidden rows before returning the variable - optimised for the very common case that there aren't any
+                if (nonHiddenRowCount != texts.Length)
+                {
+                    string[] temp = new string[nonHiddenRowCount];
+                    Array.Copy(texts, temp, nonHiddenRowCount);
+                    texts = temp;
+                }
+                StringVariable variable = new StringVariable(texts, null)
+                {
+                    Origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != texts.Length)
+                };
+                frame.Variables.Add(variable);
             }
         }
 
