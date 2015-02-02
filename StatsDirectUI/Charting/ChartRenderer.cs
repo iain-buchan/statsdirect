@@ -1077,7 +1077,7 @@ namespace StatsDirect.Charting
 
         private void Q_AxisOrFromDefinition(ref double qmin, double qMinGreaterThanZero, ref double qmax, out int div, out double zmin, out double zint, out int minorTicsPerMajorTic, bool isY, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
-            if ((definition != null) && definition.HasScaleParameters && !(useCalculatedScalesEvenWithDefinition))
+            if ((definition != null) && definition.HasScaleParameters && !useCalculatedScalesEvenWithDefinition)
             {
                 //  Use the values in our scale parameters
                 AxisScaleParameters asp = isY ? definition.ScaleParameters.Y : definition.ScaleParameters.X;
@@ -7238,68 +7238,47 @@ namespace StatsDirect.Charting
         private ScaleParameters GetForestScaleParameters()
         {
             ForestOptions fOptions = ((ForestOptions)(definition.ChartOptions));
-            double[] gn = fOptions.gn;
             int k = fOptions.k;
             double[] odr = fOptions.OddsRatios;
             double[] odrl = fOptions.OddsRatioLcis;
             double[] odru = fOptions.OddsRatioUcis;
-            double[] pg = fOptions.pg;
 
-            int kok = 0;
-            double ormax = double.MinValue;
-            double ormin = double.MaxValue;
-            double orming0 = double.MaxValue;
-            double orumax = double.MinValue;
-            double orlmin = double.MaxValue;
-            double max_gn = double.MinValue;
+            DataMaxX = double.MinValue;
+            DataMinX = double.MaxValue;
+            DataMinGreaterThanZeroX = double.MaxValue;
 
             for (int i = 0; i < k; i++)
             {
-                if (pg == null || pg[i] == 0)
-                {
-                    if (gn[i] != Constant.MISSING && !double.IsInfinity(gn[i]) && gn[i] > max_gn)
-                        max_gn = gn[i];
-                }
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
-                    kok++;
-                    if (odr[i] > ormax)
-                        ormax = odr[i];
-                    if (odr[i] < ormin)
-                        ormin = odr[i];
-                    if (odr[i] < orming0)
-                        orming0 = odr[i];
+                    if (odr[i] > DataMaxX)
+                        DataMaxX = odr[i];
+                    if (odr[i] < DataMinX)
+                        DataMinX = odr[i];
+                    if (odr[i] < DataMinGreaterThanZeroX)
+                        DataMinGreaterThanZeroX = odr[i];
                     if (odrl[i] > odru[i])
                     {
                         double tmp = odrl[i];
                         odrl[i] = odru[i];
                         odru[i] = tmp;
                     }
-                    if (odrl[i] < orlmin && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
-                        orlmin = odrl[i];
-                    if (odru[i] > orumax && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
-                        orumax = odru[i];
+                    if (odrl[i] < DataMinX && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
+                        DataMinX = odrl[i];
+                    if (odru[i] > DataMaxX && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
+                        DataMaxX = odru[i];
                 }
             }
 
-            double absmin = double.MaxValue;
-            for (int i = 0; i < k; i++)
+            bool shouldDrawLine = DataMinX <= 0 || (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue);
+            double lineX = (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue) ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
+            if (shouldDrawLine)
             {
-                if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0 && odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
-                    absmin = Math.Abs(odr[i]);
-                if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
-                    absmin = Math.Abs(odrl[i]);
-                if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
-                    absmin = Math.Abs(odru[i]);
+                if (DataMaxX < lineX)
+                    DataMaxX = lineX;
+                if (DataMinX > lineX)
+                    DataMinX = lineX;
             }
-
-            DataMaxX = ormax;
-            DataMinX = ormin;
-            DataMinGreaterThanZeroX = orming0;
-            if (DataMaxX < orumax && orumax != Constant.MISSING && !double.IsInfinity(orumax))
-                DataMaxX = orumax;
-            if (DataMinX > orlmin && orlmin != Constant.MISSING && !double.IsInfinity(orlmin))
-                DataMinX = orlmin;
 
             return new ScaleParameters
             {
@@ -7310,9 +7289,7 @@ namespace StatsDirect.Charting
 
         private ParameterBag PlotForest()
         {
-            double realamin = 0; double[] tic = null; double realamax = 0;
-            int tics = 0; int pbias = 0; double xm;
-            double yt = 0;
+            int pbias = 0;
 
             ForestOptions fOptions = ((ForestOptions)(definition.ChartOptions));
             MarkerType studyMarkerType = fOptions.MarkerTypes[0];
@@ -7339,10 +7316,8 @@ namespace StatsDirect.Charting
             }
 
             int kok = 0;
-            double ormax = double.NegativeInfinity;
-            double ormin = double.PositiveInfinity;
-            double orumax = double.NegativeInfinity;
-            double orlmin = double.PositiveInfinity;
+            DataMaxX = double.NegativeInfinity;
+            DataMinX = double.PositiveInfinity;
             double max_gn = double.NegativeInfinity;
 
             for (int i = 0; i < k; i++)
@@ -7355,20 +7330,20 @@ namespace StatsDirect.Charting
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
                     kok++;
-                    if (odr[i] > ormax)
-                        ormax = odr[i];
-                    if (odr[i] < ormin && odr[i] > 0)
-                        ormin = odr[i];
+                    if (odr[i] > DataMaxX)
+                        DataMaxX = odr[i];
+                    if (odr[i] < DataMinX && odr[i] > 0)
+                        DataMinX = odr[i];
                     if (odrl[i] > odru[i])
                     {
                         double tmp = odrl[i];
                         odrl[i] = odru[i];
                         odru[i] = tmp;
                     }
-                    if (odrl[i] < orlmin && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
-                        orlmin = odrl[i];
-                    if (odru[i] > orumax && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
-                        orumax = odru[i];
+                    if (odrl[i] < DataMinX && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
+                        DataMinX = odrl[i];
+                    if (odru[i] > DataMaxX && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
+                        DataMaxX = odru[i];
                 }
             }
 
@@ -7385,26 +7360,36 @@ namespace StatsDirect.Charting
 
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 
-            DataMaxX = ormax;
-            DataMinX = ormin;
-            if (DataMaxX < orumax && orumax != Constant.MISSING && !double.IsInfinity(orumax))
-                DataMaxX = orumax;
-            if (DataMinX > orlmin && orlmin != Constant.MISSING && !double.IsInfinity(orlmin))
-                DataMinX = orlmin;
-
             ScaleType xlogscale = definition.ScaleParameters.X.ScaleType;
             bool isLogScale = (xlogscale == ScaleType.Log10 || xlogscale == ScaleType.LogNatural);
-            
+
+            // Determine whether to draw a vertical line and, if so, where; ensure it is within our scale.
+            bool shouldDrawLine = DataMinX <= 0 || (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue);
+            double lineX = (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue) ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
+            if (shouldDrawLine)
+            {
+                if (DataMaxX < lineX)
+                    DataMaxX = lineX;
+                if (DataMinX > lineX)
+                    DataMinX = lineX;
+                if (null != definition && definition.HasScaleParameters)
+                {
+                    if (definition.ScaleParameters.X.Max < lineX)
+                        definition.ScaleParameters.X.Max = lineX;
+                    if (definition.ScaleParameters.X.Min > lineX)
+                        definition.ScaleParameters.X.Min = lineX;
+                }
+            }
+
+            int tics = 0;
+            double[] tic = null;
+            double realamin = 0;
+            double realamax = 0;
             if (isLogScale)
             {
                 tics = 1;
                 tic = new double[tics + 1];
                 CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
-            }
-            else
-            {
-                DataMinX = axisXMin;
-                DataMaxX = axisXMax;
             }
             
             StartMetafile();
@@ -7415,7 +7400,7 @@ namespace StatsDirect.Charting
             double xtra = 0;
             //  Allow room for right hand labels of effect and CI
             double w;
-            for (int i = 0; i <= k - 1; i++)
+            for (int i = 0; i < k; i++)
             {
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
@@ -7432,13 +7417,9 @@ namespace StatsDirect.Charting
                 xtra = w - xAxisCanvas - 5;
             xExtCanvas = 940 - rgap;
             if (isLogScale)
-            {
                 DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.LineOnly, 0, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
-            }
             else
-            {
                 DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.Scale, 0, ScaleType.NotSet), new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
-            }
 
             divx = DataMaxX - DataMinX;
             offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
@@ -7454,7 +7435,7 @@ namespace StatsDirect.Charting
                     if (tic[i] >= realamin && tic[i] <= realamax)
                     {
                         // force ToCanvas to use log on a linear canvas because scatter plot etc. uses different scaling: TODO
-                        xm = ToCanvasX(Math.Log(tic[i]),ScaleType.Linear);
+                        double xm = ToCanvasX(Math.Log(tic[i]),ScaleType.Linear);
                         string lab = tic[i].ToString("G");
                         if (lastXM == 0 || statsDirectCanvas.MeasureString(lab, axisLabelFont).Width < xm - lastXM)
                         {
@@ -7474,6 +7455,7 @@ namespace StatsDirect.Charting
                 dotPen = GetMarkerPen(_markerTypes[10]),
                 pooledCiPen = GetLinePen(pooledMarkerType, true))
             {
+                double yt = 0;
                 for (int i = k - 1; i >= 0; i--)
                 {
                     if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
@@ -7481,7 +7463,7 @@ namespace StatsDirect.Charting
                         r++;
                         double yctr = (r + pbias - 0.5) / divy * yExtCanvas;
                         double ytop = (r + pbias) / divy * yExtCanvas;
-                        xm = odr[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odr[i]) : odr[i], ScaleType.Linear);
+                        double xm = odr[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odr[i]) : odr[i], ScaleType.Linear);
                         double xl = odrl[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odrl[i]) : odrl[i], ScaleType.Linear);
                         double xr = ToCanvasX(isLogScale ? Math.Log(odru[i]) : odru[i], ScaleType.Linear);
                         double y2 = (ytop - yctr) / 1.5;
@@ -7531,10 +7513,10 @@ namespace StatsDirect.Charting
                     }
                 }
 
-                if (DataMinX <= 0)
+                if (shouldDrawLine)
                 {
                     // no effect line, which is effectively part of the axis so uses the axis pen
-                    xm = ToCanvasX(0, ScaleType.Linear);
+                    double xm = ToCanvasX(lineX, ScaleType.Linear);
                     statsDirectCanvas.DrawLine(axisPen, xm, yt, xm, yAxisCanvas);
                 }
             }
