@@ -21,7 +21,7 @@ namespace StatsDirect.Templates
        XmlInclude(typeof(PickVariablesParameter)),
        XmlInclude(typeof(SpecialParameter)),
        XmlInclude(typeof(StringParameter))]
-    public abstract class Parameter
+    public abstract class Parameter : IMightRequireInput
     {
         protected Parameter()
         {
@@ -144,5 +144,7 @@ namespace StatsDirect.Templates
         {
             get;
         }
+
+        public abstract InputDuringStep RequiresInputGiven(ParameterBag parameters);
     }
 }

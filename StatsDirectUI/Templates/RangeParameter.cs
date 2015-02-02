@@ -28,5 +28,10 @@ namespace StatsDirect.Templates
         /// <value>false</value>
         [XmlElement(ElementName = "show-limits")]
         public bool ShowLimits { get; set; }
+
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
+        {
+            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
     }
 }

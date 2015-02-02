@@ -9,5 +9,9 @@ namespace StatsDirect.Templates
         {
             get { return ParameterType.Double2By2ByK; }
         }
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
+        {
+            return (MustRequest || !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
     }
 }

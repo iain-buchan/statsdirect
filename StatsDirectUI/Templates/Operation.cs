@@ -217,9 +217,9 @@ namespace StatsDirect.Templates
             return Step.ShouldRequestTargetAfter(stepToFind, steps, stepType, false, out stepFound);
         }
 
-        public InputDuringStep RequiresInput
+        public InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get { return Step.GetInputRequirement(steps); }
+            return Step.GetInputRequirement(steps, parameters);
         }
 
         public IList<SuggestedOperation> AvailableSuggestedOperations(ITemplateProcessor processor, ParameterBag parameters)

@@ -40,10 +40,9 @@ namespace StatsDirect.Templates
             set { requiresInput = value; }
         }
 
-        [XmlIgnore]
-        public override InputDuringStep RequiresInput
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get { return requiresInput; }
+            return requiresInput;
         }
 
         [XmlIgnore]

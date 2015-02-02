@@ -4,14 +4,22 @@
 	<friendly-name lang="en-GB">Incidence rate ratio (relative risk)</friendly-name>
   <prerequisite-operation>PoissonRegression</prerequisite-operation>
   <steps>
+    <builtin function-name="opPoissonRegressionIrrMakeDichotomousCovariates" />
     <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
         </confidence-interval>
+        <pick-from-list>
+          <name>cov</name>
+          <prompt>Select covariate for sub-population relative risk</prompt>
+          <acquire-if-true>=parameters["hasDichotomousCovariates"].AsBoolean</acquire-if-true>
+          <must-request>true</must-request>
+          <source>dichotomousCovariates</source>
+        </pick-from-list>
       </parameters>
     </settings>
-		<builtin function-name="rptPoissonRegressionIRR" />
+		<builtin function-name="rptPoissonRegressionIrr" />
 		<report type="text/rtf" filename="pr_irr.rtf" />
 	</steps>
 </operation>

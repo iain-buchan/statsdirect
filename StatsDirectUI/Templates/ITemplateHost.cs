@@ -27,9 +27,9 @@ namespace StatsDirect.Templates
             this.requiresInput = requiresInput;
         }
 
-        public InputDuringStep RequiresInput
+        public InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get { return requiresInput; }
+            return requiresInput;
         }
 
         public BuiltinFunction FunctionToCall

@@ -134,21 +134,18 @@ namespace StatsDirect.Templates
             }
         }
 
-        public override InputDuringStep RequiresInput
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get
-            {
-                InputDuringStep trueRequirement = GetInputRequirement(trueSteps);
-                InputDuringStep falseRequirement = GetInputRequirement(falseSteps);
+            InputDuringStep trueRequirement = GetInputRequirement(trueSteps, parameters);
+            InputDuringStep falseRequirement = GetInputRequirement(falseSteps, parameters);
 
-                // If the requirements are the same, that's the overall requirement
-                if (trueRequirement == falseRequirement)
-                    return trueRequirement;
+            // If the requirements are the same, that's the overall requirement
+            if (trueRequirement == falseRequirement)
+                return trueRequirement;
 
-                // Otherwise, they're different.  In all such cases, it's a resounding maybe!
-                // (Yes/sometimes, yes/no, sometimes/no and the reverses of these)
-                return InputDuringStep.Sometimes;
-            }
+            // Otherwise, they're different.  In all such cases, it's a resounding maybe!
+            // (Yes/sometimes, yes/no, sometimes/no and the reverses of these)
+            return InputDuringStep.Sometimes;
         }
 
         public override bool IsOrContains(Step candidate)

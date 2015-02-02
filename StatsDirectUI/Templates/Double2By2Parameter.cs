@@ -6,90 +6,44 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class Double2By2Parameter: Parameter
     {
-        private string columnsPrompt;
-        private string leftColumnPrompt;
-        private string rightColumnPrompt;
-        private string rowsPrompt;
-        private string topRowPrompt;
-        private string bottomRowPrompt;
-        private string topLeftName;
-        private string topRightName;
-        private string bottomLeftName;
-        private string bottomRightName;
-        
         [XmlElement(ElementName = "columns-prompt")]
-        public string ColumnsPrompt
-        {
-            get { return columnsPrompt; }
-            set { columnsPrompt = value; }
-        }
+        public string ColumnsPrompt { get; set; }
 
         [XmlElement(ElementName = "left-column-prompt")]
-        public string LeftColumnPrompt
-        {
-            get { return leftColumnPrompt; }
-            set { leftColumnPrompt = value; }
-        }
+        public string LeftColumnPrompt { get; set; }
 
         [XmlElement(ElementName = "right-column-prompt")]
-        public string RightColumnPrompt
-        {
-            get { return rightColumnPrompt; }
-            set { rightColumnPrompt = value; }
-        }
+        public string RightColumnPrompt { get; set; }
 
         [XmlElement(ElementName = "rows-prompt")]
-        public string RowsPrompt
-        {
-            get { return rowsPrompt; }
-            set { rowsPrompt = value; }
-        }
+        public string RowsPrompt { get; set; }
 
         [XmlElement(ElementName = "top-row-prompt")]
-        public string TopRowPrompt
-        {
-            get { return topRowPrompt; }
-            set { topRowPrompt = value; }
-        }
+        public string TopRowPrompt { get; set; }
 
         [XmlElement(ElementName = "bottom-row-prompt")]
-        public string BottomRowPrompt
-        {
-            get { return bottomRowPrompt; }
-            set { bottomRowPrompt = value; }
-        }
+        public string BottomRowPrompt { get; set; }
 
         [XmlElement(ElementName = "top-left-name")]
-        public string TopLeftName
-        {
-            get { return topLeftName; }
-            set { topLeftName = value; }
-        }
+        public string TopLeftName { get; set; }
 
         [XmlElement(ElementName = "top-right-name")]
-        public string TopRightName
-        {
-            get { return topRightName; }
-            set { topRightName = value; }
-        }
+        public string TopRightName { get; set; }
 
         [XmlElement(ElementName = "bottom-left-name")]
-        public string BottomLeftName
-        {
-            get { return bottomLeftName; }
-            set { bottomLeftName = value; }
-        }
+        public string BottomLeftName { get; set; }
 
         [XmlElement(ElementName = "bottom-right-name")]
-        public string BottomRightName
-        {
-            get { return bottomRightName; }
-            set { bottomRightName = value; }
-        }
+        public string BottomRightName { get; set; }
 
         public override ParameterType Type
         {
             get { return ParameterType.Double2By2; }
+        }
+
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
+        {
+            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
         }
     }
 }

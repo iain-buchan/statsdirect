@@ -445,7 +445,7 @@ namespace StatsDirect.Templates
 
                     Step frameStep;
                     Step outputForFrameStep;
-                    if ((step.Operation.ShouldRequestTargetAfter(step, Step.StepType.Frame, out frameStep) == HasInput.NoAndTypeFound)
+                    if ((step.Operation.ShouldRequestTargetAfter(step, Step.StepType.OutputFrame, out frameStep) == HasInput.NoAndTypeFound)
                         || (step.Operation.ShouldRequestTargetAfter(step, Step.StepType.SelectOutputForFrame, out outputForFrameStep) == HasInput.NoAndTypeFound))
                     {
                         bool preferInPlaceInsertion = null != frameStep && ((OutputFrameStep)frameStep).PreferInPlaceInsertion;

@@ -38,7 +38,7 @@ namespace StatsDirect.Templates
 
         public override StepType Type
         {
-            get { return StepType.Frame; }
+            get { return StepType.OutputFrame; }
         }
 
         public override StepResult ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
@@ -49,9 +49,9 @@ namespace StatsDirect.Templates
         /// <summary>
         /// Requires input if the output location has not been selected.
         /// </summary>
-        public override InputDuringStep RequiresInput
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get { return InputDuringStep.Sometimes; }
+            return InputDuringStep.Sometimes;
         }
     }
 }

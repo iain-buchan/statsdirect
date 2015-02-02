@@ -31,7 +31,7 @@ namespace StatsDirect.Builtins
             public double[] FV;
             public double[] H1;
             public double[,] H;
-            public string[] Label;
+            public string[] Labels { get; set; }
             public double LLX;
             public int N;
             public string outcomeTitle;
@@ -3063,10 +3063,10 @@ namespace StatsDirect.Builtins
                 p++;
 
             double tol = accuracy;
-            string[] label = new string[p + 1 ];
-            label[0] = responseVariable.Title.Trim();
+            string[] labels = new string[p + 1 ];
+            labels[0] = responseVariable.Title.Trim();
             for (int j = 1; j <= predictors; j++)
-                label[j] = predictorsFrame.Variables[j - 1].Title.Trim();
+                labels[j] = predictorsFrame.Variables[j - 1].Title.Trim();
 
             // Copy tt to t, tr yo y, tw to wt, pt to x.  Check for missing data; if any is present for a row, do not copy the row.
             int cnt = 0;
@@ -3231,7 +3231,7 @@ namespace StatsDirect.Builtins
                     prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(beta[i] / se_beta[i])));
                 ParameterBag varParameters = new ParameterBag();
                 varList.Add(varParameters);
-                string q = i == 1 && mean ? "(intercept)" : label[i - iq];
+                string q = i == 1 && mean ? "(intercept)" : labels[i - iq];
                 varParameters.AddOutput("par", q);
                 if (i > 1 || mean == false)
                 {
@@ -3300,8 +3300,8 @@ namespace StatsDirect.Builtins
             */
 
             string tx = "logit ";
-            if (label[0].Length > 0)
-                tx += label[0];
+            if (labels[0].Length > 0)
+                tx += labels[0];
             else
                 tx += "Y";
             tx += " = ";
@@ -3310,7 +3310,7 @@ namespace StatsDirect.Builtins
                 if (j > 1 && beta[j] >= 0.0)
                     tx += "+";
                 tx += host.RoundU(beta[j]);
-                string Q = mean ? (j > 1 ? label[j - 1] : " ") : label[j];
+                string Q = mean ? (j > 1 ? labels[j - 1] : " ") : labels[j];
                 if (Q.Length == 0)
                     tx += " X" + j.ToString();
                 else 
@@ -3329,7 +3329,7 @@ namespace StatsDirect.Builtins
             context.H1 = leverage;
             context.N = records;
             context.DoC = mean;
-            context.Label = label;
+            context.Labels = labels;
             context.P = p;
             context.COV = covariance;
             context.WT = wt;
@@ -3392,7 +3392,7 @@ namespace StatsDirect.Builtins
             // double[] var = context.V1; 
             int nx = context.N;
             bool DoC = context.DoC;
-            string[] label = context.Label;
+            string[] labels = context.Labels;
             int P = context.P;
             double[] cov = context.COV;
             double[] wt = context.WT;
@@ -3470,17 +3470,17 @@ namespace StatsDirect.Builtins
 
                 List<ParameterBag> predictorsList = new List<ParameterBag>();
                 groupedParameters.AddOutput("*predictors", predictorsList);
-                for (int i = 1; i <= label.Length - 2; i++)
+                for (int i = 1; i <= labels.Length - 2; i++)
                 {
                     ParameterBag predictorsParameters = new ParameterBag();
                     predictorsList.Add(predictorsParameters);
-                    predictorsParameters.AddOutput("lab", label[i]);
+                    predictorsParameters.AddOutput("lab", labels[i]);
                 }
                 List<ParameterBag> predictorValuesList = new List<ParameterBag>();
                 groupedParameters.AddOutput("*predictorValues", predictorValuesList);
                 for (int i = 1; i <= nx; i++)
                 {
-                    ParameterBag bag = MakeLogisticRegressionFitRow(host, t, y, dr, hi, label, x, ry, fit, pxi, xis, cbar, c, d, dc, i, true, outputFrame, i - 1);
+                    ParameterBag bag = MakeLogisticRegressionFitRow(host, t, y, dr, hi, labels, x, ry, fit, pxi, xis, cbar, c, d, dc, i, true, outputFrame, i - 1);
                     predictorValuesList.Add(bag);
                 }
             }
@@ -3539,7 +3539,7 @@ namespace StatsDirect.Builtins
                                 }
                                 if (snap)
                                 {
-                                    bag = MakeLogisticRegressionFitRow(host, t, y, dr, hi, label, x, ry, fit, pxi, xis, cbar, c, d, dc, i, false, outputFrame, predictorRow);
+                                    bag = MakeLogisticRegressionFitRow(host, t, y, dr, hi, labels, x, ry, fit, pxi, xis, cbar, c, d, dc, i, false, outputFrame, predictorRow);
                                     snapped = true;
                                     break;
                                 }
@@ -3563,8 +3563,8 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag covarParameters = new ParameterBag();
                     covarList.Add(covarParameters);
-                    string x1 = qlbli(label, i, DoC);
-                    string x2 = qlbli(label, j, DoC);
+                    string x1 = qlbli(labels, i, DoC);
+                    string x2 = qlbli(labels, j, DoC);
                     covarParameters.AddOutput("lab", x1 + " vs. " + x2);
                     covarParameters.AddOutput("cov", host.RoundU(cov[((int)(Math.Floor((double)j * (j - 1) / 2 + i)))]));
                 }
@@ -3843,7 +3843,7 @@ namespace StatsDirect.Builtins
             double[] b = context.B;
             double[] se = context.SE;
             int P = context.P;
-            string[] Label = context.Label;
+            string[] labels = context.Labels;
             bool DoC = context.DoC;
             double dev = context.DEV;
             int irank = context.RANK;
@@ -3960,7 +3960,7 @@ namespace StatsDirect.Builtins
                 {
                     Q = "Constant";
                 }
-                else { Q = Label[i - iq]; }
+                else { Q = labels[i - iq]; }
                 unscaledParameters.AddOutput("par", Q);
                 unscaledParameters.AddOutput("coef", host.RoundU(b[i]));
                 unscaledParameters.AddOutput("err", host.RoundU(se[i]));
@@ -3976,7 +3976,7 @@ namespace StatsDirect.Builtins
                 {
                     Q = "Constant";
                 }
-                else { Q = Label[i - iq]; }
+                else { Q = labels[i - iq]; }
                 double sse = sp == Constant.MISSING ? Constant.MISSING : Math.Sqrt(se[i] * se[i] * sp);
                 double z;
                 if (sse == 0.0 | sse == Constant.MISSING)
@@ -4003,7 +4003,7 @@ namespace StatsDirect.Builtins
             double[] b = context.B;
             double[] se = context.SE;
             int P = context.P;
-            string[] Label = context.Label;
+            string[] labels = context.Labels;
             bool DoC = context.DoC;
             double dev = context.DEV;
             int irank = context.RANK;
@@ -4155,7 +4155,7 @@ namespace StatsDirect.Builtins
                     prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(b[i] / se[i])));
                 ParameterBag parametersParameters = new ParameterBag();
                 parametersList.Add(parametersParameters);
-                string Q = i == 1 && DoC ? "(intercept)" : Label[i - iq];
+                string Q = i == 1 && DoC ? "(intercept)" : labels[i - iq];
                 parametersParameters.AddOutput("par", Q);
                 parametersParameters.AddOutput("coef", host.RoundU(b[i]));
                 parametersParameters.AddOutput("err", host.RoundU(se[i]));
@@ -4183,19 +4183,19 @@ namespace StatsDirect.Builtins
             double[,] x = context.X;
             double[] b = context.B;
             double[] se = context.SE;
-            int P = context.P;
+            int p = context.P;
             int nx = context.N;
-            string[] Label = context.Label;
+            string[] labels = context.Labels;
             bool DoC = context.DoC;
-            double cit; double rr; double P0;
             //  RTF_LoadTemplate("pr_irr.rtf")
             double GAMMA = parameters["gamma"].AsDouble;
+            double cit; double P0;
             MathDbl.civ(0, out cit, GAMMA, out P0);
             ParameterBag outputParameters = new ParameterBag();
-            IList<ParameterBag> popList = new List<ParameterBag>();
-            outputParameters.AddOutput("*pop", popList);
 
             //  Whole study
+            IList<ParameterBag> popList = new List<ParameterBag>();
+            outputParameters.AddOutput("*pop", popList);
             ParameterBag popParameters = new ParameterBag();
             popList.Add(popParameters);
             popParameters.AddOutput("pop", "whole study (baseline relative risk)");
@@ -4203,15 +4203,15 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> parList = new List<ParameterBag>();
             popParameters.AddOutput("*par", parList);
             int iq = DoC ? 1 : 0;
-            for (int i = 1; i <= P; i++)
+            for (int i = 1; i <= p; i++)
             {
-                if (i != 1 || DoC == false)
+                if (i != 1 || !DoC)
                 {
                     ParameterBag parParameters = new ParameterBag();
                     parList.Add(parParameters);
-                    parParameters.AddOutput("par", Label[i - iq]);
+                    parParameters.AddOutput("par", labels[i - iq]);
                     parParameters.AddOutput("est", host.RoundU(b[i]));
-                    rr = Formatting.SafeExp(b[i]);
+                    double rr = Formatting.SafeExp(b[i]);
                     double lci;
                     double uci;
                     if (rr != Constant.MISSING)
@@ -4228,63 +4228,45 @@ namespace StatsDirect.Builtins
                     parParameters.AddOutput("ci", host.RoundU(lci) + "  to  " + host.RoundU(uci));
                 }
             }
+
             // relative to dichotomous covariates
-            int[] nsel = new int[P + 1];
-            int ctr = 0;
-            List<string> labels = new List<string>();
-            for (int l = 1; l <= P; l++)
+            if (parameters["hasDichotomousCovariates"].AsBoolean)
             {
-                bool OK = true;
-                if (l > 1 || !DoC)
+                double[] nsel = (double[])parameters["dichotomousCovariates"].AsDataFrame.Variables[1].AsDoubleVariable.Data;
+                bool[] cov = (bool[])parameters["cov"].Data;
+                int selectedIndex = 0;
+                for (int i = 0; i <= cov.GetUpperBound(0); i++)
                 {
-                    int k = DoC ? l - 1 : l;
-                    for (int j = 1; j <= nx; j++)
+                    if (cov[i])
                     {
-                        if (x[j, k] != 0.0 && x[j, k] != 1.0)
-                        {
-                            OK = false;
-                            break;
-                        }
-                    }
-                    if (OK)
-                    {
-                        labels.Add(Label[l - iq]);
-                        nsel[ctr] = l;
-                        ctr++;
+                        selectedIndex = i;
+                        break;
                     }
                 }
-            }
-            if (ctr >= 1 && P - iq > 1)
-            {
-                bool cancelled;
-                int selectedIndex = host.GetOption("Select covariate for sub-population relative risk", "Covariate", labels, 0, out cancelled);
-                if (cancelled)
-                    throw new TemplateOperationCancelledException();
-                int L = nsel[selectedIndex];
+                int l = (int)nsel[selectedIndex];
                 for (int j = 2; j >= 1; j--)
                 {
-                    double bx = Formatting.SafeExp(b[L]);
+                    double bx = Formatting.SafeExp(b[l]);
                     if (bx != Constant.MISSING)
                     {
                         popParameters = new ParameterBag();
                         popList.Add(popParameters);
-                        popParameters.AddOutput("pop", Label[L - iq] + " = " + (j - 1).ToString());
+                        popParameters.AddOutput("pop", labels[l - iq] + " = " + (j - 1).ToString());
                         popParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
                         parList = new List<ParameterBag>();
                         popParameters.AddOutput("*par", parList);
                         if (j == 1)
-                        {
                             bx = 1.0 / bx;
-                        }
-                        for (int i = 1; i <= P; i++)
+
+                        for (int i = 1; i <= p; i++)
                         {
-                            if ((i != 1 | DoC == false) & i != L)
+                            if ((i != 1 || !DoC) && i != l)
                             {
                                 ParameterBag parParameters = new ParameterBag();
                                 parList.Add(parParameters);
-                                parParameters.AddOutput("par", Label[i - iq]);
+                                parParameters.AddOutput("par", labels[i - iq]);
                                 parParameters.AddOutput("est", host.RoundU(b[i]));
-                                rr = Formatting.SafeExp(b[i]) * bx;
+                                double rr = Formatting.SafeExp(b[i]) * bx;
                                 double lci;
                                 double uci;
                                 if (rr != Constant.MISSING)
@@ -4307,12 +4289,59 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
+        public static StepResult OpPoissonRegressionIrrMakeDichotomousCovariates(ITemplateHost host, ParameterBag parameters)
+        {
+            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            double[,] x = context.X;
+            int p = context.P;
+            int nx = context.N;
+
+            ParameterBag outputParameters = new ParameterBag();
+
+            int iq = context.DoC ? 1 : 0;
+
+            // Locate dichotomous covariates so that the user can be asked which one they want
+            List<double> nsel = new List<double>();
+            List<string> okLabels = new List<string>();
+            for (int l = 1; l <= p; l++)
+            {
+                if (l > 1 || !context.DoC)
+                {
+                    bool ok = true;
+                    int k = context.DoC ? l - 1 : l;
+                    for (int j = 1; j <= nx; j++)
+                    {
+                        if (x[j, k] != 0.0 && x[j, k] != 1.0)
+                        {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if (ok)
+                    {
+                        okLabels.Add(context.Labels[l - iq]);
+                        nsel.Add(l);
+                    }
+                }
+            }
+
+            // We need to ask if there's at least one dichotomous covariate and at least two coefficients other than the intercept
+            outputParameters.AddOutput("hasDichotomousCovariates", okLabels.Count >= 1 && p - iq > 1);
+            StringVariable names = new StringVariable(okLabels.ToArray(), "labels");
+            DoubleVariable offsets = new DoubleVariable(nsel.ToArray(), "offsets");
+            DataFrame dcFrame = new DataFrame();
+            dcFrame.Variables.Add(names);
+            dcFrame.Variables.Add(offsets);
+            outputParameters.AddOutput("dichotomousCovariates", dcFrame);
+            return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
         public static StepResult RptLogisticRegressionModelSelection(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
             bool mean = context.DoC;
             int n = context.N;
-            string[] label = context.Label;
+            string[] labels = context.Labels;
             double[] y = context.Y;
             double[] t = context.T;
             double[] wt = context.WT;
@@ -4352,7 +4381,7 @@ namespace StatsDirect.Builtins
             err_msg = "";
             host.StartProgress("Checking significance with all predictors", false);
             Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
-            LR_ModelSelectionOutput(host, parametersList, fault, label, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
+            LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
             host.FinishProgress();
 
             // Now add predictors one at time: select the predictor that gives max Akaike information to the model on each addition, building up to the full model again
@@ -4399,7 +4428,7 @@ namespace StatsDirect.Builtins
                 // Re-do the regression with that predictor selected along with any others we may have from previous iterations
                 selectX[bestPredictorIndexSoFar] = true;
                 Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
-                LR_ModelSelectionOutput(host, parametersList, fault, label, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
+                LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
                 if (host.UpdateProgress((++regressionsRun) / estimatedRegressionsToRun))
                     break;
 
@@ -4630,7 +4659,7 @@ namespace StatsDirect.Builtins
             double[] h;
             int n = context.N;
             bool mean = context.DoC;
-            string[] Label = context.Label;
+            string[] labels = context.Labels;
             int p = context.P;
             double[] cov;
             double[] wt = context.WT;
@@ -4781,7 +4810,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag parametersParameters = new ParameterBag();
                 parametersList.Add(parametersParameters);
-                string Q = i == 1 && mean ? "Constant" : Label[i - iq];
+                string Q = i == 1 && mean ? "Constant" : labels[i - iq];
                 parametersParameters.AddOutput("par", Q);
                 parametersParameters.AddOutput("obs", host.RoundU(ob[i]));
                 if (i > 1 | mean == false)
@@ -4816,7 +4845,7 @@ namespace StatsDirect.Builtins
             MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
             double[] b = context.B;
             int P = context.P;
-            string[] Label = context.Label;
+            string[] labels = context.Labels;
             double[] cov = context.COV;
             bool DoC = context.DoC;
 
@@ -4862,7 +4891,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag predictorsParameters = new ParameterBag();
                 predictorsList.Add(predictorsParameters);
-                predictorsParameters.AddOutput("x", Label[i] + " = " + host.RoundU(newx[i + iq]));
+                predictorsParameters.AddOutput("x", labels[i] + " = " + host.RoundU(newx[i + iq]));
             }
             string msg = lsqmean ? "  (regression mean)" : "";
             //  sd of Y from covariance matrix as sqr(xVx')
@@ -5120,7 +5149,7 @@ namespace StatsDirect.Builtins
                 }
                 if (bin)
                 {
-                    string t = context.Label[j];
+                    string t = context.Labels[j];
                     int px = t.IndexOf("(", StringComparison.Ordinal) + 1;
                     if (px == 0)
                     {
@@ -5131,9 +5160,9 @@ namespace StatsDirect.Builtins
                         //  Deal with multiple predictors with the same name - stored as name(...
                         int k = 1;
                         t = t.Substring(0, px - 1);
-                        for (int i = 1; i < context.Label.Length; i++)
+                        for (int i = 1; i < context.Labels.Length; i++)
                         {
-                            if (null != context.Label[i] && context.Label[i].Contains(t))
+                            if (null != context.Labels[i] && context.Labels[i].Contains(t))
                             {
                                 k++;
                             }
@@ -5145,7 +5174,7 @@ namespace StatsDirect.Builtins
                 {
                     mu = mu / Convert.ToDouble(context.N);
                 }
-                keyVariable.set_Data(j - 1, context.Label[j]);
+                keyVariable.set_Data(j - 1, context.Labels[j]);
                 valueVariable.set_Data(j - 1, mu.ToString());
                 oldValueVariable.set_Data(j - 1, Parsing.Cdbl_Txt(mu.ToString()));
             }
@@ -5287,11 +5316,11 @@ namespace StatsDirect.Builtins
             {
                 p = p + 1;
             }
-            string[] label = new string[p + 1 ];
-            label[0] = responseVariable.Title;
+            string[] labels = new string[p + 1 ];
+            labels[0] = responseVariable.Title;
             for (j = 1; j <= prd; j++)
             {
-                label[j] = predictorsFrame.Variables[j - 1].Title;
+                labels[j] = predictorsFrame.Variables[j - 1].Title;
             }
             if (records != targetRow - 1)
             {
@@ -5437,12 +5466,12 @@ namespace StatsDirect.Builtins
                 predList.Add(predParameters);
                 if (mean)
                 {
-                    predParameters.AddOutput("lab", i == 1 ? "Intercept" : label[i - 1]);
+                    predParameters.AddOutput("lab", i == 1 ? "Intercept" : labels[i - 1]);
                     predParameters.AddOutput("idx", (i - 1).ToString());
                 }
                 else
                 {
-                    predParameters.AddOutput("lab", label[i]);
+                    predParameters.AddOutput("lab", labels[i]);
                     predParameters.AddOutput("idx", i.ToString());
                 }
                 predParameters.AddOutput("res", host.RoundU(beta[i]));
@@ -5461,18 +5490,18 @@ namespace StatsDirect.Builtins
                 }
             }
             string tx = "log ";
-            string transTemp10 = label[0];
+            string transTemp10 = labels[0];
             if (transTemp10.Length > 0)
             {
-                tx = tx + label[0];
+                tx = tx + labels[0];
             }
             else { tx = tx + "Y"; }
             if (use_offset)
             {
-                string transTemp11 = label[1];
+                string transTemp11 = labels[1];
                 if (transTemp11.Length > 0)
                 {
-                    tx = tx + " [offset log(" + label[1] + ")]";
+                    tx = tx + " [offset log(" + labels[1] + ")]";
                 }
                 else { tx = tx + " [offset log(exposure)]"; }
             }
@@ -5487,11 +5516,11 @@ namespace StatsDirect.Builtins
                 string Q;
                 if (mean)
                 {
-                    Q = j > 1 ? label[j - 1] : " ";
+                    Q = j > 1 ? labels[j - 1] : " ";
                 }
                 else
                 {
-                    Q = label[j];
+                    Q = labels[j];
                 }
                 tx += Q.Length == 0 ? " X" + j.ToString() : " " + Q + " ";
             }
@@ -5509,7 +5538,7 @@ namespace StatsDirect.Builtins
                 M = predictors,
                 FV = fit,
                 H1 = leverage,
-                Label = label,
+                Labels = labels,
                 LLX = llx,
                 N = records,
                 P = p,
@@ -5539,7 +5568,7 @@ namespace StatsDirect.Builtins
             double[] hi = context.H1;
             int nx = context.N;
             bool DoC = context.DoC;
-            string[] label = context.Label;
+            string[] labels = context.Labels;
             int P = context.P;
             double[] cov = context.COV;
             double[] wt = context.WT;
@@ -5552,11 +5581,11 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> predictorsList = new List<ParameterBag>();
             outputParameters.AddOutput("*predictors", predictorsList);
-            for (int i = 1; i <= label.Length - 2; i++)
+            for (int i = 1; i <= labels.Length - 2; i++)
             {
                 ParameterBag predictorsParameters = new ParameterBag();
                 predictorsList.Add(predictorsParameters);
-                predictorsParameters.AddOutput("lab", label[i]);
+                predictorsParameters.AddOutput("lab", labels[i]);
             }
             List<ParameterBag> predictorValuesList = new List<ParameterBag>();
             outputParameters.AddOutput("*predictorValues", predictorValuesList);
@@ -5567,7 +5596,7 @@ namespace StatsDirect.Builtins
                 predictorValuesParameters.AddOutput("idx", j);
                 List<ParameterBag> predictorsList2 = new List<ParameterBag>();
                 predictorValuesParameters.AddOutput("*pred", predictorsList2);
-                for (int i = 1; i <= label.Length - 2; i++)
+                for (int i = 1; i <= labels.Length - 2; i++)
                 {
                     ParameterBag predictorsParameters = new ParameterBag();
                     predictorsList2.Add(predictorsParameters);
@@ -5647,8 +5676,8 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag covarParameters = new ParameterBag();
                     covarList.Add(covarParameters);
-                    string x1 = qlbli(label, i, DoC);
-                    string x2 = qlbli(label, j, DoC);
+                    string x1 = qlbli(labels, i, DoC);
+                    string x2 = qlbli(labels, j, DoC);
                     covarParameters.AddOutput("lab", x1 + " vs. " + x2);
                     covarParameters.AddOutput("cov", host.RoundU(cov[(((int)(Math.Floor((double)j * (j - 1) / 2 + i))))]));
                 }
@@ -5794,7 +5823,7 @@ namespace StatsDirect.Builtins
             double[] yfit = context.FV;
             double[] dr = context.R;
             double[,] xd = context.X;
-            string[] Label = context.Label;
+            string[] labels = context.Labels;
             int P = context.P;
             bool Intercept = context.DoC;
 
@@ -5833,7 +5862,7 @@ namespace StatsDirect.Builtins
                         {
                             ParameterBag chartParameters = new ParameterBag();
                             chartList.Add(chartParameters);
-                            chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, r, dr, "Predictor: " + Label[k], "Deviance residual", "Residuals vs. Predictor " + k.ToString() + " [Poisson regression]", true, 0, false));
+                            chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, r, dr, "Predictor: " + labels[k], "Deviance residual", "Residuals vs. Predictor " + k.ToString() + " [Poisson regression]", true, 0, false));
                         }
                     }
                 }
@@ -6092,10 +6121,10 @@ namespace StatsDirect.Builtins
             context.DV = dv;
             context.SV = sv;
             context.RV = rv;
-            context.Label = new string[2 + 1 ];
-            context.Label[0] = doseVariable.Title;
-            context.Label[1] = subjectsVariable.Title;
-            context.Label[2] = respondersVariable.Title;
+            context.Labels = new string[3];
+            context.Labels[0] = doseVariable.Title;
+            context.Labels[1] = subjectsVariable.Title;
+            context.Labels[2] = respondersVariable.Title;
             outputParameters.Add("context", new FilledParameter(true, context));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
@@ -6712,8 +6741,8 @@ namespace StatsDirect.Builtins
                 t = PDF.gauinv(ici + ((1.0 - ici) / 2.0), out ifa);
             }
 
-            string YAxisTitle = context.Label[2] + " / " + context.Label[1];
-            string XAxisTitle = context.Label[0];
+            string YAxisTitle = context.Labels[2] + " / " + context.Labels[1];
+            string XAxisTitle = context.Labels[0];
             y[0] = Constant.MISSING; //  Force no point at (0,0)
             x[0] = Constant.MISSING;
             ChartDefinition cd = new ChartDefinition();
@@ -6740,7 +6769,7 @@ namespace StatsDirect.Builtins
             double b = context.ARG[2];
             bool clog = context.DoC;
             double C2 = context.ARG[18];
-            string[] Label = context.Label;
+            string[] Label = context.Labels;
 
             // Interpolate X value
             double xval = parameters["newx"].AsDouble;
@@ -6791,7 +6820,7 @@ namespace StatsDirect.Builtins
             double b = context.ARG[2];
             bool clog = context.DoC;
             double C2 = context.ARG[18];
-            string[] Label = context.Label;
+            string[] Label = context.Labels;
             double qdose;
 
             // Interpolate Y value

@@ -103,29 +103,22 @@ namespace StatsDirect.Templates
             get
             {
                 foreach (Step step in steps)
-                {
                     if (step.RequiresGrid)
                         return true;
-                }
                 return false;
             }
         }
 
-        public override InputDuringStep RequiresInput
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get
-            {
-                return GetInputRequirement(steps);
-            }
+            return GetInputRequirement(steps, parameters);
         }
 
         internal override void NoteOperation(Operation operation)
         {
             base.NoteOperation(operation);
             foreach (Step s in steps)
-            {
                 s.NoteOperation(operation);
-            }
         }
     }
 }

@@ -102,9 +102,23 @@ namespace StatsDirect.Templates
             }
         }
 
-        public override InputDuringStep RequiresInput
+        public override InputDuringStep RequiresInputGiven(ParameterBag bag)
         {
-            get { return InputDuringStep.Always; }
+            // Any always means we always need to request; otherwise, any sometimes means we sometimes need to request; otherwise, we never need to request.
+            bool atLeastOneSometimes = false;
+            foreach (Parameter parameter in parameters)
+                switch (parameter.RequiresInputGiven(bag))
+                {
+                    case InputDuringStep.Always:
+                        return InputDuringStep.Always;
+                    case InputDuringStep.Sometimes:
+                        atLeastOneSometimes = true;
+                        break;
+                    default:
+                        // Do nothing
+                        break;
+                }
+            return atLeastOneSometimes ? InputDuringStep.Sometimes : InputDuringStep.Never; 
         }
     }
 }

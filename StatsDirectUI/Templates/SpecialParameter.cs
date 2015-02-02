@@ -26,5 +26,10 @@ namespace StatsDirect.Templates
         {
             get { return ParameterType.Special; }
         }
+
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
+        {
+            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
     }
 }

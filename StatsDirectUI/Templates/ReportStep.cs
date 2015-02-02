@@ -54,11 +54,11 @@ namespace StatsDirect.Templates
         }
 
         /// <summary>
-        /// May need to be told where to put the output
+        /// Doesn't need to be told where to put the output as that's now UI state rather than requested on demand.
         /// </summary>
-        public override InputDuringStep RequiresInput
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get { return InputDuringStep.Sometimes; }
+            return InputDuringStep.Never;
         }
     }
 }

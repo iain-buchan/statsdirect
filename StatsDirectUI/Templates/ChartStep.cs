@@ -98,9 +98,9 @@ namespace StatsDirect.Templates
             return processor.ExecuteInternal(this, parameters, isRedo);
         }
 
-        public override InputDuringStep RequiresInput
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get { return InputDuringStep.Never; }
+            return InputDuringStep.Never;
         }
     }
 }

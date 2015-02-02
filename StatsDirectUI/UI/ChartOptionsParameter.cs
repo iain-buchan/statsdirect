@@ -28,5 +28,9 @@ namespace StatsDirect.UI
         {
             get { return ParameterType.Custom; }
         }
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
+        {
+            return InputDuringStep.Always;
+        }
     }
 }

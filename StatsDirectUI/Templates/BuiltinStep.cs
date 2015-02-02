@@ -25,12 +25,9 @@ namespace StatsDirect.Templates
             return processor.ExecuteInternal(this, parameters, isRedo);
         }
 
-        public override InputDuringStep RequiresInput
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            get
-            {
-                return BuiltinRegistry.SoleInstance.Builtin(functionName).RequiresInput;
-            }
+            return BuiltinRegistry.SoleInstance.Builtin(functionName).RequiresInputGiven(parameters);
         }
     }
 }

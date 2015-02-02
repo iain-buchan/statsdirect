@@ -37,7 +37,7 @@ namespace StatsDirect.Templates
         {
             Builtin,
             Chart,
-            Frame,
+            OutputFrame,
             Iteration,
             Parameters,
             Report,
@@ -110,21 +110,20 @@ namespace StatsDirect.Templates
             get { return false; }
         }
 
-        [XmlIgnore]
-        public abstract InputDuringStep RequiresInput { get; }
+        public abstract InputDuringStep RequiresInputGiven(ParameterBag parameters);
 
         public virtual bool IsOrContains(Step step)
         {
             return this == step;
         }
 
-        internal static InputDuringStep GetInputRequirement(IList<Step> steps)
+        internal static InputDuringStep GetInputRequirement(IList<Step> steps, ParameterBag parameters)
         {
             bool atLeastOneSometimes = false;
 
             foreach (Step step in steps)
             {
-                switch (step.RequiresInput)
+                switch (step.RequiresInputGiven(parameters))
                 {
                     case InputDuringStep.Always:
                         // If any step always requires input, so does the overall set of steps
@@ -157,6 +156,8 @@ namespace StatsDirect.Templates
 
             // Approach: Go through the operation (found = false) until we find the given step (found = true).
             // Then keep going until we hit something else that will request input (can't aggregate) or something of the relevant step type (can aggregate) or the end of the report (don't know).
+            // TODO: Do we ever need to pass real parameters into this?
+            ParameterBag parameters = new ParameterBag();
             foreach (Step candidate in steps)
             {
                 if (found)
@@ -168,7 +169,7 @@ namespace StatsDirect.Templates
                         stepFound = candidate;
                         return HasInput.NoAndTypeFound;
                     }
-                    if (candidate.RequiresInput != InputDuringStep.Never)
+                    if (candidate.RequiresInputGiven(parameters) != InputDuringStep.Never)
                     {
                         // We've not reached a report step, and something wants input.
                         stepFound = null;

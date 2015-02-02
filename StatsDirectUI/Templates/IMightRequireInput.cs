@@ -2,6 +2,6 @@
 {
     public interface IMightRequireInput
     {
-        InputDuringStep RequiresInput { get; }
+        InputDuringStep RequiresInputGiven(ParameterBag parameters);
     }
 }
