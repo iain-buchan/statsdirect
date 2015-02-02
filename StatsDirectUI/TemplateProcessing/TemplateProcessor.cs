@@ -366,9 +366,8 @@ namespace StatsDirect.Templates
                     // Union parms with filledParameters before we pass in, so that this has access to earlier parameters in the same series
                     ParameterBag parmsAndFilledParameters = new ParameterBag();
                     foreach (KeyValuePair<string, FilledParameter> pair in filledParameters.Pairs)
-                    {
                         parmsAndFilledParameters.Add(pair);
-                    }
+
                     foreach (KeyValuePair<string, FilledParameter> pair in parms.Pairs)
                     {
                         if (!parmsAndFilledParameters.ContainsKey(pair.Key))
@@ -377,47 +376,9 @@ namespace StatsDirect.Templates
 
                     // If we don't already have the parameter and its lifetime is something other than just this operation, see whether it's already in the session
                     if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
-                    {
-                        IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
-                        switch (parameter.Type)
-                        {
-                            case ParameterType.Options:
-                                {
-                                    if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
-                                    {
-                                        ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
-                                        foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
-                                        {
-                                            if (savedParameters.ContainsKey(opt.Name))
-                                            {
-                                                filledParameters.Add(opt.Name, savedParameters[opt.Name]);
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            default:
-                                {
-                                    if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
-                                    {
-                                        ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
-                                        if (savedParameters.ContainsKey(parameter.Name))
-                                        {
-                                            filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
-                                        }
-                                    }
-                                }
-                                break;
-                        }
-                    }
-                    if (parameter.Lifetime == ParameterLifetime.SessionForAllOperations && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
-                    {
-                        ParameterBag savedParameters = host.SessionParametersAcrossOperations;
-                        if (savedParameters.ContainsKey(parameter.Name))
-                        {
-                            filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
-                        }
-                    }
+                        TryToRecallParameterForThisOperation(filledParameters, parameter);
+                    else if (parameter.Lifetime == ParameterLifetime.SessionForAllOperations && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
+                        TryToRecallParameterForAllOptions(filledParameters, parameter);
 
                     // Try to combine requests for parameters where possible.  The host can always refuse a request.
                     bool shouldCombine = host.CanCombine(parameter);
@@ -519,6 +480,48 @@ namespace StatsDirect.Templates
                 throw new Utilities.TemplateOperationCancelledException();
             }
 #endif
+        }
+
+        private void TryToRecallParameterForAllOptions(ParameterBag filledParameters, Parameter parameter)
+        {
+            ParameterBag savedParameters = host.SessionParametersAcrossOperations;
+            if (savedParameters.ContainsKey(parameter.Name))
+                filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
+        }
+
+        private void TryToRecallParameterForThisOperation(ParameterBag filledParameters, Parameter parameter)
+        {
+            IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
+            switch (parameter.Type)
+            {
+                case ParameterType.Options:
+                    {
+                        if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
+                        {
+                            ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
+                            foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
+                            {
+                                if (savedParameters.ContainsKey(opt.Name))
+                                {
+                                    filledParameters.Add(opt.Name, savedParameters[opt.Name]);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    {
+                        if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
+                        {
+                            ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
+                            if (savedParameters.ContainsKey(parameter.Name))
+                            {
+                                filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
+                            }
+                        }
+                    }
+                    break;
+            }
         }
 
         /// <summary>
