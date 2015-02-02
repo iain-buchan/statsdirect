@@ -199,26 +199,31 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
+        private enum Chi2ByNTrend
+        {
+            WithoutTrend = 0,
+            LinearTrend = 1,
+            WithTrend = 2
+        }
 
         public static StepResult RptChi2ByNWithoutTrend(ITemplateHost host, ParameterBag parameters)
         {
-            return RptChi2ByN(host, parameters, 0);
+            return RptChi2ByN(host, parameters, Chi2ByNTrend.WithoutTrend);
         }
 
 
         public static StepResult RptChi2ByNLinearTrend(ITemplateHost host, ParameterBag parameters)
         {
-            return RptChi2ByN(host, parameters, 1);
+            return RptChi2ByN(host, parameters, Chi2ByNTrend.LinearTrend);
         }
 
 
         public static StepResult RptChi2ByNWithTrend(ITemplateHost host, ParameterBag parameters)
         {
-            return RptChi2ByN(host, parameters, 2);
+            return RptChi2ByN(host, parameters, Chi2ByNTrend.WithTrend);
         }
 
-
-        private static StepResult RptChi2ByN(ITemplateHost host, ParameterBag parameters, int z)
+        private static StepResult RptChi2ByN(ITemplateHost host, ParameterBag parameters, Chi2ByNTrend z)
         {
             double k4 = 0;
             double k2 = 0;
@@ -229,15 +234,13 @@ namespace StatsDirect.Builtins
             double a = 0;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            if (datFrame.VariableCount < ((z > 1) ? 3 : 2))
+            if (datFrame.VariableCount < ((z == Chi2ByNTrend.WithTrend) ? 3 : 2))
                 throw new InvalidDataException("Invalid data: Please fill in the same number of rows in each column without gaps");
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
             DoubleVariable datV2 = null;
-            if (z > 1)
-            {
+            if (z == Chi2ByNTrend.WithTrend)
                 datV2 = datFrame.Variables[2].AsDoubleVariable;
-            }
             int rows = datFrame.MaxRows;
             double[] f = new double[rows + 1 ];
             double[] g = new double[rows + 1 ];
@@ -253,8 +256,8 @@ namespace StatsDirect.Builtins
                 double t1 = a1 + b1;
                 if (t1 <= 0.0)
                     throw new InvalidDataException("Invalid data: row " + r.ToString() + " total is not greater than zero, which it must be for this calculation");
-                Debug.Assert(z != 2 || datV2 != null);
-                double s1 = z == 2 ? datV2.Data[r - 1] : r;
+                Debug.Assert(z != Chi2ByNTrend.WithTrend || datV2 != null);
+                double s1 = z == Chi2ByNTrend.WithTrend ? datV2.Data[r - 1] : r;
                 f[r] = a1;
                 g[r] = b1;
                 h[r] = t1;
@@ -320,7 +323,7 @@ namespace StatsDirect.Builtins
 
             List<ParameterBag> zList = new List<ParameterBag>();
             outputParameters.AddOutput("*z", zList);
-            if (z != 0)
+            if (z != Chi2ByNTrend.WithoutTrend)
             {
                 c = x2;
                 double k8 = b / a;
@@ -350,7 +353,6 @@ namespace StatsDirect.Builtins
 
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-
 
         public static StepResult RptChiMantel(ITemplateHost host, ParameterBag parameters)
         {
