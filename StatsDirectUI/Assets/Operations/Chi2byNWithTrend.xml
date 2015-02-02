@@ -12,6 +12,8 @@
           <validators>
             <validator>NoMissingData</validator>
             <validator>ThreeColumns</validator>
+            <validator>NonNegative</validator>
+            <validator>PositiveRowsExceptLastColumn</validator>
           </validators>
           <type>chi-3-column</type>
         </special>

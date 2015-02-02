@@ -922,6 +922,59 @@ namespace StatsDirect.Templates
                         }
                     }
                     return null;
+                case "PositiveRows":
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (Variable variable in dataFrame.Variables)
+                            if (!(variable is DoubleVariable))
+                                return "Data must be numeric";
+
+                        // Otherwise ensure the sum of all values across a row is > 0
+                        for (int row = 0; row < dataFrame.MinRows; row++)
+                        {
+                            double sum = 0;
+                            foreach (Variable variable in dataFrame.Variables)
+                            {
+                                double x = variable.AsDoubleVariable.Data[row];
+                                if (!(x == Constant.MISSING || double.IsInfinity(x)))
+                                    sum += x;
+                            }
+                            if (sum <= 0)
+                                return failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation";
+                        }
+                    }
+                    return null;
+                case "PositiveRowsExceptLastColumn":
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (Variable variable in dataFrame.Variables)
+                            if (!(variable is DoubleVariable))
+                                return "Data must be numeric";
+
+                        // Otherwise ensure the sum of all values across a row except the last column is > 0
+                        for (int row = 0; row < dataFrame.MinRows; row++)
+                        {
+                            double sum = 0;
+                            for (int col = 0; col < dataFrame.Variables.Count - 1; col++)
+                            {
+                                Variable variable = dataFrame.Variables[col];
+                                double x = variable.AsDoubleVariable.Data[row];
+                                if (!(x == Constant.MISSING || double.IsInfinity(x)))
+                                    sum += x;
+                            }
+                            if (sum <= 0)
+                                return failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation";
+                        }
+                    }
+                    return null;
                 case "NonNegative":
                     {
                         // If we're allowing blank parameters, accept a blank
