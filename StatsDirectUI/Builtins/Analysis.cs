@@ -55,14 +55,10 @@ namespace StatsDirect.Builtins
             }
 
             if (refntot <= 0.0)
-            {
                 throw new InvalidDataException("Total reference group size must be greater than zero");
-            }
 
             for (int j = 1; j <= rows; j++)
-            {
                 refw[j] = refn[j] / refntot;
-            }
 
             double stdr = 0.0;
             double poisVar = 0.0;

@@ -77,13 +77,12 @@ namespace StatsDirect.Charting
                     Q_Axis_ShiftMin(qmin, qmax, ref zmin, ref zint, ref div, out pref);
 
                     const int tries = 4;
-                    int[] trydiv = new int[tries + 1];
-                    trydiv[1] = 15;
-                    trydiv[2] = 25;
-                    trydiv[3] = 16;
-                    trydiv[4] = 24;
-                    int i;
-                    for (i = 1; i <= tries; i++)
+                    int[] trydiv = new int[tries];
+                    trydiv[0] = 15;
+                    trydiv[1] = 25;
+                    trydiv[2] = 16;
+                    trydiv[3] = 24;
+                    for (int i = 0; i < tries; i++)
                     {
                         int ndiv = trydiv[i];
                         double nzmin, nzint;
