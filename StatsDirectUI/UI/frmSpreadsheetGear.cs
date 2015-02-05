@@ -2649,19 +2649,14 @@ namespace StatsDirect.UI
                 IWorksheetWindowInfo info = worksheet.WindowInfo;
                 if (info.FreezePanes)
                 {
+                    // Unfreeze the panes
                     worksheet.WindowInfo.SplitColumns = 0;
                     worksheet.WindowInfo.SplitRows = 0;
                     info.FreezePanes = false;
                 }
                 else
                 {
-                    int row = workbookView.ActiveCell.Row - worksheet.WindowInfo.ScrollRow;
-                    int column = workbookView.ActiveCell.Column - worksheet.WindowInfo.ScrollColumn;
-
-                    worksheet.WindowInfo.SplitColumns = column;
-                    worksheet.WindowInfo.SplitRows = row;
-
-                    // Freeze the panes.
+                    // Freeze the panes.  Defaults to freezing at the current row/column, so no need to set that before freezing.
                     info.FreezePanes = true;
                 }
             }
