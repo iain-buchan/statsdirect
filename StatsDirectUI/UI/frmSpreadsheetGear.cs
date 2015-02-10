@@ -1,3 +1,6 @@
+// Comment for production
+// #define WATCH_EXCEPTIONS
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -600,26 +603,34 @@ namespace StatsDirect.UI
 
         private void DoOrWarn(Action func, string explanation)
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 func();
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.FriendlyError(explanation, ex, false);
             }
+#endif
         }
 
         private void DoOrSwallow(Action func)
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 func();
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception)
             {
                 // TODO: It'd be nice to know that the exception happened for our diagnostic purposes.
             }
+#endif
         }
 
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
