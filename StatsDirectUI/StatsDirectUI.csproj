@@ -1590,7 +1590,9 @@
     <Content Include="Assets\Operations\PoissonRegressionFitToReport.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\Operations\PoissonRegressionIRR.xml" />
+    <Content Include="Assets\Operations\PoissonRegressionIRR.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\PoissonRegressionModel.xml" />
     <Content Include="Assets\Operations\PoissonRegressionResiduals.xml" />
     <Content Include="Assets\Operations\PolynomialAreaUnderCurve.xml" />
@@ -1682,7 +1684,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
