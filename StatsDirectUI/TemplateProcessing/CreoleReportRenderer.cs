@@ -70,15 +70,18 @@ namespace StatsDirect.TemplateProcessing
                 afterSubstitutions = afterSubstitutions.Replace(pair.Key, pair.Value);
             // RTF tables need a certain amount of fixup: they need a \cellx0 for each cell in the row.
             // ASSUMPTION: An entire table row is on one line in the source and hence in the translated data.
+            // ASSUMPTION: There is at lease one non-table line between tables.  This is used to detect the first row of a table in order to insert some text that is later removed when fixing up the table.
             string[] splitResults = afterSubstitutions.Split('\n');
             StringBuilder finalOutput = new StringBuilder();
             Regex cellFinder = new Regex(@"\\intbl(?:!!(?<span>[A-Z]+)!!)?");
+            bool wasInTable = false;
             foreach (string unchangedLine in splitResults)
             {
                 // Do not propagate blank lines
                 if (string.IsNullOrWhiteSpace(unchangedLine))
                     continue;
 
+                bool isInTable = false;
                 string line = unchangedLine.Trim();
                 if (line.Contains(@"\row"))
                 {
@@ -86,26 +89,40 @@ namespace StatsDirect.TemplateProcessing
                     // If we have a table row with no cells, it's invalid - prevent it from being emitted.
                     if (matches.Count > 0)
                     {
+                        isInTable = true;
                         // If we get here, there are some cells in this line.  We need one \cellx<width> for each \cell, placed at the end of the row data (which we know ends with \!!CELLSHERE!! from the translation of </tr>).
                         StringBuilder cellxs = new StringBuilder();
                         foreach (Match m in matches)
                         {
                             string spanString = m.Groups["span"].Value;
                             if ("FIRST".Equals(spanString))
-                            {
                                 cellxs.Append(@"\clmgf");
-                            }
                             else if ("SPAN".Equals(spanString))
-                            {
                                 cellxs.Append(@"\clmrg");
-                            }
+                            // cellxs.Append(@"\cellx0");
                             cellxs.Append(@"\clNoWrap\cellx0");
                         }
-                        finalOutput.AppendLine(line.Replace("!!FIRST!!", "").Replace("!!SPAN!!", "").Replace(@"!!CELLDEFINITION!!", cellxs.ToString()));
+
+                        // If this is the first line of a new table, mark the first table cell so that the RTF inserter can get hold of it later.
+                        // TODO: This whole text-replacement approach is getting increasingly unpleasant; how can we use e.g. ANTLR and island grammars to get a proper parse tree instead?
+                        if (!wasInTable)
+                        {
+                            // The contents of each cell will end with "\cell " - note the space at the end.  We can drop some marker text into the first cell by finding the first occurrence and adding that marker.
+                            // int pos = line.IndexOf(@"\cell ");
+                            // if (pos >= 0)
+                            //     line = line.Substring(0, pos) + "!!FIRSTCELLOFTABLE!!" + line.Substring(pos);
+                        }
+
+                        finalOutput.AppendLine(line
+                            .Replace("!!FIRST!!", "")
+                            .Replace("!!SPAN!!", "")
+                            .Replace(@"!!CELLDEFINITION!!", cellxs.ToString())
+                            );
                     }
                 }
                 else
                     finalOutput.AppendLine(line);
+                wasInTable = isInTable;
             }
             return finalOutput.ToString();
         }
