@@ -350,7 +350,7 @@ namespace StatsDirect.UI
         public void AppendRtfText(string rtf, int helpContextId, Operation operation, string redoInformation)
         {
             Document document = richEditControl1.Document;
-            // DocumentPosition initialEnd = document.Range.End;
+            int initialEnd = document.Range.End.ToInt();
             document.BeginUpdate();
 
             // Append the text, surrounding it with the specified help context if required
@@ -370,12 +370,15 @@ namespace StatsDirect.UI
             // document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!help!-> " + AmbientHelpContextId.ToString() + @" <-!help!! }}");
 
             // Ensure the appended text is visible by scrolling the selection into view - the selection is the caret at the end of the old text
-            // document.CaretPosition = initialEnd;
-            document.CaretPosition = document.Range.End;
 
             document.EndUpdate();
 
-            richEditControl1.ScrollToCaret();
+            FixupNewTables();
+
+            // document.CaretPosition = document.CreatePosition(initialEnd);
+            // richEditControl1.ScrollToCaret(0);
+            document.CaretPosition = document.Range.End;
+            richEditControl1.ScrollToCaret(1);
         }
 
         #endregion
@@ -966,6 +969,60 @@ namespace StatsDirect.UI
         private void InsertDateAndTime()
         {
             richEditControl1.Document.InsertText(richEditControl1.Document.CaretPosition, DateTime.Now.ToString("dd MMMM yyyy @ hh:MM:ss"));
+        }
+
+        private void FixupTableAt(DocumentRange rng)
+        {
+            Document doc = richEditControl1.Document;
+
+            // Delete the found text - do this before we autofit!
+            doc.Delete(rng);
+
+            // Autofit
+            DocumentPosition pos = rng.Start;
+            TableCell cell = doc.Tables.GetTableCell(pos);
+            if (null != cell)
+                FixupTable(cell.Table);
+        }
+
+        private void FixupTable(Table table)
+        {
+            table.BeginUpdate();
+            try
+            {
+                table.TableLayout = TableLayoutType.Autofit;
+                table.ForEachCell(((cell, rowIndex, cellIndex) =>
+                {
+                    cell.PreferredWidthType = WidthType.Auto;
+                }));
+            }
+            finally
+            {
+                table.EndUpdate();
+            }
+        }
+
+        /// <summary>
+        /// New tables that have been inserted by the Creole renderer have the string !!FIRSTCELLOFTABLE!! at the end of the first cell in the first row.  Use this as a marker, removing it.
+        /// </summary>
+        private void FixupNewTables()
+        {
+            return;
+            Document doc = richEditControl1.Document;
+            string txt = doc.GetText(doc.Range);
+            string rtf = doc.GetRtfText(doc.Range);
+            int startPos = doc.Range.Start.ToInt();
+            int length = doc.Range.End.ToInt() - startPos;
+            DocumentRange range = doc.CreateRange(startPos, length);
+            ISearchResult searchResult = doc.StartSearch("!!FIRSTCELLOFTABLE!!" , SearchOptions.None, SearchDirection.Forward, range);
+
+            if (null != searchResult.CurrentResult)
+            {
+                FixupTableAt(searchResult.CurrentResult);
+
+                while (searchResult.FindNext())
+                    FixupTableAt(searchResult.CurrentResult);
+            }
         }
     }
 }
