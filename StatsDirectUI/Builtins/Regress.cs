@@ -4187,7 +4187,6 @@ namespace StatsDirect.Builtins
             int nx = context.N;
             string[] labels = context.Labels;
             bool DoC = context.DoC;
-            //  RTF_LoadTemplate("pr_irr.rtf")
             double GAMMA = parameters["gamma"].AsDouble;
             double cit; double P0;
             MathDbl.civ(0, out cit, GAMMA, out P0);
@@ -5343,7 +5342,7 @@ namespace StatsDirect.Builtins
             residual = new double[records + 1];
             leverage = new double[records + 1];
             Regress1.X_Poisson_Regression(mean, use_offset, ref weighted, records, x, predictors, selectX, p, y, t, weight, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
-            if (fault != 0 & fault != 3)
+            if (fault != 0 && fault != 3)
             {
                 host.Error(err_msg, "Poisson regression");
                 throw new TemplateOperationCancelledException();
@@ -5384,6 +5383,12 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("*warn", null);
             }
+
+            double GAMMA = parameters["gamma"].AsDouble;
+            double cit; double P0;
+            MathDbl.civ(0, out cit, GAMMA, out P0);
+            outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
+
             outputParameters.AddOutput("dev", host.RoundU(deviance));
             outputParameters.AddOutput("df_dev", df.ToString());
             double prob = PDF.chivalp(deviance, Convert.ToDouble(df));
@@ -5404,13 +5409,9 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= p; i++)
             {
                 if (se_beta[i] == 0)
-                {
                     prob = Constant.MISSING;
-                }
                 else
-                {
                     prob = 2.0 * (1.0 - PDF.alnorm(Math.Abs(beta[i] / se_beta[i])));
-                }
                 ParameterBag predParameters = new ParameterBag();
                 predList.Add(predParameters);
                 if (mean)
@@ -5437,6 +5438,22 @@ namespace StatsDirect.Builtins
                     predParameters.AddOutput("z", host.RoundU(z));
                     predParameters.AddOutput("p", host.pval(prob));
                 }
+
+                double rr = Formatting.SafeExp(beta[i]);
+                double lci;
+                double uci;
+                if (rr != Constant.MISSING)
+                {
+                    lci = Formatting.SafeExp(beta[i] - se_beta[i] * cit);
+                    uci = Formatting.SafeExp(beta[i] + se_beta[i] * cit);
+                }
+                else
+                {
+                    lci = Constant.MISSING;
+                    uci = Constant.MISSING;
+                }
+                predParameters.AddOutput("irr", host.RoundU(rr));
+                predParameters.AddOutput("ci", host.RoundU(lci) + "  to  " + host.RoundU(uci));
             }
             string tx = "log ";
             if (labels[0].Length > 0)

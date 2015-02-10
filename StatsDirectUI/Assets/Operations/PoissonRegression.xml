@@ -6,6 +6,9 @@
   <steps>
     <settings>
       <parameters>
+        <confidence-interval>
+          <name>gamma</name>
+        </confidence-interval>
         <option>
           <name>grouping</name>
           <prompt>Response data</prompt>
@@ -122,7 +125,8 @@
 </table>
 <line></line>
 <table>
-<block name="pred"><tr><td><in>lab</in></td><td>b<in>idx</in> = <warn><in>res</in></warn></td><td>z = <in>z</in></td><td><pval><in>p</in></warn></td></tr></block>
+<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci><in>pc</in>% CI</ci></th><th>z</th><th><pval></pval></th></tr>
+<block name="pred"><tr><td><in>lab</in></td><td>b<in>idx</in> = <in>res</in></td><td><in>irr</in></td><td><ci><in>ci</in></ci></td><td><in>z</in></td><td><pval><in>p</in></warn></td></tr></block>
 </table>
 <line></line>
 <line><in>logit</in></line>
