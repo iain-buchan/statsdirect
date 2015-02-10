@@ -223,8 +223,7 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  
         ///  </summary>
-        ///  <param name="frame"></param>
-        ///  <param name="n"></param>
+        ///  <param name="frame">One classifier variable per rater, one row of data per subject.</param>
         ///  <param name="poscat"></param>
         ///  <param name="k"></param>
         ///  <param name="mbar"></param>
@@ -234,40 +233,33 @@ namespace StatsDirect.Builtins
         ///  <param name="maxm"></param>
         ///  <param name="medm"></param>
         ///  <remarks></remarks>
-        private static void KappaHat(DataFrame frame, int n, string poscat, out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm)
+        private static void KappaHat(DataFrame frame, string poscat, out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm)
         {
-            double[] qm = new double[n - 1 + 1 ];
-            double[] qx = new double[n - 1 + 1 ];
+            int n = frame.Variables[0].Length;
+            double[] qm = new double[n];
+            double[] qx = new double[n];
             //  IEB Aug 2007: Corrected to allow for complete non-rating of a subject
-            for (int i = 0; i <= n - 1; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = 0; j <= frame.VariableCount - 1; j++)
+                for (int j = 0; j < frame.VariableCount; j++)
                 {
                     ClassifierVariable v = frame.Variables[j].AsClassifierVariable;
                     //  Find the first missing label
                     int m;
-                    for (m = 0; m <= v.GroupCount - 1; m++)
+                    for (m = 0; m < v.GroupCount; m++)
                     {
                         if (v.get_Group(m).Label == Formatting.MISSINGLABEL)
-                        {
-                            break; /* TRANSWARNING: check that break is in correct scope */
-                        }
+                            break;
                     }
-                    if (v.Data[i] != Convert.ToDouble(m) & v.Data[i] != Constant.MISSING)
-                    {
-                        qm[i] = qm[i] + 1.0;
-                    }
-                    for (m = 0; m <= v.GroupCount - 1; m++)
+                    if (v.Data[i] != Convert.ToDouble(m) && v.Data[i] != Constant.MISSING)
+                        qm[i] += 1.0;
+                    for (m = 0; m < v.GroupCount; m++)
                     {
                         if (v.get_Group(m).Label == poscat)
-                        {
                             break;
-                        }
                     }
-                    if (v.Data[i] == Convert.ToDouble(m) & v.Data[i] != Constant.MISSING)
-                    {
-                        qx[i] = qx[i] + 1.0;
-                    }
+                    if (v.Data[i] == Convert.ToDouble(m) && v.Data[i] != Constant.MISSING)
+                        qx[i] += 1.0;
                 }
             }
             mbar = 0.0;
@@ -275,47 +267,40 @@ namespace StatsDirect.Builtins
             double xn = 0;
             minm = double.MaxValue;
             maxm = double.MinValue;
-            for (int i = 0; i <= n - 1; i++)
+            for (int i = 0; i < n; i++)
             {
-                mbar = mbar + qm[i];
+                mbar += qm[i];
                 if (qm[i] != 0.0)
                 {
-                    mbarh = mbarh + 1.0 / qm[i];
+                    mbarh += 1.0 / qm[i];
                     xn += 1;
                 }
                 if (qm[i] < minm)
-                {
                     minm = qm[i];
-                }
                 if (qm[i] > maxm)
-                {
                     maxm = qm[i];
-                }
             }
             medm = Describe.Median(qm, 0, n - 1);
             mbar = mbar / xn;
             mbarh = xn / mbarh;
             pbar = 0.0;
-            for (int i = 0; i <= n - 1; i++)
-            {
-                pbar = pbar + qx[i];
-            }
+            for (int i = 0; i < n; i++)
+                pbar += qx[i];
             pbar = pbar / (xn * mbar);
             double bx = 0.0;
             double wx = 0.0;
-            for (int i = 0; i <= n - 1; i++)
+            for (int i = 0; i < n; i++)
             {
                 if (qm[i] != 0)
                 {
-                    bx = bx + (Math.Pow((qx[i] - qm[i] * pbar), 2.0)) / qm[i];
-                    wx = wx + (qx[i] * (qm[i] - qx[i])) / qm[i];
+                    bx += (Math.Pow((qx[i] - qm[i] * pbar), 2.0)) / qm[i];
+                    wx += (qx[i] * (qm[i] - qx[i])) / qm[i];
                 }
             }
             bx = bx / xn;
             wx = wx / (xn * (mbar - 1.0));
             k = (bx - wx) / (bx + (mbar - 1.0) * wx);
         }
-
 
         private static void XSymmetriseXtab(ref int xcats, ref Namevar[] xcat, ref int ycats, ref Namevar[] ycat, int lowerBound)
         {
@@ -1215,7 +1200,7 @@ namespace StatsDirect.Builtins
                     double minm;
                     double maxm;
                     double medm;
-                    KappaHat(frame, n, catz[0], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
+                    KappaHat(frame, catz[0], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
                     double sek = (1.0 / ((mbar - 1.0) * Math.Sqrt(Convert.ToDouble(n) * mbarh))) * Math.Sqrt(2.0 * (mbarh - 1.0) + ((mbar - mbarh) * (1.0 - 4.0 * pbar * (1.0 - pbar))) / (mbar * pbar * (1.0 - pbar)));
                     double z;
                     if (sek != 0.0)
@@ -1261,7 +1246,7 @@ namespace StatsDirect.Builtins
                         double mbar;
                         double mbarh;
                         double pbar;
-                        KappaHat(frame, n, catz[i], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
+                        KappaHat(frame, catz[i], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
                         double qbar = 1.0 - pbar;
                         kj[i] = k;
                         sej[i] = Math.Sqrt(2.0 / (Convert.ToDouble(n) * mx * (mx - 1.0)));
