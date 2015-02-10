@@ -20,6 +20,18 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPoissonRegressionIrr" />
-		<report type="text/rtf" filename="pr_irr.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[<report>
+<line><title>Poisson regression - incidence rate ratios (relative risks)</title></line>
+<block name="pop">
+<line></line>
+<line>Inference population: <in>pop</in></line>
+<table>
+<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci><in>pc</in>% CI</ci></th></tr>
+<block name="par"><tr><td><in>par</in></td><td><in>est</in></td><td><in>irr</in></td><td><ci><in>ci</in></ci></td></tr></block>
+</table>
+</block>
+</report>]]>
+    </report>
+  </steps>
 </operation>

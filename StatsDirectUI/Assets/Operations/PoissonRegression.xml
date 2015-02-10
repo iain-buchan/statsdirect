@@ -110,8 +110,25 @@
       </parameters>
     </settings>
 		<builtin function-name="rptPoissonRegression" />
-		<report type="text/rtf" filename="poisreg.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[<report>
+<line><title>Poisson regression</title></line>
+<block name="warn"><line></line>
+<line><warn><in>warn</in></warn></line></block>
+<line></line>
+<table>
+<tr><td>Deviance goodness of fit chi-square =</td><td><in>dev</in></td><td>df = <in>df_dev</in></td><td><pval><in>p_dev</in></pval> <in>w</in></td></tr>
+<tr><td>Deviance (likelihood ratio) chi-square =</td><td><in>x2</in></td><td>df = <in>df_x2</in></td><td><pval><in>p_x2</in></pval></td></tr>
+</table>
+<line></line>
+<table>
+<block name="pred"><tr><td><in>lab</in></td><td>b<in>idx</in> = <warn><in>res</in></warn></td><td>z = <in>z</in></td><td><pval><in>p</in></warn></td></tr></block>
+</table>
+<line></line>
+<line><in>logit</in></line>
+</report>]]>
+    </report>
+  </steps>
   <suggested-operations>
     <suggested-operation>PoissonRegressionFitToReport</suggested-operation>
     <suggested-operation>PoissonRegressionFitToWorksheet</suggested-operation>

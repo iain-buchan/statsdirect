@@ -1135,7 +1135,6 @@
     <None Include="Assets\Template\pardet.rtf" />
     <None Include="Assets\Template\peto.rtf" />
     <None Include="Assets\Template\pinterp.rtf" />
-    <None Include="Assets\Template\poisreg.rtf" />
     <None Include="Assets\Template\poisson.rtf" />
     <None Include="Assets\Template\poly.rtf" />
     <None Include="Assets\Template\POLY_AUC.rtf" />
@@ -1149,9 +1148,6 @@
     <None Include="Assets\Template\probmore.rtf" />
     <None Include="Assets\Template\propmeta.rtf" />
     <None Include="Assets\Template\prscores.rtf" />
-    <None Include="Assets\Template\pr_det.rtf" />
-    <None Include="Assets\Template\pr_fit.rtf" />
-    <None Include="Assets\Template\pr_irr.rtf" />
     <None Include="Assets\Template\p_pair.rtf" />
     <None Include="Assets\Template\p_unpair.rtf" />
     <None Include="Assets\Template\quantile.rtf" />
@@ -1588,8 +1584,12 @@
     <Content Include="Assets\Operations\PlotSeCi.xml" />
     <Content Include="Assets\Operations\PlotSimpleLinearRegression.xml" />
     <Content Include="Assets\Operations\PoissonConfidenceInterval.xml" />
-    <Content Include="Assets\Operations\PoissonRegression.xml" />
-    <Content Include="Assets\Operations\PoissonRegressionFitToReport.xml" />
+    <Content Include="Assets\Operations\PoissonRegression.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Assets\Operations\PoissonRegressionFitToReport.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\PoissonRegressionIRR.xml" />
     <Content Include="Assets\Operations\PoissonRegressionModel.xml" />
     <Content Include="Assets\Operations\PoissonRegressionResiduals.xml" />
@@ -1682,7 +1682,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

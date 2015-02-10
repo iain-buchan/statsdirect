@@ -1196,9 +1196,6 @@
     <Component Id="pinterp.rtf">
       <File Id="pinterp.rtf" Name="pinterp.rtf" KeyPath="yes" />
     </Component>
-    <Component Id="poisreg.rtf">
-      <File Id="poisreg.rtf" Name="poisreg.rtf" KeyPath="yes" />
-    </Component>
     <Component Id="poisson.rtf">
       <File Id="poisson.rtf" Name="poisson.rtf" KeyPath="yes" />
     </Component>
@@ -1237,15 +1234,6 @@
     </Component>
     <Component Id="prscores.rtf">
       <File Id="prscores.rtf" Name="prscores.rtf" KeyPath="yes" />
-    </Component>
-    <Component Id="pr_det.rtf">
-      <File Id="pr_det.rtf" Name="pr_det.rtf" KeyPath="yes" />
-    </Component>
-    <Component Id="pr_fit.rtf">
-      <File Id="pr_fit.rtf" Name="pr_fit.rtf" KeyPath="yes" />
-    </Component>
-    <Component Id="pr_irr.rtf">
-      <File Id="pr_irr.rtf" Name="pr_irr.rtf" KeyPath="yes" />
     </Component>
     <Component Id="p_pair.rtf">
       <File Id="p_pair.rtf" Name="p_pair.rtf" KeyPath="yes" />

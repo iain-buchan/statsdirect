@@ -415,7 +415,6 @@
     <ComponentRef Id="pardet.rtf" />
     <ComponentRef Id="peto.rtf" />
     <ComponentRef Id="pinterp.rtf" />
-    <ComponentRef Id="poisreg.rtf" />
     <ComponentRef Id="poisson.rtf" />
     <ComponentRef Id="poly.rtf" />
     <ComponentRef Id="POLY_AUC.rtf" />
@@ -429,9 +428,6 @@
     <ComponentRef Id="probmore.rtf" />
     <ComponentRef Id="propmeta.rtf" />
     <ComponentRef Id="prscores.rtf" />
-    <ComponentRef Id="pr_det.rtf" />
-    <ComponentRef Id="pr_fit.rtf" />
-    <ComponentRef Id="pr_irr.rtf" />
     <ComponentRef Id="p_pair.rtf" />
     <ComponentRef Id="p_unpair.rtf" />
     <ComponentRef Id="quantile.rtf" />
