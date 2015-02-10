@@ -21,83 +21,74 @@ namespace StatsDirect.Builtins
                 n = temp;
             }
             ParameterBag outputParameters = new ParameterBag();
-            if (n > 0.0)
+            if (n <= 0.0)
+                throw new InvalidDataException();
+
+            double acr = r;
+            double cco = parameters["cco"].AsDouble;
+            if (cco <= 0.0 || cco >= 1.0)
+                cco = 0.95;
+
+            if (r > n / 2.0)
+                r = n - r;
+
+            double f = Math.Pow(0.5, n);
+            outputParameters.AddOutput("sample", n.ToString());
+            outputParameters.AddOutput("sample_1", acr.ToString());
+            if (f > 0.0)
             {
-                double acr = r;
-                double cco = parameters["cco"].AsDouble;
-                if (cco <= 0.0 | cco >= 1.0)
+                double p = f;
+                if (r != 0.0)
                 {
-                    cco = 0.95;
-                }
-                if (r > n / 2.0)
-                {
-                    r = n - r;
-                }
-                double f = Math.Pow(0.5, n);
-                outputParameters.AddOutput("sample", n.ToString());
-                outputParameters.AddOutput("sample_1", acr.ToString());
-                if (f > 0.0)
-                {
-                    double p = f;
-                    if (r != 0.0)
+                    for (long i = 1; i <= Convert.ToInt64(r); i++)
                     {
-                        long i;
-                        for (i = 1; i <= Convert.ToInt64(r); i++)
-                        {
-                            f = f * (n - Convert.ToDouble(i) + 1.0) / Convert.ToDouble(i);
-                            p = p + f;
-                        }
+                        f *= (n - i + 1.0) / Convert.ToDouble(i);
+                        p += f;
                     }
-                    double p2 = 2.0 * p;
-                    if (p2 > 1.0)
-                    {
-                        p2 = 1.0;
-                    }
-                    List<ParameterBag> exactList = new List<ParameterBag>();
-                    outputParameters.AddOutput("*exact", exactList);
-                    ParameterBag exactParameters = new ParameterBag();
-                    exactList.Add(exactParameters);
-                    exactParameters.AddOutput("prob_2", host.pval(p2));
-                    exactParameters.AddOutput("prob_1", host.pval(p));
-                    outputParameters.AddOutput("*large", null);
                 }
-                else
-                {
-                    outputParameters.AddOutput("*exact", null);
-                    List<ParameterBag> largeList = new List<ParameterBag>();
-                    outputParameters.AddOutput("*large", largeList);
-                    largeList.Add(new ParameterBag());
-                }
+                double p2 = 2.0 * p;
+                if (p2 > 1.0)
+                    p2 = 1.0;
 
-                double d = Math.Abs(n / 2.0 - r) - 0.5;
-                double x9;
-                if (d < 0.0)
-                {
-                    x9 = 0.0;
-                }
-                else { x9 = d / Math.Sqrt(n / 4.0); }
-
-                outputParameters.AddOutput("z", host.RoundU(x9));
-                outputParameters.AddOutput("p_2", host.zvalp2(x9));
-                outputParameters.AddOutput("p_1", host.zvalp1(x9));
-
-                r = acr;
-                outputParameters.AddOutput("ci", Formatting.XRound(cco * 100, 2));
-
-                double piu;
-                string warn;
-                double pil;
-                MathDbl.binci(r, n, out pil, out piu, cco, out warn);
-
-                outputParameters.AddOutput("lower", host.RoundU(pil));
-                outputParameters.AddOutput("prop", host.RoundU(r / n));
-                outputParameters.AddOutput("upper", host.RoundU(piu) + warn);
-
+                List<ParameterBag> exactList = new List<ParameterBag>();
+                outputParameters.AddOutput("*exact", exactList);
+                ParameterBag exactParameters = new ParameterBag();
+                exactList.Add(exactParameters);
+                exactParameters.AddOutput("prob_2", host.pval(p2));
+                exactParameters.AddOutput("prob_1", host.pval(p));
+                outputParameters.AddOutput("*large", null);
             }
             else
             {
-                throw new InvalidDataException();
+                outputParameters.AddOutput("*exact", null);
+                List<ParameterBag> largeList = new List<ParameterBag>();
+                outputParameters.AddOutput("*large", largeList);
+                largeList.Add(new ParameterBag());
             }
+
+            double d = Math.Abs(n / 2.0 - r) - 0.5;
+            double x9;
+            if (d < 0.0)
+                x9 = 0.0;
+            else
+                x9 = d / Math.Sqrt(n / 4.0);
+
+            outputParameters.AddOutput("z", host.RoundU(x9));
+            outputParameters.AddOutput("p_2", host.zvalp2(x9));
+            outputParameters.AddOutput("p_1", host.zvalp1(x9));
+
+            r = acr;
+            outputParameters.AddOutput("ci", Formatting.XRound(cco * 100, 2));
+
+            double piu;
+            string warn;
+            double pil;
+            MathDbl.binci(r, n, out pil, out piu, cco, out warn);
+
+            outputParameters.AddOutput("lower", host.RoundU(pil));
+            outputParameters.AddOutput("prop", host.RoundU(r / n));
+            outputParameters.AddOutput("upper", host.RoundU(piu) + warn);
+
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
@@ -112,9 +103,7 @@ namespace StatsDirect.Builtins
             int d = Convert.ToInt32(parameters["d"].AsDouble);
             StepResult outputResult = Tables.SFisher(host, ref a, ref b, ref c, ref d, ref fault);
             if (fault != 0)
-            {
                 return new StepResult(StepSuccess.Failed, null);
-            }
             return outputResult;
         }
 
@@ -122,7 +111,6 @@ namespace StatsDirect.Builtins
         public static StepResult RptExactFisherX(ITemplateHost host, ParameterBag parameters)
         {
             int fault = 0;
-            int t;
 
             int a = Convert.ToInt32(parameters["a"].AsDouble);
             int b = Convert.ToInt32(parameters["b"].AsDouble);
@@ -138,13 +126,13 @@ namespace StatsDirect.Builtins
 
             if (a > d)
             {
-                t = a;
+                int t = a;
                 a = d;
                 d = t;
             }
             if (b > c)
             {
-                t = b;
+                int t = b;
                 b = c;
                 c = t;
             }
@@ -218,9 +206,9 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                double[] f1 = new double[p + 2 ];
-                double[] g1 = new double[p + 2 ];
-                double[] h1 = new double[p + 2 ];
+                double[] f1 = new double[p + 2];
+                double[] g1 = new double[p + 2];
+                double[] h1 = new double[p + 2];
                 int a1 = 0;
                 int q1 = q - r;
                 int p1 = p;
@@ -242,15 +230,15 @@ namespace StatsDirect.Builtins
                 int a2;
                 do
                 {
-                    a1 = a1 + 1;
-                    q1 = q1 + 1;
-                    h = h * Convert.ToDouble(p1) / Convert.ToDouble(a1) * Convert.ToDouble(r1) / Convert.ToDouble(q1);
-                    f = f + h;
+                    a1++;
+                    q1++;
+                    h *= Convert.ToDouble(p1) / Convert.ToDouble(a1) * Convert.ToDouble(r1) / Convert.ToDouble(q1);
+                    f += h;
                     a2 = a1 + 1;
                     f1[a2] = f;
                     h1[a2] = h;
-                    p1 = p1 - 1;
-                    r1 = r1 - 1;
+                    --p1;
+                    --r1;
                 }
                 while (p1 > 0L);
 
@@ -258,14 +246,13 @@ namespace StatsDirect.Builtins
                 //   IF CALCULATED BY 1 - F. THEREFORE ......
 
                 g = 0.0;
-                int j;
-                for (j = a2; j >= 2; j--)
+                for (int j = a2; j >= 2; j--)
                 {
                     g = g + h1[j];
                     g1[j] = g;
                 }
                 // int Start = 1; 
-                for (j = 2; j <= a2; j++)
+                for (int j = 2; j <= a2; j++)
                 {
                     rowParameters = new ParameterBag();
                     rowList.Add(rowParameters);
@@ -283,7 +270,7 @@ namespace StatsDirect.Builtins
 
                     g = g1[a1];
                     f = 0.0;
-                    for (j = 1; j <= a2; j++)
+                    for (int j = 1; j <= a2; j++)
                     {
                         if (h1[j] > h)
                             break;
@@ -303,7 +290,7 @@ namespace StatsDirect.Builtins
                 {
                     f = f1[a1];
                     g = 0.0;
-                    for (j = a2; j >= 1; j--)
+                    for (int j = a2; j >= 1; j--)
                     {
                         if (h1[j] > h)
                             break;
@@ -342,9 +329,7 @@ namespace StatsDirect.Builtins
             DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
             int rows = datFrame.MaxRows;
             if (rows <= 0)
-            {
                 throw new InvalidDataException();
-            }
 
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
@@ -567,7 +552,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p2m", host.pval(p2m));
             return new StepResult(StepSuccess.Success, outputParameters);
         }
-        
+
         public static StepResult RptRatePoissonCI(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
