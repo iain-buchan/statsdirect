@@ -71,141 +71,181 @@ namespace StatsDirect.UI
             return true;
         }
 
-        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DoOrWarn(Action func, string explanation)
         {
+#if !WATCH_EXCEPTIONS
             try
             {
-                SaveContents();
+#endif
+                func();
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't save file", ex, false);
+                SdApplication.SoleInstance.FriendlyError(explanation, ex, false);
             }
+#endif
+        }
+
+        private void DoOrSwallow(Action func)
+        {
+#if !WATCH_EXCEPTIONS
+            try
+            {
+#endif
+                func();
+#if !WATCH_EXCEPTIONS
+            }
+            catch (Exception)
+            {
+                // TODO: It'd be nice to know that the exception happened for our diagnostic purposes.
+            }
+#endif
+        }
+
+        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(() => SaveContents(), "Couldn't save file");
         }
 
         private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                SaveAsContents();
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't save file", ex, false);
-            }
+            DoOrWarn(() => SaveAsContents(), "Couldn't save file");
         }
 
         private void SelectAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                new SelectAllCommand(richEditControl1).Execute();
-            }
-            catch (Exception)
-            {
-                SdApplication.SoleInstance.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            DoOrWarn(EditSelectAll, "Unable to select all document content");
+        }
+
+        private void EditSelectAll()
+        {
+            new SelectAllCommand(richEditControl1).Execute();
         }
 
         private void CopyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                EditCopy();
-            }
-            catch (Exception)
-            {
-                SdApplication.SoleInstance.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            DoOrWarn(EditCopy, "Unable to copy document content");
         }
 
         private void CutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                EditCut();
-            }
-            catch (Exception)
-            {
-                SdApplication.SoleInstance.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            DoOrWarn(EditCut, "Unable to cut document content");
         }
 
         private void PasteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                EditPaste();
-            }
-            catch (Exception)
-            {
-                SdApplication.SoleInstance.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            DoOrWarn(EditPaste, "Unable to copy clipboard content to document");
         }
 
         private void SelectFontToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ShowFontForm, "Unable to select font");
+        }
+
+        private void ShowFontForm()
         {
             new ShowFontFormCommand(richEditControl1).Execute();
         }
 
         private void BoldToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ToggleBold, "Unable to set bold font");
+        }
+
+        private void ToggleBold()
+        {
             new ToggleFontBoldCommand(richEditControl1).Execute();
         }
 
         private void ItalicToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ToggleItalic, "Unable to set italic font");
+        }
+
+        private void ToggleItalic()
         {
             new ToggleFontItalicCommand(richEditControl1).Execute();
         }
 
         private void UnderlineToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ToggleUnderline, "Unable to set underline font");
+        }
+
+        private void ToggleUnderline()
+        {
             new ToggleFontUnderlineCommand(richEditControl1).Execute();
         }
 
         private void NormalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ClearFormatting, "Unable to clear formatting");
+        }
+
+        private void ClearFormatting()
         {
             new ClearFormattingCommand(richEditControl1).Execute();
         }
 
         private void mnuUndo_Click(object sender, EventArgs e)
         {
-            new UndoCommand(richEditControl1).Execute();
+            DoOrWarn(EditUndo, "Unable to undo");
         }
 
         private void mnuRedo_Click(object sender, EventArgs e)
         {
-            new RedoCommand(richEditControl1).Execute();
+            DoOrWarn(EditRedo, "Unable to redo");
         }
 
         private void LeftToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(AlignLeft, "Unable to set left alignment");
+        }
+
+        private void AlignLeft()
         {
             new ToggleParagraphAlignmentLeftCommand(richEditControl1).Execute();
         }
 
         private void CenterToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(AlignCenter, "Unable to set centre alignment");
+        }
+
+        private void AlignCenter()
+        {
             new ToggleParagraphAlignmentCenterCommand(richEditControl1).Execute();
         }
 
         private void RightToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(AlignRight, "Unable to set right alignment");
+        }
+
+        private void AlignRight()
         {
             new ToggleParagraphAlignmentRightCommand(richEditControl1).Execute();
         }
 
         private void AddBulletsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ToggleBullets, "Unable to set bullets");
+        }
+
+        private void ToggleBullets()
+        {
             new ToggleBulletedListCommand(richEditControl1).Execute();
         }
 
         private void RemoveBulletsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            new ToggleBulletedListCommand(richEditControl1).Execute();
+            DoOrWarn(ToggleBullets, "Unable to set bullets");
         }
 
         private void FindToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            EditFind();
+            DoOrWarn(EditFind, "Cannot start find");
         }
 
         private void EditFind()
@@ -215,7 +255,7 @@ namespace StatsDirect.UI
 
         private void FindAndReplaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            EditReplace();
+            DoOrWarn(EditReplace, "Cannot start replace");
         }
 
         private void EditReplace()
@@ -225,19 +265,17 @@ namespace StatsDirect.UI
 
         private void PreviewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                new PrintPreviewCommand(richEditControl1).Execute();
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't print preview", ex, false);
-            }
+            DoOrWarn(PrintPreview, "Couldn't print preview");
+        }
+
+        private void PrintPreview()
+        {
+            new PrintPreviewCommand(richEditControl1).Execute();
         }
 
         private void PrintToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            new PrintCommand(richEditControl1).Execute();
+            DoOrWarn(Print, "Couldn't print");
         }
 
         private void mnuPageSetup_Click(object sender, EventArgs e)
@@ -247,46 +285,52 @@ namespace StatsDirect.UI
 
         private void InsertImageToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DoOrWarn(InsertPicture, "Couldn't insert image");
+        }
+
+        private void InsertPicture()
+        {
             new InsertPictureCommand(richEditControl1).Execute();
         }
 
         private void tbrBold_Click(object sender, EventArgs e)
         {
-            BoldToolStripMenuItem_Click(this, e);
+            DoOrWarn(ToggleBold, "Unable to set bold font");
         }
 
-        private void tbrItalic_Click(object sender, EventArgs e){
-            ItalicToolStripMenuItem_Click(this, e);
+        private void tbrItalic_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ToggleItalic, "Unable to set italic font");
         }
 
         private void tbrUnderline_Click(object sender, EventArgs e)
         {
-            UnderlineToolStripMenuItem_Click(this, e);
+            DoOrWarn(ToggleUnderline, "Unable to set underline font");
         }
 
         private void tbrFont_Click(object sender, EventArgs e)
         {
-            SelectFontToolStripMenuItem_Click(this, e);
+            DoOrWarn(ShowFontForm, "Unable to select font");
         }
 
         private void tbrLeft_Click(object sender, EventArgs e)
         {
-            new ToggleParagraphAlignmentLeftCommand(richEditControl1).Execute();
+            DoOrWarn(AlignLeft, "Unable to set left alignment");
         }
 
         private void tbrCenter_Click(object sender, EventArgs e)
         {
-            new ToggleParagraphAlignmentCenterCommand(richEditControl1).Execute();
+            DoOrWarn(AlignCenter, "Unable to set centre alignment");
         }
 
         private void tbrRight_Click(object sender, EventArgs e)
         {
-            new ToggleParagraphAlignmentRightCommand(richEditControl1).Execute();
+            DoOrWarn(AlignRight, "Unable to set right alignment");
         }
 
         private void tbrFind_Click(object sender, EventArgs e)
         {
-            EditFind();
+            DoOrWarn(EditFind, "Couldn't start find");
         }
 
         #region IReport Members
@@ -385,8 +429,7 @@ namespace StatsDirect.UI
 
         private void frmReport_Shown(object sender, EventArgs e)
         {
-            MergeToolStrip();
-            richEditControl1.Focus();
+            DoOrSwallow(() => { MergeToolStrip(); richEditControl1.Focus(); });
         }
 
         private void LoadTemplateFile()
@@ -403,19 +446,21 @@ namespace StatsDirect.UI
 
         private void frmReport_Activated(object sender, EventArgs e)
         {
-            MergeToolStrip();
-            if (null != Tag)
-                SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
-            richEditControl1.Visible = true;
-            richEditControl1.Focus();
+            DoOrSwallow(() =>
+            {
+                MergeToolStrip();
+                if (null != Tag)
+                    SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
+                richEditControl1.Visible = true;
+                richEditControl1.Focus();
+            });
         }
 
         public override IList<Pane> AvailablePanes
         {
             get
             {
-                List<Pane> panes = new List<Pane> {((IForm) this).SelectedPane};
-                return panes;
+                return new List<Pane> {((IForm) this).SelectedPane};
             }
         }
 
@@ -471,21 +516,13 @@ namespace StatsDirect.UI
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName) ?? "";
             strExt = strExt.ToUpper();
             if (".RTF".Equals(strExt))
-            {
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.Rtf);
-            }
             else if (".HTM".Equals(strExt) || ".HTML".Equals(strExt))
-            {
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.Html);
-            }
             else if (".MHT".Equals(strExt) || ".MHTML".Equals(strExt))
-            {
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.Mht);
-            }
             else
-            {
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.PlainText);
-            }
             currentFile = SaveFileDialog1.FileName;
             SdApplication.SoleInstance.NoteRecentFile(currentFile, true);
             Text = currentFile;
@@ -508,7 +545,7 @@ namespace StatsDirect.UI
 
         private void frmReport_Deactivate(object sender, EventArgs e)
         {
-            UnmergeToolStrip();
+            DoOrSwallow(UnmergeToolStrip);
         }
 
         private void MergeToolStrip()
@@ -543,9 +580,7 @@ namespace StatsDirect.UI
                 }
             }
             else
-            {
                 new CopySelectionCommand(richEditControl1).Execute();
-            }
         }
 
         internal override void EditPaste()
@@ -555,12 +590,12 @@ namespace StatsDirect.UI
 
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Close();
+            DoOrSwallow(Close);
         }
 
         private void exportGraphicToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ExportSelectedImage();
+            DoOrWarn(ExportSelectedImage, "Couldn't export image");
         }
 
         private void ExportSelectedImage()
@@ -575,9 +610,7 @@ namespace StatsDirect.UI
                 }
             }
             else
-            {
                 SdApplication.SoleInstance.MsgboxX("No chart is selected. Please select a chart to export.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Export graphic", true);
-            }
         }
 
         private Image GetSelectedImage(out byte[] rawBytes)
@@ -625,27 +658,27 @@ namespace StatsDirect.UI
 
         private void exportGraphicContextMenuItem_Click(object sender, EventArgs e)
         {
-            ExportSelectedImage();
+            DoOrWarn(ExportSelectedImage, "Couldn't export image");
         }
 
         private void cutContextMenuItem_Click(object sender, EventArgs e)
         {
-            EditCut();
+            DoOrWarn(EditCut, "Couldn't cut");
         }
 
         private void copyContextMenuItem_Click(object sender, EventArgs e)
         {
-            EditCopy();
+            DoOrWarn(EditCopy, "Couldn't copy");
         }
 
         private void pasteContextMenuItem_Click(object sender, EventArgs e)
         {
-            EditPaste();
+            DoOrWarn(EditPaste, "Couldn't paste");
         }
 
         private void undoContextMenuItem_Click(object sender, EventArgs e)
         {
-            EditUndo();
+            DoOrWarn(EditUndo, "Couldn't undo");
         }
 
         private void EditUndo()
@@ -660,17 +693,17 @@ namespace StatsDirect.UI
 
         private void findContextMenuItem_Click(object sender, EventArgs e)
         {
-            EditFind();
+            DoOrWarn(EditFind, "Couldn't start find");
         }
 
         private void replaceContextMenuItem_Click(object sender, EventArgs e)
         {
-            EditReplace();
+            DoOrWarn(EditReplace, "Couldn't start replace");
         }
 
         private void deleteContextMenuItem_Click(object sender, EventArgs e)
         {
-            EditDelete();
+            DoOrWarn(EditDelete, "Couldn't delete");
         }
 
         private void EditDelete()
@@ -730,14 +763,13 @@ namespace StatsDirect.UI
 
         private void richEditControl1_PopupMenuShowing(object sender, PopupMenuShowingEventArgs e)
         {
-            if (IsSelectionReplayable)
-            {
-                e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Replay Operation", ReplayOperation));
-            }
-            if (IsImageSelected)
-            {
-                e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Export Graphic", ExportGraphic));
-            }
+            DoOrSwallow(() =>
+                {
+                    if (IsSelectionReplayable)
+                        e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Replay Operation", ReplayOperation));
+                    if (IsImageSelected)
+                        e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Export Graphic", ExportGraphic));
+                });
         }
 
         private void ExportGraphic(object sender, EventArgs e)
@@ -766,70 +798,135 @@ namespace StatsDirect.UI
 
         private void tbrParagraph_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ShowParagraphForm, "Couldn't show paragraph properties");
+        }
+
+        private void ShowParagraphForm()
+        {
             new ShowParagraphFormCommand(richEditControl1).Execute();
         }
 
         private void tbrTabs_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ShowTabs, "Couldn't show tabs");
+        }
+
+        private void ShowTabs()
         {
             new ShowTabsFormCommand(richEditControl1).Execute();
         }
 
         private void tbrInsertSymbol_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ShowInsertSymbolForm, "Couldn't show Insert Symbol form");
+        }
+
+        private void ShowInsertSymbolForm()
+        {
             new ShowSymbolFormCommand(richEditControl1).Execute();
         }
 
         private void tbrToggleBullets_Click(object sender, EventArgs e)
         {
-            new ToggleBulletedListCommand(richEditControl1).Execute();
+            DoOrWarn(ToggleBullets, "Couldn't set bullets");
         }
 
         private void tbrToggleNumbers_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ToggleNumbers, "Couldn't set numbers");
+        }
+
+        private void ToggleNumbers()
         {
             new ToggleSimpleNumberingListCommand(richEditControl1).Execute();
         }
 
         private void tbrSubscript_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ToggleSubscript, "Couldn't set subscript");
+        }
+
+        private void ToggleSubscript()
+        {
             new ToggleFontSubscriptCommand(richEditControl1).Execute();
         }
 
         private void tbrSuperscript_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ToggleSuperscript, "Couldn't set superscript");
+        }
+
+        private void ToggleSuperscript()
         {
             new ToggleFontSuperscriptCommand(richEditControl1).Execute();
         }
 
         private void tbrDecreaseIndent_Click(object sender, EventArgs e)
         {
+            DoOrWarn(DecreaseIndent, "Couldn't decrease indent");
+        }
+
+        private void DecreaseIndent()
+        {
             new DecrementIndentCommand(richEditControl1).Execute();
         }
 
         private void tbrIncreaseIndent_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(IncreaseIndent, "Couldn't increase indent");
+        }
+
+        private void IncreaseIndent()
         {
             new IncrementIndentCommand(richEditControl1).Execute();
         }
 
         private void tbrZoomOut_Click(object sender, EventArgs e)
         {
+            DoOrWarn(ZoomOut, "Couldn't set zoom");
+        }
+
+        private void ZoomOut()
+        {
             new ZoomOutCommand(richEditControl1).Execute();
         }
 
         private void tbrZoomIn_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ZoomIn, "Couldn't zoom in");
+        }
+
+        private void ZoomIn()
         {
             new ZoomInCommand(richEditControl1).Execute();
         }
 
         private void tbrDraft_Click(object sender, EventArgs e)
         {
+            DoOrWarn(SetDraftLayout, "Couldn't set draft layout");
+        }
+
+        private void SetDraftLayout()
+        {
             richEditControl1.ActiveViewType = RichEditViewType.Draft;
         }
 
         private void tbrPrintLayout_Click(object sender, EventArgs e)
         {
+            DoOrWarn(SetPrintLayout, "Couldn't set print layout");
+        }
+
+        private void SetPrintLayout()
+        {
             richEditControl1.ActiveViewType = RichEditViewType.PrintLayout;
         }
 
         private void tbrIndentedList_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(ToggleMultiLevelList, "Couldn't set multi-level list");
+        }
+
+        private void ToggleMultiLevelList()
         {
             new ToggleMultiLevelListCommand(richEditControl1).Execute();
         }
@@ -841,19 +938,32 @@ namespace StatsDirect.UI
 
         private void tbrSimple_Click(object sender, EventArgs e)
         {
+            DoOrWarn(SetSimpleLayout, "Couldn't set simple layout");
+        }
+
+        private void SetSimpleLayout()
+        {
             richEditControl1.ActiveViewType = RichEditViewType.Simple;
         }
 
         void richEditControl1_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.Control && e.KeyValue == 67)
+            DoOrSwallow(() =>
             {
-                EditCopy();
-                e.Handled = true;
-            }
+                if (e.Control && e.KeyValue == 67)
+                {
+                    EditCopy();
+                    e.Handled = true;
+                }
+            });
         }
 
         private void insertDateAndTimeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoOrWarn(InsertDateAndTime, "Couldn't insert date and time");
+        }
+
+        private void InsertDateAndTime()
         {
             richEditControl1.Document.InsertText(richEditControl1.Document.CaretPosition, DateTime.Now.ToString("dd MMMM yyyy @ hh:MM:ss"));
         }
