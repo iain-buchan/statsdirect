@@ -175,14 +175,14 @@ namespace StatsDirect.Numerics
                 Sum = 0.0;
                 double slog = 0.0;
                 double sumsqdev = 0.0;
-                bool gmok = false;
+                bool geometricMeanOk = false;
                 for (int i = 1; i <= ValidData; i++)
                 {
                     Sum += xo[i] * w[i];
                     if (xo[i] * w[i] > 0.0)
                         slog += Math.Log(xo[i] * w[i]);
                     else
-                        gmok = true;
+                        geometricMeanOk = true;
                 }
                 Mean = Sum / nnx;
 
@@ -214,7 +214,7 @@ namespace StatsDirect.Numerics
                     MeanLCL = Mean - bit;
                     MeanUCL = Mean + bit;
                 }
-                GeometricMean = gmok == false ? Math.Exp(slog / nnx) : Constant.MISSING;
+                GeometricMean = geometricMeanOk ? Math.Exp(slog / nnx) : Constant.MISSING;
                 if (SD != Constant.MISSING && Mean != Constant.MISSING && Mean != 0.0)
                 {
                     VarianceCoefficient = SD / Mean;
