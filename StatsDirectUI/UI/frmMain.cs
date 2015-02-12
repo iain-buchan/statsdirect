@@ -1,4 +1,4 @@
-#define RELEASE_EXCEPTIONS
+// Comment for production
 // #define WATCH_EXCEPTIONS
 
 // If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
@@ -464,7 +464,7 @@ namespace StatsDirect.UI
                     throw;
                 }
             }
-#if RELEASE_EXCEPTIONS
+#if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.EraseAnyOutstandingParameters();
@@ -482,13 +482,13 @@ namespace StatsDirect.UI
 
         public void DoOperation(string operationName)
         {
-#if RELEASE_EXCEPTIONS
+#if !WATCH_EXCEPTIONS
             try
             {
 #endif
             Operation operation = TemplateFactory.Operations[operationName];
             SdApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
-#if RELEASE_EXCEPTIONS
+#if !WATCH_EXCEPTIONS
             }
             catch (CancelCurrentOperationAndDoException ex)
             {
@@ -1585,10 +1585,12 @@ namespace StatsDirect.UI
 
         private void DoCalculate()
         {
-#if RELEASE_EXCEPTIONS
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 DoCalculateInternal();
+#if !WATCH_EXCEPTIONS
             }
             catch (CancelCurrentOperationAndDoException)
             {
@@ -1599,8 +1601,6 @@ namespace StatsDirect.UI
             {
                 SdApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
             }
-#else
-            DoCalculateInternal();
 #endif
         }
 
