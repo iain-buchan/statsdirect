@@ -99,8 +99,8 @@ namespace StatsDirect.TemplateProcessing
                                 cellxs.Append(@"\clmgf");
                             else if ("SPAN".Equals(spanString))
                                 cellxs.Append(@"\clmrg");
-                            // cellxs.Append(@"\cellx0");
-                            cellxs.Append(@"\clNoWrap\cellx0");
+                            cellxs.Append(@"\cellx0");
+                            // cellxs.Append(@"\clNoWrap\cellx0");
                         }
 
                         // If this is the first line of a new table, mark the first table cell so that the RTF inserter can get hold of it later.
@@ -108,9 +108,9 @@ namespace StatsDirect.TemplateProcessing
                         if (!wasInTable)
                         {
                             // The contents of each cell will end with "\cell " - note the space at the end.  We can drop some marker text into the first cell by finding the first occurrence and adding that marker.
-                            // int pos = line.IndexOf(@"\cell ");
-                            // if (pos >= 0)
-                            //     line = line.Substring(0, pos) + "!!FIRSTCELLOFTABLE!!" + line.Substring(pos);
+                            int pos = line.IndexOf(@"\cell ");
+                            if (pos >= 0)
+                                line = line.Substring(0, pos) + "!!FIRSTCELLOFTABLE!!" + line.Substring(pos);
                         }
 
                         finalOutput.AppendLine(line

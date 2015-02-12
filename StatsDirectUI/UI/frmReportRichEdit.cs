@@ -1007,7 +1007,6 @@ namespace StatsDirect.UI
         /// </summary>
         private void FixupNewTables()
         {
-            return;
             Document doc = richEditControl1.Document;
             string txt = doc.GetText(doc.Range);
             string rtf = doc.GetRtfText(doc.Range);
@@ -1015,14 +1014,9 @@ namespace StatsDirect.UI
             int length = doc.Range.End.ToInt() - startPos;
             DocumentRange range = doc.CreateRange(startPos, length);
             ISearchResult searchResult = doc.StartSearch("!!FIRSTCELLOFTABLE!!" , SearchOptions.None, SearchDirection.Forward, range);
-
-            if (null != searchResult.CurrentResult)
-            {
+            // StartSearch merely sets up the search; use FindNext to find the first result.
+            while (searchResult.FindNext())
                 FixupTableAt(searchResult.CurrentResult);
-
-                while (searchResult.FindNext())
-                    FixupTableAt(searchResult.CurrentResult);
-            }
         }
     }
 }
