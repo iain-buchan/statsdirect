@@ -78,8 +78,8 @@ namespace StatsDirect.Numerics
         ///  <param name="userCentL"></param>
         ///  <param name="userCentU"></param>
         ///  <param name="nvSum"></param>
-        /// <param name="xs"> </param>
-        /// <returns></returns>
+        ///  <param name="xs">1-based array of VarAndWeight</param>
+        ///  <returns></returns>
         ///  <remarks>see Gleason JR. Univariate summaries with boxplots. Stata Technical Bulletin sg67, 1997 and sg67.1, 1999.</remarks>
         public bool FullSummary(double[] x, double[] v, int start, int rows, double userCL, double userCentL, double userCentU, double nvSum, out VarAndWeight[] xs)
         {
@@ -107,9 +107,9 @@ namespace StatsDirect.Numerics
                 UserCentileUCaption = "";
             }
             ValidData = rows;
-            xs = new VarAndWeight[ValidData + 1];
-            double[] xo = new double[ValidData + 1];
-            double[] w = new double[ValidData + 1];
+            xs = new VarAndWeight[ValidData + 1]; // 1-based
+            double[] xo = new double[ValidData + 1]; // 1-based
+            double[] w = new double[ValidData + 1]; // 1-based
             ValidData = 0;
             double sumv = 0.0;
             int k = 0;
@@ -138,9 +138,10 @@ namespace StatsDirect.Numerics
                 for (int i = start; i < ValidData + start; i++)
                 {
                     SumOfWeights += v[i];
-                    w[i] = v[i] * nsumv;
-                    xs[i].Weight = w[i];
-                    WeightedSum += w[i];
+                    double wt = v[i] * nsumv;
+                    w[i + 1 - start] = wt;
+                    xs[i + 1 - start].Weight = wt;
+                    WeightedSum += wt;
                 }
             }
             // confidence interval prep
@@ -175,14 +176,14 @@ namespace StatsDirect.Numerics
                 Sum = 0.0;
                 double slog = 0.0;
                 double sumsqdev = 0.0;
-                bool geometricMeanOk = false;
+                bool geometricMeanOk = true;
                 for (int i = 1; i <= ValidData; i++)
                 {
                     Sum += xo[i] * w[i];
                     if (xo[i] * w[i] > 0.0)
                         slog += Math.Log(xo[i] * w[i]);
                     else
-                        geometricMeanOk = true;
+                        geometricMeanOk = false;
                 }
                 Mean = Sum / nnx;
 
@@ -317,7 +318,7 @@ namespace StatsDirect.Numerics
         ///  <summary>
         ///  
         ///  </summary>
-        ///  <param name="x">x() is assumed to be an array from 1 to n with all elements valid</param>
+        ///  <param name="x">An array from 1 to n with all elements valid</param>
         ///  <param name="n"></param>
         ///  <param name="centile"></param>
         ///  <returns></returns>
@@ -342,7 +343,7 @@ namespace StatsDirect.Numerics
                 return (1.0 - h) * x[bottom].Data + h * x[top].Data;
             }
 
-            index = centile * Convert.ToDouble(n);
+            index = centile * n;
             double cumsum = 0.0;
             int i;
             for (i = 1; i <= n; i++)
