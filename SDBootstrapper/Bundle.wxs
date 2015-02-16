@@ -4,7 +4,7 @@
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
 	<Bundle
     Name="StatsDirect"
-    Version="3.0.139.0"
+    Version="3.0.140.0"
     Manufacturer="StatsDirect Limited"
     UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5"
     DisableModify="yes"
@@ -32,7 +32,7 @@
 
     <PackageGroup Id="Netfx4Full">
       <ExePackage Id="Netfx4Full" Cache="no" Compressed="no" PerMachine="yes" Permanent="yes" Vital="yes" SuppressSignatureVerification="no"
-          SourceFile="dotNetFx40_Full_Setup.exe"
+          SourceFile="dotnetfx40_full_x86_x64.exe"
           DownloadUrl="http://go.microsoft.com/fwlink/?LinkId=164193"
           DetectCondition="Netfx4FullVersion AND (NOT VersionNT64 OR Netfx4x64FullVersion)" />
     </PackageGroup>
