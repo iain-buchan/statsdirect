@@ -1,102 +1,102 @@
 grammar StatsDirectExpression;
 
 r returns [string builtExpression]
-	: EQ? expr { $r.builtExpression = $expr.builtExpression; }
+	: EQ? expr { $builtExpression = $expr.builtExpression; }
 	;
 
 expr returns [string builtExpression]
-	: lhs=andexpr { $expr.builtExpression = $lhs.builtExpression; }
-		(op=OR rhs=andexpr { $expr.builtExpression = "(" + $expr.builtExpression + " || " + $rhs.builtExpression + ")"; })* 
+	: lhs=andexpr { $builtExpression = $lhs.builtExpression; }
+		(op=OR rhs=andexpr { $builtExpression = "(" + $builtExpression + " || " + $rhs.builtExpression + ")"; })* 
 	;
 
 andexpr returns [string builtExpression]
-	: lhs=notexpr { $andexpr.builtExpression = $lhs.builtExpression; }
-		(op=AND rhs=notexpr { $andexpr.builtExpression = "(" + $andexpr.builtExpression + " && " + $rhs.builtExpression + ")"; })* 
+	: lhs=notexpr { $builtExpression = $lhs.builtExpression; }
+		(op=AND rhs=notexpr { $builtExpression = "(" + $builtExpression + " && " + $rhs.builtExpression + ")"; })* 
 	;
 
 notexpr returns [string builtExpression]
-	: ( NOT rhs=relexpr { $notexpr.builtExpression = "(!(" + $rhs.builtExpression + "))"; } )
-	| relexpr { $notexpr.builtExpression = $relexpr.builtExpression; }
+	: ( NOT rhs=relexpr { $builtExpression = "(!(" + $rhs.builtExpression + "))"; } )
+	| relexpr { $builtExpression = $relexpr.builtExpression; }
 	;
 
 relexpr returns [string builtExpression]
-	: lhs=numexpr { $relexpr.builtExpression = $lhs.builtExpression; }
-		(op=relop rhs=numexpr { $relexpr.builtExpression = "(" + $relexpr.builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; })? 
+	: lhs=numexpr { $builtExpression = $lhs.builtExpression; }
+		(op=relop rhs=numexpr { $builtExpression = "(" + $builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; })? 
 	;
 
 numexpr returns [string builtExpression]
-	: lhs=mulexpr { $numexpr.builtExpression = $lhs.builtExpression; }
-		(op=addop rhs=mulexpr { $numexpr.builtExpression = "(" + $numexpr.builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; })* 
+	: lhs=mulexpr { $builtExpression = $lhs.builtExpression; }
+		(op=addop rhs=mulexpr { $builtExpression = "(" + $builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; })* 
 	;
 	
 mulexpr returns [string builtExpression]
-	: lhs=powexpr { $mulexpr.builtExpression = $lhs.builtExpression; }
-		(op=mulop rhs=powexpr { if ("idiv".Equals($op.builtExpression)) $mulexpr.builtExpression = "SDMath.Idiv(" + $mulexpr.builtExpression + ", " + $rhs.builtExpression + ")"; else $mulexpr.builtExpression = "(" + $mulexpr.builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; } )*
+	: lhs=powexpr { $builtExpression = $lhs.builtExpression; }
+		(op=mulop rhs=powexpr { if ("idiv".Equals($op.builtExpression)) $builtExpression = "SDMath.Idiv(" + $builtExpression + ", " + $rhs.builtExpression + ")"; else $builtExpression = "(" + $builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; } )*
 	;
 
 powexpr returns [string builtExpression]
-	: lhs=factorial { $powexpr.builtExpression = $lhs.builtExpression; }
-		((CARET | STARSTAR) rhs=factorial { $powexpr.builtExpression = "Math.Pow(" + $powexpr.builtExpression + ", " + $rhs.builtExpression + ")"; } )* 
+	: lhs=factorial { $builtExpression = $lhs.builtExpression; }
+		((CARET | STARSTAR) rhs=factorial { $builtExpression = "Math.Pow(" + $builtExpression + ", " + $rhs.builtExpression + ")"; } )* 
 	;
 
 factorial returns [string builtExpression]
-	: term { $factorial.builtExpression = $term.builtExpression; }
-	(EXCLAIM { $factorial.builtExpression = "SDMath.Factorial(" + $term.builtExpression + ")"; })?
+	: term { $builtExpression = $term.builtExpression; }
+	(EXCLAIM { $builtExpression = "SDMath.Factorial(" + $term.builtExpression + ")"; })?
 	;
 	
 term returns [string builtExpression]
-	: INTEGER { $term.builtExpression = "((double)" + double.Parse($INTEGER.text).ToString() + ")"; }
-	| MINUS INTEGER { $term.builtExpression = "((double)-" + double.Parse($INTEGER.text).ToString() + ")"; }
-	| FLOAT { $term.builtExpression = double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")).ToString(); }
-	| MINUS FLOAT { $term.builtExpression = "-" + double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")).ToString(); }
-	| LPAREN expr RPAREN { $term.builtExpression = "(" + $expr.builtExpression + ")"; }
-	| constant { $term.builtExpression = $constant.builtExpression; }
-	| function { $term.builtExpression = $function.builtExpression; }
-	| IDENTIFIER { $term.builtExpression = RenderVariable($IDENTIFIER.text); }
+	: INTEGER { $builtExpression = "((double)" + double.Parse($INTEGER.text).ToString() + ")"; }
+	| MINUS INTEGER { $builtExpression = "((double)-" + double.Parse($INTEGER.text).ToString() + ")"; }
+	| FLOAT { $builtExpression = double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")).ToString(); }
+	| MINUS FLOAT { $builtExpression = "-" + double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")).ToString(); }
+	| LPAREN expr RPAREN { $builtExpression = "(" + $expr.builtExpression + ")"; }
+	| constant { $builtExpression = $constant.builtExpression; }
+	| function { $builtExpression = $function.builtExpression; }
+	| IDENTIFIER { $builtExpression = RenderVariable($IDENTIFIER.text); }
 	;
 	
 function returns [string builtExpression]
-	: IDENTIFIER LPAREN argumentlist RPAREN { $function.builtExpression = RenderFunction($IDENTIFIER.text.ToUpper(), $argumentlist.arguments); }
+	: IDENTIFIER LPAREN argumentlist RPAREN { $builtExpression = RenderFunction($IDENTIFIER.text.ToUpper(), $argumentlist.arguments); }
 	;
 	
 argumentlist returns [Arguments arguments]
-	: lhs=arg { $argumentlist.arguments = new Arguments(); if (null != $lhs.argument) $argumentlist.arguments.Add($lhs.argument); }
-	( COMMA rhs=arg { $argumentlist.arguments.Add($rhs.argument); }) *
+	: lhs=arg { $arguments = new Arguments(); if (null != $lhs.argument) $arguments.Add($lhs.argument); }
+	( COMMA rhs=arg { $arguments.Add($rhs.argument); }) *
 	;
 	
 arg returns [Argument argument]
-	: expr { $arg.argument = new Argument($expr.builtExpression); }
-	| explicitParameterName GETS expr { $arg.argument = new Argument($explicitParameterName.text, $expr.builtExpression); }
-	| { $arg.argument = null; }
+	: expr { $argument = new Argument($expr.builtExpression); }
+	| explicitParameterName GETS expr { $argument = new Argument($explicitParameterName.text, $expr.builtExpression); }
+	| { $argument = null; }
 	;
 	
 constant returns [string builtExpression]
-	: PI { $constant.builtExpression = "Math.PI"; }
-	| EE { $constant.builtExpression = "Math.E"; }
-	| FALSE { $constant.builtExpression = "false"; }
-	| TRUE { $constant.builtExpression = "true"; }
+	: PI { $builtExpression = "Math.PI"; }
+	| EE { $builtExpression = "Math.E"; }
+	| FALSE { $builtExpression = "false"; }
+	| TRUE { $builtExpression = "true"; }
 //	| LR { throw new System.NotImplementedException(); }
 	;
 	
 relop returns [string builtExpression]
-	: NE { $relop.builtExpression = "!="; }
-	| LE { $relop.builtExpression = "<="; }
-	| LT { $relop.builtExpression = "<"; }
-	| GE { $relop.builtExpression = ">="; }
-	| GT { $relop.builtExpression = ">"; }
-	| EQ { $relop.builtExpression = "=="; }
+	: NE { $builtExpression = "!="; }
+	| LE { $builtExpression = "<="; }
+	| LT { $builtExpression = "<"; }
+	| GE { $builtExpression = ">="; }
+	| GT { $builtExpression = ">"; }
+	| EQ { $builtExpression = "=="; }
 	;
 
 addop returns [string builtExpression]
-	: PLUS { $addop.builtExpression = "+"; }
-	| MINUS { $addop.builtExpression = "-"; }
+	: PLUS { $builtExpression = "+"; }
+	| MINUS { $builtExpression = "-"; }
 	;
 	
 mulop returns [string builtExpression]
-	: STAR { $mulop.builtExpression = "*"; }
-	| SLASH { $mulop.builtExpression = "/"; }
-	| BACKSLASH { $mulop.builtExpression = "idiv"; }
-	| MOD { $mulop.builtExpression = "%"; }
+	: STAR { $builtExpression = "*"; }
+	| SLASH { $builtExpression = "/"; }
+	| BACKSLASH { $builtExpression = "idiv"; }
+	| MOD { $builtExpression = "%"; }
 	;
 
 explicitParameterName

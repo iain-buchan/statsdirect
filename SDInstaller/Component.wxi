@@ -56,8 +56,8 @@
   <Component Id="menu.xml">
     <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
   </Component>
-  <Component Id="Antlr4.Runtime.v4.0.dll">
-    <File Id="Antlr4.Runtime.v4.0.dll" KeyPath="yes" Name="Antlr4.Runtime.v4.0.dll" Checksum="yes" />
+  <Component Id="Antlr4.Runtime.net40.dll">
+    <File Id="Antlr4.Runtime.net40.dll" KeyPath="yes" Name="Antlr4.Runtime.net40.dll" Checksum="yes" />
   </Component>
   <Component Id="STATSDIRECT.chm">
     <File Id="STATSDIRECT.chm" KeyPath="yes" Name="STATSDIRECT.chm" Checksum="yes" />

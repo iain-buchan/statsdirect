@@ -32,7 +32,7 @@
     <ComponentRef Id="SpreadsheetGear2012.Windows.Forms.dll" />
 
     <ComponentRef Id="menu.xml" />
-    <ComponentRef Id="Antlr4.Runtime.v4.0.dll" />
+    <ComponentRef Id="Antlr4.Runtime.net40.dll" />
     <ComponentRef Id="STATSDIRECT.chm" />
     <ComponentRef Id="StatsDirect.exe.config" />
 
