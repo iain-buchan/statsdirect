@@ -6134,10 +6134,14 @@ namespace StatsDirect.UI
                 Application.DoEvents(); // HACK: Force an inner event loop
                 Thread.Sleep(5);
             } while (waitingForModalMessage);
-            mnuMain.Enabled = true;
-            foreach (Form f in MdiChildren)
+
+            // If we still have a main form and menus (the user might have done strange things like close the window), re-enable them.
+            if (null != mnuMain)
+                mnuMain.Enabled = true;
+            if (null != MdiChildren)
             {
-                f.Enabled = true;
+                foreach (Form f in MdiChildren)
+                    f.Enabled = true;
             }
             if (null != puntedException)
             {
