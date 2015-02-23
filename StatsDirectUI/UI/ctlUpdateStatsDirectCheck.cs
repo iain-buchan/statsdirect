@@ -22,7 +22,14 @@ namespace StatsDirect.UI
         private void button1_Click(object sender, EventArgs e)
         {
             StopCheck();
-            SdApplication.SoleInstance.CloseAndUpdate();
+            try
+            {
+                SdApplication.SoleInstance.CloseAndUpdate();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't launch Web browser to fetch StatsDirect update", ex, false);
+            }
         }
 
         public void StopCheck()
@@ -61,7 +68,14 @@ namespace StatsDirect.UI
 
         private void lblWhatsNew_Click(object sender, EventArgs e)
         {
-            Process.Start("http://www.statsdirect.com/Revisions.aspx");
+            try
+            {
+                Process.Start("http://www.statsdirect.com/Revisions.aspx");
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't launch Web browser to view revisions", ex, false);
+            }
         }
     }
 }
