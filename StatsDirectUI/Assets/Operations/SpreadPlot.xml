@@ -9,7 +9,7 @@
         <frame>
           <name>data</name>
           <prompt>Select DATA for PLOT</prompt>
-          <ask-for-group-id>false</ask-for-group-id>
+          <ask-for-group-id>true</ask-for-group-id>
           <same-length>false</same-length>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
