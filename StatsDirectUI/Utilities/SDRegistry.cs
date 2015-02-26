@@ -78,6 +78,16 @@ namespace StatsDirect.Utilities
             }
         }
 
+        /// <summary>
+        /// Emulates the old VB6 GetSetting call, right down to looking in \Software\VB and VBA Program Settings.
+        /// First try to look in HKCU; if that fails, look in HKLM; if that also fails, the setting can't be there.
+        /// This makes no attempt to return early if it can't find a subkey in HKCU, as there's a nasty edge case when some settings are in HKCU and some in HKLM.
+        /// Instead, it triggers the exception in the registry code and tries HKLM instead.
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         internal static string GetSetting(string app, string key, string value)
         {
             try
@@ -86,20 +96,12 @@ namespace StatsDirect.Utilities
                 {
                     using (RegistryKey softwareKey = hkcu.OpenSubKey("Software"))
                     {
-                        if (null == softwareKey)
-                            return null;
                         using (RegistryKey vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"))
                         {
-                            if (null == vbKey)
-                                return null;
                             using (RegistryKey appKey = vbKey.OpenSubKey(app))
                             {
-                                if (null == appKey)
-                                    return null;
                                 using (RegistryKey keyKey = appKey.OpenSubKey(key))
                                 {
-                                    if (null == keyKey)
-                                        return null;
                                     object val = keyKey.GetValue(value);
                                     return (string)val;
                                 }
@@ -108,7 +110,7 @@ namespace StatsDirect.Utilities
                     }
                 }
             }
-            catch (Exception /* ex */)
+            catch (Exception)
             {
                 try
                 {
@@ -117,20 +119,12 @@ namespace StatsDirect.Utilities
                     {
                         using (RegistryKey softwareKey = hklm.OpenSubKey("Software"))
                         {
-                            if (null == softwareKey)
-                                return null;
                             using (RegistryKey vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"))
                             {
-                                if (null == vbKey)
-                                    return null;
                                 using (RegistryKey appKey = vbKey.OpenSubKey(app))
                                 {
-                                    if (null == appKey)
-                                        return null;
                                     using (RegistryKey keyKey = appKey.OpenSubKey(key))
                                     {
-                                        if (null == keyKey)
-                                            return null;
                                         object val = keyKey.GetValue(value);
                                         return (string)val;
                                     }
@@ -139,8 +133,9 @@ namespace StatsDirect.Utilities
                         }
                     }
                 }
-                catch (Exception /* exInner */)
+                catch (Exception)
                 {
+                    // Can't find in either location.
                     return null;
                 }
             }
