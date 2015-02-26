@@ -37,7 +37,6 @@
   <ItemGroup>
     <Content Include="bannrbmp-sd.png" />
     <Content Include="dlgbmp-sd.png" />
-    <Content Include="dotNetFx40_Full_setup.exe" />
     <Content Include="greybar.png" />
     <Content Include="Licence.rtf" />
     <Content Include="sd3.ico" />
