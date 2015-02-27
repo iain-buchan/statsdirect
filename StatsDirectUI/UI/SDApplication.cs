@@ -259,7 +259,7 @@ namespace StatsDirect.UI
             return candidateNumber;
         }
 
-        public UserInfo UserInfo
+        internal UserInfo UserInfo
         {
             get { return userInfo; }
             set

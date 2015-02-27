@@ -256,7 +256,7 @@ namespace StatsDirect.UI
             // Install the registry settings if not already present.
             const string app = "ExcelStatsDirect3Link";
             const string key = "Paths";
-            string helpPath = SDRegistry.GetSetting(app, key, "Help");
+            string helpPath = SDRegistry.GetSetting(app, key, "Help", false);
             string appPath = Path.GetDirectoryName(Application.ExecutablePath);
             if (null != appPath)
             {
@@ -290,46 +290,25 @@ namespace StatsDirect.UI
         {
             while (true)
             {
-                UserInfo ui = License.GetUserInfo();
-                DateTime scrapDate;
-                if (string.IsNullOrEmpty(ui.Name) || ui.Name.Length < 2 || !DateTime.TryParse(ui.Expires, out scrapDate))
+                UserInfo userUi = License.GetUserInfo(false);
+                UserInfo machineUi = License.GetUserInfo(true);
+                bool userIsPartiallyComplete;
+                bool userOk = License.Check(userUi, out userIsPartiallyComplete);
+                bool machineIsPartiallyComplete;
+                bool machineOk = License.Check(machineUi, out machineIsPartiallyComplete);
+                if (userOk || machineOk)
                 {
-                    using (frmLicense f = new frmLicense(ui))
-                    {
-                        f.ShowDialog();
-                        if (f.UserCancelled)
-                            Environment.Exit(1);
-                    }
+                    SdApplication.SoleInstance.UserInfo = machineOk ? machineUi : userUi;
+                    return;
                 }
-                else
+
+                // If we get here, neither the user nor the machine license are good.  Get the user to start a trial or enter a good key, or exit SD.
+                // The user has no ability to enter a machine key, so always use the user key as the basis of this.
+                using (frmLicense f = new frmLicense(userUi, userIsPartiallyComplete))
                 {
-                    int D = DateTime.Parse(ui.Expires).Subtract(DateTime.Today).Days;
-                    if (D <= 0 || (ui.Trial && D > 11))
-                    {
-                        string lk = License.RegDateLock.ToString();
-                        ui.Expires = lk;
-                        lk = License.XorString(lk, License.REG_KEY_KEY);
-                        SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_EXPIRES, License.StrToNum(lk));
-                        using (frmLicense f = new frmLicense(ui, ui.Name, ui.Company))
-                        {
-                            f.ShowDialog();
-                            if (f.UserCancelled)
-                                Environment.Exit(1);
-                        }
-                    }
-                    else
-                    {
-                        if (ui.Expires.Equals(new DateTime(2011, 11, 11).ToString()))
-                        {
-                            // convert old style perpetual licence to new fixed term
-                            string lk = new DateTime(2004, 6, 6).ToString();
-                            ui.Expires = lk;
-                            lk = License.XorString(lk, License.REG_KEY_KEY);
-                            SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_EXPIRES, License.StrToNum(lk));
-                        }
-                        SdApplication.SoleInstance.UserInfo = ui;
-                        break;
-                    }
+                    f.ShowDialog();
+                    if (f.UserCancelled)
+                        Environment.Exit(1);
                 }
             }
         }

@@ -11,10 +11,10 @@ namespace StatsDirect.Utilities
         /// </summary>
         /// <param name="app"></param>
         /// <param name="key"></param>
+        /// <param name="valueName"></param>
         /// <param name="value"></param>
-        /// <param name="newValue"></param>
         /// <returns>true if the save succeeded, false if not</returns>
-        internal static bool SaveSetting(string app, string key, string value, string newValue)
+        internal static bool SaveSetting(string app, string key, string valueName, string value)
         {
             try
             {
@@ -63,7 +63,7 @@ namespace StatsDirect.Utilities
                                     if (null == keyKey)
                                         return false;
 
-                                    keyKey.SetValue(value, newValue, RegistryValueKind.String);
+                                    keyKey.SetValue(valueName, value, RegistryValueKind.String);
                                 }
                                 return true;
                             }
@@ -86,58 +86,26 @@ namespace StatsDirect.Utilities
         /// </summary>
         /// <param name="app"></param>
         /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="valueName"></param>
         /// <returns></returns>
-        internal static string GetSetting(string app, string key, string value)
+        internal static string GetSetting(string app, string key, string valueName, bool getFromMachine)
         {
             try
             {
-                using (RegistryKey hkcu = Registry.CurrentUser)
+                using (RegistryKey root = getFromMachine ? Registry.LocalMachine : Registry.CurrentUser,
+                    softwareKey = root.OpenSubKey("Software"),
+                    vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"),
+                    appKey = vbKey.OpenSubKey(app),
+                    keyKey = appKey.OpenSubKey(key))
                 {
-                    using (RegistryKey softwareKey = hkcu.OpenSubKey("Software"))
-                    {
-                        using (RegistryKey vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"))
-                        {
-                            using (RegistryKey appKey = vbKey.OpenSubKey(app))
-                            {
-                                using (RegistryKey keyKey = appKey.OpenSubKey(key))
-                                {
-                                    object val = keyKey.GetValue(value);
-                                    return (string)val;
-                                }
-                            }
-                        }
-                    }
+                    object val = keyKey.GetValue(valueName);
+                    return (string)val;
                 }
             }
             catch (Exception)
             {
-                try
-                {
-                    // Error when using HKCU; probably not found.  Is it in HKLM?
-                    using (RegistryKey hklm = Registry.LocalMachine)
-                    {
-                        using (RegistryKey softwareKey = hklm.OpenSubKey("Software"))
-                        {
-                            using (RegistryKey vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"))
-                            {
-                                using (RegistryKey appKey = vbKey.OpenSubKey(app))
-                                {
-                                    using (RegistryKey keyKey = appKey.OpenSubKey(key))
-                                    {
-                                        object val = keyKey.GetValue(value);
-                                        return (string)val;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // Can't find in either location.
-                    return null;
-                }
+                // Can't find in either location.
+                return null;
             }
         }
 

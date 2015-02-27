@@ -10,26 +10,24 @@ namespace StatsDirect.UI
         private bool closedViaButton;
         private readonly UserInfo ui;
 
-        public frmLicense(UserInfo ui)
+        internal frmLicense(UserInfo ui, bool fillFieldsFromExistingData)
         {
             this.ui = ui;
             InitializeComponent();
-        }
 
-        public frmLicense(UserInfo UI, string name, string organisation)
-            : this(UI)
-        {
-            if (string.IsNullOrEmpty(name))
-                return;
-            if (string.IsNullOrEmpty(organisation))
-                return;
-
-            txtEmail.Text = name.Trim();
-            if (name.EndsWith("~~" + name.Substring(0, 1)))
+            if (fillFieldsFromExistingData)
             {
-                organisation = organisation.Substring(0, organisation.Length - 3);
+                if (string.IsNullOrEmpty(ui.Name))
+                    return;
+                if (string.IsNullOrEmpty(ui.Company))
+                    return;
+
+                txtEmail.Text = ui.Name.Trim();
+                string company = ui.Company;
+                if (ui.Name.EndsWith("~~" + ui.Name.Substring(0, 1)))
+                    company = company.Substring(0, company.Length - 3);
+                txtOrganisation.Text = company.Trim();
             }
-            txtOrganisation.Text = organisation.Trim();
         }
 
         public bool UserCancelled
