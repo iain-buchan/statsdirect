@@ -1451,7 +1451,7 @@ namespace StatsDirect.UI
             this.tlpUserArea.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpUserArea.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpUserArea.Size = new System.Drawing.Size(664, 86);
-            this.tlpUserArea.TabIndex = 14;
+            this.tlpUserArea.TabIndex = 0;
             // 
             // pnlUser
             // 

@@ -2604,8 +2604,6 @@ namespace StatsDirect.UI
 
                 Control c = (Control)sender;
 
-                // this.SelectNextControl(c, true, true, true, false);
-                // Control next = this.ActiveControl;
                 Control next = c;
                 do
                 {
@@ -4214,9 +4212,8 @@ namespace StatsDirect.UI
                 return false;
 
             if (outputControlsAreUseful)
-            {
                 return true;
-            }
+
             return !(c.Tag is Parameter && ((Parameter)c.Tag).Type == ParameterType.Special && "report".Equals(((SpecialParameter)c.Tag).SpecialType));
         }
 
