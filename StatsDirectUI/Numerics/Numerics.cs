@@ -720,23 +720,25 @@ namespace StatsDirect.Numerics
             double rx = xx / cx;
             double temp = qq - ai;
             if (zs == 0.0) rx = xx;
-            for (; ; )
+            while (true)
             {
                 term = term * temp * rx / (pp + ai);
-                ret = ret + term;
+                ret += term;
                 temp = Math.Abs(term);
-                if (temp <= acu & temp <= acu * ret) break;
-                ai = ai + 1.0;
-                zs = zs - 1.0;
+                if (temp <= acu & temp <= acu * ret)
+                    break;
+                ai += 1.0;
+                zs -= 1.0;
                 if (zs >= 0.0)
                 {
                     temp = qq - ai;
-                    if (zs == 0.0) rx = xx;
+                    if (zs == 0.0)
+                        rx = xx;
                 }
                 else
                 {
                     temp = psq;
-                    psq = psq + 1.0;
+                    psq += 1.0;
                 }
             }
 
@@ -744,7 +746,8 @@ namespace StatsDirect.Numerics
 
             double beta = alogam(p) + alogam(q) - alogam(p + q);
             ret = ret * Math.Exp(pp * Math.Log(xx) + (qq - 1.0) * Math.Log(cx) - beta) / pp;
-            if (index) ret = 1.0 - ret;
+            if (index)
+                ret = 1.0 - ret;
             return ret;
         }
 
@@ -776,30 +779,24 @@ namespace StatsDirect.Numerics
             if (f1 == 0.0)
             {
                 x2 = x1;
-                ret = (x1 + x2) * 0.5;
-                return ret;
+                return (x1 + x2) * 0.5;
             }
             x2 = p + 0.05;
             double xd = 0.05;
             if (x2 <= 0.0)
-            {
                 f2 = -p;
-            }
             else if (x2 >= 1.0)
-            {
                 f2 = 1.0 - p;
-            }
             else
-            {
                 f2 = betain(x2, pin, qin, out ifault) - p;
-            }
+
             double slope = Math.Max(0.01, (f2 - f1) / xd);
             double delta = -f1 / slope;
             int iter = 0;
-            for (; ; )
+            while (true)
             {
-                delta = 2.0 * delta;
-                iter = iter + 1;
+                delta *= 2.0;
+                iter++;
                 if (iter > 100)
                 {
                     x2 = 1.0;
@@ -807,26 +804,18 @@ namespace StatsDirect.Numerics
                 }
                 x2 = x1 + delta;
                 if (x2 <= 0.0)
-                {
                     f2 = -p;
-                }
                 else if (x2 >= 1.0)
-                {
                     f2 = 1.0 - p;
-                }
                 else
-                {
                     f2 = betain(x2, pin, qin, out ifault) - p;
-                }
+
                 if (f1 * f2 >= 0.0)
-                {
                     x1 = x2;
-                }
                 else
-                {
                     break;
-                }
             }
+
             bool ibisec = false;
             ifault = 4;
             for (iter = 1; iter <= 100; iter++)
@@ -850,29 +839,16 @@ namespace StatsDirect.Numerics
                         break;
                     }
                 }
-                double x3;
-                if (ibisec)
-                {
-                    x3 = xm;
-                }
-                else
-                {
-                    x3 = x2 - f2 * xd / fd;
-                }
+                double x3 = ibisec ? xm : x2 - f2 * xd / fd;
                 ibisec = false;
+
                 double f3;
                 if (x3 <= 0.0)
-                {
                     f3 = -p;
-                }
                 else if (x3 >= 1.0)
-                {
                     f3 = 1.0 - p;
-                }
                 else
-                {
                     f3 = betain(x3, pin, qin, out ifault) - p;
-                }
                 if (f3 * f2 <= 0.0)
                 {
                     x1 = x2;
@@ -892,8 +868,7 @@ namespace StatsDirect.Numerics
                     }
                 }
             }
-            ret = (x1 + x2) * 0.5;
-            return ret;
+            return (x1 + x2) * 0.5;
         }
 
         /// <summary>
@@ -919,7 +894,8 @@ namespace StatsDirect.Numerics
         {
             int fault;
             double ret = betain(dfd / (dfd + dfn * f), dfd / 2.0, dfn / 2.0, out fault);
-            if (fault != 0) ret = double.NaN;
+            if (fault != 0)
+                ret = double.NaN;
             return ret;
         }
 
@@ -934,7 +910,8 @@ namespace StatsDirect.Numerics
                 ret = finvt(2.0 * p, df, out ifault);
             else
                 ret = -finvt(2.0 * (1.0 - p), df, out ifault);
-            if (ifault != 0) ret = double.NaN;
+            if (ifault != 0)
+                ret = double.NaN;
             return ret;
         }
 
@@ -945,7 +922,8 @@ namespace StatsDirect.Numerics
         {
             int ifault;
             double ret = finvt(p, df, out ifault);
-            if (ifault != 0) ret = double.NaN;
+            if (ifault != 0)
+                ret = double.NaN;
             return ret;
         }
 
@@ -956,11 +934,10 @@ namespace StatsDirect.Numerics
         {
             double ret = fvalp(t * t, 1.0, df);
             if (double.IsNaN(ret))
-            {
                 return ret;
-            }
             ret = ret * 0.5;
-            if (t < 0.0) ret = 1.0 - ret;
+            if (t < 0.0)
+                ret = 1.0 - ret;
             return ret;
         }
 
@@ -1037,7 +1014,8 @@ namespace StatsDirect.Numerics
         {
             int ifault;
             double ret = 1.0 - gammad(x / 2.0, df / 2.0, out ifault);
-            if (ifault != 0) ret = double.NaN;
+            if (ifault != 0)
+                ret = double.NaN;
             return ret;
         }
 
@@ -1130,7 +1108,8 @@ namespace StatsDirect.Numerics
                 }
                 arg = arg + Math.Log(ret);
                 ret = one;
-                if (arg >= elimit) ret = one - Math.Exp(arg);
+                if (arg >= elimit)
+                    ret = one - Math.Exp(arg);
             }
             return ret;
         }
@@ -1400,7 +1379,7 @@ namespace StatsDirect.Numerics
         /// <summary>
         ///
         ///     function  ppchi2
-        ///       evaluates the percentae points of the chi-squared
+        ///       evaluates the percentage points of the chi-squared
         ///       probability distribution function.
         ///       g should equal ln(gamma(v/2.0)).
         ///
@@ -1432,17 +1411,19 @@ namespace StatsDirect.Numerics
             double p = prob;
             double ret = -1.0;
             ifault = 1;
-            if (p < 0.000002 | p > 0.999998)
+            if (p < 0.000002 || p > 0.999998)
             {
                 ret = ppchir(prob, v, out ifault);
                 return ret;
             }
-            if (v <= 0.0) return ret;
+            if (v <= 0.0) 
+                return ret;
             ifault = 0;
             double xx = 0.5 * v;
             double c = xx - 1.0;
             double g = alogam(xx);
-            if (ifault != 0) return ret;
+            if (ifault != 0) 
+                return ret;
             //  start approximation for small chi-squared
             if (v < -1.24 * Math.Log(p))
             {
