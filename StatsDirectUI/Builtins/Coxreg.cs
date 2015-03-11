@@ -2628,9 +2628,9 @@ namespace StatsDirect.Builtins
                 resultsFrame.Variables.Add(hazardRatioVariable);
                 for (i = 1; i <= iobs; i++)
                 {
-                    survivalVariable.set_Data(i - 1, z[i].S);
-                    hazardVariable.set_Data(i - 1, z[i].H);
-                    hazardRatioVariable.set_Data(i - 1, z[i].Exb);
+                    survivalVariable.SetData(i - 1, z[i].S);
+                    hazardVariable.SetData(i - 1, z[i].H);
+                    hazardRatioVariable.SetData(i - 1, z[i].Exb);
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
@@ -2986,15 +2986,15 @@ namespace StatsDirect.Builtins
                 resultsFrame.Variables.Add(devianceResidualVariable);
                 for (i = 1; i <= iobs; i++)
                 {
-                    leverageVariable.set_Data(i - 1, ARR2[i, 2]);
-                    proportionalityVariable.set_Data(i - 1, ARR2[i, 5]);
-                    coxOakesResidualVariable.set_Data(i - 1, ARR2[i, 3]);
+                    leverageVariable.SetData(i - 1, ARR2[i, 2]);
+                    proportionalityVariable.SetData(i - 1, ARR2[i, 5]);
+                    coxOakesResidualVariable.SetData(i - 1, ARR2[i, 3]);
                     double rc = z[i].Exb * z[i].H;
                     double rm = z[i].Censor - rc;
                     double rd = Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
-                    coxSnellResidualVariable.set_Data(i - 1, rc);
-                    martingaleResidualVariable.set_Data(i - 1, rm);
-                    devianceResidualVariable.set_Data(i - 1, rd);
+                    coxSnellResidualVariable.SetData(i - 1, rc);
+                    martingaleResidualVariable.SetData(i - 1, rm);
+                    devianceResidualVariable.SetData(i - 1, rd);
                 }
                 outputParameters.AddOutput("results", resultsFrame);
 

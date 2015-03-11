@@ -8,15 +8,12 @@ namespace StatsDirect.Data
     [Serializable]
     public class ClassifierVariable : DoubleVariable
     {
-
-        private IList<Group> _groups;
-
         public ClassifierVariable()
         {
-            _groups = new List<Group>();
+            Groups = new List<Group>();
         }
 
-        public override bool IsClassifier
+        public override bool IsClassifierVariable
         {
             get
             {
@@ -33,52 +30,29 @@ namespace StatsDirect.Data
 
         public override void StealDataFrom(Variable victim)
         {
-            if (!(victim.IsClassifier))
-            {
+            if (!(victim.IsClassifierVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
-            }
             base.StealDataFrom(victim);
             ClassifierVariable cVictim = victim.AsClassifierVariable;
-            _groups = cVictim._groups;
+            Groups = cVictim.Groups;
         }
 
         [XmlIgnore]
-        public IList<Group> Groups
-        {
-            get
-            {
-                return _groups;
-            }
-            set
-            {
-                _groups = value;
-            }
-        }
-
-        public Group get_Group(int Index)
-        {
-            return _groups[Index];
-        }
-
-        public void set_Group(int Index, Group value)
-        {
-            EnsureGroups(Index + 1);
-            _groups[Index] = value;
-        }
+        public IList<Group> Groups { get; set; }
 
         public int GroupCount
         {
             get
             {
-                return _groups.Count;
+                return Groups.Count;
             }
         }
 
-        public void EnsureGroups(int MinimumSize)
+        public void EnsureGroups(int minimumSize)
         {
-            while (_groups.Count < MinimumSize)
+            while (Groups.Count < minimumSize)
             {
-                _groups.Add(null);
+                Groups.Add(null);
             }
         }
 
@@ -105,7 +79,7 @@ namespace StatsDirect.Data
             if (Origin == null || shouldKeepData)
             {
                 //  Note: This is deliberately a shallow copy for speed.  It does mean that callers should not alter anything in copy's data, though.
-                copy._groups = _groups;
+                copy.Groups = Groups;
             }
             return copy;
         }
@@ -135,9 +109,7 @@ namespace StatsDirect.Data
             {
                 List<string> n = new List<string>();
                 foreach (Group g in Groups)
-                {
                     n.Add(g.Label);
-                }
                 n.Sort();
                 return n.ToArray();
             }
@@ -147,20 +119,16 @@ namespace StatsDirect.Data
         {
             get
             {
-                return base.HasData && _groups != null;
+                return base.HasData && Groups != null;
             }
         }
 
         public Group GroupWithId(double id)
         {
-            foreach (Group group in _groups)
-            {
+            foreach (Group group in Groups)
                 if (group.Id == id)
                     return group;
-            }
             return null;
         }
     }
-
-
 }

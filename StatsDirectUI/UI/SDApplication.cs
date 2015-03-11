@@ -795,7 +795,7 @@ namespace StatsDirect.UI
                         }
                         break;
                     case ParameterType.GroupedCovariance:
-                        outputParameters = FillParameter((GroupedCovarianceParameter) parameter);
+                        outputParameters = FillParameter(processor, (GroupedCovarianceParameter) parameter);
                         break;
                     case ParameterType.Integer:
                         outputParameters = FillParameter(processor, (IntegerParameter) parameter, context);
@@ -873,13 +873,13 @@ namespace StatsDirect.UI
             // TODO: Move logic out of SetOperation() into here
         }
 
-        ParameterBag FillParameter(GroupedCovarianceParameter Parameter)
+        ParameterBag FillParameter(ITemplateProcessor processor, GroupedCovarianceParameter parameter)
         {
             IGrid grid = (IGrid)ActiveGrid.Window;
-            Builtins.GroupedCovarianceData data = new GridSelectionProcessor(grid).FillGroupedCovarianceParameter();
+            Builtins.GroupedCovarianceData data = new GridSelectionProcessor(grid).FillGroupedCovarianceParameter(processor);
             if (null == data)
                 return null;
-            return new ParameterBag(Parameter.Name, new FilledParameter(true, data));
+            return new ParameterBag(parameter.Name, new FilledParameter(true, data));
         }
 
         ParameterBag FillParameter(ITemplateProcessor processor, IntegerParameter Parameter, ParameterBag context)
@@ -1587,37 +1587,67 @@ namespace StatsDirect.UI
             }
         }
 
-        public void Refill(Variable variable)
+        void IRefillSource.Refill(IList<Variable> variables)
         {
-            IOrigin origin = variable.Origin;
-            if (null == origin)
+            // Split up the variables, which might occasionally have come from more than one selection, into their different selections.
+            Dictionary<int, List<Variable>> variablesByOriginGroup = new Dictionary<int, List<Variable>>();
+            foreach (Variable variable in variables)
             {
-                // Hope it's got its data still included!
-                return;
-            }
-            if (!(origin is WorksheetOrigin))
-            {
-                throw new NotImplementedException("At present, only data taken from worksheets can be refilled");
+                if (null == variable.Origin)
+                    continue;
+                List<Variable> variablesByThisGroup;
+                if (!variablesByOriginGroup.TryGetValue(variable.Origin.OriginGroup, out variablesByThisGroup))
+                {
+                    variablesByThisGroup = new List<Variable>();
+                    variablesByOriginGroup.Add(variable.Origin.OriginGroup, variablesByThisGroup);
+                }
+                variablesByThisGroup.Add(variable);
             }
 
-            WorksheetOrigin worksheetOrigin = (WorksheetOrigin)origin;
-            Refill(variable, worksheetOrigin);
-        }
-
-        public void Refill(Variable variable, WorksheetOrigin worksheetOrigin)
-        {
-            if (null == worksheetOrigin)
-                return;
-            if (null == worksheetOrigin.WorkbookPath)
-                return;
-            StatsDirectForm gridWindow = mainWindow.FindOrOpenGrid(worksheetOrigin.WorkbookPath);
-            if (null == gridWindow)
+            // For each selection, check they all have the same workbook (we can't handle cross-workbook selections as we hand off to an IGrid), load it and delegate the refill to it.
+            foreach (List<Variable> candidates in variablesByOriginGroup.Values)
             {
-                FriendlyError("Cannot replay the operation as it took data from the unsaved workbook \"" + worksheetOrigin.WorkbookPath + "\", which is no longer open.", null, false);
-                throw new TemplateOperationCancelledException();
+                string workbookPath = null;
+                bool atLeastOneFailedVariable = false;
+                foreach (Variable candidate in candidates)
+                {
+                    if (!(candidate.Origin is WorksheetOrigin))
+                    {
+                        atLeastOneFailedVariable = true;
+                        break;
+                    }
+                    WorksheetOrigin worksheetOrigin = (WorksheetOrigin)candidate.Origin;
+                    if (null == worksheetOrigin.WorkbookPath)
+                    {
+                        atLeastOneFailedVariable = true;
+                        break;
+                    }
+                    if (null == workbookPath)
+                        workbookPath = worksheetOrigin.WorkbookPath;
+                    else
+                    {
+                        if (!(workbookPath.Equals(worksheetOrigin.WorkbookPath)))
+                        {
+                            atLeastOneFailedVariable = true;
+                            break;
+                        }
+                    }
+                }
+                if (atLeastOneFailedVariable)
+                {
+                    // Can't refill this
+                    break;
+                }
+
+                StatsDirectForm gridWindow = mainWindow.FindOrOpenGrid(workbookPath);
+                if (null == gridWindow)
+                {
+                    FriendlyError("Cannot replay the operation as it took data from the unsaved workbook \"" + workbookPath + "\", which is no longer open.", null, false);
+                    throw new TemplateOperationCancelledException();
+                }
+                IGrid grid = (IGrid)gridWindow;
+                grid.Refill(candidates);
             }
-            IGrid grid = (IGrid)gridWindow;
-            grid.Refill(variable, worksheetOrigin);
         }
 
         public IDictionary<string, ParameterBag> SessionParametersPerOperation

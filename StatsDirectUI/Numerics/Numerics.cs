@@ -234,8 +234,10 @@ namespace StatsDirect.Numerics
         {
             double y, a = Math.Abs(x);
 
-            if (a < Constant.DBL_LRS) return x;
-            if (a > 0.697) return Math.Exp(x) - 1.0;
+            if (a < Constant.DBL_LRS)
+                return x;
+            if (a > 0.697)
+                return Math.Exp(x) - 1.0;
 
             if (a > 1e-8)
             {

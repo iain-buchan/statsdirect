@@ -1,3 +1,5 @@
+using StatsDirect.Utilities;
+
 namespace StatsDirect.Data
 {
     ///  <summary>
@@ -5,13 +7,10 @@ namespace StatsDirect.Data
     ///  A typical example would be a data frame, where the data should be discarded and re-acquired based on its provenance information if the operation is re-done.
     ///  </summary>
     ///  <remarks>Strictly, this should be part of the template system.  Unfortunately template requires data, and this would require a circular dependency.</remarks>
-    public interface IStripForRedo 
-    { 
-        object CopyAndStripForRedo( bool shouldKeepData );
-        
-        void RefillForRedo( IRefillSource source );
-        
-    } 
-    
-    
-} 
+    public interface IStripForRedo
+    {
+        object CopyAndStripForRedo(bool shouldKeepData);
+
+        void RefillForRedo(IRefillSource source);
+    }
+}

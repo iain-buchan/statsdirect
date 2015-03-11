@@ -183,16 +183,13 @@ namespace StatsDirect.Templates
                 copiedData = data;
             }
 
-            FilledParameter copy = new FilledParameter {isInputParameter = isInputParameter, data = copiedData};
-            return copy;
+            return new FilledParameter {isInputParameter = isInputParameter, data = copiedData};
         }
 
         internal void RefillForRedo(IRefillSource refillSource)
         {
             if (data is IStripForRedo)
-            {
                 ((IStripForRedo)data).RefillForRedo(refillSource);
-            }
         }
     }
 }

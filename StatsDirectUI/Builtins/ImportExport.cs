@@ -13,30 +13,26 @@ namespace StatsDirect.Builtins
         public static StepResult FileImportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
             // import data to the active worksheet
-            using (OpenFileDialog C_FD = new OpenFileDialog())
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                C_FD.ShowHelp = true;
-                C_FD.Title = "Import worksheet data";
-                C_FD.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab|Text file (*.txt)|*.txt|All files (*.*)|*.*";
-                C_FD.CheckFileExists = true;
+                openFileDialog.ShowHelp = true;
+                openFileDialog.Title = "Import worksheet data";
+                openFileDialog.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab|Text file (*.txt)|*.txt|All files (*.*)|*.*";
+                openFileDialog.CheckFileExists = true;
 
-                DialogResult result = C_FD.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                DialogResult result = openFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK != result)
-                {
                     return null;
-                }
 
                 // If it's an Excel file, load it instead
-                string suffix = Path.GetExtension(C_FD.FileName);
+                string suffix = Path.GetExtension(openFileDialog.FileName);
                 if (".xls".Equals(suffix) || ".xlsx".Equals(suffix))
-                {
                     throw new Exception("Please Open an excel file rather than Importing it.");
-                }
 
-                host.StartProgress("Importing data", true);
+                host.StartProgress("Importing data", false);
                 try
                 {
-                    ParameterBag outputParameters = FileImportAscii(C_FD.FileName);
+                    ParameterBag outputParameters = FileImportAscii(openFileDialog.FileName);
                     return new StepResult(StepSuccess.Success, outputParameters);
                 }
                 finally
@@ -50,18 +46,18 @@ namespace StatsDirect.Builtins
         public static StepResult FileImportReport(ITemplateHost host, ParameterBag parameters)
         {
             // import text to the active report
-            using (OpenFileDialog C_FD = new OpenFileDialog())
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                C_FD.Title = "Import Text";
-                C_FD.Filter = "ASCII Text (*.txt)|*.txt|All files (*.*)|*.*";
-                C_FD.CheckFileExists = true;
+                openFileDialog.Title = "Import Text";
+                openFileDialog.Filter = "ASCII Text (*.txt)|*.txt|All files (*.*)|*.*";
+                openFileDialog.CheckFileExists = true;
 
-                DialogResult result = C_FD.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                DialogResult result = openFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK != result)
                 {
                     return null;
                 }
-                using (StreamReader sr = File.OpenText(C_FD.FileName))
+                using (StreamReader sr = File.OpenText(openFileDialog.FileName))
                 {
                     string fileContents = sr.ReadToEnd();
                     ParameterBag outputParameters = new ParameterBag();
@@ -80,13 +76,10 @@ namespace StatsDirect.Builtins
                 if (null == currentLine)
                     return null;
 
-                // if the file contains Tabs read as tab-delimited
-                // else read as comma delimited
+                // If the file contains Tabs read as tab-delimited; otherwise, read as comma-delimited.
                 string delimiter = currentLine.Contains("\t") ? "\t" : ",";
                 if (currentLine.Substring(currentLine.Length - 1) != delimiter)
-                {
                     currentLine += delimiter;
-                }
                 DataFrame outputFrame = new DataFrame();
                 int row = 0;
                 do
@@ -103,11 +96,8 @@ namespace StatsDirect.Builtins
                         if (rawField.StartsWith(@"""") && rawField.EndsWith(@""""))
                             rawField = rawField.Substring(1, rawField.Length - 2).Replace("\"\"", "\"");
                         if (outputFrame.VariableCount <= col)
-                        {
-                            StringVariable v = new StringVariable();
-                            outputFrame.Variables.Add(v);
-                        }
-                        outputFrame.Variables[col].AsStringVariable.set_Data(row, rawField);
+                            outputFrame.Variables.Add(new StringVariable());
+                        outputFrame.Variables[col].AsStringVariable.SetData(row, rawField);
                         lastSplitPosition += splitLength + 1;
                     }
                     if (sr.EndOfStream)
@@ -117,11 +107,8 @@ namespace StatsDirect.Builtins
                         break;
 
                     if (currentLine.Length > 0 && currentLine.Substring(currentLine.Length - 1) != delimiter)
-                    {
                         currentLine += delimiter;
-                    }
                     row += 1;
-                    //  TODO: If host.UpdateProgress(Loc(ff) / LOF(ff) * 128) Then Exit Do
                 } while (true);
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("output", outputFrame);
@@ -136,75 +123,71 @@ namespace StatsDirect.Builtins
 
         public static StepResult FileExportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
-            using (SaveFileDialog C_FD = new SaveFileDialog())
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
-                C_FD.Title = "Export Data";
-                C_FD.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab";
+                saveFileDialog.Title = "Export Data";
+                saveFileDialog.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab";
                 DataFrame data = parameters["data"].AsDataFrame;
                 string source = data.Name;
-                C_FD.FileName = source.Contains(".") ? source.Substring(0, source.Length - 4) + ".csv" : source + ".csv";
-                C_FD.OverwritePrompt = true;
-                DialogResult result = C_FD.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                saveFileDialog.FileName = source.Contains(".") ? source.Substring(0, source.Length - 4) + ".csv" : source + ".csv";
+                saveFileDialog.OverwritePrompt = true;
+                DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK == result)
                 {
-                    bool tabout = C_FD.FileName.Substring(C_FD.FileName.Length - 3).ToLower() == "tab";
-                    using (StreamWriter sw = File.CreateText(C_FD.FileName))
+                    bool useTabDelimiter = saveFileDialog.FileName.Substring(saveFileDialog.FileName.Length - 3).ToLower() == "tab";
+                    using (StreamWriter sw = File.CreateText(saveFileDialog.FileName))
                     {
                         host.StartProgress("Exporting Worksheet", true);
 
                         //  Titles
-                        string a = "";
-                        int C1;
-                        string buf;
-                        for (C1 = 0; C1 <= data.VariableCount - 1; C1++)
+                        string delimiter = useTabDelimiter ? "\t" : ",";
+                        bool first = true;
+                        for (int c = 0; c < data.VariableCount; c++)
                         {
-                            StringVariable v = data.Variables[C1].AsStringVariable;
-                            buf = v.Title;
-                            if (tabout)
-                            {
-                                a += buf.Trim() + "\t";
-                            }
+                            StringVariable v = data.Variables[c].AsStringVariable;
+                            if (first)
+                                first = false;
                             else
-                            {
-                                a += buf.Trim() + ",";
-                            }
+                                sw.Write(delimiter);
+                            sw.Write(ToCsvCell(v.Title));
                         }
-                        sw.WriteLine(a.Substring(0, a.Length - 1));
+                        sw.WriteLine();
 
                         //  Data
-                        int row = data.MaxRows;
-                        int r1;
-                        for (r1 = 0; r1 <= data.MaxRows - 1; r1++)
+                        int rows = data.MaxRows;
+                        for (int r = 0; r < data.MaxRows; r++)
                         {
-                            a = "";
-                            for (C1 = 0; C1 <= data.VariableCount - 1; C1++)
+                            first = true;
+                            for (int c = 0; c < data.VariableCount; c++)
                             {
-                                StringVariable v = data.Variables[C1].AsStringVariable;
-                                buf = "";
-                                if (v.Length > r1)
-                                {
-                                    buf = v.Data[r1];
-                                }
-                                if (tabout)
-                                {
-                                    a += buf.Trim() + "\t";
-                                }
+                                StringVariable v = data.Variables[c].AsStringVariable;
+                                if (first)
+                                    first = false;
                                 else
-                                {
-                                    a += buf.Trim() + ",";
-                                }
+                                    sw.Write(delimiter);
+                                string buf = (v.Length > r) ? v.Data[r] : "";
+                                sw.Write(ToCsvCell(buf));
                             }
-                            sw.WriteLine(a.Substring(0, a.Length - 1));
-                            if (host.UpdateProgress(r1 / (double)row))
-                            {
+                            sw.WriteLine();
+                            if (host.UpdateProgress(r / (double)rows))
                                 break;
-                            }
                         }
                         host.FinishProgress();
                     }
                 }
             }
             return new StepResult(StepSuccess.Success, new ParameterBag());
+        }
+
+        /// <param name="contents"></param>
+        /// <returns>A representation of contents in Excel-CSV format, i.e. quoted and with quotes double-quoted if there are CSV metacharacters (comma, double-quote, newline) in the contents.</returns>
+        private static string ToCsvCell(string contents)
+        {
+            string s = contents.Trim();
+            if (s.Contains("\"") || s.Contains(",") || s.Contains(Environment.NewLine))
+                return "\"" + s.Replace("\"", "\"\"") + "\"";
+            else
+                return s;
         }
     }
 }

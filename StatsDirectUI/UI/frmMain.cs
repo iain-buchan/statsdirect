@@ -3848,7 +3848,7 @@ namespace StatsDirect.UI
             string[] values;
             if (sourceFrame.Variables[0].IsStringVariable)
                 values = sourceFrame.Variables[0].AsStringVariable.Data;
-            else if (sourceFrame.Variables[0].IsClassifier)
+            else if (sourceFrame.Variables[0].IsClassifierVariable)
                 values = sourceFrame.Variables[0].AsClassifierVariable.SortedCategoryNames;
             else
                 throw new ArgumentException("A PickFromListParameter can only pick from string or classifier variables");

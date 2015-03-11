@@ -775,6 +775,7 @@
     <Compile Include="Utilities\Formatting.cs" />
     <Compile Include="Utilities\Parsing.cs" />
     <Compile Include="Utilities\SDRegistry.cs" />
+    <Compile Include="Utilities\TakeANumber.cs" />
     <Compile Include="Utilities\TemplateOperationCancelledException.cs" />
     <Compile Include="Utilities\Utilities.cs" />
     <EmbeddedResource Include="Calculator\frmStatsDirectCalculator.resx">
@@ -1685,7 +1686,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

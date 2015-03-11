@@ -8,11 +8,8 @@ namespace StatsDirect.Data
     ///  Use ClassiferVariable to represent a classifier variable.
     ///  </summary>
     [Serializable]
-    public abstract class Variable : IStripForRedo
+    public abstract class Variable
     {
-        private string _title;
-        private IOrigin _origin;
-
         ///  <summary>
         ///  The title (name) of the variable
         ///  </summary>
@@ -20,44 +17,24 @@ namespace StatsDirect.Data
         ///  <returns></returns>
         ///  <remarks></remarks>
         [XmlElement("title")]
-        public string Title
-        {
-            get
-            {
-                return _title;
-            }
-            set
-            {
-                _title = value;
-            }
-        }
+        public string Title { get; set; }
 
         ///  <summary>
         ///  Where the variable came from
         ///  </summary>
         [XmlIgnore]
-        public IOrigin Origin
-        {
-            get
-            {
-                return _origin;
-            }
-            set
-            {
-                _origin = value;
-            }
-        }
+        public IOrigin Origin { get; set; }
 
         [XmlElement("worksheet-origin", typeof(WorksheetOrigin))]
         public object OriginForXml
         {
             get
             {
-                return _origin;
+                return Origin;
             }
             set
             {
-                _origin = ((IOrigin)(value));
+                Origin = ((IOrigin)(value));
             }
         }
 
@@ -71,7 +48,7 @@ namespace StatsDirect.Data
         ///  <returns></returns>
         ///  <remarks></remarks>
         [XmlIgnore]
-        public virtual bool IsClassifier
+        public virtual bool IsClassifierVariable
         {
             get
             {
@@ -214,11 +191,6 @@ namespace StatsDirect.Data
         public abstract VariableType VariableType { get; }
 
         public abstract object CopyAndStripForRedo(bool shouldKeepData);
-        // interface methods implemented by CopyAndStripForRedo
-        object IStripForRedo.CopyAndStripForRedo(bool shouldKeepData)
-        {
-            return CopyAndStripForRedo(shouldKeepData);
-        }
 
         ///  <summary>
         ///  A fast but destructive way of transferring victim's data to this variable.  Victim should not be used after this operation.
@@ -226,23 +198,10 @@ namespace StatsDirect.Data
         ///  <param name="victim"></param>
         public abstract void StealDataFrom(Variable victim);
 
-        public virtual void RefillForRedo(IRefillSource refillSource)
-        {
-            if (!(HasData))
-            {
-                refillSource.Refill(this);
-            }
-        }
-        // interface methods implemented by RefillForRedo
-        void IStripForRedo.RefillForRedo(IRefillSource refillSource)
-        {
-            RefillForRedo(refillSource);
-        }
-
         protected virtual void CopyAndStripForRedoInto(Variable copy, bool shouldKeepData)
         {
-            copy._title = _title;
-            copy._origin = _origin;
+            copy.Title = Title;
+            copy.Origin = Origin;
         }
 
         ///  <summary>

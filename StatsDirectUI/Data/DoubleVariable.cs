@@ -114,7 +114,7 @@ namespace StatsDirect.Data
         ///  <param name="value">The new value to set. Storage management is done internally, so the array is always sufficently large to hold the value</param>
         ///  <returns>The value at the specified index, or an exception if the index is out of bounds</returns>
         ///  <remarks></remarks>
-        public void set_Data(int index, double value)
+        public void SetData(int index, double value)
         {
             EnsureLength(index + 1);
             data[index] = value;
@@ -152,9 +152,7 @@ namespace StatsDirect.Data
             {
                 data = new double[minimumLength];
                 for (int i = 0; i <= minimumLength - 1; i++)
-                {
                     data[i] = fillValue;
-                }
             }
             else
             {
@@ -164,10 +162,8 @@ namespace StatsDirect.Data
                     double[] transTemp1 = new double[minimumLength];
                     Array.Copy(data, transTemp1, data.Length);
                     data = transTemp1;
-                    for (int i = oldLength; i <= minimumLength - 1; i++)
-                    {
+                    for (int i = oldLength; i < minimumLength; i++)
                         data[i] = fillValue;
-                    }
                 }
             }
         }
@@ -175,13 +171,9 @@ namespace StatsDirect.Data
         public override void EnsureLength(int minimumLength, bool useMissing)
         {
             if (useMissing)
-            {
                 EnsureLength(minimumLength, Constant.MISSING);
-            }
             else
-            {
                 EnsureLength(minimumLength);
-            }
         }
 
         public override void TruncateDataToLength(int maximumLength)

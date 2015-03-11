@@ -274,37 +274,46 @@ namespace StatsDirect.UI
             dirty = true;
         }
 
-        void IGrid.Refill(Variable variable, WorksheetOrigin worksheetOrigin)
+        void IGrid.Refill(List<Variable> variables)
         {
-            // Set the active worksheet
-            workbookView.ActiveWorkbookSet.GetLock();
-            try
-            {
-                string sheetName = worksheetOrigin.WorksheetName;
-                IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
-                bool succeeded = (null != worksheet);
-                if (!succeeded)
-                    throw new Exception("Cannot refill variable as the worksheet \"" + worksheetOrigin.WorksheetName + "\" in workbook \"" + worksheetOrigin.WorkbookPath + "\" no longer exists.");
-                workbookView.ActiveSheet = worksheet;
-            }
-            finally
-            {
-                workbookView.ActiveWorkbookSet.ReleaseLock();
-            }
-
-            CellColumnSelection cellColumnSelection = new CellColumnSelection
-                                                          {
-                                                              ColumnIndex = worksheetOrigin.Column,
-                                                              RowCount = worksheetOrigin.Rows,
-                                                              RowIndex = worksheetOrigin.TopRow
-                                                          };
-            MaybeExpandCellColumnSelection(cellColumnSelection);
             CellSelection revisedCellSelection = new CellSelection();
-            revisedCellSelection.ColumnSelections.Add(cellColumnSelection);
-            revisedCellSelection.LongestRowCount = cellColumnSelection.RowCount;
-            DataFrame refilledFrame = ProcessCellArray(revisedCellSelection, worksheetOrigin.Mode, 0, true, worksheetOrigin.HasTitle);
-            Variable refilledVariable = refilledFrame.Variables[0];
-            variable.StealDataFrom(refilledVariable);
+
+            foreach (Variable variable in variables)
+            {
+                WorksheetOrigin worksheetOrigin = (WorksheetOrigin)variable.Origin;
+
+                // Set the active worksheet
+                workbookView.ActiveWorkbookSet.GetLock();
+                try
+                {
+                    string sheetName = worksheetOrigin.WorksheetName;
+                    IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
+                    bool succeeded = (null != worksheet);
+                    if (!succeeded)
+                        throw new Exception("Cannot refill variable as the worksheet \"" + worksheetOrigin.WorksheetName + "\" in workbook \"" + worksheetOrigin.WorkbookPath + "\" no longer exists.");
+                    workbookView.ActiveSheet = worksheet;
+                }
+                finally
+                {
+                    workbookView.ActiveWorkbookSet.ReleaseLock();
+                }
+
+                CellColumnSelection cellColumnSelection = new CellColumnSelection
+                                                              {
+                                                                  ColumnIndex = worksheetOrigin.Column,
+                                                                  RowCount = worksheetOrigin.Rows,
+                                                                  RowIndex = worksheetOrigin.TopRow
+                                                              };
+                MaybeExpandCellColumnSelection(cellColumnSelection);
+                revisedCellSelection.ColumnSelections.Add(cellColumnSelection);
+                revisedCellSelection.LongestRowCount = cellColumnSelection.RowCount;
+            }
+            WorksheetOrigin firstWorksheetOrigin = (WorksheetOrigin)variables[0].Origin;
+            DataFrame refilledFrame = ProcessCellArray(revisedCellSelection, firstWorksheetOrigin.Mode, 0, true, firstWorksheetOrigin.HasTitle, firstWorksheetOrigin.OriginGroup);
+            if (refilledFrame.VariableCount != variables.Count)
+                throw new Exception("Cannot refill frame as the number of variables present in the workbook \"" + firstWorksheetOrigin.WorkbookPath + "\" appears to differ now.");
+            for (int i = 0; i < refilledFrame.VariableCount; i++)
+                variables[i].StealDataFrom(refilledFrame.Variables[i]);
         }
 
         /// <summary>
@@ -831,7 +840,7 @@ namespace StatsDirect.UI
         /// <param name="userCancelled">If true, the user cancelled the selection</param>
         /// <param name="wasPivoted">If true, the user changed from selecting groups by column to by identifier, or vice versa</param>
         /// <returns></returns>
-        public DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted)
+        public DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup)
         {
             bool shouldDefaultSelection = null != mostRecentCellSelectionDuringBatch && mightBeBatching;
             if (shouldDefaultSelection)
@@ -853,10 +862,10 @@ namespace StatsDirect.UI
                 return null;
             }
 
-            return ProcessCellArray(cellSelection, mode, rowLengthHint, false, false);
+            return ProcessCellArray(cellSelection, mode, rowLengthHint, false, false, originGroup);
         }
 
-        private DataFrame ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData)
+        private DataFrame ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup)
         {
             // If we get here, the user selected some data.
             try
@@ -903,12 +912,12 @@ namespace StatsDirect.UI
                                 }
                                 return null;
                             }
-                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered);
+                            variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered, originGroup);
                             variable.TruncateDataToLength(size);
                         }
                         break;
                     case DataAcquisitionMode.NumericReplaceMissing:
-                        ProcessCellArrayNumericReplaceMissing(cellSelection, mode, frame);
+                        ProcessCellArrayNumericReplaceMissing(cellSelection, mode, frame, originGroup);
                         break;
                     case DataAcquisitionMode.GroupIdentifiers:
                     case DataAcquisitionMode.CategoryReplaceMissing:
@@ -1067,24 +1076,24 @@ namespace StatsDirect.UI
                             } // of DataAcquisitionMode.CategoryReplaceMissing
 
                             if (DataAcquisitionMode.Text == mode)
-                                ProcessCellArrayText(cellSelection, mode, frame, topRow, hold, wasFiltered);
+                                ProcessCellArrayText(cellSelection, mode, frame, topRow, hold, wasFiltered, originGroup);
                             else if (mode == DataAcquisitionMode.CategoryCombineAllColumns)
-                                ProcessCellArrayCategoryCombineAllColumns(cellSelection, mode, frame, topRow, hold, wasFiltered);
+                                ProcessCellArrayCategoryCombineAllColumns(cellSelection, mode, frame, topRow, hold, wasFiltered, originGroup);
                             else
-                                ProcessCellArrayCategoriesPerColumn(cellSelection, mode, frame, topRow, hold, wasFiltered);
+                                ProcessCellArrayCategoriesPerColumn(cellSelection, mode, frame, topRow, hold, wasFiltered, originGroup);
                         }
                         break;
                     case DataAcquisitionMode.DateReplaceMissing:
-                        ProcessCellArrayDateReplaceMissing(cellSelection, mode, frame);
+                        ProcessCellArrayDateReplaceMissing(cellSelection, mode, frame, originGroup);
                         break;
                     case DataAcquisitionMode.TextWithFormulae:
-                        ProcessCellArrayTextWithFormulae(cellSelection, mode, frame);
+                        ProcessCellArrayTextWithFormulae(cellSelection, mode, frame, originGroup);
                         break;
                     case DataAcquisitionMode.Variant:
-                        ProcessCellArrayVariant(cellSelection, mode, frame);
+                        ProcessCellArrayVariant(cellSelection, mode, frame, originGroup);
                         break;
                     case DataAcquisitionMode.TextNoTitles:
-                        ProcessCellArrayTextNoTitles(cellSelection, mode, frame);
+                        ProcessCellArrayTextNoTitles(cellSelection, mode, frame, originGroup);
                         break;
                     case DataAcquisitionMode.NumericCodingTextToCategories:
                     case DataAcquisitionMode.NumericCodingTextToDummies:
@@ -1157,13 +1166,11 @@ namespace StatsDirect.UI
                                 // Fill in groups
                                 variable.EnsureGroups(groupsByLabel.Count);
                                 foreach (Group group in groupsByLabel.Values)
-                                {
-                                    variable.set_Group((int)group.Id, group);
-                                }
+                                    variable.Groups[(int)group.Id] = group;
 
                                 // Fill in column title
                                 variable.Title = title;
-                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, titleIsInData, nonHiddenTextRowCount != textValues.Length);
+                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, titleIsInData, nonHiddenTextRowCount != textValues.Length, originGroup);
                                 if (mode == DataAcquisitionMode.NumericCodingTextToCategories)
                                 {
                                     frame.Variables.Add(variable);
@@ -1191,7 +1198,7 @@ namespace StatsDirect.UI
                                         v = Constant.MISSING;
                                     variable.Data[row] = v;
                                 }
-                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, nonHiddenTextRowCount != textValues.Length);
+                                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, nonHiddenTextRowCount != textValues.Length, originGroup);
                                 if (mode == DataAcquisitionMode.NumericCodingTextToCategories)
                                 {
                                     frame.Variables.Add(variable);
@@ -1240,7 +1247,7 @@ namespace StatsDirect.UI
                                         cv.EnsureLength(variable.Data.Length);
                                         cv.EnsureGroups(groupsByLabel.Count);
                                         foreach (Group group in groupsByLabel.Values)
-                                            cv.set_Group((int)group.Id, group);
+                                            cv.Groups[(int)group.Id] = group;
                                         DataFrame dummyFrame;
                                         try
                                         {
@@ -1276,7 +1283,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void ProcessCellArrayText(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered)
+        private void ProcessCellArrayText(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered, int originGroup)
         {
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
@@ -1311,12 +1318,13 @@ namespace StatsDirect.UI
                         cellSelection.ColumnSelections[c].RowIndex,
                         cellSelection.ColumnSelections[c].RowCount, mode,
                         topRow > 0,
-                        wasFiltered);
+                        wasFiltered,
+                        originGroup);
                 }
             }
         }
 
-        private void ProcessCellArrayCategoryCombineAllColumns(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered)
+        private void ProcessCellArrayCategoryCombineAllColumns(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered, int originGroup)
         {
             // Categories combined across columns; output as row pattern
             int totRows = cellSelection.LongestRowCount;
@@ -1375,11 +1383,12 @@ namespace StatsDirect.UI
             }
 
             // fill in column details
+            variable.EnsureGroups(found);
             for (int i = 0; i < found; i++)
             {
                 Group group = new Group(foundwhat[i], i);
                 group.NBin = nbin[i];
-                variable.set_Group(i, group);
+                variable.Groups[i] = group;
             }
 
             // column title is a hybrid of all columns
@@ -1403,10 +1412,11 @@ namespace StatsDirect.UI
                                                   cellSelection.ColumnSelections[0].RowIndex,
                                                   cellSelection.ColumnSelections[0].RowCount, mode,
                                                   topRow > 0,
-                                                  wasFiltered);
+                                                  wasFiltered,
+                                                  originGroup);
         }
 
-        private void ProcessCellArrayCategoriesPerColumn(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered)
+        private void ProcessCellArrayCategoriesPerColumn(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int topRow, string[,] hold, bool wasFiltered, int originGroup)
         {
             // Modes 3, 4 or 6: categories per column
             for (int c = 0; c < cellSelection.TotalColumns; c++)
@@ -1457,11 +1467,12 @@ namespace StatsDirect.UI
                 }
 
                 // Fill in column details
+                variable.EnsureGroups(found);
                 for (int i = 0; i < found; i++)
                 {
                     Group group = new Group(foundwhat[i], i);
                     group.NBin = nbin[i];
-                    variable.set_Group(i, group);
+                    variable.Groups[i] = group;
                 }
 
                 // Fill in column title
@@ -1479,11 +1490,12 @@ namespace StatsDirect.UI
                     cellSelection.ColumnSelections[c].RowCount,
                     mode,
                     topRow > 0,
-                    wasFiltered);
+                    wasFiltered,
+                    originGroup);
             }
         }
 
-        private void ProcessCellArrayNumericReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        private void ProcessCellArrayNumericReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int originGroup)
         {
             // Read in the cells replacing missing data with Constant.MISSING
             for (int c = 0; c < cellSelection.TotalColumns; c++)
@@ -1517,11 +1529,11 @@ namespace StatsDirect.UI
                         v = Constant.MISSING;
                     variable.Data[row] = v;
                 }
-                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered);
+                variable.Origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, gridColumn, cellSelection.ColumnSelections[c].RowIndex, dataRows, mode, titleIsInData, wasFiltered, originGroup);
             }
         }
 
-        private void ProcessCellArrayDateReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        private void ProcessCellArrayDateReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int originGroup)
         {
             // Read in the cells replacing missing data with Constant.MISSING
             for (int c = 0; c < cellSelection.TotalColumns; c++)
@@ -1557,11 +1569,12 @@ namespace StatsDirect.UI
                     dataRows,
                     mode,
                     titleIsInData,
-                    wasFiltered);
+                    wasFiltered,
+                    originGroup);
             }
         }
 
-        private void ProcessCellArrayTextWithFormulae(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        private void ProcessCellArrayTextWithFormulae(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int originGroup)
         {
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
@@ -1575,13 +1588,22 @@ namespace StatsDirect.UI
                     formulae = temp;
                 }
                 StringVariable variable = new StringVariable(formulae, null);
-                IOrigin origin = new WorksheetOrigin(cellSelection.ColumnSelections[c].WorkbookPath, cellSelection.ColumnSelections[c].WorksheetName, cellSelection.ColumnSelections[c].ColumnIndex, cellSelection.ColumnSelections[c].RowIndex, cellSelection.ColumnSelections[c].RowCount, mode, false, nonHiddenRowCount != formulae.Length);
+                IOrigin origin = new WorksheetOrigin(
+                    cellSelection.ColumnSelections[c].WorkbookPath,
+                    cellSelection.ColumnSelections[c].WorksheetName,
+                    cellSelection.ColumnSelections[c].ColumnIndex,
+                    cellSelection.ColumnSelections[c].RowIndex,
+                    cellSelection.ColumnSelections[c].RowCount,
+                    mode,
+                    false,
+                    nonHiddenRowCount != formulae.Length,
+                    originGroup);
                 variable.Origin = origin;
                 frame.Variables.Add(variable);
             }
         }
 
-        private void ProcessCellArrayVariant(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        private void ProcessCellArrayVariant(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int originGroup)
         {
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
@@ -1600,13 +1622,13 @@ namespace StatsDirect.UI
                 for (int i = 0; i < nonHiddenRowCount; i++)
                     cooked[i] = raw[i, 0];
                 VariantVariable variable = new VariantVariable(cooked, title);
-                IOrigin origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != raw.GetUpperBound(0));
+                IOrigin origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != raw.GetUpperBound(0), originGroup);
                 variable.Origin = origin;
                 frame.Variables.Add(variable);
             }
         }
 
-        private void ProcessCellArrayTextNoTitles(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame)
+        private void ProcessCellArrayTextNoTitles(CellSelection cellSelection, DataAcquisitionMode mode, DataFrame frame, int originGroup)
         {
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
@@ -1622,7 +1644,7 @@ namespace StatsDirect.UI
                 }
                 StringVariable variable = new StringVariable(texts, null)
                 {
-                    Origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != texts.Length)
+                    Origin = new WorksheetOrigin(cs.WorkbookPath, cs.WorksheetName, cs.ColumnIndex, cs.RowIndex, cs.RowCount, mode, false, nonHiddenRowCount != texts.Length, originGroup)
                 };
                 frame.Variables.Add(variable);
             }
@@ -1631,10 +1653,8 @@ namespace StatsDirect.UI
         private bool TopRowIsFormattedLikeTitles(CellSelection cellSelection)
         {
             foreach (CellColumnSelection probe in cellSelection.ColumnSelections)
-            {
                 if (!CellIsFormattedLikeATitle(probe.WorkbookPath, probe.WorksheetName, probe.ColumnIndex, probe.RowIndex))
                     return false;
-            }
             return true;
         }
 
@@ -1799,22 +1819,21 @@ namespace StatsDirect.UI
                 DateTime dt;
                 return DateTime.TryParse((string)val, out dt) ? dt : DateTime.MinValue;
             }
-            // throw new NotImplementedException("Don't know how to handle type " + val.GetType().FullName);
             return DateTime.MinValue;
         }
 
         /// <summary>
         /// Get the single cell value at the specified row and column.
         /// </summary>
-        /// <param name="Row"></param>
-        /// <param name="Column"></param>
+        /// <param name="row"></param>
+        /// <param name="column"></param>
         /// <returns>MISSING if the value could not be converted, MISSING * 10 if the value was previously MISSING, or the converted value</returns>
-        double GetCellValue(int Row, int Column)
+        double GetCellValue(int row, int column)
         {
             workbookView.GetLock();
             try
             {
-                object val = workbookView.ActiveWorksheet.Cells[Row, Column].Value;
+                object val = workbookView.ActiveWorksheet.Cells[row, column].Value;
                 return ToCellValue(val);
             }
             finally
@@ -1823,12 +1842,12 @@ namespace StatsDirect.UI
             }
         }
 
-        string GetCellText(int Row, int Column)
+        string GetCellText(int row, int column)
         {
             workbookView.GetLock();
             try
             {
-                object val = workbookView.ActiveWorksheet.Cells[Row, Column].Value;
+                object val = workbookView.ActiveWorksheet.Cells[row, column].Value;
                 return null == val ? "" : val.ToString();
             }
             finally
@@ -3107,7 +3126,7 @@ namespace StatsDirect.UI
         {
             bool userCancelled;
             bool wasPivoted;
-            DataFrame frame = GetCellArray(0, DataAcquisitionMode.Variant, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out userCancelled, out wasPivoted);
+            DataFrame frame = GetCellArray(0, DataAcquisitionMode.Variant, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out userCancelled, out wasPivoted, 0);
             if (userCancelled)
                 return;
             StringBuilder sb = new StringBuilder();

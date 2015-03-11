@@ -363,16 +363,14 @@ namespace StatsDirect.Builtins
 
             double GAMMA = parameters["gamma"].AsDouble;
             if (GAMMA <= 0)
-            {
                 throw new TemplateOperationCancelledException();
-            }
             double cit;
             double P0;
             MathDbl.civ(0, out cit, GAMMA, out P0);
 
             // bool OK = false; 
             DataFrame stratumFrame = parameters["stratum"].AsDataFrame;
-            ClassifierVariable stratumVariable = stratumFrame.get_Variable(0).AsClassifierVariable;
+            ClassifierVariable stratumVariable = stratumFrame.Variables[0].AsClassifierVariable;
             int rows = stratumVariable.Length;
             int[] isi = new int[rows + 1];
             int[] ic = new int[rows + 1];
@@ -390,23 +388,17 @@ namespace StatsDirect.Builtins
                 }
             }
             for (int i = 1; i <= strata; i++)
-            {
-                stratlab[i] = stratumVariable.get_Group(i - 1).Label;
-            }
+                stratlab[i] = stratumVariable.Groups[i - 1].Label;
 
             DataFrame caseControlFrame = parameters["case-control"].AsDataFrame;
-            DoubleVariable caseControlVariable = caseControlFrame.get_Variable(0).AsDoubleVariable;
+            DoubleVariable caseControlVariable = caseControlFrame.Variables[0].AsDoubleVariable;
             for (int i = 1; i <= rows; i++)
             {
                 //  Pre-validated to 0 or 1
                 if (caseControlVariable.Data[i - 1] == Constant.MISSING)
-                {
                     isi[i] = 0;
-                }
                 else
-                {
                     ic[i] = Convert.ToInt32(caseControlVariable.Data[i - 1]);
-                }
             }
 
             DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
@@ -414,14 +406,14 @@ namespace StatsDirect.Builtins
             int cols = predictorsFrame.VariableCount;
             double[,] x = new double[cols + 1, rows + 1];
             ColumnData[] cd = new ColumnData[cols + 1];
-            for (int C = 1; C <= cols; C++)
+            for (int c = 1; c <= cols; c++)
             {
-                DoubleVariable v = predictorsFrame.Variables[C - 1].AsDoubleVariable;
-                cd[C] = new ColumnData { Title = v.Title };
+                DoubleVariable v = predictorsFrame.Variables[c - 1].AsDoubleVariable;
+                cd[c] = new ColumnData { Title = v.Title };
 
                 for (int r = 1; r <= rows; r++)
                 {
-                    x[C, r] = v.Data[r - 1];
+                    x[c, r] = v.Data[r - 1];
                 }
             }
             // check predictors for categorical data not yet dummied

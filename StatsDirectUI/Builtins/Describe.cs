@@ -268,7 +268,7 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             for (int v = 0; v <= data.VariableCount - 1; v++)
             {
-                if (!(data.Variables[v].IsClassifier))
+                if (!(data.Variables[v].IsClassifierVariable))
                     data.Variables[v] = TemplateProcessor.gidx_bins(data.Variables[v].AsDoubleVariable);
             }
 
@@ -290,10 +290,9 @@ namespace StatsDirect.Builtins
                 int xtot = vc.Length;
                 int bins = vc.GroupCount;
                 Group[] bin = new Group[bins + 1 ];
-                int i;
-                for (i = 1; i <= bins; i++)
+                for (int i = 1; i <= bins; i++)
                 {
-                    bin[i] = vc.get_Group(i - 1);
+                    bin[i] = vc.Groups[i - 1];
                     if (bin[i].Label == Formatting.MISSINGLABEL)
                         xtot -= bin[i].NBin;
                 }
@@ -317,7 +316,7 @@ namespace StatsDirect.Builtins
 
                 List<ParameterBag> binList = new List<ParameterBag>();
                 variableParameters.AddOutput("*bin", binList);
-                for (i = 1; i <= bins; i++)
+                for (int i = 1; i <= bins; i++)
                 {
                     int xn = bin[i].NBin;
                     ParameterBag binParameters = new ParameterBag();
@@ -619,7 +618,7 @@ namespace StatsDirect.Builtins
                         StringVariable totalsVariable = new StringVariable { Title = "Title" };
                         totalsVariable.EnsureLength(cols);
                         for (int i = 0; i < cols; i++)
-                            totalsVariable.set_Data(i, sx[i].Title);
+                            totalsVariable.SetData(i, sx[i].Title);
                         outputFrame.Variables.Add(totalsVariable);
                         foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
                         {
@@ -779,7 +778,7 @@ namespace StatsDirect.Builtins
             v.EnsureLength(cols);
             v.Title = Caption(summaryType, sx[0], titles);
             for (int i = 0; i < cols; i++)
-                v.set_Data(i, Value(summaryType, sx[i]));
+                v.SetData(i, Value(summaryType, sx[i]));
             return v;
         }
 

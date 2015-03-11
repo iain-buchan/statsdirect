@@ -5,15 +5,15 @@ namespace StatsDirect.UI
 {
     /// <summary>
     /// Represents one user-identifiable object within a StatsDirectForm.
-    /// This may be areport (there's only one object in it), a script (ditto) or a grid (which may have sheets within it)
+    /// This may be a report (there's only one object in it), a script (ditto) or a grid (which may have sheets within it)
     /// </summary>
     [Serializable]
     public class Pane : IStripForRedo
     {
-        public string Name { get; set; }
+        public string Name { get; private set; }
         [NonSerialized]
-        private WindowInformation windowInformation;
-        public object Tag { get; set; }
+        private WindowInformation windowInformation; // Can't be converted to an auto-property, as NonSerialized can only apply to fields.
+        public object Tag { get; private set; }
 
         internal Pane(string name, WindowInformation info, object tag)
         {
@@ -25,7 +25,6 @@ namespace StatsDirect.UI
         public WindowInformation WindowInformation
         {
             get { return windowInformation; }
-            set { windowInformation = value; }
         }
 
         public override string ToString()
@@ -68,8 +67,6 @@ namespace StatsDirect.UI
             return Name.GetHashCode() ^ WindowInformation.GetHashCode() ^ Tag.GetHashCode();
         }
 
-        #region IStripForRedo Members
-
         public object CopyAndStripForRedo(bool shouldKeepData)
         {
             // Indicate that this should not be kept
@@ -81,8 +78,6 @@ namespace StatsDirect.UI
             // Should never refill, as should never have been present in the first place!
             throw new NotImplementedException();
         }
-
-        #endregion
     }
 
     [Serializable]

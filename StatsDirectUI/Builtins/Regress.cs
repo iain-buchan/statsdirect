@@ -493,9 +493,9 @@ namespace StatsDirect.Builtins
                 double ya = context.Slope * vx.Data[j] + context.YIntercept;
                 double pcon = ya + (sey * context.PERT);
                 double ncon = ya - (sey * context.PERT);
-                reg.set_Data(j, ya);
-                uci.set_Data(j, pcon);
-                lci.set_Data(j, ncon);
+                reg.SetData(j, ya);
+                uci.SetData(j, pcon);
+                lci.SetData(j, ncon);
             }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("data", outputFrame);
@@ -835,7 +835,7 @@ namespace StatsDirect.Builtins
             context.Titles = new string[predictorsFrame.VariableCount + iq + 1 ];
             for (int i = 0; i <= predictorsFrame.VariableCount - 1; i++)
             {
-                context.Titles[i + 1 + iq] = predictorsFrame.get_Variable(i).Title;
+                context.Titles[i + 1 + iq] = predictorsFrame.Variables[i].Title;
             }
             int cnt = 0;
             for (int j = 0; j <= context.N - 1; j++)
@@ -847,7 +847,7 @@ namespace StatsDirect.Builtins
                 }
                 for (int k = 1; k <= ip; k++)
                 {
-                    if (predictorsFrame.get_Variable(k - 1).AsDoubleVariable.Data[j] == Constant.MISSING)
+                    if (predictorsFrame.Variables[k - 1].AsDoubleVariable.Data[j] == Constant.MISSING)
                     {
                         OK = false;
                     }
@@ -859,7 +859,7 @@ namespace StatsDirect.Builtins
                     context.S[cnt] = weightsVariable.Data[j];
                     for (int k = 1; k <= ip; k++)
                     {
-                        context.X[cnt, k + iq] = predictorsFrame.get_Variable(k - 1).AsDoubleVariable.Data[j];
+                        context.X[cnt, k + iq] = predictorsFrame.Variables[k - 1].AsDoubleVariable.Data[j];
                     }
                 }
             }
@@ -1354,7 +1354,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptMultipleLinearRegressionPrediction(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1377,21 +1376,18 @@ namespace StatsDirect.Builtins
             {
                 iq = 0;
             }
-            StringVariable valueVariable = candidatePredictors.get_Variable(1).AsStringVariable;
-            DoubleVariable oldValueVariable = candidatePredictors.get_Variable(2).AsDoubleVariable;
+            StringVariable valueVariable = candidatePredictors.Variables[1].AsStringVariable;
+            DoubleVariable oldValueVariable = candidatePredictors.Variables[2].AsDoubleVariable;
             for (i = 1 + iq; i <= context.P; i++)
             {
                 newx[i] = Parsing.Cdbl_Txt(valueVariable.Data[i - 1 - iq]);
                 if (newx[i] != oldValueVariable.Data[i - 1 - iq])
-                {
                     lsqmean = false;
-                }
             }
             double newy = 0.0;
             for (i = 1; i <= context.P; i++)
-            {
-                newy = newy + (newx[i] * context.B[i]);
-            }
+                newy += newx[i] * context.B[i];
+
             MathDbl.civ(context.N - context.P, out cit, GAMMA, out P0);
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> xList = new List<ParameterBag>();
@@ -1606,8 +1602,8 @@ namespace StatsDirect.Builtins
                 vcv.EnsureLength(context.P);
                 for (int j = 1; j <= context.P; j++)
                 {
-                    vxxi.set_Data(j - 1, context.H[i, j]);
-                    vcv.set_Data(j - 1, context.H[i, j] * rms);
+                    vxxi.SetData(j - 1, context.H[i, j]);
+                    vcv.SetData(j - 1, context.H[i, j] * rms);
                 }
             }
             //  Spacer
@@ -1750,9 +1746,9 @@ namespace StatsDirect.Builtins
                 yfitFrame.Variables.Add(vResidual);
                 for (int i = 1; i <= context.N; i++)
                 {
-                    vYFit.set_Data(i - 1, context.FV[i]);
-                    vSdYFit.set_Data(i - 1, sey[i]);
-                    vResidual.set_Data(i - 1, context.R[i]);
+                    vYFit.SetData(i - 1, context.FV[i]);
+                    vSdYFit.SetData(i - 1, sey[i]);
+                    vResidual.SetData(i - 1, context.R[i]);
                 }
                 outputParameters.AddOutput("yfit", yfitFrame);
             }
@@ -1781,9 +1777,9 @@ namespace StatsDirect.Builtins
                 studentisedFrame.Variables.Add(vCook);
                 for (int i = 1; i <= context.N; i++)
                 {
-                    vResidual.set_Data(i - 1, rstd[i]);
-                    vLeverage.set_Data(i - 1, hi[i]);
-                    vCook.set_Data(i - 1, cd[i]);
+                    vResidual.SetData(i - 1, rstd[i]);
+                    vLeverage.SetData(i - 1, hi[i]);
+                    vCook.SetData(i - 1, cd[i]);
                 }
                 outputParameters.AddOutput("studentised", studentisedFrame);
             }
@@ -1808,8 +1804,8 @@ namespace StatsDirect.Builtins
                 jackknifeFrame.Variables.Add(vDFIT);
                 for (int i = 1; i <= context.N; i++)
                 {
-                    vResidual.set_Data(i - 1, rstudent[i]);
-                    vDFIT.set_Data(i - 1, dff[i]);
+                    vResidual.SetData(i - 1, rstudent[i]);
+                    vDFIT.SetData(i - 1, dff[i]);
                 }
                 outputParameters.AddOutput("jackknife", jackknifeFrame);
             }
@@ -2071,9 +2067,9 @@ namespace StatsDirect.Builtins
                 {
                     mu = mu / Convert.ToDouble(context.N);
                 }
-                keyVariable.set_Data(j - 1 - iq, context.Titles[j]);
-                valueVariable.set_Data(j - 1 - iq, mu.ToString());
-                oldValueVariable.set_Data(j - 1 - iq, Parsing.Cdbl_Txt(mu.ToString()));
+                keyVariable.SetData(j - 1 - iq, context.Titles[j]);
+                valueVariable.SetData(j - 1 - iq, mu.ToString());
+                oldValueVariable.SetData(j - 1 - iq, Parsing.Cdbl_Txt(mu.ToString()));
             }
             return frame;
         }
@@ -2794,10 +2790,10 @@ namespace StatsDirect.Builtins
                 double cl = cit * sey;
                 s = Math.Sqrt(rms * (1.0 + xcx));
                 double pl = cit * s;
-                vYFit.set_Data(k - 1, yfit[k]);
-                vsey.set_Data(k - 1, sey);
-                vcl.set_Data(k - 1, cl);
-                vpl.set_Data(k - 1, pl);
+                vYFit.SetData(k - 1, yfit[k]);
+                vsey.SetData(k - 1, sey);
+                vcl.SetData(k - 1, cl);
+                vpl.SetData(k - 1, pl);
             }
             DataFrame outputFrame = new DataFrame();
             outputFrame.Variables.Add(vYFit);
@@ -4867,8 +4863,8 @@ namespace StatsDirect.Builtins
             }
             DataFrame candidatePredictors = parameters["candidatePredictors"].AsDataFrame;
             //  Predictors are guaranteed to be in the same order as the labels
-            StringVariable valueVariable = candidatePredictors.get_Variable(1).AsStringVariable;
-            DoubleVariable oldValueVariable = candidatePredictors.get_Variable(2).AsDoubleVariable;
+            StringVariable valueVariable = candidatePredictors.Variables[1].AsStringVariable;
+            DoubleVariable oldValueVariable = candidatePredictors.Variables[2].AsDoubleVariable;
             for (i = 1; i <= P - iq; i++)
             {
                 newx[i + 1] = Parsing.Cdbl_Txt(valueVariable.Data[i - 1]);
@@ -5173,9 +5169,9 @@ namespace StatsDirect.Builtins
                 {
                     mu = mu / Convert.ToDouble(context.N);
                 }
-                keyVariable.set_Data(j - 1, context.Labels[j]);
-                valueVariable.set_Data(j - 1, mu.ToString());
-                oldValueVariable.set_Data(j - 1, Parsing.Cdbl_Txt(mu.ToString()));
+                keyVariable.SetData(j - 1, context.Labels[j]);
+                valueVariable.SetData(j - 1, mu.ToString());
+                oldValueVariable.SetData(j - 1, Parsing.Cdbl_Txt(mu.ToString()));
             }
             return frame;
         }
@@ -5675,19 +5671,19 @@ namespace StatsDirect.Builtins
                     if (expectedEvents)
                     { // Events
 
-                        expectedEventsVariable.set_Data(i - 1, fvl[i]);
+                        expectedEventsVariable.SetData(i - 1, fvl[i]);
                     }
                     if (expectedIncidence)
                     {
                         // Incidence
 
                         double ry = t[i] != 0.0 ? fvl[i] / t[i] : Constant.MISSING;
-                        expectedIncidenceVariable.set_Data(i - 1, ry);
+                        expectedIncidenceVariable.SetData(i - 1, ry);
                     }
                     if (residualEvents)
                     { // Residual
 
-                        residualEventsVariable.set_Data(i - 1, y[i] - fvl[i]);
+                        residualEventsVariable.SetData(i - 1, y[i] - fvl[i]);
                     }
                     double ww;
                     if (freemanTukeyResidual)
@@ -5698,31 +5694,31 @@ namespace StatsDirect.Builtins
                                          ? Constant.MISSING
                                          : Math.Sqrt(y[i]) * Math.Sqrt(ww) + Math.Sqrt(y[i] + 1.0) * Math.Sqrt(ww) -
                                            Math.Sqrt(4.0 * fvl[i] + 1.0) * Math.Sqrt(ww);
-                        freemanTukeyResidualVariable.set_Data(i - 1, ftr);
+                        freemanTukeyResidualVariable.SetData(i - 1, ftr);
                     }
                     if (devianceResidual)
                     { // Deviance residuals
 
-                        devianceResidualVariable.set_Data(i - 1, dr[i]);
+                        devianceResidualVariable.SetData(i - 1, dr[i]);
                     }
                     ww = Weight ? wt[i] : 1.0;
                     double xi = fvl[i] == 0.0 ? Constant.MISSING : (Math.Pow((y[i] - fvl[i]), 2.0)) / fvl[i];
                     if (pearsonResidual)
                     { // Pearson chi-square residuals
 
-                        pearsonResidualVariable.set_Data(i - 1, xi);
+                        pearsonResidualVariable.SetData(i - 1, xi);
                     }
                     if (leverage)
                     { // Leverage HI
 
-                        leverageVariable.set_Data(i - 1, hi[i]);
+                        leverageVariable.SetData(i - 1, hi[i]);
                     }
                     if (stdPearsonResidual)
                     { // Standardised Pearson residual
 
                         xi = ((y[i] - fvl[i]) * Math.Sqrt(ww)) / Math.Sqrt(fvl[i]);
                         double xis = 1.0 - hi[i] > 0.0 ? xi / Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
-                        stdPearsonResidualVariable.set_Data(i - 1, xis);
+                        stdPearsonResidualVariable.SetData(i - 1, xis);
                     }
                 }
                 if (expectedEvents)

@@ -16,9 +16,13 @@ namespace StatsDirect.Templates
         StepResult ExecuteInternal(ParametersStep step, ParameterBag parameters, bool isRedo);
         StepResult ExecuteInternal(ReportStep step, ParameterBag parameters, bool isRedo);
         StepResult ExecuteInternal(ScriptStep step, ParameterBag parameters, bool isRedo);
-        // StepResult ExecuteInternal(SelectOutputForFrameStep step, ParameterBag parameters, bool isRedo);
         StepResult ExecuteInternal(TestStep step, ParameterBag parameters, bool isRedo);
 
         object Evaluate(Expression expression, ParameterBag parameters);
+
+        /// <summary>
+        /// Returns a unique, monotonically increasing value for this processor that is intended to keep variables acquired at the same point together.
+        /// </summary>
+        int NextOriginGroup();
     }
 }

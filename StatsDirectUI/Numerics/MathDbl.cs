@@ -1083,8 +1083,6 @@ namespace StatsDirect.Numerics
             else { warn = ""; }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method civ
         public static void civ(long df, out double cit, double GAMMA, out double P0)
         {
             double P;
@@ -1092,8 +1090,7 @@ namespace StatsDirect.Numerics
             if (df == 0)
             {
                 P = (1.0 - GAMMA) / 2.0;
-                int transTemp12;
-                cit = PDF.gauinv(1.0 - P, out transTemp12);
+                cit = PDF.gauinv(1.0 - P);
                 P0 = 1.0 - GAMMA;
             }
             else
@@ -1101,9 +1098,7 @@ namespace StatsDirect.Numerics
                 P = (1.0 - GAMMA) / 2.0;
                 P0 = 1.0 - GAMMA;
                 if (P > 1.0 - P)
-                {
                     P = 1.0 - P;
-                }
                 cit = PDF.tfromp(P, Convert.ToDouble(df));
             }
         }
@@ -1123,7 +1118,7 @@ namespace StatsDirect.Numerics
         {
             double lastz = 0;
 
-            if ((fp == 0.0 & tp == 0.0) | (fp == column2total & tp == column1total))
+            if ((fp == 0.0 && tp == 0.0) || (fp == column2total && tp == column1total))
             {
                 thetal = 0.0;
                 thetau = double.PositiveInfinity;

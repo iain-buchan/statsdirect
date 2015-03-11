@@ -9,7 +9,7 @@ namespace StatsDirect.Data
     [XmlType("worksheet-origin")]
     public class WorksheetOrigin : IOrigin
     {
-        public WorksheetOrigin(string workbookPath, string worksheetName, int column, int topRow, int rows, DataAcquisitionMode mode, bool hasTitle, bool wasFiltered)
+        public WorksheetOrigin(string workbookPath, string worksheetName, int column, int topRow, int rows, DataAcquisitionMode mode, bool hasTitle, bool wasFiltered, int originGroup)
         {
             WorkbookPath = workbookPath;
             WorksheetName = worksheetName;
@@ -18,6 +18,8 @@ namespace StatsDirect.Data
             Rows = rows;
             Mode = mode;
             HasTitle = hasTitle;
+            WasFiltered = wasFiltered;
+            OriginGroup = originGroup;
         }
 
         ///  <summary>
@@ -34,36 +36,41 @@ namespace StatsDirect.Data
             {
                 return OriginType.Worksheet;
             }
-        } // interface properties implemented by Type
-
+        }
 
         [XmlElement("column")]
-        public int Column { get; set; }
+        public int Column { get; private set; }
 
         [XmlElement("mode")]
-        public DataAcquisitionMode Mode { get; set; }
+        public DataAcquisitionMode Mode { get; private set; }
 
         [XmlElement("top-row")]
-        public int TopRow { get; set; }
+        public int TopRow { get; private set; }
 
         ///  <summary>
         ///  The number of rows that were specified for the original column.  As a special case, any negative value indicates the whole column.
         ///  </summary>
         [XmlElement("rows")]
-        public int Rows { get; set; }
+        public int Rows { get; private set; }
 
         [XmlElement("workbook-path")]
-        public string WorkbookPath { get; set; }
+        public string WorkbookPath { get; private set; }
 
         [XmlElement("worksheet-name")]
-        public string WorksheetName { get; set; }
+        public string WorksheetName { get; private set; }
 
+        /// <summary>
+        /// True iff the original data was considered to have a title row.
+        /// </summary>
         [XmlElement("has-title")]
-        public bool HasTitle { get; set; }
+        public bool HasTitle { get; private set; }
 
+        /// <summary>
+        /// True iff the worksheet had a filter in place such that only some rows were shown when this data was selected.
+        /// </summary>
         [XmlElement("was-filtered")]
-        public bool WasFiltered { get; set; }
+        public bool WasFiltered { get; private set; }
+
+        public int OriginGroup { get; set; }
     }
-
-
 }

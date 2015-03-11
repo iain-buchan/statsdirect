@@ -22,7 +22,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenPoisson( XM ) ); 
+                    v.SetData( N, RNG.GenPoisson( XM ) ); 
                 } 
             } 
             return outputFrame; 
@@ -43,7 +43,7 @@ namespace StatsDirect.Builtins
                     outputFrame.Variables.Add( v ); 
                     for ( int N=0; N <= rows - 1; N++ ) 
                     { 
-                        v.set_Data( N, RNG.GenUniAB( a, b, isCount ) ); 
+                        v.SetData( N, RNG.GenUniAB( a, b, isCount ) ); 
                     } 
                 } 
             } 
@@ -77,7 +77,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenBinom( nx, PP ) ); 
+                    v.SetData( N, RNG.GenBinom( nx, PP ) ); 
                 } 
             } 
             return outputFrame; 
@@ -130,7 +130,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenF( dfn, dfd ) ); 
+                    v.SetData( N, RNG.GenF( dfn, dfd ) ); 
                 } 
             } 
             return outputFrame; 
@@ -156,7 +156,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenGeom( a ) ); 
+                    v.SetData( N, RNG.GenGeom( a ) ); 
                 } 
             } 
             return outputFrame; 
@@ -182,7 +182,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenNegbin( a, b ) ); 
+                    v.SetData( N, RNG.GenNegbin( a, b ) ); 
                 } 
             } 
             return outputFrame; 
@@ -208,7 +208,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenBeta( a, b ) ); 
+                    v.SetData( N, RNG.GenBeta( a, b ) ); 
                 } 
             } 
             return outputFrame; 
@@ -234,7 +234,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenCauchy( a, b ) ); 
+                    v.SetData( N, RNG.GenCauchy( a, b ) ); 
                 } 
             } 
             return outputFrame; 
@@ -260,7 +260,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenWeibull( a, b ) ); 
+                    v.SetData( N, RNG.GenWeibull( a, b ) ); 
                 } 
             } 
             return outputFrame; 
@@ -286,7 +286,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenLogistic( a, b ) ); 
+                    v.SetData( N, RNG.GenLogistic( a, b ) ); 
                 } 
             } 
             return outputFrame; 
@@ -312,7 +312,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenT( df ) ); 
+                    v.SetData( N, RNG.GenT( df ) ); 
                 } 
             } 
             return outputFrame; 
@@ -344,7 +344,7 @@ namespace StatsDirect.Builtins
                         host.Error( BADPARA, mx ); 
                         return null; 
                     } 
-                    v.set_Data( N, e ); 
+                    v.SetData( N, e ); 
                 } 
             } 
             return outputFrame; 
@@ -370,7 +370,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenGamma( a, b ) ); 
+                    v.SetData( N, RNG.GenGamma( a, b ) ); 
                 } 
             } 
             return outputFrame; 
@@ -399,7 +399,7 @@ namespace StatsDirect.Builtins
                 // b = Exp(2# * xm + 2# * sd * sd) - Exp(2# * xm + sd * sd)
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, Formatting.SafeExp( RNG.GenNorm( XM, sd ) ) ); 
+                    v.SetData( N, Formatting.SafeExp( RNG.GenNorm( XM, sd ) ) ); 
                 } 
             } 
             return outputFrame; 
@@ -418,7 +418,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add( v ); 
                 for ( int N=0; N <= rows - 1; N++ ) 
                 { 
-                    v.set_Data( N, RNG.GenNorm( XM, sd ) ); 
+                    v.SetData( N, RNG.GenNorm( XM, sd ) ); 
                 } 
             } 
             return outputFrame; 

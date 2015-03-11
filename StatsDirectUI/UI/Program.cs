@@ -46,7 +46,6 @@ namespace StatsDirect.UI
                     if (IpcSender.TryToTellAnotherStatsDirectToOpen(args[1]))
                         return;
 
-            Stopwatch sw = Stopwatch.StartNew();
             frmMain mainWindow;
             // As soon as possible, put up a loader
             using (frmLoading loader = new frmLoading())

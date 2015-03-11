@@ -86,7 +86,7 @@ namespace StatsDirect.Builtins
             double[] x = new double[1];
             for (int i = 0; i <= rows - 1; i++)
             {
-                v.set_Data(i, currentval);
+                v.SetData(i, currentval);
                 x[0] = currentval;
                 currentval = c.Evaluate(x);
             }
@@ -231,7 +231,7 @@ namespace StatsDirect.Builtins
                             {
                                 maxctr = ctr;
                             }
-                            outputFrame.Variables[c].AsStringVariable.set_Data(ctr - 1, hold[r, c]);
+                            outputFrame.Variables[c].AsStringVariable.SetData(ctr - 1, hold[r, c]);
                         }
                     }
                 }
@@ -255,7 +255,7 @@ namespace StatsDirect.Builtins
                             {
                                 maxctr = ctr;
                             }
-                            outputFrame.Variables[c].AsStringVariable.set_Data(ctr - 1, hold[r, c]);
+                            outputFrame.Variables[c].AsStringVariable.SetData(ctr - 1, hold[r, c]);
                         }
                     }
                     outputFrame.Variables[c].EnsureLength(ctr);
@@ -442,12 +442,12 @@ namespace StatsDirect.Builtins
             {
                 if (inputVariable.Data[n] == Constant.MISSING)
                 {
-                    minusTwoVariable.set_Data(n, Constant.MISSING);
-                    minusOneVariable.set_Data(n, Constant.MISSING);
-                    minusHalfVariable.set_Data(n, Constant.MISSING);
-                    logVariable.set_Data(n, Constant.MISSING);
-                    halfVariable.set_Data(n, Constant.MISSING);
-                    squaredVariable.set_Data(n, Constant.MISSING);
+                    minusTwoVariable.SetData(n, Constant.MISSING);
+                    minusOneVariable.SetData(n, Constant.MISSING);
+                    minusHalfVariable.SetData(n, Constant.MISSING);
+                    logVariable.SetData(n, Constant.MISSING);
+                    halfVariable.SetData(n, Constant.MISSING);
+                    squaredVariable.SetData(n, Constant.MISSING);
                 }
                 else
                 {
@@ -455,13 +455,13 @@ namespace StatsDirect.Builtins
                     // -2
                     if (z == 0)
                     {
-                        minusTwoVariable.set_Data(n, Constant.MISSING);
+                        minusTwoVariable.SetData(n, Constant.MISSING);
                     }
                     else
                     {
                         try
                         {
-                            minusTwoVariable.set_Data(n, Math.Pow(z, -2.0));
+                            minusTwoVariable.SetData(n, Math.Pow(z, -2.0));
                         }
                         catch (Exception)
                         {
@@ -469,17 +469,17 @@ namespace StatsDirect.Builtins
                         }
                     }
                     // -1
-                    minusOneVariable.set_Data(n, z == 0 ? Constant.MISSING : Math.Pow(z, -1.0));
+                    minusOneVariable.SetData(n, z == 0 ? Constant.MISSING : Math.Pow(z, -1.0));
                     // -0.5
                     if (z <= 0)
                     {
-                        minusHalfVariable.set_Data(n, Constant.MISSING);
+                        minusHalfVariable.SetData(n, Constant.MISSING);
                     }
                     else
                     {
                         try
                         {
-                            minusHalfVariable.set_Data(n, Math.Pow(z, -0.5));
+                            minusHalfVariable.SetData(n, Math.Pow(z, -0.5));
                         }
                         catch (Exception)
                         {
@@ -487,31 +487,31 @@ namespace StatsDirect.Builtins
                         }
                     }
                     // log
-                    logVariable.set_Data(n, z <= 0 ? Constant.MISSING : Math.Log(z));
+                    logVariable.SetData(n, z <= 0 ? Constant.MISSING : Math.Log(z));
                     // 0.5
                     if (z < 0)
                     {
-                        halfVariable.set_Data(n, Constant.MISSING);
+                        halfVariable.SetData(n, Constant.MISSING);
                     }
                     else
                     {
                         try
                         {
-                            halfVariable.set_Data(n, Math.Pow(z, 0.5));
+                            halfVariable.SetData(n, Math.Pow(z, 0.5));
                         }
                         catch (Exception)
                         {
-                            halfVariable.set_Data(n, Constant.MISSING);
+                            halfVariable.SetData(n, Constant.MISSING);
                         }
                     }
                     // 2
                     try
                     {
-                        squaredVariable.set_Data(n, Math.Pow(z, 2.0));
+                        squaredVariable.SetData(n, Math.Pow(z, 2.0));
                     }
                     catch (Exception)
                     {
-                        squaredVariable.set_Data(n, Constant.MISSING);
+                        squaredVariable.SetData(n, Constant.MISSING);
                     }
                 }
             }
@@ -621,11 +621,11 @@ namespace StatsDirect.Builtins
                                 break;
                         }
 
-                        outputVariable.set_Data(c, tr);
+                        outputVariable.SetData(c, tr);
                     }
                     else
                     {
-                        outputVariable.set_Data(c, Constant.MISSING);
+                        outputVariable.SetData(c, Constant.MISSING);
                     }
                 }
             }
@@ -700,12 +700,12 @@ namespace StatsDirect.Builtins
                 string outputTitle = v.Title;
                 if (ok)
                 {
-                    groupVariable.set_Data(row, v.Title.Substring(v.Title.Length - v.Title.Length - ep));
+                    groupVariable.SetData(row, v.Title.Substring(v.Title.Length - v.Title.Length - ep));
                 }
                 foreach (double value in v.Data)
                 {
-                    groupVariable.set_Data(row, outputTitle);
-                    dataVariable.set_Data(row, value);
+                    groupVariable.SetData(row, outputTitle);
+                    dataVariable.SetData(row, value);
                     row += 1;
                 }
             }
@@ -761,7 +761,7 @@ namespace StatsDirect.Builtins
             {
                 if (inputVariable.Data[i] == DateTime.MinValue)
                 {
-                    outputVariable.set_Data(i, Constant.MISSING);
+                    outputVariable.SetData(i, Constant.MISSING);
                 }
                 else
                 {
@@ -787,23 +787,16 @@ namespace StatsDirect.Builtins
             for (int c = 1; c <= ng; c++)
             {
                 if (gidsVariable.Title == "Group ID")
-                {
-                    glabel[c] = gidsVariable.get_Group(c - 1).Label;
-                }
+                    glabel[c] = gidsVariable.Groups[c - 1].Label;
                 else
-                {
-                    glabel[c] = gidsVariable.Title + "=" + gidsVariable.get_Group(c - 1).Label;
-                }
-                if (gidsVariable.get_Group(c - 1).Label == Formatting.MISSINGLABEL)
-                {
+                    glabel[c] = gidsVariable.Title + "=" + gidsVariable.Groups[c - 1].Label;
+                if (gidsVariable.Groups[c - 1].Label == Formatting.MISSINGLABEL)
                     g[c] = Constant.MISSING;
-                }
-                else { g[c] = Convert.ToDouble(c) - 1; }
+                else
+                    g[c] = c - 1;
             }
             for (int c = 1; c <= rows; c++)
-            {
                 gid[c] = gidsVariable.Data[c - 1];
-            }
 
             DataFrame data = parameters["data"].AsDataFrame;
             int cols = data.VariableCount;
@@ -848,7 +841,7 @@ namespace StatsDirect.Builtins
                     if (gid[r] == g[j])
                     {
                         for (int c = 1; c <= cols; c++)
-                            outputFrame.Variables[lc + c - 1].AsDoubleVariable.set_Data(rw, x[c, r]);
+                            outputFrame.Variables[lc + c - 1].AsDoubleVariable.SetData(rw, x[c, r]);
                         rw++;
                     }
                 }
@@ -948,11 +941,11 @@ namespace StatsDirect.Builtins
                             break;
                     }
 
-                    outputVariable.set_Data(c - 1, tr == Constant.MISSING ? Constant.MISSING : tr);
+                    outputVariable.SetData(c - 1, tr == Constant.MISSING ? Constant.MISSING : tr);
                 }
                 else
                 {
-                    outputVariable.set_Data(c - 1, Constant.MISSING);
+                    outputVariable.SetData(c - 1, Constant.MISSING);
                 }
             }
 
@@ -1120,11 +1113,11 @@ namespace StatsDirect.Builtins
                             Debug.Assert(y != null, "y != null");
                             if (x[i] == Constant.MISSING || y[j] == Constant.MISSING)
                             {
-                                outputVariable.set_Data(cnt, Constant.MISSING);
+                                outputVariable.SetData(cnt, Constant.MISSING);
                             }
                             else
                             {
-                                outputVariable.set_Data(cnt, x[i] - y[j]);
+                                outputVariable.SetData(cnt, x[i] - y[j]);
                             }
                             cnt = cnt + 1;
                         }
@@ -1137,11 +1130,11 @@ namespace StatsDirect.Builtins
                         {
                             if (x[i] == Constant.MISSING)
                             {
-                                outputVariable.set_Data(cnt, Constant.MISSING);
+                                outputVariable.SetData(cnt, Constant.MISSING);
                             }
                             else
                             {
-                                outputVariable.set_Data(cnt, (x[i] + x[j]) / 2.0);
+                                outputVariable.SetData(cnt, (x[i] + x[j]) / 2.0);
                             }
                             cnt = cnt + 1;
                         }
@@ -1157,11 +1150,11 @@ namespace StatsDirect.Builtins
                             {
                                 if (x[i] == Constant.MISSING || y[j] == Constant.MISSING || x[i] - x[j] == 0.0)
                                 {
-                                    outputVariable.set_Data(cnt, Constant.MISSING);
+                                    outputVariable.SetData(cnt, Constant.MISSING);
                                 }
                                 else
                                 {
-                                    outputVariable.set_Data(cnt, (y[i] - y[j]) / (x[i] - x[j]));
+                                    outputVariable.SetData(cnt, (y[i] - y[j]) / (x[i] - x[j]));
                                 }
                                 cnt = cnt + 1;
                             }
@@ -1460,11 +1453,11 @@ namespace StatsDirect.Builtins
                 if (inputVariable.Data[c - 1] != Constant.MISSING)
                 {
                     cx = cx + 1;
-                    outputVariable.set_Data(c - 1, r[cx] == Constant.MISSING ? Constant.MISSING : r[cx]);
+                    outputVariable.SetData(c - 1, r[cx] == Constant.MISSING ? Constant.MISSING : r[cx]);
                 }
                 else
                 {
-                    outputVariable.set_Data(c - 1, Constant.MISSING);
+                    outputVariable.SetData(c - 1, Constant.MISSING);
                 }
             }
             return WrapFrame("output", outputFrame);
@@ -1492,7 +1485,7 @@ namespace StatsDirect.Builtins
                     StringVariable inv = data.Variables[col].AsStringVariable;
                     if (inv.Length > row)
                     {
-                        v.set_Data(col, inv.Data[row]);
+                        v.SetData(col, inv.Data[row]);
                     }
                 }
             }
@@ -2000,7 +1993,7 @@ namespace StatsDirect.Builtins
                 int r;
                 for (r = 0; r <= options.Counts.Length - 1; r++)
                 {
-                    countVariable.set_Data(r, options.Counts[r]);
+                    countVariable.SetData(r, options.Counts[r]);
                 }
             }
             return WrapFrame("output", outputFrame);

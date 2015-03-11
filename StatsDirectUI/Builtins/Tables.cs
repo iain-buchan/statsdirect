@@ -248,14 +248,14 @@ namespace StatsDirect.Builtins
                     int m;
                     for (m = 0; m < v.GroupCount; m++)
                     {
-                        if (v.get_Group(m).Label == Formatting.MISSINGLABEL)
+                        if (v.Groups[m].Label == Formatting.MISSINGLABEL)
                             break;
                     }
                     if (v.Data[i] != Convert.ToDouble(m) && v.Data[i] != Constant.MISSING)
                         qm[i] += 1.0;
                     for (m = 0; m < v.GroupCount; m++)
                     {
-                        if (v.get_Group(m).Label == poscat)
+                        if (v.Groups[m].Label == poscat)
                             break;
                     }
                     if (v.Data[i] == Convert.ToDouble(m) && v.Data[i] != Constant.MISSING)
@@ -1788,9 +1788,9 @@ namespace StatsDirect.Builtins
             double ci = parameters["ci"].AsDouble;
             double x2 = parameters["x2"].AsDouble;
             DataFrame observedFrame = parameters["observed"].AsDataFrame;
-            DoubleVariable observed = observedFrame.get_Variable(0).AsDoubleVariable;
+            DoubleVariable observed = observedFrame.Variables[0].AsDoubleVariable;
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
-            DoubleVariable expected = expectedFrame.get_Variable(0).AsDoubleVariable;
+            DoubleVariable expected = expectedFrame.Variables[0].AsDoubleVariable;
 
             //  Observed data is grouped frequencies.
             double[] observedData = observed.Data;
@@ -1918,9 +1918,9 @@ namespace StatsDirect.Builtins
             const string cgft = "Chi-square goodness of fit test";
 
             DataFrame observedFrame = parameters["observed"].AsDataFrame;
-            DoubleVariable observed = observedFrame.get_Variable(0).AsDoubleVariable;
+            DoubleVariable observed = observedFrame.Variables[0].AsDoubleVariable;
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
-            DoubleVariable expected = expectedFrame.get_Variable(0).AsDoubleVariable;
+            DoubleVariable expected = expectedFrame.Variables[0].AsDoubleVariable;
             StringVariable namesVariable = null;
             if (parameters.ContainsKey("names"))
             {
@@ -7357,8 +7357,8 @@ namespace StatsDirect.Builtins
                         int k;
                         for (k = 1; k <= xt[j, i]; k++)
                         {
-                            rowVariable.set_Data(ctr, j);
-                            columnVariable.set_Data(ctr, i + 1);
+                            rowVariable.SetData(ctr, j);
+                            columnVariable.SetData(ctr, i + 1);
                             ctr += 1;
                         }
                     }
@@ -7381,7 +7381,7 @@ namespace StatsDirect.Builtins
             string ylab = rowsVariable.Title;
             for (int i = 1; i <= ycats; i++)
             {
-                ycat[i].Ti = rowsVariable.get_Group(i - 1).Label;
+                ycat[i].Ti = rowsVariable.Groups[i - 1].Label;
                 ycat[i].X = Convert.ToDouble(i - 1);
             }
             for (int i = 1; i <= n; i++)
@@ -7432,10 +7432,10 @@ namespace StatsDirect.Builtins
                         tot += xt[i, j];
                     }
                 }
-                v.set_Data(pos, "(n = " + tot.ToString() + ")");
+                v.SetData(pos, "(n = " + tot.ToString() + ")");
                 for (int j = 1; j <= ycats; j++)
                 {
-                    v.set_Data(pos + j, ylab + ":" + ycat[j].Ti);
+                    v.SetData(pos + j, ylab + ":" + ycat[j].Ti);
                 }
                 for (int i = 1; i <= xcats; i++)
                 {
@@ -7449,10 +7449,10 @@ namespace StatsDirect.Builtins
                         vv = new StringVariable();
                         outputFrame.Variables.Add(vv);
                     }
-                    vv.set_Data(pos, xlab + ":" + xcat[i].Ti);
+                    vv.SetData(pos, xlab + ":" + xcat[i].Ti);
                     for (int j = 1; j <= ycats; j++)
                     {
-                        vv.set_Data(pos + j, xt[i, j].ToString());
+                        vv.SetData(pos + j, xt[i, j].ToString());
                     }
                 }
                 pos += ycats + 2;

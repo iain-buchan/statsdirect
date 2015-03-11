@@ -738,7 +738,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DataFrame groupFrame = parameters["groups"].AsDataFrame;
-            ClassifierVariable groupVariable = groupFrame.get_Variable(0).AsClassifierVariable;
+            ClassifierVariable groupVariable = groupFrame.Variables[0].AsClassifierVariable;
 
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> aList = new List<ParameterBag>();
@@ -758,7 +758,7 @@ namespace StatsDirect.Builtins
                     {
                         if (groupVariable.Data[vIndex] == groupId && v.Data[vIndex] != Constant.MISSING)
                         {
-                            oneWayVariable.set_Data(oneWayIndex, v.Data[vIndex]);
+                            oneWayVariable.SetData(oneWayIndex, v.Data[vIndex]);
                             oneWayIndex += 1;
                         }
                     }
@@ -784,9 +784,9 @@ namespace StatsDirect.Builtins
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DataFrame blocksFrame = parameters["blocks"].AsDataFrame;
-            ClassifierVariable blocksVariable = blocksFrame.get_Variable(0).AsClassifierVariable;
+            ClassifierVariable blocksVariable = blocksFrame.Variables[0].AsClassifierVariable;
             DataFrame treatmentsFrame = parameters["treatments"].AsDataFrame;
-            ClassifierVariable treatmentsVariable = treatmentsFrame.get_Variable(0).AsClassifierVariable;
+            ClassifierVariable treatmentsVariable = treatmentsFrame.Variables[0].AsClassifierVariable;
 
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> aList = new List<ParameterBag>();
@@ -802,7 +802,7 @@ namespace StatsDirect.Builtins
                     DoubleVariable newV = new DoubleVariable(maxBlocks, g.Label);
                     for (int i = 0; i <= maxBlocks - 1; i++)
                     {
-                        newV.set_Data(i, Constant.MISSING);
+                        newV.SetData(i, Constant.MISSING);
                     }
                     twoWayFrame.Variables.Add(newV);
                 }
@@ -815,7 +815,7 @@ namespace StatsDirect.Builtins
                         int blockIndex = Convert.ToInt32(blocksVariable.Data[vIndex]);
                         int treatmentIndex = Convert.ToInt32(treatmentsVariable.Data[vIndex]);
                         DoubleVariable treatmentVariable = twoWayFrame.Variables[treatmentIndex].AsDoubleVariable;
-                        treatmentVariable.set_Data(blockIndex, v.Data[vIndex]);
+                        treatmentVariable.SetData(blockIndex, v.Data[vIndex]);
                     }
                 }
 

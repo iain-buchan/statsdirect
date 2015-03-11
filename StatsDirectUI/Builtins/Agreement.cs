@@ -59,26 +59,25 @@ namespace StatsDirect.Builtins
         private static void GatherUniversalAgreementData(ITemplateHost host, ParameterBag parameters, out int n, out int b, out int c, out double[, ,] data, out bool standard, ref int nobs, ref string title, ref string refIdent)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = dataFrame.get_Variable(0).AsDoubleVariable;
+            DoubleVariable dataVariable = dataFrame.Variables[0].AsDoubleVariable;
             DataFrame ratersFrame = parameters["raters"].AsDataFrame;
-            ClassifierVariable ratersVariable = ratersFrame.get_Variable(0).AsClassifierVariable;
+            ClassifierVariable ratersVariable = ratersFrame.Variables[0].AsClassifierVariable;
             DataFrame objectsFrame = parameters["objects"].AsDataFrame;
-            ClassifierVariable objectsVariable = objectsFrame.get_Variable(0).AsClassifierVariable;
+            ClassifierVariable objectsVariable = objectsFrame.Variables[0].AsClassifierVariable;
             bool hasCategories = parameters.ContainsKey("categories") && parameters["categories"] != null;
             ClassifierVariable categoriesVariable = null;
             if (hasCategories)
             {
                 DataFrame categoriesFrame = parameters["categories"].AsDataFrame;
-                categoriesVariable = categoriesFrame.get_Variable(0).AsClassifierVariable;
+                categoriesVariable = categoriesFrame.Variables[0].AsClassifierVariable;
             }
 
             n = objectsVariable.GroupCount;
             b = ratersVariable.GroupCount;
             c = 1;
             if (hasCategories)
-            {
                 c = categoriesVariable.GroupCount;
-            }
+
             data = new double[n + 1, b + 1, c + 1];
             for (int i = 1; i <= n; i++)
             {
@@ -116,12 +115,10 @@ namespace StatsDirect.Builtins
 
                 //  Find the ID of the reference observer
                 int referenceGroupNumber;
-                for (referenceGroupNumber = 0; referenceGroupNumber <= ratersVariable.GroupCount - 1; referenceGroupNumber++)
+                for (referenceGroupNumber = 0; referenceGroupNumber < ratersVariable.GroupCount; referenceGroupNumber++)
                 {
-                    if (ratersVariable.get_Group(referenceGroupNumber).Label == referenceName)
-                    {
+                    if (ratersVariable.Groups[referenceGroupNumber].Label == referenceName)
                         break;
-                    }
                 }
                 if (referenceGroupNumber == ratersVariable.GroupCount)
                 {
@@ -138,9 +135,9 @@ namespace StatsDirect.Builtins
                     double oldReferenceGroupId = ratersVariable.Groups[referenceGroupNumber].Id;
                     ratersVariable.Groups[0] = ratersVariable.Groups[referenceGroupNumber];
                     ratersVariable.Groups[referenceGroupNumber] = oldZeroGroup;
-                    ratersVariable.get_Group(0).Id = oldZeroId;
-                    ratersVariable.get_Group(referenceGroupNumber).Id = oldReferenceGroupId;
-                    for (int i = 0; i <= ratersVariable.Data.Length - 1; i++)
+                    ratersVariable.Groups[0].Id = oldZeroId;
+                    ratersVariable.Groups[referenceGroupNumber].Id = oldReferenceGroupId;
+                    for (int i = 0; i < ratersVariable.Data.Length; i++)
                     {
                         int val = Convert.ToInt32(ratersVariable.Data[i]);
                         if (val == 0)
@@ -151,7 +148,7 @@ namespace StatsDirect.Builtins
                         {
                             val = 0;
                         }
-                        ratersVariable.set_Data(i, val);
+                        ratersVariable.SetData(i, val);
                     }
                 }
             }
@@ -161,7 +158,7 @@ namespace StatsDirect.Builtins
             }
 
             nobs = 0;
-            for (int row = 0; row <= dataVariable.Length - 1; row++)
+            for (int row = 0; row < dataVariable.Length; row++)
             {
                 double measurement = dataVariable.Data[row];
                 double raterId = ratersVariable.Data[row];
@@ -210,13 +207,9 @@ namespace StatsDirect.Builtins
             }
 
             if (hasCategories)
-            {
                 title = dataVariable.Title + " (" + categoriesVariable.CommaSeparatedCategoryNames + ")";
-            }
             else
-            {
                 title = dataVariable.Title;
-            }
         }
 
 

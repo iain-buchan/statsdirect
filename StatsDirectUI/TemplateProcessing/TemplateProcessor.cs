@@ -18,6 +18,7 @@ namespace StatsDirect.Templates
     public sealed class TemplateProcessor : ITemplateProcessor
     {
         private readonly ITemplateHost host;
+        private readonly TakeANumber takeAnOriginGroup;
         private const string STATSDIRECT_CHART_OPTIONS = "statsdirect-chart-options";
         private const string STATSDIRECT_CHART_SCALE_PARAMETERS = "statsdirect-chart-scale-parameters";
         private const string STATSDIRECT_FRAME_PANE = "statsdirect-frame-pane";
@@ -26,6 +27,7 @@ namespace StatsDirect.Templates
         public TemplateProcessor(ITemplateHost host)
         {
             this.host = host;
+            this.takeAnOriginGroup = new TakeANumber();
         }
 
         /// <summary>
@@ -1093,5 +1095,9 @@ namespace StatsDirect.Templates
             }
         }
 
+        public int NextOriginGroup()
+        {
+            return takeAnOriginGroup.Next();
+        }
     }
 }

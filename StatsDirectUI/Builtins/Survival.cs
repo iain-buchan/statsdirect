@@ -1359,41 +1359,41 @@ namespace StatsDirect.Builtins
 
                 do
                 {
-                    timeVariable.set_Data(r, stime[j, lap]);
-                    deathVariable.set_Data(r, allcens[r].ToString());
-                    survivalVariable.set_Data(r, s[j, lap]);
-                    seVariable.set_Data(r, vs[j] == Constant.MISSING ? Constant.MISSING : Math.Sqrt(vs[j]));
+                    timeVariable.SetData(r, stime[j, lap]);
+                    deathVariable.SetData(r, allcens[r].ToString());
+                    survivalVariable.SetData(r, s[j, lap]);
+                    seVariable.SetData(r, vs[j] == Constant.MISSING ? Constant.MISSING : Math.Sqrt(vs[j]));
                     if (conus == Constant.MISSING)
                     {
                         if (vs[j] == Constant.MISSING)
                         {
-                            selVariable.set_Data(r, Constant.MISSING);
-                            seuVariable.set_Data(r, Constant.MISSING);
+                            selVariable.SetData(r, Constant.MISSING);
+                            seuVariable.SetData(r, Constant.MISSING);
                         }
                         else
                         {
-                            selVariable.set_Data(r, s[j, lap] - (cit * Math.Sqrt(vs[j])));
-                            seuVariable.set_Data(r, s[j, lap] + (cit * Math.Sqrt(vs[j])));
+                            selVariable.SetData(r, s[j, lap] - (cit * Math.Sqrt(vs[j])));
+                            seuVariable.SetData(r, s[j, lap] + (cit * Math.Sqrt(vs[j])));
                         }
                     }
                     else
                     {
-                        selVariable.set_Data(r, conls);
-                        seuVariable.set_Data(r, conus);
+                        selVariable.SetData(r, conls);
+                        seuVariable.SetData(r, conus);
                     }
                     if (h[j, lap] == Constant.MISSING)
                     {
-                        cumhVariable.set_Data(r, Constant.MISSING);
-                        sehVariable.set_Data(r, Constant.MISSING);
-                        sehlVariable.set_Data(r, Constant.MISSING);
-                        sehuVariable.set_Data(r, Constant.MISSING);
+                        cumhVariable.SetData(r, Constant.MISSING);
+                        sehVariable.SetData(r, Constant.MISSING);
+                        sehlVariable.SetData(r, Constant.MISSING);
+                        sehuVariable.SetData(r, Constant.MISSING);
                     }
                     else
                     {
-                        cumhVariable.set_Data(r, h[j, lap]);
-                        sehVariable.set_Data(r, Math.Sqrt(vh[j]));
-                        sehlVariable.set_Data(r, h[j, lap] - (cit * Math.Sqrt(vh[j])));
-                        sehuVariable.set_Data(r, h[j, lap] + (cit * Math.Sqrt(vh[j])));
+                        cumhVariable.SetData(r, h[j, lap]);
+                        sehVariable.SetData(r, Math.Sqrt(vh[j]));
+                        sehlVariable.SetData(r, h[j, lap] - (cit * Math.Sqrt(vh[j])));
+                        sehuVariable.SetData(r, h[j, lap] + (cit * Math.Sqrt(vh[j])));
                     }
                     r = r + 1;
                 }
@@ -2033,9 +2033,9 @@ namespace StatsDirect.Builtins
                         xx = Convert.ToInt32(x[i]).ToString() + " to " + Convert.ToInt32(x[i + 1] - j).ToString();
                     else
                         xx = Convert.ToInt32(x[i]).ToString() + " up";
-                    intervalVariable.set_Data(i - 1, xx);
-                    qHatVariable.set_Data(i - 1, q[i]);
-                    varQVariable.set_Data(i - 1, vq[i]);
+                    intervalVariable.SetData(i - 1, xx);
+                    qHatVariable.SetData(i - 1, q[i]);
+                    varQVariable.SetData(i - 1, vq[i]);
                     if (vq[i] != Constant.MISSING & vq[i] >= 0.0)
                     {
                         lci = q[i] - Math.Sqrt(vq[i]) * cit;
@@ -2046,15 +2046,15 @@ namespace StatsDirect.Builtins
                         lci = Constant.MISSING;
                         uci = Constant.MISSING;
                     }
-                    lciQVariable.set_Data(i - 1, lci);
-                    uciQVariable.set_Data(i - 1, uci);
-                    lVariable.set_Data(i - 1, sl[i]);
-                    dVariable.set_Data(i - 1, dd[i]);
-                    fractionAVariable.set_Data(i - 1, a[i]);
-                    ylVariable.set_Data(i - 1, yl[i]);
-                    tVariable.set_Data(i - 1, t[i]);
-                    eVariable.set_Data(i - 1, e[i]);
-                    varEVariable.set_Data(i - 1, ve[i]);
+                    lciQVariable.SetData(i - 1, lci);
+                    uciQVariable.SetData(i - 1, uci);
+                    lVariable.SetData(i - 1, sl[i]);
+                    dVariable.SetData(i - 1, dd[i]);
+                    fractionAVariable.SetData(i - 1, a[i]);
+                    ylVariable.SetData(i - 1, yl[i]);
+                    tVariable.SetData(i - 1, t[i]);
+                    eVariable.SetData(i - 1, e[i]);
+                    varEVariable.SetData(i - 1, ve[i]);
                     if (ve[i] != Constant.MISSING & ve[i] >= 0.0)
                     {
                         lci = e[i] - Math.Sqrt(ve[i]) * cit;
@@ -2065,8 +2065,8 @@ namespace StatsDirect.Builtins
                         lci = Constant.MISSING;
                         uci = Constant.MISSING;
                     }
-                    lciEVariable.set_Data(i - 1, lci);
-                    uciEVariable.set_Data(i - 1, uci);
+                    lciEVariable.SetData(i - 1, lci);
+                    uciEVariable.SetData(i - 1, uci);
                     if (util)
                     {
                         if (sl[i] == 0.0 | sl[i] == Constant.MISSING)
@@ -2077,7 +2077,7 @@ namespace StatsDirect.Builtins
                         {
                             eh = (u[i] * t[i]) / sl[i];
                         }
-                        aEVariable.set_Data(i - 1, eh);
+                        aEVariable.SetData(i - 1, eh);
                     }
                 }
                 outputParameters.AddOutput("results", resultsFrame);
