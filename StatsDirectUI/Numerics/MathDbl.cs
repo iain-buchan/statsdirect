@@ -1009,8 +1009,6 @@ namespace StatsDirect.Numerics
             xu = x[2];
         }
 
-
-        // TRANSMISSINGCOMMENT: Method binci
         public static void binci(double r, double N, out double pil, out double piu, double cco, out string warn)
         {
 
@@ -1026,13 +1024,9 @@ namespace StatsDirect.Numerics
             {
                 double fivl = PDF.ffromp(rp2l, rp1l, (1.0 - cco) / 2.0);
                 if (fivl == Constant.MISSING)
-                {
                     pil = Constant.MISSING;
-                }
                 else
-                {
                     pil = r / (r + ((N - r + 1.0) * fivl));
-                }
             }
             if (r == N)
             {
@@ -1042,19 +1036,14 @@ namespace StatsDirect.Numerics
             {
                 double fivu = PDF.ffromp(rp2u, rp1u, (1.0 - cco) / 2.0);
                 if (fivu == Constant.MISSING)
-                {
                     piu = Constant.MISSING;
-                }
                 else
-                {
                     piu = (r + 1.0) / ((r + 1.0) + ((N - r) * (1.0 / fivu)));
-                }
             }
-            if (r == 0.0 | r == N)
-            {
+            if (r == 0.0 || r == N)
                 warn = " [" + StatsDirect.Utilities.Formatting.XRound(100.0 * (cco + (1.0 - cco) / 2.0), 1) + "% one-sided CI]";
-            }
-            else { warn = ""; }
+            else
+                warn = "";
         }
 
         public static void civ(long df, out double cit, double GAMMA, out double P0)
