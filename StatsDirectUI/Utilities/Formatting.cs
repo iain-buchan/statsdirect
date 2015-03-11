@@ -17,7 +17,6 @@ namespace StatsDirect.Utilities
         public const string ERRCOLON = "Error: ";
         public const string RTFCRLF = @"\par ";
 
-
         private static string decimalSeparator;
 
         public static string DecimalSeparator
