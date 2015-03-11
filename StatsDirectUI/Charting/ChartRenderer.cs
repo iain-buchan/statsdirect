@@ -1610,7 +1610,7 @@ namespace StatsDirect.Charting
                     DoubleSeries ys = definition.YSeries[c].AsDoubleSeries;
                     double[] xdat = xs.Data;
                     double[] ydat = ys.Data;
-                    PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
+                    PointF[] xys = new PointF[xs.Data.Length];
                     for (int r = 0; r < xs.Data.Length; r++)
                     {
                         if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
@@ -1726,7 +1726,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
+            PointF[] xys = new PointF[xs.Data.Length];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -1815,7 +1815,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
+            PointF[] xys = new PointF[xs.Data.Length];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2157,7 +2157,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
+            PointF[] xys = new PointF[xs.Data.Length];
             for (int r = 0; r <= xs.Data.Length - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -2246,7 +2246,7 @@ namespace StatsDirect.Charting
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            PointF[] xys = new PointF[xs.Data.Length - 1 + 1];
+            PointF[] xys = new PointF[xs.Data.Length];
             for (int r = 0; r < xs.Data.Length; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
@@ -4826,7 +4826,7 @@ namespace StatsDirect.Charting
             int rows = x.Length;
             int xOffset = x.GetLowerBound(0);
             int yOffset = y.GetLowerBound(0);
-            PointF[] xys = new PointF[rows - 1 + 1];
+            PointF[] xys = new PointF[rows];
             for (int r = 0; r <= rows - 1; r++)
             {
                 if (x[r + xOffset] != Constant.MISSING && y[r + yOffset] != Constant.MISSING)
@@ -5802,13 +5802,13 @@ namespace StatsDirect.Charting
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
 
-            double[] y = new double[rows - 1 + 1];
+            double[] y = new double[rows];
             for (int j = 0; j <= rows - 1; j++)
             {
                 y[j] = xs0.Data[j];
             }
 
-            double[] x = new double[rows - 1 + 1];
+            double[] x = new double[rows];
             double transTemp68;
             ExFortran.Rank(y, x, 0, rows, 0, out transTemp68);
 
@@ -6059,8 +6059,8 @@ namespace StatsDirect.Charting
                 //  Separate male and female values
                 DataFrame femaleFrame = pOptions.FemaleFrame;
                 DoubleVariable females = femaleFrame.Variables[0].AsDoubleVariable;
-                female = new double[nmale - 1 + 1];
-                male = new double[nmale - 1 + 1];
+                female = new double[nmale];
+                male = new double[nmale];
                 maxfemale = females.Max;
 
                 for (int r = 0; r <= nmale - 1; r++)
@@ -6078,8 +6078,8 @@ namespace StatsDirect.Charting
             else
             {
                 //  Combined male/female values - assume an even split
-                female = new double[nmale - 1 + 1];
-                male = new double[nmale - 1 + 1];
+                female = new double[nmale];
+                male = new double[nmale];
                 for (int r = 0; r <= nmale - 1; r++)
                 {
                     if (males.Data[r] != Constant.MISSING)
@@ -6887,7 +6887,7 @@ namespace StatsDirect.Charting
             ToCanvasX(xdat[1]);
             ToCanvasY(ydat[1]);
             // plot points
-            PointF[] xys = new PointF[rows - 1 + 1];
+            PointF[] xys = new PointF[rows];
             for (int r = 0; r <= rows - 1; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)

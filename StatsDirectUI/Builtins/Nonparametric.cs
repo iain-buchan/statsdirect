@@ -4232,8 +4232,8 @@ namespace StatsDirect.Builtins
             //  In the single-variable case, plot as well
             if (frame.VariableCount == 1)
             {
-                double[] x = new double[rx - 1 + 1 ];
-                double[] y = new double[rx - 1 + 1 ];
+                double[] x = new double[rx];
+                double[] y = new double[rx];
                 double vtot = 0.0;
                 for (int j = 1; j <= rx; j++)
                 {

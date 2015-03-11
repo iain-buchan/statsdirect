@@ -1549,14 +1549,14 @@ namespace StatsDirect.Builtins
 
             string t = "Sort: " + dataVariable.Title;
 
-            double[] dataArray = new double[rows - 1 + 1 ];
+            double[] dataArray = new double[rows];
             int nx;
             if (hasLink)
             {
                 DataFrame linkData = parameters["linkdata"].AsDataFrame;
                 DoubleVariable linkVariable = linkData.Variables[0].AsDoubleVariable;
                 t += " (by " + linkVariable.Title + ")";
-                double[] linkArray = new double[rows - 1 + 1 ];
+                double[] linkArray = new double[rows];
                 nx = 0;
                 for (int i = 0; i <= rows - 1; i++)
                 {
@@ -1694,7 +1694,7 @@ namespace StatsDirect.Builtins
             double[] inputData = inputVariable.Data;
             int rows = inputData.Length;
 
-            double[] a = new double[rows - 1 + 1 ];
+            double[] a = new double[rows];
             if ((index == 0))
             {
                 double cons = Constant.MISSING;
@@ -1895,7 +1895,7 @@ namespace StatsDirect.Builtins
             }
             if ((index == 6))
             {
-                double[] fn = new double[inputData.Length - 1 + 1 ];
+                double[] fn = new double[inputData.Length];
                 int err;
                 MathDbl.ecdf(inputData, fn, out err);
                 if (err == 0)
@@ -1906,7 +1906,7 @@ namespace StatsDirect.Builtins
             }
             if ((index == 7))
             {
-                double[] fn = new double[inputData.Length - 1 + 1 ];
+                double[] fn = new double[inputData.Length];
                 int err;
                 MathDbl.zscore(inputData, ref fn, false, out err);
                 if (err == 0)
@@ -1917,7 +1917,7 @@ namespace StatsDirect.Builtins
             }
             if ((index == 8))
             {
-                double[] fn = new double[inputData.Length - 1 + 1 ];
+                double[] fn = new double[inputData.Length];
                 int err;
                 MathDbl.zscore(inputData, ref fn, true, out err);
                 if (err == 0)
@@ -1970,7 +1970,7 @@ namespace StatsDirect.Builtins
             CategoriseOptions options = new CategoriseOptions
                                             {
                                                 Title = "Categorised: " + inputVariable.Title,
-                                                PassX = new double[rows - 1 + 1],
+                                                PassX = new double[rows],
                                                 Data = inputVariable
                                             };
             if (null == host.Amend(options, parameters))

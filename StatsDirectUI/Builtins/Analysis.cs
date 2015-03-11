@@ -976,8 +976,7 @@ namespace StatsDirect.Builtins
             if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
 
-            string wtypeString = parameters["method"].AsString;
-            int wtype = "1".Equals(wtypeString) ? 1 : 2;
+            int wtype = Parsing.Cint_Txt(parameters["method"].AsString);
             int fault;
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
             if (fault != 0)
@@ -999,29 +998,36 @@ namespace StatsDirect.Builtins
             }
 
             for (int i = 0; i < rows; i++)
-            {
                 for (int j = 0; j < cols; j++)
-                {
                     o[i, j] = datFrame.Variables[j].AsDoubleVariable.Data[i];
-                }
-            }
 
-
-            for (int i = 0; i < g; i++)
+            switch (wtype)
             {
-                for (int j = 0; j < g; j++)
-                {
-                    switch (wtype)
+                case 3:
+                    DataFrame weights = parameters["weights"].AsDataFrame;
+                    for (int i = 0; i < weights.VariableCount; i++)
                     {
-                        case 2:
-                            w[i, j] = 1 - Math.Pow((Convert.ToDouble(i - j) / Convert.ToDouble(g - 1)), 2.0);
-                            break;
-                        default:
-                            w[i, j] = 1 - Convert.ToDouble(Math.Abs(i - j)) / Convert.ToDouble(g - 1);
-                            break;
+                        DoubleVariable v = weights.Variables[i].AsDoubleVariable;
+                        for (int j = 0; j < v.Length; j++)
+                        {
+                            w[i, j] = v.Data[j];
+                            if (w[i, j] == Constant.MISSING)
+                                w[i, j] = 0.0;
+                        }
                     }
-
-                }
+                    break;
+                case 2:
+                    for (int i = 0; i < g; i++)
+                        for (int j = 0; j < g; j++)
+                            w[i, j] = 1 - Math.Pow((Convert.ToDouble(i - j) / Convert.ToDouble(g - 1)), 2.0);
+                    break;
+                case 1:
+                    for (int i = 0; i < g; i++)
+                        for (int j = 0; j < g; j++)
+                            w[i, j] = 1 - Convert.ToDouble(Math.Abs(i - j)) / Convert.ToDouble(g - 1);
+                    break;
+                default:
+                    throw new Exception("Unknown weight type");
             }
 
             double k;

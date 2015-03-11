@@ -657,7 +657,7 @@ namespace StatsDirect.Builtins
             if (reali > 1)
             {
                 // create temp variable for copying values 
-                double[] transTemp0 = new double[reali - 1 + 1];
+                double[] transTemp0 = new double[reali];
                 Array.Copy(ao, transTemp0, Math.Min(ao.Length, transTemp0.Length));
                 ao = transTemp0;
                 Array.Sort(ao);

@@ -36,11 +36,11 @@ namespace StatsDirect.Numerics
         ///  </summary>
         ///  <param name="x">Vector of indepentent observations</param>
         ///  <param name="y">Matching vector of depentent observations</param>
-        ///  <param name="LowerBound">LowerBound-based input vector of n values</param>
+        ///  <param name="lowerBound">LowerBound-based input vector of n values</param>
         ///  <param name="n">Number of observations</param>
-        /// <param name="NoMissing"></param>
+        /// <param name="noMissing"></param>
         /// <remarks></remarks>
-        public static double corr(double[] x, double[] y, int LowerBound, int n, bool NoMissing)
+        public static double corr(double[] x, double[] y, int lowerBound, int n, bool noMissing)
         {
 
             // Return a Pearson correlation coefficient
@@ -52,10 +52,10 @@ namespace StatsDirect.Numerics
             double nx = 0.0;
             double sx;
             double sy;
-            if (NoMissing)
+            if (noMissing)
             {
                 nx = Convert.ToDouble(n);
-                for (int i = LowerBound; i <= n + LowerBound - 1; i++)
+                for (int i = lowerBound; i <= n + lowerBound - 1; i++)
                 {
                     sx = x[i];
                     sy = y[i];
@@ -68,7 +68,7 @@ namespace StatsDirect.Numerics
             }
             else
             {
-                for (int i = LowerBound; i <= n + LowerBound - 1; i++)
+                for (int i = lowerBound; i <= n + lowerBound - 1; i++)
                 {
                     if (x[i] != Constant.MISSING & y[i] != Constant.MISSING)
                     {
@@ -117,7 +117,7 @@ namespace StatsDirect.Numerics
         ///  <param name="qc"></param>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        public static double quantile_from_sorted(double[] r, int rx, double qc)
+        public static double QuantileFromSorted(double[] r, int rx, double qc)
         {
             double iq = qc * (rx + 1);
             if (iq > rx)
@@ -243,8 +243,6 @@ namespace StatsDirect.Numerics
             }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method log10
         public static double log10(double x)
         {
             return Math.Log(x) / Math.Log(10.0);
@@ -302,7 +300,7 @@ namespace StatsDirect.Numerics
         ///  <summary>
         ///  
         ///  </summary>
-        ///  <param name="a">0-based array, dimensions (LowerBound..LowerBound+N-1, LowerBound..LowerBound+N-1?)</param>
+        ///  <param name="a">Array, used dimensions (LowerBound..LowerBound+N-1, LowerBound..LowerBound+N-1?)</param>
         /// <param name="lowerBound"></param>
         /// <param name="N"></param>
         ///  <param name="b">0-based array, dimensions (LowerBound..LowerBound+M-1, LowerBound+..LowerBound+M-1)</param>
@@ -313,9 +311,9 @@ namespace StatsDirect.Numerics
         {
             int icol = 0; int irow = 0;
 
-            int[] indxc = new int[lowerBound + N - 1 + 1];
-            int[] indxr = new int[lowerBound + N - 1 + 1];
-            long[] ipiv = new long[lowerBound + N - 1 + 1];
+            int[] indxc = new int[lowerBound + N];
+            int[] indxr = new int[lowerBound + N];
+            long[] ipiv = new long[lowerBound + N];
             if (N > a.GetUpperBound(0) + 1 || N > a.GetUpperBound(1) + 1 || M > b.GetUpperBound(1) + 1 || N > b.GetUpperBound(0) + 1)
             {
                 ifault = 1;
@@ -422,17 +420,17 @@ namespace StatsDirect.Numerics
         ///  Calculate and return the mean and standard deviation of the doubles in x(LowerBound) to x(LowerBound + k - 1) inclusive.
         ///  </summary>
         ///  <param name="x">The array of values</param>
-        ///  <param name="LowerBound">The index at which the first value can be found.  Typically 0 or 1.</param>
+        ///  <param name="lowerBound">The index at which the first value can be found.  Typically 0 or 1.</param>
         ///  <param name="k">The number of values.  Set to the number of non-MISSING values.</param>
         ///  <param name="xmean">The output mean, or Constant.MISSING</param>
         ///  <param name="xsd">The output standard deviation, or Constant.MISSING</param>
         ///  <remarks></remarks>
-        public static void meansd(double[] x, int LowerBound, ref int k, out double xmean, out double xsd)
+        public static void meansd(double[] x, int lowerBound, ref int k, out double xmean, out double xsd)
         {
 
             double xsum = 0.0;
             int ctr = 0;
-            for (int i = LowerBound; i <= k + LowerBound - 1; i++)
+            for (int i = lowerBound; i <= k + lowerBound - 1; i++)
             {
                 if (x[i] != Constant.MISSING)
                 {
@@ -448,7 +446,7 @@ namespace StatsDirect.Numerics
             }
             xmean = xsum / Convert.ToDouble(k);
             double xss = 0.0;
-            for (int i = LowerBound; i <= k + LowerBound - 1; i++)
+            for (int i = lowerBound; i <= k + lowerBound - 1; i++)
             {
                 if (x[i] != Constant.MISSING)
                 {
@@ -535,8 +533,6 @@ namespace StatsDirect.Numerics
             return taufrompReturn;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method transpose_cr_rc
         public static void transpose_cr_rc(double[,] x, out double[,] z)
         {
             int cols = x.GetUpperBound(0);
@@ -550,7 +546,6 @@ namespace StatsDirect.Numerics
                 }
             }
         }
-
 
         ///  <summary>
         ///  A version of kendp that gives a boolean error value rather than an integer error value.
@@ -568,8 +563,6 @@ namespace StatsDirect.Numerics
             return result;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method kendp
         public static double kendp(int k, int N, ref int ifault)
         {
             double kendpReturn = 0;
@@ -689,8 +682,6 @@ namespace StatsDirect.Numerics
             return kendpReturn;
         }
 
-
-        // TRANSMISSINGCOMMENT: Method rhofromp
         public static double rhofromp(double P, out double pu, out int ix, int nx, out int ifault)
         {
             double rhofrompReturn = 0;
@@ -907,7 +898,6 @@ namespace StatsDirect.Numerics
             }
         }
 
-
         public static void pone(double P0, double dpsi, double r, out double dp1, out int imposs)
         {
             double Q0 = 1.0 - P0;
@@ -925,39 +915,23 @@ namespace StatsDirect.Numerics
             double min = p00;
             double max = p00;
             if (p11 > max)
-            {
                 max = p11;
-            }
             if (p10 > max)
-            {
                 max = p10;
-            }
             if (p01 > max)
-            {
                 max = p01;
-            }
             if (p11 < min)
-            {
                 min = p11;
-            }
             if (p10 < min)
-            {
                 min = p10;
-            }
             if (p01 < min)
-            {
                 min = p01;
-            }
             double pl = min;
             double pu = max;
-            if (pl < 0.0 | pu > 1.0)
-            {
+            if (pl < 0.0 || pu > 1.0)
                 imposs = 1;
-            }
             else
-            {
                 imposs = 0;
-            }
         }
 
         public static void uppci(int ia, int im, int ib, int z_in, out double xl, out double xu, double z, double Conf)

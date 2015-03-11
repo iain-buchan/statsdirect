@@ -1818,11 +1818,11 @@ namespace StatsDirect.Builtins
             }
             host.FinishProgress();
             Array.Sort(esim, 1, simits);
-            double esimll = MathDbl.quantile_from_sorted(esim, simits, 0.05);
-            double esimul = MathDbl.quantile_from_sorted(esim, simits, 0.95);
+            double esimll = MathDbl.QuantileFromSorted(esim, simits, 0.05);
+            double esimul = MathDbl.QuantileFromSorted(esim, simits, 0.95);
             Array.Sort(emdsim, 1, simits);
-            double emdsimll = MathDbl.quantile_from_sorted(emdsim, simits, 0.05);
-            double emdsimul = MathDbl.quantile_from_sorted(emdsim, simits, 0.95);
+            double emdsimll = MathDbl.QuantileFromSorted(emdsim, simits, 0.05);
+            double emdsimul = MathDbl.QuantileFromSorted(emdsim, simits, 0.95);
 
             // basic stats for abridged life table
             XabLifetableBasics(rows, d, p, a, sl, rm, r, q, dd, yl, t, e);
@@ -2487,7 +2487,7 @@ namespace StatsDirect.Builtins
                         sv = sv * (risktot - Convert.ToDouble(totd) + 1.0) / (risktot + 1);
                     }
                     // invert the first groups-1 elements of the v matrix
-                    double[,] vtemp = new double[groups - 1 + 1, 1 + 1];
+                    double[,] vtemp = new double[groups, 1 + 1];
                     double[,] vinv = new double[groups + 1, groups + 1];
                     // save v for summing later if stratified
                     for (j2 = 1; j2 <= groups; j2++)
@@ -2717,7 +2717,7 @@ namespace StatsDirect.Builtins
                         if (test == 1)
                         {
                             // stratified logrank
-                            vtemp = new double[groups - 1 + 1, 1 + 1];
+                            vtemp = new double[groups, 1 + 1];
                             MathDbl.gaussj(vsuml, 1, groups - 1, vtemp, 1, ref imfault);
                             if (imfault != 0)
                             {
@@ -2742,7 +2742,7 @@ namespace StatsDirect.Builtins
                         else
                         {
                             // stratified Wilcoxon
-                            vtemp = new double[groups - 1 + 1, 1 + 1];
+                            vtemp = new double[groups, 1 + 1];
                             MathDbl.gaussj(vsumw, 1, groups - 1, vtemp, 1, ref imfault);
                             if (imfault != 0)
                             {

@@ -24,6 +24,7 @@
           <options>
             <option value="1">linear: 1-abs(i-j)/(1-k)</option>
             <option value="2">quadratic: 1-[(i-j)/(1-k)]&#178;</option>
+            <option value="3">user defined</option>
           </options>
         </option>
         <boolean>
@@ -61,7 +62,32 @@
         </confidence-interval>
       </parameters>
     </settings>
-  	<builtin function-name="rptKappaScreen" />
+    <test>
+      <condition>="3".Equals(parameters["method"].AsString)</condition>
+      <iftrue>
+        <!-- Weights -->
+        <settings>
+          <parameters>
+            <frame>
+              <name>weights</name>
+              <prompt>="Select table of WEIGHTS (" + parameters["responsesCrosstab"].AsDataFrame.MaxRows + " rows by " + parameters["responsesCrosstab"].AsDataFrame.VariableCount + " columns)"</prompt>
+              <must-request>true</must-request>
+              <length>=parameters["responsesCrosstab"].AsDataFrame.MaxRows</length>
+              <mode>NumericReplaceMissing</mode>
+              <min-columns>=parameters["responsesCrosstab"].AsDataFrame.VariableCount</min-columns>
+              <max-columns>=parameters["responsesCrosstab"].AsDataFrame.VariableCount</max-columns>
+              <clear-selection-first>true</clear-selection-first>
+              <can-select>false</can-select>
+              <validators>
+                <validator>NoMissingData</validator>
+                <validator>NonNegative</validator>
+              </validators>
+            </frame>
+          </parameters>
+        </settings>
+      </iftrue>
+    </test>
+    <builtin function-name="rptKappaScreen" />
 		<report type="text/rtf" filename="kappa.rtf" />
     <test>
       <condition>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</condition>

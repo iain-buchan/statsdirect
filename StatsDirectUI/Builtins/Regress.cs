@@ -272,8 +272,8 @@ namespace StatsDirect.Builtins
 
             int nx = vx.Length;
             ParameterBag outputParameters = new ParameterBag();
-            double[] z = new double[nx - 1 + 1 ];
-            double[] r = new double[nx - 1 + 1];
+            double[] z = new double[nx];
+            double[] r = new double[nx];
             for (int j = 0; j <= nx - 1; j++)
             {
                 z[j] = vx.Data[j] * context.Slope + context.YIntercept;
@@ -785,7 +785,7 @@ namespace StatsDirect.Builtins
             else
             {
                 //  Weights aren't in use, use all 1s
-                double[] allOnes = new double[outcomeVariable.Length - 1 + 1 ];
+                double[] allOnes = new double[outcomeVariable.Length];
                 for (int i = 0; i <= allOnes.Length - 1; i++)
                 {
                     allOnes[i] = 1;

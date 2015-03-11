@@ -224,7 +224,7 @@ namespace StatsDirect.Builtins
             {
                 predictorsFrame = parameters["predictors"].AsDataFrame;
                 // Store the predictor Data
-                double[,] xx = new double[predictorsFrame.VariableCount - 1 + 1, rows + 1];
+                double[,] xx = new double[predictorsFrame.VariableCount, rows + 1];
                 for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
                 {
                     for (int r = 1; r <= rows; r++)
@@ -271,7 +271,7 @@ namespace StatsDirect.Builtins
 
             // identify the binary covariates
             bool[] bincov = new bool[ncov + 1];
-            ColumnData[] xd = new ColumnData[predictorsFrame.VariableCount - 1 + 1];
+            ColumnData[] xd = new ColumnData[predictorsFrame.VariableCount];
             int binaries = 0;
             if (ncov > 0)
             {

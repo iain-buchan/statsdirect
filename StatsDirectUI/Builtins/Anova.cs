@@ -429,7 +429,7 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             int rows = frame.Variables[0].Length;
             int cols = frame.VariableCount;
-            double[][] ARR2 = new double[cols - 1 + 1 ][];
+            double[][] ARR2 = new double[cols][];
             for (C = 0; C < cols; C++)
             {
                 ARR2[C] = ((DoubleVariable)(frame.Variables[C])).Data;
@@ -517,27 +517,27 @@ namespace StatsDirect.Builtins
             int ifault;
             double z = PDF.gauinv(1 - (1 - GAMMA) / 2, out ifault);
             // create temp variable for copying values 
-            double[] transTemp0 = new double[rx - 1 + 1 ];
+            double[] transTemp0 = new double[rx];
             Array.Copy(av, transTemp0, Math.Min(av.Length, transTemp0.Length));
             av = transTemp0;
             // create temp variable for copying values 
-            double[] transTemp1 = new double[rx - 1 + 1];
+            double[] transTemp1 = new double[rx];
             Array.Copy(mxd, transTemp1, Math.Min(mxd.Length, transTemp1.Length));
             mxd = transTemp1;
             // xd not used from here
-            // double[] transTemp2 = new double[rx - 1 + 1 ]; 
+            // double[] transTemp2 = new double[rx]; 
             // Array.Copy( xd, transTemp2, Math.Min( xd.Length, transTemp2.Length ) ); 
             // xd = transTemp2; 
             // vr not used from here
-            // double[] transTemp3 = new double[rx - 1 + 1 ]; 
+            // double[] transTemp3 = new double[rx]; 
             // Array.Copy( vr, transTemp3, Math.Min( vr.Length, transTemp3.Length ) ); 
             // vr = transTemp3; 
             // create temp variable for copying values 
-            double[] transTemp4 = new double[rx - 1 + 1];
+            double[] transTemp4 = new double[rx];
             Array.Copy(ssd, transTemp4, Math.Min(ssd.Length, transTemp4.Length));
             ssd = transTemp4;
             // create temp variable for copying values 
-            double[] transTemp5 = new double[rx - 1 + 1 ];
+            double[] transTemp5 = new double[rx];
             Array.Copy(xxm, transTemp5, Math.Min(xxm.Length, transTemp5.Length));
             xxm = transTemp5;
             double wssd = Math.Sqrt(meanvr);
@@ -648,8 +648,8 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
-            int[] tnx = new int[frame.VariableCount - 1 + 1 ];
-            double[] mean = new double[frame.VariableCount - 1 + 1 ];
+            int[] tnx = new int[frame.VariableCount];
+            double[] mean = new double[frame.VariableCount];
             double sumtot = 0.0;
             int ntot = 0;
             string tlist = "";
@@ -1708,8 +1708,8 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
 
             double[] ao = new double[frame.MaxRows + 1 ];
-            int[] reali = new int[frame.VariableCount - 1 + 1 ];
-            double[] mdn = new double[frame.VariableCount - 1 + 1 ];
+            int[] reali = new int[frame.VariableCount];
+            double[] mdn = new double[frame.VariableCount];
 
             for (int D = 0; D <= frame.VariableCount - 1; D++)
             {
@@ -1743,9 +1743,9 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double[] sum = new double[frame.VariableCount - 1 + 1 ];
-            double[] sum2 = new double[frame.VariableCount - 1 + 1 ];
-            long[] tnx = new long[frame.VariableCount - 1 + 1 ];
+            double[] sum = new double[frame.VariableCount];
+            double[] sum2 = new double[frame.VariableCount];
+            long[] tnx = new long[frame.VariableCount];
             for (int D = 0; D <= frame.VariableCount - 1; D++)
             {
                 DoubleVariable v = frame.Variables[D].AsDoubleVariable;
@@ -1788,8 +1788,8 @@ namespace StatsDirect.Builtins
             long bdf = frame.VariableCount - 1;
             double C = 1.0 + (1.0 / (3.0 * bdf)) * (svii - (1.0 / svi));
             double x2 = M / C;
-            sum = new double[frame.VariableCount - 1 + 1 ]; //  Force to zeroes
-            sum2 = new double[frame.VariableCount - 1 + 1 ]; //  Force to zeroes
+            sum = new double[frame.VariableCount]; //  Force to zeroes
+            sum2 = new double[frame.VariableCount]; //  Force to zeroes
             sum2tot = 0.0;
             sumtot = 0.0;
             ntot = 0;
@@ -2253,8 +2253,8 @@ namespace StatsDirect.Builtins
             {
                 DataFrame frame = parameters["data"].AsDataFrame;
 
-                int[] tnx = new int[frame.VariableCount - 1 + 1 ];
-                double[] mean = new double[frame.VariableCount - 1 + 1 ];
+                int[] tnx = new int[frame.VariableCount];
+                double[] mean = new double[frame.VariableCount];
                 double sumtot = 0.0;
                 int ntot = 0;
                 for (int d = 0; d < frame.VariableCount; d++)

@@ -304,28 +304,19 @@ namespace StatsDirect.Builtins
 
         private static void XSymmetriseXtab(ref int xcats, ref Namevar[] xcat, ref int ycats, ref Namevar[] ycat, int lowerBound)
         {
-            int i;
             Namevar[] maxcat = new Namevar[xcats + ycats + lowerBound];
             // fill in the gaps if non-contiguous series - 12/02/05 --->
-            for (i = lowerBound; i <= xcats - 1 + lowerBound; i++)
-            {
+            for (int i = lowerBound; i <= xcats - 1 + lowerBound; i++)
                 maxcat[i] = xcat[i];
-            }
-            for (i = lowerBound; i <= ycats - 1 + lowerBound; i++)
-            {
+            for (int i = lowerBound; i <= ycats - 1 + lowerBound; i++)
                 maxcat[xcats + i] = ycat[i];
-            }
             SortName(xcats + ycats, maxcat, lowerBound);
-            for (i = lowerBound + 1; i <= xcats + ycats - 1 + lowerBound; i++)
-            {
+            for (int i = lowerBound + 1; i <= xcats + ycats - 1 + lowerBound; i++)
                 if (maxcat[i - 1].Ti == maxcat[i].Ti)
-                {
                     maxcat[i - 1].Ti = "";
-                }
-            }
             SortName(xcats + ycats, maxcat, lowerBound);
             int g = 1;
-            for (i = xcats + ycats - 1 + lowerBound; i >= lowerBound; i--)
+            for (int i = xcats + ycats - 1 + lowerBound; i >= lowerBound; i--)
             {
                 if (maxcat[i].Ti == "")
                 {
@@ -342,25 +333,21 @@ namespace StatsDirect.Builtins
             Namevar[] transTemp15 = new Namevar[maxcats - 1 + lowerBound + 1 ];
             Array.Copy(ycat, transTemp15, Math.Min(ycat.Length, transTemp15.Length));
             ycat = transTemp15;
-            for (i = lowerBound; i <= maxcats - 1 + lowerBound; i++)
+            for (int i = lowerBound; i <= maxcats - 1 + lowerBound; i++)
             {
                 int j;
                 if (xcat[i].Ti != maxcat[g + i - lowerBound].Ti)
                 {
                     //  Shuffle the end of the array up
                     for (j = maxcats - 2 + lowerBound; j >= i; j--)
-                    {
                         xcat[j + 1] = xcat[j];
-                    }
                     xcat[i].Ti = maxcat[g + i - lowerBound].Ti;
                     xcat[i].X = -Constant.MISSING;
                 }
                 if (ycat[i].Ti != maxcat[g + i - lowerBound].Ti)
                 {
                     for (j = maxcats - 2 + lowerBound; j >= i; j--)
-                    {
                         ycat[j + 1] = ycat[j];
-                    }
                     ycat[i].Ti = maxcat[g + i - lowerBound].Ti;
                     ycat[i].X = -Constant.MISSING;
                 }
@@ -625,9 +612,9 @@ namespace StatsDirect.Builtins
             // two rater kappa
             ierror = true;
             // get row and column totals
-            double[] pidot = new double[g - 1 + 1 ];
-            double[] pdotj = new double[g - 1 + 1 ];
-            double[] crtot = new double[g - 1 + 1 ];
+            double[] pidot = new double[g];
+            double[] pdotj = new double[g];
+            double[] crtot = new double[g];
             double gt = 0.0;
             for (int i = 0; i <= g - 1; i++)
             {
@@ -699,8 +686,8 @@ namespace StatsDirect.Builtins
             }
             kw = (pow - pew) / (1.0 - pew);
             sekw = 1.0 / ((1.0 - pew) * Math.Sqrt(gt));
-            double[] wibar = new double[g - 1 + 1 ];
-            double[] wjbar = new double[g - 1 + 1 ];
+            double[] wibar = new double[g];
+            double[] wjbar = new double[g];
             for (int i = 0; i <= g - 1; i++)
             {
                 for (int j = 0; j <= g - 1; j++)
@@ -759,11 +746,11 @@ namespace StatsDirect.Builtins
         {
             int i; int j; int ifault = 0;
 
-            double[] rtot = new double[k - 1 + 1 ];
-            double[] ctot = new double[k - 1 + 1 ];
-            double[] d = new double[k - 1 + 1 ];
-            double[,] v = new double[k - 1 + 1, k - 1 + 1];
-            double[,] z = new double[k - 1 + 1, k - 1 + 1];
+            double[] rtot = new double[k];
+            double[] ctot = new double[k];
+            double[] d = new double[k];
+            double[,] v = new double[k, k];
+            double[,] z = new double[k, k];
             //  get row and column totals and delta vector
             for (i = 0; i <= k - 1; i++)
             {
@@ -834,14 +821,12 @@ namespace StatsDirect.Builtins
             if (cco > 0)
             {
                 p = (1.0 - cco) / 2.0;
-                int ifault;
-                cit = PDF.gauinv(1.0 - p, out ifault);
+                cit = PDF.gauinv(1.0 - p);
             }
             else
             {
                 cco = 0.95;
-                int ifault;
-                cit = PDF.gauinv(0.975, out ifault);
+                cit = PDF.gauinv(0.975);
             }
 
             DataFrame frame = parameters["responses"].AsDataFrame;
@@ -854,10 +839,10 @@ namespace StatsDirect.Builtins
                 ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
                 int n = v0.Length;
                 int ycats = 0;
-                double[] y = new double[n - 1 + 1 ];
-                Namevar[] ycat = new Namevar[v0.GroupCount - 1 + 1 ];
+                double[] y = new double[n];
+                Namevar[] ycat = new Namevar[v0.GroupCount];
                 string ylab = v0.Title;
-                for (int i = 0; i <= v0.GroupCount - 1; i++)
+                for (int i = 0; i < v0.GroupCount; i++)
                 {
                     if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
@@ -867,70 +852,56 @@ namespace StatsDirect.Builtins
                     }
                 }
                 // create temp variable for copying values 
-                Namevar[] transTemp16 = new Namevar[ycats - 1 + 1 ];
+                Namevar[] transTemp16 = new Namevar[ycats];
                 Array.Copy(ycat, transTemp16, Math.Min(ycat.Length, transTemp16.Length));
                 ycat = transTemp16;
-                for (int i = 0; i <= n - 1; i++)
-                {
+                for (int i = 0; i < n; i++)
                     y[i] = v0.Data[i];
-                }
                 SortName(ycats, ycat, 0);
                 ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
                 int xcats = 0;
-                double[] x = new double[n - 1 + 1 ];
-                Namevar[] xcat = new Namevar[v1.GroupCount - 1 + 1 ];
+                double[] x = new double[n];
+                Namevar[] xcat = new Namevar[v1.GroupCount];
                 string xlab = v1.Title;
-                for (int i = 0; i <= v1.GroupCount - 1; i++)
+                for (int i = 0; i < v1.GroupCount; i++)
                 {
                     if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
                         xcat[xcats].Ti = v1.Groups[i].Label;
                         xcat[xcats].X = Convert.ToDouble(i);
-                        xcats = xcats + 1;
+                        xcats++;
                     }
                 }
                 // create temp variable for copying values 
-                Namevar[] transTemp17 = new Namevar[xcats - 1 + 1];
-                Array.Copy(xcat, transTemp17, Math.Min(xcat.Length, transTemp17.Length));
+                Namevar[] transTemp17 = new Namevar[xcats];
+                Array.Copy(xcat, transTemp17, Math.Min(xcat.Length, xcats));
                 xcat = transTemp17;
-                for (int i = 0; i <= n - 1; i++)
-                {
+                for (int i = 0; i < n; i++)
                     x[i] = v1.Data[i];
-                }
                 SortName(xcats, xcat, 0);
                 XSymmetriseXtab(ref xcats, ref xcat, ref ycats, ref ycat, 0);
-                double[,] xt = new double[xcats - 1 + 1, ycats - 1 + 1];
-                for (int i = 0; i <= xcats - 1; i++)
-                {
-                    for (int j = 0; j <= ycats - 1; j++)
-                    {
-                        for (int kv = 0; kv <= n - 1; kv++)
-                        {
-                            if (x[kv] == xcat[i].X & y[kv] == ycat[j].X)
-                            {
+
+                double[,] xt = new double[xcats, ycats];
+                for (int i = 0; i < xcats; i++)
+                    for (int j = 0; j < ycats; j++)
+                        for (int kv = 0; kv < n; kv++)
+                            if (x[kv] == xcat[i].X && y[kv] == ycat[j].X)
                                 xt[i, j] += 1;
-                            }
-                        }
-                    }
-                }
+
                 int g = Math.Max(xcats, ycats);
-                double[,] o = new double[g - 1 + 1, g - 1 + 1];
-                double[,] w = new double[g - 1 + 1, g - 1 + 1];
-                for (int i = 0; i <= g - 1; i++)
+                double[,] o = new double[g, g];
+                double[,] w = new double[g, g];
+                for (int i = 0; i < g; i++)
                 {
-                    for (int j = 0; j <= g - 1; j++)
+                    for (int j = 0; j < g; j++)
                     {
                         o[i, j] = 0.0;
                         w[i, j] = 0.0;
                     }
                 }
-                for (int i = 0; i <= ycats - 1; i++)
-                {
-                    for (int j = 0; j <= xcats - 1; j++)
-                    {
+                for (int i = 0; i < ycats; i++)
+                    for (int j = 0; j < xcats; j++)
                         o[i, j] = xt[j, i];
-                    }
-                }
                 // <------- xtab
 
                 //  xt, o and w are now zero-based, were 1-based.
@@ -940,16 +911,14 @@ namespace StatsDirect.Builtins
                 if (wtype == 3)
                 {
                     DataFrame weights = parameters["weights"].AsDataFrame;
-                    for (int i = 0; i <= weights.VariableCount - 1; i++)
+                    for (int i = 0; i < weights.VariableCount; i++)
                     {
                         DoubleVariable v = weights.Variables[i].AsDoubleVariable;
-                        for (int j = 0; j <= v.Length - 1; j++)
+                        for (int j = 0; j < v.Length; j++)
                         {
                             w[i, j] = v.Data[j];
                             if (w[i, j] == Constant.MISSING)
-                            {
                                 w[i, j] = 0.0;
-                            }
                         }
                     }
                 }
@@ -958,7 +927,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("ylab", ylab);
                 outputParameters.AddOutput("xlab", xlab);
                 ICollection<ParameterBag> xList = new List<ParameterBag>();
-                for (int i = 0; i <= xcats - 1; i++)
+                for (int i = 0; i < xcats; i++)
                 {
                     ParameterBag xValues = new ParameterBag();
                     xValues.AddOutput("x", xcat[i].Ti);
@@ -966,12 +935,12 @@ namespace StatsDirect.Builtins
                 }
                 outputParameters.AddOutput("*x", xList);
                 ICollection<ParameterBag> yList = new List<ParameterBag>();
-                for (int i = 0; i <= ycats - 1; i++)
+                for (int i = 0; i < ycats; i++)
                 {
                     ParameterBag yValues = new ParameterBag();
                     yValues.AddOutput("y", ycat[i].Ti);
                     ICollection<ParameterBag> totList = new List<ParameterBag>();
-                    for (int j = 0; j <= xcats - 1; j++)
+                    for (int j = 0; j < xcats; j++)
                     {
                         ParameterBag totValues = new ParameterBag();
                         totValues.AddOutput("tot", host.RoundU(xt[j, i]));
@@ -984,9 +953,9 @@ namespace StatsDirect.Builtins
                 // <--- xtab
                 if (wtype != 3)
                 {
-                    for (int i = 0; i <= g - 1; i++)
+                    for (int i = 0; i < g; i++)
                     {
-                        for (int j = 0; j <= g - 1; j++)
+                        for (int j = 0; j < g; j++)
                         {
                             switch (wtype)
                             {
@@ -1037,10 +1006,9 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("to", host.RoundU(kciu));
                     outputParameters.AddOutput("z", host.RoundU(0.0 == sek ? 0 : k / sek));
                     if (sek != 0.0)
-                    {
                         p = 1.0 - PDF.alnorm(k / sek);
-                    }
-                    else { p = Constant.MISSING; }
+                    else
+                        p = Constant.MISSING;
                     outputParameters.AddOutput("p", host.pval(p));
 
                     switch (wtype)
@@ -1057,11 +1025,11 @@ namespace StatsDirect.Builtins
                     }
 
                     ICollection<ParameterBag> weightList = new List<ParameterBag>();
-                    for (int i = 0; i <= ycats - 1; i++)
+                    for (int i = 0; i < ycats; i++)
                     {
                         ParameterBag weightValues = new ParameterBag();
                         ICollection<ParameterBag> totList = new List<ParameterBag>();
-                        for (int j = 0; j <= xcats - 1; j++)
+                        for (int j = 0; j < xcats; j++)
                         {
                             ParameterBag totValues = new ParameterBag();
                             totValues.AddOutput("tot", host.RoundU(w[i, j]));
@@ -1082,10 +1050,9 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("tow", host.RoundU(kwciu));
                     outputParameters.AddOutput("zw", host.RoundU(0.0 == sekw ? 0 : kw / sekw));
                     if (sekw != 0.0)
-                    {
                         p = 1.0 - PDF.alnorm(kw / sekw);
-                    }
-                    else { p = Constant.MISSING; }
+                    else
+                        p = Constant.MISSING;
                     outputParameters.AddOutput("pw", host.pval(p));
                     outputParameters.AddOutput("pocopy", Formatting.XRound(po * 100, 2));
                     outputParameters.AddOutput("spe", Formatting.XRound(spe * 100, 2));
@@ -1163,7 +1130,6 @@ namespace StatsDirect.Builtins
                 }
                 throw new InvalidDataException();
                 // <----wt
-
             }
             else
             {
@@ -1175,17 +1141,13 @@ namespace StatsDirect.Builtins
                     {
                         string nm = gr.Label;
                         if (!(categoryList.Contains(nm)) && !(Formatting.MISSINGLABEL.Equals(nm)))
-                        {
                             categoryList.Add(nm);
-                        }
                     }
                 }
                 int cats = categoryList.Count;
-                string[] catz = new string[cats - 1 + 1 ];
+                string[] catz = new string[cats];
                 for (int i = 0; i <= cats - 1; i++)
-                {
                     catz[i] = categoryList[i];
-                }
                 Array.Sort(catz, 0, cats);
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("categories", cats); //  To ensure that any test on the result can find the number of categories
@@ -1204,16 +1166,15 @@ namespace StatsDirect.Builtins
                     double sek = (1.0 / ((mbar - 1.0) * Math.Sqrt(Convert.ToDouble(n) * mbarh))) * Math.Sqrt(2.0 * (mbarh - 1.0) + ((mbar - mbarh) * (1.0 - 4.0 * pbar * (1.0 - pbar))) / (mbar * pbar * (1.0 - pbar)));
                     double z;
                     if (sek != 0.0)
-                    {
                         z = k / sek;
-                    }
-                    else { z = Constant.MISSING; }
+                    else
+                        z = Constant.MISSING;
+
                     string ratz;
                     if (minm == maxm)
-                    {
                         ratz = raters.ToString();
-                    }
-                    else { ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")"; }
+                    else
+                        ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")";
                     outputParameters.AddOutput("r", ratz);
                     outputParameters.AddOutput("k", host.RoundU(k));
                     outputParameters.AddOutput("se", host.RoundU(sek));
@@ -1235,12 +1196,12 @@ namespace StatsDirect.Builtins
                     double kbarn = 0.0;
                     double kbard = 0.0;
                     double se2 = 0.0;
-                    double[] sej = new double[cats - 1 + 1 ];
-                    double[] kj = new double[cats - 1 + 1 ];
+                    double[] sej = new double[cats];
+                    double[] kj = new double[cats];
                     double minm = 0;
                     double maxm = 0;
                     double medm = 0;
-                    for (int i = 0; i <= cats - 1; i++)
+                    for (int i = 0; i < cats; i++)
                     {
                         double k;
                         double mbar;
@@ -1257,31 +1218,25 @@ namespace StatsDirect.Builtins
                     double kbar = kbard != 0.0 ? kbarn / kbard : Constant.MISSING;
                     double sek;
                     if (Math.Pow(kbard, 2.0) - se2 < 0.0)
-                    {
                         sek = Constant.MISSING;
-                    }
                     else
-                    {
                         sek = (Math.Sqrt(2.0) / (kbard * Math.Sqrt(Convert.ToDouble(n) * mx * (mx - 1.0)))) * Math.Sqrt(Math.Pow(kbard, 2.0) - se2);
-                    }
                     double z;
                     if (sek != 0.0 & sek != Constant.MISSING)
-                    {
                         z = kbar / sek;
-                    }
-                    else { z = Constant.MISSING; }
+                    else
+                        z = Constant.MISSING;
                     outputParameters.AddOutput("cats", cats.ToString());
                     string ratz;
                     if (minm == maxm)
-                    {
                         ratz = raters.ToString();
-                    }
-                    else { ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")"; }
+                    else
+                        ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")";
                     outputParameters.AddOutput("r", ratz);
                     if (minm == maxm)
                     {
                         ICollection<ParameterBag> catList = new List<ParameterBag>();
-                        for (int i = 0; i <= cats - 1; i++)
+                        for (int i = 0; i < cats; i++)
                         {
                             ParameterBag catValues = new ParameterBag();
                             catValues.AddOutput("resp", catz[i]);
@@ -1289,10 +1244,9 @@ namespace StatsDirect.Builtins
                             catValues.AddOutput("se", host.RoundU(sej[i]));
                             double zz;
                             if (sej[i] != 0.0)
-                            {
                                 zz = kj[i] / sej[i];
-                            }
-                            else { zz = 0.0; }
+                            else
+                                zz = 0.0;
                             catValues.AddOutput("z", host.RoundU(zz));
                             catValues.AddOutput("p", host.pval(1.0 - PDF.alnorm(zz)));
                             catList.Add(catValues);
@@ -1315,7 +1269,7 @@ namespace StatsDirect.Builtins
                     else
                     {
                         ICollection<ParameterBag> catList = new List<ParameterBag>();
-                        for (int i = 0; i <= cats - 1; i++)
+                        for (int i = 0; i < cats; i++)
                         {
                             ParameterBag catValues = new ParameterBag();
                             catValues.AddOutput("resp", catz[i]);
@@ -1337,13 +1291,11 @@ namespace StatsDirect.Builtins
                 }
 
                 double[, ,] agreeData = new double[frame.Variables[0].Length + 1, raters + 1, 2];
-                for (int rater = 0; rater <= raters - 1; rater++)
+                for (int rater = 0; rater < raters; rater++)
                 {
                     double[] data = frame.Variables[rater].AsClassifierVariable.Data;
-                    for (int row = 0; row <= data.Length - 1; row++)
-                    {
+                    for (int row = 0; row < data.Length; row++)
                         agreeData[row + 1, rater + 1, 1] = data[row] + 1;
-                    }
                 }
                 double delta;
                 double edel;
@@ -1393,7 +1345,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException("A crosstab for kappa exact P must be square");
 
                 g = Math.Max(rows, cols);
-                o = new int[g - 1 + 1, g - 1 + 1];
+                o = new int[g, g];
 
                 for (int i = 0; i <= g - 1; i++)
                 {
@@ -1423,8 +1375,8 @@ namespace StatsDirect.Builtins
                 ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
                 int n = v0.Length;
                 int ycats = 0;
-                double[] y = new double[n - 1 + 1 ];
-                Namevar[] ycat = new Namevar[v0.GroupCount - 1 + 1 ];
+                double[] y = new double[n];
+                Namevar[] ycat = new Namevar[v0.GroupCount];
                 for (int i = 0; i <= v0.GroupCount - 1; i++)
                 {
                     if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
@@ -1435,7 +1387,7 @@ namespace StatsDirect.Builtins
                     }
                 }
                 // create temp variable for copying values 
-                Namevar[] transTemp18 = new Namevar[ycats - 1 + 1 ];
+                Namevar[] transTemp18 = new Namevar[ycats];
                 Array.Copy(ycat, transTemp18, Math.Min(ycat.Length, transTemp18.Length));
                 ycat = transTemp18;
                 for (int i = 0; i <= n - 1; i++)
@@ -1445,8 +1397,8 @@ namespace StatsDirect.Builtins
                 SortName(ycats, ycat, 0);
                 ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
                 int xcats = 0;
-                double[] x = new double[n - 1 + 1 ];
-                Namevar[] xcat = new Namevar[v1.GroupCount - 1 + 1 ];
+                double[] x = new double[n];
+                Namevar[] xcat = new Namevar[v1.GroupCount];
                 for (int i = 0; i <= v1.GroupCount - 1; i++)
                 {
                     if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
@@ -1457,7 +1409,7 @@ namespace StatsDirect.Builtins
                     }
                 }
                 // create temp variable for copying values 
-                Namevar[] transTemp19 = new Namevar[xcats - 1 + 1];
+                Namevar[] transTemp19 = new Namevar[xcats];
                 Array.Copy(xcat, transTemp19, Math.Min(xcat.Length, transTemp19.Length));
                 xcat = transTemp19;
                 for (int i = 0; i <= n - 1; i++)
@@ -1466,7 +1418,7 @@ namespace StatsDirect.Builtins
                 }
                 SortName(xcats, xcat, 0);
                 XSymmetriseXtab(ref xcats, ref xcat, ref ycats, ref ycat, 0);
-                double[,] xt = new double[xcats - 1 + 1, ycats - 1 + 1];
+                double[,] xt = new double[xcats, ycats];
                 double tot = 0.0;
                 for (int i = 0; i <= xcats - 1; i++)
                 {
@@ -1483,7 +1435,7 @@ namespace StatsDirect.Builtins
                     }
                 }
                 g = Math.Max(xcats, ycats);
-                o = new int[g - 1 + 1, g - 1 + 1];
+                o = new int[g, g];
                 for (int i = 0; i <= g - 1; i++)
                 {
                     for (int j = 0; j <= g - 1; j++)
@@ -1505,7 +1457,7 @@ namespace StatsDirect.Builtins
             // xt, o and w are now zero-based, were 1-based.
 
             // weights --->
-            double[,] w = new double[g - 1 + 1, g - 1 + 1];
+            double[,] w = new double[g, g];
             for (int i = 0; i <= g - 1; i++)
             {
                 for (int j = 0; j <= g - 1; j++)
@@ -1643,8 +1595,8 @@ namespace StatsDirect.Builtins
             int maxtot = 5000000;
             bool primed = false;
 
-            double[] fact = new double[g - 1 + 1];
-            int[] jwork = new int[g - 1 + 1];
+            double[] fact = new double[g];
+            int[] jwork = new int[g];
 
             int missingSek = 0;
             int missingSekw = 0;
@@ -1731,8 +1683,8 @@ namespace StatsDirect.Builtins
             ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
             int n = v0.Length;
             int ycats = 0;
-            double[] y = new double[n - 1 + 1];
-            Namevar[] ycat = new Namevar[v0.GroupCount - 1 + 1 ];
+            double[] y = new double[n];
+            Namevar[] ycat = new Namevar[v0.GroupCount];
             for (int i = 0; i < v0.GroupCount; i++)
             {
                 if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
@@ -1743,7 +1695,7 @@ namespace StatsDirect.Builtins
                 }
             }
             // create temp variable for copying values 
-            Namevar[] transTemp20 = new Namevar[ycats - 1 + 1 ];
+            Namevar[] transTemp20 = new Namevar[ycats];
             Array.Copy(ycat, transTemp20, Math.Min(ycat.Length, transTemp20.Length));
             ycat = transTemp20;
             for (int i = 0; i <= n - 1; i++)
@@ -1753,8 +1705,8 @@ namespace StatsDirect.Builtins
             SortName(ycats, ycat, 0);
             ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
             int xcats = 0;
-            double[] x = new double[n - 1 + 1 ];
-            Namevar[] xcat = new Namevar[v1.GroupCount - 1 + 1 ];
+            double[] x = new double[n];
+            Namevar[] xcat = new Namevar[v1.GroupCount];
             for (int i = 0; i <= v1.GroupCount - 1; i++)
             {
                 if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
@@ -1765,7 +1717,7 @@ namespace StatsDirect.Builtins
                 }
             }
             // create temp variable for copying values 
-            Namevar[] transTemp21 = new Namevar[xcats - 1 + 1 ];
+            Namevar[] transTemp21 = new Namevar[xcats];
             Array.Copy(xcat, transTemp21, Math.Min(xcat.Length, transTemp21.Length));
             xcat = transTemp21;
             for (int i = 0; i <= n - 1; i++)
