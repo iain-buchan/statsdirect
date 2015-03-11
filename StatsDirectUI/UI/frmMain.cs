@@ -1998,10 +1998,12 @@ namespace StatsDirect.UI
         /// <param name="processor"></param>
         /// <param name="operation"></param>
         /// <param name="context"></param>
-        private static ParameterBag SetInterfaceAndTryToRun(TemplateProcessor processor, Operation operation, ParameterBag context)
+        private ParameterBag SetInterfaceAndTryToRun(TemplateProcessor processor, Operation operation, ParameterBag context)
         {
             // Iff the operation has some initial parameters that can be batched, we should start it and let it populate those parameters
-            if (!ShouldRunOperationOnSelection(operation, context))
+            bool shouldRun = ShouldRunOperationOnSelection(operation, context);
+            pnlFollowOnInstructions.Visible = !shouldRun;
+            if (!shouldRun)
                 return null; // Cannot be run now, as the operation has no initial parameters, so no results
 
             ParameterBag results = processor.Execute(operation, context, false);
@@ -2030,11 +2032,13 @@ namespace StatsDirect.UI
 
         private void MaybeRunSelectedOperation(Operation operation)
         {
+            bool shouldRun = ShouldRunOperationOnSelection(operation, knownParameters);
+            pnlFollowOnInstructions.Visible = !shouldRun;
             if (InOperation)
             {
                 // There's already an operation running; deal with it
                 // The new operation may not auto-run, depending on whether it takes input or not.
-                if (ShouldRunOperationOnSelection(operation, knownParameters))
+                if (shouldRun)
                 {
                     // This is only ever reached when the combo box is populated and an operation is run from there.
                     // Most of the time, that is a follow-on operation - which means it may need the original operation's data and certainly needs to know that the original operation was run.
@@ -2046,7 +2050,7 @@ namespace StatsDirect.UI
             else
             {
                 // No operation, try to run this one!
-                if (ShouldRunOperationOnSelection(operation, knownParameters))
+                if (shouldRun)
                     DoCalculate();
             }
         }
