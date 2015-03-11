@@ -42,5 +42,14 @@ namespace StatsDirect.Charting
         {
             return ys[index];
         }
+
+        /// <summary>
+        /// Return a deep copy of this MDP.
+        /// </summary>
+        /// <returns></returns>
+        public MultiDoublePoint Clone()
+        {
+            return new MultiDoublePoint { X = X, ys = new List<double>(ys) };
+        }
     }
 }
