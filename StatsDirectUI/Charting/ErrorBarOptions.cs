@@ -9,6 +9,7 @@ namespace StatsDirect.Charting
         public bool PlotMarkers { get; set; }
         public bool JoinMarkersWithLines { get; set; }
         public List<MultiDoubleSeries> Series { get; set; }
+        public bool ShouldCheckForOffsets { get; set; }
 
         public ErrorBarOptions(bool useColour)
             : base(useColour)
