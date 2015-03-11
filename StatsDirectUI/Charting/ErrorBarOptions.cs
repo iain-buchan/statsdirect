@@ -15,6 +15,7 @@ namespace StatsDirect.Charting
             : base(useColour)
         {
             PlotMarkers = true;
+            ShouldCheckForOffsets = true;
         }
 
         public void SetMarkers()

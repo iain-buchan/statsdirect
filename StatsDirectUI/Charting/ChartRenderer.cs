@@ -7110,6 +7110,7 @@ namespace StatsDirect.Charting
         private ParameterBag PlotErrorBar()
         {
             ErrorBarOptions eOptions = ((ErrorBarOptions)(definition.ChartOptions));
+            bool shouldCheckForOffsets = eOptions.ShouldCheckForOffsets;
             int seriesCount = eOptions.Series.Count;
 
             // Setup the Min & Max Values
@@ -7171,64 +7172,106 @@ namespace StatsDirect.Charting
             // Draw the scale
             DrawAxesOrEnlargeCanvas(eOptions.Title, new Axis(eOptions.XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(eOptions.YAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
 
+            // #1079: Prevent overdrawing of error bars by offsetting bars that would otherwise overlap.
+            Dictionary<int, List<MultiDoublePoint>> alreadyUsed = new Dictionary<int, List<MultiDoublePoint>>();
+            double aboutALineWidth = divx / xExtCanvas;
+
             // Work through the series
             for (int seriesIndex = 0; seriesIndex < eOptions.Series.Count; seriesIndex++)
             {
                 MultiDoubleSeries s = eOptions.Series[seriesIndex];
+                List<MultiDoublePoint> safesBySeries = new List<MultiDoublePoint>();
                 int length = s.Data.Length;
 
-                //  Draw the error bars first so we don't interfere with connection lines
+                // Draw the error bars first so we don't interfere with connection lines
                 using (Pen p = GetMarkerPen(eOptions.MarkerTypes[seriesIndex]))
                 {
                     foreach (MultiDoublePoint pt in s.Data)
                     {
-                        double x = ToCanvasX(pt.X);
-                        double yl = ToCanvasY(pt.get_Y(1));
-                        double yu = ToCanvasY(pt.get_Y(2));
+                        // Check for overlaps with any existing error bar.  If none, save this one; if there is one, offset by the line width and try again.
+                        MultiDoublePoint safePoint = pt;
+                        if (shouldCheckForOffsets)
+                        {
+                            while (true)
+                            {
+                                int roughX = (int)Math.Round(ToCanvasX(safePoint.X));
+                                List<MultiDoublePoint> barsAtRoughX;
+                                if (!alreadyUsed.TryGetValue(roughX, out barsAtRoughX))
+                                {
+                                    // this one's the first point at this X; known safe.  Record it and move on.
+                                    alreadyUsed.Add(roughX, new List<MultiDoublePoint> { safePoint });
+                                    break;
+                                }
+
+                                // If we get here, there's at least one bar at this rough X.  Check for overlaps; if they exist, offset this by 1 and try that instead.
+                                bool atLeastOneOverlap = false;
+                                foreach (MultiDoublePoint existingBar in barsAtRoughX)
+                                {
+                                    if (safePoint.get_Y(1) < existingBar.get_Y(2) && safePoint.get_Y(2) > existingBar.get_Y(1))
+                                    {
+                                        atLeastOneOverlap = true;
+                                        safePoint = safePoint.Clone();
+                                        safePoint.X += aboutALineWidth;
+                                        break;
+                                    }
+                                }
+                                if (!atLeastOneOverlap)
+                                {
+                                    // We've found somewhere to put this point.  Record it and move on.
+                                    alreadyUsed[roughX].Add(safePoint);
+                                    break;
+                                }
+                            }
+                        }
+                        safesBySeries.Add(safePoint);
+
+                        double x = ToCanvasX(safePoint.X);
+                        double yl = ToCanvasY(safePoint.get_Y(1));
+                        double yu = ToCanvasY(safePoint.get_Y(2));
                         // Draw the endlines
                         statsDirectCanvas.DrawLine(p, x - 10, yl, x + 10, yl);
                         statsDirectCanvas.DrawLine(p, x - 10, yu, x + 10, yu);
                         // Draw the bar
                         statsDirectCanvas.DrawLine(p, x, yl, x, yu);
                     }
+                }
 
-                    //  Work through the rows plotting the markers
-                    if (eOptions.PlotMarkers)
+                //  Plot the markers
+                if (eOptions.PlotMarkers)
+                {
+                    foreach (MultiDoublePoint pt in safesBySeries)
                     {
-                        foreach (MultiDoublePoint pt in s.Data)
+                        double x1 = ToCanvasX(pt.X);
+                        double y1 = ToCanvasY(pt.get_Y(0));
+                        DrawMarker(x1, y1, eOptions.MarkerTypes[seriesIndex].MarkerSize, eOptions.MarkerTypes[seriesIndex]);
+                    }
+                }
+
+                if (eOptions.JoinMarkersWithLines)
+                {
+                    using (Pen pStyled = GetLinePen(eOptions.MarkerTypes[seriesIndex], false))
+                    {
+                        // set the initial values of x2,y2 to x1,y1
+                        double x2 = ToCanvasX(s.Data[0].X);
+                        double y2 = ToCanvasY(s.Data[0].get_Y(0));
+
+                        foreach (MultiDoublePoint pt in safesBySeries)
                         {
                             double x1 = ToCanvasX(pt.X);
                             double y1 = ToCanvasY(pt.get_Y(0));
-                            DrawMarker(x1, y1, eOptions.MarkerTypes[seriesIndex].MarkerSize, eOptions.MarkerTypes[seriesIndex]);
+                            statsDirectCanvas.DrawLine(pStyled, x1, y1, x2, y2);
+                            x2 = x1;
+                            y2 = y1;
                         }
                     }
+                }
 
-                    if (eOptions.JoinMarkersWithLines)
-                    {
-                        using (Pen pStyled = GetLinePen(eOptions.MarkerTypes[seriesIndex], false))
-                        {
-                            // set the initial values of x2,y2 to x1,y1
-                            double x2 = ToCanvasX(s.Data[0].X);
-                            double y2 = ToCanvasY(s.Data[0].get_Y(0));
-
-                            foreach (MultiDoublePoint pt in s.Data)
-                            {
-                                double x1 = ToCanvasX(pt.X);
-                                double y1 = ToCanvasY(pt.get_Y(0));
-                                statsDirectCanvas.DrawLine(pStyled, x1, y1, x2, y2);
-                                x2 = x1;
-                                y2 = y1;
-                            }
-                        }
-                    }
-
-                    //  Legend
-                    if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
-                    {
-                        double legendY = legendTop - (seriesIndex * legendSpacing);
-                        DrawMarker(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendY - legendFontHeight / 2.0, LEGEND_MARKER_SIZE, eOptions.MarkerTypes[seriesIndex]);
-                        DrawStringLegendL(eOptions.SeriesTitles[seriesIndex], xAxisCanvas + LEGEND_MARKER_SIZE * 2, legendY);
-                    }
+                //  Legend
+                if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
+                {
+                    double legendY = legendTop - (seriesIndex * legendSpacing);
+                    DrawMarker(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendY - legendFontHeight / 2.0, LEGEND_MARKER_SIZE, eOptions.MarkerTypes[seriesIndex]);
+                    DrawStringLegendL(eOptions.SeriesTitles[seriesIndex], xAxisCanvas + LEGEND_MARKER_SIZE * 2, legendY);
                 }
             }
             EndMetafile();

@@ -223,6 +223,7 @@ namespace StatsDirect.UI
             ErrorBarOptions errorBarOptions = (ErrorBarOptions)options;
             errorBarOptions.PlotMarkers = chkScatterXYPlotMarkers.Checked;
             errorBarOptions.JoinMarkersWithLines = chkScatterXYPlotLines.Checked;
+            errorBarOptions.ShouldCheckForOffsets = chkShouldCheckForOffsets.Checked;
         }
 
         private void FillForestOptionsFromForm()
@@ -338,7 +339,7 @@ namespace StatsDirect.UI
             {
                 txtChartTitle.Text = options.Title;
             }
-            if (options.UsesSeriesLabels)
+            if (options.UsesSeriesLabels && null != options.SeriesTitles)
             {
                 foreach (string seriesTitle in options.SeriesTitles)
                     gridSeriesLabels.Rows.Add(seriesTitle);
@@ -542,6 +543,8 @@ namespace StatsDirect.UI
             ErrorBarOptions errorBarOptions = (ErrorBarOptions)options;
             chkScatterXYPlotMarkers.Checked = errorBarOptions.PlotMarkers;
             chkScatterXYPlotLines.Checked = errorBarOptions.JoinMarkersWithLines;
+            chkShouldCheckForOffsets.Visible = true;
+            chkShouldCheckForOffsets.Checked = errorBarOptions.ShouldCheckForOffsets;
         }
 
         private void FillFormFromForestOptions()
