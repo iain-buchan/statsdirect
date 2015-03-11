@@ -339,7 +339,7 @@ namespace StatsDirect.UI
             {
                 txtChartTitle.Text = options.Title;
             }
-            if (options.UsesSeriesLabels && null != options.SeriesTitles)
+            if (options.UsesSeriesLabels)
             {
                 foreach (string seriesTitle in options.SeriesTitles)
                     gridSeriesLabels.Rows.Add(seriesTitle);

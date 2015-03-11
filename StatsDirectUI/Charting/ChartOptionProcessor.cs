@@ -329,8 +329,11 @@ namespace StatsDirect.Charting
                         : "Line plot from " + dataName,
                 YAxisTitle = definition.YSeries[0].Title,
                 XAxisTitle = definition.XSeries[0].Title,
-                PlotMarkers = true
+                PlotMarkers = true,
+                SeriesTitles = new string[definition.XSeries.Count]
             };
+            for (int i = 0; i < definition.XSeries.Count; i++)
+                sOptions.SeriesTitles[i] = definition.XSeries[i].Title;
             return sOptions;
         }
 
