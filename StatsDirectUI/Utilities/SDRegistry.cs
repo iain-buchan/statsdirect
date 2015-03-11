@@ -88,7 +88,7 @@ namespace StatsDirect.Utilities
         /// <param name="key"></param>
         /// <param name="valueName"></param>
         /// <returns></returns>
-        internal static string GetSetting(string app, string key, string valueName, bool getFromMachine)
+        internal static string GetStringSetting(string app, string key, string valueName, bool getFromMachine)
         {
             try
             {
@@ -104,8 +104,37 @@ namespace StatsDirect.Utilities
             }
             catch (Exception)
             {
-                // Can't find in either location.
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Emulates the old VB6 GetSetting call, right down to looking in \Software\VB and VBA Program Settings.
+        /// First try to look in HKCU; if that fails, look in HKLM; if that also fails, the setting can't be there.
+        /// This makes no attempt to return early if it can't find a subkey in HKCU, as there's a nasty edge case when some settings are in HKCU and some in HKLM.
+        /// Instead, it triggers the exception in the registry code and tries HKLM instead.
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="key"></param>
+        /// <param name="valueName"></param>
+        /// <returns></returns>
+        internal static int GetDwordSetting(string app, string key, string valueName, bool getFromMachine)
+        {
+            try
+            {
+                using (RegistryKey root = getFromMachine ? Registry.LocalMachine : Registry.CurrentUser,
+                    softwareKey = root.OpenSubKey("Software"),
+                    vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"),
+                    appKey = vbKey.OpenSubKey(app),
+                    keyKey = appKey.OpenSubKey(key))
+                {
+                    object val = keyKey.GetValue(valueName);
+                    return (int)val;
+                }
+            }
+            catch (Exception)
+            {
+                return int.MinValue;
             }
         }
 

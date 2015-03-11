@@ -54,7 +54,9 @@ namespace StatsDirect.UI
                 Application.DoEvents(); // Force display of the show form
 
                 // Prep a background check for new version, if there is one.  This will tidy up after itself.
-                new frmUpdateCheck(true);
+                int checkForUpdatesInt = SDRegistry.GetDwordSetting("StatsDirect3", "Startup", "CheckForUpdates", true);
+                if (checkForUpdatesInt != 0) // If the value is not there, this returns int.MinValue, which is non-zero; we should check in this case.
+                    new frmUpdateCheck(true);
 
                 // Preload and parse XML for operations
                 Templates.TemplateFactory.LoadOperationsAsync();
@@ -255,7 +257,7 @@ namespace StatsDirect.UI
             // Install the registry settings if not already present.
             const string app = "ExcelStatsDirect3Link";
             const string key = "Paths";
-            string helpPath = SDRegistry.GetSetting(app, key, "Help", false);
+            string helpPath = SDRegistry.GetStringSetting(app, key, "Help", false);
             string appPath = Path.GetDirectoryName(Application.ExecutablePath);
             if (null != appPath)
             {
