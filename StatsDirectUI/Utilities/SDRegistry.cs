@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Win32;
 
 namespace StatsDirect.Utilities
@@ -87,7 +88,9 @@ namespace StatsDirect.Utilities
         /// <param name="app"></param>
         /// <param name="key"></param>
         /// <param name="valueName"></param>
+        /// <param name="getFromMachine"></param>
         /// <returns></returns>
+        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
         internal static string GetStringSetting(string app, string key, string valueName, bool getFromMachine)
         {
             try
@@ -117,7 +120,9 @@ namespace StatsDirect.Utilities
         /// <param name="app"></param>
         /// <param name="key"></param>
         /// <param name="valueName"></param>
+        /// <param name="getFromMachine"></param>
         /// <returns></returns>
+        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
         internal static int GetDwordSetting(string app, string key, string valueName, bool getFromMachine)
         {
             try

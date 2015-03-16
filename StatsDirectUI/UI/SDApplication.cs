@@ -193,24 +193,24 @@ namespace StatsDirect.UI
                 bool acceptable = true;
                 foreach (WindowInformation wi in windows)
                 {
-                    if (wi.Window.ImplementsIReport)
+                    if (!wi.Window.ImplementsIReport)
+                        continue;
+
+                    string windowName = wi.FriendlyName;
+                    if (!windowName.StartsWith("Report "))
+                        continue;
+
+                    // We don't want to load Report 1.rtf and create Report 1 again (#673).  Strip any suffix before comparison.
+                    if (Path.HasExtension(windowName))
+                        windowName = Path.GetFileNameWithoutExtension(windowName);
+                    string windowNumberAsString = windowName.Substring(7).Trim();
+                    int windowNumber;
+                    if (int.TryParse(windowNumberAsString, out windowNumber))
                     {
-                        string windowName = wi.FriendlyName;
-                        if (windowName.StartsWith("Report "))
+                        if (windowNumber == candidateNumber)
                         {
-                            // We don't want to load Report 1.rtf and create Report 1 again (#673).  Strip any suffix before comparison.
-                            if (Path.HasExtension(windowName))
-                                windowName = Path.GetFileNameWithoutExtension(windowName);
-                            string windowNumberAsString = (null == windowName) ? "" : windowName.Substring(7).Trim();
-                            int windowNumber;
-                            if (int.TryParse(windowNumberAsString, out windowNumber))
-                            {
-                                if (windowNumber == candidateNumber)
-                                {
-                                    acceptable = false;
-                                    break;
-                                }
-                            }
+                            acceptable = false;
+                            break;
                         }
                     }
                 }
@@ -1137,7 +1137,7 @@ namespace StatsDirect.UI
 
         public string GetString(string prompt, string caption, string defaultValue)
         {
-            return this.Prompt(prompt, caption, defaultValue);
+            return Prompt(prompt, caption, defaultValue);
         }
 
         public void Error(string message, string caption)
@@ -1528,10 +1528,7 @@ namespace StatsDirect.UI
                 if (recentFiles.Count > MAX_RECENT_FILES)
                 {
                     // Never remove the example file; keep it as the oldest entry even if that means removing a younger file
-                    if (recentFiles[0].Equals(SDConfiguration.MyTestFilePath))
-                        recentFiles.RemoveAt(1);
-                    else
-                        recentFiles.RemoveAt(0);
+                    recentFiles.RemoveAt(recentFiles[0].Equals(SDConfiguration.MyTestFilePath) ? 1 : 0);
                 }
             }
             Properties.Settings.Default.RecentFileList = recentFiles;
