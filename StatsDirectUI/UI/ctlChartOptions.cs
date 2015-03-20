@@ -803,17 +803,13 @@ namespace StatsDirect.UI
         private void rdoNormalScaled_CheckedChanged(object sender, EventArgs e)
         {
             if (rdoNormalScaled.Checked)
-            {
                 Rescale();
-            }
         }
 
         private void rdoNormalRaw_CheckedChanged(object sender, EventArgs e)
         {
             if (rdoNormalRaw.Checked)
-            {
                 Rescale();
-            }
         }
 
         private void ctlBoxWhiskerOptions1_XAxisTitleChanged(object sender, EventArgs e)
@@ -889,9 +885,7 @@ namespace StatsDirect.UI
         private void rdoOrientationHorizontal_CheckedChanged(object sender, EventArgs e)
         {
             if (rdoOrientationHorizontal.Checked)
-            {
                 OrientationChanged();
-            }
         }
 
         private void OrientationChanged()
@@ -903,9 +897,7 @@ namespace StatsDirect.UI
         private void rdoOrientationVertical_CheckedChanged(object sender, EventArgs e)
         {
             if (rdoOrientationVertical.Checked)
-            {
                 OrientationChanged();
-            }
         }
 
         private void chkScatterXYPlotLines_CheckedChanged(object sender, EventArgs e)

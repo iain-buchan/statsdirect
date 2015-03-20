@@ -5,10 +5,16 @@ namespace StatsDirect.UI
     public partial class ctlAxisOptions : UserControl
     {
         private bool axisLabelsAreSwapped;
+        private bool xIsVisible = true;
+        private bool yIsVisible = true;
+        private TabPage tab0;
+        private TabPage tab1;
 
         public ctlAxisOptions()
         {
             InitializeComponent();
+            tab0 = tabAxis.TabPages[0];
+            tab1 = tabAxis.TabPages[1];
         }
 
         public ctlOneAxisOptions X
@@ -21,6 +27,26 @@ namespace StatsDirect.UI
             get { return ctlOneAxisOptionsY; }
         }
 
+        public bool ShowX
+        {
+            get { return xIsVisible; }
+            set
+            {
+                xIsVisible = value;
+                SetTabLabelsAndVisibility();
+            }
+        }
+
+        public bool ShowY
+        {
+            get { return yIsVisible; }
+            set
+            {
+                yIsVisible = value;
+                SetTabLabelsAndVisibility();
+            }
+        }
+
         public bool AxisLabelsAreSwapped
         {
             get
@@ -29,13 +55,28 @@ namespace StatsDirect.UI
             }
             set
             {
-                if (axisLabelsAreSwapped != value)
-                {
-                    tabAxis.TabPages[0].Text = value ? "Y" : "X";
-                    tabAxis.TabPages[1].Text = value ? "X" : "Y";
-                    axisLabelsAreSwapped = value;
-                }
+                axisLabelsAreSwapped = value;
+                SetTabLabelsAndVisibility();
             }
+        }
+
+        private void SetTabLabelsAndVisibility()
+        {
+            SuspendLayout();
+            TabPage tabX = axisLabelsAreSwapped ? tab1 : tab0;
+            TabPage tabY = axisLabelsAreSwapped ? tab0 : tab1;
+            tabX.Text = "X";
+            tabY.Text = "Y";
+            // Ensure X and Y are visible iff they are shown, and are in the right order
+            if (tabAxis.TabPages.Contains(tabX))
+                tabAxis.TabPages.Remove(tabX);
+            if (tabAxis.TabPages.Contains(tabY))
+                tabAxis.TabPages.Remove(tabY);
+            if (ShowX)
+                tabAxis.TabPages.Add(tabX);
+            if (ShowY)
+                tabAxis.TabPages.Add(tabY);
+            ResumeLayout();
         }
     }
 }
