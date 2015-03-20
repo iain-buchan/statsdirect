@@ -13,7 +13,7 @@
     <!-- Packaging: a single .msi with compressed files in .cab format -->
     <Package
       InstallScope="perMachine"
-      InstallerVersion="200"
+      InstallerVersion="405"
       Compressed="yes"
       Description="StatsDirect v3.0"
       Manufacturer="StatsDirect Limited"/>
