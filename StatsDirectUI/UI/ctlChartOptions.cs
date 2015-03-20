@@ -323,79 +323,45 @@ namespace StatsDirect.UI
             pnlOrientation.Visible = options.UsesOrientation;
             pnlShowLegend.Visible = options.UsesShowLegend && options.ShowLegendIsRelevant;
             pnlColour.Visible = options.UsesColour;
+            ctlAxisOptions.ShowX = options.UsesXAxisOptions;
+            ctlAxisOptions.ShowY = options.UsesYAxisOptions;
             if (pnlOrientation.Visible)
-            {
                 grpOrientation.Text = options.OrientationLabel;
-            }
             if (options.UsesShowLegend && options.ShowLegendIsRelevant)
-            {
                 chkShowLegend.Checked = options.ShowLegend;
-            }
             if (options.UsesBoxAxes)
-            {
                 chkBoxAxes.Checked = options.ShouldBoxAxes;
-            }
             if (options.UsesChartTitle)
-            {
                 txtChartTitle.Text = options.Title;
-            }
             if (options.UsesSeriesLabels)
-            {
                 foreach (string seriesTitle in options.SeriesTitles)
                     gridSeriesLabels.Rows.Add(seriesTitle);
-            }
             if (options.UsesXAxisTitle)
-            {
                 ctlAxisOptions.X.Title = options.XAxisTitle;
-            }
             if (options.UsesYAxisTitle)
-            {
                 ctlAxisOptions.Y.Title = options.YAxisTitle;
-            }
             if (options.ShowBarOptions)
-            {
                 FillFormFromBarOptions();
-            }
             if (options.ShowBoxWhiskerOptions)
-            {
                 FillFormFromBoxWhiskerOptions();
-            }
             if (options.ShowControlOptions)
-            {
                 FillFormFromControlOptions();
-            }
             if (options.ShowErrorBarOptions)
-            {
                 FillFormFromErrorBarOptions();
-            }
             if (options.ShowForestOptions)
-            {
                 FillFormFromForestOptions();
-            }
             if (options.ShowHistogramOptions)
-            {
                 FillFormFromHistogramOptions();
-            }
             if (options.ShowNormalOptions)
-            {
                 FillFormFromNormalOptions();
-            }
             if (options.ShowPyramidOptions)
-            {
                 FillFormFromPyramidOptions();
-            }
             if (options.ShowRocOptions)
-            {
                 FillFormFromRocOptions();
-            }
             if (options.ShowScatterXYOptions)
-            {
                 FillFormFromScatterXYOptions();
-            }
             if (options.ShowSurvivalOptions)
-            {
                 FillFormFromSurvivalOptions();
-            }
             if (options.UsesAxisLabelFontDescriptor)
             {
                 ctlAxisLabelFont.Purpose = options.AxisLabelFontLabel + " Font";
@@ -411,9 +377,7 @@ namespace StatsDirect.UI
             {
                 ctlLegendFont.Purpose = options.LegendFontLabel + " Font";
                 if (!string.IsNullOrEmpty(options.LegendFontDescriptor))
-                {
                     ctlLegendFont.UserFont = ChartRenderer.FontFromSaveString(options.LegendFontDescriptor);
-                }
             }
             if (options.UsesTitleFontDescriptor)
             {
@@ -621,13 +585,9 @@ namespace StatsDirect.UI
             catch (Exception ex)
             {
                 if (SdApplication.SoleInstance.MainWindow.InOperation)
-                {
                     SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
-                }
                 else
-                {
                     throw;
-                }
             }
 #endif
         }
@@ -656,13 +616,9 @@ namespace StatsDirect.UI
             catch (Exception ex)
             {
                 if (SdApplication.SoleInstance.MainWindow.InOperation)
-                {
                     SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
-                }
                 else
-                {
                     throw;
-                }
             }
 #endif
         }
@@ -685,13 +641,9 @@ namespace StatsDirect.UI
             catch (Exception ex)
             {
                 if (SdApplication.SoleInstance.MainWindow.InOperation)
-                {
                     SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
-                }
                 else
-                {
                     throw;
-                }
             }
 #endif
         }
@@ -773,9 +725,7 @@ namespace StatsDirect.UI
         private void rdoNormalExpectedNormalOrder_CheckedChanged(object sender, EventArgs e)
         {
             if (rdoNormalExpectedNormalOrder.Checked)
-            {
                 Rescale();
-            }
         }
 
         private void Rescale()
@@ -787,17 +737,13 @@ namespace StatsDirect.UI
         private void rdoNormalBlom_CheckedChanged(object sender, EventArgs e)
         {
             if (rdoNormalBlom.Checked)
-            {
                 Rescale();
-            }
         }
 
         private void rdoNormalVanDerWaerden_CheckedChanged(object sender, EventArgs e)
         {
             if (rdoNormalVanDerWaerden.Checked)
-            {
                 Rescale();
-            }
         }
 
         private void rdoNormalScaled_CheckedChanged(object sender, EventArgs e)

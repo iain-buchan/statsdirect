@@ -4625,11 +4625,9 @@ namespace StatsDirect.Charting
                         double scrap;
                         DrawAxesOrFail(title, xAxis, new Axis(histOptions.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, legendSize.Height, definition.ScaleParameters.Y.ScaleType), false, true, out scrap);
 
-                        // DrawAxesOrFail sets {div,off}{x,y}, so we need to reset afterwards to our custom versions
+                        // DrawAxesOrFail sets {div,off}x, so we need to reset afterwards to our custom versions.  We don't need to (and indeed shouldn't) reset divy and offy, as the Y scale has been drawn based on the calculated version.
                         divx = xExtCanvas / Math.Max(mp, 1);
                         offx = 0;
-                        divy = axisYMax - axisYMin;
-                        offy = -(axisYMin / divy * yExtCanvas) + yAxisCanvas;
 
                         // Plot each bar
                         bool labelIsLow = false;

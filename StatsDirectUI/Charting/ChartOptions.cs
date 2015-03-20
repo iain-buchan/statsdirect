@@ -3,106 +3,101 @@ using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
-    [ Serializable ]
-    public abstract class ChartOptions  
-    { 
+    [Serializable]
+    public abstract class ChartOptions
+    {
         public string Title { get; set; }
         public string XAxisTitle { get; set; }
         public string YAxisTitle { get; set; }
         public float AxisLineThickness { get; set; }
         public bool ShowLegend { get; set; }
         public bool UseColour { get; set; }
-        private IList<MarkerType> markerTypes;
-        
+        ///  <summary>
+        ///  Marker details.
+        ///  </summary>
+        ///  <remarks>Explicitly allowed: one marker type may be referenced multiple times in the list.  This is used, for example, by the Ladder plot, which uses marker type 1 for slots 1 and 2 so that it can show a UI for the markers in slot 1, and the lines in slot 2.</remarks>
+        public IList<MarkerType> MarkerTypes { get; set; }
+
         ///  <summary>
         ///  Given a series index (13 for the 14th series, for example) return the marker that should be used for that series.
         ///  </summary>
         ///  <param name="SeriesNumber"></param>
         ///  <returns></returns>
         ///  <remarks>This used to be considerably more complex; Peter has simplified.</remarks>
-        public static int SeriesNumberToMarkerNumber( int SeriesNumber ) 
-        { 
-            return SeriesNumber % 10; 
-            
-            // If SeriesNumber = 0 Then
-            //     Return 10
-            // ElseIf SeriesNumber > 10 Then
-            //     Return SeriesNumber - 10 * (SeriesNumber \ 10) ' TODO: PJC: Why does this work?
-            // Else
-            //     Return SeriesNumber
-            // End If
-        } 
-        
-        
-        ///  <summary>
-        ///  Marker details.
-        ///  </summary>
-        ///  <remarks>Explicitly allowed: one marker type may be referenced multiple times in the list.  This is used, for example, by the Ladder plot, which uses marker type 1 for slots 1 and 2 so that it can show a UI for the markers in slot 1, and the lines in slot 2.</remarks>
-        public IList <MarkerType>MarkerTypes 
-        { 
-            get 
-            { 
-                return markerTypes; 
-            } 
-            set 
-            { 
-                markerTypes = value; 
-            } 
-        } 
-        
-        protected ChartOptions( bool useColour ) 
-        { 
-            UseColour = useColour; 
-        } 
-        
-        public virtual bool UsesAxisLineThickness 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public virtual bool UsesColour 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public virtual bool UsesShowLegend 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public virtual bool UsesXAxisTitle 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        } 
-        
-        public virtual bool UsesYAxisTitle 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        } 
-        
+        public static int SeriesNumberToMarkerNumber(int SeriesNumber)
+        {
+            return SeriesNumber % 10;
+        }
+
+        protected ChartOptions(bool useColour)
+        {
+            UseColour = useColour;
+        }
+
+        public virtual bool UsesAxisLineThickness
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public virtual bool UsesColour
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public virtual bool UsesShowLegend
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public virtual bool UsesXAxisOptions
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public virtual bool UsesXAxisTitle
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public virtual bool UsesYAxisOptions
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public virtual bool UsesYAxisTitle
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         public abstract ChartOptionType OptionType { get; }
-        
+
         public abstract bool ShowLegendIsRelevant { get; }
 
         public virtual ChartOptions Clone()
         {
             ChartOptions theClone = (ChartOptions)MemberwiseClone();
-            if (null != markerTypes)
+            if (null != MarkerTypes)
                 theClone.MarkerTypes = new List<MarkerType>(MarkerTypes);
             return theClone;
         }
@@ -134,4 +129,4 @@ namespace StatsDirect.Charting
         Spread,
         Survival,
     }
-} 
+}

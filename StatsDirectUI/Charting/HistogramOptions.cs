@@ -32,36 +32,35 @@ namespace StatsDirect.Charting
     public class HistogramOptions : GenericOptions
     {
 
-        private bool _showRelativeFrequencies;
+        private bool showRelativeFrequencies;
 
-        public bool OverlayNormalCurve;
+        public bool OverlayNormalCurve { get; set; }
         ///  <summary>
         ///  Informational to the filler.  ASCII charts cannot overlay normals, so the option should not be given.
         ///  </summary>
-        public bool IsAscii;
+        public bool IsAscii { get; set; }
 
         ///  <summary>
         ///  If true, all variables are pooled for bin calculations (i.e. there is a common X axis).
         ///  If false, bin calculations are per-variable.
         ///  </summary>
-        public bool PoolVariablesForBins;
+        public bool PoolVariablesForBins { get; set; }
 
         public HistogramOptions(bool UseColour)
             : base(UseColour)
         {
-
         }
 
         public bool ShowRelativeFrequencies
         {
             get
             {
-                return _showRelativeFrequencies;
+                return showRelativeFrequencies;
             }
             set
             {
-                bool changed = value != _showRelativeFrequencies;
-                _showRelativeFrequencies = value;
+                bool changed = value != showRelativeFrequencies;
+                showRelativeFrequencies = value;
                 if (changed)
                 {
                     if (null != ScaleChanged)
@@ -71,10 +70,10 @@ namespace StatsDirect.Charting
         }
 
         //  Display options
-        public int LineWidth;
-        public string AxisFontDescriptor;
+        public int LineWidth { get; set; }
+        public string AxisFontDescriptor { get; set; }
 
-        public List<HistogramSeriesOptions> HistoSeriesOptions;
+        public List<HistogramSeriesOptions> HistoSeriesOptions { get; set; }
 
         [field: NonSerialized]
         public event EventHandler ScaleChanged;
@@ -85,6 +84,11 @@ namespace StatsDirect.Charting
             {
                 return false;
             }
+        }
+
+        public override bool UsesXAxisOptions
+        {
+            get { return false; }
         }
 
         public override ChartOptionType OptionType
@@ -123,13 +127,9 @@ namespace StatsDirect.Charting
                 foreach (DoubleSeries s in series)
                 {
                     if (s.Min < min)
-                    {
                         min = s.Min;
-                    }
                     if (s.Max > max)
-                    {
                         max = s.Max;
-                    }
                 }
                 Calculate(series, binsFromUser, full, ref min, ref max, out zmin, out zint, out bins);
             }
@@ -145,7 +145,7 @@ namespace StatsDirect.Charting
             //  Write the values
             if (setAllSeries)
             {
-                for (int i = 0; i <= series.Count - 1; i++)
+                for (int i = 0; i < series.Count; i++)
                 {
                     HistogramSeriesOptions transTemp12 = HistoSeriesOptions[i];
                     transTemp12.MinimumValue = min;
@@ -153,7 +153,6 @@ namespace StatsDirect.Charting
                     transTemp12.MinimumBinMidPoint = zmin;
                     transTemp12.MidPointInterval = zint;
                     transTemp12.Bins = bins;
-
                 }
             }
             else
@@ -166,7 +165,8 @@ namespace StatsDirect.Charting
                 transTemp13.Bins = bins;
 
             }
-            if (null != ScaleChanged) ScaleChanged(this, EventArgs.Empty);
+            if (null != ScaleChanged)
+                ScaleChanged(this, EventArgs.Empty);
         }
 
         public void v_axis(ref double qmin, ref double qmax, int cm, out double zmin, out double zint)
@@ -181,7 +181,6 @@ namespace StatsDirect.Charting
                 zint = qmax - qmin;
             }
         }
-
 
         ///  <summary>
         ///  
@@ -215,7 +214,7 @@ namespace StatsDirect.Charting
             //  Assume there's at least one column, and therefore longestSoFar is never Nothing
             double[] xx = new double[maxRows + 1 ];
             int actualRows = 0;
-            for (int c = 0; c <= maxRows - 1; c++)
+            for (int c = 0; c < maxRows; c++)
             {
                 if (longestSoFar.Data[c] != Numerics.Constant.MISSING)
                 {
@@ -233,13 +232,9 @@ namespace StatsDirect.Charting
                 //  Work out how many bins we should have at maximum: between 7 and 20, depending on the number of samples
                 int maxcm = Convert.ToInt32(Math.Pow(Convert.ToDouble(actualRows), 0.88) / 4.0);
                 if (maxcm > 20)
-                {
                     maxcm = 20;
-                }
                 if (maxcm < 7)
-                {
                     maxcm = 7;
-                }
                 double mxx = 0.0;
                 int mpp = 0;
                 for (int cm = 1; cm <= maxcm; cm++)
@@ -259,26 +254,22 @@ namespace StatsDirect.Charting
                     {
                         mp = cm;
                     }
-                    int C2 = 0;
+                    int c2 = 0;
                     int clm = 0;
-                    for (int C = 1; C <= mp; C++)
+                    for (int c = 1; c <= mp; c++)
                     {
-                        double high = zmin + (zint * Convert.ToDouble(C - 1)) + zint / 2.0;
+                        double high = zmin + (zint * Convert.ToDouble(c - 1)) + zint / 2.0;
                         int c1;
-                        for (c1 = C2; c1 <= actualRows - 1; c1++)
+                        for (c1 = c2; c1 <= actualRows - 1; c1++)
                         {
                             if (xx[c1] > high)
-                            {
                                 break;
-                            }
                         }
-                        int bin = c1 - C2;
+                        int bin = c1 - c2;
                         if (bin > 0)
-                        {
-                            clm = clm + 1;
-                        }
+                            clm++;
                         //  If bin > 1 Then clm = clm + 3
-                        C2 = c1;
+                        c2 = c1;
                     }
                     double qxx = Convert.ToDouble(clm);
                     if (qxx > mxx)
@@ -292,20 +283,16 @@ namespace StatsDirect.Charting
 
             //  Ensure the total number of bins is between 1 and 20
             if (mp < 1)
-            {
                 mp = 1;
-            }
             if (mp > 20)
-            {
                 mp = 20;
-            }
 
             v_axis(ref min, ref max, mp - 1, out zmin, out zint);
             if (force)
             {
-                for (int C = 1; C <= 2; C++)
+                for (int c = 1; c <= 2; c++)
                 {
-                    int nmp = mp - C;
+                    int nmp = mp - c;
                     double nzmin = 0;
                     double nzint = 0;
                     if (nmp > 3)
@@ -319,7 +306,7 @@ namespace StatsDirect.Charting
                             break;
                         }
                     }
-                    nmp = mp + C;
+                    nmp = mp + c;
                     if (nmp <= 20)
                     {
                         v_axis(ref min, ref max, nmp - 1, out nzmin, out nzint);
@@ -384,7 +371,7 @@ namespace StatsDirect.Charting
                         break;
                     }
                 }
-                zmin = zmin + zint * budge;
+                zmin += zint * budge;
             }
             outputBins = mp;
         }
