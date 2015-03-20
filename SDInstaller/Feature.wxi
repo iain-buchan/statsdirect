@@ -6,7 +6,7 @@
     <ComponentRef Id="CalculatorShortcut" />
 
     <!-- Registry -->
-    <ComponentRef Id="RegistryEntries"/>
+    <!-- <ComponentRef Id="RegistryEntries"/> -->
 
     <!-- Main files -->
     <ComponentRef Id="ProductComponent" />
