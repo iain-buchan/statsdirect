@@ -14,15 +14,17 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug</DefineConstants>
+    <DefineConstants>Debug;OperationsDir=$(SolutionDir)StatsDirectUI\Assets\Operations</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>OperationsDir=$(SolutionDir)StatsDirectUI\Assets\Operations</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
@@ -33,6 +35,7 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="OperationsFragment.wxs" />
     <Compile Include="StatsDirect-x86.wxs" />
   </ItemGroup>
   <ItemGroup>
@@ -71,12 +74,17 @@
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
+  -->
+  <Target Name="BeforeBuild">
+    <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="OperationsFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="%(HarvestDirectory.Transforms)" Directory="$(SolutionDir)StatsDirectUI\Assets\Operations" ComponentGroupName="Operations" DirectoryRefId="Operations" KeepEmptyDirectories="false" PreprocessorVariable="var.OperationsSource" SuppressCom="%(HarvestDirectory.SuppressCom)" SuppressRootDirectory="true" SuppressRegistry="%(HarvestDirectory.SuppressRegistry)">
+    </HeatDirectory>
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent />
   </PropertyGroup>
 </Project>
