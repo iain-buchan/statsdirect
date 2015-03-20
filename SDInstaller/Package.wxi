@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <!-- Packaging: a single .msi with compressed files in .cab format -->
+  <Package
+    InstallScope="perMachine"
+    InstallerVersion="405"
+    Compressed="yes"
+    Description="StatsDirect v3.0"
+    Manufacturer="StatsDirect Limited"/>
+  <Media Id="1" Cabinet="SD.cab" EmbedCab="no" />
+</Include>

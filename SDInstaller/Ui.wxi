@@ -50,42 +50,7 @@
     <![CDATA[Installed OR (VersionNT >= 501)]]>
   </Condition>
   <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
-  <Condition Message="A later version of [ProductName] is already installed. Setup will now exit.">
+  <Condition Message="A later version of [ProductName] is already installed. If you wish to install this version, uninstall the later version then run this installer again. Setup will now exit.">
     NOT NEWERVERSIONDETECTED OR Installed
   </Condition>
-
-  <!-- Start menu shortcuts -->
-  <DirectoryRef Id="ApplicationProgramsFolder">
-    <Component Id="ApplicationShortcut" Guid="4A69823D-392D-49aa-81DF-B660EA920F25">
-      <Shortcut Id="ApplicationStartMenuShortcut"
-                Name="StatsDirect 3"
-                Description="StatsDirect Statistical Package"
-                Icon="statsdirect.ico"
-                Target="[INSTALLLOCATION]StatsDirect.exe"
-                WorkingDirectory="INSTALLLOCATION"
-                  />
-      <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
-      <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirect" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-    </Component>
-    <Component Id="CalculatorShortcut" Guid="827ED6FB-DBEC-42e7-A3B1-22BF3FAAB104">
-      <Shortcut Id="CalculatorStartMenuShortcut"
-                Name="StatsDirect Calculator"
-                Description="StatsDirect Calculator Utility"
-                Icon="calculator.ico"
-                Target="[INSTALLLOCATION]StatsDirect.exe"
-                Arguments="-calculator"
-                WorkingDirectory="INSTALLLOCATION"/>
-      <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirectCalculator" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-    </Component>
-  </DirectoryRef>
-
-  <!-- Initial registry area so that SD3 can write its licence key -->
-  <DirectoryRef Id="TARGETDIR">
-    <Component Id="RegistryEntries" Guid="D2C93068-C954-4b1d-8516-355434B623D7">
-      <RegistryKey Root="HKCU" Key="Software\VB and VBA Program Settings" ForceCreateOnInstall="yes">
-        <Permission GenericAll="yes" User="[LogonUser]"/>
-        <RegistryValue Type="string" Value="Default Value"/>
-      </RegistryKey>
-    </Component>
-  </DirectoryRef>
 </Include>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <!-- Desktop shortcuts - assumes surrounding Directory structure has been created. -->
+  <Shortcut Id="StatsDirectExeDesktopShortcut"
+            Directory="DesktopFolder"
+            Name="StatsDirect 3"
+            Description="StatsDirect Statistical Package"
+            Icon="statsdirect.ico"
+            WorkingDirectory="INSTALLLOCATION"
+            Advertise="yes"/>
+</Include>

@@ -59,6 +59,9 @@
   <ItemGroup>
     <Content Include="bannrbmp-sd.bmp" />
     <Content Include="Component.wxi" />
+    <Content Include="Desktop.wxi" />
+    <Content Include="Package.wxi" />
+    <Content Include="StartMenu.wxi" />
     <Content Include="Ui.wxi" />
     <Content Include="Feature.wxi" />
     <Content Include="dlgbmp-sd.bmp" />
