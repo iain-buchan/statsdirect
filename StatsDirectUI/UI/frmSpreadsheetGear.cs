@@ -1,6 +1,3 @@
-// Comment for production
-// #define WATCH_EXCEPTIONS
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -610,7 +607,7 @@ namespace StatsDirect.UI
             return new Area(grid, range.Row, range.Column, range.Row + range.RowCount - 1, range.Column + range.ColumnCount - 1);
         }
 
-        private void DoOrWarn(Action func, string explanation)
+        private static void DoOrWarn(Action func, string explanation)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -626,7 +623,7 @@ namespace StatsDirect.UI
 #endif
         }
 
-        private void DoOrSwallow(Action func)
+        private static void DoOrSwallow(Action func)
         {
 #if !WATCH_EXCEPTIONS
             try

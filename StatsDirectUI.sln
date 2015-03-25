@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsDirectUI", "StatsDirectUI\StatsDirectUI.csproj", "{C73E1B83-A745-4592-92A0-40C5658D6D7C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BF6CBFF8-F40E-427B-8EBD-16662BD9413B}"
@@ -23,6 +25,10 @@ Global
 		Debug|Mixed Platforms = Debug|Mixed Platforms
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		DebugWatchExceptions|Any CPU = DebugWatchExceptions|Any CPU
+		DebugWatchExceptions|Mixed Platforms = DebugWatchExceptions|Mixed Platforms
+		DebugWatchExceptions|x64 = DebugWatchExceptions|x64
+		DebugWatchExceptions|x86 = DebugWatchExceptions|x86
 		Release|Any CPU = Release|Any CPU
 		Release|Mixed Platforms = Release|Mixed Platforms
 		Release|x64 = Release|x64
@@ -39,6 +45,12 @@ Global
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.DebugWatchExceptions|Any CPU.ActiveCfg = DebugWatchExceptions|Any CPU
+		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.DebugWatchExceptions|Any CPU.Build.0 = DebugWatchExceptions|Any CPU
+		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = DebugWatchExceptions|Any CPU
+		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.DebugWatchExceptions|Mixed Platforms.Build.0 = DebugWatchExceptions|Any CPU
+		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.DebugWatchExceptions|x64.ActiveCfg = DebugWatchExceptions|Any CPU
+		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.DebugWatchExceptions|x86.ActiveCfg = DebugWatchExceptions|Any CPU
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C73E1B83-A745-4592-92A0-40C5658D6D7C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
@@ -56,6 +68,10 @@ Global
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|x64.ActiveCfg = Debug|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|x86.ActiveCfg = Debug|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|x86.Build.0 = Debug|x86
+		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|Any CPU.ActiveCfg = DebugWatchExceptions|x86
+		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = DebugWatchExceptions|x86
+		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|x64.ActiveCfg = DebugWatchExceptions|x86
+		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|x86.ActiveCfg = DebugWatchExceptions|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|Any CPU.ActiveCfg = Release|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|Mixed Platforms.Build.0 = Release|x86
@@ -74,6 +90,11 @@ Global
 		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.Debug|x64.ActiveCfg = Debug|x86
 		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.Debug|x86.ActiveCfg = Debug|x86
 		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.Debug|x86.Build.0 = Debug|x86
+		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.DebugWatchExceptions|Any CPU.ActiveCfg = Debug|x86
+		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = Debug|x86
+		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.DebugWatchExceptions|x64.ActiveCfg = Debug|x86
+		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.DebugWatchExceptions|x86.ActiveCfg = Debug|x86
+		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.DebugWatchExceptions|x86.Build.0 = Debug|x86
 		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.Release|Any CPU.ActiveCfg = Release|x86
 		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}.Release|Mixed Platforms.Build.0 = Release|x86
@@ -92,6 +113,11 @@ Global
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|x64.ActiveCfg = Debug|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|x64.Build.0 = Debug|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Debug|x86.ActiveCfg = Debug|x64
+		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.DebugWatchExceptions|Any CPU.ActiveCfg = Debug|x64
+		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = Debug|x64
+		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.DebugWatchExceptions|x64.ActiveCfg = Debug|x64
+		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.DebugWatchExceptions|x64.Build.0 = Debug|x64
+		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.DebugWatchExceptions|x86.ActiveCfg = Debug|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|Any CPU.ActiveCfg = Release|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|Mixed Platforms.ActiveCfg = Release|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.Release|Mixed Platforms.Build.0 = Release|x64
@@ -110,6 +136,11 @@ Global
 		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Debug|x64.ActiveCfg = Debug|x86
 		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Debug|x86.ActiveCfg = Debug|x86
 		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Debug|x86.Build.0 = Debug|x86
+		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|Any CPU.ActiveCfg = Debug|x86
+		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = Debug|x86
+		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|x64.ActiveCfg = Debug|x86
+		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|x86.ActiveCfg = Debug|x86
+		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|x86.Build.0 = Debug|x86
 		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|Any CPU.ActiveCfg = Release|x86
 		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|Any CPU.Build.0 = Release|x86
 		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|Mixed Platforms.ActiveCfg = Release|x86
@@ -129,11 +160,11 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UpdateFileVersion = False
-		BuildVersion_UpdateAssemblyVersion = False
-		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
-		BuildVersion_ConfigurationName = ReleaseWithSigning
-		BuildVersion_BuildAction = Both
 		BuildVersion_UseGlobalSettings = False
+		BuildVersion_BuildAction = Both
+		BuildVersion_ConfigurationName = ReleaseWithSigning
+		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
+		BuildVersion_UpdateAssemblyVersion = False
+		BuildVersion_UpdateFileVersion = False
 	EndGlobalSection
 EndGlobal

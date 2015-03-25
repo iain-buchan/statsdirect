@@ -1,6 +1,3 @@
-// Comment for production
-// #define WATCH_EXCEPTIONS
-
 // If ALLOW_OPTIONAL_UNMANAGED_CODE is defined, the application is free to use unmanaged code to get around annoyances.
 // Current uses:
 // - Removes flicker when swapping between maximised MDI children using tabs
@@ -412,13 +409,9 @@ namespace StatsDirect.UI
             catch (Exception ex)
             {
                 if (InOperation)
-                {
                     PuntThroughEventLoop(ex);
-                }
                 else
-                {
                     throw;
-                }
             }
 #endif
         }

@@ -1,6 +1,3 @@
-// Comment for production
-// #define WATCH_EXCEPTIONS
-
 using System.Drawing;
 using System;
 using System.Collections.Generic;
