@@ -393,10 +393,6 @@ namespace StatsDirect.UI
             if (!(tagObject is Dictionary<string, string>))
                 return;
             Dictionary<string, string> tags = (Dictionary<string, string>)tagObject;
-            if (tags.Count > 1)
-            {
-
-            }
             string operationName;
             if (!tags.TryGetValue("operation", out operationName))
                 return;
