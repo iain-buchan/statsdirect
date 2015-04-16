@@ -97,9 +97,6 @@
     <Component Id="BACKINT.rtf">
       <File Id="BACKINT.rtf" Name="BACKINT.rtf" KeyPath="yes" />
     </Component>
-    <Component Id="bartlett.rtf">
-      <File Id="bartlett.rtf" Name="bartlett.rtf" KeyPath="yes" />
-    </Component>
     <Component Id="blank.rtf">
       <File Id="blank.rtf" Name="blank.rtf" KeyPath="yes" />
     </Component>

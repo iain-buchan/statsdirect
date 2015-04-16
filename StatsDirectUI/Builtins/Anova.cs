@@ -1694,6 +1694,48 @@ namespace StatsDirect.Builtins
 
         public static StepResult RptEqualityOfVariance(ITemplateHost host, ParameterBag parameters)
         {
+            DataFrame frame = parameters["data"].AsDataFrame;
+
+            double[] ao = new double[frame.MaxRows + 1];
+            int[] reali = new int[frame.VariableCount];
+            double[] mdn = new double[frame.VariableCount];
+
+            for (int d = 0; d < frame.VariableCount; d++)
+            {
+                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                foreach (double val in v.Data)
+                {
+                    if (val != Constant.MISSING)
+                    {
+                        reali[d] += 1;
+                        ao[reali[d]] = val;
+                    }
+                }
+                if (reali[d] > 1)
+                {
+                    Array.Sort(ao, 1, reali[d]);
+                    double imdn = 0.5 * (reali[d] + 1);
+                    if (imdn - Math.Floor(imdn) == 0)
+                    {
+                        mdn[d] = ao[Convert.ToInt32(imdn)];
+                    }
+                    else
+                    {
+                        int iimdn = (int)Math.Floor(imdn);
+                        mdn[d] = ao[iimdn] + (ao[iimdn + 1] - ao[iimdn]) * (imdn - Math.Floor(imdn));
+                    }
+                }
+                else
+                {
+                    host.Error("zero length group", "Homogeneity of Variance");
+                    throw new TemplateOperationCancelledException();
+                }
+            }
+
+            double[] sums = new double[frame.VariableCount];
+            double[] sum2 = new double[frame.VariableCount];
+            long[] tnx = new long[frame.VariableCount];
+            double[] means = new double[frame.VariableCount];
             double lns = 0;
             double sbar = 0;
             double svii = 0;
@@ -1702,76 +1744,36 @@ namespace StatsDirect.Builtins
             int ntot = 0;
             double sum2tot = 0;
             double sqtot = 0;
-            double sq;
-            int nx;
 
-            DataFrame frame = parameters["data"].AsDataFrame;
-
-            double[] ao = new double[frame.MaxRows + 1 ];
-            int[] reali = new int[frame.VariableCount];
-            double[] mdn = new double[frame.VariableCount];
-
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[D].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                int nx = 0;
+                double sq = 0.0;
+                double sum = 0.0;
                 foreach (double val in v.Data)
                 {
                     if (val != Constant.MISSING)
                     {
-                        reali[D] += 1;
-                        ao[reali[D]] = val;
-                    }
-                }
-                if (reali[D] > 1)
-                {
-                    Array.Sort(ao, 1, reali[D]);
-                    double imdn = 0.5 * (reali[D] + 1);
-                    if (imdn - Math.Floor(imdn) == 0)
-                    {
-                        mdn[D] = ao[Convert.ToInt32(imdn)];
-                    }
-                    else
-                    {
-                        int iimdn = (int)Math.Floor(imdn);
-                        mdn[D] = ao[iimdn] + (ao[iimdn + 1] - ao[iimdn]) * (imdn - Math.Floor(imdn));
-                    }
-                }
-                else
-                {
-                    host.Error("zero length group", "Homogeneity of Variance"); //  , App.helpfile, ACTIVE_HELP_ID, Me)
-                    throw new TemplateOperationCancelledException();
-                }
-            }
-
-            double[] sum = new double[frame.VariableCount];
-            double[] sum2 = new double[frame.VariableCount];
-            long[] tnx = new long[frame.VariableCount];
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
-            {
-                DoubleVariable v = frame.Variables[D].AsDoubleVariable;
-                nx = 0;
-                sq = 0.0;
-                foreach (double val in v.Data)
-                {
-                    if (val != Constant.MISSING)
-                    {
-                        nx += 1;
-                        sum[D] += val;
+                        nx++;
+                        sum += val;
                         sqtot += val * val;
                         sq += val * val;
                     }
                 }
-                tnx[D] = nx;
-                sum2[D] = (sum[D] * sum[D]) / Convert.ToDouble(nx);
-                sum2tot = sum2tot + sum2[D];
-                ntot = ntot + nx;
-                sumtot = sumtot + sum[D];
-                double df = tnx[D] - 1;
-                double var = (sq - sum2[D]) / df;
-                svi = svi + df;
-                svii = svii + 1.0 / df;
-                sbar = sbar + var * df;
-                lns = lns + df * Math.Log(var);
+                tnx[d] = nx;
+                sums[d] = sum;
+                means[d] = sum / nx;
+                sum2[d] = (sum * sum) / nx;
+                sum2tot += sum2[d];
+                ntot += nx;
+                sumtot += sum;
+                double df = tnx[d] - 1;
+                double var = (sq - sum2[d]) / df;
+                svi += df;
+                svii += 1.0 / df;
+                sbar += var * df;
+                lns += df * Math.Log(var);
             }
             // The following code fragment produces values that are never used.  PJC 2012/04/09
             // cc = ( sumtot * sumtot ) / Convert.ToDouble( ntot ); 
@@ -1788,53 +1790,90 @@ namespace StatsDirect.Builtins
             long bdf = frame.VariableCount - 1;
             double C = 1.0 + (1.0 / (3.0 * bdf)) * (svii - (1.0 / svi));
             double x2 = M / C;
-            sum = new double[frame.VariableCount]; //  Force to zeroes
-            sum2 = new double[frame.VariableCount]; //  Force to zeroes
-            sum2tot = 0.0;
-            sumtot = 0.0;
-            ntot = 0;
-            sqtot = 0.0;
-            for (int D = 0; D < frame.VariableCount; D++)
+            double[] sumMdnDiffs = new double[frame.VariableCount]; //  Force to zeroes
+            double[] sum2MdnDiffs = new double[frame.VariableCount]; //  Force to zeroes
+            double[] variances = new double[frame.VariableCount]; //  Force to zeroes
+            double sum2MdnDiffTot = 0.0;
+            double sumMdnDiffTot = 0.0;
+            double sqMdnDiffTot = 0.0;
+
+            for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[D].AsDoubleVariable;
-                nx = 0;
-                sq = 0.0;
+                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                double sumMdnDiff = 0.0;
+                double sqMeanDiffTot = 0.0;
                 foreach (double val in v.Data)
                 {
                     if (val != Constant.MISSING)
                     {
-                        nx += 1;
-                        double diff = val - mdn[D];
-                        sum[D] += Math.Abs(diff);
-                        sqtot += diff * diff;
-                        sq += diff * diff;
+                        double mdnDiff = val - mdn[d];
+                        sumMdnDiff += Math.Abs(mdnDiff);
+                        sqMdnDiffTot += mdnDiff * mdnDiff;
+                        double meanDiff = val - means[d];
+                        sqMeanDiffTot += meanDiff * meanDiff;
                     }
                 }
-                tnx[D] = nx;
-                sum2[D] = (sum[D] * sum[D]) / Convert.ToDouble(nx);
-                sum2tot = sum2tot + sum2[D];
-                ntot = ntot + nx;
-                sumtot = sumtot + sum[D];
+                sumMdnDiffs[d] = sumMdnDiff;
+                sumMdnDiffTot += sumMdnDiff;
+                double sum2MdnDiff = (sumMdnDiff * sumMdnDiff) / tnx[d];
+                sum2MdnDiffs[d] = sum2MdnDiff;
+                sum2MdnDiffTot += sum2MdnDiff;
+                variances[d] = sqMeanDiffTot / (tnx[d] - 1.0);
             }
-            double cc = (sumtot * sumtot) / Convert.ToDouble(ntot);
-            double sstot = sqtot - cc;
-            // int dftot = ntot - 1; Never used.  PJC 2012/04/09.
-            double ssgroup = sum2tot - cc;
-            long dfgroup = frame.VariableCount - 1;
+            double[] ws = new double[frame.VariableCount]; //  Force to zeroes
+            double wTot = 0;
+            double wMeanTot = 0;
+            for (int d = 0; d < frame.VariableCount; d++)
+            {
+                double w = tnx[d] / variances[d];
+                ws[d] = w;
+                wTot += w;
+                double wMean = means[d] * w;
+                wMeanTot += wMean;
+            }
+            double xBar = wMeanTot / wTot;
+            double faTotal = 0;
+            double fcTotal = 0;
+            for (int d = 0; d < frame.VariableCount; d++)
+            {
+                double fa = ws[d] * (means[d] - xBar) * (means[d] - xBar);
+                double something = 1.0 - (tnx[d] / variances[d]) / wTot;
+                double fc = something * something / (tnx[d] - 1.0);
+                faTotal += fa;
+                fcTotal += fc;
+            }
+            double cc = (sumMdnDiffTot * sumMdnDiffTot) / ntot;
+            double sstot = sqMdnDiffTot - cc;
+            double ssgroup = sum2MdnDiffTot - cc;
+            long dfGroup = frame.VariableCount - 1;
             double sserror = sstot - ssgroup;
             int dferr = ntot - frame.VariableCount;
-            double msgroup = ssgroup / Convert.ToDouble(dfgroup);
-            double mserr = sserror / Convert.ToDouble(dferr);
-            //  RTF_LoadTemplate("bartlett.rtf")
+            double msgroup = ssgroup / dfGroup;
+            double mserr = sserror / dferr;
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("f", host.RoundU(msgroup / mserr));
-            outputParameters.AddOutput("df1", dfgroup.ToString());
-            outputParameters.AddOutput("df2", dferr.ToString());
-            double P = PDF.fvalp(msgroup / mserr, Convert.ToDouble(dfgroup), Convert.ToDouble(dferr));
-            outputParameters.AddOutput("pLevene", host.pval(P));
-            outputParameters.AddOutput("x2", host.RoundU(x2));
-            outputParameters.AddOutput("df", bdf.ToString());
-            outputParameters.AddOutput("pBartlett", host.pval(PDF.chivalp(x2, Convert.ToDouble(bdf))));
+
+            // Levene
+            outputParameters.AddOutput("f", msgroup / mserr);
+            outputParameters.AddOutput("df1", dfGroup);
+            outputParameters.AddOutput("df2", dferr);
+            double P = PDF.fvalp(msgroup / mserr, dfGroup, dferr);
+            outputParameters.AddOutput("pLevene", P);
+
+            // Bartlett
+            outputParameters.AddOutput("x2", x2);
+            outputParameters.AddOutput("df", bdf);
+            outputParameters.AddOutput("pBartlett", PDF.chivalp(x2, bdf));
+
+            // Welch
+            double groups = frame.VariableCount;
+            double fb = 2 * (groups - 2.0) / (groups * groups - 1.0);
+            double fWelch = (faTotal / (groups - 1.0)) / (1.0 + fb * fcTotal);
+            double dfdWelch = ((groups * groups) - 1) / (3.0 * fcTotal);
+            double pWelch = PDF.fvalp(fWelch, dfGroup, dfdWelch);
+            outputParameters.AddOutput("fWelch", fWelch);
+            outputParameters.AddOutput("dfnWelch", dfGroup);
+            outputParameters.AddOutput("dfdWelch", dfdWelch);
+            outputParameters.AddOutput("pWelch", pWelch);
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 

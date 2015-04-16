@@ -47,7 +47,6 @@
     <ComponentRef Id="agree.rtf" />
     <ComponentRef Id="asciigr.rtf" />
     <ComponentRef Id="BACKINT.rtf" />
-    <ComponentRef Id="bartlett.rtf" />
     <ComponentRef Id="blank.rtf" />
     <ComponentRef Id="BONFERR.rtf" />
     <ComponentRef Id="chartonly_ascii.rtf" />
