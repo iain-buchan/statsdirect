@@ -3316,7 +3316,7 @@ namespace StatsDirect.UI
                 {
                     Tag = parameter,
                     Name = "grid",
-                    Size = new Size(500 - 2 * 3, 305),
+                    Size = new Size((int)(494 * currentScaleFactor.Width), (int)(305 * currentScaleFactor.Height)),
                     ContextMenuStrip = contextMenuStrip
                 };
                 grid.ActiveWorkbookSet.GetLock();
@@ -3329,9 +3329,7 @@ namespace StatsDirect.UI
                     {
                         DoubleVariable v = frame.Variables[col].AsDoubleVariable;
                         for (int row = 0; row < v.Length; row++)
-                        {
                             usedRange.Cells[row, col].Value = v.Data[row];
-                        }
                     }
                 }
                 grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
@@ -3911,43 +3909,8 @@ namespace StatsDirect.UI
                     AutoSize = true
                 };
 
-                Panel colsPanel = new Panel { Padding = new Padding(0, 0, 0, 0), Margin = new Padding(0, 0, 0, 0), Size = new Size(300, 16) };
+                Panel colsPanel = new Panel { Padding = new Padding(0, 0, 0, 0), Margin = new Padding(0, 0, 0, 3), Size = new Size(300, 16), AutoSize = true, AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink };
                 ssgContainer.Controls.Add(colsPanel, 1, 0);
-
-                Label col1Label = new Label
-                {
-                    Text =
-                        isPersonTimeSize
-                            ? "Index events"
-                            : isRrIndex
-                                ? "Reference rate"
-                                : isLikelihood ? "+ feature" : "+ success",
-                    AutoSize = true,
-                    Location = new Point(30, 0)
-                };
-                colsPanel.Controls.Add(col1Label);
-
-                Label col2Label = new Label
-                {
-                    Text =
-                        (isPersonTimeSize || isRrIndex)
-                            ? "Index Person-time"
-                            : isLikelihood ? "- feature" : "- failure",
-                    AutoSize = true,
-                    Location = new Point(120, 0)
-                };
-                colsPanel.Controls.Add(col2Label);
-
-                if (has3Columns)
-                {
-                    Label col3Label = new Label
-                    {
-                        Text = isPersonTimeSize ? "Reference size" : "score",
-                        AutoSize = true,
-                        Location = new Point(210, 0)
-                    };
-                    colsPanel.Controls.Add(col3Label);
-                }
 
                 if (isLikelihood)
                 {
@@ -3961,7 +3924,6 @@ namespace StatsDirect.UI
 
                 WorkbookView grid = new WorkbookView
                                         {
-                                            Size = new Size((int)((has3Columns ? 320 : 230) * currentScaleFactor.Width), (int)(400 * currentScaleFactor.Height)),
                                             ContextMenuStrip = contextMenuStrip,
                                             Padding = new Padding(0, 0, 0, 0),
                                             Margin = new Padding(0, 0, 0, 0)
@@ -3977,20 +3939,68 @@ namespace StatsDirect.UI
                             DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0].AsDoubleVariable);
                             DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, sourceFrame.Variables[1].AsDoubleVariable);
                             if (has3Columns && sourceFrame.VariableCount >= 3 && sourceFrame.Variables[0].IsDoubleVariable)
-                            {
                                 DumpIntoSsg((IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2].AsDoubleVariable);
-                            }
                         }
                     }
                     grid.ActiveWorksheet.WindowInfo.SplitColumns = has3Columns ? 3 : 2;
                     grid.ActiveWorksheet.WindowInfo.FreezePanes = true;
                     grid.ActiveWorksheet.Cells[0, has3Columns ? 3 : 2, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
-                    grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.ColumnWidth = 11; // characters
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
                     grid.ActiveWorkbook.WindowInfo.DisplayHorizontalScrollBar = false;
-                    // grid.CellEndEdit += grid_CellEndEdit;
-                    // grid.RangeSelectionChanging += grid_RangeSelectionChanging;
-                    // grid.KeyUp += grid_KeyUp;
+
+                    // Figure out the width of the row header
+                    grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.ColumnWidth = 3; // characters - used to simulate row header, which defaults to 3 character width until 1,000th row visible
+                    double rowHeaderWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.Width; // Simulated row header
+
+                    // Reset column widths to a more useful number (11 characters) and get their visible width
+                    grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.ColumnWidth = 11; // characters
+                    double visibleColumnsWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.Width; // Visible columns excluding row header and scrollbar
+                    double oneColumnWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.Width; // One column
+
+                    // Set the control size
+                    double pointsToPixels = 2; // TODO: HACK: Fudge factor.  How do we get this to be saner?
+                    int aHair = 3; // Fudge factor: Extra width in pixels for things like scrollbar edges and ensuring that the right-hand end of the last cell is visible
+                    int overallWidthInPixels = (int)((rowHeaderWidthInPoints + visibleColumnsWidthInPoints) * pointsToPixels) + SystemInformation.VerticalScrollBarWidth + aHair;
+                    grid.Size = new Size((int)(overallWidthInPixels * currentScaleFactor.Width), (int)(400 * currentScaleFactor.Height));
+                    int rowHeaderWidthInPixels = (int)(rowHeaderWidthInPoints * pointsToPixels);
+                    int oneColumnWidthInPixels = (int)(oneColumnWidthInPoints * pointsToPixels);
+                    int fudge = (int)(3 * pointsToPixels); // Offset of labels from nominal column start, in pixels.  Ideally this should closely match SSG's internal offset.
+
+                    Label col1Label = new Label
+                    {
+                        Text =
+                            isPersonTimeSize
+                                ? "Index events"
+                                : isRrIndex
+                                    ? "Reference rate"
+                                    : isLikelihood ? "+ feature" : "+ success",
+                        AutoSize = true,
+                        Location = new Point(rowHeaderWidthInPixels + (0 * oneColumnWidthInPixels) + fudge, 0)
+                    };
+                    colsPanel.Controls.Add(col1Label);
+
+                    Label col2Label = new Label
+                    {
+                        Text =
+                            (isPersonTimeSize || isRrIndex)
+                                ? "Index Person-time"
+                                : isLikelihood ? "- feature" : "- failure",
+                        AutoSize = true,
+                        Location = new Point(rowHeaderWidthInPixels + (1 * oneColumnWidthInPixels) + fudge, 0)
+                    };
+                    colsPanel.Controls.Add(col2Label);
+
+                    if (has3Columns)
+                    {
+                        Label col3Label = new Label
+                        {
+                            Text = isPersonTimeSize ? "Reference size" : "score",
+                            AutoSize = true,
+                            Location = new Point(rowHeaderWidthInPixels + (2 * oneColumnWidthInPixels) + fudge, 0)
+                        };
+                        colsPanel.Controls.Add(col3Label);
+                    }
+
                 }
                 finally
                 {
@@ -4571,25 +4581,25 @@ namespace StatsDirect.UI
                                 txtBL.BackColor = SystemColors.Window;
                                 txtBR.BackColor = SystemColors.Window;
                                 // Validate
-                                if (tl == Constant.MISSING)
+                                if (tl == Constant.MISSING || tl < 0)
                                 {
                                     txtTL.SelectAll();
                                     txtTL.Focus();
                                     return txtTL;
                                 }
-                                if (tr == Constant.MISSING)
+                                if (tr == Constant.MISSING || tr < 0)
                                 {
                                     txtTR.SelectAll();
                                     txtTR.Focus();
                                     return txtTR;
                                 }
-                                if (bl == Constant.MISSING)
+                                if (bl == Constant.MISSING || bl < 0)
                                 {
                                     txtBL.SelectAll();
                                     txtBL.Focus();
                                     return txtBL;
                                 }
-                                if (br == Constant.MISSING)
+                                if (br == Constant.MISSING || br < 0)
                                 {
                                     txtBR.SelectAll();
                                     txtBR.Focus();
@@ -4639,25 +4649,25 @@ namespace StatsDirect.UI
                                 txtBl.BackColor = SystemColors.Window;
                                 txtBr.BackColor = SystemColors.Window;
                                 // Validate - find the first missing value in the current stratum
-                                if (tl == Constant.MISSING)
+                                if (tl == Constant.MISSING || tl < 0)
                                 {
                                     txtTl.SelectAll();
                                     txtTl.Focus();
                                     return txtTl;
                                 }
-                                if (tr == Constant.MISSING)
+                                if (tr == Constant.MISSING || tr < 0)
                                 {
                                     txtTr.SelectAll();
                                     txtTr.Focus();
                                     return txtTr;
                                 }
-                                if (bl == Constant.MISSING)
+                                if (bl == Constant.MISSING || bl < 0)
                                 {
                                     txtBl.SelectAll();
                                     txtBl.Focus();
                                     return txtBl;
                                 }
-                                if (br == Constant.MISSING)
+                                if (br == Constant.MISSING || br < 0)
                                 {
                                     txtBr.SelectAll();
                                     txtBr.Focus();
@@ -4694,25 +4704,25 @@ namespace StatsDirect.UI
                                         lblStratum.Tag = failedStratum + 1;
                                         cmdPrevious.Enabled = failedStratum > 0;
                                         cmdNext.Enabled = true;
-                                        if (tl == Constant.MISSING)
+                                        if (tl == Constant.MISSING || tl < 0)
                                         {
                                             txtTl.SelectAll();
                                             txtTl.Focus();
                                             return txtTl;
                                         }
-                                        if (tr == Constant.MISSING)
+                                        if (tr == Constant.MISSING || tr < 0)
                                         {
                                             txtTr.SelectAll();
                                             txtTr.Focus();
                                             return txtTr;
                                         }
-                                        if (bl == Constant.MISSING)
+                                        if (bl == Constant.MISSING || bl < 0)
                                         {
                                             txtBl.SelectAll();
                                             txtBl.Focus();
                                             return txtBl;
                                         }
-                                        if (br == Constant.MISSING)
+                                        if (br == Constant.MISSING || br < 0)
                                         {
                                             txtBr.SelectAll();
                                             txtBr.Focus();
