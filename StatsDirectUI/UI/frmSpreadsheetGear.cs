@@ -489,13 +489,9 @@ namespace StatsDirect.UI
                                 {
                                     for (int i = 0; i < data.Length; i++)
                                         if (Constant.MISSING == data[i] || double.IsNaN(data[i]))
-                                        {
                                             values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
-                                        }
                                         else
-                                        {
                                             values.SetNumber(i + offsetForTitles, firstColumnOfData + v, data[i]);
-                                        }
                                 }
                             }
                             break;
@@ -510,6 +506,36 @@ namespace StatsDirect.UI
                                                        Constant.MISSING == data[i]
                                                            ? missingIndicator
                                                            : variable.Groups[(int)data[i]].Label);
+                                }
+                            }
+                            break;
+                        case VariableType.Variant:
+                            {
+                                VariantVariable variable = frame.Variables[v].AsVariantVariable;
+                                object[] data = variable.Data;
+                                if (null != data)
+                                {
+                                    for (int i = 0; i < data.Length; i++)
+                                        if (data[i] is double)
+                                        {
+                                            double val = (double)data[i];
+                                            if (Constant.MISSING == val || double.IsNaN(val))
+                                                values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
+                                            else
+                                                values.SetNumber(i + offsetForTitles, firstColumnOfData + v, val);
+                                        }
+                                        else if (data[i] is bool)
+                                        {
+                                            values.SetLogical(i + offsetForTitles, firstColumnOfData + v, (bool)data[i]);
+                                        }
+                                        else if (null == data[i])
+                                        {
+                                            values.Clear(i + offsetForTitles, firstColumnOfData + v);
+                                        }
+                                        else
+                                        {
+                                            values.SetText(i + offsetForTitles, firstColumnOfData + v, data[i].ToString());
+                                        }
                                 }
                             }
                             break;

@@ -366,15 +366,7 @@ namespace StatsDirect.Templates
 
                     // Fill and validate the parameter
                     // Union parms with filledParameters before we pass in, so that this has access to earlier parameters in the same series
-                    ParameterBag parmsAndFilledParameters = new ParameterBag();
-                    foreach (KeyValuePair<string, FilledParameter> pair in filledParameters.Pairs)
-                        parmsAndFilledParameters.Add(pair);
-
-                    foreach (KeyValuePair<string, FilledParameter> pair in parms.Pairs)
-                    {
-                        if (!parmsAndFilledParameters.ContainsKey(pair.Key))
-                            parmsAndFilledParameters.Add(pair);
-                    }
+                    ParameterBag parmsAndFilledParameters = CombinePreferringLater(parms, filledParameters);
 
                     // If we don't already have the parameter and its lifetime is something other than just this operation, see whether it's already in the session
                     if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
@@ -410,6 +402,8 @@ namespace StatsDirect.Templates
                             }
                             outstandingParameters.Clear();
                         }
+                        // Ensure recently-acquired parameters are added to the context for the next parameter acquisition
+                        parmsAndFilledParameters = CombinePreferringLater(parms, filledParameters);
                     }
                     ParameterBag newFilledParameters = host.FillParameter(this, parameter, parmsAndFilledParameters, shouldCombine);
                     if (shouldCombine)
@@ -434,16 +428,7 @@ namespace StatsDirect.Templates
                 if (outstandingParameters.Count > 0)
                 {
                     // Union parms with filledParameters before we pass in, so that this has access to earlier parameters in the same series
-                    ParameterBag parmsAndFilledParameters = new ParameterBag();
-                    foreach (KeyValuePair<string, FilledParameter> pair in filledParameters.Pairs)
-                    {
-                        parmsAndFilledParameters.Add(pair);
-                    }
-                    foreach (KeyValuePair<string, FilledParameter> pair in parms.Pairs)
-                    {
-                        if (!parmsAndFilledParameters.ContainsKey(pair.Key))
-                            parmsAndFilledParameters.Add(pair);
-                    }
+                    ParameterBag parmsAndFilledParameters = CombinePreferringLater(parms, filledParameters);
 
                     Step frameStep;
                     Step outputForFrameStep;
@@ -461,9 +446,7 @@ namespace StatsDirect.Templates
                     if (null == outstandingFilledParameters)
                         throw new TemplateOperationCancelledException();
                     foreach (Parameter outstandingParameter in outstandingParameters)
-                    {
                         MaybeRemember(outstandingParameter, outstandingFilledParameters);
-                    }
                     foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
                         filledParameters[pair.Key] = pair.Value;
                     outstandingParameters.Clear();
@@ -484,6 +467,24 @@ namespace StatsDirect.Templates
 #endif
         }
 
+        /// <summary>
+        /// Combine bag1 and bag2 into a new bag (returned).  Where bag1 and bag2 contain the same parameter, prefer the one from bag2.
+        /// </summary>
+        /// <param name="bag1"></param>
+        /// <param name="bag2"></param>
+        /// <returns></returns>
+        private static ParameterBag CombinePreferringLater(ParameterBag bag1, ParameterBag bag2)
+        {
+            ParameterBag parmsAndFilledParameters = new ParameterBag();
+            foreach (KeyValuePair<string, FilledParameter> pair in bag2.Pairs)
+                parmsAndFilledParameters.Add(pair);
+
+            foreach (KeyValuePair<string, FilledParameter> pair in bag1.Pairs)
+                if (!parmsAndFilledParameters.ContainsKey(pair.Key))
+                    parmsAndFilledParameters.Add(pair);
+            return parmsAndFilledParameters;
+        }
+
         private void TryToRecallParameterForAllOptions(ParameterBag filledParameters, Parameter parameter)
         {
             ParameterBag savedParameters = host.SessionParametersAcrossOperations;
@@ -502,12 +503,8 @@ namespace StatsDirect.Templates
                         {
                             ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
                             foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
-                            {
                                 if (savedParameters.ContainsKey(opt.Name))
-                                {
                                     filledParameters.Add(opt.Name, savedParameters[opt.Name]);
-                                }
-                            }
                         }
                     }
                     break;
@@ -517,9 +514,7 @@ namespace StatsDirect.Templates
                         {
                             ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
                             if (savedParameters.ContainsKey(parameter.Name))
-                            {
                                 filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
-                            }
                         }
                     }
                     break;
@@ -1021,6 +1016,26 @@ namespace StatsDirect.Templates
                                         return failedValidationMessage ?? "Data must lie between 0 and 1";
                                     }
                                 }
+                            }
+                        }
+                    }
+                    return null;
+                case "ZeroToOneInclusive":
+                    {
+                        // If we're allowing blank parameters, accept a blank
+                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                            return null;
+
+                        // Otherwise ensure all values are in the range [0, 1]
+                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        foreach (Variable variable in dataFrame.Variables)
+                        {
+                            if (variable is DoubleVariable)
+                            {
+                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                foreach (double value in doubleVariable.Data)
+                                    if (value < 0 || value > 1)
+                                        return failedValidationMessage ?? "Data must lie between 0 and 1 inclusive";
                             }
                         }
                     }

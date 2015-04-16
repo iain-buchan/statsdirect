@@ -2093,42 +2093,171 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-        internal static StepResult ShtExpandFrequencies(ITemplateHost host, ParameterBag parameters)
+        internal static StepResult ShtExpand(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame uniquesFrame = parameters["uniques"].AsDataFrame;
-            StringVariable uniquesVariable = uniquesFrame.Variables[0].AsStringVariable;
-            string[] uniques = uniquesVariable.Data;
-            DataFrame frequenciesFrame = parameters["frequencies"].AsDataFrame;
-            DoubleVariable frequenciesVariable = frequenciesFrame.Variables[0].AsDoubleVariable;
-
-            // Rough defence against overflowing the grid.  Could still be overcome by someone deliberately introducing negative numbers, but this will catch thoughtlessness.
-            if (frequenciesVariable.Sum > 1000000)
+            int MAXROWS = 1000000; // Maximum number of output rows we're willing to tolerate.  TODO: Should really acquire this from the host.
+            string mode = parameters["mode"].AsString;
+            DataFrame covariatesOrNull;
+            StringVariable labelsOrNull;
+            int totalOutputRows;
+            int[] yesPerGroup;
+            int[] noPerGroup;
+            bool hasResponses;
+            switch (mode)
             {
-                host.Error("The output would require " + frequenciesVariable.Sum.ToString() + " rows, which will not fit into the spreadsheet", "Expand");
+                case "categories-counts":
+                    {
+                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        yesPerGroup = ToIntArray(countsVariable.Data, out totalOutputRows);
+                        noPerGroup = new int[yesPerGroup.Length]; // Initialised to 0
+                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0].AsStringVariable;
+                        covariatesOrNull = null;
+                        hasResponses = false;
+                    }
+                    break;
+                case "categories-counts-covariates":
+                    {
+                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        yesPerGroup = ToIntArray(countsVariable.Data, out totalOutputRows);
+                        noPerGroup = new int[yesPerGroup.Length]; // Initialised to 0
+                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0].AsStringVariable;
+                        covariatesOrNull = parameters["covariates"].AsDataFrame;
+                        hasResponses = false;
+                    }
+                    break;
+                case "responders-nonresps-covariates":
+                    {
+                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        int yesses;
+                        yesPerGroup = ToIntArray(respondersVariable.Data, out yesses);
+                        DoubleVariable nonrespsVariable = parameters["nonresps"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        int noes;
+                        noPerGroup = ToIntArray(nonrespsVariable.Data, out noes);
+                        totalOutputRows = yesses + noes;
+                        labelsOrNull = null;
+                        covariatesOrNull = parameters["covariates"].AsDataFrame;
+                        hasResponses = true;
+                    }
+                    break;
+                case "responders-totals-covariates":
+                    {
+                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        int scrap;
+                        yesPerGroup = ToIntArray(respondersVariable.Data, out scrap);
+                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        int[] totalsPerGroup = ToIntArray(totalsVariable.Data, out totalOutputRows);
+                        noPerGroup = new int[yesPerGroup.Length];
+                        for (int i = 0; i < yesPerGroup.Length; i++)
+                            noPerGroup[i] = totalsPerGroup[i] - yesPerGroup[i];
+                        labelsOrNull = null;
+                        covariatesOrNull = parameters["covariates"].AsDataFrame;
+                        hasResponses = true;
+                    }
+                    break;
+                case "resprops-totals-covariates":
+                    {
+                        DoubleVariable respropsVariable = parameters["resprops"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        int[] totalsPerGroup = ToIntArray(totalsVariable.Data, out totalOutputRows);
+                        yesPerGroup = new int[totalsVariable.Length];
+                        noPerGroup = new int[yesPerGroup.Length];
+                        for (int i = 0; i < yesPerGroup.Length; i++)
+                        {
+                            yesPerGroup[i] = (int)Math.Round(totalsPerGroup[i] * respropsVariable.Data[i], MidpointRounding.AwayFromZero);
+                            noPerGroup[i] = totalsPerGroup[i] - yesPerGroup[i];
+                        }
+                        labelsOrNull = null;
+                        covariatesOrNull = parameters["covariates"].AsDataFrame;
+                        hasResponses = true;
+                    }
+                    break;
+                default:
+                    throw new Exception("Unknown mode '" + mode + "' when trying to expand data");
+            }
+            if (totalOutputRows > MAXROWS)
+            {
+                host.Error("The output would require " + totalOutputRows + " rows, which will not fit into the spreadsheet", "Expand");
                 throw new TemplateOperationCancelledException();
             }
-            double[] frequencies = frequenciesVariable.Data;
+            bool hasLabels = null != labelsOrNull;
+            int covariatesCount = null == covariatesOrNull ? 0 : covariatesOrNull.VariableCount;
 
-            string[] outputValues = new string[(int)Math.Ceiling(frequenciesVariable.Sum)];
-            int nextOutputOffset = 0;
-            for (int i = 0; i < uniques.Length; i++)
+            DataFrame outputFrame = new DataFrame();
+            // Add label variable if we have it
+            StringVariable outputLabels;
+            if (hasLabels)
             {
-                // Defend against non-integer and negative numbers: Round to nearest integer and set negatives to 0.
-                int thisFrequency = (int)Math.Max(0, Math.Round(frequencies[i], 0));
-
-                for (int j = 0; j < thisFrequency; j++)
-                    outputValues[nextOutputOffset++] = uniques[i];
+                string title = labelsOrNull.Title;
+                if (title.EndsWith("_Grouped"))
+                    title = title.Replace("_Grouped", "");
+                else
+                    title += "_Individual";
+                outputLabels = new StringVariable(totalOutputRows, title);
+                outputFrame.Variables.Add(outputLabels);
             }
-            string title = uniquesVariable.Title;
-            if (title.EndsWith("_Grouped"))
-                title = title.Replace("_Grouped", "");
             else
-                title += "_Individual";
-            StringVariable outputVariable = new StringVariable(outputValues, title);
-            DataFrame outputFrame = new DataFrame(outputVariable);
+                outputLabels = null;
+
+            // Add responses variable if we have it
+            DoubleVariable outputResponses;
+            if (hasResponses)
+            {
+                outputResponses = new DoubleVariable(totalOutputRows, "Response");
+                outputFrame.Variables.Add(outputResponses);
+            }
+            else
+                outputResponses = null;
+
+            // Add covariates if we have them
+            VariantVariable[] outputCovariates = new VariantVariable[covariatesCount];
+            for (int i = 0; i < covariatesCount; i++)
+            {
+                VariantVariable v = new VariantVariable(totalOutputRows, covariatesOrNull.Variables[i].Title);
+                outputFrame.Variables.Add(v);
+                outputCovariates[i] = v;
+            }
+            int nextOutputOffset = 0;
+            for (int srcRow = 0; srcRow < yesPerGroup.Length; srcRow++)
+            {
+                if (yesPerGroup[srcRow] > 0)
+                {
+                    nextOutputOffset = FillExtractOutputRow(covariatesOrNull, labelsOrNull, yesPerGroup[srcRow], 1, hasResponses, hasLabels, covariatesCount, outputLabels, outputResponses, outputCovariates, nextOutputOffset, srcRow);
+                    nextOutputOffset = FillExtractOutputRow(covariatesOrNull, labelsOrNull, noPerGroup[srcRow], 0, hasResponses, hasLabels, covariatesCount, outputLabels, outputResponses, outputCovariates, nextOutputOffset, srcRow);
+                }
+
+            }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
             return new StepResult(StepSuccess.Success, outputParameters);
+        }
+
+        private static int FillExtractOutputRow(DataFrame covariatesOrNull, StringVariable labelsOrNull, int copies, int response, bool hasResponses, bool hasLabels, int covariatesCount, StringVariable outputLabels, DoubleVariable outputResponses, VariantVariable[] outputCovariates, int nextOutputOffset, int srcRow)
+        {
+            for (int copy = 0; copy < copies; copy++)
+            {
+                if (hasLabels)
+                    outputLabels.Data[nextOutputOffset] = labelsOrNull.Data[srcRow];
+                if (hasResponses)
+                    outputResponses.Data[nextOutputOffset] = response;
+                for (int covariate = 0; covariate < covariatesCount; covariate++)
+                    outputCovariates[covariate].Data[nextOutputOffset] = covariatesOrNull.Variables[covariate].AsVariantVariable.Data[srcRow];
+                nextOutputOffset++;
+            }
+            return nextOutputOffset;
+        }
+
+        private static int[] ToIntArray(double[] p, out int sum)
+        {
+            int total = 0;
+            int[] output = new int[p.Length];
+            for (int i = 0; i < p.Length; i++)
+            {
+                int rounded = (int)Math.Round(p[i], MidpointRounding.AwayFromZero);
+                total += rounded;
+                output[i] = rounded;
+            }
+            sum = total;
+            return output;
         }
     }
 }

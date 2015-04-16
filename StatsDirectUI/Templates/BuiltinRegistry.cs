@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace StatsDirect.Templates
 {
@@ -20,15 +21,16 @@ namespace StatsDirect.Templates
 
         public Builtin Builtin(string name)
         {
-            return builtins[name];
+            Builtin builtin;
+            if (!builtins.TryGetValue(name, out builtin))
+                throw new Exception("No built-in operation named '" + name + "' exists in the function registry.");
+            return builtin;
         }
 
         public void AddAll(ICollection<Builtin> candidates)
         {
             foreach (Builtin candidate in candidates)
-            {
                 builtins.Add(candidate.Name, candidate);
-            }
         }
     }
 }

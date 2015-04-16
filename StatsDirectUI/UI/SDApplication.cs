@@ -749,6 +749,11 @@ namespace StatsDirect.UI
                 return null;
             }
 
+            // We can't combine the parameter.  Check whether we need to acquire it at all.
+            if (parameter.HasAcquireIfTrue && !parameter.AcquireIfTrue(processor, context))
+                    return null;
+
+            // We can't combine the parameter and need to acquire it.
             while (true)
             {
                 ParameterBag outputParameters;

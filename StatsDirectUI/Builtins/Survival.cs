@@ -1480,7 +1480,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         private static void Petoprep(ITemplateHost host, ParameterBag parameters, ref int rows, out double gamma, ref double cit, ref int groups, ref int strata, ref double[] score, ref string gid, ref double[] gpid, ref string[] glab, ref string[] slab, out bool ifault, ref double[,] arr2, ref ColumnData[] cdat1)
         {
             int r; int j;
@@ -1490,9 +1489,8 @@ namespace StatsDirect.Builtins
             ifault = true;
             gamma = parameters["gamma"].AsDouble;
             if (gamma < 0)
-            {
                 throw new ArgumentException("gamma must be >= 0");
-            }
+
             double p = (1.0 - gamma) / 2.0;
             int iifault;
             cit = PDF.gauinv(1.0 - p, out iifault);
@@ -1672,9 +1670,7 @@ namespace StatsDirect.Builtins
                 if (use123)
                 {
                     for (j = 1; j <= groups; j++)
-                    {
                         score[j] = Convert.ToDouble(j);
-                    }
                 }
                 else
                 {
@@ -1683,16 +1679,12 @@ namespace StatsDirect.Builtins
                         bool wasCancelled;
                         score[j] = host.GetDouble("Score/weight for group " + j.ToString(), "Log rank & Wilcoxon", j, out wasCancelled);
                         if (wasCancelled)
-                        {
                             throw new TemplateOperationCancelledException();
-                        }
                     }
                 }
             }
             else if (groups < 2)
-            {
                 throw new TemplateOperationCancelledException();
-            }
             ifault = false;
         }
 
@@ -2276,7 +2268,6 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, outputParameters);
         }
 
-
         public static StepResult RptLogRank(ITemplateHost host, ParameterBag parameters)
         {
             int imfault = 0;
@@ -2301,9 +2292,7 @@ namespace StatsDirect.Builtins
             ColumnData[] cdat1 = null;
             Petoprep(host, parameters, ref nt, out gamma, ref cit, ref groups, ref strata, ref score, ref gid, ref gpid, ref glab, ref slab, out ifault, ref arr2, ref cdat1);
             if (ifault)
-            {
                 throw new TemplateOperationCancelledException();
-            }
 
             int wtMethod = Parsing.Cint_Txt(parameters["wt_method"].AsString);
             //  RTF_LoadTemplate("logrank.rtf")

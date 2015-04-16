@@ -3306,6 +3306,13 @@ namespace StatsDirect.UI
             return null;
         }
 
+        /// <summary>
+        /// If this is called, we know we're acquiring "screen" data in the dialog area rather than data from a loaded worksheet.
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="parameter"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, GridParameter parameter, ParameterBag context)
         {
             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);

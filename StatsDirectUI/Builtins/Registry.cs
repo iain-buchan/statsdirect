@@ -222,7 +222,7 @@ namespace StatsDirect.Builtins
                 new Builtin("shtDates", Sheet.ShtDates, InputDuringStep.Never),
                 new Builtin("shtDetabulate", Tables.ShtDetabulate, InputDuringStep.Never),
                 new Builtin("shtDummyVariables", Sheet.ShtDummyVariables, InputDuringStep.Never),
-                new Builtin("shtExpandFrequencies", Sheet.ShtExpandFrequencies, InputDuringStep.Never),
+                new Builtin("shtExpand", Sheet.ShtExpand, InputDuringStep.Never),
                 new Builtin("shtFillSeries", Sheet.ShtFillSeries, InputDuringStep.Never),
                 new Builtin("shtGroupCategorise", Sheet.ShtGroupCategorise, InputDuringStep.Never),
                 new Builtin("shtGroupExtract", Sheet.ShtGroupExtract, InputDuringStep.Never),
