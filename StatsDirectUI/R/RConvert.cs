@@ -47,66 +47,85 @@ namespace StatsDirect.R
             }
         }
 
-        public static void ToR(StringBuilder sb, string name, FilledParameter filledParameter)
+        public static void ToR(StringBuilder sb, string name, FilledParameter filledParameter, FrameType frameTypePreference)
         {
             if (filledParameter.IsDataFrame)
             {
                 DataFrame frame = filledParameter.AsDataFrame;
-                ToR(sb, name, frame);
+                ToR(sb, name, frame, frameTypePreference);
             }
             else
             {
                 ToRName(sb, name);
                 sb.Append(" <- ");
                 if (null == filledParameter || !filledParameter.HasData)
-                {
                     sb.Append("NULL");
-                }
                 else if (filledParameter.IsString)
-                {
                     ToR(sb, filledParameter.AsString);
-                }
                 else if (filledParameter.IsDouble)
-                {
                     ToR(sb, filledParameter.AsDouble);
-                }
                 else if (filledParameter.IsInt32)
-                {
                     ToR(sb, filledParameter.AsInt32);
-                }
                 else if (filledParameter.IsBoolean)
-                {
                     ToR(sb, filledParameter.AsBoolean);
-                }
             }
             sb.AppendLine();
         }
 
-        public static void ToR(StringBuilder sb, string frameName, DataFrame frame)
+        public static void ToR(StringBuilder sb, string frameName, DataFrame frame, FrameType frameTypePreference)
         {
             List<string> variableNames = new List<string>();
             List<string> columnNames = new List<string>();
             foreach (Variable variable in frame.Variables)
             {
                 StringBuilder nameBuilder = new StringBuilder();
-                RConvert.ToRName(nameBuilder, variable.Title);
+                ToRName(nameBuilder, variable.Title);
                 string variableName = nameBuilder.ToString();
                 sb.Append(variableName);
                 sb.Append(" <- ");
                 ToR(sb, variable);
                 sb.AppendLine();
                 variableNames.Add(variableName);
-                columnNames.Add("\"" + variable.Title.Replace("\"", "\"\"") + "\"");
+                columnNames.Add(RQuote(variable.Title));
             }
-            ToRName(sb, frameName);
-            sb.Append(" <- data.frame(");
-            sb.Append(string.Join(", ", variableNames.ToArray()));
-            sb.AppendLine(")");
-            sb.Append("colnames(");
-            ToRName(sb, frameName);
-            sb.Append(") <- c(");
-            sb.Append(string.Join(", ", columnNames.ToArray()));
-            sb.Append(")");
+
+            switch (frameTypePreference)
+            { 
+                case FrameType.Wide:
+                    ToRName(sb, frameName);
+                    sb.Append(" <- data.frame(");
+                    sb.Append(string.Join(", ", variableNames.ToArray()));
+                    sb.AppendLine(")");
+                    sb.Append("colnames(");
+                    ToRName(sb, frameName);
+                    sb.Append(") <- c(");
+                    sb.Append(string.Join(", ", columnNames.ToArray()));
+                    sb.Append(")");
+                    break;
+                case FrameType.Long:
+                    ToRName(sb, frameName);
+                    sb.AppendLine(" <- data.frame(");
+                    sb.Append("\tdata=c(");
+                    sb.Append(string.Join(", ", variableNames.ToArray()));
+                    sb.AppendLine("),");
+                    sb.Append("\tgroups=factor(rep(c(");
+                    sb.Append(String.Join(", ", variableNames.Select(RQuote).ToArray()));
+                    sb.Append("), times=c(");
+                    sb.Append(String.Join(", ", variableNames.Select(variableName => "length(" + variableName + ")").ToArray()));
+                    sb.AppendLine(")))");
+                    sb.AppendLine("\t)");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("frameTypePreference", frameTypePreference, "Only Long or Wide known when converting StatsDirect frame to R frame");
+            }
+        }
+
+        /// <summary>
+        /// Return unquoted in such a way that it is guaranteed to be an acceptable string to the R parser.  This surrounds the string with double-quotes and replaces any " in the string with "".
+        /// </summary>
+        private static string RQuote(string unquoted)
+        {
+            return "\"" + unquoted.Replace("\"", "\"\"") + "\"";
         }
 
         public static void ToR(StringBuilder sb, Variable variable)

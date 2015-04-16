@@ -63,7 +63,7 @@ namespace StatsDirect.Templates
             {
                 foreach (KeyValuePair<string, FilledParameter> pair in parameters.Pairs)
                 {
-                    RConvert.ToR(sb, pair.Key, pair.Value);
+                    RConvert.ToR(sb, pair.Key, pair.Value, FrameType.Wide);
                 }
             }
             sb.AppendLine(code);

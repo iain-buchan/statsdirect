@@ -3127,7 +3127,7 @@ namespace StatsDirect.UI
             if (userCancelled)
                 return;
             StringBuilder sb = new StringBuilder();
-            RConvert.ToR(sb, "copied.data", frame);
+            RConvert.ToR(sb, "copied.data", frame, FrameType.Long);
             Clipboard.Clear();
             Clipboard.SetText(sb.ToString(), TextDataFormat.Text);
         }

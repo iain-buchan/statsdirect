@@ -281,6 +281,7 @@
     <Compile Include="Expressions\StatsDirectExpressionLexerPartial.cs" />
     <Compile Include="Expressions\StatsDirectExpressionParserPartial.cs" />
     <Compile Include="Numerics\Utilities.cs" />
+    <Compile Include="R\FrameType.cs" />
     <Compile Include="R\RConvert.cs" />
     <Compile Include="R\RController.cs" />
     <Compile Include="R\RResults.g4.lexer.cs">
@@ -1696,7 +1697,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
