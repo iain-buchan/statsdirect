@@ -2061,11 +2061,12 @@ namespace StatsDirect.Builtins
             return new StepResult(StepSuccess.Success, new ParameterBag());
         }
 
-        internal static StepResult ShtContractFrequencies(ITemplateHost host, ParameterBag parameters)
+        internal static StepResult ShtContract(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame observationsFrame = parameters["observations"].AsDataFrame;
             ClassifierVariable observationsVariable = observationsFrame.Variables[0].AsClassifierVariable;
             IList<Group> groups = observationsVariable.Groups;
+            DataFrame covariatesOrNull;
 
             string[] outputValues = new string[groups.Count];
             double[] outputFrequencies = new double[groups.Count];
@@ -2082,7 +2083,7 @@ namespace StatsDirect.Builtins
             string frequenciesTitle = observationsVariable.Title;
             if (frequenciesTitle.EndsWith("_Individual"))
                 frequenciesTitle = frequenciesTitle.Replace("_Individual", "");
-            frequenciesTitle += "_Counts";
+            // frequenciesTitle += "_Counts"; Removed as part of #958
             StringVariable valuesVariable = new StringVariable(outputValues, valuesTitle);
             DoubleVariable frequenciesVariable = new DoubleVariable(outputFrequencies, frequenciesTitle);
             DataFrame outputFrame = new DataFrame();

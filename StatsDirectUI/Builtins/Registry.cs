@@ -217,7 +217,7 @@ namespace StatsDirect.Builtins
                 new Builtin("showGraphicsOptions", Options.ShowGraphicsOptions, InputDuringStep.Always),
                 new Builtin("shtClearMissing", Sheet.ShtClearMissing, InputDuringStep.Never),
                 new Builtin("shtCombine", Sheet.ShtCombine, InputDuringStep.Never),
-                new Builtin("shtContractFrequencies", Sheet.ShtContractFrequencies, InputDuringStep.Never),
+                new Builtin("shtContract", Sheet.ShtContract, InputDuringStep.Never),
                 new Builtin("shtConvertUnits", Sheet.ShtConvertUnits, InputDuringStep.Never),
                 new Builtin("shtDates", Sheet.ShtDates, InputDuringStep.Never),
                 new Builtin("shtDetabulate", Tables.ShtDetabulate, InputDuringStep.Never),
