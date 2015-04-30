@@ -93,7 +93,7 @@ namespace StatsDirect.Templates
             get { return StepType.Chart; }
         }
 
-        public override StepResult ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
+        public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {
             return processor.ExecuteInternal(this, parameters, isRedo);
         }

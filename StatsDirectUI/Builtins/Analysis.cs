@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
 {
     public class Analysis
     {
-        public static StepResult RptRateDirectStd(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRateDirectStd(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
@@ -177,11 +177,11 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("from_dobson", host.RoundU(xl * nunit));
             outputParameters.AddOutput("to_dobson", host.RoundU(xu * nunit));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptRateCompareTwo(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRateCompareTwo(ITemplateHost host, ParameterBag parameters)
         {
             double p2M = 0;
             double p1M = 0;
@@ -319,7 +319,7 @@ namespace StatsDirect.Builtins
                 exactParameters.AddOutput("p2m", host.pval(p2M));
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -462,7 +462,7 @@ namespace StatsDirect.Builtins
             return Constant.MISSING;
         }
 
-        public static StepResult RptMiscRetroRisk(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscRetroRisk(ITemplateHost host, ParameterBag parameters)
         {
             double p2m;
             double p1m;
@@ -594,7 +594,7 @@ namespace StatsDirect.Builtins
                 riskParameters.AddOutput("from", host.RoundU(parLl * 100.0));
                 riskParameters.AddOutput("to", host.RoundU(parUl * 100.0));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -626,7 +626,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepResult RptMiscDiagnostic(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscDiagnostic(ITemplateHost host, ParameterBag parameters)
         {
             double lrneg;
             double thetau;
@@ -933,11 +933,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("odr_from", host.RoundU(llf));
             outputParameters.AddOutput("odr_to", host.RoundU(ulf));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptMiscFalseResult(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscFalseResult(ITemplateHost host, ParameterBag parameters)
         {
             double pt = parameters["pt"].AsDouble;
             if (Math.Abs(pt - 0.5) >= 0.5)
@@ -966,11 +966,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("specific", host.RoundU((1 - pf) * 100));
             outputParameters.AddOutput("negative", host.RoundU(pn));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptKappaScreen(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKappaScreen(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
@@ -1174,10 +1174,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pegama", host.RoundU(pegama));
             outputParameters.AddOutput("pegamapc", Math.Round(pegama * 100.0, 2));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptMiscLikely(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscLikely(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
@@ -1238,11 +1238,11 @@ namespace StatsDirect.Builtins
                 rowParameters.AddOutput("from", host.RoundU(thetal));
                 rowParameters.AddOutput("to", host.RoundU(thetau));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptMiscNumberNeededToTreat(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscNumberNeededToTreat(ITemplateHost host, ParameterBag parameters)
         {
             double tmp;
             double rrel; double rreu;
@@ -1562,11 +1562,11 @@ namespace StatsDirect.Builtins
 
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptMiscRelRisk(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscRelRisk(ITemplateHost host, ParameterBag parameters)
         {
             int fault;
             double pe = Constant.MISSING;
@@ -1664,13 +1664,13 @@ namespace StatsDirect.Builtins
                     exposureParameters.AddOutput("walter_to", host.RoundU(parUl * 100.0));
                 }
 
-                return new StepResult(StepSuccess.Success, outputParameters);
+                return outputParameters;
             }
             return null;
         }
 
         /**
-        public static StepResult rptRateSMR(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag rptRateSMR(ITemplateHost host, ParameterBag parameters)
         {
             double etot = 0;
             int j;
@@ -1755,11 +1755,11 @@ namespace StatsDirect.Builtins
 
                 outputParameters.AddOutput("p_lo", host.pval(plo));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 **/
 
-        public static StepResult RptPropPairs(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPropPairs(ITemplateHost host, ParameterBag parameters)
         {
             double piu;
             double pil;
@@ -1912,11 +1912,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("lower", host.RoundU(pil));
             outputParameters.AddOutput("upper", host.RoundU(piu));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptPropSingle(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPropSingle(ITemplateHost host, ParameterBag parameters)
         {
             double p2;
             double dp2;
@@ -2036,11 +2036,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ap_2_approx", aprx);
             outputParameters.AddOutput("p_2_approx", host.pval(p2));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptPropUnPaired(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPropUnPaired(ITemplateHost host, ParameterBag parameters)
         {
             double z;
             double cu;
@@ -2138,7 +2138,7 @@ namespace StatsDirect.Builtins
                 approx2Parameters.AddOutput("p_2", host.zvalp2(z));
                 approx2Parameters.AddOutput("p_1", host.zvalp1(z));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
     }
 }

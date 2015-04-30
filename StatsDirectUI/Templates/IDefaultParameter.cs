@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace StatsDirect.Templates
+﻿namespace StatsDirect.Templates
 {
     /// <summary>
     /// Defines what must be implemented if this parameter is to have defaults.

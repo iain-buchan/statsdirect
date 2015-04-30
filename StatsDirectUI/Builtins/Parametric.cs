@@ -85,7 +85,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptVarianceRatio(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptVarianceRatio(ITemplateHost host, ParameterBag parameters)
         {
             int bot; int top;
 
@@ -124,10 +124,10 @@ namespace StatsDirect.Builtins
                 P = 0.5;
             }
             outputParameters.AddOutput("p_2", host.pval(P * 2));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptReferenceRange(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptReferenceRange(ITemplateHost host, ParameterBag parameters)
         {
             double cover = 0; double ul; double ll; double xq = 0;
             double o = 0;
@@ -287,7 +287,7 @@ namespace StatsDirect.Builtins
             x = capLower | capUpper ? "  (* limit capped at min/max)" : "";
             outputParameters.AddOutput("co", host.RoundU(cover) + "%" + x);
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -349,7 +349,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptPoissonConfidenceInterval(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag rptPoissonConfidenceInterval(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             double percent2 = parameters["gamma"].AsDouble * 100.0;
@@ -419,23 +419,23 @@ namespace StatsDirect.Builtins
                 sampleParameters.AddOutput("lower1", host.RoundU(tlower1));
                 sampleParameters.AddOutput("upper1", host.RoundU(tupper1));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptZSingle(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptZSingle(ITemplateHost host, ParameterBag parameters)
         {
             return RptNormalZ(host, parameters, 1);
         }
 
 
-        public static StepResult RptZUnpaired(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptZUnpaired(ITemplateHost host, ParameterBag parameters)
         {
             return RptNormalZ(host, parameters, 2);
         }
 
 
-        private static StepResult RptNormalZ(ITemplateHost host, ParameterBag parameters, int mode)
+        private static ParameterBag RptNormalZ(ITemplateHost host, ParameterBag parameters, int mode)
         {
             double gsumsq = 0;
             double gsum = 0;
@@ -492,7 +492,7 @@ namespace StatsDirect.Builtins
                 {
                     outputParameters.AddOutput("*warn", null);
                 }
-                return new StepResult(StepSuccess.Success, outputParameters);
+                return outputParameters;
             }
             else
             {
@@ -581,12 +581,12 @@ namespace StatsDirect.Builtins
                 {
                     outputParameters.AddOutput("*warn", null);
                 }
-                return new StepResult(StepSuccess.Success, outputParameters);
+                return outputParameters;
             }
         }
 
 
-        public static StepResult RptNormality(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptNormality(ITemplateHost host, ParameterBag parameters)
         {
             // ASSUME: Data passed in was acquired with NumericSkipMissing and has no missing values.
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -703,7 +703,7 @@ namespace StatsDirect.Builtins
                     variableParameters.AddOutput("chart", rtf);
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -1072,7 +1072,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult rptTUnpairedSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag rptTUnpairedSummary(ITemplateHost host, ParameterBag parameters)
         {
             double GAMMA = parameters["gamma"].AsDouble;
             int nx1 = parameters["nx1"].AsInt32;
@@ -1168,11 +1168,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("say1", "Two sided F test is not significant");
                 outputParameters.AddOutput("say2", "No need to assume unequal variances");
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptTSingleSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTSingleSummary(ITemplateHost host, ParameterBag parameters)
         {
             double P0; double cit;
 
@@ -1213,11 +1213,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_1", host.pval(P));
             outputParameters.AddOutput("p_2", host.pval(P * 2.0));
             outputParameters.AddOutput("pwr", Formatting.pwr(power, 1.0 - GAMMA));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptTUnpaired(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTUnpaired(ITemplateHost host, ParameterBag parameters)
         {
             double P0;
             double cit;
@@ -1313,11 +1313,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("say1", "Two sided F test is not significant");
                 outputParameters.AddOutput("say2", "No need to assume unequal variances");
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptTSingle(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTSingle(ITemplateHost host, ParameterBag parameters)
         {
             double[] mean = new double[1];
             double[] ss = new double[1];
@@ -1358,11 +1358,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_1", host.pval(P));
             outputParameters.AddOutput("p_2", host.pval(P * 2.0));
             outputParameters.AddOutput("pwr", Formatting.pwr(power, 1.0 - GAMMA));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptTPaired(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTPaired(ITemplateHost host, ParameterBag parameters)
         {
             double P0; double cit;
             double var;
@@ -1476,7 +1476,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*twosample", null);
                 outputParameters.AddOutput("*chart", null);
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
     }

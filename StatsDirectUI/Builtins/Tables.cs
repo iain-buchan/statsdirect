@@ -42,7 +42,7 @@ namespace StatsDirect.Builtins
             Array.Sort(cat, lowerBound, cats, new NamevarAscending());
         }
 
-        public static StepResult SFisher(ITemplateHost host, ref int a, ref int b, ref int c, ref int d, ref int fault)
+        public static ParameterBag SFisher(ITemplateHost host, ref int a, ref int b, ref int c, ref int d, ref int fault)
         {
             int t;
 
@@ -216,7 +216,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("mid_p_2", host.pval(Math.Min(midP * 2.0, 1.0)));
             }
             fault = 0;
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -814,7 +814,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepResult RptKappa(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKappa(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
             double cit; double p;
@@ -1126,7 +1126,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("pegama", host.RoundU(pegama));
                     outputParameters.AddOutput("pegamapc", Math.Round(pegama * 100.0, 2));
 
-                    return new StepResult(StepSuccess.Success, outputParameters);
+                    return outputParameters;
                 }
                 throw new InvalidDataException();
                 // <----wt
@@ -1306,12 +1306,12 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("kw", host.RoundU(r));
                 outputParameters.AddOutput("pw", host.pval(p));
 
-                return new StepResult(StepSuccess.Success, outputParameters);
+                return outputParameters;
             }
         }
 
 
-        public static StepResult RptKappaSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKappaSimulateExactP(ITemplateHost host, ParameterBag parameters)
         {
             int iter = parameters["iterations"].AsInt32;
             int seed = parameters["seed"].AsInt32;
@@ -1539,7 +1539,7 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("p", "P = * (cancelled)");
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -1676,7 +1676,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptKappaSizeWeights(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKappaSizeWeights(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["responses"].AsDataFrame;
 
@@ -1729,11 +1729,11 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("ycats", ycats);
             outputParameters.AddOutput("xcats", xcats);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptChiGfSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiGfSimulateExactP(ITemplateHost host, ParameterBag parameters)
         {
             int iterations = parameters["iterations"].AsInt32;
             int seed = parameters["seed"].AsInt32;
@@ -1777,7 +1777,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("k", actualIterations.ToString("N0"));
             outputParameters.AddOutput("seed_fmt", seed.ToString());
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         ///  <summary>
@@ -1865,7 +1865,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptChiSquareGoodnessOfFit(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiSquareGoodnessOfFit(ITemplateHost host, ParameterBag parameters)
         {
             const string cgft = "Chi-square goodness of fit test";
 
@@ -1997,7 +1997,7 @@ namespace StatsDirect.Builtins
             //  Remember a few values in case the user then wants to simulate exact P
             outputParameters.AddInput("x2", x2);
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -2165,7 +2165,7 @@ namespace StatsDirect.Builtins
         //     Return New StepResult(StepSuccess.Success, outputParameters)
         // End Function
 
-        public static StepResult RptCrosstabsPreprocess(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCrosstabsPreprocess(ITemplateHost host, ParameterBag parameters)
         {
             bool strat = false;
 
@@ -2256,10 +2256,10 @@ namespace StatsDirect.Builtins
                     outputParameters.AddInput("ycats", ycats);
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptCrosstabs(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCrosstabs(ITemplateHost host, ParameterBag parameters)
         {
             double[] z = null;
             string zlab = null;
@@ -2546,12 +2546,12 @@ namespace StatsDirect.Builtins
                         }
 
                         // w() was passed to a FORTRAN routine so must redim to (1 to c, 1 to r)
-                        ParameterBag chirxcParameters = SChi(host, ref cco, w, ycats, xcats, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed).ParameterBag;
+                        ParameterBag chirxcParameters = SChi(host, ref cco, w, ycats, xcats, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
                         chirxcList.Add(chirxcParameters);
                     }
                 } // two factor <-----
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         private static ParameterBag TabCmh(ITemplateHost host, ParameterBag parameters, int istrata, int irows, int icols, double[, ,] zt, string ylab, string xlab, string zlab)
@@ -2837,7 +2837,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static StepResult SChi(ITemplateHost host, ref double cco, double[,] o, int rows, int cols, bool doExact, bool doMonteCarlo, bool pc, bool xp, bool cs, bool xs, bool specifyScores, double mcci, int iterations, int seed)
+        public static ParameterBag SChi(ITemplateHost host, ref double cco, double[,] o, int rows, int cols, bool doExact, bool doMonteCarlo, bool pc, bool xp, bool cs, bool xs, bool specifyScores, double mcci, int iterations, int seed)
         {
             int ierr;
             double ul; double ll; double p; double c1;
@@ -3497,7 +3497,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ptaubi", host.pval(p));
             outputParameters.AddOutput("lltaubi", host.RoundU(ll));
             outputParameters.AddOutput("ultaubi", host.RoundU(ul));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         private static ParameterBag TabMh(ITemplateHost host, double cco, int zcats, double[, ,] zt, Namevar[] zcat)
@@ -7001,7 +7001,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult Woolf(ITemplateHost host, double[,] o, int k, bool showIntermediates, double cit, double cco, out bool ierr)
+        public static ParameterBag Woolf(ITemplateHost host, double[,] o, int k, bool showIntermediates, double cit, double cco, out bool ierr)
         {
             double s1X = 0; double s1 = 0; double t1 = 0; double t1X = 0; double w1 = 0; double w1X = 0; double n1 = 0; double n1X = 0;
 
@@ -7211,11 +7211,11 @@ namespace StatsDirect.Builtins
                 combinedWithHaldaneParameters.AddOutput("dfx", n2.ToString());
                 combinedWithHaldaneParameters.AddOutput("het_chi_px", host.pval(PDF.chivalp(x2, n2)));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptChiWoolfWorksheet(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiWoolfWorksheet(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0)
@@ -7254,7 +7254,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult ShtDetabulate(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtDetabulate(ITemplateHost host, ParameterBag parameters)
         {
             int i; int j;
 
@@ -7318,11 +7318,11 @@ namespace StatsDirect.Builtins
             }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult ShtTabulate(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTabulate(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame rowsFrame = parameters["rows"].AsDataFrame;
             ClassifierVariable rowsVariable = rowsFrame.Variables[0].AsClassifierVariable;
@@ -7411,7 +7411,7 @@ namespace StatsDirect.Builtins
             }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
     }

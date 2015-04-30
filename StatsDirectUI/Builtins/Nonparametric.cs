@@ -973,7 +973,7 @@ namespace StatsDirect.Builtins
             return 0;
         }
 
-        public static StepResult RptCuzick(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCuzick(ITemplateHost host, ParameterBag parameters)
         {
             double varz = 0; double ez = 0; double st = 0; double tie;
             int n = 0; int count = 0;
@@ -1087,11 +1087,11 @@ namespace StatsDirect.Builtins
             // RTF_DeleteBlock()
             // End If
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptDiversity(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptDiversity(ITemplateHost host, ParameterBag parameters)
         {
             double cit; double P0;
             double bias = 0; double biasx = 0;
@@ -1614,11 +1614,11 @@ namespace StatsDirect.Builtins
 
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptMannWhitney(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMannWhitney(ITemplateHost host, ParameterBag parameters)
         {
             double lev = 0;
             double r1 = 0; double xf = 0; double z = 0; double u = 0;
@@ -1626,9 +1626,7 @@ namespace StatsDirect.Builtins
 
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0)
-            {
-                return new StepResult(StepSuccess.Success, new ParameterBag());
-            }
+                return new ParameterBag();
 
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
@@ -1734,7 +1732,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("*noconf", null);
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         /// <summary>
@@ -1853,7 +1851,7 @@ namespace StatsDirect.Builtins
                 return theta_tzmin(true, tz2, y2, lp, ln, z, t, m, n);
         }
 
-        public static StepResult RptSpearman(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptSpearman(ITemplateHost host, ParameterBag parameters)
         {
             int nx = 0;
             double srkd2 = 0; double srksq = 0; double srksqa = 0; double srksqb = 0;
@@ -1880,7 +1878,7 @@ namespace StatsDirect.Builtins
             }
             if (nx < 2)
             {
-                return new StepResult(StepSuccess.Success, new ParameterBag());
+                return new ParameterBag();
             }
 
             double[] rka = new double[nx + 1 ];
@@ -1977,10 +1975,10 @@ namespace StatsDirect.Builtins
                 }
 
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptNpRegression(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptNpRegression(ITemplateHost host, ParameterBag parameters)
         {
             double Intercept = 0;
             double uci; double lci; double mdn = 0;
@@ -2041,7 +2039,7 @@ namespace StatsDirect.Builtins
             if (rows <= 4)
             {
                 host.Error("Too few observations", "Nonparametric Regression");
-                return new StepResult(StepSuccess.Failed, new ParameterBag());
+                throw new TemplateOperationCancelledException();
             }
 
             // get x and y medians in order to calculate intercepts later
@@ -2217,10 +2215,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("mdnValue", mdn);
             outputParameters.AddOutput("interceptValue", Intercept);
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptWilcoxon(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptWilcoxon(ITemplateHost host, ParameterBag parameters)
         {
             int n; double xf = 0; double ned = 0; double w = 0; double pl = 0; double pu = 0; double p2 = 0;
             int n1 = 0; int cnt = 0;
@@ -2270,7 +2268,7 @@ namespace StatsDirect.Builtins
 
             if (n < 2)
             {
-                return new StepResult(StepSuccess.Failed, new ParameterBag());
+                throw new TemplateOperationCancelledException();
             }
 
             XWSR(x, y, n, ref w, ref n1, ref ned, ref xf, ref pl, ref pu, ref p2, out fault);
@@ -2278,7 +2276,7 @@ namespace StatsDirect.Builtins
             if (fault)
             {
                 host.Error("Calculation Error", "Wilcoxon");
-                return new StepResult(StepSuccess.Failed, new ParameterBag());
+                throw new TemplateOperationCancelledException();
             }
 
             ParameterBag outputParameters = new ParameterBag();
@@ -2341,7 +2339,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*noconf", null);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         private static void XWSR(double[] x, double[] y, int n, ref double w, ref int nonzero, ref double ned, ref double xf, ref double pl, ref double pu, ref double p2, out bool fault)
@@ -2818,7 +2816,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static StepResult RptSmirnov(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptSmirnov(ITemplateHost host, ParameterBag parameters)
         {
             int n1 = 0; int n2 = 0; int ifault;
             double D; double dn; double DP;
@@ -2874,10 +2872,10 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("p_r", host.pval_half(P));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptQuantile(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptQuantile(ITemplateHost host, ParameterBag parameters)
         {
             bool do_conservative = parameters["conservative-ci"].AsBoolean;
             double GAMMA = parameters["gamma"].AsDouble;
@@ -2927,11 +2925,11 @@ namespace StatsDirect.Builtins
                 variableList.Add(variableParameters);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptKendall(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKendall(ITemplateHost host, ParameterBag parameters)
         {
             int ifault; int nxx = 0; int N;
             double ps;
@@ -2966,7 +2964,7 @@ namespace StatsDirect.Builtins
 
             if (fault)
             {
-                return new StepResult(StepSuccess.Failed, new ParameterBag());
+                throw new TemplateOperationCancelledException();
             }
 
             ParameterBag outputParameters = new ParameterBag();
@@ -3075,11 +3073,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_lexact", host.pval(pl));
             outputParameters.AddOutput("p_2exact", host.pval(ps * 2));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptFriedmanSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFriedmanSimulateExactP(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             int iterations = parameters["iterations"].AsInt32;
@@ -3136,7 +3134,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("k", actualIterations.ToString("N0"));
             outputParameters.AddOutput("seed_fmt", seed.ToString());
             host.FinishProgress();
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -3184,7 +3182,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptFriedman(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFriedman(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
@@ -3273,7 +3271,7 @@ namespace StatsDirect.Builtins
             outputParameters.Add("A2", new FilledParameter(true, A2));
             outputParameters.Add("B2", new FilledParameter(true, B2));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -3408,7 +3406,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptFrMultiple(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFrMultiple(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double confidence = parameters["confidence"].AsDouble;
@@ -3474,11 +3472,11 @@ namespace StatsDirect.Builtins
                 }
             }
             outputParameters.AddOutput("*pair", pairList);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptKruskal(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKruskal(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
@@ -3566,11 +3564,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*message", null);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptKruskalSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKruskalSimulateExactP(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             int iterations = parameters["iterations"].AsInt32;
@@ -3653,11 +3651,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("k", actualIterations.ToString("N0"));
             outputParameters.AddOutput("seed_fmt", seed.ToString());
             host.FinishProgress();
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptKwMultiple(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKwMultiple(ITemplateHost host, ParameterBag parameters)
         {
             double[] ri;
             double[] x;
@@ -3847,11 +3845,11 @@ namespace StatsDirect.Builtins
                 }
             }
             outputParameters.AddOutput("*conover", inequalityList);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptSqRank(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptSqRank(ITemplateHost host, ParameterBag parameters)
         {
             double ru = 0;
             double P;
@@ -4024,11 +4022,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("p2", host.pval(P * 2));
                 outputParameters.AddOutput("p1", host.pval(P));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptGini(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptGini(ITemplateHost host, ParameterBag parameters)
         {
             double sumsqdev = 0;
             double bgini2 = 0; double bgini3 = 0; double bcal = 0; double bcau = 0;
@@ -4254,7 +4252,7 @@ namespace StatsDirect.Builtins
                 //  TODO: HACK: We really need a template processor that removes placeholders if they're not present
                 outputParameters.AddOutput("chart", null);
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
     }

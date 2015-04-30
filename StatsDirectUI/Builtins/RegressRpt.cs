@@ -42,7 +42,7 @@ namespace StatsDirect.Builtins
 
     public class RegressRpt
     {
-        public static StepResult RptGroupedLinearity(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptGroupedLinearity(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame predictorFrame = parameters["predictor"].AsDataFrame;
             int nx = predictorFrame.Variables[0].Length;
@@ -101,11 +101,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tot_df", (totny - 1).ToString());
             outputParameters.AddOutput("reg", Q2);
             outputParameters.AddOutput("lin", Q);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptGroupedCovariance(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptGroupedCovariance(ITemplateHost host, ParameterBag parameters)
         {
             double gtxx = 0; double gtxy = 0; double gtyy = 0; double grandn = 0; double grandx = 0; double grandsqx = 0; double grandsqy = 0;
             double tsy = 0; double tsx = 0; double cit; double p0;
@@ -353,11 +353,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("chart", rtf);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptConditionalLogisticRegression(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptConditionalLogisticRegression(ITemplateHost host, ParameterBag parameters)
         {
             const string capti = "Conditional logistic regression";
 
@@ -572,7 +572,7 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("from", host.RoundU(lci));
                 orParameters.AddOutput("to", host.RoundU(uci));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 

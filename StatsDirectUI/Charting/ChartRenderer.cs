@@ -460,16 +460,27 @@ namespace StatsDirect.Charting
         }
 
         /// <summary>
-        /// Returns a font matching the descriptor appropriate for drawing on a metafile.  #830: To prevent scaling issues, assume the metafile is drawn at 96dpi.
+        /// Returns a font matching the descriptor appropriate for drawing on a metafile, or null if no font can be derived from the descriptor.  #830: To prevent scaling issues, assume the metafile is drawn at 96dpi.
         /// </summary>
         public static Font FontFromSaveString(string descriptor)
         {
+            if (string.IsNullOrWhiteSpace(descriptor))
+                return null;
             string[] fontStrings = descriptor.Split(';');
+            if (fontStrings.Length != 3)
+                return null;
             string familyName = fontStrings[0];
             FontStyle style = ((FontStyle)(Parsing.Cint_Txt(fontStrings[1])));
             float emSize = float.Parse(fontStrings[2]);
             float pixelSize = emSize * PIXELS_PER_POINT;
-            return new Font(familyName, pixelSize, style, GraphicsUnit.Pixel);
+            try
+            {
+                return new Font(familyName, pixelSize, style, GraphicsUnit.Pixel);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public static string SaveStringFromFont(Font f)
@@ -707,15 +718,27 @@ namespace StatsDirect.Charting
                 InitSharedValues();
 
             //  Drawing objects
-            axisLabelFont = FontFromSaveString(DefaultAxisLabelFont);
+            if (!ReconstituteFonts())
+            {
+                InitFirstFonts();
+                if (!ReconstituteFonts())
+                    throw new Exception("Cannot find the fonts that StatsDirect uses for charting. If Calibri is not installed on your system, you can download it from https://www.microsoft.com/typography/fonts/font.aspx?FMID=1710");
+            }
+
             axisPen = new Pen(grAxis, 1);
-            axisTitleFont = FontFromSaveString(DefaultAxisTitleFont);
             axisBrush = new SolidBrush(Color.Black);
+
+            statsDirectCanvas = new EmfCanvas(metafileWidth, metafileHeight);
+        }
+
+        private bool ReconstituteFonts()
+        {
+            axisLabelFont = FontFromSaveString(DefaultAxisLabelFont);
+            axisTitleFont = FontFromSaveString(DefaultAxisTitleFont);
             labelFont = FontFromSaveString(DefaultLabelFont);
             legendFont = FontFromSaveString(DefaultLegendFont);
             titleFont = FontFromSaveString(DefaultTitleFont);
-
-            statsDirectCanvas = new EmfCanvas(metafileWidth, metafileHeight);
+            return null != axisLabelFont && null != axisTitleFont && null != labelFont && null != legendFont && null != titleFont;
         }
 
         ///  <summary>

@@ -104,7 +104,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepResult RptPreferences(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPreferences(ITemplateHost host, ParameterBag parameters)
         {
             const string pg = "Preference Groups";
 
@@ -239,7 +239,7 @@ namespace StatsDirect.Builtins
                 groupsParameters.AddOutput("sub", i.ToString());
                 groupsParameters.AddOutput("grp", allocatedGroup[i].ToString());
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepResult RptFrequency(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFrequency(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             for (int v = 0; v <= data.VariableCount - 1; v++)
@@ -338,11 +338,11 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult QuickSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag QuickSummary(ITemplateHost host, ParameterBag parameters)
         {
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
@@ -378,17 +378,17 @@ namespace StatsDirect.Builtins
             sb.AppendLine(Formatting.PadTo("Range", k) + Formatting.RoundOut(sx.Range, flt));
             SummaryStatisticsOptions sso = new SummaryStatisticsOptions { Text = sb.ToString() };
             host.Amend(sso, parameters);
-            return new StepResult(StepSuccess.Success, new ParameterBag());
+            return new ParameterBag();
         }
 
 
-        public static StepResult RptUnivariateSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptUnivariateSummary(ITemplateHost host, ParameterBag parameters)
         {
             return RptDescriptive(host, parameters, false);
         }
 
 
-        public static StepResult RptWeightedUnivariateSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptWeightedUnivariateSummary(ITemplateHost host, ParameterBag parameters)
         {
             return RptDescriptive(host, parameters, true);
         }
@@ -419,7 +419,7 @@ namespace StatsDirect.Builtins
             Udc2 = 21
         };
 
-        private static StepResult RptDescriptive(ITemplateHost host, ParameterBag parameters, bool isWeighted)
+        private static ParameterBag RptDescriptive(ITemplateHost host, ParameterBag parameters, bool isWeighted)
         {
             int maxrows; int cols;
             double nsumwt = 0;
@@ -629,7 +629,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -891,7 +891,7 @@ namespace StatsDirect.Builtins
             return fieldParameters;
         }
 
-        public static StepResult RptTimeSeriesSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTimeSeriesSummary(ITemplateHost host, ParameterBag parameters)
         {
             // Extract our variables from the input
             DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0].AsDoubleVariable;
@@ -1211,7 +1211,7 @@ namespace StatsDirect.Builtins
 
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         private class TimeSeriesSummaryStore

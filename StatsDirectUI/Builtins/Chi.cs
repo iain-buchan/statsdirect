@@ -11,7 +11,7 @@ namespace StatsDirect.Builtins
 {
     public class Chi
     {
-        public static StepResult RptChi2By2(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChi2By2(ITemplateHost host, ParameterBag parameters)
         {
             double eor = 0;
             int fault;
@@ -175,7 +175,7 @@ namespace StatsDirect.Builtins
             else if (isCohort)
             {
                 //  RTF_LoadTemplate("relrisk.rtf")
-                relRiskList.Add(Analysis.RptMiscRelRisk(host, parameters).ParameterBag);
+                relRiskList.Add(Analysis.RptMiscRelRisk(host, parameters));
             }
 
             List<ParameterBag> fisherList = new List<ParameterBag>();
@@ -185,18 +185,18 @@ namespace StatsDirect.Builtins
                 if (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20)
                 {
                     //  RTF_LoadTemplate("fisher.rtf")
-                    fisherList.Add(Exact.RptExactFisher(host, parameters).ParameterBag);
+                    fisherList.Add(Exact.RptExactFisher(host, parameters));
                 }
                 else
                 {
                     if (doFisher)
                     {
                         //  RTF_LoadTemplate("fisher.rtf")
-                        fisherList.Add(Exact.RptExactFisher(host, parameters).ParameterBag);
+                        fisherList.Add(Exact.RptExactFisher(host, parameters));
                     }
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         private enum Chi2ByNTrend
@@ -206,24 +206,24 @@ namespace StatsDirect.Builtins
             WithTrend = 2
         }
 
-        public static StepResult RptChi2ByNWithoutTrend(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChi2ByNWithoutTrend(ITemplateHost host, ParameterBag parameters)
         {
             return RptChi2ByN(host, parameters, Chi2ByNTrend.WithoutTrend);
         }
 
 
-        public static StepResult RptChi2ByNLinearTrend(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChi2ByNLinearTrend(ITemplateHost host, ParameterBag parameters)
         {
             return RptChi2ByN(host, parameters, Chi2ByNTrend.LinearTrend);
         }
 
 
-        public static StepResult RptChi2ByNWithTrend(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChi2ByNWithTrend(ITemplateHost host, ParameterBag parameters)
         {
             return RptChi2ByN(host, parameters, Chi2ByNTrend.WithTrend);
         }
 
-        private static StepResult RptChi2ByN(ITemplateHost host, ParameterBag parameters, Chi2ByNTrend z)
+        private static ParameterBag RptChi2ByN(ITemplateHost host, ParameterBag parameters, Chi2ByNTrend z)
         {
             double k4 = 0;
             double k2 = 0;
@@ -351,10 +351,10 @@ namespace StatsDirect.Builtins
                 zParameters.AddOutput("chi_non_p", host.pval(PDF.chivalp(x2, n2)));
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptChiMantel(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiMantel(ITemplateHost host, ParameterBag parameters)
         {
             double p2M = 0;
             double p1M = 0;
@@ -611,11 +611,11 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptChiRbyC(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiRbyC(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             DataFrame dataFrame = parameters["data"].AsDataFrame;
@@ -652,11 +652,10 @@ namespace StatsDirect.Builtins
                 seed = parameters["seed"].AsInt32;
             }
 
-            StepResult outputResult = Tables.SChi(host, ref cco, a, rows, cols, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
-            return outputResult;
+            return Tables.SChi(host, ref cco, a, rows, cols, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
         }
 
-        public static StepResult RptChiWoolf(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiWoolf(ITemplateHost host, ParameterBag parameters)
         {
             int rc;
             bool ierr;
@@ -698,7 +697,7 @@ namespace StatsDirect.Builtins
             return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out ierr);
         }
 
-        public static StepResult RptChi2ByNWithTrendSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChi2ByNWithTrendSimulateExactP(ITemplateHost host, ParameterBag parameters)
         {
             int iterations = parameters["iterations"].AsInt32;
             double ci = parameters["ci"].AsDouble;
@@ -758,7 +757,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("p", "P = * (cancelled)");
             }
             host.FinishProgress();
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         ///  <summary>

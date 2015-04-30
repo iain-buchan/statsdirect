@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
 {
     public class Exact
     {
-        public static StepResult RptExactSign(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactSign(ITemplateHost host, ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
             double r = parameters["r"].AsDouble;
@@ -89,11 +89,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("prop", host.RoundU(r / n));
             outputParameters.AddOutput("upper", host.RoundU(piu) + warn);
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptExactFisher(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactFisher(ITemplateHost host, ParameterBag parameters)
         {
             int fault = 0;
             //  RTF_LoadTemplate("fisher.rtf") Then
@@ -101,14 +101,14 @@ namespace StatsDirect.Builtins
             int b = Convert.ToInt32(parameters["b"].AsDouble);
             int c = Convert.ToInt32(parameters["c"].AsDouble);
             int d = Convert.ToInt32(parameters["d"].AsDouble);
-            StepResult outputResult = Tables.SFisher(host, ref a, ref b, ref c, ref d, ref fault);
+            ParameterBag outputResult = Tables.SFisher(host, ref a, ref b, ref c, ref d, ref fault);
             if (fault != 0)
-                return new StepResult(StepSuccess.Failed, null);
+                throw new TemplateOperationCancelledException();
             return outputResult;
         }
 
 
-        public static StepResult RptExactFisherX(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactFisherX(ITemplateHost host, ParameterBag parameters)
         {
             int fault = 0;
 
@@ -316,10 +316,10 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("mid_p_2", host.RoundU(Math.Min(midP * 2.0, 1.0)));
 
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptChiWoolf(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiWoolf(ITemplateHost host, ParameterBag parameters)
         {
             int rc;
             bool ierr;
@@ -361,7 +361,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptExactMcNamar(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactMcNamar(ITemplateHost host, ParameterBag parameters)
         {
             double ul;
             double ll;
@@ -471,11 +471,11 @@ namespace StatsDirect.Builtins
                 rPrimeList.Add(new ParameterBag());
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptExactORCML(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactORCML(ITemplateHost host, ParameterBag parameters)
         {
             // Gart replaced by CML in May 2001
 
@@ -550,10 +550,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ulm", host.RoundU(ulm));
             outputParameters.AddOutput("p1m", host.pval(p1m));
             outputParameters.AddOutput("p2m", host.pval(p2m));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptRatePoissonCI(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRatePoissonCI(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             double alpha = 1.0 - cco;
@@ -580,7 +580,7 @@ namespace StatsDirect.Builtins
             Rates.poisson_ci(alpha, revents, tar, out xl, out xu);
             outputParameters.AddOutput("from", host.RoundU(xl));
             outputParameters.AddOutput("to", host.RoundU(xu));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
     }
 }

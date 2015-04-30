@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
     public class Agreement
     {
 
-        public static StepResult RptUniversalAgreement(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptUniversalAgreement(ITemplateHost host, ParameterBag parameters)
         {
             int n;
             int b;
@@ -52,7 +52,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("skewdel", host.RoundU(gam));
             outputParameters.AddOutput("R", host.RoundU(r));
             outputParameters.AddOutput("p", host.pval(p));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -213,7 +213,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptUniversalRCompare(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptUniversalRCompare(ITemplateHost host, ParameterBag parameters)
         {
             double r1 = parameters["r1_in"].AsDouble;
             double r2 = parameters["r2_in"].AsDouble;
@@ -262,7 +262,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p1", host.pval(p1));
             outputParameters.AddOutput("p2", host.pval(p2));
             outputParameters.AddOutput("pd", host.pval(pd * 2.0));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -759,7 +759,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptUniversalAgreementSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptUniversalAgreementSimulateExactP(ITemplateHost host, ParameterBag parameters)
         {
             int n;
             int b;
@@ -796,7 +796,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("k", mpd.ToString("N0"));
             outputParameters.AddOutput("seed_fmt", seed.ToString());
             host.FinishProgress();
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 

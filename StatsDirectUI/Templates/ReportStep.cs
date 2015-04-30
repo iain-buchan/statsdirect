@@ -48,7 +48,7 @@ namespace StatsDirect.Templates
             return ReportRenderer.GetContent(FileName);
         }
 
-        public override StepResult ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
+        public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {
             return processor.ExecuteInternal(this, parameters, isRedo);
         }

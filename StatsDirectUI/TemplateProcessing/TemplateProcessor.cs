@@ -52,8 +52,7 @@ namespace StatsDirect.Templates
             {
                 try
                 {
-                    StepResult result = Execute(step, filledParameters, isRedo);
-                    filledParameters = (null == result) ? null : result.ParameterBag;
+                    filledParameters = Execute(step, filledParameters, isRedo);
                 }
                 catch (InvalidDataException ex)
                 {
@@ -96,37 +95,33 @@ namespace StatsDirect.Templates
         /// <param name="parameters"></param>
         /// <param name="isRedo"></param>
         /// <returns></returns>
-        private StepResult Execute(Step step, ParameterBag parameters, bool isRedo)
+        private ParameterBag Execute(Step step, ParameterBag parameters, bool isRedo)
         {
-            StepResult result = null;
+            ParameterBag result = null;
             if (null != parameters)
                 result = step.ExecuteInternal(this, parameters, isRedo);
 
             // If required, transfer input parameters where the same name is not already present in the results.
             if (null != result)
             {
-                ParameterBag results = result.ParameterBag;
-                if (null != results)
+                if (step.ShouldCopyInputParameters)
                 {
-                    if (step.ShouldCopyInputParameters)
-                    {
-                        foreach (KeyValuePair<string, FilledParameter> inputParameter in parameters.Pairs)
-                            if (!results.ContainsKey(inputParameter.Key))
-                                results.Add(inputParameter.Key, inputParameter.Value);
-                    }
-                    // Remove explicit blanks now that they have prevented copying.
-                    List<string> keysToRemove = new List<string>();
-                    foreach (KeyValuePair<string, FilledParameter> pair in results.Pairs)
-                        if (null == pair.Value)
-                            keysToRemove.Add(pair.Key);
-                    foreach (string keyToRemove in keysToRemove)
-                        results.Remove(keyToRemove);
+                    foreach (KeyValuePair<string, FilledParameter> inputParameter in parameters.Pairs)
+                        if (!result.ContainsKey(inputParameter.Key))
+                            result.Add(inputParameter.Key, inputParameter.Value);
                 }
+                // Remove explicit blanks now that they have prevented copying.
+                List<string> keysToRemove = new List<string>();
+                foreach (KeyValuePair<string, FilledParameter> pair in result.Pairs)
+                    if (null == pair.Value)
+                        keysToRemove.Add(pair.Key);
+                foreach (string keyToRemove in keysToRemove)
+                    result.Remove(keyToRemove);
             }
             return result;
         }
 
-        public StepResult ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo)
+        public ParameterBag ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo)
         {
             if (null == parameters)
                 throw new ArgumentOutOfRangeException("parameters", "parameters must be a dictionary and cannot be null. Did a previous script step return null?");
@@ -134,7 +129,7 @@ namespace StatsDirect.Templates
             if (null == builtin)
                 throw new Exception("No function '" + step.FunctionName + "' is supplied by the host.");
             BuiltinFunction toCall = builtin.FunctionToCall;
-            StepResult outputResult = toCall(host, parameters);
+            ParameterBag outputResult = toCall(host, parameters);
             // Ensure no stray progress bars stay around
             host.FinishProgress();
             return outputResult;
@@ -199,7 +194,7 @@ namespace StatsDirect.Templates
             return null;
         }
 
-        public StepResult ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo)
+        public ParameterBag ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo)
         {
             ChartDefinition definition = new ChartDefinition { ChartType = step.ChartType };
             // Series: First X...
@@ -255,7 +250,7 @@ namespace StatsDirect.Templates
                 }
                 SaveChartDefinition(step, results, definition);
             }
-            return new StepResult(StepSuccess.Success, results);
+            return results;
         }
 
         private static void SaveChartDefinition(ChartStep step, ParameterBag results, ChartDefinition definition)
@@ -264,7 +259,7 @@ namespace StatsDirect.Templates
             results.Add(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? ""), new FilledParameter(true, definition.ScaleParameters));
         }
 
-        public StepResult ExecuteInternal(IterationStep step, ParameterBag parms, bool isRedo)
+        public ParameterBag ExecuteInternal(IterationStep step, ParameterBag parms, bool isRedo)
         {
             // Detect bounds: default 0 to 0 inclusive (1 iteration), then add any fixed values, then any variables if found.
             int lower = 0;
@@ -297,17 +292,17 @@ namespace StatsDirect.Templates
                 foreach (Step s in step.Steps)
                 {
                     // TODO: How to handle execution failures?
-                    StepResult result = s.ExecuteInternal(this, filledParameters, isRedo);
+                    ParameterBag result = s.ExecuteInternal(this, filledParameters, isRedo);
                     // Add in any required parameters, combining everything into one big mass of outputs.
                     // Overwrite earlier loop results with later ones.
-                    foreach (string k in result.ParameterBag.Keys)
-                        filledParameters[k] = result.ParameterBag[k];
+                    foreach (string k in result.Keys)
+                        filledParameters[k] = result[k];
                 }
             }
-            return new StepResult(StepSuccess.Success, filledParameters);
+            return filledParameters;
         }
 
-        public StepResult ExecuteInternal(OutputFrameStep step, ParameterBag parameters, bool isRedo)
+        public ParameterBag ExecuteInternal(OutputFrameStep step, ParameterBag parameters, bool isRedo)
         {
             DataFrame frame = parameters[step.ParameterName].AsDataFrame;
             if (null != frame)
@@ -318,7 +313,7 @@ namespace StatsDirect.Templates
                     preferredPaneAndPosition = parameters[STATSDIRECT_FRAME_PANE].AsPaneAndPosition;
                 host.OutputFrame(frame, step.KeepSelection, step.IsFormulae, step.MissingIndicator, preferredPaneAndPosition);
             }
-            return new StepResult(StepSuccess.Success, new ParameterBag());
+            return new ParameterBag();
         }
         /*
         public StepResult ExecuteInternal(SelectOutputForFrameStep step, ParameterBag parameters, bool isRedo)
@@ -336,14 +331,16 @@ namespace StatsDirect.Templates
         /// <param name="isRedo"></param>
         /// <returns></returns>
         /// <remarks>Note that this may return parameters with null values; it is up to the caller to remove these.</remarks>
-        public StepResult ExecuteInternal(ParametersStep step, ParameterBag parms, bool isRedo)
+        public ParameterBag ExecuteInternal(ParametersStep step, ParameterBag parms, bool isRedo)
         {
             // If we're redoing a previous operation, then all parameters are taken from the previous operation.  We do not request any.
             if (isRedo)
-                return new StepResult(StepSuccess.Success, new ParameterBag());
+                return new ParameterBag();
 
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 ParameterBag filledParameters = new ParameterBag();
                 List<Parameter> outstandingParameters = new List<Parameter>();
                 foreach (Parameter parameter in step.Parameters)
@@ -451,13 +448,9 @@ namespace StatsDirect.Templates
                         filledParameters[pair.Key] = pair.Value;
                     outstandingParameters.Clear();
                 }
-                return new StepResult(StepSuccess.Success, filledParameters);
+                return filledParameters;
+#if !WATCH_EXCEPTIONS
             }
-            catch (Utilities.TemplateOperationCancelledException)
-            {
-                throw;
-            }
-#if PRODUCTION
             catch(Exception ex)
             {
                 // Fail the operation
@@ -595,7 +588,7 @@ namespace StatsDirect.Templates
             }
         }
 
-        public StepResult ExecuteInternal(ReportStep reportStep, ParameterBag parameters, bool isRedo)
+        public ParameterBag ExecuteInternal(ReportStep reportStep, ParameterBag parameters, bool isRedo)
         {
             string filledReport = reportStep.Substitute(host, parameters);
 
@@ -620,32 +613,30 @@ namespace StatsDirect.Templates
             // outputParameters.Add(REPORT_ID_NAME, new FilledParameter(true, reportId));
             if (!parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
                 outputParameters.Add(STATSDIRECT_REPORT_PANE, new FilledParameter(true, preferredPane));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public StepResult ExecuteInternal(ScriptStep step, ParameterBag parameters, bool isRedo)
+        public ParameterBag ExecuteInternal(ScriptStep step, ParameterBag parameters, bool isRedo)
         {
             IScriptEngine scriptEngine = host.GetScriptEngine(step.Language);
             string entryPoint = step.EntryPoint;
             ScriptType scriptType = null == entryPoint ? ScriptType.Function : ScriptType.MultipleMethods;
-            return new StepResult(StepSuccess.Success, (ParameterBag)scriptEngine.Run(step.Language, step.Body, scriptType, host, parameters, null, entryPoint));
+            return (ParameterBag)scriptEngine.Run(step.Language, step.Body, scriptType, host, parameters, null, entryPoint);
         }
 
-        public StepResult ExecuteInternal(TestStep step, ParameterBag parms, bool isRedo)
+        public ParameterBag ExecuteInternal(TestStep step, ParameterBag parms, bool isRedo)
         {
             // HACK: This is not a proper interpreter, and should be!
             bool result = (bool)Evaluate(step.Condition, parms);
             IList<Step> steps = result ? step.TrueSteps : step.FalseSteps;
             foreach (Step s in steps)
             {
-                StepResult stepResult = Execute(s, parms, isRedo);
+                ParameterBag stepResult = Execute(s, parms, isRedo);
                 if (null == stepResult)
-                    return new StepResult(StepSuccess.Failed, new ParameterBag());
-                if (stepResult.StepSuccess == StepSuccess.Failed)
-                    return new StepResult(StepSuccess.Failed, new ParameterBag());
-                parms = stepResult.ParameterBag;
+                    return null;
+                parms = stepResult;
             }
-            return new StepResult(StepSuccess.Success, parms);
+            return parms;
         }
 
         public object Evaluate(Expression expression, ParameterBag parameters)

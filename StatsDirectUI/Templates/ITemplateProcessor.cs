@@ -9,14 +9,14 @@ namespace StatsDirect.Templates
     {
         void PrepareInternal(ParametersStep step, ParameterBag parameters);
 
-        StepResult ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo);
-        StepResult ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo);
-        StepResult ExecuteInternal(IterationStep step, ParameterBag parameters, bool isRedo);
-        StepResult ExecuteInternal(OutputFrameStep step, ParameterBag parameters, bool isRedo);
-        StepResult ExecuteInternal(ParametersStep step, ParameterBag parameters, bool isRedo);
-        StepResult ExecuteInternal(ReportStep step, ParameterBag parameters, bool isRedo);
-        StepResult ExecuteInternal(ScriptStep step, ParameterBag parameters, bool isRedo);
-        StepResult ExecuteInternal(TestStep step, ParameterBag parameters, bool isRedo);
+        ParameterBag ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo);
+        ParameterBag ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo);
+        ParameterBag ExecuteInternal(IterationStep step, ParameterBag parameters, bool isRedo);
+        ParameterBag ExecuteInternal(OutputFrameStep step, ParameterBag parameters, bool isRedo);
+        ParameterBag ExecuteInternal(ParametersStep step, ParameterBag parameters, bool isRedo);
+        ParameterBag ExecuteInternal(ReportStep step, ParameterBag parameters, bool isRedo);
+        ParameterBag ExecuteInternal(ScriptStep step, ParameterBag parameters, bool isRedo);
+        ParameterBag ExecuteInternal(TestStep step, ParameterBag parameters, bool isRedo);
 
         object Evaluate(Expression expression, ParameterBag parameters);
 

@@ -12,7 +12,7 @@ namespace StatsDirect.Builtins
 {
     public class Meta
     {
-        public static StepResult RptPetoMeta(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPetoMeta(ITemplateHost host, ParameterBag parameters)
         {
             double rmh = 0; double isq; double llisq; double ulisq;
             double z; double poru; double porl; double por;
@@ -333,7 +333,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -557,7 +557,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptRiskDifferenceMeta(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRiskDifferenceMeta(ITemplateHost host, ParameterBag parameters)
         {
             double dsul = 0; double dsll = 0;
             double dsx2 = 0; double qc = 0; double sk = 0; double x2Rmh = 0; double ul = 0; double ll = 0; double rmh = 0; double cit;
@@ -795,11 +795,11 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptRelativeRiskMeta(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRelativeRiskMeta(ITemplateHost host, ParameterBag parameters)
         {
             double dsul = 0; double dsll = 0;
             double dsx2 = 0; double dsrr = 0; double qc = 0; double sk = 0; double x2Rmh = 0; double ul = 0; double ll = 0; double rmh = 0; double cit;
@@ -1037,11 +1037,11 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptEffect(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptEffect(ITemplateHost host, ParameterBag parameters)
         {
             double dsul = 0; double dsll = 0; double dsz = 0; double dsd = 0;
             double tausq = 0; double sumsqwt; double qc = 0; double dplusul = 0; double dplusll = 0; double dplusz = 0;
@@ -1413,7 +1413,7 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
 
-                return new StepResult(StepSuccess.Success, outputParameters);
+                return outputParameters;
             }
             else
             {
@@ -1584,7 +1584,7 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
 
-                return new StepResult(StepSuccess.Success, outputParameters);
+                return outputParameters;
             }
         }
 
@@ -2029,19 +2029,19 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptMetaIncidenceRateRatio(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMetaIncidenceRateRatio(ITemplateHost host, ParameterBag parameters)
         {
             return RptMetaIncidenceRate(host, parameters, 2);
         }
 
 
-        public static StepResult RptMetaIncidenceRateDifference(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMetaIncidenceRateDifference(ITemplateHost host, ParameterBag parameters)
         {
             return RptMetaIncidenceRate(host, parameters, 1);
         }
 
 
-        private static StepResult RptMetaIncidenceRate(ITemplateHost host, ParameterBag parameters, int index)
+        private static ParameterBag RptMetaIncidenceRate(ITemplateHost host, ParameterBag parameters, int index)
         {
             double p2M = 0; double p1M = 0; double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0;
             double llf = 0; double ulf = 0; double eor = 0; double dsirr = 0; double dsul; double dsll; double tausq;
@@ -2378,11 +2378,11 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptMantel(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMantel(ITemplateHost host, ParameterBag parameters)
         {
             double p2M = 0; double p1M = 0;
             double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0; double llf = 0; double ulf = 0; double eor = 0; double tausq = 0;
@@ -2712,7 +2712,7 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -3276,7 +3276,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptMetaSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMetaSummary(ITemplateHost host, ParameterBag parameters)
         {
             double dsul; double dsll; double dsrr;
             double tausq;
@@ -3588,10 +3588,10 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptMetaCorrelation(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMetaCorrelation(ITemplateHost host, ParameterBag parameters)
         {
             double tausq;
             double cit;
@@ -3917,7 +3917,7 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -4099,7 +4099,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepResult RptProportionMeta(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptProportionMeta(ITemplateHost host, ParameterBag parameters)
         {
             double tausq;
             double cit;
@@ -4380,7 +4380,7 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 

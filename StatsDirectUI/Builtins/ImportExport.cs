@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
 {
     public class ImportExport
     {
-        public static StepResult FileImportWorksheet(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag FileImportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
             // import data to the active worksheet
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -33,7 +33,7 @@ namespace StatsDirect.Builtins
                 try
                 {
                     ParameterBag outputParameters = FileImportAscii(openFileDialog.FileName);
-                    return new StepResult(StepSuccess.Success, outputParameters);
+                    return outputParameters;
                 }
                 finally
                 {
@@ -43,7 +43,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult FileImportReport(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag FileImportReport(ITemplateHost host, ParameterBag parameters)
         {
             // import text to the active report
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -62,7 +62,7 @@ namespace StatsDirect.Builtins
                     string fileContents = sr.ReadToEnd();
                     ParameterBag outputParameters = new ParameterBag();
                     outputParameters.AddOutput("rtf", fileContents);
-                    return new StepResult(StepSuccess.Success, outputParameters);
+                    return outputParameters;
                 }
             }
         }
@@ -121,7 +121,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult FileExportWorksheet(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag FileExportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
@@ -176,7 +176,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            return new StepResult(StepSuccess.Success, new ParameterBag());
+            return new ParameterBag();
         }
 
         /// <param name="contents"></param>

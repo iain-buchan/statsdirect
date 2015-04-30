@@ -130,7 +130,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepResult RptCoxRegression(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxRegression(ITemplateHost host, ParameterBag parameters)
         {
             int i; int ifault = 0; int ncoef = 0;
             int istrat; int icov = 0;
@@ -477,7 +477,7 @@ namespace StatsDirect.Builtins
             outputParameters.Add("ARR3", new FilledParameter(true, ARR3));
             outputParameters.Add("CDAT1", new FilledParameter(true, CDAT1));
             outputParameters.Add("holdx", new FilledParameter(true, holdx));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -2438,19 +2438,19 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptCoxBaselineToReport(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxBaselineToReport(ITemplateHost host, ParameterBag parameters)
         {
             return RptCoxBaseline(host, parameters, false, "", false);
         }
 
 
-        public static StepResult RptCoxBaselineToWorksheet(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxBaselineToWorksheet(ITemplateHost host, ParameterBag parameters)
         {
             return RptCoxBaseline(host, parameters, false, "", true);
         }
 
 
-        public static StepResult RptCoxHazardPlots(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxHazardPlots(ITemplateHost host, ParameterBag parameters)
         {
             bool[] selectedGroups = ((bool[])(parameters["group"].Data));
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
@@ -2463,11 +2463,11 @@ namespace StatsDirect.Builtins
                     return RptCoxBaseline(host, parameters, true, selectedGroup, false);
                 }
             }
-            return new StepResult(StepSuccess.Success, new ParameterBag());
+            return new ParameterBag();
         }
 
 
-        private static StepResult RptCoxBaseline(ITemplateHost host, ParameterBag parameters, bool plot, string groupVar, bool createGrid)
+        private static ParameterBag RptCoxBaseline(ITemplateHost host, ParameterBag parameters, bool plot, string groupVar, bool createGrid)
         {
             int i;
             double watch_time;
@@ -2634,7 +2634,7 @@ namespace StatsDirect.Builtins
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -2814,7 +2814,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptCoxResiduals(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxResiduals(ITemplateHost host, ParameterBag parameters)
         {
             int jcoef = 0; int i;
             int istrata = 0;
@@ -2999,10 +2999,10 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("results", resultsFrame);
 
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptCoxHazardRatios(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxHazardRatios(ITemplateHost host, ParameterBag parameters)
         {
             double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
             double[, ,] ARR3 = ((double[, ,])(parameters["ARR3"].Data));
@@ -3038,11 +3038,11 @@ namespace StatsDirect.Builtins
                 parameterParameters.AddOutput("coef", host.RoundU(ARR3[1, i, 1]));
                 parameterParameters.AddOutput("se", host.RoundU(ARR3[1, i, 2]));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptCoxModelAnalysis(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxModelAnalysis(ITemplateHost host, ParameterBag parameters)
         {
             double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
             //  RTF_LoadTemplate("cox_dev.rtf") Then
@@ -3053,7 +3053,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("x2", host.RoundU(x2dev));
             outputParameters.AddOutput("df", ARR2[1, 0].ToString());
             outputParameters.AddOutput("p", host.pval(PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0])));
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
     }

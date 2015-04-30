@@ -68,7 +68,7 @@ namespace StatsDirect.Builtins
 
 
 
-        public static StepResult RptRateSmr(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRateSmr(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco > 1.0 || cco < 0.0)
@@ -171,11 +171,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("p_hi", host.pval(phi));
                 outputParameters.AddOutput("p_lo", host.pval(plo));
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult rptRateDirect(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag rptRateDirect(ITemplateHost host, ParameterBag parameters)
         {
             double xu; double XL;
             int j; int fault; int i;
@@ -370,11 +370,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("from_dobson", host.RoundU(nunit * XL));
             outputParameters.AddOutput("to_dobson", host.RoundU(nunit * xu));
 
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
-        public static StepResult RptStdrr(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptStdrr(ITemplateHost host, ParameterBag parameters)
         {
             double srru_bino; double srrl_bino;
             double srru; double srrl;
@@ -832,7 +832,7 @@ namespace StatsDirect.Builtins
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
     }

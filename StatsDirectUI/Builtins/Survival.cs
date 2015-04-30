@@ -67,7 +67,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptKaplan(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKaplan(ITemplateHost host, ParameterBag parameters)
         {
             int lc = 0; int nmax = 0; int j;
             int lap;
@@ -496,10 +496,10 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("results", resultsFrame);
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptKaplanMeierPlots(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKaplanMeierPlots(ITemplateHost host, ParameterBag parameters)
         {
             int[] cnx = ((int[])(parameters["cnx"].Data));
             int[,] dead = ((int[,])(parameters["dead"].Data));
@@ -523,7 +523,7 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
         /// <summary>
@@ -831,7 +831,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptWeiLachin(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptWeiLachin(ITemplateHost host, ParameterBag parameters)
         {
             int ifault;
             int gid2 = 0; int j;
@@ -960,7 +960,7 @@ namespace StatsDirect.Builtins
             {
                 host.Error("Error in calculation, report invalid", null);
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
 
@@ -1689,7 +1689,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepResult RptAbridgedLifetable(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptAbridgedLifetable(ITemplateHost host, ParameterBag parameters)
         {
             double se; double lci; double uci;
 
@@ -2074,10 +2074,10 @@ namespace StatsDirect.Builtins
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptFollowUpLifetableCalculateNatst(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFollowUpLifetableCalculateNatst(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
@@ -2100,10 +2100,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("natst-min", natst);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptFollowUpLifetable(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFollowUpLifetable(ITemplateHost host, ParameterBag parameters)
         {
             const string nan = Formatting.ASTERISK;
             double gamma = parameters["gamma"].AsDouble;
@@ -2265,10 +2265,10 @@ namespace StatsDirect.Builtins
                 survivalParameters.AddOutput("lci", lc);
                 survivalParameters.AddOutput("uci", uc);
             }
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
 
-        public static StepResult RptLogRank(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptLogRank(ITemplateHost host, ParameterBag parameters)
         {
             int imfault = 0;
             int strata = 0; int groups = 0;
@@ -2887,7 +2887,7 @@ namespace StatsDirect.Builtins
                 while (!(test >= 2));
             }
             while (stratum != strata);
-            return new StepResult(StepSuccess.Success, outputParameters);
+            return outputParameters;
         }
     }
 }
