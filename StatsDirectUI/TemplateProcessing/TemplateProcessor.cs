@@ -337,10 +337,8 @@ namespace StatsDirect.Templates
             if (isRedo)
                 return new ParameterBag();
 
-#if !WATCH_EXCEPTIONS
             try
             {
-#endif
                 ParameterBag filledParameters = new ParameterBag();
                 List<Parameter> outstandingParameters = new List<Parameter>();
                 foreach (Parameter parameter in step.Parameters)
@@ -449,9 +447,14 @@ namespace StatsDirect.Templates
                     outstandingParameters.Clear();
                 }
                 return filledParameters;
-#if !WATCH_EXCEPTIONS
             }
-            catch(Exception ex)
+            catch (CloseCurrentOperationException)
+            {
+                // We don't ever want this caught by the general exception catcher below, so we make a special case.
+                throw;
+            }
+#if !WATCH_EXCEPTIONS
+            catch (Exception ex)
             {
                 // Fail the operation
                 host.Error("Internal error: " + ex.Message, "Operation terminated");
