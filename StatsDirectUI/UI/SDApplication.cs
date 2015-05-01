@@ -661,7 +661,7 @@ namespace StatsDirect.UI
 
         IScriptEngine ITemplateHost.GetScriptEngine(string Language)
         {
-            // At present, all languages are handled by the ScriptEngine.  This may never change.
+            // At present, all languages are handled by the ScriptEngine.  This may never change, but at least this method provides an extension point in case it does.
             return new ScriptEngine();
         }
 
