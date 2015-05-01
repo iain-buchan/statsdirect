@@ -410,7 +410,8 @@
     <menu-item label="&amp;Graphics">
       <help chm-id="1122" />
       <sub-items>
-        <menu-item label="&amp;Bar or Column" operation="BarPlot" />
+        <menu-item label="&amp;Bar or Column (Value)" operation="BarPlot" />
+        <menu-item label="&amp;Bar or Column (Frequency)" operation="BarPlotFrequency" />
         <menu-item label="B&amp;ox and Whisker" operation="BoxWhiskerPlot" />
         <menu-item label="Bo&amp;x and Whisker (Text)" operation="BoxWhiskerPlotText" />
         <menu-item label="&amp;Control" operation="ControlPlot" />

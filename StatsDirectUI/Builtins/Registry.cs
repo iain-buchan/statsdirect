@@ -265,7 +265,8 @@ namespace StatsDirect.Builtins
                 new Builtin("shtTransformLogit", Sheet.ShtTransformLogit, InputDuringStep.Never),
                 new Builtin("shtTransformProbit", Sheet.ShtTransformProbit, InputDuringStep.Never),
                 new Builtin("shtTransformZECDF", Sheet.ShtTransformZecdf, InputDuringStep.Never),
-                new Builtin("shtTransformZSD", Sheet.ShtTransformZsd, InputDuringStep.Never)
+                new Builtin("shtTransformZSD", Sheet.ShtTransformZsd, InputDuringStep.Never),
+                new Builtin("valuesToFrequencies", Sheet.ValuesToFrequencies, InputDuringStep.Never)
             };
             return functionRegistry;
         }

@@ -3619,14 +3619,16 @@ namespace StatsDirect.Charting
         {
             BarOptions bOptions = ((BarOptions)(definition.ChartOptions));
 
+            // No false origins
+            DataMinY = 0;
+            axisYMin = 0;
+
             //  Stacked and 100% stacked charts require different scaling
             if (bOptions.Stacked)
             {
                 if (bOptions.Stacked100Percent)
                 {
-                    DataMinY = 0;
                     DataMaxY = 100;
-                    axisYMin = 0;
                     axisYMax = 100;
                 }
                 else
@@ -3653,9 +3655,7 @@ namespace StatsDirect.Charting
                     {
                         largestSoFar = 1;
                     }
-                    DataMinY = 0;
                     DataMaxY = largestSoFar;
-                    axisYMin = 0;
                     axisYMax = largestSoFar;
                 }
             }
@@ -3969,7 +3969,7 @@ namespace StatsDirect.Charting
                 AssignMarkersToSeries(bOptions);
 
                 //  Get overall minima and maxima
-                double min = double.MaxValue;
+                double min = 0; // We don't do false origins, so axis minimum cannot be greater than zero
                 double minGreaterThanZero = double.MaxValue;
                 double max = double.MinValue;
                 foreach (DoubleSeries s in seriesToUse)
@@ -3978,6 +3978,7 @@ namespace StatsDirect.Charting
                     minGreaterThanZero = Math.Min(minGreaterThanZero, s.MinGreaterThanZero);
                     max = Math.Max(max, s.Max);
                 }
+                DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
                 int div;
                 double zmin;
@@ -10453,6 +10454,5 @@ namespace StatsDirect.Charting
                 throw new Exception("Couldn't convert a chart to RTF", ex);
             }
         }
-
     }
 }

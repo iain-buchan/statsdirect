@@ -1230,6 +1230,9 @@
     <Content Include="Assets\menu-shell.xml">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Assets\Operations\BarPlotFrequency.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\ConvertUnits.xml" />
     <Content Include="Assets\Operations\ConvertUnitsScreen.xml" />
     <Content Include="Assets\Operations\ContractFrequencies.xml">

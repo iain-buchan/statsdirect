@@ -2513,5 +2513,91 @@ namespace StatsDirect.Builtins
             public int NonResponders { get { return Count - Responders; } }
             public double ProportionResponding { get { return Responders / (double)Count; } }
         }
+
+        internal static ParameterBag ValuesToFrequencies(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame rawValuesFrame = parameters["rawValues"].AsDataFrame;
+
+            // Gather all labels mentioned, and construct counts for each one of those labels
+            List<string> labelsByDiscoveryOrder = new List<string>();
+            Dictionary<string, int[]> countsByLabelAndVariable = new Dictionary<string, int[]>();
+            for (int variableIndex = 0; variableIndex < rawValuesFrame.Variables.Count; variableIndex++)
+            {
+                ClassifierVariable cv = rawValuesFrame.Variables[variableIndex].AsClassifierVariable;
+                foreach (Group group in cv.Groups)
+                {
+                    // HACK: There has to be a better way of getting rid of missing values - but there's no CategorySkipMissing selection.
+                    if (Formatting.MISSINGLABEL.Equals(group.Label))
+                        continue;
+
+                    int[] countsByVariable;
+                    if (!countsByLabelAndVariable.TryGetValue(group.Label, out countsByVariable))
+                    {
+                        countsByVariable = new int[rawValuesFrame.Variables.Count];
+                        countsByLabelAndVariable.Add(group.Label, countsByVariable);
+                        labelsByDiscoveryOrder.Add(group.Label);
+                    }
+                    countsByVariable[variableIndex] += group.NBin;
+                }
+            }
+
+            labelsByDiscoveryOrder.Sort(new SortAlphaNumeric());
+
+            bool shouldUseProportions = rawValuesFrame.Variables.Count > 1;
+
+            // Synthesise "values" and "labels" variables suitable for a bar plot
+            ParameterBag outputParameters = new ParameterBag();
+            DataFrame labelsFrame = new DataFrame(new StringVariable(labelsByDiscoveryOrder.ToArray()));
+            outputParameters.AddOutput("labels", labelsFrame);
+
+            DataFrame valuesFrame = new DataFrame() { Name = rawValuesFrame.Name };
+            outputParameters.AddOutput("values", valuesFrame);
+            // A bit of rotation - we've stored counts in rows, the output variables want them by column.
+            for (int valueIndex = 0; valueIndex < rawValuesFrame.Variables.Count; valueIndex++)
+            {
+                double[] data = new double[labelsByDiscoveryOrder.Count];
+                double sum = 0;
+                for (int labelIndex = 0; labelIndex < labelsByDiscoveryOrder.Count; labelIndex++)
+                {
+                    string label = labelsByDiscoveryOrder[labelIndex];
+                    int[] countsByVariable = countsByLabelAndVariable[label];
+                    double value = countsByVariable[valueIndex];
+                    data[labelIndex] = value;
+                    sum += value;
+                }
+                if (shouldUseProportions && sum > 0)
+                    for (int labelIndex = 0; labelIndex < labelsByDiscoveryOrder.Count; labelIndex++)
+                        data[labelIndex] /= sum;
+                DoubleVariable values = new DoubleVariable(data, rawValuesFrame.Variables[valueIndex].Title);
+                valuesFrame.Variables.Add(values);
+            }
+            return outputParameters;
+        }
+
+        private class SortAlphaNumeric : IComparer<string>
+        {
+            private static int Compare(string x, string y)
+            {
+                if (x.Equals(y))
+                    return 0;
+
+                //  If both are numeric, compare numerically; else, compare as text
+                bool lower;
+                double numericX;
+                double numericY;
+                if (double.TryParse(x, out numericX) && double.TryParse(y, out numericY))
+                    lower = numericX <= numericY;
+                else
+                    lower = String.CompareOrdinal(x, y) < 0;
+
+                return lower ? -1 : 1;
+            }
+
+            // interface methods implemented by Compare
+            int IComparer<string>.Compare(string x, string y)
+            {
+                return Compare(x, y);
+            }
+        }
     }
 }
