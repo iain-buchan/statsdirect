@@ -24,7 +24,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations</DefineConstants>
+    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
@@ -37,6 +37,7 @@
   <ItemGroup>
     <Compile Include="OperationsFragment.wxs" />
     <Compile Include="StatsDirect-x86.wxs" />
+    <Compile Include="TemplateFragment.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StatsDirectUI\StatsDirectUI.csproj">
@@ -77,6 +78,8 @@
   -->
   <Target Name="BeforeBuild">
     <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="OperationsFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="%(HarvestDirectory.Transforms)" Directory="$(SolutionDir)StatsDirectUI\Assets\Operations" ComponentGroupName="Operations" DirectoryRefId="Operations" KeepEmptyDirectories="false" PreprocessorVariable="var.OperationsSource" SuppressCom="%(HarvestDirectory.SuppressCom)" SuppressRootDirectory="true" SuppressRegistry="%(HarvestDirectory.SuppressRegistry)">
+    </HeatDirectory>
+    <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="TemplateFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="%(HarvestDirectory.Transforms)" Directory="$(SolutionDir)StatsDirectUI\Assets\Template" ComponentGroupName="Template" DirectoryRefId="Template" KeepEmptyDirectories="false" PreprocessorVariable="var.TemplateSource" SuppressCom="%(HarvestDirectory.SuppressCom)" SuppressRootDirectory="true" SuppressRegistry="%(HarvestDirectory.SuppressRegistry)">
     </HeatDirectory>
   </Target>
   <Target Name="AfterBuild">
