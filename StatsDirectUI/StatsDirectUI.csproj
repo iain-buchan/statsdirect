@@ -1232,7 +1232,9 @@
     </Content>
     <Content Include="Assets\Operations\ConvertUnits.xml" />
     <Content Include="Assets\Operations\ConvertUnitsScreen.xml" />
-    <Content Include="Assets\Operations\ContractFrequencies.xml" />
+    <Content Include="Assets\Operations\ContractFrequencies.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\TimeSeriesSummary.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1689,7 +1691,8 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"
-rem $(SolutionDir)Bin\sgen /n /f  /a:"$(TargetPath)"
+$(SolutionDir)Bin\sgen /n /f  /a:"$(TargetPath)"
+if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
 xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>
@@ -1699,7 +1702,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Drawing;
+using System.Xml.Serialization;
 
 namespace StatsDirect.Utilities
 {
+    [XmlRoot(Namespace = "http://www.statsdirect.com/schemas/Scrap.xsd", ElementName = "Utilities-Utilities")] // To prevent Sgen complaining about serializing two classes with the same name.
     public sealed class Utilities
     {
         public static void Swap(ref double x, ref double y)

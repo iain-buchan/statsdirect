@@ -53,6 +53,9 @@
   </Component>
 
   <!-- SD3 -->
+  <Component Id="StatsDirect.XmlSerializers.dll">
+    <File Id="StatsDirect.XmlSerializers.dll" KeyPath="yes" Name="StatsDirect.XmlSerializers.dll" Checksum="yes" />
+  </Component>
   <Component Id="menu.xml">
     <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
   </Component>

@@ -39,37 +39,37 @@ namespace StatsDirect.Data
         }
 
         [XmlElement("column")]
-        public int Column { get; private set; }
+        public int Column { get; set; }
 
         [XmlElement("mode")]
-        public DataAcquisitionMode Mode { get; private set; }
+        public DataAcquisitionMode Mode { get; set; }
 
         [XmlElement("top-row")]
-        public int TopRow { get; private set; }
+        public int TopRow { get; set; }
 
         ///  <summary>
         ///  The number of rows that were specified for the original column.  As a special case, any negative value indicates the whole column.
         ///  </summary>
         [XmlElement("rows")]
-        public int Rows { get; private set; }
+        public int Rows { get; set; }
 
         [XmlElement("workbook-path")]
-        public string WorkbookPath { get; private set; }
+        public string WorkbookPath { get; set; }
 
         [XmlElement("worksheet-name")]
-        public string WorksheetName { get; private set; }
+        public string WorksheetName { get; set; }
 
         /// <summary>
         /// True iff the original data was considered to have a title row.
         /// </summary>
         [XmlElement("has-title")]
-        public bool HasTitle { get; private set; }
+        public bool HasTitle { get; set; }
 
         /// <summary>
         /// True iff the worksheet had a filter in place such that only some rows were shown when this data was selected.
         /// </summary>
         [XmlElement("was-filtered")]
-        public bool WasFiltered { get; private set; }
+        public bool WasFiltered { get; set; }
 
         public int OriginGroup { get; set; }
     }

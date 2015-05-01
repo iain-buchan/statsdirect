@@ -28,7 +28,9 @@
     <ComponentRef Id="SpreadsheetGear2012.Drawing.dll" />
     <ComponentRef Id="SpreadsheetGear2012.Windows.Forms.dll" />
 
+    <!-- Other StatsDirect -->
     <ComponentRef Id="menu.xml" />
+    <ComponentRef Id="StatsDirect.XmlSerializers.dll" />
     <ComponentRef Id="Antlr4.Runtime.net40.dll" />
     <ComponentRef Id="STATSDIRECT.chm" />
     <ComponentRef Id="StatsDirect.exe.config" />
