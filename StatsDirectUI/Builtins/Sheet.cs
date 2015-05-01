@@ -2063,35 +2063,187 @@ namespace StatsDirect.Builtins
 
         internal static ParameterBag ShtContract(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame observationsFrame = parameters["observations"].AsDataFrame;
-            ClassifierVariable observationsVariable = observationsFrame.Variables[0].AsClassifierVariable;
-            IList<Group> groups = observationsVariable.Groups;
             DataFrame covariatesOrNull;
+            bool hasResponses;
 
-            string[] outputValues = new string[groups.Count];
-            double[] outputFrequencies = new double[groups.Count];
-            for (int i = 0; i < groups.Count; i++)
+            string type = parameters["type"].AsString;
+            switch (type)
             {
-                outputValues[i] = groups[i].Label;
-                outputFrequencies[i] = groups[i].NBin;
+                case "categories":
+                    {
+                        covariatesOrNull = null;
+                        hasResponses = false;
+                    }
+                    break;
+                case "categories-covariates":
+                    {
+                        covariatesOrNull = parameters["covariates"].AsDataFrame;
+                        hasResponses = false;
+                    }
+                    break;
+                case "response-covariates":
+                    {
+                        covariatesOrNull = parameters["covariates"].AsDataFrame;
+                        hasResponses = true;
+                    }
+                    break;
+                default:
+                    throw new Exception("Unknown type '" + type + "' when trying to contract data");
             }
-            string valuesTitle = observationsVariable.Title;
-            if (valuesTitle.EndsWith("_Individual"))
-                valuesTitle = valuesTitle.Replace("_Individual", "");
+
+            // We do fundamentally different things depending on whether we have responses or categories - the output contains different numbers of rows.
+            // Deal with this as two separate workflows.
+            if (hasResponses)
+            {
+                // 0 or 1 responses - one row per covariate pattern
+                DataFrame responsesFrame = parameters["responses"].AsDataFrame;
+                DoubleVariable responsesVariable = responsesFrame.Variables[0].AsDoubleVariable;
+                double[] responseData = responsesVariable.Data;
+
+                int[] differenceArray;
+                int nextDifferentValue;
+                if (null == covariatesOrNull)
+                {
+                    nextDifferentValue = 1;
+                    differenceArray = new int[nextDifferentValue];
+                }
+                else
+                {
+                    nextDifferentValue = ClassifyObjects(covariatesOrNull, out differenceArray);
+                }
+
+                // Gather counts and sequencing for later use
+                int[] differenceValuesInOrder = new int[nextDifferentValue];
+                int nextInOrderOffset = 0;
+                Dictionary<int, RespondersCountAndRowIndex> countMap = new Dictionary<int, RespondersCountAndRowIndex>();
+                for (int sourceIndex = 0; sourceIndex < differenceArray.Length; sourceIndex++)
+                {
+                    int value = differenceArray[sourceIndex];
+                    RespondersCountAndRowIndex rcari;
+                    if (countMap.TryGetValue(value, out rcari))
+                    {
+                        rcari.Count++;
+                    }
+                    else
+                    {
+                        rcari = new RespondersCountAndRowIndex { Count = 1, RowIndex = sourceIndex };
+                        countMap.Add(value, rcari);
+                        differenceValuesInOrder[nextInOrderOffset++] = value;
+                    }
+                    if (responseData[sourceIndex] != 0.0)
+                        rcari.Responders++;
+                }
+
+                // Generate output
+                double[] outputTotals = new double[nextDifferentValue];
+                double[] outputResponders = new double[nextDifferentValue];
+                double[] outputNonResponders = new double[nextDifferentValue];
+                double[] outputProportionsResponding = new double[nextDifferentValue];
+                for (int i = 0; i < nextDifferentValue; i++)
+                {
+                    RespondersCountAndRowIndex rcari = countMap[differenceValuesInOrder[i]];
+                    outputTotals[i] = rcari.Count;
+                    outputResponders[i] = rcari.Responders;
+                    outputNonResponders[i] = rcari.NonResponders;
+                    outputProportionsResponding[i] = rcari.ProportionResponding;
+                }
+                DataFrame outputFrame = new DataFrame();
+                string group = parameters["group"].AsString;
+                if (group.Contains("totals"))
+                    outputFrame.Variables.Add(new DoubleVariable(outputTotals, "Total"));
+                if (group.Contains("responders"))
+                    outputFrame.Variables.Add(new DoubleVariable(outputResponders, "Responders"));
+                if (group.Contains("nonresps"))
+                    outputFrame.Variables.Add(new DoubleVariable(outputNonResponders, "Non-responders"));
+                if (group.Contains("resprops"))
+                    outputFrame.Variables.Add(new DoubleVariable(outputProportionsResponding, "Proportion responding"));
+
+                if (null != covariatesOrNull)
+                {
+                    // Add covariates.  We happen to know these are all VariantVariables.
+                    foreach (Variable inputCovariant in covariatesOrNull.Variables)
+                    {
+                        object[] icData = inputCovariant.AsVariantVariable.Data;
+                        VariantVariable outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
+                        for (int i = 0; i < nextDifferentValue; i++)
+                            outputCovariant.Data[i] = icData[countMap[differenceValuesInOrder[i]].RowIndex];
+                        outputFrame.Variables.Add(outputCovariant);
+                    }
+                }
+                ParameterBag outputParameters = new ParameterBag();
+                outputParameters.AddOutput("output", outputFrame);
+                return outputParameters;
+
+            }
             else
-                valuesTitle += "_Grouped";
-            string frequenciesTitle = observationsVariable.Title;
-            if (frequenciesTitle.EndsWith("_Individual"))
-                frequenciesTitle = frequenciesTitle.Replace("_Individual", "");
-            // frequenciesTitle += "_Counts"; Removed as part of #958
-            StringVariable valuesVariable = new StringVariable(outputValues, valuesTitle);
-            DoubleVariable frequenciesVariable = new DoubleVariable(outputFrequencies, frequenciesTitle);
-            DataFrame outputFrame = new DataFrame();
-            outputFrame.Variables.Add(valuesVariable);
-            outputFrame.Variables.Add(frequenciesVariable);
-            ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("output", outputFrame);
-            return outputParameters;
+            {
+                // Categories - one row per combination of category and covariate pattern
+                DataFrame categoriesFrame = parameters["categories"].AsDataFrame;
+                ClassifierVariable categoriesVariable = categoriesFrame.Variables[0].AsClassifierVariable;
+                int[] differenceArray;
+                int nextDifferentValue = ClassifyObjects(categoriesFrame, out differenceArray);
+                if (null != covariatesOrNull)
+                    nextDifferentValue = ClassifyObjects(differenceArray, covariatesOrNull, nextDifferentValue);
+
+                // Gather counts and sequencing for later use
+                int[] differenceValuesInOrder = new int[nextDifferentValue];
+                int nextInOrderOffset = 0;
+                Dictionary<int, CountAndRowIndex> countMap = new Dictionary<int, CountAndRowIndex>();
+                for (int sourceIndex = 0; sourceIndex < differenceArray.Length; sourceIndex++)
+                {
+                    int value = differenceArray[sourceIndex];
+                    CountAndRowIndex cari;
+                    if (countMap.TryGetValue(value, out cari))
+                        cari.Count++;
+                    else
+                    {
+                        cari = new CountAndRowIndex { Count = 1, RowIndex = sourceIndex };
+                        countMap.Add(value, cari);
+                        differenceValuesInOrder[nextInOrderOffset++] = value;
+                    }
+                }
+
+                // Generate output
+                string[] outputValues = new string[nextDifferentValue];
+                double[] outputFrequencies = new double[nextDifferentValue];
+                for (int i = 0; i < nextDifferentValue; i++)
+                {
+                    int rowIndex = countMap[differenceValuesInOrder[i]].RowIndex;
+                    int groupIndex = (int)categoriesVariable.Data[rowIndex];
+                    outputValues[i] = categoriesVariable.Groups[groupIndex].Label;
+                    outputFrequencies[i] = countMap[differenceValuesInOrder[i]].Count;
+                }
+                string valuesTitle = categoriesVariable.Title;
+                if (valuesTitle.EndsWith("_Individual"))
+                    valuesTitle = valuesTitle.Replace("_Individual", "");
+                else
+                    valuesTitle += "_Grouped";
+                string frequenciesTitle = categoriesVariable.Title;
+                if (frequenciesTitle.EndsWith("_Individual"))
+                    frequenciesTitle = frequenciesTitle.Replace("_Individual", "");
+                StringVariable valuesVariable = new StringVariable(outputValues, valuesTitle);
+                DoubleVariable frequenciesVariable = new DoubleVariable(outputFrequencies, frequenciesTitle);
+                DataFrame outputFrame = new DataFrame();
+                outputFrame.Variables.Add(valuesVariable);
+                outputFrame.Variables.Add(frequenciesVariable);
+
+                if (null != covariatesOrNull)
+                {
+                    // Add covariates.  We happen to know these are all VariantVariables.
+                    foreach (Variable inputCovariant in covariatesOrNull.Variables)
+                    {
+                        object[] icData = inputCovariant.AsVariantVariable.Data;
+                        VariantVariable outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
+                        for (int i = 0; i < nextDifferentValue; i++)
+                            outputCovariant.Data[i] = icData[countMap[differenceValuesInOrder[i]].RowIndex];
+                        outputFrame.Variables.Add(outputCovariant);
+                    }
+                }
+                ParameterBag outputParameters = new ParameterBag();
+                outputParameters.AddOutput("output", outputFrame);
+                return outputParameters;
+
+            }
         }
 
         internal static ParameterBag ShtExpand(ITemplateHost host, ParameterBag parameters)
@@ -2221,10 +2373,9 @@ namespace StatsDirect.Builtins
             for (int srcRow = 0; srcRow < yesPerGroup.Length; srcRow++)
             {
                 if (yesPerGroup[srcRow] > 0)
-                {
                     nextOutputOffset = FillExtractOutputRow(covariatesOrNull, labelsOrNull, yesPerGroup[srcRow], 1, hasResponses, hasLabels, covariatesCount, outputLabels, outputResponses, outputCovariates, nextOutputOffset, srcRow);
+                if (noPerGroup[srcRow] > 0)
                     nextOutputOffset = FillExtractOutputRow(covariatesOrNull, labelsOrNull, noPerGroup[srcRow], 0, hasResponses, hasLabels, covariatesCount, outputLabels, outputResponses, outputCovariates, nextOutputOffset, srcRow);
-                }
 
             }
             ParameterBag outputParameters = new ParameterBag();
@@ -2247,18 +2398,120 @@ namespace StatsDirect.Builtins
             return nextOutputOffset;
         }
 
-        private static int[] ToIntArray(double[] p, out int sum)
+        private static int[] ToIntArray(double[] doubles, out int sum)
         {
             int total = 0;
-            int[] output = new int[p.Length];
-            for (int i = 0; i < p.Length; i++)
+            int[] output = new int[doubles.Length];
+            for (int i = 0; i < doubles.Length; i++)
             {
-                int rounded = (int)Math.Round(p[i], MidpointRounding.AwayFromZero);
+                int rounded = (int)Math.Round(doubles[i], MidpointRounding.AwayFromZero);
                 total += rounded;
                 output[i] = rounded;
             }
             sum = total;
             return output;
+        }
+
+        /// <summary>
+        /// Returns an array of the same length as inputFrame.MaxRows.  Values in cells of the output array will be identical where an input row is identical, otherwise different.
+        /// This can be used to compress differences across input rows into a single signature array.
+        /// </summary>
+        /// <param name="inputFrame"></param>
+        /// <returns></returns>
+        private static int ClassifyObjects(DataFrame inputFrame, out int[] differenceArray)
+        {
+            differenceArray = new int[inputFrame.MaxRows]; // Initialise all rows to zero
+            return ClassifyObjects(differenceArray, inputFrame, 1);
+        }
+
+        private static int ClassifyObjects(int[] differenceArray, DataFrame inputFrame, int nextDifferentValue)
+        {
+            foreach (Variable variable in inputFrame.Variables)
+                nextDifferentValue = ClassifyObjects(differenceArray, variable, nextDifferentValue);
+            return nextDifferentValue;
+        }
+
+        /// <summary>
+        /// Assume differenceArray already holds differences for variables earlier than this one.  Where elements of this variable differ, distinguish new values in differenceArray.
+        /// </summary>
+        /// <param name="differenceArray"></param>
+        /// <param name="variable"></param>
+        /// <param name="nextDifferentValue"></param>
+        /// <returns></returns>
+        private static int ClassifyObjects(int[] differenceArray, Variable variable, int nextDifferentValue)
+        {
+            if (variable.IsDoubleVariable) // Includes ClassifierVariable
+                return ClassifyObjects(differenceArray, ((DoubleVariable)variable).Data, nextDifferentValue);
+            if (variable.IsDateVariable)
+                return ClassifyObjects(differenceArray, ((DateVariable)variable).Data, nextDifferentValue);
+            if (variable.IsStringVariable)
+                return ClassifyObjects(differenceArray, ((StringVariable)variable).Data, nextDifferentValue);
+            if (variable.IsVariantVariable)
+                return ClassifyObjects(differenceArray, ((VariantVariable)variable).Data, nextDifferentValue);
+            throw new Exception("Unknown type of data variable in ClassifyObjects");
+        }
+
+        private static int ClassifyObjects<T>(int[] differenceArray, T[] testArray, int nextDifferentValue)
+        {
+            HashSet<int> seenDifferences = new HashSet<int>();
+            Dictionary<IntAndSomething<T>, int> differenceMapper = new Dictionary<IntAndSomething<T>, int>();
+            for (int i = 0; i < differenceArray.Length; i++)
+            {
+                int differenceValue = differenceArray[i];
+                IntAndSomething<T> probe = new IntAndSomething<T> { i = differenceValue, t = (i < testArray.Length) ? testArray[i] : default(T) };
+                int target; // Holds the value we'll use
+                if (differenceMapper.TryGetValue(probe, out target))
+                {
+                    // We've seen this value before; use the existing mapping
+                }
+                else
+                {
+                    // We've not seen this combination before.  Create a mapping for it and set the value in differenceArray accordingly.
+                    // If this is the first time we've seen this value in differenceArray, re-use it; otherwise, assign a new unique value.
+                    if (!seenDifferences.Contains(differenceValue))
+                    {
+                        seenDifferences.Add(differenceValue);
+                        target = differenceValue;
+                    }
+                    else
+                        target = nextDifferentValue++;
+                    differenceMapper.Add(probe, target);
+                }
+                differenceArray[i] = target;
+            }
+            return nextDifferentValue;
+        }
+
+        private class IntAndSomething<T>
+        {
+            public int i;
+            public T t;
+
+            public override int GetHashCode()
+            {
+                return i ^ t.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (!(obj is IntAndSomething<T>))
+                    return false;
+                IntAndSomething<T> other = (IntAndSomething<T>)obj;
+                return i == other.i && t.Equals(other.t);
+            }
+        }
+
+        private class CountAndRowIndex
+        {
+            public int Count { get; set; }
+            public int RowIndex { get; set; }
+        }
+
+        private class RespondersCountAndRowIndex : CountAndRowIndex
+        {
+            public int Responders { get; set; }
+            public int NonResponders { get { return Count - Responders; } }
+            public double ProportionResponding { get { return Responders / (double)Count; } }
         }
     }
 }

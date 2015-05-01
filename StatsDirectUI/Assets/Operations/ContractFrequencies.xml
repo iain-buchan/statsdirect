@@ -24,13 +24,14 @@
             <option value="totals-responders">Totals and responders (1)</option>
             <option value="responders-nonresps">Responders (1) and non-responders (0)</option>
             <option value="resprops-totals">Proportions responding and totals</option>
-            <option value="categories">Plain categories</option>
+            <!-- <option value="categories">Plain categories</option> -->
           </options>
           <default-value>totals-responders</default-value>
         </option>
         <frame>
-          <name>observations</name>
+          <name>categories</name>
           <prompt>Select observations</prompt>
+          <acquire-if-true>=parameters.ContainsKey("type") &amp;&amp; null != parameters["type"] &amp;&amp; parameters["type"].AsString.Contains("categories")</acquire-if-true>
           <mode>CategoryReplaceMissing</mode>
           <clear-selection-first>true</clear-selection-first>
           <min-columns>1</min-columns>
@@ -40,11 +41,26 @@
           </validators>
         </frame>
         <frame>
+          <name>responses</name>
+          <prompt>Select responses</prompt>
+          <acquire-if-true>=parameters.ContainsKey("type") &amp;&amp; null != parameters["type"] &amp;&amp; parameters["type"].AsString.Contains("response")</acquire-if-true>
+          <mode>NumericReplaceMissing</mode>
+          <clear-selection-first>true</clear-selection-first>
+          <min-columns>1</min-columns>
+          <max-columns>1</max-columns>
+          <validators>
+            <validator>NoMissingData</validator>
+            <validator>Boolean</validator>
+          </validators>
+          <validation-fail-message>Response data must be 0 or 1 only, with no missing data.</validation-fail-message>
+        </frame>
+        <frame>
           <name>covariates</name>
           <prompt>Select covariates</prompt>
           <acquire-if-true>=parameters["type"].AsString.Contains("covariates")</acquire-if-true>
           <clear-selection-first>true</clear-selection-first>
           <same-length-as>observations</same-length-as>
+          <same-length-as>responses</same-length-as>
           <mode>Variant</mode>
           <min-columns>1</min-columns>
           <max-columns>9999</max-columns>
