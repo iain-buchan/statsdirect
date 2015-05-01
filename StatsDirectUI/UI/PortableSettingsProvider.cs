@@ -23,10 +23,8 @@ namespace StatsDirect.UI
         {
             get
             {
-                if (Application.ProductName.Trim().Length > 0)
-                {
+                if (!string.IsNullOrWhiteSpace(Application.ProductName))
                     return Application.ProductName;
-                }
                 FileInfo fi = new FileInfo(Application.ExecutablePath);
                 return fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
             }
@@ -34,13 +32,6 @@ namespace StatsDirect.UI
             {
                 // Do nothing
             }
-        }
-
-        protected virtual string GetAppSettingsPath()
-        {
-            // Used to determine where to store the settings
-            FileInfo fi = new FileInfo(Application.ExecutablePath);
-            return fi.DirectoryName;
         }
 
         protected virtual string GetAppSettingsFilename()
@@ -52,7 +43,6 @@ namespace StatsDirect.UI
         protected string SettingsFileName
         {
             get { return Path.Combine(SDConfiguration.MyStatsDirectFolder, GetAppSettingsFilename()); }
-            // get { return Path.Combine(GetAppSettingsPath(), GetAppSettingsFilename()); }
         }
 
         public override void SetPropertyValues(SettingsContext context, SettingsPropertyValueCollection propvals)
@@ -137,10 +127,14 @@ namespace StatsDirect.UI
 
         private void SetValue(SettingsPropertyValue propVal)
         {
+            if (null == propVal)
+                return;
             if (null == propVal.SerializedValue)
                 return;
+            if (null == propVal.Name)
+                return;
 
-            XmlElement SettingNode;
+            XmlElement settingNode;
 
             // Determine if the setting is roaming.
             // If roaming then the value is stored as an element under the root
@@ -148,54 +142,56 @@ namespace StatsDirect.UI
             try
             {
                 if (IsRoaming(propVal.Property))
-                    SettingNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + propVal.Name));
+                    settingNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + propVal.Name));
                 else
-                    SettingNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName + "/" + propVal.Name));
+                    settingNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName + "/" + propVal.Name));
             }
             catch (Exception)
             {
-                SettingNode = null;
+                settingNode = null;
             }
 
             // Check to see if the node exists, if so then set its new value
-            if (null != SettingNode)
+            if (null != settingNode)
             {
-                SettingNode.InnerText = propVal.SerializedValue.ToString();
+                settingNode.InnerText = propVal.SerializedValue.ToString();
             }
             else
             {
+                XmlNode parentNode;
+
                 if (IsRoaming(propVal.Property))
                 {
                     // Store the value as an element of the Settings Root Node
-                    SettingNode = SettingsXML.CreateElement(propVal.Name);
-                    SettingNode.InnerText = propVal.SerializedValue.ToString();
-                    SettingsXML.SelectSingleNode(SETTINGSROOT).AppendChild(SettingNode);
+                    parentNode = SettingsXML.SelectSingleNode(SETTINGSROOT);
                 }
                 else
                 {
-                    // Its machine specific, store as an element of the machine name node,
+                    // It's machine specific, store as an element of the machine name node,
                     // creating a new machine name node if one doesnt exist.
-                    XmlElement MachineNode;
+                    XmlElement machineNode;
                     try
                     {
-                        MachineNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName));
+                        machineNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName));
                     }
                     catch (Exception)
                     {
-                        MachineNode = SettingsXML.CreateElement(SystemInformation.ComputerName);
-                        SettingsXML.SelectSingleNode(SETTINGSROOT).AppendChild(MachineNode);
+                        machineNode = null;
                     }
 
-                    if (null == MachineNode)
+                    if (null == machineNode)
                     {
-                        MachineNode = SettingsXML.CreateElement(SystemInformation.ComputerName);
-                        SettingsXML.SelectSingleNode(SETTINGSROOT).AppendChild(MachineNode);
+                        machineNode = SettingsXML.CreateElement(SystemInformation.ComputerName);
+                        SettingsXML.SelectSingleNode(SETTINGSROOT).AppendChild(machineNode);
                     }
 
-                    SettingNode = SettingsXML.CreateElement(propVal.Name);
-                    SettingNode.InnerText = propVal.SerializedValue.ToString();
-                    MachineNode.AppendChild(SettingNode);
+                    parentNode = machineNode;
                 }
+
+                settingNode = SettingsXML.CreateElement(propVal.Name);
+                settingNode.InnerText = propVal.SerializedValue.ToString();
+                if (null != parentNode)
+                    parentNode.AppendChild(settingNode);
             }
         }
 
