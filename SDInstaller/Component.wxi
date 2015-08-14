@@ -1,44 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
   <!-- DevExpress rich text editor -->
-  <Component Id="DevExpress.Data.v14.2.dll">
-    <File Id="DevExpress.Data.v14.2.dll" KeyPath="yes" Name="DevExpress.Data.v14.2.dll" Checksum="yes" />
+  <Component Id="DevExpress.Data.v15.1.dll">
+    <File Id="DevExpress.Data.v15.1.dll" KeyPath="yes" Name="DevExpress.Data.v15.1.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.Docs.v14.2.dll">
-    <File Id="DevExpress.Docs.v14.2.dll" KeyPath="yes" Name="DevExpress.Docs.v14.2.dll" Checksum="yes" />
+  <Component Id="DevExpress.Docs.v15.1.dll">
+    <File Id="DevExpress.Docs.v15.1.dll" KeyPath="yes" Name="DevExpress.Docs.v15.1.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.Office.v14.2.Core.dll">
-    <File Id="DevExpress.Office.v14.2.Core.dll" KeyPath="yes" Name="DevExpress.Office.v14.2.Core.dll" Checksum="yes" />
+  <Component Id="DevExpress.Office.v15.1.Core.dll">
+    <File Id="DevExpress.Office.v15.1.Core.dll" KeyPath="yes" Name="DevExpress.Office.v15.1.Core.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.Printing.v14.2.Core.dll">
-    <File Id="DevExpress.Printing.v14.2.Core.dll" KeyPath="yes" Name="DevExpress.Printing.v14.2.Core.dll" Checksum="yes" />
+  <Component Id="DevExpress.Printing.v15.1.Core.dll">
+    <File Id="DevExpress.Printing.v15.1.Core.dll" KeyPath="yes" Name="DevExpress.Printing.v15.1.Core.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.RichEdit.v14.2.Core.dll">
-    <File Id="DevExpress.RichEdit.v14.2.Core.dll" KeyPath="yes" Name="DevExpress.RichEdit.v14.2.Core.dll" Checksum="yes" />
+  <Component Id="DevExpress.RichEdit.v15.1.Core.dll">
+    <File Id="DevExpress.RichEdit.v15.1.Core.dll" KeyPath="yes" Name="DevExpress.RichEdit.v15.1.Core.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.Sparkline.v14.2.Core.dll">
-    <File Id="DevExpress.Sparkline.v14.2.Core.dll" KeyPath="yes" Name="DevExpress.Sparkline.v14.2.Core.dll" Checksum="yes" />
+  <Component Id="DevExpress.Sparkline.v15.1.Core.dll">
+    <File Id="DevExpress.Sparkline.v15.1.Core.dll" KeyPath="yes" Name="DevExpress.Sparkline.v15.1.Core.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.Utils.v14.2.dll">
-    <File Id="DevExpress.Utils.v14.2.dll" KeyPath="yes" Name="DevExpress.Utils.v14.2.dll" Checksum="yes" />
+  <Component Id="DevExpress.Utils.v15.1.dll">
+    <File Id="DevExpress.Utils.v15.1.dll" KeyPath="yes" Name="DevExpress.Utils.v15.1.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.XtraBars.v14.2.dll">
-    <File Id="DevExpress.XtraBars.v14.2.dll" KeyPath="yes" Name="DevExpress.XtraBars.v14.2.dll" Checksum="yes" />
+  <Component Id="DevExpress.XtraBars.v15.1.dll">
+    <File Id="DevExpress.XtraBars.v15.1.dll" KeyPath="yes" Name="DevExpress.XtraBars.v15.1.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.XtraEditors.v14.2.dll">
-    <File Id="DevExpress.XtraEditors.v14.2.dll" KeyPath="yes" Name="DevExpress.XtraEditors.v14.2.dll" Checksum="yes" />
+  <Component Id="DevExpress.XtraEditors.v15.1.dll">
+    <File Id="DevExpress.XtraEditors.v15.1.dll" KeyPath="yes" Name="DevExpress.XtraEditors.v15.1.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.XtraPrinting.v14.2.dll">
-    <File Id="DevExpress.XtraPrinting.v14.2.dll" KeyPath="yes" Name="DevExpress.XtraPrinting.v14.2.dll" Checksum="yes" />
+  <Component Id="DevExpress.XtraPrinting.v15.1.dll">
+    <File Id="DevExpress.XtraPrinting.v15.1.dll" KeyPath="yes" Name="DevExpress.XtraPrinting.v15.1.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.XtraRichEdit.v14.2.dll">
-    <File Id="DevExpress.XtraRichEdit.v14.2.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v14.2.dll" Checksum="yes" />
+  <Component Id="DevExpress.XtraRichEdit.v15.1.dll">
+    <File Id="DevExpress.XtraRichEdit.v15.1.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v15.1.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.XtraRichEdit.v14.2.Extensions.dll">
-    <File Id="DevExpress.XtraRichEdit.v14.2.Extensions.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v14.2.Extensions.dll" Checksum="yes" />
+  <Component Id="DevExpress.XtraRichEdit.v15.1.Extensions.dll">
+    <File Id="DevExpress.XtraRichEdit.v15.1.Extensions.dll" KeyPath="yes" Name="DevExpress.XtraRichEdit.v15.1.Extensions.dll" Checksum="yes" />
   </Component>
-  <Component Id="DevExpress.XtraTreeList.v14.2.dll">
-    <File Id="DevExpress.XtraTreeList.v14.2.dll" KeyPath="yes" Name="DevExpress.XtraTreeList.v14.2.dll" Checksum="yes" />
+  <Component Id="DevExpress.XtraTreeList.v15.1.dll">
+    <File Id="DevExpress.XtraTreeList.v15.1.dll" KeyPath="yes" Name="DevExpress.XtraTreeList.v15.1.dll" Checksum="yes" />
   </Component>
 
   <!-- SpreadsheetGear -->

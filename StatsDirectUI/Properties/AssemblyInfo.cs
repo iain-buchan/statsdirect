@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("StatsDirect Limited")]
 [assembly: AssemblyProduct("StatsDirect")]
-[assembly: AssemblyCopyright("Copyright © 1997-2015 StatsDirect Limited")]
+[assembly: AssemblyCopyright("Copyright ©1997-2015 StatsDirect Limited")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -29,6 +29,6 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.0.150.0")]
-[assembly: AssemblyFileVersion("3.0.150.0")]
+[assembly: AssemblyVersion("3.0.152.0")]
+[assembly: AssemblyFileVersion("3.0.152.0")]
 [assembly: CLSCompliant(false)]
