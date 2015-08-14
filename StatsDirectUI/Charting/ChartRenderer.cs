@@ -2797,9 +2797,7 @@ namespace StatsDirect.Charting
             {
                 double w = statsDirectCanvas.MeasureString(s.Title, axisLabelFont).Width + 20;
                 if (w > xtra + xAxisCanvas)
-                {
                     xtra = w - xAxisCanvas;
-                }
             }
             DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, xtra, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
 
@@ -2813,16 +2811,16 @@ namespace StatsDirect.Charting
                     for (int c = 0; c < seriesToUse.Count; c++)
                     {
                         DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                        double centre = 0;
-                        double boxL = 0;
-                        double boxR = 0;
-                        double innerFenceL = 0;
-                        double innerFenceR = 0;
-                        double outerFenceL = 0;
-                        double outerFenceR = 0;
-                        double otherMark = 0;
-                        bool centreIsMedian = false;
-                        PlotBoxWhiskerCalc(s, bwOptions.Method, P, ref centre, ref boxL, ref boxR, ref innerFenceL, ref innerFenceR, bwOptions.UseInnerFence, ref outerFenceL, ref outerFenceR, bwOptions.UseOuterFence, ref otherMark, ref centreIsMedian);
+                        double centre;
+                        double boxL;
+                        double boxR;
+                        double innerFenceL;
+                        double innerFenceR;
+                        double outerFenceL;
+                        double outerFenceR;
+                        double otherMark;
+                        bool centreIsMedian;
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, P, out centre, out boxL, out boxR, out innerFenceL, out innerFenceR, bwOptions.UseInnerFence, out outerFenceL, out outerFenceR, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
 
                         // Plot graphic
                         double yctr = (c + 0.5) / divy * yExtCanvas;
@@ -2874,13 +2872,9 @@ namespace StatsDirect.Charting
                         {
                             Pen innerPen;
                             if (bwOptions.UseOuterFence || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
-                            {
                                 innerPen = dottedBlackPen;
-                            }
                             else
-                            {
                                 innerPen = blackPen;
-                            }
                             statsDirectCanvas.DrawLine(innerPen, innerFenceLX, yt, innerFenceLX, yb);
                         }
 
@@ -2930,11 +2924,6 @@ namespace StatsDirect.Charting
                         // ReSharper disable ConvertToConstant.Local
                         bool shouldDrawOuterFenceL = true;
                         // ReSharper restore ConvertToConstant.Local
-                        // If (gatedInnerL OrElse gatedOuterL) _
-                        //     AndAlso Not (bwOptions.Method = BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary OrElse bwOptions.Method = BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary) Then 'bwOptions.UseInnerFence AndAlso (Not bwOptions.UseOuterFence) AndAlso gatedInnerL Then
-                        //  At least one inner outlier, and we're not using the outer fence.  The inner fence will have been drawn; we should not draw this as well.
-                        // shouldDrawOuterFenceL = False
-                        // End If
                         bool shouldDrawOuterBracketL = shouldDrawOuterFenceL && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterL || gatedInnerL));
                         if (shouldDrawOuterFenceL)
                         {
@@ -2950,7 +2939,7 @@ namespace StatsDirect.Charting
                         const double outlierRadius = BOXWHISKER_OUTLIER_RADIUS;
                         if (gatedInnerL)
                         {
-                            for (int r = 0; r <= s.Data.Length - 1; r++)
+                            for (int r = 0; r < s.Data.Length; r++)
                             {
                                 if (s.Data[r] < innerFenceL && (s.Data[r] >= outerFenceL || !(gatedOuterL)))
                                 {
@@ -2961,7 +2950,7 @@ namespace StatsDirect.Charting
                         }
                         if (gatedOuterL)
                         {
-                            for (int r = 0; r <= s.Data.Length - 1; r++)
+                            for (int r = 0; r < s.Data.Length; r++)
                             {
                                 if (s.Data[r] < outerFenceL)
                                 {
@@ -2988,9 +2977,6 @@ namespace StatsDirect.Charting
                         {
                             shouldDrawInnerFenceR = true;
                             innerFenceRX = ToCanvasX(innerFenceR);
-                            // ElseIf bwOptions.UseInnerFence AndAlso gatedInnerR Then
-                            //     shouldDrawInnerFenceR = True
-                            //     innerFenceRX = ToCanvasX(innerFenceR)
                         }
                         if (shouldDrawInnerFenceR)
                         {
@@ -3024,7 +3010,7 @@ namespace StatsDirect.Charting
                                 if (s.Data[i] <= innerFenceR)
                                 {
                                     maxWhiskerR = s.Data[i];
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
                             }
                         }
@@ -3035,7 +3021,7 @@ namespace StatsDirect.Charting
                                 if (s.Data[i] <= outerFenceR)
                                 {
                                     maxWhiskerR = s.Data[i];
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
                             }
                         }
@@ -3091,7 +3077,6 @@ namespace StatsDirect.Charting
                             }
                         }
                     }
-
                 }
             }
             MaybeDrawMarkerLines();
@@ -3101,7 +3086,6 @@ namespace StatsDirect.Charting
 
         private ParameterBag PlotBoxWhiskerVertical(List<Series> seriesToUse)
         {
-
             int k = seriesToUse.Count + 1;
             if (k > 10)
             {
@@ -3130,17 +3114,11 @@ namespace StatsDirect.Charting
 
             //  Fonts
             if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
-            {
                 axisLabelFont = FontFromSaveString(bwOptions.AxisLabelFontDescriptor);
-            }
             if (!(string.IsNullOrEmpty(bwOptions.AxisFontDescriptor)))
-            {
                 axisTitleFont = FontFromSaveString(bwOptions.AxisFontDescriptor);
-            }
             if (!(string.IsNullOrEmpty(bwOptions.TitleFontDescriptor)))
-            {
                 titleFont = FontFromSaveString(bwOptions.TitleFontDescriptor);
-            }
 
             AssignMarkersToSeries();
             //  Not horizontal, so vertical
@@ -3177,14 +3155,10 @@ namespace StatsDirect.Charting
             float w = statsDirectCanvas.MeasureString(min.ToString(msk), axisLabelFont).Width;
             //  Allow 20 units for axes; if we need more, offset the axis
             if (w - 20 > xtra)
-            {
                 xtra = w - 20;
-            }
             w = statsDirectCanvas.MeasureString(max.ToString(msk), axisLabelFont).Width;
             if (w - 20 > xtra)
-            {
                 xtra = w - 20;
-            }
             //  Offset the axis label
 
             DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(null, AxisMode.Series, 0, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), false, false);
@@ -3199,16 +3173,16 @@ namespace StatsDirect.Charting
                     for (int c = 0; c < seriesToUse.Count; c++)
                     {
                         DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                        double centre = 0;
-                        double boxB = 0;
-                        double boxT = 0;
-                        double innerFenceB = 0;
-                        double innerFenceT = 0;
-                        double outerFenceB = 0;
-                        double outerFenceT = 0;
-                        double otherMark = 0;
-                        bool CentreIsMedian = false;
-                        PlotBoxWhiskerCalc(s, bwOptions.Method, P, ref centre, ref boxB, ref boxT, ref innerFenceB, ref innerFenceT, bwOptions.UseInnerFence, ref outerFenceB, ref outerFenceT, bwOptions.UseOuterFence, ref otherMark, ref CentreIsMedian);
+                        double centre;
+                        double boxB;
+                        double boxT;
+                        double innerFenceB;
+                        double innerFenceT;
+                        double outerFenceB;
+                        double outerFenceT;
+                        double otherMark;
+                        bool centreIsMedian;
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, P, out centre, out boxB, out boxT, out innerFenceB, out innerFenceT, bwOptions.UseInnerFence, out outerFenceB, out outerFenceT, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
 
                         // Plot graphic
                         double xctr = (c + 0.5) / divx * xExtCanvas;
@@ -3310,11 +3284,6 @@ namespace StatsDirect.Charting
 
                         //  Draw outer marker
                         const bool shouldDrawOuterFenceB = true;
-                        // If (gatedInnerB OrElse gatedOuterB) _
-                        //     AndAlso Not (bwOptions.Method = BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary OrElse bwOptions.Method = BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary) Then 'bwOptions.UseInnerFence AndAlso (Not bwOptions.UseOuterFence) AndAlso gatedInnerL Then
-                        //  At least one inner outlier, and we're not using the outer fence.  The inner fence will have been drawn; we should not draw this as well.
-                        // shouldDrawOuterFenceB = False
-                        // End If
                         // ReSharper disable RedundantLogicalConditionalExpressionOperand
                         bool shouldDrawOuterBracketB = shouldDrawOuterFenceB && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterB || gatedInnerB));
                         // ReSharper restore RedundantLogicalConditionalExpressionOperand
@@ -3374,13 +3343,9 @@ namespace StatsDirect.Charting
                         {
                             Pen innerPen;
                             if (bwOptions.UseOuterFence || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
-                            {
                                 innerPen = dottedBlackPen;
-                            }
                             else
-                            {
                                 innerPen = blackPen;
-                            }
                             statsDirectCanvas.DrawLine(innerPen, xr, innerFenceTY, xl, innerFenceTY);
                         }
 
@@ -3402,7 +3367,7 @@ namespace StatsDirect.Charting
                                 if (s.Data[i] <= innerFenceT)
                                 {
                                     maxWhiskerT = s.Data[i];
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
                             }
                         }
@@ -3413,7 +3378,7 @@ namespace StatsDirect.Charting
                                 if (s.Data[i] <= outerFenceT)
                                 {
                                     maxWhiskerT = s.Data[i];
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
                             }
                         }
@@ -3508,7 +3473,6 @@ namespace StatsDirect.Charting
                 shTx[0] = bwOptions.XAxisTitle;
             }
 
-
             // work through the columns
             for (int c = 0; c <= seriesToUse.Count - 1; c++)
             {
@@ -3518,53 +3482,51 @@ namespace StatsDirect.Charting
                 double outerFenceL = 0; double outerFenceR = 0;
                 double otherMark = 0;
                 bool centreIsMedian = false;
-                PlotBoxWhiskerCalc(s, bwOptions.Method, P, ref mdn, ref Q1, ref Q3, ref innerFenceL, ref innerFenceR, bwOptions.UseInnerFence, ref outerFenceL, ref outerFenceR, bwOptions.UseOuterFence, ref otherMark, ref centreIsMedian);
+                PlotBoxWhiskerCalc(s, bwOptions.Method, P, out mdn, out Q1, out Q3, out innerFenceL, out innerFenceR, bwOptions.UseInnerFence, out outerFenceL, out outerFenceR, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
 
                 bool gatedl;
-                int XL;
-                if (s.Data[0] < outerFenceL & outerFenceL < Q1)
+                int xl;
+                if (s.Data[0] < outerFenceL && outerFenceL < Q1)
                 {
-                    XL = Convert.ToInt32(offx + outerFenceL / divx * 60);
+                    xl = Convert.ToInt32(offx + outerFenceL / divx * 60);
                     gatedl = true;
                 }
                 else
                 {
-                    XL = Convert.ToInt32(offx + s.Data[0] / divx * 60);
+                    xl = Convert.ToInt32(offx + s.Data[0] / divx * 60);
                     gatedl = false;
                 }
 
                 bool gatedr;
-                int XR;
-                if (s.Data[s.Data.Length - 1] > outerFenceR & outerFenceR > Q3)
+                int xr;
+                if (s.Data[s.Data.Length - 1] > outerFenceR && outerFenceR > Q3)
                 {
-                    XR = Convert.ToInt32(offx + outerFenceR / divx * 60);
+                    xr = Convert.ToInt32(offx + outerFenceR / divx * 60);
                     gatedr = true;
                 }
                 else
                 {
-                    XR = Convert.ToInt32(offx + s.Data[s.Data.Length - 1] / divx * 60);
+                    xr = Convert.ToInt32(offx + s.Data[s.Data.Length - 1] / divx * 60);
                     gatedr = false;
                 }
 
-                int XM = Convert.ToInt32(offx + (mdn / divx * 60));
+                int xm = Convert.ToInt32(offx + (mdn / divx * 60));
 
-                int LQ = Convert.ToInt32(offx + (Q1 / divx * 60));
-                int UQ = Convert.ToInt32(offx + (Q3 / divx * 60));
+                int lq = Convert.ToInt32(offx + (Q1 / divx * 60));
+                int uq = Convert.ToInt32(offx + (Q3 / divx * 60));
 
                 // Plot it
                 int Y2 = 3 + c * 2;
-                WriteAsciiYX(Y2, LQ, new string('.', UQ - LQ));
-                WriteAsciiYX(Y2, XM, "*");
+                WriteAsciiYX(Y2, lq, new string('.', uq - lq));
+                WriteAsciiYX(Y2, xm, "*");
 
-                int L;
+                int l;
                 if (gatedl)
                 {
-                    L = LQ - XL;
-                    if (L < 2)
-                    {
-                        L = 2;
-                    }
-                    WriteAsciiYX(Y2, XL, "|" + new string('-', L - 2) + "[");
+                    l = lq - xl;
+                    if (l < 2)
+                        l = 2;
+                    WriteAsciiYX(Y2, xl, "|" + new string('-', l - 2) + "[");
                     for (int r = 0; r <= s.Data.Length - 1; r++)
                     {
                         if (s.Data[r] < outerFenceL)
@@ -3576,22 +3538,18 @@ namespace StatsDirect.Charting
                 }
                 else
                 {
-                    L = LQ - XL;
-                    if (L < 2)
-                    {
-                        L = 2;
-                    }
-                    WriteAsciiYX(Y2, XL, ">" + new string('-', L - 2) + "[");
+                    l = lq - xl;
+                    if (l < 2)
+                        l = 2;
+                    WriteAsciiYX(Y2, xl, ">" + new string('-', l - 2) + "[");
                 }
 
                 if (gatedr)
                 {
-                    L = XR - UQ;
-                    if (L < 2)
-                    {
-                        L = 2;
-                    }
-                    WriteAsciiYX(Y2, UQ, "]" + new string('-', L - 2) + "|");
+                    l = xr - uq;
+                    if (l < 2)
+                        l = 2;
+                    WriteAsciiYX(Y2, uq, "]" + new string('-', l - 2) + "|");
                     for (int r = 0; r <= s.Data.Length - 1; r++)
                     {
                         if (s.Data[r] > outerFenceR)
@@ -3603,14 +3561,11 @@ namespace StatsDirect.Charting
                 }
                 else
                 {
-                    L = XR - UQ;
-                    if (L < 2)
-                    {
-                        L = 2;
-                    }
-                    WriteAsciiYX(Y2, UQ, "]" + new string('-', L - 2) + "<");
+                    l = xr - uq;
+                    if (l < 2)
+                        l = 2;
+                    WriteAsciiYX(Y2, uq, "]" + new string('-', l - 2) + "<");
                 }
-
             }
             return new ParameterBag();
         }
@@ -4238,47 +4193,38 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  Get the nth centile (divided by 100,  so 0.25 for lower quartile etc) from the given series containing a sorted 0-based array of data
         ///  </summary>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
         private double Quantile(DoubleSeries s, double n)
         {
             int count = s.Data.Length;
-            double imdn = n * count;
+            double imdn = n * count - 0.5;
             if (imdn < 0)
-            {
                 imdn = 0.0;
-            }
             if (imdn > s.Data.Length - 1)
-            {
                 imdn = s.Data.Length - 1;
-            }
-            if (imdn -  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor(imdn) == 0.0)
-            {
+            if (imdn - Math.Floor(imdn) == 0.0)
                 return s.Data[Convert.ToInt32(imdn)];
-            }
             return s.Data[((int)(Math.Floor(imdn)))] + (s.Data[((int)(Math.Floor(imdn))) + 1] - s.Data[((int)(Math.Floor(imdn)))]) * (imdn - Math.Floor(imdn));
         }
 
         ///  <summary>
-        ///  
+        ///  Calculate and return as output parameters many values that are useful for a single box+whisker from the given series.
         ///  </summary>
         ///  <param name="s">The series to use for calculation</param>
         ///  <param name="method">The calculation method</param>
         ///  <param name="P">For Mean, CI, Range: the CI to calculate</param>
-        ///  <param name="Centre">Returns the median value</param>
-        ///  <param name="BoxL">Returns the lower quertile</param>
-        ///  <param name="BoxR">Returns the upper quartile</param>
-        ///  <param name="InnerFenceL">The lower inner fence value if used, 9th centile for seven number, or 10th centile for Bowley</param>
-        ///  <param name="InnerFenceR">The upper inner fence value if used, 91st centile for seven number, or 90th centile for Bowley</param>
+        ///  <param name="centre">Returns the median value</param>
+        ///  <param name="boxL">Returns the lower quertile</param>
+        ///  <param name="boxR">Returns the upper quartile</param>
+        ///  <param name="innerFenceL">The lower inner fence value if used, 9th centile for seven number, or 10th centile for Bowley</param>
+        ///  <param name="innerFenceR">The upper inner fence value if used, 91st centile for seven number, or 90th centile for Bowley</param>
         ///  <param name="useInnerFence">True to calculate inner fences</param>
-        ///  <param name="OuterFenceL">The lower outer fence value if used, 2nd centile for seven number, min otherwise</param>
-        ///  <param name="OuterFenceR">The upper outer fence value if used, 98th centile for seven number, max otherwise</param>
+        ///  <param name="outerFenceL">The lower outer fence value if used, 2nd centile for seven number, min otherwise</param>
+        ///  <param name="outerFenceR">The upper outer fence value if used, 98th centile for seven number, max otherwise</param>
         ///  <param name="useOuterFence">True to calculate outer fences</param>
-        ///  <param name="OtherCentre">Another centre that might be appropriate to plot.  Mean if centre is median, and vice versa.</param>
-        /// <param name="CentreIsMedian"></param>
-        private void PlotBoxWhiskerCalc(DoubleSeries s, BoxWhiskerOptions.BoxWhiskerMethod method, double P, ref double Centre, ref double BoxL, ref double BoxR, ref double InnerFenceL, ref double InnerFenceR, bool useInnerFence, ref double OuterFenceL, ref double OuterFenceR, bool useOuterFence, ref double OtherCentre, ref bool CentreIsMedian)
+        ///  <param name="otherCentre">Another centre that might be appropriate to plot.  Mean if centre is median, and vice versa.</param>
+        /// <param name="centreIsMedian">True if centre is the median and otherCentre is mean, false if the reverse is true.</param>
+        private void PlotBoxWhiskerCalc(DoubleSeries s, BoxWhiskerOptions.BoxWhiskerMethod method, double P, out double centre, out double boxL, out double boxR, out double innerFenceL, out double innerFenceR, bool useInnerFence, out double outerFenceL, out double outerFenceR, bool useOuterFence, out double otherCentre, out bool centreIsMedian)
         {
-
             int count = s.Data.Length;
             switch (method)
             {
@@ -4288,48 +4234,46 @@ namespace StatsDirect.Charting
                     {
 
                         //  Median
-                        Centre = Quantile(s, 0.5);
+                        centre = Quantile(s, 0.5);
                         //  Lower quartile
-                        BoxL = Quantile(s, 0.25);
+                        boxL = Quantile(s, 0.25);
                         //  Upper quartile
-                        BoxR = Quantile(s, 0.75);
+                        boxR = Quantile(s, 0.75);
 
                         //  Inner fence
                         switch (method)
                         {
                             case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
-                                double interQuartileRange = Math.Abs(BoxR - BoxL);
+                                double interQuartileRange = Math.Abs(boxR - boxL);
                                 if (useInnerFence)
                                 {
-                                    InnerFenceL = BoxL - 1.5 * interQuartileRange;
-                                    InnerFenceR = BoxR + 1.5 * interQuartileRange;
+                                    innerFenceL = boxL - 1.5 * interQuartileRange;
+                                    innerFenceR = boxR + 1.5 * interQuartileRange;
                                 }
                                 else
                                 {
                                     //  Get out of the way!
-                                    InnerFenceL = BoxL;
-                                    InnerFenceR = BoxR;
+                                    innerFenceL = boxL;
+                                    innerFenceR = boxR;
                                 }
                                 break;
                             case BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary:
-                                InnerFenceL = Quantile(s, 0.09);
-                                InnerFenceR = Quantile(s, 0.91);
+                                innerFenceL = Quantile(s, 0.09);
+                                innerFenceR = Quantile(s, 0.91);
                                 break;
                             case BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary:
-                                InnerFenceL = Quantile(s, 0.1);
-                                InnerFenceR = Quantile(s, 0.9);
+                                innerFenceL = Quantile(s, 0.1);
+                                innerFenceR = Quantile(s, 0.9);
                                 break;
+                            default:
+                                throw new Exception("Unexpected method");
                         }
 
                         //  Fences never extend beyond the data
-                        if (InnerFenceL < s.Data[0])
-                        {
-                            InnerFenceL = s.Data[0];
-                        }
-                        if (InnerFenceR > s.Data[s.Data.Length - 1])
-                        {
-                            InnerFenceR = s.Data[s.Data.Length - 1];
-                        }
+                        if (innerFenceL < s.Data[0])
+                            innerFenceL = s.Data[0];
+                        if (innerFenceR > s.Data[s.Data.Length - 1])
+                            innerFenceR = s.Data[s.Data.Length - 1];
 
                         //  Outer fence
                         switch (method)
@@ -4337,89 +4281,94 @@ namespace StatsDirect.Charting
                             case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
                                 if (useOuterFence)
                                 {
-                                    double interQuartileRange = Math.Abs(BoxR - BoxL);
-                                    OuterFenceL = BoxL - 3.0 * interQuartileRange;
-                                    OuterFenceR = BoxR + 3.0 * interQuartileRange;
+                                    double interQuartileRange = Math.Abs(boxR - boxL);
+                                    outerFenceL = boxL - 3.0 * interQuartileRange;
+                                    outerFenceR = boxR + 3.0 * interQuartileRange;
                                 }
                                 else
                                 {
                                     //  Min/max
-                                    OuterFenceL = s.Data[0];
-                                    OuterFenceR = s.Data[s.Points - 1];
+                                    outerFenceL = s.Data[0];
+                                    outerFenceR = s.Data[s.Points - 1];
                                 }
                                 break;
                             case BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary:
-                                OuterFenceL = Quantile(s, 0.02);
-                                OuterFenceR = Quantile(s, 0.98);
+                                outerFenceL = Quantile(s, 0.02);
+                                outerFenceR = Quantile(s, 0.98);
                                 break;
                             case BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary:
                                 //  Min/max
-                                OuterFenceL = s.Data[0];
-                                OuterFenceR = s.Data[s.Points - 1];
+                                outerFenceL = s.Data[0];
+                                outerFenceR = s.Data[s.Points - 1];
                                 break;
+                            default:
+                                throw new Exception("Unexpected method");
                         }
 
                         //  Fences never extend beyond the data
-                        if (OuterFenceL < s.Data[0])
-                        {
-                            OuterFenceL = s.Data[0];
-                        }
-                        if (OuterFenceR > s.Data[s.Data.Length - 1])
-                        {
-                            OuterFenceR = s.Data[s.Data.Length - 1];
-                        }
+                        if (outerFenceL < s.Data[0])
+                            outerFenceL = s.Data[0];
+                        if (outerFenceR > s.Data[s.Data.Length - 1])
+                            outerFenceR = s.Data[s.Data.Length - 1];
 
-                        CentreIsMedian = true;
+                        centreIsMedian = true;
                         //  Other centre is the mean
                         double sum = 0;
-                        for (int N = 0; N < count; N++)
-                        {
-                            sum += s.Data[N];
-                        }
-                        OtherCentre = sum / Convert.ToDouble(count);
+                        for (int n = 0; n < count; n++)
+                            sum += s.Data[n];
+                        otherCentre = sum / Convert.ToDouble(count);
 
                     } break;
                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange:
                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange:
                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange:
                     {
-
                         double sum = 0.0;
                         double sumsqdev = 0.0;
 
-                        for (int N = 0; N < count; N++)
-                            sum += s.Data[N];
+                        for (int n = 0; n < count; n++)
+                            sum += s.Data[n];
 
-                        double mean = sum / Convert.ToDouble(count);
+                        double mean = sum / count;
 
-                        for (int N = 0; N < count; N++)
+                        for (int n = 0; n < count; n++)
                         {
                             if (Math.Abs(sumsqdev) > 1.0E+300)
                             {
                                 sumsqdev = Constant.MISSING;
                                 break;
                             }
-                            double dev = s.Data[N] - mean;
+                            double dev = s.Data[n] - mean;
                             sumsqdev += dev * dev;
                         }
 
-                        Centre = mean;
-                        CentreIsMedian = false;
-                        OtherCentre = Quantile(s, 0.5); //  Median
+                        centre = mean;
+                        centreIsMedian = false;
+                        otherCentre = Quantile(s, 0.5); //  Median
                         if (sumsqdev == Constant.MISSING)
                         {
                             //  Everything collapses
-                            BoxL = Centre;
-                            BoxR = Centre;
+                            boxL = centre;
+                            boxR = centre;
                             if (useInnerFence)
                             {
-                                InnerFenceL = Centre;
-                                InnerFenceR = Centre;
+                                innerFenceL = centre;
+                                innerFenceR = centre;
+                            }
+                            else
+                            {
+                                innerFenceL = 0;
+                                innerFenceR = 0;
                             }
                             if (useOuterFence)
                             {
-                                OuterFenceL = Centre;
-                                OuterFenceR = Centre;
+                                outerFenceL = centre;
+                                outerFenceR = centre;
+                            }
+                            else
+                            {
+                                outerFenceL = 0;
+                                outerFenceR = 0;
                             }
                         }
                         else
@@ -4431,18 +4380,18 @@ namespace StatsDirect.Charting
                             switch (method)
                             {
                                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange:
-                                    BoxL = mean - standardDeviation;
-                                    BoxR = mean + standardDeviation;
+                                    boxL = mean - standardDeviation;
+                                    boxR = mean + standardDeviation;
                                     break;
                                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange:
-                                    BoxL = mean - standardError;
-                                    BoxR = mean + standardError;
+                                    boxL = mean - standardError;
+                                    boxR = mean + standardError;
                                     break;
                                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange:
                                     double cit = PDF.tfromp(P, Convert.ToDouble(count - 1));
                                     double bit = cit * standardDeviation / Math.Sqrt(count);
-                                    BoxL = mean - bit;
-                                    BoxR = mean + bit;
+                                    boxL = mean - bit;
+                                    boxR = mean + bit;
                                     break;
                                 default:
                                     throw new Exception("Unexpected box+whisker plot type");
@@ -4452,19 +4401,29 @@ namespace StatsDirect.Charting
                             {
                                 //  95% CI
                                 double innerFenceFactor = PDF.gauinv(0.975);
-                                InnerFenceL = mean - innerFenceFactor * standardDeviation;
-                                InnerFenceR = mean + innerFenceFactor * standardDeviation;
+                                innerFenceL = mean - innerFenceFactor * standardDeviation;
+                                innerFenceR = mean + innerFenceFactor * standardDeviation;
+                            }
+                            else
+                            {
+                                innerFenceL = 0;
+                                innerFenceR = 0;
                             }
                             if (useOuterFence)
                             {
                                 //  99% CI
                                 double outerFenceFactor = PDF.gauinv(0.995);
-                                OuterFenceL = mean - outerFenceFactor * standardDeviation;
-                                OuterFenceR = mean + outerFenceFactor * standardDeviation;
+                                outerFenceL = mean - outerFenceFactor * standardDeviation;
+                                outerFenceR = mean + outerFenceFactor * standardDeviation;
+                            }
+                            else
+                            {
+                                outerFenceL = 0;
+                                outerFenceR = 0;
                             }
                         }
-
-                    } break;
+                    }
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException("method", method.ToString());
             }
