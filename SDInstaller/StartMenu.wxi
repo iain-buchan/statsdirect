@@ -23,15 +23,4 @@
       <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirectCalculator" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
     </Component>
   </DirectoryRef>
-
-  <!-- Initial registry area so that SD3 can write its licence key -->
-  <!--
-  <DirectoryRef Id="TARGETDIR">
-    <Component Id="RegistryEntries" Guid="D2C93068-C954-4b1d-8516-355434B623D7">
-      <RegistryKey Root="HKCU" Key="Software\VB and VBA Program Settings">
-        <RegistryValue Type="string" Value="Default Value"/>
-      </RegistryKey>
-    </Component>
-  </DirectoryRef>
-  -->
 </Include>
