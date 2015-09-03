@@ -170,7 +170,6 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.CancelButton = this.cmdOK;
             this.ClientSize = new System.Drawing.Size(423, 426);
             this.Controls.Add(this.pictureBox1);
