@@ -4442,7 +4442,7 @@ namespace StatsDirect.Charting
             DataMinY = 0.0;
             DataMaxY = 0.0;
 
-            for (int iter = 0; iter <= SeriesToUse.Count - 1; iter++)
+            for (int iter = 0; iter < SeriesToUse.Count; iter++)
             {
                 DoubleSeries s = SeriesToUse[iter].AsDoubleSeries;
                 HistogramSeriesOptions so = histOptions.HistoSeriesOptions[iter];
@@ -4450,29 +4450,29 @@ namespace StatsDirect.Charting
                 int mp = so.Bins;
                 double zint = so.MidPointInterval;
                 double zmin = so.MinimumBinMidPoint;
-                int[] size = new int[mp + 2];
-                double[] midpt = new double[mp + 2];
+                int[] size = new int[mp];
+                double[] midpt = new double[mp];
 
                 //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
                 axisXMin = zmin;
-                axisXMax = zmin + (zint * mp - 1);
+                axisXMax = zmin + (zint * (mp - 1));
 
                 //  Find the number of values in each bin, and hence the size of the histogram's y axis.
-                //  This works because the bins are always of equal width - if they weren't, we'd have to scale by the width
+                //  This works because the bins are always of equal width in the histograms we choose to plot - if they weren't, we'd have to scale by the width
                 double seriesMaxY = 0;
                 int c2 = 0;
-                for (int C = 1; C <= mp; C++)
+                for (int c = 0; c < mp; c++)
                 {
-                    double high = zmin + (zint * Convert.ToDouble(C - 1)) + zint / 2.0;
+                    double high = zmin + (zint * c) + zint / 2.0;
                     //  Count the number of samples in this bin
                     int c1;
-                    for (c1 = c2; c1 <= s.Points - 1; c1++)
+                    for (c1 = c2; c1 < s.Points; c1++)
                         if (s.Data[c1] > high)
                             break;
-                    size[C] = c1 - c2;
-                    midpt[C] = zmin + (zint * Convert.ToDouble(C - 1));
-                    if (size[C] > seriesMaxY)
-                        seriesMaxY = size[C];
+                    size[c] = c1 - c2;
+                    midpt[c] = zmin + (zint * c);
+                    if (size[c] > seriesMaxY)
+                        seriesMaxY = size[c];
                     c2 = c1;
                 }
                 if (ShowRelativeFrequencies)
@@ -4549,7 +4549,7 @@ namespace StatsDirect.Charting
 
                     //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
                     axisXMin = zMin;
-                    axisXMax = zMin + (zInt * mp - 1);
+                    axisXMax = zMin + (zInt * (mp - 1));
 
                     //  Find the number of values in each bin, and hence the size of the histogram's y axis.
                     //  This works because the bins are always of equal width - if they weren't, we'd have to scale by the width
@@ -4590,7 +4590,7 @@ namespace StatsDirect.Charting
                         //  If necessary, extend the Y axis to accommodate the normal curve
                         if (overlayNormalCurve)
                         {
-                            double mxy = PlotCurveMax(zMin, zInt, mp - 1, s);
+                            double mxy = PlotNormalCurve(zMin, zInt, mp - 1, s, 1.0, false);
                             if (mxy > DataMaxY)
                                 DataMaxY = mxy;
                         }
@@ -4646,7 +4646,7 @@ namespace StatsDirect.Charting
                                 proportionScaler = 1.0 / s.Points;
                             else
                                 proportionScaler = 1.0;
-                            PlotCurve(zMin, zInt, mp - 1, s, proportionScaler);
+                            PlotNormalCurve(zMin, zInt, mp - 1, s, proportionScaler, true);
                         }
                     }
                     else
@@ -4900,18 +4900,20 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         private Color grAxis
         {
-            get
-            { return ShouldUseColour ? Color.FromArgb(134, 134, 134) : Color.Black; }
+            get { return ShouldUseColour ? Color.FromArgb(134, 134, 134) : Color.Black; }
         }
 
-
-        // TRANSMISSINGCOMMENT: Method PlotCurve
-        private void PlotCurve(double qzmin, double qzint, int qcount, DoubleSeries s, double proportionScaler)
+        /// <summary>
+        /// Returns the maximum value of a normal curve from the specified series and bin values.
+        /// </summary>
+        /// <param name="qzmin">The smallest midpoint</param>
+        /// <param name="qzint">The midpoint interval</param>
+        /// <param name="qcount">The number of bins</param>
+        /// <param name="s">The series whose data is to be used for the calculation</param>
+        /// <param name="shouldPlot">Draws if true; merely returns the maximum value if false</param>
+        /// <returns>The maximum value of y</returns>
+        private double PlotNormalCurve(double zmin, double zint, int count, DoubleSeries s, double proportionScaler, bool shouldPlot)
         {
-            double zmin = qzmin;
-            double zint = qzint;
-            int count = qcount;
-
             // Setup the plotting variables
             double xbar = s.Sum / s.Points;
             double sdv = s.StdDev;
@@ -4921,67 +4923,30 @@ namespace StatsDirect.Charting
             //  Multiply the count to give more steps
             int div = Convert.ToInt32(xExtCanvas / count / 5);
             count *= div;
-            zint = zint / Convert.ToDouble(div);
+            zint /= div;
 
             //  Move the cursor to the start
             double y = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0)) * proportionScaler;
+            double yMax = y;
             double yold = ToCanvasY(y);
             double xold = xAxisCanvas;
-
-            for (int C = 1; C <= count; C++)
-            {
-                sumx += zint;
-                y = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0)) * proportionScaler;
-                double y1 = ToCanvasY(y);
-                double x1 = xAxisCanvas + (C / (double)count * xExtCanvas);
-                statsDirectCanvas.DrawLine(s.MarkerDetails.MarkerPen, xold, yold, x1, y1);
-                xold = x1;
-                yold = y1;
-            }
-        }
-
-
-        ///  <summary>
-        ///  Returns the maximum value of a normal curve from the specified series and bin values.
-        ///  </summary>
-        ///  <param name="qzmin">The smallest midpoint</param>
-        ///  <param name="qzint">The midpoint interval</param>
-        ///  <param name="qcount">The number of bins</param>
-        ///  <param name="s">The series whose data is to be used for the calculation</param>
-        ///  <remarks></remarks>
-        private double PlotCurveMax(double qzmin, double qzint, int qcount, DoubleSeries s)
-        {
-            double zmin = qzmin;
-            double zint = qzint;
-            int count = qcount;
-
-            // calc max for normal plot background
-            //  TODO: Init_Axes() - do we need to?
-
-            // Setup the plotting variables
-            double xbar = s.Sum / s.Points;
-            double sdv = s.StdDev;
-            double sumx = zmin;
-            double bins = zint * s.Points * (1.0 / (sdv * Math.Sqrt(2.0 * Math.PI)));
-
-            //  Multiply the count to give more steps
-            int div = Convert.ToInt32(xExtCanvas / count / 5);
-            count *= div;
-            zint = zint / Convert.ToDouble(div);
-
-            //  Move the cursor to the start
-            double max = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0));
 
             for (int c = 1; c <= count; c++)
             {
                 sumx += zint;
-                double y = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0));
-                if (y > max)
+                y = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0)) * proportionScaler;
+                if (y > yMax)
+                    yMax = y;
+                if (shouldPlot)
                 {
-                    max = y;
+                    double y1 = ToCanvasY(y);
+                    double x1 = xAxisCanvas + (c / (double)count * xExtCanvas);
+                    statsDirectCanvas.DrawLine(s.MarkerDetails.MarkerPen, xold, yold, x1, y1);
+                    xold = x1;
+                    yold = y1;
                 }
             }
-            return max;
+            return yMax;
         }
 
         private static string GetAxisMask(double stepp, double znmin, int nstep, int sp)

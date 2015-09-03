@@ -74,9 +74,7 @@ namespace StatsDirect.UI
             }
             options.ShowRelativeFrequencies = chkShowRelativeFrequencies.Checked;
             if (!options.IsAscii)
-            {
                 options.OverlayNormalCurve = chkOverlayNormalCurve.Checked;
-            }
 
             return optionsAreOk;
         }
@@ -96,9 +94,7 @@ namespace StatsDirect.UI
                 if (0 == cboVariable.Items.Count)
                 {
                     foreach (Series s in series)
-                    {
                         cboVariable.Items.Add(s.Title);
-                    }
                 }
                 chkPoolVariables.Enabled = series.Count > 1;
                 chkPoolVariables.Checked = options.PoolVariablesForBins;
@@ -115,13 +111,9 @@ namespace StatsDirect.UI
                 chkShowRelativeFrequencies.Checked = options.ShowRelativeFrequencies;
 
                 if (options.IsAscii)
-                {
                     chkOverlayNormalCurve.Enabled = false;
-                }
                 else
-                {
                     chkOverlayNormalCurve.Checked = options.OverlayNormalCurve;
-                }
                 ListBins();
             }
             finally
@@ -130,26 +122,29 @@ namespace StatsDirect.UI
             }
         }
 
+        /// <summary>
+        /// Given the current options, populate the list with the bins that will be used: left, midpoint, right.
+        /// </summary>
         private void ListBins()
         {
             int mp;
             if (!int.TryParse(txtBins.Text, out mp))
                 FailAndHighlight(txtBins);
-            double zint;
-            if (!double.TryParse(txtMidpointInterval.Text, out zint))
+            double zInt;
+            if (!double.TryParse(txtMidpointInterval.Text, out zInt))
                 FailAndHighlight(txtMidpointInterval);
-            double zmin;
-            if (!double.TryParse(txtMinimumMidpoint.Text, out zmin))
+            double zMin;
+            if (!double.TryParse(txtMinimumMidpoint.Text, out zMin))
                 FailAndHighlight(txtMinimumMidpoint);
             lstBinValues.Items.Clear();
             for (int i = 0; i < mp; i++)
             {
-                double ltpt = AxisScaler.Axis_Q0(zmin, zmin + (zint * i) - zint / 2.0);
-                double mdpt = AxisScaler.Axis_Q0(zmin, zmin + (zint * i));
-                double rtpt = AxisScaler.Axis_Q0(zmin, zmin + (zint * i) + zint / 2.0);
-                ListViewItem item = new ListViewItem {Text = Formatting.XRound(ltpt, 9)};
-                item.SubItems.Add(Formatting.XRound(mdpt, 9));
-                item.SubItems.Add(Formatting.XRound(rtpt, 9));
+                double leftPoint = AxisScaler.Axis_Q0(zMin, zMin + (zInt * i) - zInt / 2.0);
+                double midPoint = AxisScaler.Axis_Q0(zMin, zMin + (zInt * i));
+                double rightPoint = AxisScaler.Axis_Q0(zMin, zMin + (zInt * i) + zInt / 2.0);
+                ListViewItem item = new ListViewItem {Text = Formatting.XRound(leftPoint, 9)};
+                item.SubItems.Add(Formatting.XRound(midPoint, 9));
+                item.SubItems.Add(Formatting.XRound(rightPoint, 9));
                 lstBinValues.Items.Add(item);
             }
         }

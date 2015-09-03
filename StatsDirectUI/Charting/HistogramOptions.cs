@@ -1,3 +1,4 @@
+using StatsDirect.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -104,12 +105,12 @@ namespace StatsDirect.Charting
         ///  If PoolVariablesForBins is true, this combines the data for all the variables.
         ///  If PoolVariablesForBins is false, this uses just the data from the series at seriesIndex.
         ///  </summary>
-        ///  <param name="full">If true, force a full calculation of the number of bins.  If false, use the user-entered number of bins as a hint.</param>
+        ///  <param name="calculateBinCount">If true, force a full calculation of the number of bins.  If false, use the user-entered number of bins as a hint.</param>
         ///  <param name="binsFromUser">The user-entered number of bins</param>
         ///  <param name="seriesIndex">The index of the series on which calculations are to be made (if PoolVariablesForBins is false) and whose parameters are to be set (if setAllSeries is false).</param>
         ///  <param name="setAllSeries">If true, the calculation for this series is set for each series.</param>
         /// <param name="series"> </param>
-        public void Reset(bool full, int binsFromUser, bool setAllSeries, int seriesIndex, List<Series> series)
+        public void Reset(bool calculateBinCount, int binsFromUser, bool setAllSeries, int seriesIndex, List<Series> series)
         {
             //  TODO: Set up the global minimum and maximum values based on the series
 
@@ -131,7 +132,7 @@ namespace StatsDirect.Charting
                     if (s.Max > max)
                         max = s.Max;
                 }
-                Calculate(series, binsFromUser, full, ref min, ref max, out zmin, out zint, out bins);
+                Calculate(series, binsFromUser, calculateBinCount, ref min, ref max, out zmin, out zint, out bins);
             }
             else
             {
@@ -139,7 +140,7 @@ namespace StatsDirect.Charting
                 List<Series> justOneSeries = new List<Series> { s };
                 min = s.Min;
                 max = s.Max;
-                Calculate(justOneSeries, binsFromUser, full, ref min, ref max, out zmin, out zint, out bins);
+                Calculate(justOneSeries, binsFromUser, calculateBinCount, ref min, ref max, out zmin, out zint, out bins);
             }
 
             //  Write the values
@@ -147,38 +148,39 @@ namespace StatsDirect.Charting
             {
                 for (int i = 0; i < series.Count; i++)
                 {
-                    HistogramSeriesOptions transTemp12 = HistoSeriesOptions[i];
-                    transTemp12.MinimumValue = min;
-                    transTemp12.MaximumValue = max;
-                    transTemp12.MinimumBinMidPoint = zmin;
-                    transTemp12.MidPointInterval = zint;
-                    transTemp12.Bins = bins;
+                    HistogramSeriesOptions hso = HistoSeriesOptions[i];
+                    hso.MinimumValue = min;
+                    hso.MaximumValue = max;
+                    hso.MinimumBinMidPoint = zmin;
+                    hso.MidPointInterval = zint;
+                    hso.Bins = bins;
                 }
             }
             else
             {
-                HistogramSeriesOptions transTemp13 = HistoSeriesOptions[seriesIndex];
-                transTemp13.MinimumValue = min;
-                transTemp13.MaximumValue = max;
-                transTemp13.MinimumBinMidPoint = zmin;
-                transTemp13.MidPointInterval = zint;
-                transTemp13.Bins = bins;
-
+                HistogramSeriesOptions hso = HistoSeriesOptions[seriesIndex];
+                hso.MinimumValue = min;
+                hso.MaximumValue = max;
+                hso.MinimumBinMidPoint = zmin;
+                hso.MidPointInterval = zint;
+                hso.Bins = bins;
             }
+
+            // Warn listeners that we've just changed our scale.
             if (null != ScaleChanged)
                 ScaleChanged(this, EventArgs.Empty);
         }
 
-        public void v_axis(ref double qmin, ref double qmax, int cm, out double zmin, out double zint)
+        public void v_axis(ref double qmin, ref double qmax, int cm, out double zMinimum, out double zInterval)
         {
             if (cm > 0)
             {
-                AxisScaler.Axis(ref qmin, ref qmax, cm, out zmin, out zint);
+                AxisScaler.Axis(ref qmin, ref qmax, cm, out zMinimum, out zInterval);
             }
             else
             {
-                zmin = qmin;
-                zint = qmax - qmin;
+                zMinimum = qmin;
+                zInterval = qmax - qmin;
             }
         }
 
@@ -187,14 +189,14 @@ namespace StatsDirect.Charting
         ///  </summary>
         ///  <param name="oneOrMoreSeries">Input data. All data will be pooled for the purposes of calculating minimum and maximum values.</param>
         ///  <param name="binsFromUser">A user-entered bin count.</param>
-        ///  <param name="full">If false, use the user-entered bin count.  If true, calculate from scratch.</param>
+        ///  <param name="calculateBinCount">If false, use the user-entered bin count.  If true, calculate from scratch.</param>
         ///  <param name="min">The lowest value in the input, minus 1 if there's only one value.</param>
         ///  <param name="max">The highest value in the input, plus 1 if there's only one value.</param>
         ///  <param name="zmin"></param>
         ///  <param name="zint"></param>
         /// <param name="outputBins"></param>
         /// <remarks></remarks>
-        public void Calculate(List<Series> oneOrMoreSeries, int binsFromUser, bool full, ref double min, ref double max, out double zmin, out double zint, out int outputBins)
+        public void Calculate(List<Series> oneOrMoreSeries, int binsFromUser, bool calculateBinCount, ref double min, ref double max, out double zmin, out double zint, out int outputBins)
         {
             Debug.Assert(oneOrMoreSeries.Count > 0);
 
@@ -212,25 +214,25 @@ namespace StatsDirect.Charting
             Debug.Assert(null != longestSoFar);
 
             //  Assume there's at least one column, and therefore longestSoFar is never Nothing
-            double[] xx = new double[maxRows + 1 ];
+            double[] nonMissingData = new double[maxRows];
             int actualRows = 0;
             for (int c = 0; c < maxRows; c++)
             {
-                if (longestSoFar.Data[c] != Numerics.Constant.MISSING)
+                if (longestSoFar.Data[c] != Constant.MISSING)
                 {
-                    xx[actualRows] = longestSoFar.Data[c];
+                    nonMissingData[actualRows] = longestSoFar.Data[c];
                     actualRows += 1;
                 }
             }
 
             //  By now, xx(0) to xx(actualRows - 1) contain the actual data for the longest row, with missing data excluded.
 
-            int mp = full ? 0 : binsFromUser;
+            int mp = calculateBinCount ? 0 : binsFromUser;
             bool force = (mp == 0);
             if (force)
             {
                 //  Work out how many bins we should have at maximum: between 7 and 20, depending on the number of samples
-                int maxcm = Convert.ToInt32(Math.Pow(Convert.ToDouble(actualRows), 0.88) / 4.0);
+                int maxcm = Convert.ToInt32(Math.Pow(actualRows, 0.88) / 4.0);
                 if (maxcm > 20)
                     maxcm = 20;
                 if (maxcm < 7)
@@ -260,9 +262,9 @@ namespace StatsDirect.Charting
                     {
                         double high = zmin + (zint * Convert.ToDouble(c - 1)) + zint / 2.0;
                         int c1;
-                        for (c1 = c2; c1 <= actualRows - 1; c1++)
+                        for (c1 = c2; c1 < actualRows; c1++)
                         {
-                            if (xx[c1] > high)
+                            if (nonMissingData[c1] > high)
                                 break;
                         }
                         int bin = c1 - c2;
@@ -320,58 +322,52 @@ namespace StatsDirect.Charting
                     }
                 }
 
-                // use up to last occupied bin
-                int C2 = actualRows;
-                for (int C = mp; C >= 1; C--)
+                // Get rid of empty bins on the upper end of the histogram
+                int c2 = actualRows;
+                for (int c = mp; c >= 1; c--)
                 {
-                    double bin_left = zmin + (zint * Convert.ToDouble(C - 1L)) - zint / 2.0;
-                    bool OK = false;
-                    for (int C1 = C2; C1 >= 1; C1--)
+                    double binLeft = zmin + (zint * (c - 1)) - zint / 2.0;
+                    bool thisBinHasData = false;
+                    for (int c1 = c2; c1 >= 1; c1--)
                     {
-                        if (xx[C1] > bin_left)
+                        if (nonMissingData[c1] > binLeft)
                         {
-                            OK = true;
-                            C2 = C1;
+                            thisBinHasData = true;
+                            c2 = c1;
                             break;
                         }
                     }
-                    if (!(OK))
-                    {
-                        mp = mp - 1;
-                    }
-                    else
-                    {
+                    if (thisBinHasData)
                         break;
-                    }
+                    else
+                        --mp;
                 }
 
-                // use from first occupied bin
-                int budge = 0; // TODO: This doesn't seem appropriate - what have I missed?
-                C2 = 1;
-                for (int C = 1; C <= mp; C++)
+                // Get rid of empty bins on the lower end of the histogram
+                int emptyBinsLeft = 0;
+                c2 = 1;
+                for (int c = 1; c <= mp; c++)
                 {
-                    double bin_right = zmin + (zint * Convert.ToDouble(C - 1L)) + zint / 2.0;
-                    bool OK = false;
-                    for (int C1 = C2; C1 <= actualRows; C1++)
+                    double binRight = zmin + (zint * (c - 1)) + zint / 2.0;
+                    bool thisBinHasData = false;
+                    for (int c1 = c2; c1 <= actualRows; c1++)
                     {
-                        if (xx[C1] <= bin_right)
+                        if (nonMissingData[c1] <= binRight)
                         {
-                            OK = true;
-                            C2 = C1 + 1;
+                            thisBinHasData = true;
+                            c2 = c1 + 1;
                             break;
                         }
                     }
-                    if (!(OK))
-                    {
-                        budge += 1;
-                        mp -= 1;
-                    }
+                    if (thisBinHasData)
+                        break;
                     else
                     {
-                        break;
+                        emptyBinsLeft += 1;
+                        mp -= 1;
                     }
                 }
-                zmin += zint * budge;
+                zmin += zint * emptyBinsLeft;
             }
             outputBins = mp;
         }
