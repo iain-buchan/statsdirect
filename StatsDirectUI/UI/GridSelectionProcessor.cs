@@ -39,13 +39,17 @@ namespace StatsDirect.UI
                         requiredLength = gridParameter.Length(processor, parameters);
                     else if (null != gridParameter.SameLengthAsParameter)
                     {
-                        if (parameters.ContainsKey(gridParameter.SameLengthAsParameter) && null != parameters[gridParameter.SameLengthAsParameter])
+                        foreach (string candidateName in gridParameter.SameLengthAsParameter)
                         {
-                            FilledParameter fp = parameters[gridParameter.SameLengthAsParameter];
-                            if (fp.HasData && fp.IsDataFrame)
+                            if (parameters.ContainsKey(candidateName) && null != parameters[candidateName])
                             {
-                                DataFrame f = fp.AsDataFrame;
-                                requiredLength = f.MaxRows;
+                                FilledParameter fp = parameters[candidateName];
+                                if (fp.HasData && fp.IsDataFrame)
+                                {
+                                    DataFrame f = fp.AsDataFrame;
+                                    requiredLength = f.MaxRows;
+                                }
+                                break;
                             }
                         }
                     }

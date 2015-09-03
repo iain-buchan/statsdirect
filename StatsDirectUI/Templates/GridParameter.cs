@@ -2,6 +2,7 @@ using System;
 using System.Xml.Serialization;
 
 using StatsDirect.Utilities;
+using System.Collections.Generic;
 
 namespace StatsDirect.Templates
 {
@@ -9,7 +10,7 @@ namespace StatsDirect.Templates
     public sealed class GridParameter: Parameter
     {
         private bool columnsAreSameLength;
-        private string sameLengthAsParameter;
+        private List<string> sameLengthAsParameter;
         private Expression length;
         private Expression minimumColumns;
         private Expression maximumColumns;
@@ -55,9 +56,10 @@ namespace StatsDirect.Templates
         /// <summary>
         /// If non-null and non-blank, all columns selected must be of the same length as the first column in the specified parameter.
         /// If null or blank, columns are not restricted.
+        /// If multiple names are specified, they are checked in order and the first variable that is found by name is used for the length test.
         /// </summary>
         [XmlElement(ElementName = "same-length-as")]
-        public string SameLengthAsParameter
+        public List<string> SameLengthAsParameter
         {
             get { return sameLengthAsParameter; }
             set { sameLengthAsParameter = value; }
