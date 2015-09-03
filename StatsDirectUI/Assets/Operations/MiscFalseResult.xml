@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Analysis of screening test error probabilities</friendly-name>
   <help chm-id="1214" />
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>pt</name>
@@ -27,7 +26,6 @@
           <minimum-value>0</minimum-value>
         </double>
       </parameters>
-    </settings>
   	<builtin function-name="rptMiscFalseResult" />
 	  <report type="text/rtf" filename="falser.rtf" />
 	</steps>

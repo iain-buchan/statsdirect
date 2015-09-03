@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Universal agreement statistic R</friendly-name>
   <help chm-id="1004" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -57,7 +56,6 @@
           <source>raters</source>
         </pick-from-list>
       </parameters>
-    </settings>
 	<builtin function-name="rptUniversalAgreement" />
 	<report type="text/rtf" filename="universalAgreement.rtf" />
 	</steps>

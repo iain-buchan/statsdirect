@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Contract</friendly-name>
   <help chm-id="1397" />
   <steps>
-    <settings>
       <parameters>
         <option>
           <name>type</name>
@@ -66,7 +65,6 @@
           <max-columns>9999</max-columns>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtContract" />
     <output-frame frame-name="output" />
 	</steps>

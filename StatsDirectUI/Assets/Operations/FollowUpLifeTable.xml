@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Follow-up life table</friendly-name>
   <help chm-id="1324" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -37,9 +36,7 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="rptFollowUpLifetableCalculateNatst" />
-    <settings>
       <parameters>
         <double>
           <name>natst</name>
@@ -49,7 +46,6 @@
           <default-value>=parameters["natst-min"].AsDouble</default-value>
         </double>
       </parameters>
-    </settings>
     <builtin function-name="rptFollowUpLifetable" />
 		<report type="text/rtf" filename="lifetab.rtf" />
 	</steps>

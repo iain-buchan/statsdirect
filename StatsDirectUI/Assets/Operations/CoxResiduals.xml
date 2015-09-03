@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Residuals and diagnostics</friendly-name>
   <prerequisite-operation>CoxRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <boolean>
           <name>save</name>
@@ -13,7 +12,6 @@
           <must-request>true</must-request>
         </boolean>
       </parameters>
-    </settings>
 		<builtin function-name="rptCoxResiduals" />
 		<test>
 			<condition>=parameters.ContainsKey("results")</condition>

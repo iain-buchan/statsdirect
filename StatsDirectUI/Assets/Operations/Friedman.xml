@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Friedman and Cochran (nonparametric two-way ANOVA) tests</friendly-name>
   <help chm-id="1223" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -17,7 +16,6 @@
           <group-id-mode>TreatmentAndBlock</group-id-mode>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptFriedman" />
     <test>
       <condition>="Friedman".Equals(parameters["testName"].AsString)</condition>

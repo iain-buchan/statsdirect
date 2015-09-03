@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Kendall's rank correlation</friendly-name>
   <help chm-id="1225" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -19,7 +18,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 	<builtin function-name="rptKendall" />
 	<report type="text/rtf" filename="kendall.rtf" />
 	</steps>

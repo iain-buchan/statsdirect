@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Convert text to numbers</friendly-name>
   <help chm-id="1090" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -14,8 +13,6 @@
           <max-columns>256</max-columns>
         </frame>
       </parameters>
-    </settings>
-    <settings>
       <parameters>
         <special>
           <name>data</name>
@@ -23,7 +20,6 @@
           <type>textToNumbers</type>
         </special>
       </parameters>
-    </settings>
     <output-frame frame-name="output" missing-indicator="" />
 	</steps>
 </operation>

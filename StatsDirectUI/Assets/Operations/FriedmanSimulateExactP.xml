@@ -6,7 +6,6 @@
   <prerequisite-operation>CochranQ</prerequisite-operation>
   <help chm-id="1223" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>iterations</name>
@@ -39,7 +38,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptFriedmanSimulateExactP" />
     <report type="text/rtf" filename="simulatedExactP.rtf" />
   </steps>

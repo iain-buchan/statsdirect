@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Plot regression</friendly-name>
   <prerequisite-operation>SimpleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -27,7 +26,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="plotSimpleLinearRegression" />
 		<chart copy-input-parameters="true">
 			<x-series-data>x</x-series-data>

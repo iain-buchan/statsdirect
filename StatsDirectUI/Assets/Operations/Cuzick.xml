@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Cuzick's test for trend</friendly-name>
   <help chm-id="1221" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -17,7 +16,6 @@
           <clear-selection-first>false</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <script language="CSharp">
   <![CDATA[
 DataFrame data = parameters["data"].AsDataFrame;
@@ -31,7 +29,6 @@ ParameterBag outputParameters = new ParameterBag();
 outputParameters.AddInput("scores", scoresFrame);
 return outputParameters;
     ]]></script>
-    <settings>
       <parameters>
         <frame>
           <name>scores</name>
@@ -47,7 +44,6 @@ return outputParameters;
           <can-select>false</can-select>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptCuzick" />
 		<report type="text/rtf" filename="cuzick.rtf" />
 	</steps>

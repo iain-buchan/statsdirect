@@ -6,7 +6,6 @@
   <prerequisite-operation>KappaScreen</prerequisite-operation>
   <help chm-id="1003" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>iterations</name>
@@ -29,7 +28,6 @@
           <can-default>false</can-default>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptKappaSimulateExactP" />
     <report type="text/rtf" filename="kappaSimulatedExactP.rtf" />
   </steps>

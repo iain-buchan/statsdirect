@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Single sample z(normal distribution) test</friendly-name>
   <help chm-id="1245" />
 	<steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -29,7 +28,6 @@
           <cancel-skips-parameter>true</cancel-skips-parameter>
         </double>
       </parameters>
-    </settings>
 	<builtin function-name="rptZSingle" />
 	<report type="text/rtf" filename="z_norm1.rtf" />
 	</steps>

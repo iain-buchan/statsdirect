@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Meta-analyses from summary statistics</friendly-name>
   <help chm-id="1172" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -31,7 +30,6 @@
           <default-value>="true"</default-value>
         </option>
       </parameters>
-    </settings>
 		<script language="CSharp">
           <![CDATA[
 				string t = parameters["type"].AsString;
@@ -70,7 +68,6 @@
 					throw new ArgumentOutOfRangeException();
 				return outputParameters;
 		]]></script>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -81,11 +78,9 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<test>
 			<condition>="true".Equals(parameters["use_ci"].AsString)</condition>
 			<iftrue>
-        <settings>
           <parameters>
             <frame>
               <name>ll_y</name>
@@ -106,10 +101,8 @@
               <clear-selection-first>true</clear-selection-first>
             </frame>
           </parameters>
-        </settings>
 			</iftrue>
 			<iffalse>
-        <settings>
 					<parameters>
 						<frame>
 							<name>se_y</name>
@@ -121,10 +114,8 @@
 							<clear-selection-first>true</clear-selection-first>
 						</frame>
 					</parameters>
-				</settings>
 			</iffalse>
 		</test>
-    <settings>
 			<parameters>
 				<frame>
 					<name>studies</name>
@@ -137,7 +128,6 @@
 					<clear-selection-first>true</clear-selection-first>
 				</frame>
 			</parameters>
-		</settings>
 		<builtin function-name="rptMetaSummary" />
 		<report type="text/rtf" filename="genmeta.rtf" />
 		<report type="text/rtf" filename="charts.rtf" />

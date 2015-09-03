@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Ladder plot of changes in paired observations</friendly-name>
   <help chm-id="1127" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -16,7 +15,6 @@
           <max-columns>2</max-columns>
         </frame>
       </parameters>
-    </settings>
 		<chart>
 			<y-series-data>data</y-series-data>
 			<chart-name>chart</chart-name>

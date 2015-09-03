@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Sort by expression</friendly-name>
   <help chm-id="1086" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -20,7 +19,6 @@
           <default-value>="=X1"</default-value>
         </string>
       </parameters>
-    </settings>
     <builtin function-name="shtSortByExpression"/>
     <output-frame frame-name="output" />
   </steps>

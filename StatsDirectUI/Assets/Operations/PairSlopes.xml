@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Pairwise slopes</friendly-name>
   <help chm-id="1081" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -31,7 +30,6 @@
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
     <builtin function-name="shtPairSlopes"/>
     <output-frame frame-name="output" />
 	</steps>

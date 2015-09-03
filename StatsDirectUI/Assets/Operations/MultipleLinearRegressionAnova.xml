@@ -5,14 +5,12 @@
   <help chm-id="1277" />
   <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
 			<parameters>
 				<confidence-interval>
 					<name>ci</name>
           <must-request>true</must-request>
         </confidence-interval>
 			</parameters>
-		</settings>
 		<builtin function-name="rptMultipleLinearRegressionAnova" />
 		<report type="text/rtf" filename="glranova.rtf" />
 	</steps>

@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Likelihood ratios</friendly-name>
   <help chm-id="1216" />
   <steps>
-    <settings>
       <parameters>
         <special>
           <name>data</name>
@@ -20,7 +19,6 @@
           <must-request>true</must-request>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptMiscLikely" />
 	  <report type="text/rtf" filename="likely.rtf" />
 	</steps>

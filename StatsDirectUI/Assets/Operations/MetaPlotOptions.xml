@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Meta-analysis plot options</friendly-name>
   <help chm-id="1166" />
   <steps>
-    <settings>
       <parameters>
         <option>
           <name>meta-plot-method</name>
@@ -26,7 +25,6 @@
           <default-value>=host.Preferences.MetaPlotCI</default-value>
         </boolean>
       </parameters>
-    </settings>
     <script language="CSharp"><![CDATA[
 SDPreferences preferences = host.Preferences;
 preferences.MetaPlotCI = parameters["meta-plot-ci"].AsBoolean;

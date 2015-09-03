@@ -5,7 +5,6 @@
   <prerequisite-operation>Kruskal</prerequisite-operation>
   <help chm-id="1226" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>iterations</name>
@@ -28,7 +27,6 @@
           <can-default>false</can-default>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptKruskalSimulateExactP" />
     <report type="text/rtf" filename="simulatedExactP.rtf" />
   </steps>

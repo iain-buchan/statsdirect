@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Single sample Student t test</friendly-name>
   <help chm-id="1241" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -27,7 +26,6 @@
           <default-value>0</default-value>
         </double>
       </parameters>
-    </settings>
 	<builtin function-name="rptTSingle" />
 	<report type="text/rtf" filename="m_single.rtf" />
 	</steps>

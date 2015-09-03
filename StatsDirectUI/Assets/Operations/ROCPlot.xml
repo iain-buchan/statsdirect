@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">ROC plot and area under the curve</friendly-name>
   <help chm-id="1232" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>series-count</name>
@@ -14,13 +13,11 @@
           <maximum-value>9</maximum-value>
         </integer>
       </parameters>
-    </settings>
 		<iteration>
 			<lower-bound>1</lower-bound>
 			<upper-bound-parameter>series-count</upper-bound-parameter>
       <loop-variable-name>i</loop-variable-name>
       <steps>
-        <settings>
           <parameters>
             <frame>
               <name>P1</name>
@@ -45,7 +42,6 @@
               <must-request>true</must-request>
             </frame>
           </parameters>
-        </settings>
 			</steps>
 		</iteration>
 		<chart>

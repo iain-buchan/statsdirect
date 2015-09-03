@@ -6,7 +6,6 @@
   <prerequisite-operation>ReplicateTwoWay</prerequisite-operation>
   <prerequisite-operation>TwoWay</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -37,7 +36,6 @@
           <default-value>1</default-value>
         </integer>
       </parameters>
-    </settings>
 		<builtin function-name="rptBonferroni" />
 		<report type="text/rtf" filename="bonferr.rtf" />
 	</steps>

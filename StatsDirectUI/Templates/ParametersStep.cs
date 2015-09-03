@@ -15,24 +15,23 @@ namespace StatsDirect.Templates
             parameters = new List<Parameter>();
         }
 
-        [XmlArray(ElementName="parameters"),
-          XmlArrayItem(ElementName = "boolean", Type = typeof(BooleanParameter)),
-          XmlArrayItem(ElementName = "confidence-interval", Type = typeof(ConfidenceIntervalParameter)),
-          XmlArrayItem(ElementName = "date", Type = typeof(DateParameter)),
-          XmlArrayItem(ElementName = "double", Type = typeof(DoubleParameter)),
-          XmlArrayItem(ElementName = "double-2-by-2", Type = typeof(Double2By2Parameter)),
-          XmlArrayItem(ElementName = "double-2-by-2-by-k", Type = typeof(Double2By2ByKParameter)),
-          XmlArrayItem(ElementName = "edit-grid", Type = typeof(EditGridParameter)),
-          XmlArrayItem(ElementName = "frame", Type = typeof(GridParameter)),
-          XmlArrayItem(ElementName = "frame2d", Type = typeof(GridParameter2D)),
-          XmlArrayItem(ElementName = "grouped-covariance", Type = typeof(GroupedCovarianceParameter)),
-          XmlArrayItem(ElementName = "integer", Type = typeof(IntegerParameter)),
-          XmlArrayItem(ElementName = "option", Type = typeof(OptionParameter)),
-          XmlArrayItem(ElementName = "options", Type = typeof(OptionsParameter)),
-          XmlArrayItem(ElementName = "pick-from-list", Type = typeof(PickFromListParameter)),
-          XmlArrayItem(ElementName = "pick-variables", Type = typeof(PickVariablesParameter)),
-          XmlArrayItem(ElementName = "special", Type = typeof(SpecialParameter)),
-          XmlArrayItem(ElementName = "string", Type = typeof(StringParameter))]
+        [XmlElement(ElementName = "boolean", Type = typeof(BooleanParameter))]
+        [XmlElement(ElementName = "confidence-interval", Type = typeof(ConfidenceIntervalParameter))]
+        [XmlElement(ElementName = "date", Type = typeof(DateParameter))]
+        [XmlElement(ElementName = "double", Type = typeof(DoubleParameter))]
+        [XmlElement(ElementName = "double-2-by-2", Type = typeof(Double2By2Parameter))]
+        [XmlElement(ElementName = "double-2-by-2-by-k", Type = typeof(Double2By2ByKParameter))]
+        [XmlElement(ElementName = "edit-grid", Type = typeof(EditGridParameter))]
+        [XmlElement(ElementName = "frame", Type = typeof(GridParameter))]
+        [XmlElement(ElementName = "frame2d", Type = typeof(GridParameter2D))]
+        [XmlElement(ElementName = "grouped-covariance", Type = typeof(GroupedCovarianceParameter))]
+        [XmlElement(ElementName = "integer", Type = typeof(IntegerParameter))]
+        [XmlElement(ElementName = "option", Type = typeof(OptionParameter))]
+        [XmlElement(ElementName = "options", Type = typeof(OptionsParameter))]
+        [XmlElement(ElementName = "pick-from-list", Type = typeof(PickFromListParameter))]
+        [XmlElement(ElementName = "pick-variables", Type = typeof(PickVariablesParameter))]
+        [XmlElement(ElementName = "special", Type = typeof(SpecialParameter))]
+        [XmlElement(ElementName = "string", Type = typeof(StringParameter))]
         public Parameter[] ParametersForXml
         {
             get

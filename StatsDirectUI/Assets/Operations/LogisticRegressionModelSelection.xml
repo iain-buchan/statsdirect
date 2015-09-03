@@ -4,13 +4,11 @@
 	<friendly-name lang="en-GB">Model selection</friendly-name>
   <prerequisite-operation>LogisticRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptLogisticRegressionModelSelection" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>

@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Simple linear regression and correlation</friendly-name>
   <help chm-id="1286" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -27,7 +26,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptSimpleLinearRegression" />
 		<report type="text/rtf" filename="simple.rtf" />
 	</steps>

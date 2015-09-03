@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Random numbers: Cauchy</friendly-name>
   <help chm-id="1258" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>cols</name>
@@ -36,7 +35,6 @@
           <default-value>=Base.DefaultSeed()</default-value>
         </integer>
       </parameters>
-    </settings>
   	<builtin function-name="shtRndCauchy" />
 	  <output-frame frame-name="output" prefer-in-place-insertion="true"/>
 	</steps>

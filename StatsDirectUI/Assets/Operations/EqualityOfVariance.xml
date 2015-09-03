@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Equality of variance (Levene, Bartlett) and Welch's F</friendly-name>
   <prerequisite-operation>OneWay</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -16,7 +15,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptEqualityOfVariance" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>

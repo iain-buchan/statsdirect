@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Kaplan-Meier product limit estimates of survival</friendly-name>
   <help chm-id="1323" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -51,7 +50,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptKaplanMeier" />
 		<test>
 			<condition>=parameters.ContainsKey("results")</condition>

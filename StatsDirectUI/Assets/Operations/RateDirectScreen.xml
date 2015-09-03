@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Direct standardisation</friendly-name>
   <help chm-id="1260" />
   <steps>
-    <settings>
       <parameters>
         <special>
           <name>data</name>
@@ -40,7 +39,6 @@
           <must-request>true</must-request>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptRateDirectStd" />
 	  <report type="text/rtf" filename="dstdr.rtf" />
 	</steps>

@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Log-rank test</friendly-name>
   <help chm-id="1325" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>gid</name>
@@ -64,7 +63,6 @@
           <default-value>true</default-value>
         </boolean>
       </parameters>
-    </settings>
 		<builtin function-name="rptLogRank" />
 		<report type="text/rtf" filename="logrank.rtf" />
 	</steps>

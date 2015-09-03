@@ -5,7 +5,6 @@
   <prerequisite-operation>Logit</prerequisite-operation>
   <prerequisite-operation>Probit</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>newx</name>
@@ -14,7 +13,6 @@
           <minimum-value>0</minimum-value>
         </double>
       </parameters>
-    </settings>
 		<builtin function-name="rptProbitInterpolateX" />
 		<report type="text/rtf" filename="intprobx.rtf" />
 	</steps>

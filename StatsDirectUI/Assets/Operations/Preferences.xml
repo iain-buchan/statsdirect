@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Random allocation guided by group preference</friendly-name>
   <help chm-id="1253" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>seed</name>
@@ -29,7 +28,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptPreferences" />
 		<report type="text/rtf" filename="prefer.rtf" />
 	</steps>

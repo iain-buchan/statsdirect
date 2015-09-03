@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Line plot</friendly-name>
   <help chm-id="1131" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>n</name>
@@ -14,13 +13,11 @@
           <default-value>1</default-value>
         </integer>
       </parameters>
-    </settings>
     <iteration>
       <lower-bound>1</lower-bound>
       <upper-bound-parameter>n</upper-bound-parameter>
       <loop-variable-name>i</loop-variable-name>
       <steps>
-        <settings>
           <parameters>
             <frame>
               <name>Ynew</name>
@@ -46,7 +43,6 @@
               <must-request>true</must-request>
             </frame>
           </parameters>
-        </settings>
       </steps>
     </iteration>
 		<chart>

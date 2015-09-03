@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Meta-analysis of incidence rate ratios</friendly-name>
   <help chm-id="1163" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -55,7 +54,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptMetaIncidenceRateRatio" />
 		<report type="text/rtf" filename="irrmeta.rtf" />
 		<report type="text/rtf" filename="charts.rtf" />

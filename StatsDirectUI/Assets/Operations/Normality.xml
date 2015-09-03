@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Tests for signs of departure from normal distributions</friendly-name>
   <help chm-id="1243" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -16,7 +15,6 @@
           <ask-for-group-id>false</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 	  <builtin function-name="rptNormality" />
 	  <report type="text/rtf" filename="normality.rtf" />
   </steps>

@@ -5,7 +5,6 @@
   <prerequisite-operation>LinearizedEstimates</prerequisite-operation>
   <prerequisite-operation>SimpleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -30,7 +29,6 @@
         </frame>
         -->
       </parameters>
-    </settings>
 		<builtin function-name="rptRanv" />
 		<report type="text/rtf" filename="simanal.rtf" />
 	</steps>

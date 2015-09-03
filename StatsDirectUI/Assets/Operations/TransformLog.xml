@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Transformation: Log</friendly-name>
   <help chm-id="1076" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -19,7 +18,6 @@
           <type>addedConstant</type>
         </special>
       </parameters>
-    </settings>
     <builtin function-name="shtTransformLog"/>
     <output-frame frame-name="output" />
   </steps>

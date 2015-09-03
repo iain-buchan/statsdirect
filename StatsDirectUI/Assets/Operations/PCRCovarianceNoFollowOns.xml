@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Principal components analysis: covariance</friendly-name>
   <help chm-id="1280" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -25,7 +24,6 @@
           <default-value>true</default-value>
         </boolean>
       </parameters>
-    </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />
 		<report type="text/rtf" filename="princ.rtf" />
     <!-- Defect ID #217: Do Cronbach immediately after PCR and disable other follow-on functions -->

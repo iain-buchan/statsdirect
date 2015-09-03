@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Transformation: Angular</friendly-name>
   <help chm-id="1057" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -23,7 +22,6 @@
           </options>
         </option>
       </parameters>
-    </settings>
     <builtin function-name="shtTransformAngular"/>
     <output-frame frame-name="output" />
   </steps>

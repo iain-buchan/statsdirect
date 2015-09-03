@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Multiple (general) linear regression</friendly-name>
   <help chm-id="1277" />
   <steps>
-    <settings>
 			<parameters>
 				<confidence-interval>
 					<name>ci</name>
@@ -27,11 +26,9 @@
 					<clear-selection-first>true</clear-selection-first>
 				</frame>
 			</parameters>
-		</settings>
 		<test>
 			<condition>=parameters["useWeights"].AsBoolean</condition>
 			<iftrue>
-        <settings>
 					<parameters>
 						<frame>
 							<name>weights</name>
@@ -44,10 +41,8 @@
 							<clear-selection-first>true</clear-selection-first>
 						</frame>
 					</parameters>
-				</settings>
 			</iftrue>
 		</test>
-    <settings>
 			<parameters>
 				<frame>
 					<name>predictors</name>
@@ -59,7 +54,6 @@
 					<clear-selection-first>true</clear-selection-first>
 				</frame>
 			</parameters>
-		</settings>
 		<builtin function-name="rptMultipleLinearRegression" />
 		<test>
 			<condition>=parameters["isPoly"].AsBoolean</condition>

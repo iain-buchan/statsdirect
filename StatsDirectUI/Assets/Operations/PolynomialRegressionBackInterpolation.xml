@@ -3,7 +3,6 @@
 	<name>PolynomialRegressionBackInterpolation</name>
 	<friendly-name lang="en-GB">Back interpolation</friendly-name>
 	<steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -28,7 +27,6 @@
           <must-request>true</must-request>
         </double>
       </parameters>
-    </settings>
 		<builtin function-name="rptPolynomialRegressionBackInterpolation" />
 		<report type="text/rtf" filename="backint.rtf" />
 	</steps>

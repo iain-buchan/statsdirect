@@ -3,7 +3,6 @@
 	<name>PolynomialRegressionInterpolation</name>
 	<friendly-name lang="en-GB">Interpolate X to Y</friendly-name>
 	<steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -31,7 +30,6 @@
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptPolynomialRegressionInterpolation" />
 		<report type="text/rtf" filename="pinterp.rtf" />
 	</steps>

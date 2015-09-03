@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Method comparison regression</friendly-name>
   <help chm-id="1396" />
   <steps>
-    <settings>
 			<parameters>
 				<frame>
 					<name>testData</name>
@@ -72,7 +71,6 @@
           <default-value>false</default-value>
         </boolean>
       </parameters>
-		</settings>
     <script language="R">
   <![CDATA[
 # Use the cloud redirect to a CRAN mirror

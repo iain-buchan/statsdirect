@@ -5,7 +5,6 @@
   <help chm-id="1277" />
   <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
 			<parameters>
 				<pick-from-list>
 					<name>selectedPredictors</name>
@@ -25,7 +24,6 @@
 					</options>
 				</option>
 			</parameters>
-		</settings>
 		<builtin function-name="rptMultipleLinearRegressionBestSubset" />
 		<report type="text/rtf" filename="subset.rtf" />
 		<test>

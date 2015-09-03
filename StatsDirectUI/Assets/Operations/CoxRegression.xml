@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Cox (proportional hazards) regression</friendly-name>
   <help chm-id="1322" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>times</name>
@@ -60,7 +59,6 @@
           <default-value>true</default-value>
         </boolean>
       </parameters>
-    </settings>
 		<builtin function-name="rptCoxRegression" />
 		<report type="text/rtf" filename="coxreg.rtf" />
 	</steps>

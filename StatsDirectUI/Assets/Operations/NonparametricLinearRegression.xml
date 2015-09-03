@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Nonparametric linear regression</friendly-name>
   <help chm-id="1228" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -31,7 +30,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 	<builtin function-name="rptNpRegression" copy-input-parameters="true" />
 	<chart copy-input-parameters="true">
 		<x-series-data>predictor</x-series-data>

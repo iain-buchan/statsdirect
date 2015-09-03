@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Pairwise means</friendly-name>
   <help chm-id="1080" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -15,7 +14,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtPairMeans"/>
     <output-frame frame-name="output" />
 	</steps>

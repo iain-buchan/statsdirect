@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Crossover analysis of variance</friendly-name>
   <help chm-id="1006" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -65,7 +64,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptCrossover" />
 		<report type="text/rtf" filename="xover.rtf" />
 	</steps>

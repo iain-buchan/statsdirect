@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Principal components analysis: correlation</friendly-name>
   <help chm-id="1280" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -21,7 +20,6 @@
           <default-value>true</default-value>
         </boolean>
       </parameters>
-    </settings>
 		<builtin function-name="rptPrincipalComponentsRegressionCorrelation" />
 		<report type="text/rtf" filename="princ.rtf" />
 	</steps>

@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Direct standardization</friendly-name>
   <help chm-id="1260" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>cco</name>
@@ -63,7 +62,6 @@
           </options>
         </option>
       </parameters>
-    </settings>
 		<builtin function-name="rptRateDirect" />
 		<report type="text/rtf" filename="dstdr.rtf" />
 	</steps>

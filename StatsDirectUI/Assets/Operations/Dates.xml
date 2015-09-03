@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Calculate date and time intervals</friendly-name>
   <help chm-id="1066" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -36,7 +35,6 @@
           </options>
         </option>
       </parameters>
-    </settings>
     <builtin function-name="shtDates"/>
     <output-frame frame-name="output" />
 	</steps>

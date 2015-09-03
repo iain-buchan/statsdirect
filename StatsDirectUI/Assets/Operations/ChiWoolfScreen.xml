@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Chi-square 2-by-2-by-k Woolf test</friendly-name>
   <help chm-id="1056" />
   <steps>
-    <settings>
       <parameters>
         <double-2-by-2-by-k>
           <name>data</name>
@@ -27,7 +26,6 @@
           <column>2</column>
         </boolean>
       </parameters>
-    </settings>
   	<builtin function-name="rptChiWoolf" />
 	  <report type="text/rtf" filename="woolf.rtf" />
   </steps>

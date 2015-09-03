@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">CI for a mean value of Y for a given X</friendly-name>
   <prerequisite-operation>SimpleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>reggamma</name>
@@ -14,7 +13,6 @@
           <prompt>X value</prompt>
         </double>
       </parameters>
-    </settings>
 		<builtin function-name="rptCiMeanY" />
 		<report type="text/rtf" filename="cimeany.rtf" />
 	</steps>

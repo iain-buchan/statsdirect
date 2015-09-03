@@ -7,7 +7,6 @@
     <test>
       <condition>="individual".Equals(parameters["grouping"].AsString)</condition>
       <iftrue>
-        <settings>
           <parameters>
             <option>
               <name>row_type</name>
@@ -21,7 +20,6 @@
               </options>
             </option>
           </parameters>
-        </settings>
       </iftrue>
     </test>
     <builtin function-name="rptLogisticRegressionFit" />

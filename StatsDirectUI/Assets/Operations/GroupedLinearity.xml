@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Analysis of linearity</friendly-name>
   <help chm-id="1275" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>predictor</name>
@@ -24,7 +23,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptGroupedLinearity" />
 		<report type="text/rtf" filename="grprep.rtf" />
 	</steps>

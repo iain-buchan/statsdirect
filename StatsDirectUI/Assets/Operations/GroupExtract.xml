@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Derive a variable from data based on rules</friendly-name>
   <help chm-id="1070" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -15,11 +14,9 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <test>
       <condition>=parameters["data"].AsDataFrame.VariableCount == 1</condition>
       <iftrue>
-        <settings>
           <parameters>
             <frame>
               <name>identifiers</name>
@@ -31,7 +28,6 @@
               <clear-selection-first>true</clear-selection-first>
             </frame>
           </parameters>
-        </settings>
       </iftrue>
     </test>
     <builtin function-name="shtGroupExtract"/>

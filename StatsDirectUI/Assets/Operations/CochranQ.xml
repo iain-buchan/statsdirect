@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Cochran Q test</friendly-name>
   <help chm-id="1223" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -16,7 +15,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptFriedman" />
     <test>
       <condition>="Friedman".Equals(parameters["testName"].AsString)</condition>

@@ -5,7 +5,6 @@
   <help chm-id="1277" />
   <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
 			<parameters>
 				<options>
 					<name>options</name>
@@ -18,12 +17,10 @@
 					</options>
 				</options>
 			</parameters>
-		</settings>
 		<builtin function-name="rptMultipleLinearRegressionResiduals" />
 		<test>
 			<condition>=parameters.ContainsKey("yfit") || parameters.ContainsKey("studentised") || parameters.ContainsKey("jackknife") </condition>
 			<iftrue>
-        <settings>
           <parameters>
             <special>
               <name>statsdirect-frame-pane</name>
@@ -31,7 +28,6 @@
               <type>frame</type>
             </special>
         </parameters>
-        </settings>
         <test>
 					<condition>=parameters.ContainsKey("yfit")</condition>
 					<iftrue>

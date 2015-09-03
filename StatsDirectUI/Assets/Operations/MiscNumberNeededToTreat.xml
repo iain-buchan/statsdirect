@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Nunber needed to treat</friendly-name>
   <help chm-id="1218" />
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>nc</name>
@@ -41,7 +40,6 @@
           <must-request>true</must-request>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptMiscNumberNeededToTreat" />
 	  <report type="text/rtf" filename="treat.rtf" />
 	</steps>

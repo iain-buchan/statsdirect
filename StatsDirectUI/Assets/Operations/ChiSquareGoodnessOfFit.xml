@@ -5,7 +5,6 @@
   <help chm-id="1051" />
   <steps>
     <!-- Grouped -->
-    <settings>
       <parameters>
         <frame>
           <name>observed</name>
@@ -40,7 +39,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="rptChiSquareGoodnessOfFit" />
   	<report type="text/rtf" filename="chigood.rtf"/>
 	</steps>

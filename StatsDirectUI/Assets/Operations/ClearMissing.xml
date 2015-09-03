@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Clear missing values</friendly-name>
   <help chm-id="1060" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -44,7 +43,6 @@ You may define an additional missing text code for clearing (leave the box blank
           <prompt-precedes-parameter>true</prompt-precedes-parameter>
         </string>
       </parameters>
-    </settings>
 		<builtin function-name="shtClearMissing" />
     <output-frame frame-name="output" />
 	</steps>

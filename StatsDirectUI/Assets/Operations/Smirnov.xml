@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Smirnov two-sample test</friendly-name>
   <help chm-id="1233" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -16,7 +15,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptSmirnov" />
 		<report type="text/rtf" filename="smirnov.rtf" />
 	</steps>

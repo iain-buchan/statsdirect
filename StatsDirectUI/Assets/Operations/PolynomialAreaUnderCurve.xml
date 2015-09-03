@@ -3,7 +3,6 @@
 	<name>PolynomialAreaUnderCurve</name>
 	<friendly-name lang="en-GB">Area under curve</friendly-name>
 	<steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -23,7 +22,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptAreaUnderCurve" />
 		<report type="text/rtf" filename="poly_auc.rtf" />
 	</steps>

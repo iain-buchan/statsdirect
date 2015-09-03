@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Survival and hazard plots</friendly-name>
   <prerequisite-operation>CoxRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <boolean>
           <name>use-tics</name>
@@ -22,7 +21,6 @@
           <source>subgroups</source>
         </pick-from-list>
       </parameters>
-    </settings>
 		<builtin function-name="rptCoxHazardPlots" />
 		<report type="text/rtf" filename="charts.rtf" />
 	</steps>

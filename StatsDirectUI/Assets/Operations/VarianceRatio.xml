@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">F (Variance ratio) test</friendly-name>
   <help chm-id="1236" />
 	<steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -16,7 +15,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
     <script language="VB" entry-point="rptVarianceRatio">
       <![CDATA[
     Public Function rptVarianceRatio(ByVal host As ITemplateHost, ByVal parameters As ParameterBag) As ParameterBag

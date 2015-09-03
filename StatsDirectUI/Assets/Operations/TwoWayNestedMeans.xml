@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Treatment &amp; subgroup means</friendly-name>
   <prerequisite-operation>TwoWayNested</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <frame2d>
           <name>data2d</name>
@@ -16,7 +15,6 @@
           <max-columns>10</max-columns>
         </frame2d>
       </parameters>
-    </settings>
 		<builtin function-name="rptNestMeans" />
 		<report type="text/rtf" filename="nestmean.rtf" />
 	</steps>

@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Two-way ANOVA with repeated observations</friendly-name>
   <help chm-id="1015" />
   <steps>
-    <settings>
       <parameters>
         <frame2d>
           <name>data2d</name>
@@ -15,7 +14,6 @@
           <max-columns>100</max-columns>
         </frame2d>
       </parameters>
-    </settings>
 		<builtin function-name="rptTwoMulti" />
 		<report type="text/rtf" filename="twomulti.rtf" />
 	</steps>

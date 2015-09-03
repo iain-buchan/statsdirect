@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Select model</friendly-name>
   <prerequisite-operation>LinearizedEstimates</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -34,7 +33,6 @@
           <must-request>true</must-request>
         </option>
       </parameters>
-    </settings>
 		<builtin function-name="rptLinearizedEstimates" />
 		<report type="text/rtf" filename="linised.rtf" />
 	</steps>

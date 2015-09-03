@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Two way hierarchical (nested) analysis of variance</friendly-name>
   <help chm-id="1010" />
   <steps>
-    <settings>
       <parameters>
         <frame2d>
           <name>data2d</name>
@@ -16,7 +15,6 @@
           <max-columns>10</max-columns>
         </frame2d>
       </parameters>
-    </settings>
 		<builtin function-name="rptTwoNest" />
 		<report type="text/rtf" filename="twonest.rtf" />
 	</steps>

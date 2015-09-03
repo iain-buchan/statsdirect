@@ -20,7 +20,7 @@
       <xs:element minOccurs="1" maxOccurs="1" name="iteration" nillable="true" type="sdop:IterationStep" />
       <xs:element minOccurs="1" maxOccurs="1" name="builtin" nillable="true" type="sdop:BuiltinStep" />
       <xs:element minOccurs="1" maxOccurs="1" name="chart" nillable="true" type="sdop:ChartStep" />
-      <xs:element minOccurs="1" maxOccurs="1" name="settings" nillable="true" type="sdop:parameters" />
+      <xs:element minOccurs="1" maxOccurs="1" name="parameters" nillable="true" type="sdop:parameters" />
     </xs:choice>
   </xs:complexType>
   <xs:complexType name="Step" abstract="true">

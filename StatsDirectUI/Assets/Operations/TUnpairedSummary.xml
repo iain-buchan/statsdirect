@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Unpaired Student t test from summary statistics</friendly-name>
   <help chm-id="1244" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>nx1</name>
@@ -42,7 +41,6 @@
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptTUnpairedSummary" />
 	  <report type="text/rtf" filename="m_unpair.rtf" />
 	</steps>

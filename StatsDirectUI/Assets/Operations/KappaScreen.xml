@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Measures of inter-rater agreement over categorization</friendly-name>
   <help chm-id="1003" />
   <steps>
-    <settings>
       <parameters>
         <special>
           <name>responsesCrosstab</name>
@@ -61,12 +60,10 @@
           <can-use-standard>false</can-use-standard>
         </confidence-interval>
       </parameters>
-    </settings>
     <test>
       <condition>="3".Equals(parameters["method"].AsString)</condition>
       <iftrue>
         <!-- Weights -->
-        <settings>
           <parameters>
             <frame>
               <name>weights</name>
@@ -84,7 +81,6 @@
               </validators>
             </frame>
           </parameters>
-        </settings>
       </iftrue>
     </test>
     <builtin function-name="rptKappaScreen" />

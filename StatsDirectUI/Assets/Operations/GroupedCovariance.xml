@@ -4,13 +4,11 @@
   <friendly-name lang="en-GB">Analysis of covariance</friendly-name>
   <help chm-id="1272" />
   <steps>
-    <settings>
       <parameters>
         <grouped-covariance>
           <name>gcd</name>
         </grouped-covariance>
       </parameters>
-    </settings>
 		<builtin function-name="rptGroupedCovariance" />
 		<report type="text/rtf" filename="grpcov.rtf" />
 	</steps>

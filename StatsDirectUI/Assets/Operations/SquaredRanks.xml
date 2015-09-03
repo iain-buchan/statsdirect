@@ -3,7 +3,6 @@
 	<name>SquaredRanks</name>
 	<friendly-name lang="en-GB">Equality of variance (squared ranks)</friendly-name>
 	<steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>confidence</name>
@@ -18,7 +17,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptSqRank" />
 		<test>
 			<condition>=((StatsDirect.Data.DataFrame)parameters["data"].Data).VariableCount > 2</condition>

@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Reference Range</friendly-name>
   <help chm-id="1240" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -37,7 +36,6 @@
           <lifetime>SessionForThisOperation</lifetime>
         </boolean>
       </parameters>
-    </settings>
 		<builtin function-name="rptReferenceRange" />
 		<report type="text/rtf" filename="refrange.rtf" />
 	</steps>

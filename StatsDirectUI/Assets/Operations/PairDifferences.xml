@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Pairwise differences</friendly-name>
   <help chm-id="1079" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -24,7 +23,6 @@
           <same-length-as>y</same-length-as>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtPairDifferences"/>
     <output-frame frame-name="output" />
 	</steps>

@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Paired Student t test</friendly-name>
   <help chm-id="1239" />
 	<steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -20,11 +19,9 @@
           <lifetime>SessionForThisOperation</lifetime>
         </confidence-interval>
       </parameters>
-    </settings>
     <test>
       <condition>=parameters["data"].AsDataFrame.VariableCount > 1</condition>
       <iftrue>
-        <settings>
           <parameters>
             <boolean>
               <name>doAgreement</name>
@@ -32,7 +29,6 @@
               <lifetime>SessionForThisOperation</lifetime>
             </boolean>
           </parameters>
-        </settings>
       </iftrue>
     </test>
 	  <builtin function-name="rptTPaired" />

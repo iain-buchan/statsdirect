@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Block randomization</friendly-name>
   <help chm-id="1252" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>n</name>
@@ -30,7 +29,6 @@
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
         </integer>
       </parameters>
-    </settings>
   	<builtin function-name="rptRandomBlock" />
 	  <report type="text/rtf" filename="r_block.rtf" />
 	</steps>

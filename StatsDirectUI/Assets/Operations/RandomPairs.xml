@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Intervention-control pair randomization</friendly-name>
   <help chm-id="1255" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>pairs</name>
@@ -23,7 +22,6 @@
           <must-request>true</must-request>
         </boolean>
       </parameters>
-    </settings>
   	<builtin function-name="rptRandomPairs" />
 	  <report type="text/rtf" filename="r_pair.rtf" />
 	</steps>

@@ -5,7 +5,6 @@
   <prerequisite-operation>PCRCorrelation</prerequisite-operation>
   <prerequisite-operation>PCRCovariance</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>ci</name>
@@ -20,7 +19,6 @@
           <max-columns>200</max-columns>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptCronbach" />
 		<report type="text/rtf" filename="cronbach.rtf" />
 	</steps>

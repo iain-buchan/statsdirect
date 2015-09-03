@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Time Series Summary</friendly-name>
   <help chm-id="1399" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>times</name>
@@ -54,7 +53,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <script language="CSharp"><![CDATA[
     bool hasZeroTime = false;
     foreach (double v in parameters["times"].AsDataFrame.Variables[0].AsDoubleVariable.Data)
@@ -70,17 +68,14 @@
     <test>
       <condition>=!(parameters["hasZeroTime"].AsBoolean)</condition>
       <iftrue>
-        <settings>
           <parameters>
             <boolean>
               <name>addZeroObservationAtZeroTime</name>
               <prompt>Treat observation value at time zero as zero?</prompt>
             </boolean>
           </parameters>
-        </settings>
       </iftrue>
     </test>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>ci</name>
@@ -110,7 +105,6 @@
           <default-value>=Base.DefaultSeed()</default-value>
         </integer>
       </parameters>
-    </settings>
     <builtin function-name="rptTimeSeriesSummary"/>
     <report type="application/x-statsdirect-creole">
       <![CDATA[

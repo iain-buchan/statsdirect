@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Chi-square 2-by-2-by-k Woolf test</friendly-name>
   <help chm-id="1056" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>cco</name>
@@ -51,7 +50,6 @@
           <column>2</column>
         </boolean>
       </parameters>
-    </settings>
   	<builtin function-name="rptChiWoolfWorksheet" />
 	  <report type="text/rtf" filename="woolf.rtf" />
   </steps>

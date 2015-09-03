@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Wei-Lachin test</friendly-name>
   <help chm-id="1327" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>gid</name>
@@ -25,14 +24,12 @@
           <default-value>1</default-value>
         </integer>
       </parameters>
-    </settings>
 		<!-- Construct two frames, "times" and "censor", with variables[0..nr - 1] for each of the repeats -->
 		<iteration>
 			<lower-bound>1</lower-bound>
 			<upper-bound-parameter>nr</upper-bound-parameter>
 			<loop-variable-name>repeat</loop-variable-name>
 			<steps>
-        <settings>
           <parameters>
             <frame>
               <name>scrapTimes</name>
@@ -61,7 +58,6 @@
               <must-request>true</must-request>
             </frame>
           </parameters>
-        </settings>
 			</steps>
 		</iteration>
 		<builtin function-name="rptWeiLachin" />

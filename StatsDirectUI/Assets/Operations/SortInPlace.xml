@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Sorting observations using the worksheet</friendly-name>
   <help chm-id="1093" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -15,7 +14,6 @@
           <max-columns>1000</max-columns>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="shtSortInPlace" />
 	</steps>
 </operation>

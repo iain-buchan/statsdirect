@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Conditional (matched pairs) logistic regression</friendly-name>
   <help chm-id="1270" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>stratum</name>
@@ -65,7 +64,6 @@
           </options>
         </option>
       </parameters>
-    </settings>
 		<builtin function-name="rptConditionalLogisticRegression" />
 		<report type="text/rtf" filename="clogit.rtf" />
 	</steps>

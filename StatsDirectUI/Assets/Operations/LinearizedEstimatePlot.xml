@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Plot function</friendly-name>
   <prerequisite-operation>LinearizedEstimates</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -24,7 +23,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptLinearizedEstimatePlot" />
 		<report type="text/rtf" filename="chartonly.rtf" />
 	</steps>

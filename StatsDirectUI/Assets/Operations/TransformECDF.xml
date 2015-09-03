@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Transformation: Empirical Cumulative Distribution Function</friendly-name>
   <help chm-id="1069" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -14,7 +13,6 @@
           <max-columns>1</max-columns>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtTransformECDF"/>
     <output-frame frame-name="output" />
   </steps>

@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Survival plot</friendly-name>
   <help chm-id="1135" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>group-count</name>
@@ -14,13 +13,11 @@
           <maximum-value>10</maximum-value>
         </integer>
       </parameters>
-    </settings>
 		<iteration>
 			<lower-bound>1</lower-bound>
 			<upper-bound-parameter>group-count</upper-bound-parameter>
       <loop-variable-name>group-index</loop-variable-name>
       <steps>
-        <settings>
           <parameters>
             <frame>
               <name>xdatNew</name>
@@ -86,7 +83,6 @@
               <append-to-frame>ydatu</append-to-frame>
             </frame>
           </parameters>
-        </settings>
 			</steps>
 		</iteration>
 		<chart>

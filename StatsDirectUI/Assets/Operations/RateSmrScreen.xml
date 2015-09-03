@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Indirect standardization and SMR</friendly-name>
   <help chm-id="1265" />
   <steps>
-    <settings>
       <parameters>
         <special>
           <name>data</name>
@@ -41,7 +40,6 @@
           <must-request>true</must-request>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptRateSMR" />
 	  <report type="text/rtf" filename="stdmort.rtf" />
 	</steps>

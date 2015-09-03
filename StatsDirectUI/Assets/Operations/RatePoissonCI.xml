@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Poisson rate confidence interval</friendly-name>
   <help chm-id="1263" />
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>revents</name>
@@ -23,7 +22,6 @@
           <must-request>true</must-request>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptRatePoissonCI" />
 	  <report type="text/rtf" filename="prate.rtf" />
 	</steps>

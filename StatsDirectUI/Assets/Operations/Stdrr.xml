@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Standardize and compare two rates</friendly-name>
   <help chm-id="1266" />
 	<steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>cco</name>
@@ -94,7 +93,6 @@
           </options>
         </option>
       </parameters>
-    </settings>
 		<builtin function-name="rptStdrr" />
 		<report type="text/rtf" filename="stdrr.rtf" />
     <report type="text/rtf" filename="charts.rtf" />

@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Bootstrap</friendly-name>
   <prerequisite-operation>LogisticRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>boots</name>
@@ -16,7 +15,6 @@
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptLogisticRegressionBootstrap" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>

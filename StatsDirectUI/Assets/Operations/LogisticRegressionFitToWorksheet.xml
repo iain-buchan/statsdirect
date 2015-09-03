@@ -7,7 +7,6 @@
     <test>
       <condition>="individual".Equals(parameters["grouping"].AsString)</condition>
       <iftrue>
-        <settings>
           <parameters>
             <option>
               <name>row_type</name>
@@ -21,10 +20,8 @@
               </options>
             </option>
           </parameters>
-        </settings>
       </iftrue>
     </test>
-    <settings>
       <parameters>
         <options>
           <prompt>Save fits and residuals to a worksheet</prompt>
@@ -43,7 +40,6 @@
           </options>
         </options>
       </parameters>
-    </settings>
     <builtin function-name="rptLogisticRegressionFit" />
     <builtin function-name="gridLogisticRegressionFit" />
 		<output-frame frame-name="results" />

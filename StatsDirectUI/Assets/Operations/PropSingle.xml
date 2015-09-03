@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Analysis of single proportions</friendly-name>
   <help chm-id="1251" />
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>n</name>
@@ -31,7 +30,6 @@
           <must-request>true</must-request>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptPropSingle" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[

@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Meta-analysis calculation options</friendly-name>
   <help chm-id="1166" />
   <steps>
-    <settings>
       <parameters>
         <boolean>
           <name>meta-exact</name>
@@ -29,7 +28,6 @@
           </options>
         </option>
       </parameters>
-    </settings>
     <script language="CSharp">
   <![CDATA[
 SDPreferences preferences = host.Preferences;

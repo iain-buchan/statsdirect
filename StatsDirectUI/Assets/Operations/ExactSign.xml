@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Sign (binomial proportion) test</friendly-name>
   <help chm-id="1111" />
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>n</name>
@@ -23,7 +22,6 @@
           <name>cco</name>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptExactSign" />
 	  <report type="text/rtf" filename="sign.rtf" />
 	</steps>

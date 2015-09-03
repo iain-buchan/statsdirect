@@ -5,7 +5,6 @@
   <help chm-id="1223" />
   <prerequisite-operation>Friedman</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>confidence</name>
@@ -20,7 +19,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptFrMultiple" />
 		<report type="text/rtf" filename="frmulti.rtf" />
 	</steps>

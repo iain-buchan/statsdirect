@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">XXi (hat) and (co)variance matrix</friendly-name>
   <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <boolean>
           <name>outputToGrid</name>
@@ -13,7 +12,6 @@
           <default-value>true</default-value>
         </boolean>
       </parameters>
-    </settings>
 		<builtin function-name="rptXxi" />
 		<test>
 			<condition>=parameters["outputToGrid"].AsBoolean</condition>

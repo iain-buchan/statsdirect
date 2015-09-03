@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Univariate descriptive summary statistics</friendly-name>
   <help chm-id="1045" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -17,7 +16,6 @@
           <max-columns>1</max-columns>
         </frame>
       </parameters>
-    </settings>
 	  <builtin function-name="quickSummary" />
 	</steps>
 </operation>

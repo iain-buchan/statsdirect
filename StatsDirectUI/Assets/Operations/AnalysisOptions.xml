@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Analysis options</friendly-name>
   <help chm-id="1137" />
   <steps>
-    <settings>
       <parameters>
         <boolean>
           <name>use-default-ci</name>
@@ -70,7 +69,6 @@
           <default-value>=host.Preferences.ShouldKeepData</default-value>
         </boolean>
       </parameters>
-    </settings>
   	<builtin function-name="setAnalysisOptions" />
 	</steps>
 </operation>

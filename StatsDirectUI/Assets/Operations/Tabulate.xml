@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Cross-tabulate two variables</friendly-name>
   <help chm-id="1089" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>rows</name>
@@ -28,7 +27,6 @@
           <default-value>true</default-value>
         </boolean>
       </parameters>
-    </settings>
     <builtin function-name="shtTabulate"/>
     <output-frame frame-name="output" />
 	</steps>

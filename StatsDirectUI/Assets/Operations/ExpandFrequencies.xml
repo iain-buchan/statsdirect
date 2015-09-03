@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Expand</friendly-name>
   <help chm-id="1398" />
   <steps>
-    <settings>
       <parameters>
         <option>
           <name>mode</name>
@@ -110,7 +109,6 @@
           <max-columns>9999</max-columns>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtExpand" />
     <output-frame frame-name="output" />
 	</steps>

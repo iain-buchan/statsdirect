@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Rotate data block</friendly-name>
   <help chm-id="1084" />
   <steps>
-    <settings>
       <parameters>
         <option>
           <name>use-formulae</name>
@@ -16,11 +15,9 @@
           </options>
         </option>
       </parameters>
-    </settings>
     <test>
       <condition>="formulae".Equals(parameters["use-formulae"].AsString)</condition>
       <iftrue>
-        <settings>
           <parameters>
             <frame>
               <name>data</name>
@@ -30,12 +27,10 @@
               <max-columns>256</max-columns>
             </frame>
           </parameters>
-        </settings>
         <builtin function-name="shtRotate"/>
         <output-frame frame-name="output" formulae="true" />
       </iftrue>
       <iffalse>
-        <settings>
           <parameters>
             <frame>
               <name>data</name>
@@ -45,7 +40,6 @@
               <max-columns>256</max-columns>
             </frame>
           </parameters>
-        </settings>
         <builtin function-name="shtRotate"/>
         <output-frame frame-name="output" />
       </iffalse>

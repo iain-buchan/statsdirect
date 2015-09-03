@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Ladder of powers transformation set</friendly-name>
   <help chm-id="1074" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -20,7 +19,6 @@
           <type>addedConstant</type>
         </special>
       </parameters>
-    </settings>
     <builtin function-name="shtLadderPowers"/>
     <output-frame frame-name="output" />
 	</steps>

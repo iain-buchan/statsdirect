@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">One way analysis of variance</friendly-name>
   <help chm-id="1011" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -16,7 +15,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptOneWay" />
 		<report type="text/rtf" filename="oneway.rtf" />
 	</steps>

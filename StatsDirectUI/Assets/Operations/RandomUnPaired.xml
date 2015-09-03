@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Random allocation into two independent groups</friendly-name>
   <help chm-id="1257" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>high</name>
@@ -18,7 +17,6 @@
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
         </integer>
       </parameters>
-    </settings>
   	<builtin function-name="rptRandomUnPaired" />
 	  <report type="text/rtf" filename="r_unpair.rtf" />
 	</steps>

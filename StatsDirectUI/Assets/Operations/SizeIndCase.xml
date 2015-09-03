@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Sample size for independent case-control study</friendly-name>
   <help chm-id="1313" />
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>p0</name>
@@ -61,7 +60,6 @@
           <can-default>false</can-default>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptSizeIndCase" />
 	  <report type="text/rtf" filename="s_incase.rtf" />
 	</steps>

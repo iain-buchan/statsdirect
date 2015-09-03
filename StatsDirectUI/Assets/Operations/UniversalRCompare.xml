@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Comparison of two R agreement measures</friendly-name>
   <help chm-id="1004" />
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>r1_in</name>
@@ -56,7 +55,6 @@
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 	<builtin function-name="rptUniversalRCompare" />
 	<report type="text/rtf" filename="universal_r_compare.rtf" />
 	</steps>

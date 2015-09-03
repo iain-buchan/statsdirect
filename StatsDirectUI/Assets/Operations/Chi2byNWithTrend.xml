@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Chi-square 2-by-k test with user-defined scores for trend</friendly-name>
   <help chm-id="1049" />
   <steps>
-    <settings>
       <parameters>
         <special>
           <name>data</name>
@@ -51,7 +50,6 @@
           <can-use-standard>false</can-use-standard>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptChi2byNWithTrend" />
 	  <report type="text/rtf" filename="chi2xc.rtf" />
     <test>

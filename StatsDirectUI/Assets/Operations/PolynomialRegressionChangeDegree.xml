@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Change degree</friendly-name>
   <help chm-id="1282" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -39,7 +38,6 @@
           <must-request>true</must-request>
         </option>
       </parameters>
-    </settings>
 		<builtin function-name="rptPolynomialRegression" />
 		<report type="text/rtf" filename="poly.rtf" />
 	</steps>

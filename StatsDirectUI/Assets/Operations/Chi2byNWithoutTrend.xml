@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Chi-square 2-by-k independence test</friendly-name>
   <help chm-id="1049" />
   <steps>
-    <settings>
       <parameters>
         <special>
           <name>data</name>
@@ -18,7 +17,6 @@
           <type>chi-2-column</type>
         </special>
       </parameters>
-    </settings>
   	<builtin function-name="rptChi2byNWithoutTrend" />
 	  <report type="text/rtf" filename="chi2xc.rtf" />
 	</steps>

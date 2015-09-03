@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Gini coefficient of inequality</friendly-name>
   <help chm-id="1224" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -25,7 +24,6 @@
           <default-value>100000</default-value>
         </integer>
       </parameters>
-    </settings>
 		<builtin function-name="rptGini" />
 		<test>
 			<condition>=parameters["data"].AsDataFrame.VariableCount == 1</condition>

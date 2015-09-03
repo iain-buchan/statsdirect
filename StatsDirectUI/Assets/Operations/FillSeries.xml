@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Fill series</friendly-name>
   <help chm-id="1071" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>rows</name>
@@ -27,7 +26,6 @@
           <prompt>Title</prompt>
         </string>
       </parameters>
-    </settings>
   	<builtin function-name="shtFillSeries" />
 	  <output-frame frame-name="output" />
 	</steps>

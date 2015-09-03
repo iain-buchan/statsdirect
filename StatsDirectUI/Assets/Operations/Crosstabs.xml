@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Cross-tabulate variables and analyse the tables</friendly-name>
   <help chm-id="1042" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>c1</name>
@@ -24,11 +23,9 @@
           <same-length-as>c1</same-length-as>
         </frame>
       </parameters>
-    </settings>
     <test>
       <condition>=parameters["c2"].AsDataFrame.VariableCount == 1</condition>
       <iftrue>
-        <settings>
           <parameters>
             <frame>
               <name>c3</name>
@@ -41,13 +38,11 @@
               <same-length-as>c1</same-length-as>
             </frame>
           </parameters>
-        </settings>
       </iftrue>
     </test>
     <test>
       <condition>=parameters.ContainsKey("c3")</condition>
       <iffalse>
-        <settings>
           <parameters>
             <boolean>
               <name>doExact</name>
@@ -119,16 +114,13 @@
               <can-use-standard>false</can-use-standard>
             </confidence-interval>
           </parameters>
-        </settings>
       </iffalse>
     </test>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>cco</name>
         </confidence-interval>
       </parameters>
-    </settings>
     <builtin function-name="rptCrosstabsPreprocess" />
     <test>
       <condition>=parameters["strat"].AsBoolean</condition>
@@ -136,7 +128,6 @@
         <test>
           <condition>=parameters["xcats"].AsInt32 == 2 &amp;&amp; parameters["ycats"].AsInt32 == 2</condition>
           <iftrue>
-            <settings>
               <parameters>
                 <option>
                   <name>study_type</name>
@@ -149,16 +140,13 @@
                   <default-value>casecontrol</default-value>
                 </option>
               </parameters>
-            </settings>
           </iftrue>
           <iffalse>
-            <settings>
               <parameters>
                 <special>
                   <type>scores</type>
                 </special>
               </parameters>
-            </settings>
           </iffalse>
         </test>
       </iftrue>

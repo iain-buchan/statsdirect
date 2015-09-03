@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Turn Excel worksheet filters on/off</friendly-name>
   <help chm-id="1395" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -16,7 +15,6 @@
           <clear-selection-first>false</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtToggleFilters" />
 	</steps>
 </operation>

@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Calculation of quantiles (centiles)</friendly-name>
   <help chm-id="1230" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -30,7 +29,6 @@
           <maximum-value>1</maximum-value>
         </double>
       </parameters>
-    </settings>
 		<builtin function-name="rptQuantile" />
 		<report type="text/rtf" filename="quantile.rtf" />
 	</steps>

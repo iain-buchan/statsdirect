@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Effect size meta-analysis</friendly-name>
   <help chm-id="1160" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -28,11 +27,9 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<test>
 			<condition>=!("g".Equals(parameters["type"].AsString))</condition>
 			<iftrue>
-        <settings>
           <parameters>
             <frame>
               <name>em</name>
@@ -53,10 +50,8 @@
               <clear-selection-first>true</clear-selection-first>
             </frame>
           </parameters>
-        </settings>
 			</iftrue>
 		</test>
-    <settings>
       <parameters>
         <frame>
           <name>cn</name>
@@ -68,11 +63,9 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<test>
 			<condition>="g".Equals(parameters["type"].AsString)</condition>
 			<iftrue>
-        <settings>
           <parameters>
             <frame>
               <name>g</name>
@@ -84,10 +77,8 @@
               <clear-selection-first>true</clear-selection-first>
             </frame>
           </parameters>
-        </settings>
 			</iftrue>
 			<iffalse>
-        <settings>
           <parameters>
             <frame>
               <name>cm</name>
@@ -108,10 +99,8 @@
               <clear-selection-first>true</clear-selection-first>
             </frame>
           </parameters>
-        </settings>
 			</iffalse>
 		</test>
-    <settings>
       <parameters>
         <frame>
           <name>strata</name>
@@ -124,7 +113,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptEffect" />
 		<test>
 			<condition>="m".Equals(parameters["type"].AsString)</condition>

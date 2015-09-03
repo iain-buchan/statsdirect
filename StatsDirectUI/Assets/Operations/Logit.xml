@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Probit analysis on a logit scale</friendly-name>
   <help chm-id="1283" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>dose</name>
@@ -34,9 +33,7 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="ProbitOrLogitDataHasControls"/>
-    <settings>
       <parameters>
         <integer>
           <name>nc</name>
@@ -68,7 +65,6 @@
           <default-value>90</default-value>
         </double>
       </parameters>
-    </settings>
 		<builtin function-name="rptLogit" />
 		<report type="text/rtf" filename="probit.rtf" />
 	</steps>

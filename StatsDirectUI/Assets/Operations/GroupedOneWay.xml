@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Grouped one way analysis of variance</friendly-name>
   <help chm-id="1011" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <clear-selection-first>true</clear-selection-first>
@@ -26,7 +25,6 @@
           <max-columns>1</max-columns>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptGroupedOneWay" />
 		<report type="text/rtf" filename="groupedoneway.rtf" />
 	</steps>

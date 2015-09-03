@@ -6,7 +6,6 @@
   <prerequisite-operation>ReplicateTwoWay</prerequisite-operation>
   <prerequisite-operation>TwoWay</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -30,7 +29,6 @@
           <label-as>Control</label-as>
         </pick-variables>
       </parameters>
-    </settings>
 		<builtin function-name="rptDunnett" />
 		<report type="text/rtf" filename="dunnett.rtf" />
 	</steps>

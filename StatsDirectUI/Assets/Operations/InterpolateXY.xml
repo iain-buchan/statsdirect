@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Interpolate X to Y</friendly-name>
   <prerequisite-operation>SimpleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -15,7 +14,6 @@
           <must-request>true</must-request>
         </double>
       </parameters>
-    </settings>
 		<builtin function-name="rptInterpolateXY" />
 		<report type="text/rtf" filename="interp.rtf" />
 	</steps>

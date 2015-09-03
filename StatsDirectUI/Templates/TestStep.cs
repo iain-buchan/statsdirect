@@ -22,7 +22,7 @@ namespace StatsDirect.Templates
             XmlArrayItem(ElementName = "chart", Type = typeof(ChartStep)),
             XmlArrayItem(ElementName = "iteration", Type = typeof(IterationStep)),
             XmlArrayItem(ElementName = "output-frame", Type = typeof(OutputFrameStep)),
-            XmlArrayItem(ElementName = "settings", Type = typeof(ParametersStep)),
+            XmlArrayItem(ElementName = "parameters", Type = typeof(ParametersStep)),
             XmlArrayItem(ElementName = "report", Type = typeof(ReportStep)),
             XmlArrayItem(ElementName = "script", Type = typeof(ScriptStep)),
             XmlArrayItem(ElementName = "test", Type = typeof(TestStep))
@@ -49,7 +49,7 @@ namespace StatsDirect.Templates
             XmlArrayItem(ElementName = "chart", Type = typeof(ChartStep)),
             XmlArrayItem(ElementName = "iteration", Type = typeof(IterationStep)),
             XmlArrayItem(ElementName = "output-frame", Type = typeof(OutputFrameStep)),
-            XmlArrayItem(ElementName = "settings", Type = typeof(ParametersStep)),
+            XmlArrayItem(ElementName = "parameters", Type = typeof(ParametersStep)),
             XmlArrayItem(ElementName = "report", Type = typeof(ReportStep)),
             XmlArrayItem(ElementName = "script", Type = typeof(ScriptStep)),
             XmlArrayItem(ElementName = "test", Type = typeof(TestStep))

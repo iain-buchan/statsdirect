@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">LOESS curve fitting</friendly-name>
   <help chm-id="1380" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>outcome</name>
@@ -101,7 +100,6 @@
           <default-value>false</default-value>
         </boolean>
       </parameters>
-    </settings>
     <script language="R">
   <![CDATA[
 m<-loess(model,span=span,degree=degree)
@@ -141,7 +139,6 @@ if (exists("returning.to.statsdirect")) {
     <test>
       <condition>=parameters["saveFitsAndSe"].AsBoolean</condition>
       <iftrue>
-        <settings>
           <parameters>
             <special>
               <name>statsdirect-frame-pane</name>
@@ -149,7 +146,6 @@ if (exists("returning.to.statsdirect")) {
               <type>frame</type>
             </special>
           </parameters>
-        </settings>
         <output-frame frame-name="fits" keep-selection="true" />
         <output-frame frame-name="sefits" keep-selection="true" />
       </iftrue>

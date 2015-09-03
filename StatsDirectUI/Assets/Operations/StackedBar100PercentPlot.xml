@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Stacked bar 100 percent plot</friendly-name>
   <help chm-id="1334" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>values</name>
@@ -26,7 +25,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<chart>
 			<chart-name>chart</chart-name>
 			<chart-type>StackedBar100Percent</chart-type>

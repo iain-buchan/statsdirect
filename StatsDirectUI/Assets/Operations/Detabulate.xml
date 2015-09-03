@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Detabulate</friendly-name>
   <help chm-id="1067" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -14,7 +13,6 @@
           <max-columns>200</max-columns>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtDetabulate"/>
     <output-frame frame-name="output" />
   </steps>

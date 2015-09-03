@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Two-way analysis of variance</friendly-name>
   <help chm-id="1014" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -17,7 +16,6 @@
           <group-id-mode>TreatmentAndBlock</group-id-mode>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptTwoWay" />
 		<report type="text/rtf" filename="twoway.rtf" />
 	</steps>

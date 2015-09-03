@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Normal scores plot</friendly-name>
   <help chm-id="1128" />
   <steps>
-    <settings>
       <parameters>
         <!-- Now requested in chart options.  Callers are still able to pass this in, however.
         <option>
@@ -26,7 +25,6 @@
           <max-columns>1</max-columns>
         </frame>
       </parameters>
-    </settings>
 		<chart>
 			<x-series-data>X</x-series-data>
 			<chart-name>chart</chart-name>

@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Classification</friendly-name>
   <prerequisite-operation>LogisticRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <double>
           <name>cutoff</name>
@@ -18,7 +17,6 @@
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptLogisticRegressionClassification" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>

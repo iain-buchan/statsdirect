@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Mantel-Haenszel test and odds ratio meta-analysis</friendly-name>
   <help chm-id="1167" />
   <steps>
-    <settings>
       <parameters>
         <double-2-by-2-by-k>
           <name>data</name>
@@ -33,7 +32,6 @@
           <column>2</column>
         </boolean>
       </parameters>
-    </settings>
   	<builtin function-name="rptChiMantel" />
 	  <report type="text/rtf" filename="mantel.rtf" />
     <report type="text/rtf" filename="charts.rtf" />

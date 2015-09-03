@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Randomise a number series from x to y</friendly-name>
   <help chm-id="1256" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>low</name>
@@ -23,7 +22,6 @@
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
         </integer>
       </parameters>
-    </settings>
   	<builtin function-name="rptRandomXY" />
 	  <report type="text/rtf" filename="r_xy.rtf" />
 	</steps>

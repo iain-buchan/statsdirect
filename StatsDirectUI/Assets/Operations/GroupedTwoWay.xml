@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Grouped two way analysis of variance</friendly-name>
   <help chm-id="1014" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <clear-selection-first>true</clear-selection-first>
@@ -36,7 +35,6 @@
           <max-columns>1</max-columns>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptGroupedTwoWay" />
 		<report type="text/rtf" filename="groupedtwoway.rtf" />
 	</steps>

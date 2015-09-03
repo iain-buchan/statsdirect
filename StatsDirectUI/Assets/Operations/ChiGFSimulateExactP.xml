@@ -5,7 +5,6 @@
   <prerequisite-operation>ChiSquareGoodnessOfFit</prerequisite-operation>
   <help chm-id="1051" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>iterations</name>
@@ -28,7 +27,6 @@
           <can-default>false</can-default>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptChiGFSimulateExactP" />
     <report type="text/rtf" filename="simulatedExactP.rtf" />
   </steps>

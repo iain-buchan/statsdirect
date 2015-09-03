@@ -5,7 +5,6 @@
   <help chm-id="1277" />
   <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
 			<parameters>
 				<edit-grid>
 					<name>candidatePredictors</name>
@@ -15,7 +14,6 @@
 					<must-request>true</must-request>
 				</edit-grid>
 			</parameters>
-		</settings>
 		<builtin function-name="rptMultipleLinearRegressionPrediction" />
 		<report type="text/rtf" filename="interpmr.rtf" />
 	</steps>

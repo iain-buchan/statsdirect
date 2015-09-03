@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Standardization of variables</friendly-name>
   <help chm-id="1088" />
   <steps>
-    <settings>
       <parameters>
         <option>
           <name>mode</name>
@@ -26,7 +25,6 @@
           <max-columns>1</max-columns>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtStandardize"/>
     <output-frame frame-name="output" />
 	</steps>

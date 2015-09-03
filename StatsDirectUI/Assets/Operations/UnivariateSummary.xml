@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Univariate descriptive summaries of variables</friendly-name>
   <help chm-id="1043" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -82,7 +81,6 @@
           <type>frame</type>
         </special>
       </parameters>
-    </settings>
     <builtin function-name="rptUnivariateSummary" />
     <report type="text/rtf" filename="describe.rtf" />
     <test>

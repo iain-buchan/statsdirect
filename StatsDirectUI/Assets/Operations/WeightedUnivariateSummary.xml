@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Weighted univariate descriptive statistics</friendly-name>
   <help chm-id="1043" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -92,7 +91,6 @@
           <type>frame</type>
         </special>
       </parameters>
-    </settings>
     <builtin function-name="rptWeightedUnivariateSummary" />
     <report type="text/rtf" filename="describe.rtf" />
     <test>

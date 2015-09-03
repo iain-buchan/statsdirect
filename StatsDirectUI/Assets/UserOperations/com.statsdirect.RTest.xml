@@ -3,7 +3,6 @@
 	<name>com.statsdirect.RTest</name>
 	<friendly-name lang="en-GB">R test</friendly-name>
 	<steps>
-		<settings>
 		<parameters>
 			<frame>
 				<name>yi</name>
@@ -35,7 +34,6 @@
 				<clear-selection-first>true</clear-selection-first>
 			</frame>
 		</parameters>
-		</settings>
 		<script language="R"><![CDATA[
 ### MiMa: An S-Plus/R function to fit meta-analytic mixed-, random-, and fixed-effects models
 ### author: Wolfgang Viechtbauer (University of Maastricht)

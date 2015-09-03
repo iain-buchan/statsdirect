@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Abridged (classical) life table analysis</friendly-name>
   <help chm-id="1320" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>intervals</name>
@@ -79,7 +78,6 @@
           </options>
         </option>
       </parameters>
-    </settings>
 		<builtin function-name="rptAbridgedLifetable" />
 		<test>
 			<condition>=parameters.ContainsKey("results")</condition>

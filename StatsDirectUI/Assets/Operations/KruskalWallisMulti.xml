@@ -5,7 +5,6 @@
   <help chm-id="1226" />
   <prerequisite-operation>Kruskal</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>confidence</name>
@@ -20,7 +19,6 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptKwMultiple" />
 		<report type="text/rtf" filename="kwmulti.rtf" />
 	</steps>

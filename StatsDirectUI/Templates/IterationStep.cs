@@ -26,7 +26,7 @@ namespace StatsDirect.Templates
             XmlArrayItem(ElementName = "iteration", Type = typeof(IterationStep)),
             XmlArrayItem(ElementName = "report", Type = typeof(ReportStep)),
             XmlArrayItem(ElementName = "script", Type = typeof(ScriptStep)),
-            XmlArrayItem(ElementName = "settings", Type = typeof(ParametersStep)),
+            XmlArrayItem(ElementName = "parameters", Type = typeof(ParametersStep)),
             XmlArrayItem(ElementName = "test", Type = typeof(TestStep))
         ]
         public Step[] StepsForXml

@@ -3,7 +3,6 @@
 	<name>PolynomialRegressionConfidence</name>
 	<friendly-name lang="en-GB">Save confidence for fitted Y</friendly-name>
 	<steps>
-    <settings>
       <parameters>
         <frame>
           <name>y</name>
@@ -26,7 +25,6 @@
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptPolynomialRegressionConfidence" />
 		<output-frame frame-name="results" />
 	</steps>

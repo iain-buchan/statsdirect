@@ -4,13 +4,11 @@
 	<friendly-name lang="en-GB">Plot SE and CI for population mean</friendly-name>
   <prerequisite-operation>SimpleLinearRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>reggamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="plotSeCi" />
 		<report type="text/rtf" filename="chartonly.rtf" />
 	</steps>

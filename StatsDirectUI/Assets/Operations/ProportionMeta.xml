@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Meta-analysis of proportions</friendly-name>
   <help chm-id="1169" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -64,7 +63,6 @@
           </options>
         </option>
       </parameters>
-    </settings>
 		<builtin function-name="rptProportionMeta" />
 		<report type="text/rtf" filename="propmeta.rtf" />
 		<report type="text/rtf" filename="charts.rtf" />

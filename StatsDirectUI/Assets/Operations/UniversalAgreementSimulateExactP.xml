@@ -5,7 +5,6 @@
   <prerequisite-operation>UniversalAgreement</prerequisite-operation>
   <help chm-id="1004" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>iterations</name>
@@ -28,7 +27,6 @@
           <can-default>false</can-default>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptUniversalAgreementSimulateExactP" />
     <report type="text/rtf" filename="simulatedExactP.rtf" />
   </steps>

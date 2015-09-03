@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Expanded Fisher-Irwin test</friendly-name>
   <help chm-id="1109" />
   <steps>
-    <settings>
       <parameters>
         <double-2-by-2>
           <name>scrap</name>
@@ -21,7 +20,6 @@
           <must-request>true</must-request>
         </double-2-by-2>
       </parameters>
-    </settings>
   	<builtin function-name="rptExactFisherX" />
 	  <report type="text/rtf" filename="fisherx.rtf" />
 	</steps>

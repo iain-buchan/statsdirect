@@ -4,13 +4,11 @@
 	<friendly-name lang="en-GB">Hazard ratios</friendly-name>
   <prerequisite-operation>CoxRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptCoxHazardRatios" />
 		<report type="text/rtf" filename="cox_det.rtf" />
 	</steps>

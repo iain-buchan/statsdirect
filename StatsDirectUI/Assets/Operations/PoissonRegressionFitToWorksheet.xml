@@ -5,7 +5,6 @@
   <prerequisite-operation>PoissonRegression</prerequisite-operation>
   <steps>
 		<builtin function-name="rptPoissonRegressionFit" />
-    <settings>
       <parameters>
         <options>
           <prompt>Save fits and residuals to a worksheet</prompt>
@@ -21,7 +20,6 @@
           </options>
         </options>
       </parameters>
-    </settings>
 		<builtin function-name="gridPoissonRegressionFit" />
 		<output-frame frame-name="results" />
 	</steps>

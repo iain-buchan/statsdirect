@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">R-by-c contingency table tests</friendly-name>
   <help chm-id="1055" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -100,7 +99,6 @@
           <can-use-standard>false</can-use-standard>
         </confidence-interval>
       </parameters>
-    </settings>
   	<builtin function-name="rptChiRbyC" />
 	  <report type="text/rtf" filename="chirxc.rtf" />
 	</steps>

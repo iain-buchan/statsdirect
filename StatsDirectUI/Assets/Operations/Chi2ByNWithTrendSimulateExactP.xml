@@ -6,7 +6,6 @@
   <prerequisite-operation>Chi2byNWithTrend</prerequisite-operation>
   <help chm-id="1049" />
   <steps>
-    <settings>
       <parameters>
         <integer>
           <name>iterations</name>
@@ -34,7 +33,6 @@
           <type>chi-3-column</type>
         </special>
       </parameters>
-    </settings>
 		<builtin function-name="rptChi2byNWithTrendSimulateExactP" />
     <report type="text/rtf" filename="chiTwoByKSimulatedExactP.rtf" />
   </steps>

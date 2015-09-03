@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Poisson regression</friendly-name>
   <help chm-id="1281" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>gamma</name>
@@ -58,12 +57,10 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<test>
 			<condition>="true".Equals(parameters["has-exposure"].AsString)</condition>
 			<iftrue>
 				<!-- grouped -->
-        <settings>
           <parameters>
             <frame>
               <name>exposure</name>
@@ -76,13 +73,11 @@
               <clear-selection-first>true</clear-selection-first>
             </frame>
           </parameters>
-        </settings>
 			</iftrue>
 		</test>
 		<test>
 			<condition>=parameters["weights"].AsBoolean</condition>
 			<iftrue>
-        <settings>
           <parameters>
             <frame>
               <name>weight</name>
@@ -95,10 +90,8 @@
               <clear-selection-first>true</clear-selection-first>
             </frame>
           </parameters>
-        </settings>
 			</iftrue>
 		</test>
-    <settings>
       <parameters>
         <frame>
           <name>predictors</name>
@@ -111,7 +104,6 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
 		<builtin function-name="rptPoissonRegression" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>

@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Prediction</friendly-name>
   <prerequisite-operation>LogisticRegression</prerequisite-operation>
   <steps>
-    <settings>
       <parameters>
         <edit-grid>
           <name>candidatePredictors</name>
@@ -17,7 +16,6 @@
           <name>gamma</name>
         </confidence-interval>
       </parameters>
-    </settings>
 		<builtin function-name="rptLogisticRegressionPrediction" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>

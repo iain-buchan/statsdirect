@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Frequency (counts) analysis</friendly-name>
   <help chm-id="1044" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -37,7 +36,6 @@
           <default-value>asc</default-value>
         </option>
       </parameters>
-    </settings>
 		<builtin function-name="rptFrequency" />
 		<report type="text/rtf" filename="freq.rtf" />
 	</steps>

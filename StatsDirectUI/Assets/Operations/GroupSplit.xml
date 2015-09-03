@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Split a combined variable into its component variables</friendly-name>
   <help chm-id="1073" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>gids</name>
@@ -23,16 +22,13 @@
           <clear-selection-first>true</clear-selection-first>
         </frame>
       </parameters>
-    </settings>
     <builtin function-name="shtGroupSplit"/>
-    <settings>
       <parameters>
         <special>
           <prompt>="Number of groups = " + parameters["ng"].AsInt32.ToString()</prompt>
           <type>rubric</type>
         </special>
       </parameters>
-    </settings>
     <output-frame frame-name="output" />
 	</steps>
 </operation>

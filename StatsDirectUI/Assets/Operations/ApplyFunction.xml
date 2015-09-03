@@ -4,7 +4,6 @@
 	<friendly-name lang="en-GB">Apply function to transform data</friendly-name>
   <help chm-id="1058" />
   <steps>
-    <settings>
       <parameters>
         <frame>
           <name>data</name>
@@ -15,7 +14,6 @@
           <max-columns>9</max-columns>
         </frame>
       </parameters>
-    </settings>
     <script language="VB"><![CDATA[
   Dim data as Data.DataFrame = parameters("data").AsDataFrame
   Dim cols as Integer = data.VariableCount
@@ -27,7 +25,6 @@
   outputParameters.Add("variable_list", New FilledParameter(True, L))
   Return outputParameters
 ]]></script>
-    <settings>
       <parameters>
         <string>
           <name>expression</name>
@@ -35,7 +32,6 @@
           <default-value>=host.Session.ContainsKey("LastFunction") ? host.Session["LastFunction"] : "X1"</default-value>
         </string>
       </parameters>
-    </settings>
     <script language="VB">
       <![CDATA[
 Dim qx As String = parameters("expression").AsString
@@ -51,7 +47,6 @@ Dim outputParameters As New ParameterBag
 outputParameters.Add("default_new_column_name", New FilledParameter(True, qx))
 Return outputParameters
     ]]></script>
-    <settings>
       <parameters>
         <string>
           <name>new_column_name</name>
@@ -59,7 +54,6 @@ Return outputParameters
           <default-value language="VB">=parameters("default_new_column_name").AsString</default-value>
         </string>
       </parameters>
-    </settings>
     <script language="VB">
       <![CDATA[
         Dim data As DataFrame = parameters("data").AsDataFrame

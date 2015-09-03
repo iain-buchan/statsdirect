@@ -4,7 +4,6 @@
   <friendly-name lang="en-GB">Measures of inter-rater agreement over categorization</friendly-name>
   <help chm-id="1003" />
   <steps>
-    <settings>
       <parameters>
         <confidence-interval>
           <name>ci</name>
@@ -18,13 +17,11 @@
           <max-columns>200</max-columns>
         </frame>
       </parameters>
-    </settings>
 	<test>
 		<condition>=parameters["responses"].AsDataFrame.VariableCount == 2</condition>
 		<iftrue>
       <!-- Two raters -->
 			<!-- Options -->
-      <settings>
         <parameters>
           <option>
             <name>method</name>
@@ -37,13 +34,11 @@
             </options>
           </option>
         </parameters>
-      </settings>
 			<test>
 				<condition>="3".Equals(parameters["method"].AsString)</condition>
 				<iftrue>
 					<builtin function-name="rptKappaSizeWeights"/>
 					<!-- Weights -->
-          <settings>
             <parameters>
               <frame>
                 <name>weights</name>
@@ -55,7 +50,6 @@
                 <clear-selection-first>true</clear-selection-first>
               </frame>
             </parameters>
-          </settings>
 				</iftrue>
 			</test>
 			<builtin function-name="rptKappa" />
