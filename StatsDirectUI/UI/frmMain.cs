@@ -5047,12 +5047,7 @@ namespace StatsDirect.UI
 
                 // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
                 if (MdiChildren.Length == 0)
-                {
-                    using (frmOpening opening = new frmOpening())
-                    {
-                        opening.ShowDialog(this);
-                    }
-                }
+                    SdApplication.SoleInstance.ShowOrQueueDialog(new frmOpening(), null);
             }
             catch (Exception ex)
             {
@@ -5153,8 +5148,13 @@ namespace StatsDirect.UI
 
         private List<ToolStripMenuItem> toolsMenuItems;
 
+        /// <summary>
+        /// We have reason to believe the tools menu may not be populated (for example at the start of the program) or may not be up to date (for example after the list of tools has been changed by the user).  Set it up.
+        /// </summary>
+        /// <remarks>Precondition: We are on the UI thread.</remarks>
         public void UpdateToolsMenu()
         {
+            // Ensure the menu is blank
             if (null == toolsMenuItems)
             {
                 toolsMenuItems = new List<ToolStripMenuItem>();
@@ -5163,11 +5163,11 @@ namespace StatsDirect.UI
             {
                 // Remove current entries
                 foreach (ToolStripMenuItem item in toolsMenuItems)
-                {
                     toolsToolStripMenuItem.DropDownItems.Remove(item);
-                }
                 toolsMenuItems.Clear();
             }
+
+            // Set up the new items
             StringCollection names = Settings.Default.ToolsNames;
             StringCollection paths = Settings.Default.ToolsPrograms;
             for (int i = 0; i < names.Count; i++)
@@ -5175,12 +5175,12 @@ namespace StatsDirect.UI
                 string name = names[i];
                 string path = paths[i];
                 ToolStripMenuItem menuItem = new ToolStripMenuItem
-                                                 {
-                                                     DisplayStyle = ToolStripItemDisplayStyle.Text,
-                                                     Size = new Size(167, 22),
-                                                     Text = name,
-                                                     Tag = "#{help=1156|cmd=" + path + "}"
-                                                 };
+                {
+                    DisplayStyle = ToolStripItemDisplayStyle.Text,
+                    Size = new Size(167, 22),
+                    Text = name,
+                    Tag = "#{help=1156|cmd=" + path + "}"
+                };
                 // 167,22 is merely a convenient magic size that came from the VS2005 designer; it may not be "right", but it works.
                 menuItem.Click += ToolsMenuItemHandler;
                 menuItem.MergeAction = MergeAction.Replace;
@@ -5238,11 +5238,10 @@ namespace StatsDirect.UI
         {
             try
             {
-                using (frmSetupTools frm = new frmSetupTools())
+                SdApplication.SoleInstance.ShowOrQueueDialog(new frmSetupTools(), (f, result) =>
                 {
-                    frm.ShowDialog(this);
-                }
-                UpdateToolsMenu();
+                    UpdateToolsMenu();
+                });
             }
             catch (Exception ex)
             {
@@ -5254,11 +5253,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                using (frmAbout frm = new frmAbout())
-                {
-                    frm.ShowDialog(this);
-                }
-                GC.Collect();
+                SdApplication.SoleInstance.ShowOrQueueDialog(new frmAbout(), null);
             }
             catch (Exception ex)
             {

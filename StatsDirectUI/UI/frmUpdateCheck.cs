@@ -1,10 +1,4 @@
-﻿using StatsDirect.R;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
-using System.Text.RegularExpressions;
+﻿using System;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -28,7 +22,7 @@ namespace StatsDirect.UI
         void ctlUpdateStatsDirectCheck1_NewerVersionAvailable(object sender, EventArgs e)
         {
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            ShowDialog();
+            SdApplication.SoleInstance.ShowOrQueueDialog(this, null);
         }
 
         private void cmdClose_Click(object sender, EventArgs e)

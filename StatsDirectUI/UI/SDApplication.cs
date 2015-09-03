@@ -52,6 +52,12 @@ namespace StatsDirect.UI
 
         private ParameterBag sessionParametersAcrossOperations;
 
+        private Queue<DialogAndAction> queuedDialogs;
+        /// <summary>
+        /// If true, the UI is presently showing a dialog that was submitted using QueueDialog.
+        /// </summary>
+        private bool showingDialogThatCouldBeQueued;
+
         /// <summary>
         /// Returns the single instance of the application, creating it if necessary.
         /// </summary>
@@ -77,8 +83,76 @@ namespace StatsDirect.UI
         /// </summary>
         private SdApplication()
         {
+            queuedDialogs = new Queue<DialogAndAction>();
             InitialiseFunctionRegistry();
             LoadPersistentValues();
+        }
+
+        /// <summary>
+        /// On occasion, we have the potential for dialogs created in a background thread to be displayable while another dialog is on-screen.  Show this dialog if possible, but force a queue so that no more than one dialog is on-screen at one time.
+        /// </summary>
+        /// <param name="f">The dialog to display once any current dialog has closed.</param>
+        /// <param name="postDisplayAction">Code to be run on the UI thread when the form closes; takes the form as its first parameter.</param>
+        internal void ShowOrQueueDialog(Form f, Action<Form, DialogResult> postDisplayAction)
+        {
+            // Check whether we're safe to show the dialog now.  If not, queue it and return; if so, set the flag that we're showing to prevent anything else showing once we're out of the locked region.
+            lock(queuedDialogs)
+            {
+                if (showingDialogThatCouldBeQueued)
+                {
+                    queuedDialogs.Enqueue(new DialogAndAction(f, postDisplayAction));
+                    return;
+                }
+                else
+                    showingDialogThatCouldBeQueued = true;
+            }
+
+            // If we get here, we're safe to show the dialog now.
+            ShowDialogOnUiThread(f, postDisplayAction);
+        }
+
+        /// <summary>
+        /// We know we're safe to show a dialog now (whether immediate or whether we just got it off the queue).  Show it on the UI thread, wait for a user response, and if necessary run its post display action (also on the UI thread).
+        /// If another dialog has been queued while we're showing this one, show that.
+        /// </summary>
+        /// <param name="f"></param>
+        /// <param name="postDisplayAction"></param>
+        private void ShowDialogOnUiThread(Form f, Action<Form, DialogResult> postDisplayAction)
+        {
+            if (null != mainWindow)
+                if (mainWindow.InvokeRequired)
+                {
+                    mainWindow.Invoke(new Action(() => { DialogResult result = f.ShowDialog(mainWindow); if (null != postDisplayAction) postDisplayAction(f, result); f.Dispose(); }));
+                }
+                else
+                {
+                    DialogResult result = f.ShowDialog(mainWindow);
+                    if (null != postDisplayAction)
+                        postDisplayAction(f, result);
+                    f.Dispose();
+                }
+            else
+            {
+                // If there's no main window at present, we'd expect to be on the UI thread.  TODO: Prove this assumption.
+                DialogResult result = f.ShowDialog();
+                if (null != postDisplayAction)
+                    postDisplayAction(f, result);
+                f.Dispose();
+            }
+
+            // If there's another dialog ready to go, dequeue and show it.  Yes, this uses tail-recursion; the compiler can choose to optimise it away, or we can rely on the fact that this is a rare operation and hence the stack won't get deep.
+            DialogAndAction newDialog = null;
+            lock(queuedDialogs)
+            {
+                showingDialogThatCouldBeQueued = false;
+                if (queuedDialogs.Count > 0)
+                {
+                    newDialog = queuedDialogs.Dequeue();
+                    showingDialogThatCouldBeQueued = true;
+                }
+            }
+            if (null != newDialog)
+                ShowDialogOnUiThread(newDialog.Form, newDialog.PostCloseAction);
         }
 
         private void LoadPersistentValues()
@@ -1687,10 +1761,7 @@ namespace StatsDirect.UI
 
         public void CheckForUpdates()
         {
-            using (Form f = new frmUpdateCheck(false))
-            {
-                f.ShowDialog(mainWindow);
-            }
+            ShowOrQueueDialog(new frmUpdateCheck(false), null);
         }
 
         internal void CloseAndUpdate()
