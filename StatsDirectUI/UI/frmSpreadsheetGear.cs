@@ -357,13 +357,13 @@ namespace StatsDirect.UI
                 workbookView.GetLock();
                 isLocked = true;
                 IWorksheet worksheet = workbookView.ActiveWorksheet;
-                IRange rawRange = worksheet.UsedRange;
-                int firstFreeColumn = rawRange.Column + rawRange.ColumnCount;
+                IRange usedRange = worksheet.UsedRange;
+                int firstFreeColumn = usedRange.Column + usedRange.ColumnCount;
                 // Don't believe the free columns - there may be more space!
                 while (firstFreeColumn > 0)
                 {
                     bool allBlank = true;
-                    for (int r = rawRange.Row; r < rawRange.Row + rawRange.RowCount; r++)
+                    for (int r = usedRange.Row; r < usedRange.Row + usedRange.RowCount; r++)
                     {
                         if (null != worksheet.Cells[r, firstFreeColumn - 1].Value)
                         {
@@ -418,8 +418,14 @@ namespace StatsDirect.UI
                         throw new ArgumentOutOfRangeException("writePosition", writePosition, "Unknown write position");
                 }
 
-                IRange range = worksheet.Range[0, firstColumnOfData, rawRange.Row + rawRange.RowCount + offsetForTitles - 1, firstColumnOfData + frame.VariableCount - 1];
-                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert data", () => { WriteDataFrameInternal(frame, isFormulae, missingIndicator, range, shouldMove, offsetForTitles); return true; }));
+                IRange range = worksheet.Range[0, firstColumnOfData, usedRange.Row + usedRange.RowCount + offsetForTitles - 1, firstColumnOfData + frame.VariableCount - 1];
+                // Create a holder that can be captured by the lambda but then can be cleared out so that it doesn't retain large amounts of data
+                WriteDataFrameParametersHolder holder = new WriteDataFrameParametersHolder { Frame = frame, IsFormulae = isFormulae, MissingIndicator = missingIndicator, Range = range, ShouldMove = shouldMove, OffsetForTitles = offsetForTitles };
+                workbookView.ActiveCommandManager.Execute(new UndoWrapper(/* workbookView.RangeSelection */ range.EntireColumn, "Insert data", () => { if (null != holder.Frame) WriteDataFrameInternal(holder.Frame, holder.IsFormulae, holder.MissingIndicator, holder.Range, holder.ShouldMove, holder.OffsetForTitles); return true; }));
+                // Clear down reference variables
+                holder.Range = null;
+                holder.Frame = null;
+                holder.MissingIndicator = null;
                 workbookView.Focus();
             }
             finally
@@ -3203,6 +3209,16 @@ namespace StatsDirect.UI
                     }
                 }
             }
+        }
+
+        private class WriteDataFrameParametersHolder
+        {
+            public DataFrame Frame { get; set; }
+            public bool IsFormulae { get; set; }
+            public string MissingIndicator { get; set; }
+            public int OffsetForTitles { get; set; }
+            public IRange Range { get; set; }
+            public bool ShouldMove { get; set; }
         }
     }
 }
