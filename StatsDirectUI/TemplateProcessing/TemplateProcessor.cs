@@ -452,6 +452,11 @@ namespace StatsDirect.Templates
                 // We don't ever want this caught by the general exception catcher below, so we make a special case.
                 throw;
             }
+            catch (TemplateOperationCancelledException)
+            {
+                // We don't ever want this caught by the general exception catcher below, so we make a special case.
+                throw;
+            }
 #if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {

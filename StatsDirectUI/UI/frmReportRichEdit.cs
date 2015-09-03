@@ -713,17 +713,15 @@ namespace StatsDirect.UI
 
         private void ReplayOperation(object sender, EventArgs e)
         {
-#if !WATCH_EXCEPTIONS
             try
             {
-#endif
                 ReplayOperation();
-#if !WATCH_EXCEPTIONS
             }
             catch (TemplateOperationCancelledException)
             {
                 // The operation was cancelled during replay.  Do nothing.
             }
+#if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {
                 if (SdApplication.SoleInstance.MainWindow.InOperation)
