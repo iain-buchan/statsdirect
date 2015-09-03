@@ -3,7 +3,6 @@ using System.Windows.Forms;
 using System.IO;
 using StatsDirect.Calculator;
 using StatsDirect.Utilities;
-using System.Diagnostics;
 using StatsDirect.Configuration;
 
 namespace StatsDirect.UI
@@ -86,6 +85,10 @@ namespace StatsDirect.UI
             Application.Run(mainWindow);
         }
 
+        /// <summary>
+        /// Cause the report libraries to pre-load, for perceived faster first report startup.
+        /// </summary>
+        /// <remarks>Requires frmReportRichEditDummy to close itself once it has shown itself.</remarks>
         private static void PreloadReport()
         {
             using (frmReportRichEditDummy f = new frmReportRichEditDummy())
@@ -309,9 +312,11 @@ namespace StatsDirect.UI
                 // The user has no ability to enter a machine key, so always use the user key as the basis of this.
                 using (frmLicense f = new frmLicense(userUi, userIsPartiallyComplete))
                 {
-                    f.ShowDialog();
-                    if (f.UserCancelled)
-                        Environment.Exit(1);
+                    SdApplication.SoleInstance.ShowOrQueueDialog(f, (form, result) => {
+                        if (((frmLicense)form).UserCancelled)
+                            Environment.Exit(1);
+                    });
+                    
                 }
             }
         }

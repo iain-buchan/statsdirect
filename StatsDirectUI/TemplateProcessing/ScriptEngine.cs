@@ -5,8 +5,6 @@ using System.Text;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Reflection;
-using System.Windows.Forms;
-using StatsDirect.Data;
 using StatsDirect.R;
 using StatsDirect.Utilities;
 

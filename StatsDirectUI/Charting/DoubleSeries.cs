@@ -1,7 +1,6 @@
 using System;
 
 using StatsDirect.Numerics;
-using System.Drawing;
 
 namespace StatsDirect.Charting
 {

@@ -1,5 +1,3 @@
-using StatsDirect.Utilities;
-
 namespace StatsDirect.Data
 {
     ///  <summary>

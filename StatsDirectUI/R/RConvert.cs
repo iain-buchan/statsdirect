@@ -1,10 +1,8 @@
-﻿using Microsoft.Win32;
-using StatsDirect.Data;
+﻿using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Linq;
 using System.Globalization;

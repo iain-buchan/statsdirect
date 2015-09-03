@@ -2,7 +2,6 @@ using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using StatsDirect.UI;
 using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;

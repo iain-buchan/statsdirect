@@ -9,7 +9,6 @@ using SpreadsheetGear.Commands;
 using StatsDirect.Builtins;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
-using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using SpreadsheetGear.Advanced.Cells;
 using SpreadsheetGear;

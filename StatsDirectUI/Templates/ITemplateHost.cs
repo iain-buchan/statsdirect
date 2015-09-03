@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using StatsDirect.Data;
 using StatsDirect.UI;
-using StatsDirect.Utilities;
 
 namespace StatsDirect.Templates
 {

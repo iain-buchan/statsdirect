@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using StatsDirect.Templates;
-using StatsDirect.Utilities;
 
 namespace StatsDirect.TemplateProcessing
 {

@@ -1,10 +1,5 @@
-﻿using StatsDirect.R;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
