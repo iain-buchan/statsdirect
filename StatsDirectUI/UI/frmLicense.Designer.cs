@@ -203,7 +203,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cmdCancel;
             this.ClientSize = new System.Drawing.Size(383, 366);
-            this.ControlBox = false;
             this.Controls.Add(this.lblWeb);
             this.Controls.Add(this.txtInstructions);
             this.Controls.Add(this.txtKey);
