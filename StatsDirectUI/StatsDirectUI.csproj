@@ -784,6 +784,7 @@
     <Compile Include="Utilities\CoxP.cs" />
     <Compile Include="Utilities\DataAcquisitionMode.cs" />
     <Compile Include="Utilities\Formatting.cs" />
+    <Compile Include="Utilities\NotAnErrorException.cs" />
     <Compile Include="Utilities\Parsing.cs" />
     <Compile Include="Utilities\SDRegistry.cs" />
     <Compile Include="Utilities\TakeANumber.cs" />
@@ -1044,7 +1045,6 @@
     <None Include="Assets\Template\fisher.creole" />
     <None Include="Assets\Template\relrisk.creole" />
     <None Include="Assets\Template\odds.creole" />
-    <None Include="Charting\app.config" />
     <Antlr4 Include="Expressions\StatsDirectExpression.g4">
       <Generator>MSBuild:Compile</Generator>
       <CustomToolNamespace>StatsDirect.Expressions</CustomToolNamespace>
@@ -1217,7 +1217,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="Templates\app.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\menu.xml">
@@ -1704,7 +1703,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -343,6 +343,7 @@ namespace StatsDirect.UI.Properties {
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Template")]
         public string TemplateDirectory {
@@ -352,6 +353,7 @@ namespace StatsDirect.UI.Properties {
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Operations")]
         public string OperationsDirectory {
