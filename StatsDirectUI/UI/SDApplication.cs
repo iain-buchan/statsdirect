@@ -533,55 +533,12 @@ namespace StatsDirect.UI
         public IReport PickReportWindow(bool AllowNew)
         {
             return MainWindow.SelectedReportWindow;
-            /*
-            try
-            {
-                IList<Pane> availableWindows = AvailableReportPanes();
-                Pane selectedPane = null;
-                if (availableWindows.Count > 0)
-                {
-                    // selectedPane = PickAWindow(availableWindows, AllowNew ? "New Report" : null, mostRecentlySelectedReport);
-                    const string KEY = "solo";
-                    SpecialParameter parameter = new SpecialParameter();
-                    parameter.SpecialType = "report";
-                    parameter.Name = KEY;
-                    parameter.PromptExpression = new Expression("Pick the report in which you want the output to appear");
-                    ParameterBag results = FillSingleParameter(parameter);
-                    bool cancelled = (null == results || !results.ContainsKey(KEY));
-                    if (cancelled)
-                        throw new TemplateOperationCancelledException();
-                    selectedPane = (Pane)results[KEY].AsPane;
-                }
-                return SelectReportWindow(selectedPane);
-            }
-            catch (TemplateOperationCancelledException)
-            {
-                // User cancelled
-                return null;
-            }
-            */
         }
 
         internal IReport SelectReportWindow(Pane selectedPane)
         {
             // As we now don't remember reports for output, this is equivalent to a PickReportWindow.
             return PickReportWindow(false);
-
-            /*
-            if (null == selectedPane || null == selectedPane.WindowInformation)
-            {
-                // Create a new report
-                StatsDirectForm rpt = mainWindow.CreateReport();
-                mostRecentlySelectedReport = ((IForm)rpt).SelectedPane;
-                return (IReport)rpt;
-            }
-            else
-            {
-                // Existing window
-                mostRecentlySelectedReport = ((IForm)selectedPane.WindowInformation.Window).SelectedPane;
-                return (IReport)selectedPane.WindowInformation.Window;
-            }
-             */
         }
 
         /// <summary>
@@ -600,13 +557,13 @@ namespace StatsDirect.UI
                 {
                     const string KEY = "solo";
                     SpecialParameter parameter = new SpecialParameter
-                                                     {
-                                                         SpecialType = "frame",
-                                                         Name = KEY,
-                                                         PromptExpression =
-                                                             new Expression(
-                                                             "Pick the sheet in which you want the output to appear")
-                                                     };
+                    {
+                        SpecialType = "frame",
+                        Name = KEY,
+                        PromptExpression =
+                            new Expression(
+                            "Pick the sheet in which you want the output to appear")
+                    };
                     ParameterBag results = FillSingleParameter(parameter); // Will never return a null value as the parameter cannot be skipped
                     bool cancelled = (null == results || !results.ContainsKey(KEY));
                     if (cancelled)
