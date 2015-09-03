@@ -44,11 +44,9 @@
             this.txtKey = new System.Windows.Forms.TextBox();
             this.txtInstructions = new System.Windows.Forms.TextBox();
             this.lblWeb = new System.Windows.Forms.Label();
-            this.picSD = new System.Windows.Forms.PictureBox();
             this.tipEmail = new System.Windows.Forms.ToolTip(this.components);
             this.tipOrganisation = new System.Windows.Forms.ToolTip(this.components);
             this.tipKey = new System.Windows.Forms.ToolTip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.picSD)).BeginInit();
             this.SuspendLayout();
             // 
             // cmdCancel
@@ -89,7 +87,7 @@
             // 
             this.lblSD.AutoSize = true;
             this.lblSD.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSD.Location = new System.Drawing.Point(54, 17);
+            this.lblSD.Location = new System.Drawing.Point(13, 17);
             this.lblSD.Name = "lblSD";
             this.lblSD.Size = new System.Drawing.Size(70, 13);
             this.lblSD.TabIndex = 12;
@@ -99,7 +97,7 @@
             // 
             this.lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblVersion.Location = new System.Drawing.Point(13, 50);
+            this.lblVersion.Location = new System.Drawing.Point(13, 38);
             this.lblVersion.Name = "lblVersion";
             this.lblVersion.Size = new System.Drawing.Size(358, 17);
             this.lblVersion.TabIndex = 13;
@@ -193,17 +191,10 @@
             this.lblWeb.ForeColor = System.Drawing.Color.Purple;
             this.lblWeb.Location = new System.Drawing.Point(13, 337);
             this.lblWeb.Name = "lblWeb";
-            this.lblWeb.Size = new System.Drawing.Size(301, 13);
+            this.lblWeb.Size = new System.Drawing.Size(223, 13);
             this.lblWeb.TabIndex = 22;
-            this.lblWeb.Text = "Click here (http://www.statsdirect.com) for web site";
-            // 
-            // picSD
-            // 
-            this.picSD.Location = new System.Drawing.Point(4, 12);
-            this.picSD.Name = "picSD";
-            this.picSD.Size = new System.Drawing.Size(44, 35);
-            this.picSD.TabIndex = 23;
-            this.picSD.TabStop = false;
+            this.lblWeb.Text = "Click here for the StatsDirect web site";
+            this.lblWeb.Click += new System.EventHandler(this.lblWeb_Click);
             // 
             // frmLicense
             // 
@@ -213,7 +204,6 @@
             this.CancelButton = this.cmdCancel;
             this.ClientSize = new System.Drawing.Size(383, 366);
             this.ControlBox = false;
-            this.Controls.Add(this.picSD);
             this.Controls.Add(this.lblWeb);
             this.Controls.Add(this.txtInstructions);
             this.Controls.Add(this.txtKey);
@@ -238,7 +228,6 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmLicense_FormClosing);
             this.Load += new System.EventHandler(this.frmLicense_Load);
             this.Shown += new System.EventHandler(this.frmLicense_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.picSD)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -260,7 +249,6 @@
         private System.Windows.Forms.TextBox txtKey;
         private System.Windows.Forms.TextBox txtInstructions;
         private System.Windows.Forms.Label lblWeb;
-        private System.Windows.Forms.PictureBox picSD;
         private System.Windows.Forms.ToolTip tipEmail;
         private System.Windows.Forms.ToolTip tipOrganisation;
         private System.Windows.Forms.ToolTip tipKey;

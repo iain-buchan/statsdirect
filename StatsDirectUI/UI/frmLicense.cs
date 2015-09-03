@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using StatsDirect.Utilities;
+using System.Diagnostics;
 
 namespace StatsDirect.UI
 {
@@ -192,6 +193,11 @@ namespace StatsDirect.UI
             // This prevents the form being repeatedly displayed.
             if (!closedViaButton)
                 userCancelled = true;
+        }
+
+        private void lblWeb_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://www.statsdirect.com/");
         }
     }
 }
