@@ -17,6 +17,8 @@ namespace StatsDirect.UI
         private bool mVista;
         private bool m7;
         private bool m8;
+        private bool m81;
+        private bool m10;
 
         public frmAbout()
         {
@@ -67,6 +69,8 @@ namespace StatsDirect.UI
                     mVista = (osInfo.Version.Major >= 6);
                     m7 = (osInfo.Version.Major >= 6) && (osInfo.Version.Minor >= 1);
                     m8 = (osInfo.Version.Major >= 6) && (osInfo.Version.Minor >= 2);
+                    m81 = (osInfo.Version.Major >= 6) && (osInfo.Version.Minor >= 3);
+                    m10 = (osInfo.Version.Major >= 10);
                     break;
             }
 
@@ -144,6 +148,10 @@ namespace StatsDirect.UI
                     return "Windows 98";
                 if (m95)
                     return "Windows 95";
+                if (m10)
+                    return "Windows 10";
+                if (m81)
+                    return "Windows 8.1";
                 if (m8)
                     return "Windows 8";
                 if (m7)
@@ -167,9 +175,7 @@ namespace StatsDirect.UI
             foreach (ProcessModule m in modules)
             {
                 if (m.FileName.Contains("\\" + process.ProcessName + ".ni"))
-                {
                     return true;
-                }
             }
             return false;
         }
