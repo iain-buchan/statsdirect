@@ -323,12 +323,12 @@ namespace StatsDirect.Charting
                 }
 
                 // Get rid of empty bins on the upper end of the histogram
-                int c2 = actualRows;
+                int c2 = actualRows - 1;
                 for (int c = mp; c >= 1; c--)
                 {
                     double binLeft = zmin + (zint * (c - 1)) - zint / 2.0;
                     bool thisBinHasData = false;
-                    for (int c1 = c2; c1 >= 1; c1--)
+                    for (int c1 = c2; c1 >= 0; c1--)
                     {
                         if (nonMissingData[c1] > binLeft)
                         {
@@ -345,12 +345,12 @@ namespace StatsDirect.Charting
 
                 // Get rid of empty bins on the lower end of the histogram
                 int emptyBinsLeft = 0;
-                c2 = 1;
+                c2 = 0;
                 for (int c = 1; c <= mp; c++)
                 {
                     double binRight = zmin + (zint * (c - 1)) + zint / 2.0;
                     bool thisBinHasData = false;
-                    for (int c1 = c2; c1 <= actualRows; c1++)
+                    for (int c1 = c2; c1 < actualRows; c1++)
                     {
                         if (nonMissingData[c1] <= binRight)
                         {
