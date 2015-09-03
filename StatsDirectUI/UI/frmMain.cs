@@ -5011,7 +5011,7 @@ namespace StatsDirect.UI
         }
 
         [Serializable]
-        private class SelectedOperationChangedException : Exception
+        private class SelectedOperationChangedException : NotAnErrorException
         {
             public ParameterBag InputParameters { get; private set; }
             public SelectedOperationChangedException(ParameterBag inputParameters)

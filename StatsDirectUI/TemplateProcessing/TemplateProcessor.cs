@@ -447,12 +447,7 @@ namespace StatsDirect.Templates
                 }
                 return filledParameters;
             }
-            catch (CloseCurrentOperationException)
-            {
-                // We don't ever want this caught by the general exception catcher below, so we make a special case.
-                throw;
-            }
-            catch (TemplateOperationCancelledException)
+            catch (NotAnErrorException)
             {
                 // We don't ever want this caught by the general exception catcher below, so we make a special case.
                 throw;
