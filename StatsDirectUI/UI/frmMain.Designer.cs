@@ -186,7 +186,6 @@ namespace StatsDirect.UI
             // 
             // mnuMain
             // 
-            this.mnuMain.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.EditToolStripMenuItem,
@@ -198,8 +197,7 @@ namespace StatsDirect.UI
             this.mnuMain.Location = new System.Drawing.Point(0, 0);
             this.mnuMain.MdiWindowListItem = this.windowToolStripMenuItem;
             this.mnuMain.Name = "mnuMain";
-            this.mnuMain.Padding = new System.Windows.Forms.Padding(9, 3, 0, 3);
-            this.mnuMain.Size = new System.Drawing.Size(1038, 35);
+            this.mnuMain.Size = new System.Drawing.Size(692, 24);
             this.mnuMain.TabIndex = 1;
             this.mnuMain.Text = "menuStrip1";
             // 
@@ -224,7 +222,7 @@ namespace StatsDirect.UI
             this.fileListToolStripSeparator,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(50, 29);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Tag = "#{help=1144}";
             this.fileToolStripMenuItem.Text = "&File";
             // 
@@ -232,7 +230,7 @@ namespace StatsDirect.UI
             // 
             this.newGridToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.newGridToolStripMenuItem.Name = "newGridToolStripMenuItem";
-            this.newGridToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.newGridToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.newGridToolStripMenuItem.Tag = "#{help=1376}";
             this.newGridToolStripMenuItem.Text = "&New Data Workbook";
             this.newGridToolStripMenuItem.Click += new System.EventHandler(this.newGridToolStripMenuItem_Click);
@@ -241,7 +239,7 @@ namespace StatsDirect.UI
             // 
             this.newReportToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.newReportToolStripMenuItem.Name = "newReportToolStripMenuItem";
-            this.newReportToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.newReportToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.newReportToolStripMenuItem.Tag = "#{help=1302}";
             this.newReportToolStripMenuItem.Text = "N&ew Report";
             this.newReportToolStripMenuItem.Click += new System.EventHandler(this.newReportToolStripMenuItem_Click);
@@ -250,7 +248,7 @@ namespace StatsDirect.UI
             // 
             this.newScriptToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.newScriptToolStripMenuItem.Name = "newScriptToolStripMenuItem";
-            this.newScriptToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.newScriptToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.newScriptToolStripMenuItem.Text = "Ne&w Script";
             this.newScriptToolStripMenuItem.Visible = false;
             this.newScriptToolStripMenuItem.Click += new System.EventHandler(this.newScriptToolStripMenuItem_Click);
@@ -260,7 +258,7 @@ namespace StatsDirect.UI
             this.openToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.openToolStripMenuItem.Tag = "#{help=1148}";
             this.openToolStripMenuItem.Text = "&Open...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
@@ -271,7 +269,7 @@ namespace StatsDirect.UI
             this.saveToolStripMenuItem.Enabled = false;
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+S";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.saveToolStripMenuItem.Tag = "#{help=1151}";
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Visible = false;
@@ -281,7 +279,7 @@ namespace StatsDirect.UI
             this.saveAsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.saveAsToolStripMenuItem.Enabled = false;
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.saveAsToolStripMenuItem.Tag = "#{help=1152}";
             this.saveAsToolStripMenuItem.Text = "S&ave As...";
             this.saveAsToolStripMenuItem.Visible = false;
@@ -291,7 +289,7 @@ namespace StatsDirect.UI
             this.closeToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.closeToolStripMenuItem.Enabled = false;
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.closeToolStripMenuItem.Tag = "#{help=1330}";
             this.closeToolStripMenuItem.Text = "&Close";
             this.closeToolStripMenuItem.Visible = false;
@@ -299,13 +297,13 @@ namespace StatsDirect.UI
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(255, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(180, 6);
             // 
             // printPreviewToolStripMenuItem
             // 
             this.printPreviewToolStripMenuItem.Enabled = false;
             this.printPreviewToolStripMenuItem.Name = "printPreviewToolStripMenuItem";
-            this.printPreviewToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.printPreviewToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.printPreviewToolStripMenuItem.Tag = "#{help=1305}";
             this.printPreviewToolStripMenuItem.Text = "Print Preview";
             // 
@@ -316,19 +314,19 @@ namespace StatsDirect.UI
             this.printToolStripMenuItem.Name = "printToolStripMenuItem";
             this.printToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+P";
             this.printToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
-            this.printToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.printToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.printToolStripMenuItem.Tag = "#{help=1306}";
             this.printToolStripMenuItem.Text = "&Print...";
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(255, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(180, 6);
             // 
             // importDataToolStripMenuItem
             // 
             this.importDataToolStripMenuItem.Name = "importDataToolStripMenuItem";
-            this.importDataToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.importDataToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.importDataToolStripMenuItem.Tag = "#{help=1369}";
             this.importDataToolStripMenuItem.Text = "Import Data...";
             this.importDataToolStripMenuItem.Visible = false;
@@ -336,7 +334,7 @@ namespace StatsDirect.UI
             // exportDataToolStripMenuItem
             // 
             this.exportDataToolStripMenuItem.Name = "exportDataToolStripMenuItem";
-            this.exportDataToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.exportDataToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.exportDataToolStripMenuItem.Tag = "#{help=1143}";
             this.exportDataToolStripMenuItem.Text = "Export Data...";
             this.exportDataToolStripMenuItem.Visible = false;
@@ -344,13 +342,13 @@ namespace StatsDirect.UI
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(255, 6);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(180, 6);
             this.toolStripSeparator5.Visible = false;
             // 
             // fileListToolStripSeparator
             // 
             this.fileListToolStripSeparator.Name = "fileListToolStripSeparator";
-            this.fileListToolStripSeparator.Size = new System.Drawing.Size(255, 6);
+            this.fileListToolStripSeparator.Size = new System.Drawing.Size(180, 6);
             this.fileListToolStripSeparator.Visible = false;
             // 
             // exitToolStripMenuItem
@@ -358,7 +356,7 @@ namespace StatsDirect.UI
             this.exitToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.ShortcutKeyDisplayString = "Alt+F4";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(258, 30);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.exitToolStripMenuItem.Tag = "#{help=1142}";
             this.exitToolStripMenuItem.Text = "E&xit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
@@ -366,7 +364,7 @@ namespace StatsDirect.UI
             // EditToolStripMenuItem
             // 
             this.EditToolStripMenuItem.Name = "EditToolStripMenuItem";
-            this.EditToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
+            this.EditToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.EditToolStripMenuItem.Tag = "#{help=1344}";
             this.EditToolStripMenuItem.Text = "&Edit";
             this.EditToolStripMenuItem.Visible = false;
@@ -374,7 +372,7 @@ namespace StatsDirect.UI
             // insertToolStripMenuItem
             // 
             this.insertToolStripMenuItem.Name = "insertToolStripMenuItem";
-            this.insertToolStripMenuItem.Size = new System.Drawing.Size(68, 29);
+            this.insertToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.insertToolStripMenuItem.Tag = "#{help=1372}";
             this.insertToolStripMenuItem.Text = "&Insert";
             this.insertToolStripMenuItem.Visible = false;
@@ -384,7 +382,7 @@ namespace StatsDirect.UI
             this.formatToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.pageSetupToolStripMenuItem});
             this.formatToolStripMenuItem.Name = "formatToolStripMenuItem";
-            this.formatToolStripMenuItem.Size = new System.Drawing.Size(81, 29);
+            this.formatToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
             this.formatToolStripMenuItem.Tag = "#{help=1296}";
             this.formatToolStripMenuItem.Text = "F&ormat";
             this.formatToolStripMenuItem.Visible = false;
@@ -393,7 +391,7 @@ namespace StatsDirect.UI
             // 
             this.pageSetupToolStripMenuItem.Enabled = false;
             this.pageSetupToolStripMenuItem.Name = "pageSetupToolStripMenuItem";
-            this.pageSetupToolStripMenuItem.Size = new System.Drawing.Size(185, 30);
+            this.pageSetupToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.pageSetupToolStripMenuItem.Tag = "#{help=1303}";
             this.pageSetupToolStripMenuItem.Text = "Page Setup...";
             // 
@@ -405,26 +403,26 @@ namespace StatsDirect.UI
             this.setupToolsToolStripMenuItem,
             this.checkForUpdatesToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(65, 29);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Tag = "#{help=1156}";
             this.toolsToolStripMenuItem.Text = "&Tools";
             // 
             // rGuiToolStripMenuItem
             // 
             this.rGuiToolStripMenuItem.Name = "rGuiToolStripMenuItem";
-            this.rGuiToolStripMenuItem.Size = new System.Drawing.Size(242, 30);
+            this.rGuiToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.rGuiToolStripMenuItem.Text = "R";
             this.rGuiToolStripMenuItem.Click += new System.EventHandler(this.rGuiToolStripMenuItem_Click);
             // 
             // toolsToolStripSeparator
             // 
             this.toolsToolStripSeparator.Name = "toolsToolStripSeparator";
-            this.toolsToolStripSeparator.Size = new System.Drawing.Size(239, 6);
+            this.toolsToolStripSeparator.Size = new System.Drawing.Size(177, 6);
             // 
             // setupToolsToolStripMenuItem
             // 
             this.setupToolsToolStripMenuItem.Name = "setupToolsToolStripMenuItem";
-            this.setupToolsToolStripMenuItem.Size = new System.Drawing.Size(242, 30);
+            this.setupToolsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.setupToolsToolStripMenuItem.Tag = "#{help=1153}";
             this.setupToolsToolStripMenuItem.Text = "Setup Tools...";
             this.setupToolsToolStripMenuItem.Click += new System.EventHandler(this.setupToolsToolStripMenuItem_Click);
@@ -432,7 +430,7 @@ namespace StatsDirect.UI
             // checkForUpdatesToolStripMenuItem
             // 
             this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
-            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(242, 30);
+            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.checkForUpdatesToolStripMenuItem.Tag = "#{help=1156}";
             this.checkForUpdatesToolStripMenuItem.Text = "Check for Updates...";
             this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
@@ -448,14 +446,14 @@ namespace StatsDirect.UI
             this.maximiseToolStripMenuItem,
             this.toolStripSeparator6});
             this.windowToolStripMenuItem.Name = "windowToolStripMenuItem";
-            this.windowToolStripMenuItem.Size = new System.Drawing.Size(90, 29);
+            this.windowToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
             this.windowToolStripMenuItem.Tag = "#{help=1157}";
             this.windowToolStripMenuItem.Text = "&Window";
             // 
             // cascadeToolStripMenuItem
             // 
             this.cascadeToolStripMenuItem.Name = "cascadeToolStripMenuItem";
-            this.cascadeToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
+            this.cascadeToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.cascadeToolStripMenuItem.Tag = "#{help=1140}";
             this.cascadeToolStripMenuItem.Text = "&Cascade";
             this.cascadeToolStripMenuItem.Click += new System.EventHandler(this.cascadeToolStripMenuItem_Click);
@@ -463,7 +461,7 @@ namespace StatsDirect.UI
             // tileHorizontallyToolStripMenuItem
             // 
             this.tileHorizontallyToolStripMenuItem.Name = "tileHorizontallyToolStripMenuItem";
-            this.tileHorizontallyToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
+            this.tileHorizontallyToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.tileHorizontallyToolStripMenuItem.Tag = "#{help=1154}";
             this.tileHorizontallyToolStripMenuItem.Text = "&Tile Horizontally";
             this.tileHorizontallyToolStripMenuItem.Click += new System.EventHandler(this.tileHorizontallyToolStripMenuItem_Click);
@@ -471,7 +469,7 @@ namespace StatsDirect.UI
             // tileVerticallyToolStripMenuItem
             // 
             this.tileVerticallyToolStripMenuItem.Name = "tileVerticallyToolStripMenuItem";
-            this.tileVerticallyToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
+            this.tileVerticallyToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.tileVerticallyToolStripMenuItem.Tag = "#{help=1155}";
             this.tileVerticallyToolStripMenuItem.Text = "T&ile Vertically";
             this.tileVerticallyToolStripMenuItem.Click += new System.EventHandler(this.tileVerticallyToolStripMenuItem_Click);
@@ -479,7 +477,7 @@ namespace StatsDirect.UI
             // arrangeIconsToolStripMenuItem
             // 
             this.arrangeIconsToolStripMenuItem.Name = "arrangeIconsToolStripMenuItem";
-            this.arrangeIconsToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
+            this.arrangeIconsToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.arrangeIconsToolStripMenuItem.Tag = "#{help=1138}";
             this.arrangeIconsToolStripMenuItem.Text = "&Arrange Icons";
             this.arrangeIconsToolStripMenuItem.Click += new System.EventHandler(this.arrangeIconsToolStripMenuItem_Click);
@@ -487,7 +485,7 @@ namespace StatsDirect.UI
             // maximiseToolStripMenuItem
             // 
             this.maximiseToolStripMenuItem.Name = "maximiseToolStripMenuItem";
-            this.maximiseToolStripMenuItem.Size = new System.Drawing.Size(210, 30);
+            this.maximiseToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.maximiseToolStripMenuItem.Tag = "#{help=1147}";
             this.maximiseToolStripMenuItem.Text = "&Maximise";
             this.maximiseToolStripMenuItem.Click += new System.EventHandler(this.maximiseToolStripMenuItem_Click);
@@ -495,7 +493,7 @@ namespace StatsDirect.UI
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(207, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(157, 6);
             // 
             // helpToolStripMenuItem
             // 
@@ -506,14 +504,14 @@ namespace StatsDirect.UI
             this.toolStripSeparator3,
             this.aboutsStatsDirectToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(61, 29);
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Tag = "#{help=1145}";
             this.helpToolStripMenuItem.Text = "&Help";
             // 
             // contentsAndIndexToolStripMenuItem
             // 
             this.contentsAndIndexToolStripMenuItem.Name = "contentsAndIndexToolStripMenuItem";
-            this.contentsAndIndexToolStripMenuItem.Size = new System.Drawing.Size(250, 30);
+            this.contentsAndIndexToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.contentsAndIndexToolStripMenuItem.Tag = "#{help=1000}";
             this.contentsAndIndexToolStripMenuItem.Text = "&Contents and Index...";
             this.contentsAndIndexToolStripMenuItem.Click += new System.EventHandler(this.contentsAndIndexToolStripMenuItem_Click);
@@ -521,7 +519,7 @@ namespace StatsDirect.UI
             // methodSelectionToolStripMenuItem
             // 
             this.methodSelectionToolStripMenuItem.Name = "methodSelectionToolStripMenuItem";
-            this.methodSelectionToolStripMenuItem.Size = new System.Drawing.Size(250, 30);
+            this.methodSelectionToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.methodSelectionToolStripMenuItem.Tag = "#{help=1213}";
             this.methodSelectionToolStripMenuItem.Text = "&Method Selection...";
             this.methodSelectionToolStripMenuItem.Click += new System.EventHandler(this.methodSelectionToolStripMenuItem_Click);
@@ -529,19 +527,18 @@ namespace StatsDirect.UI
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(247, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(182, 6);
             // 
             // aboutsStatsDirectToolStripMenuItem
             // 
             this.aboutsStatsDirectToolStripMenuItem.Name = "aboutsStatsDirectToolStripMenuItem";
-            this.aboutsStatsDirectToolStripMenuItem.Size = new System.Drawing.Size(250, 30);
+            this.aboutsStatsDirectToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.aboutsStatsDirectToolStripMenuItem.Tag = "#{help=1136}";
             this.aboutsStatsDirectToolStripMenuItem.Text = "&About StatsDirect...";
             this.aboutsStatsDirectToolStripMenuItem.Click += new System.EventHandler(this.aboutsStatsDirectToolStripMenuItem_Click);
             // 
             // contextMenuStrip
             // 
-            this.contextMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cutContextMenuItem1,
             this.copyContextMenuItem,
@@ -556,12 +553,12 @@ namespace StatsDirect.UI
             this.findAndReplaceContextMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
             this.contextMenuStrip.ShowImageMargin = false;
-            this.contextMenuStrip.Size = new System.Drawing.Size(206, 286);
+            this.contextMenuStrip.Size = new System.Drawing.Size(149, 214);
             // 
             // cutContextMenuItem1
             // 
             this.cutContextMenuItem1.Name = "cutContextMenuItem1";
-            this.cutContextMenuItem1.Size = new System.Drawing.Size(205, 30);
+            this.cutContextMenuItem1.Size = new System.Drawing.Size(148, 22);
             this.cutContextMenuItem1.Tag = "#{help=1336}";
             this.cutContextMenuItem1.Text = "&Cut";
             this.cutContextMenuItem1.Click += new System.EventHandler(this.cutContextMenuItem1_Click);
@@ -569,7 +566,7 @@ namespace StatsDirect.UI
             // copyContextMenuItem
             // 
             this.copyContextMenuItem.Name = "copyContextMenuItem";
-            this.copyContextMenuItem.Size = new System.Drawing.Size(205, 30);
+            this.copyContextMenuItem.Size = new System.Drawing.Size(148, 22);
             this.copyContextMenuItem.Tag = "#{help=1288}";
             this.copyContextMenuItem.Text = "C&opy";
             this.copyContextMenuItem.Click += new System.EventHandler(this.copyContextMenuItem_Click);
@@ -577,7 +574,7 @@ namespace StatsDirect.UI
             // pasteContextMenuItem
             // 
             this.pasteContextMenuItem.Name = "pasteContextMenuItem";
-            this.pasteContextMenuItem.Size = new System.Drawing.Size(205, 30);
+            this.pasteContextMenuItem.Size = new System.Drawing.Size(148, 22);
             this.pasteContextMenuItem.Tag = "#{help=1304}";
             this.pasteContextMenuItem.Text = "&Paste";
             this.pasteContextMenuItem.Click += new System.EventHandler(this.pasteContextMenuItem_Click);
@@ -585,7 +582,7 @@ namespace StatsDirect.UI
             // pasteSpecialContextMenuItem
             // 
             this.pasteSpecialContextMenuItem.Name = "pasteSpecialContextMenuItem";
-            this.pasteSpecialContextMenuItem.Size = new System.Drawing.Size(205, 30);
+            this.pasteSpecialContextMenuItem.Size = new System.Drawing.Size(148, 22);
             this.pasteSpecialContextMenuItem.Tag = "#{help=1378}";
             this.pasteSpecialContextMenuItem.Text = "P&aste Special...";
             this.pasteSpecialContextMenuItem.Click += new System.EventHandler(this.pasteSpecialContextMenuItem_Click);
@@ -593,45 +590,45 @@ namespace StatsDirect.UI
             // separatorContextMenuItem1
             // 
             this.separatorContextMenuItem1.Name = "separatorContextMenuItem1";
-            this.separatorContextMenuItem1.Size = new System.Drawing.Size(202, 6);
+            this.separatorContextMenuItem1.Size = new System.Drawing.Size(145, 6);
             // 
             // insertContextMenuItem
             // 
             this.insertContextMenuItem.Name = "insertContextMenuItem";
-            this.insertContextMenuItem.Size = new System.Drawing.Size(205, 30);
+            this.insertContextMenuItem.Size = new System.Drawing.Size(148, 22);
             this.insertContextMenuItem.Text = "Insert...";
             this.insertContextMenuItem.Click += new System.EventHandler(this.insertContextMenuItem_Click);
             // 
             // deleteContextMenuItem
             // 
             this.deleteContextMenuItem.Name = "deleteContextMenuItem";
-            this.deleteContextMenuItem.Size = new System.Drawing.Size(205, 30);
+            this.deleteContextMenuItem.Size = new System.Drawing.Size(148, 22);
             this.deleteContextMenuItem.Text = "Delete...";
             this.deleteContextMenuItem.Click += new System.EventHandler(this.deleteContextMenuItem_Click);
             // 
             // clearContentsContextMenuItem
             // 
             this.clearContentsContextMenuItem.Name = "clearContentsContextMenuItem";
-            this.clearContentsContextMenuItem.Size = new System.Drawing.Size(205, 30);
+            this.clearContentsContextMenuItem.Size = new System.Drawing.Size(148, 22);
             this.clearContentsContextMenuItem.Text = "Clear Contents";
             this.clearContentsContextMenuItem.Click += new System.EventHandler(this.clearContentsContextMenuItem_Click);
             // 
             // separatorContextMenuItem2
             // 
             this.separatorContextMenuItem2.Name = "separatorContextMenuItem2";
-            this.separatorContextMenuItem2.Size = new System.Drawing.Size(202, 6);
+            this.separatorContextMenuItem2.Size = new System.Drawing.Size(145, 6);
             // 
             // goToContextMenuItem
             // 
             this.goToContextMenuItem.Name = "goToContextMenuItem";
-            this.goToContextMenuItem.Size = new System.Drawing.Size(205, 30);
+            this.goToContextMenuItem.Size = new System.Drawing.Size(148, 22);
             this.goToContextMenuItem.Text = "Go To...";
             this.goToContextMenuItem.Click += new System.EventHandler(this.goToContextMenuItem_Click);
             // 
             // findAndReplaceContextMenuItem
             // 
             this.findAndReplaceContextMenuItem.Name = "findAndReplaceContextMenuItem";
-            this.findAndReplaceContextMenuItem.Size = new System.Drawing.Size(205, 30);
+            this.findAndReplaceContextMenuItem.Size = new System.Drawing.Size(148, 22);
             this.findAndReplaceContextMenuItem.Text = "Find and Replace...";
             this.findAndReplaceContextMenuItem.Click += new System.EventHandler(this.findAndReplaceContextMenuItem_Click);
             // 
@@ -641,21 +638,20 @@ namespace StatsDirect.UI
             this.tabWindows.ContextMenuStrip = this.tabContextMenuStrip;
             this.tabWindows.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.tabWindows.ItemSize = new System.Drawing.Size(0, 25);
-            this.tabWindows.Location = new System.Drawing.Point(0, 9);
+            this.tabWindows.Location = new System.Drawing.Point(0, 6);
             this.tabWindows.Margin = new System.Windows.Forms.Padding(0);
-            this.tabWindows.MaximumSize = new System.Drawing.Size(0, 38);
-            this.tabWindows.MinimumSize = new System.Drawing.Size(0, 38);
+            this.tabWindows.MaximumSize = new System.Drawing.Size(0, 25);
+            this.tabWindows.MinimumSize = new System.Drawing.Size(0, 25);
             this.tabWindows.Name = "tabWindows";
             this.tabWindows.SelectedIndex = 0;
             this.tabWindows.ShowToolTips = true;
-            this.tabWindows.Size = new System.Drawing.Size(1038, 38);
+            this.tabWindows.Size = new System.Drawing.Size(692, 25);
             this.tabWindows.TabIndex = 3;
             this.tabWindows.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabWindows_Selecting);
             this.tabWindows.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tabWindows_MouseDown);
             // 
             // tabContextMenuStrip
             // 
-            this.tabContextMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.tabContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.renameContextMenutoolStripMenuItem,
             this.renameContextMenuToolStripTextBox,
@@ -666,13 +662,13 @@ namespace StatsDirect.UI
             this.toolStripMenuItem1,
             this.printToolStripMenuItem1});
             this.tabContextMenuStrip.Name = "tabContextMenuStrip";
-            this.tabContextMenuStrip.Size = new System.Drawing.Size(177, 199);
+            this.tabContextMenuStrip.Size = new System.Drawing.Size(161, 151);
             this.tabContextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.tabContextMenuStrip_Opening);
             // 
             // renameContextMenutoolStripMenuItem
             // 
             this.renameContextMenutoolStripMenuItem.Name = "renameContextMenutoolStripMenuItem";
-            this.renameContextMenutoolStripMenuItem.Size = new System.Drawing.Size(176, 30);
+            this.renameContextMenutoolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.renameContextMenutoolStripMenuItem.Tag = "#{help=1287}";
             this.renameContextMenutoolStripMenuItem.Text = "&Rename As:";
             this.renameContextMenutoolStripMenuItem.Click += new System.EventHandler(this.renameContextMenutoolStripMenuItem_Click);
@@ -682,18 +678,18 @@ namespace StatsDirect.UI
             this.renameContextMenuToolStripTextBox.AcceptsReturn = true;
             this.renameContextMenuToolStripTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.renameContextMenuToolStripTextBox.Name = "renameContextMenuToolStripTextBox";
-            this.renameContextMenuToolStripTextBox.Size = new System.Drawing.Size(100, 31);
+            this.renameContextMenuToolStripTextBox.Size = new System.Drawing.Size(100, 23);
             this.renameContextMenuToolStripTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.renameContextMenuToolStripTextBox_KeyPress);
             // 
             // toolStripSeparator8
             // 
             this.toolStripSeparator8.Name = "toolStripSeparator8";
-            this.toolStripSeparator8.Size = new System.Drawing.Size(173, 6);
+            this.toolStripSeparator8.Size = new System.Drawing.Size(157, 6);
             // 
             // saveContextMenuToolStripMenuItem
             // 
             this.saveContextMenuToolStripMenuItem.Name = "saveContextMenuToolStripMenuItem";
-            this.saveContextMenuToolStripMenuItem.Size = new System.Drawing.Size(176, 30);
+            this.saveContextMenuToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.saveContextMenuToolStripMenuItem.Tag = "#{help=1151}";
             this.saveContextMenuToolStripMenuItem.Text = "&Save";
             this.saveContextMenuToolStripMenuItem.Click += new System.EventHandler(this.saveContextMenuToolStripMenuItem_Click);
@@ -701,7 +697,7 @@ namespace StatsDirect.UI
             // saveAsContextToolStripMenuItem
             // 
             this.saveAsContextToolStripMenuItem.Name = "saveAsContextToolStripMenuItem";
-            this.saveAsContextToolStripMenuItem.Size = new System.Drawing.Size(176, 30);
+            this.saveAsContextToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.saveAsContextToolStripMenuItem.Tag = "#{help=1152}";
             this.saveAsContextToolStripMenuItem.Text = "Save &As...";
             this.saveAsContextToolStripMenuItem.Click += new System.EventHandler(this.saveAsContextToolStripMenuItem_Click);
@@ -709,7 +705,7 @@ namespace StatsDirect.UI
             // closeContextMenuToolStripMenuItem
             // 
             this.closeContextMenuToolStripMenuItem.Name = "closeContextMenuToolStripMenuItem";
-            this.closeContextMenuToolStripMenuItem.Size = new System.Drawing.Size(176, 30);
+            this.closeContextMenuToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.closeContextMenuToolStripMenuItem.Tag = "#{help=1330}";
             this.closeContextMenuToolStripMenuItem.Text = "&Close";
             this.closeContextMenuToolStripMenuItem.Click += new System.EventHandler(this.closeTabToolStripMenuItem_Click);
@@ -717,12 +713,12 @@ namespace StatsDirect.UI
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(173, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(157, 6);
             // 
             // printToolStripMenuItem1
             // 
             this.printToolStripMenuItem1.Name = "printToolStripMenuItem1";
-            this.printToolStripMenuItem1.Size = new System.Drawing.Size(176, 30);
+            this.printToolStripMenuItem1.Size = new System.Drawing.Size(160, 22);
             this.printToolStripMenuItem1.Tag = "#{help=1306}";
             this.printToolStripMenuItem1.Text = "&Print...";
             this.printToolStripMenuItem1.Click += new System.EventHandler(this.printToolStripMenuItem1_Click);
@@ -742,52 +738,47 @@ namespace StatsDirect.UI
             this.pnlSelection.Controls.Add(this.cmdCancel);
             this.pnlSelection.Controls.Add(this.cmdOK);
             this.pnlSelection.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlSelection.Location = new System.Drawing.Point(0, 134);
-            this.pnlSelection.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.pnlSelection.MaximumSize = new System.Drawing.Size(0, 89);
-            this.pnlSelection.MinimumSize = new System.Drawing.Size(0, 89);
+            this.pnlSelection.Location = new System.Drawing.Point(0, 87);
+            this.pnlSelection.MaximumSize = new System.Drawing.Size(0, 58);
+            this.pnlSelection.MinimumSize = new System.Drawing.Size(0, 58);
             this.pnlSelection.Name = "pnlSelection";
-            this.pnlSelection.Size = new System.Drawing.Size(1038, 89);
+            this.pnlSelection.Size = new System.Drawing.Size(692, 58);
             this.pnlSelection.TabIndex = 6;
             this.pnlSelection.Visible = false;
             // 
             // lblOkOrRightMouse
             // 
             this.lblOkOrRightMouse.AutoSize = true;
-            this.lblOkOrRightMouse.Location = new System.Drawing.Point(390, 52);
-            this.lblOkOrRightMouse.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblOkOrRightMouse.Location = new System.Drawing.Point(260, 34);
             this.lblOkOrRightMouse.Name = "lblOkOrRightMouse";
-            this.lblOkOrRightMouse.Size = new System.Drawing.Size(291, 20);
+            this.lblOkOrRightMouse.Size = new System.Drawing.Size(196, 13);
             this.lblOkOrRightMouse.TabIndex = 9;
             this.lblOkOrRightMouse.Text = "Click OK or right mouse button to select.";
             // 
             // lblGroupsBy
             // 
             this.lblGroupsBy.AutoSize = true;
-            this.lblGroupsBy.Location = new System.Drawing.Point(93, 52);
-            this.lblGroupsBy.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblGroupsBy.Location = new System.Drawing.Point(62, 34);
             this.lblGroupsBy.Name = "lblGroupsBy";
-            this.lblGroupsBy.Size = new System.Drawing.Size(82, 20);
+            this.lblGroupsBy.Size = new System.Drawing.Size(55, 13);
             this.lblGroupsBy.TabIndex = 8;
             this.lblGroupsBy.Text = "Groups by";
             // 
             // chkBatchMode
             // 
             this.chkBatchMode.AutoSize = true;
-            this.chkBatchMode.Location = new System.Drawing.Point(8, 51);
-            this.chkBatchMode.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.chkBatchMode.Location = new System.Drawing.Point(5, 33);
             this.chkBatchMode.Name = "chkBatchMode";
-            this.chkBatchMode.Size = new System.Drawing.Size(77, 24);
+            this.chkBatchMode.Size = new System.Drawing.Size(54, 17);
             this.chkBatchMode.TabIndex = 7;
             this.chkBatchMode.Text = "Batch";
             this.chkBatchMode.UseVisualStyleBackColor = true;
             // 
             // cmdSelectionHelp
             // 
-            this.cmdSelectionHelp.Location = new System.Drawing.Point(128, 5);
-            this.cmdSelectionHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdSelectionHelp.Location = new System.Drawing.Point(85, 3);
             this.cmdSelectionHelp.Name = "cmdSelectionHelp";
-            this.cmdSelectionHelp.Size = new System.Drawing.Size(112, 35);
+            this.cmdSelectionHelp.Size = new System.Drawing.Size(75, 23);
             this.cmdSelectionHelp.TabIndex = 6;
             this.cmdSelectionHelp.Text = "&Help";
             this.cmdSelectionHelp.UseVisualStyleBackColor = true;
@@ -796,20 +787,18 @@ namespace StatsDirect.UI
             // lblNonAdjoined
             // 
             this.lblNonAdjoined.AutoSize = true;
-            this.lblNonAdjoined.Location = new System.Drawing.Point(690, 52);
-            this.lblNonAdjoined.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblNonAdjoined.Location = new System.Drawing.Point(460, 34);
             this.lblNonAdjoined.Name = "lblNonAdjoined";
-            this.lblNonAdjoined.Size = new System.Drawing.Size(294, 20);
+            this.lblNonAdjoined.Size = new System.Drawing.Size(196, 13);
             this.lblNonAdjoined.TabIndex = 5;
             this.lblNonAdjoined.Text = "Use Ctrl. + mouse for non-adjoined data.";
             // 
             // optGroupsByIdentifier
             // 
             this.optGroupsByIdentifier.AutoSize = true;
-            this.optGroupsByIdentifier.Location = new System.Drawing.Point(284, 49);
-            this.optGroupsByIdentifier.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.optGroupsByIdentifier.Location = new System.Drawing.Point(189, 32);
             this.optGroupsByIdentifier.Name = "optGroupsByIdentifier";
-            this.optGroupsByIdentifier.Size = new System.Drawing.Size(96, 24);
+            this.optGroupsByIdentifier.Size = new System.Drawing.Size(65, 17);
             this.optGroupsByIdentifier.TabIndex = 4;
             this.optGroupsByIdentifier.TabStop = true;
             this.optGroupsByIdentifier.Text = "Identifier";
@@ -819,10 +808,9 @@ namespace StatsDirect.UI
             // optGroupsByColumn
             // 
             this.optGroupsByColumn.AutoSize = true;
-            this.optGroupsByColumn.Location = new System.Drawing.Point(184, 49);
-            this.optGroupsByColumn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.optGroupsByColumn.Location = new System.Drawing.Point(123, 32);
             this.optGroupsByColumn.Name = "optGroupsByColumn";
-            this.optGroupsByColumn.Size = new System.Drawing.Size(88, 24);
+            this.optGroupsByColumn.Size = new System.Drawing.Size(60, 17);
             this.optGroupsByColumn.TabIndex = 3;
             this.optGroupsByColumn.TabStop = true;
             this.optGroupsByColumn.Text = "Column";
@@ -832,19 +820,17 @@ namespace StatsDirect.UI
             // lblSelectionMessage
             // 
             this.lblSelectionMessage.AutoSize = true;
-            this.lblSelectionMessage.Location = new System.Drawing.Point(390, 14);
-            this.lblSelectionMessage.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblSelectionMessage.Location = new System.Drawing.Point(260, 9);
             this.lblSelectionMessage.Name = "lblSelectionMessage";
-            this.lblSelectionMessage.Size = new System.Drawing.Size(156, 20);
+            this.lblSelectionMessage.Size = new System.Drawing.Size(105, 13);
             this.lblSelectionMessage.TabIndex = 2;
             this.lblSelectionMessage.Text = "Selection message...";
             // 
             // cmdCancel
             // 
-            this.cmdCancel.Location = new System.Drawing.Point(4, 5);
-            this.cmdCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdCancel.Location = new System.Drawing.Point(3, 3);
             this.cmdCancel.Name = "cmdCancel";
-            this.cmdCancel.Size = new System.Drawing.Size(112, 35);
+            this.cmdCancel.Size = new System.Drawing.Size(75, 23);
             this.cmdCancel.TabIndex = 1;
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
@@ -852,10 +838,9 @@ namespace StatsDirect.UI
             // 
             // cmdOK
             // 
-            this.cmdOK.Location = new System.Drawing.Point(249, 5);
-            this.cmdOK.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdOK.Location = new System.Drawing.Point(166, 3);
             this.cmdOK.Name = "cmdOK";
-            this.cmdOK.Size = new System.Drawing.Size(112, 35);
+            this.cmdOK.Size = new System.Drawing.Size(75, 23);
             this.cmdOK.TabIndex = 0;
             this.cmdOK.Text = "&OK";
             this.cmdOK.UseVisualStyleBackColor = true;
@@ -866,7 +851,6 @@ namespace StatsDirect.UI
             this.toolStrip.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.toolStrip.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newToolStripButton,
             this.openToolStripButton,
@@ -883,12 +867,11 @@ namespace StatsDirect.UI
             this.cboActiveReport,
             this.toolStripLabel1,
             this.cboRecentOperations});
-            this.toolStrip.Location = new System.Drawing.Point(0, 47);
-            this.toolStrip.MinimumSize = new System.Drawing.Size(0, 42);
+            this.toolStrip.Location = new System.Drawing.Point(0, 31);
+            this.toolStrip.MinimumSize = new System.Drawing.Size(0, 27);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
             this.toolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-            this.toolStrip.Size = new System.Drawing.Size(1038, 42);
+            this.toolStrip.Size = new System.Drawing.Size(692, 27);
             this.toolStrip.TabIndex = 5;
             // 
             // newToolStripButton
@@ -897,7 +880,7 @@ namespace StatsDirect.UI
             this.newToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("newToolStripButton.Image")));
             this.newToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.newToolStripButton.Name = "newToolStripButton";
-            this.newToolStripButton.Size = new System.Drawing.Size(28, 39);
+            this.newToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.newToolStripButton.Text = "&New";
             this.newToolStripButton.Click += new System.EventHandler(this.newToolStripButton_Click);
             // 
@@ -907,7 +890,7 @@ namespace StatsDirect.UI
             this.openToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("openToolStripButton.Image")));
             this.openToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.openToolStripButton.Name = "openToolStripButton";
-            this.openToolStripButton.Size = new System.Drawing.Size(28, 39);
+            this.openToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.openToolStripButton.Text = "&Open";
             this.openToolStripButton.Click += new System.EventHandler(this.openToolStripButton_Click);
             // 
@@ -917,7 +900,7 @@ namespace StatsDirect.UI
             this.saveToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("saveToolStripButton.Image")));
             this.saveToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveToolStripButton.Name = "saveToolStripButton";
-            this.saveToolStripButton.Size = new System.Drawing.Size(28, 39);
+            this.saveToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.saveToolStripButton.Text = "&Save";
             this.saveToolStripButton.Click += new System.EventHandler(this.saveToolStripButton_Click);
             // 
@@ -927,14 +910,14 @@ namespace StatsDirect.UI
             this.printToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("printToolStripButton.Image")));
             this.printToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.printToolStripButton.Name = "printToolStripButton";
-            this.printToolStripButton.Size = new System.Drawing.Size(28, 39);
+            this.printToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.printToolStripButton.Text = "&Print";
             this.printToolStripButton.Click += new System.EventHandler(this.printToolStripButton_Click);
             // 
             // toolStripSeparator
             // 
             this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(6, 42);
+            this.toolStripSeparator.Size = new System.Drawing.Size(6, 27);
             // 
             // cutToolStripButton
             // 
@@ -942,7 +925,7 @@ namespace StatsDirect.UI
             this.cutToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("cutToolStripButton.Image")));
             this.cutToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.cutToolStripButton.Name = "cutToolStripButton";
-            this.cutToolStripButton.Size = new System.Drawing.Size(28, 39);
+            this.cutToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.cutToolStripButton.Text = "C&ut";
             this.cutToolStripButton.Click += new System.EventHandler(this.cutToolStripButton_Click);
             // 
@@ -952,7 +935,7 @@ namespace StatsDirect.UI
             this.copyToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("copyToolStripButton.Image")));
             this.copyToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.copyToolStripButton.Name = "copyToolStripButton";
-            this.copyToolStripButton.Size = new System.Drawing.Size(28, 39);
+            this.copyToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.copyToolStripButton.Text = "&Copy";
             this.copyToolStripButton.Click += new System.EventHandler(this.copyToolStripButton_Click);
             // 
@@ -962,14 +945,14 @@ namespace StatsDirect.UI
             this.pasteToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("pasteToolStripButton.Image")));
             this.pasteToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.pasteToolStripButton.Name = "pasteToolStripButton";
-            this.pasteToolStripButton.Size = new System.Drawing.Size(28, 39);
+            this.pasteToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.pasteToolStripButton.Text = "&Paste";
             this.pasteToolStripButton.Click += new System.EventHandler(this.pasteToolStripButton_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 42);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
             // 
             // helpToolStripButton
             // 
@@ -977,19 +960,19 @@ namespace StatsDirect.UI
             this.helpToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("helpToolStripButton.Image")));
             this.helpToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.helpToolStripButton.Name = "helpToolStripButton";
-            this.helpToolStripButton.Size = new System.Drawing.Size(28, 39);
+            this.helpToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.helpToolStripButton.Text = "He&lp";
             this.helpToolStripButton.Click += new System.EventHandler(this.helpToolStripButton_Click);
             // 
             // toolStripSeparator7
             // 
             this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(6, 42);
+            this.toolStripSeparator7.Size = new System.Drawing.Size(6, 27);
             // 
             // lblActiveReport
             // 
             this.lblActiveReport.Name = "lblActiveReport";
-            this.lblActiveReport.Size = new System.Drawing.Size(90, 39);
+            this.lblActiveReport.Size = new System.Drawing.Size(57, 24);
             this.lblActiveReport.Text = "Results to:";
             // 
             // cboActiveReport
@@ -998,12 +981,12 @@ namespace StatsDirect.UI
             this.cboActiveReport.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboActiveReport.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cboActiveReport.Name = "cboActiveReport";
-            this.cboActiveReport.Size = new System.Drawing.Size(180, 28);
+            this.cboActiveReport.Size = new System.Drawing.Size(121, 21);
             // 
             // toolStripLabel1
             // 
             this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(150, 39);
+            this.toolStripLabel1.Size = new System.Drawing.Size(97, 24);
             this.toolStripLabel1.Text = "Recent operations:";
             // 
             // cboRecentOperations
@@ -1013,7 +996,7 @@ namespace StatsDirect.UI
             this.cboRecentOperations.Items.AddRange(new object[] {
             "(none)"});
             this.cboRecentOperations.Name = "cboRecentOperations";
-            this.cboRecentOperations.Size = new System.Drawing.Size(121, 42);
+            this.cboRecentOperations.Size = new System.Drawing.Size(121, 27);
             this.cboRecentOperations.SelectedIndexChanged += new System.EventHandler(this.cboRecentOperations_SelectedIndexChanged);
             // 
             // pnlTop
@@ -1026,11 +1009,10 @@ namespace StatsDirect.UI
             this.pnlTop.Controls.Add(this.pnlSelection);
             this.pnlTop.Controls.Add(this.pnlOperations);
             this.pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlTop.Location = new System.Drawing.Point(0, 35);
-            this.pnlTop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.pnlTop.MinimumSize = new System.Drawing.Size(0, 89);
+            this.pnlTop.Location = new System.Drawing.Point(0, 24);
+            this.pnlTop.MinimumSize = new System.Drawing.Size(0, 58);
             this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Size = new System.Drawing.Size(1038, 505);
+            this.pnlTop.Size = new System.Drawing.Size(692, 328);
             this.pnlTop.TabIndex = 8;
             // 
             // pnlModalMessage
@@ -1041,19 +1023,18 @@ namespace StatsDirect.UI
             this.pnlModalMessage.Controls.Add(this.picModalMessageIcon);
             this.pnlModalMessage.Controls.Add(this.tlpModalMessage);
             this.pnlModalMessage.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlModalMessage.Location = new System.Drawing.Point(0, 401);
+            this.pnlModalMessage.Location = new System.Drawing.Point(0, 261);
             this.pnlModalMessage.Margin = new System.Windows.Forms.Padding(0);
-            this.pnlModalMessage.MinimumSize = new System.Drawing.Size(0, 89);
+            this.pnlModalMessage.MinimumSize = new System.Drawing.Size(0, 58);
             this.pnlModalMessage.Name = "pnlModalMessage";
-            this.pnlModalMessage.Size = new System.Drawing.Size(1038, 89);
+            this.pnlModalMessage.Size = new System.Drawing.Size(692, 58);
             this.pnlModalMessage.TabIndex = 13;
             // 
             // picModalMessageIcon
             // 
-            this.picModalMessageIcon.Location = new System.Drawing.Point(9, 11);
-            this.picModalMessageIcon.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.picModalMessageIcon.Location = new System.Drawing.Point(6, 7);
             this.picModalMessageIcon.Name = "picModalMessageIcon";
-            this.picModalMessageIcon.Size = new System.Drawing.Size(60, 62);
+            this.picModalMessageIcon.Size = new System.Drawing.Size(40, 40);
             this.picModalMessageIcon.TabIndex = 2;
             this.picModalMessageIcon.TabStop = false;
             // 
@@ -1067,24 +1048,24 @@ namespace StatsDirect.UI
             this.tlpModalMessage.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpModalMessage.Controls.Add(this.lblModalMessageText, 0, 0);
             this.tlpModalMessage.Controls.Add(this.pnlModalMessageButtons, 0, 1);
-            this.tlpModalMessage.Location = new System.Drawing.Point(75, 0);
+            this.tlpModalMessage.Location = new System.Drawing.Point(50, 0);
             this.tlpModalMessage.Margin = new System.Windows.Forms.Padding(0);
-            this.tlpModalMessage.MinimumSize = new System.Drawing.Size(0, 89);
+            this.tlpModalMessage.MinimumSize = new System.Drawing.Size(0, 58);
             this.tlpModalMessage.Name = "tlpModalMessage";
             this.tlpModalMessage.RowCount = 2;
             this.tlpModalMessage.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpModalMessage.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpModalMessage.Size = new System.Drawing.Size(963, 89);
+            this.tlpModalMessage.Size = new System.Drawing.Size(642, 58);
             this.tlpModalMessage.TabIndex = 1;
             // 
             // lblModalMessageText
             // 
             this.lblModalMessageText.AutoSize = true;
             this.lblModalMessageText.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblModalMessageText.Location = new System.Drawing.Point(4, 5);
-            this.lblModalMessageText.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.lblModalMessageText.Location = new System.Drawing.Point(3, 3);
+            this.lblModalMessageText.Margin = new System.Windows.Forms.Padding(3);
             this.lblModalMessageText.Name = "lblModalMessageText";
-            this.lblModalMessageText.Size = new System.Drawing.Size(955, 20);
+            this.lblModalMessageText.Size = new System.Drawing.Size(636, 13);
             this.lblModalMessageText.TabIndex = 0;
             this.lblModalMessageText.Text = "<Message text goes here>";
             // 
@@ -1095,18 +1076,17 @@ namespace StatsDirect.UI
             this.pnlModalMessageButtons.Controls.Add(this.cmdModalMessage3);
             this.pnlModalMessageButtons.Controls.Add(this.cmdModalMessage2);
             this.pnlModalMessageButtons.Controls.Add(this.cmdModalMessage1);
-            this.pnlModalMessageButtons.Location = new System.Drawing.Point(0, 30);
+            this.pnlModalMessageButtons.Location = new System.Drawing.Point(0, 19);
             this.pnlModalMessageButtons.Margin = new System.Windows.Forms.Padding(0);
             this.pnlModalMessageButtons.Name = "pnlModalMessageButtons";
-            this.pnlModalMessageButtons.Size = new System.Drawing.Size(384, 46);
+            this.pnlModalMessageButtons.Size = new System.Drawing.Size(257, 30);
             this.pnlModalMessageButtons.TabIndex = 1;
             // 
             // cmdModalMessage3
             // 
-            this.cmdModalMessage3.Location = new System.Drawing.Point(22, 6);
-            this.cmdModalMessage3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdModalMessage3.Location = new System.Drawing.Point(15, 4);
             this.cmdModalMessage3.Name = "cmdModalMessage3";
-            this.cmdModalMessage3.Size = new System.Drawing.Size(112, 35);
+            this.cmdModalMessage3.Size = new System.Drawing.Size(75, 23);
             this.cmdModalMessage3.TabIndex = 2;
             this.cmdModalMessage3.Text = "3";
             this.cmdModalMessage3.UseVisualStyleBackColor = true;
@@ -1115,10 +1095,9 @@ namespace StatsDirect.UI
             // 
             // cmdModalMessage2
             // 
-            this.cmdModalMessage2.Location = new System.Drawing.Point(146, 6);
-            this.cmdModalMessage2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdModalMessage2.Location = new System.Drawing.Point(97, 4);
             this.cmdModalMessage2.Name = "cmdModalMessage2";
-            this.cmdModalMessage2.Size = new System.Drawing.Size(112, 35);
+            this.cmdModalMessage2.Size = new System.Drawing.Size(75, 23);
             this.cmdModalMessage2.TabIndex = 1;
             this.cmdModalMessage2.Text = "2";
             this.cmdModalMessage2.UseVisualStyleBackColor = true;
@@ -1127,10 +1106,9 @@ namespace StatsDirect.UI
             // 
             // cmdModalMessage1
             // 
-            this.cmdModalMessage1.Location = new System.Drawing.Point(268, 6);
-            this.cmdModalMessage1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdModalMessage1.Location = new System.Drawing.Point(179, 4);
             this.cmdModalMessage1.Name = "cmdModalMessage1";
-            this.cmdModalMessage1.Size = new System.Drawing.Size(112, 35);
+            this.cmdModalMessage1.Size = new System.Drawing.Size(75, 23);
             this.cmdModalMessage1.TabIndex = 0;
             this.cmdModalMessage1.Text = "1";
             this.cmdModalMessage1.UseVisualStyleBackColor = true;
@@ -1143,39 +1121,35 @@ namespace StatsDirect.UI
             this.pnlProgress.Controls.Add(this.lblProgress);
             this.pnlProgress.Controls.Add(this.cmdCancelProgress);
             this.pnlProgress.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlProgress.Location = new System.Drawing.Point(0, 312);
-            this.pnlProgress.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.pnlProgress.MinimumSize = new System.Drawing.Size(0, 89);
+            this.pnlProgress.Location = new System.Drawing.Point(0, 203);
+            this.pnlProgress.MinimumSize = new System.Drawing.Size(0, 58);
             this.pnlProgress.Name = "pnlProgress";
-            this.pnlProgress.Size = new System.Drawing.Size(1038, 89);
+            this.pnlProgress.Size = new System.Drawing.Size(692, 58);
             this.pnlProgress.TabIndex = 12;
             this.pnlProgress.Visible = false;
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(6, 52);
-            this.progressBar.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.progressBar.Location = new System.Drawing.Point(4, 34);
             this.progressBar.Maximum = 1000;
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(1032, 32);
+            this.progressBar.Size = new System.Drawing.Size(688, 21);
             this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar.TabIndex = 4;
             // 
             // lblProgress
             // 
-            this.lblProgress.Location = new System.Drawing.Point(128, 14);
-            this.lblProgress.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblProgress.Location = new System.Drawing.Point(85, 9);
             this.lblProgress.Name = "lblProgress";
-            this.lblProgress.Size = new System.Drawing.Size(910, 28);
+            this.lblProgress.Size = new System.Drawing.Size(607, 18);
             this.lblProgress.TabIndex = 3;
             this.lblProgress.Text = "(Progress text)";
             // 
             // cmdCancelProgress
             // 
-            this.cmdCancelProgress.Location = new System.Drawing.Point(6, 6);
-            this.cmdCancelProgress.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdCancelProgress.Location = new System.Drawing.Point(4, 4);
             this.cmdCancelProgress.Name = "cmdCancelProgress";
-            this.cmdCancelProgress.Size = new System.Drawing.Size(112, 35);
+            this.cmdCancelProgress.Size = new System.Drawing.Size(75, 23);
             this.cmdCancelProgress.TabIndex = 2;
             this.cmdCancelProgress.Text = "&Cancel";
             this.cmdCancelProgress.UseVisualStyleBackColor = true;
@@ -1187,12 +1161,11 @@ namespace StatsDirect.UI
             this.pnlDefault.Controls.Add(this.tabWindows);
             this.pnlDefault.Controls.Add(this.toolStrip);
             this.pnlDefault.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlDefault.Location = new System.Drawing.Point(0, 223);
-            this.pnlDefault.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.pnlDefault.MaximumSize = new System.Drawing.Size(0, 89);
-            this.pnlDefault.MinimumSize = new System.Drawing.Size(0, 89);
+            this.pnlDefault.Location = new System.Drawing.Point(0, 145);
+            this.pnlDefault.MaximumSize = new System.Drawing.Size(0, 58);
+            this.pnlDefault.MinimumSize = new System.Drawing.Size(0, 58);
             this.pnlDefault.Name = "pnlDefault";
-            this.pnlDefault.Size = new System.Drawing.Size(1038, 89);
+            this.pnlDefault.Size = new System.Drawing.Size(692, 58);
             this.pnlDefault.TabIndex = 11;
             // 
             // pnlOperations
@@ -1202,9 +1175,9 @@ namespace StatsDirect.UI
             this.pnlOperations.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlOperations.Location = new System.Drawing.Point(0, 0);
             this.pnlOperations.Margin = new System.Windows.Forms.Padding(0);
-            this.pnlOperations.MinimumSize = new System.Drawing.Size(0, 89);
+            this.pnlOperations.MinimumSize = new System.Drawing.Size(0, 58);
             this.pnlOperations.Name = "pnlOperations";
-            this.pnlOperations.Size = new System.Drawing.Size(1038, 134);
+            this.pnlOperations.Size = new System.Drawing.Size(692, 87);
             this.pnlOperations.TabIndex = 10;
             this.pnlOperations.Visible = false;
             // 
@@ -1214,7 +1187,7 @@ namespace StatsDirect.UI
             this.tlpOperations.ColumnCount = 2;
             this.tlpOperations.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tlpOperations.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tlpOperations.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.tlpOperations.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tlpOperations.Controls.Add(this.tlpSelectOperation, 0, 0);
             this.tlpOperations.Controls.Add(this.tlpUserArea, 1, 0);
             this.tlpOperations.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -1223,7 +1196,7 @@ namespace StatsDirect.UI
             this.tlpOperations.Name = "tlpOperations";
             this.tlpOperations.RowCount = 1;
             this.tlpOperations.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpOperations.Size = new System.Drawing.Size(1038, 134);
+            this.tlpOperations.Size = new System.Drawing.Size(692, 87);
             this.tlpOperations.TabIndex = 14;
             // 
             // tlpSelectOperation
@@ -1240,8 +1213,8 @@ namespace StatsDirect.UI
             this.tlpSelectOperation.RowCount = 3;
             this.tlpSelectOperation.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpSelectOperation.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpSelectOperation.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 31F));
-            this.tlpSelectOperation.Size = new System.Drawing.Size(374, 169);
+            this.tlpSelectOperation.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tlpSelectOperation.Size = new System.Drawing.Size(249, 105);
             this.tlpSelectOperation.TabIndex = 1;
             // 
             // pnlOperationButtons
@@ -1255,15 +1228,14 @@ namespace StatsDirect.UI
             this.pnlOperationButtons.Location = new System.Drawing.Point(0, 0);
             this.pnlOperationButtons.Margin = new System.Windows.Forms.Padding(0);
             this.pnlOperationButtons.Name = "pnlOperationButtons";
-            this.pnlOperationButtons.Size = new System.Drawing.Size(374, 98);
+            this.pnlOperationButtons.Size = new System.Drawing.Size(249, 57);
             this.pnlOperationButtons.TabIndex = 0;
             // 
             // cmdHelp
             // 
-            this.cmdHelp.Location = new System.Drawing.Point(128, 5);
-            this.cmdHelp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdHelp.Location = new System.Drawing.Point(85, 3);
             this.cmdHelp.Name = "cmdHelp";
-            this.cmdHelp.Size = new System.Drawing.Size(112, 35);
+            this.cmdHelp.Size = new System.Drawing.Size(75, 23);
             this.cmdHelp.TabIndex = 2;
             this.cmdHelp.Text = "&Help";
             this.cmdHelp.UseVisualStyleBackColor = true;
@@ -1271,10 +1243,9 @@ namespace StatsDirect.UI
             // 
             // cmdClose
             // 
-            this.cmdClose.Location = new System.Drawing.Point(4, 5);
-            this.cmdClose.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdClose.Location = new System.Drawing.Point(3, 3);
             this.cmdClose.Name = "cmdClose";
-            this.cmdClose.Size = new System.Drawing.Size(112, 35);
+            this.cmdClose.Size = new System.Drawing.Size(75, 23);
             this.cmdClose.TabIndex = 3;
             this.cmdClose.Text = "&Return";
             this.cmdClose.UseVisualStyleBackColor = true;
@@ -1282,10 +1253,9 @@ namespace StatsDirect.UI
             // 
             // cmdCalculate
             // 
-            this.cmdCalculate.Location = new System.Drawing.Point(249, 5);
-            this.cmdCalculate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdCalculate.Location = new System.Drawing.Point(166, 3);
             this.cmdCalculate.Name = "cmdCalculate";
-            this.cmdCalculate.Size = new System.Drawing.Size(112, 35);
+            this.cmdCalculate.Size = new System.Drawing.Size(75, 23);
             this.cmdCalculate.TabIndex = 1;
             this.cmdCalculate.Text = "R&un";
             this.cmdCalculate.UseVisualStyleBackColor = true;
@@ -1295,10 +1265,10 @@ namespace StatsDirect.UI
             // 
             this.picArrowAcross.Image = ((System.Drawing.Image)(resources.GetObject("picArrowAcross.Image")));
             this.picArrowAcross.InitialImage = ((System.Drawing.Image)(resources.GetObject("picArrowAcross.InitialImage")));
-            this.picArrowAcross.Location = new System.Drawing.Point(362, 5);
+            this.picArrowAcross.Location = new System.Drawing.Point(241, 3);
             this.picArrowAcross.Margin = new System.Windows.Forms.Padding(0);
             this.picArrowAcross.Name = "picArrowAcross";
-            this.picArrowAcross.Size = new System.Drawing.Size(9, 35);
+            this.picArrowAcross.Size = new System.Drawing.Size(6, 23);
             this.picArrowAcross.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picArrowAcross.TabIndex = 7;
             this.picArrowAcross.TabStop = false;
@@ -1312,16 +1282,15 @@ namespace StatsDirect.UI
             this.pnlSelectOperation.Location = new System.Drawing.Point(0, 0);
             this.pnlSelectOperation.Margin = new System.Windows.Forms.Padding(0);
             this.pnlSelectOperation.Name = "pnlSelectOperation";
-            this.pnlSelectOperation.Size = new System.Drawing.Size(374, 98);
+            this.pnlSelectOperation.Size = new System.Drawing.Size(249, 57);
             this.pnlSelectOperation.TabIndex = 1;
             // 
             // lblFurtherAnalysis
             // 
             this.lblFurtherAnalysis.AutoSize = true;
-            this.lblFurtherAnalysis.Location = new System.Drawing.Point(4, 55);
-            this.lblFurtherAnalysis.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblFurtherAnalysis.Location = new System.Drawing.Point(3, 36);
             this.lblFurtherAnalysis.Name = "lblFurtherAnalysis";
-            this.lblFurtherAnalysis.Size = new System.Drawing.Size(121, 20);
+            this.lblFurtherAnalysis.Size = new System.Drawing.Size(80, 13);
             this.lblFurtherAnalysis.TabIndex = 5;
             this.lblFurtherAnalysis.Text = "Further analysis";
             // 
@@ -1330,11 +1299,10 @@ namespace StatsDirect.UI
             this.cboOperation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboOperation.DropDownWidth = 240;
             this.cboOperation.FormattingEnabled = true;
-            this.cboOperation.Location = new System.Drawing.Point(128, 51);
-            this.cboOperation.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cboOperation.Location = new System.Drawing.Point(85, 33);
             this.cboOperation.MaxDropDownItems = 15;
             this.cboOperation.Name = "cboOperation";
-            this.cboOperation.Size = new System.Drawing.Size(232, 28);
+            this.cboOperation.Size = new System.Drawing.Size(156, 21);
             this.cboOperation.TabIndex = 4;
             this.cboOperation.SelectedIndexChanged += new System.EventHandler(this.cboOperation_SelectedIndexChanged);
             // 
@@ -1342,10 +1310,10 @@ namespace StatsDirect.UI
             // 
             this.picLinkArrow.Image = ((System.Drawing.Image)(resources.GetObject("picLinkArrow.Image")));
             this.picLinkArrow.InitialImage = ((System.Drawing.Image)(resources.GetObject("picLinkArrow.InitialImage")));
-            this.picLinkArrow.Location = new System.Drawing.Point(300, 40);
+            this.picLinkArrow.Location = new System.Drawing.Point(200, 26);
             this.picLinkArrow.Margin = new System.Windows.Forms.Padding(0);
             this.picLinkArrow.Name = "picLinkArrow";
-            this.picLinkArrow.Size = new System.Drawing.Size(12, 9);
+            this.picLinkArrow.Size = new System.Drawing.Size(8, 6);
             this.picLinkArrow.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picLinkArrow.TabIndex = 6;
             this.picLinkArrow.TabStop = false;
@@ -1359,12 +1327,12 @@ namespace StatsDirect.UI
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.pnlConfidenceInterval, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.pnlVariables, 1, 0);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 98);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 57);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(270, 40);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(182, 28);
             this.tableLayoutPanel1.TabIndex = 2;
             // 
             // pnlConfidenceInterval
@@ -1375,17 +1343,16 @@ namespace StatsDirect.UI
             this.pnlConfidenceInterval.Location = new System.Drawing.Point(0, 0);
             this.pnlConfidenceInterval.Margin = new System.Windows.Forms.Padding(0);
             this.pnlConfidenceInterval.Name = "pnlConfidenceInterval";
-            this.pnlConfidenceInterval.Size = new System.Drawing.Size(208, 39);
+            this.pnlConfidenceInterval.Size = new System.Drawing.Size(140, 28);
             this.pnlConfidenceInterval.TabIndex = 2;
             this.pnlConfidenceInterval.Visible = false;
             // 
             // lblConfidenceInterval
             // 
             this.lblConfidenceInterval.AutoSize = true;
-            this.lblConfidenceInterval.Location = new System.Drawing.Point(4, 11);
-            this.lblConfidenceInterval.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblConfidenceInterval.Location = new System.Drawing.Point(3, 7);
             this.lblConfidenceInterval.Name = "lblConfidenceInterval";
-            this.lblConfidenceInterval.Size = new System.Drawing.Size(118, 20);
+            this.lblConfidenceInterval.Size = new System.Drawing.Size(78, 13);
             this.lblConfidenceInterval.TabIndex = 1;
             this.lblConfidenceInterval.Text = "Confidence (%)";
             // 
@@ -1403,10 +1370,9 @@ namespace StatsDirect.UI
             "97",
             "98",
             "99"});
-            this.cboConfidenceInterval.Location = new System.Drawing.Point(128, 6);
-            this.cboConfidenceInterval.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cboConfidenceInterval.Location = new System.Drawing.Point(85, 4);
             this.cboConfidenceInterval.Name = "cboConfidenceInterval";
-            this.cboConfidenceInterval.Size = new System.Drawing.Size(76, 28);
+            this.cboConfidenceInterval.Size = new System.Drawing.Size(52, 21);
             this.cboConfidenceInterval.TabIndex = 5;
             // 
             // pnlVariables
@@ -1414,10 +1380,10 @@ namespace StatsDirect.UI
             this.pnlVariables.AutoSize = true;
             this.pnlVariables.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlVariables.Controls.Add(this.cmdVariables);
-            this.pnlVariables.Location = new System.Drawing.Point(208, 0);
+            this.pnlVariables.Location = new System.Drawing.Point(140, 0);
             this.pnlVariables.Margin = new System.Windows.Forms.Padding(0);
             this.pnlVariables.Name = "pnlVariables";
-            this.pnlVariables.Size = new System.Drawing.Size(62, 40);
+            this.pnlVariables.Size = new System.Drawing.Size(42, 26);
             this.pnlVariables.TabIndex = 3;
             this.pnlVariables.Visible = false;
             // 
@@ -1426,10 +1392,10 @@ namespace StatsDirect.UI
             this.cmdVariables.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.cmdVariables.ForeColor = System.Drawing.SystemColors.ButtonFace;
             this.cmdVariables.Image = global::StatsDirect.UI.Properties.Resources.trolley;
-            this.cmdVariables.Location = new System.Drawing.Point(4, 5);
+            this.cmdVariables.Location = new System.Drawing.Point(3, 3);
             this.cmdVariables.Margin = new System.Windows.Forms.Padding(0);
             this.cmdVariables.Name = "cmdVariables";
-            this.cmdVariables.Size = new System.Drawing.Size(58, 35);
+            this.cmdVariables.Size = new System.Drawing.Size(39, 23);
             this.cmdVariables.TabIndex = 0;
             this.cmdVariables.UseVisualStyleBackColor = true;
             this.cmdVariables.Click += new System.EventHandler(this.cmdVariables_Click);
@@ -1444,13 +1410,13 @@ namespace StatsDirect.UI
             this.tlpUserArea.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpUserArea.Controls.Add(this.pnlUser, 0, 1);
             this.tlpUserArea.Controls.Add(this.pnlFollowOnInstructions, 0, 0);
-            this.tlpUserArea.Location = new System.Drawing.Point(374, 0);
+            this.tlpUserArea.Location = new System.Drawing.Point(249, 0);
             this.tlpUserArea.Margin = new System.Windows.Forms.Padding(0);
             this.tlpUserArea.Name = "tlpUserArea";
             this.tlpUserArea.RowCount = 2;
             this.tlpUserArea.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpUserArea.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpUserArea.Size = new System.Drawing.Size(664, 86);
+            this.tlpUserArea.Size = new System.Drawing.Size(443, 27);
             this.tlpUserArea.TabIndex = 0;
             // 
             // pnlUser
@@ -1458,10 +1424,10 @@ namespace StatsDirect.UI
             this.pnlUser.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlUser.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.pnlUser.Location = new System.Drawing.Point(0, 86);
-            this.pnlUser.Margin = new System.Windows.Forms.Padding(0, 5, 0, 0);
+            this.pnlUser.Location = new System.Drawing.Point(0, 27);
+            this.pnlUser.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
             this.pnlUser.Name = "pnlUser";
-            this.pnlUser.Size = new System.Drawing.Size(664, 0);
+            this.pnlUser.Size = new System.Drawing.Size(443, 0);
             this.pnlUser.TabIndex = 0;
             // 
             // pnlFollowOnInstructions
@@ -1473,16 +1439,16 @@ namespace StatsDirect.UI
             this.pnlFollowOnInstructions.Controls.Add(this.lblFollowOnInstructions);
             this.pnlFollowOnInstructions.Location = new System.Drawing.Point(3, 3);
             this.pnlFollowOnInstructions.Name = "pnlFollowOnInstructions";
-            this.pnlFollowOnInstructions.Size = new System.Drawing.Size(658, 75);
+            this.pnlFollowOnInstructions.Size = new System.Drawing.Size(437, 18);
             this.pnlFollowOnInstructions.TabIndex = 1;
             this.pnlFollowOnInstructions.Visible = false;
             // 
             // lblFollowOnInstructions
             // 
             this.lblFollowOnInstructions.AutoSize = true;
-            this.lblFollowOnInstructions.Location = new System.Drawing.Point(4, 55);
+            this.lblFollowOnInstructions.Location = new System.Drawing.Point(3, 5);
             this.lblFollowOnInstructions.Name = "lblFollowOnInstructions";
-            this.lblFollowOnInstructions.Size = new System.Drawing.Size(211, 20);
+            this.lblFollowOnInstructions.Size = new System.Drawing.Size(143, 13);
             this.lblFollowOnInstructions.TabIndex = 0;
             this.lblFollowOnInstructions.Text = "Click Run to run this function";
             // 
@@ -1500,16 +1466,15 @@ namespace StatsDirect.UI
             // 
             // frmMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1038, 728);
+            this.ClientSize = new System.Drawing.Size(692, 473);
             this.Controls.Add(this.pnlTop);
             this.Controls.Add(this.mnuMain);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.IsMdiContainer = true;
             this.MainMenuStrip = this.mnuMain;
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.MinimumSize = new System.Drawing.Size(889, 585);
+            this.MinimumSize = new System.Drawing.Size(600, 400);
             this.Name = "frmMain";
             this.Text = "StatsDirect";
             this.HelpButtonClicked += new System.ComponentModel.CancelEventHandler(this.frmMain_HelpButtonClicked);
