@@ -31,14 +31,18 @@ namespace StatsDirect.UI
                 options = (HistogramOptions)definition.ChartOptions;
                 options.ScaleChanged += options_ScaleChanged;
                 List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
-                if (options.PoolVariablesForBins)
+                // On a new call, series options will exist, but Bins will be set to zero for all.  On a replay, Bins will be set to sane values.  Detect the replay and don't reset the bins on one.
+                if (null != options.HistoSeriesOptions && options.HistoSeriesOptions.Count > 0 && options.HistoSeriesOptions[0].Bins == 0)
                 {
-                    options.Reset(true, 0, options.PoolVariablesForBins, 0, series);
-                }
-                else
-                {
-                    for (int i = 0; i < series.Count; i++)
-                        options.Reset(true, 0, options.PoolVariablesForBins, i, series);
+                    if (options.PoolVariablesForBins)
+                    {
+                        options.Reset(true, 0, options.PoolVariablesForBins, 0, series);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < series.Count; i++)
+                            options.Reset(true, 0, options.PoolVariablesForBins, i, series);
+                    }
                 }
                 FillFormFromOptions();
             }
@@ -186,7 +190,14 @@ namespace StatsDirect.UI
 
         private void cmdReset_Click(object sender, EventArgs e)
         {
-            ListBins();
+            try
+            {
+                ListBins();
+            }
+            catch (Exception)
+            {
+                // Do nothing
+            }
         }
 
         private void cmdPreviousVariable_Click(object sender, EventArgs e)
