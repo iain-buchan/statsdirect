@@ -7,7 +7,6 @@
 			<frame>
 				<name>yi</name>
 				<prompt>Select effect size estimate (Yi)</prompt>
-				<same-length>false</same-length>
 				<mode>NumericReplaceMissing</mode>
 				<min-columns>1</min-columns>
 				<max-columns>1</max-columns>
@@ -16,7 +15,6 @@
 			<frame>
 				<name>vi</name>
 				<prompt>Select sampling variance (vi)</prompt>
-				<same-length>true</same-length>
 				<same-length-as>yi</same-length-as>
 				<mode>NumericReplaceMissing</mode>
 				<min-columns>1</min-columns>
@@ -26,7 +24,6 @@
 			<frame>
 				<name>mods</name>
 				<prompt>Select moderators</prompt>
-				<same-length>true</same-length>
 				<same-length-as>yi</same-length-as>
 				<mode>NumericReplaceMissing</mode>
 				<min-columns>1</min-columns>
