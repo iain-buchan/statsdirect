@@ -32,12 +32,12 @@ namespace StatsDirect.UI
                 bool userCancelled;
                 bool wasPivoted;
                 DataFrame frame;
-                if (gridParameter.ColumnsAreSameLength || gridParameter.HasLength || null != gridParameter.SameLengthAsParameter)
+                if (gridParameter.ColumnsAreSameLength || gridParameter.HasLength || (null != gridParameter.SameLengthAsParameter && gridParameter.SameLengthAsParameter.Count > 0))
                 {
                     int requiredLength = 0;
                     if (gridParameter.HasLength)
                         requiredLength = gridParameter.Length(processor, parameters);
-                    else if (null != gridParameter.SameLengthAsParameter)
+                    else if (null != gridParameter.SameLengthAsParameter && gridParameter.SameLengthAsParameter.Count > 0)
                     {
                         foreach (string candidateName in gridParameter.SameLengthAsParameter)
                         {
