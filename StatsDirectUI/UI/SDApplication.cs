@@ -229,7 +229,7 @@ namespace StatsDirect.UI
                 bool acceptable = true;
                 foreach (WindowInformation wi in windows)
                 {
-                    if (wi.HasWindow && wi.Window.ImplementsIGrid)
+                    if (wi.HasWindow && (wi.Window is IGrid))
                     {
                         string windowName = wi.FriendlyName;
                         if (windowName.StartsWith("Data "))
@@ -267,7 +267,7 @@ namespace StatsDirect.UI
                 bool acceptable = true;
                 foreach (WindowInformation wi in windows)
                 {
-                    if (!wi.Window.ImplementsIReport)
+                    if (!(wi.Window is IReport))
                         continue;
 
                     string windowName = wi.FriendlyName;
@@ -308,7 +308,7 @@ namespace StatsDirect.UI
                 bool acceptable = true;
                 foreach (WindowInformation wi in windows)
                 {
-                    if (wi.Window.ImplementsIScriptWindow)
+                    if (wi.Window is IScriptWindow)
                     {
                         string windowName = wi.FriendlyName;
                         if (windowName.StartsWith("Script "))
@@ -408,10 +408,10 @@ namespace StatsDirect.UI
             activeWindow = info;
             if (null != info.Window)
             {
-                if (info.Window.ImplementsIGrid)
+                if (info.Window is IGrid)
                     activeGrid = info;
                 mainWindow.EnsureTabSelected(info.TabPage);
-                mainWindow.SetMenuVisibility(info.Window.ImplementsIGrid);
+                mainWindow.SetMenuVisibility(info.Window is IGrid);
             }
         }
 
@@ -440,7 +440,7 @@ namespace StatsDirect.UI
             else
             {
                 // Nothing in particular, guess something useful or show the ToC if we can't.
-                if (null != SoleInstance && null != SoleInstance.ActiveWindow && SoleInstance.ActiveWindow.HasWindow && SoleInstance.ActiveWindow.Window is IGrid)
+                if (null != SoleInstance && null != SoleInstance.ActiveWindow && SoleInstance.ActiveWindow.HasWindow && (SoleInstance.ActiveWindow.Window is IGrid))
                 {
                     // Grid - show the worksheet help, which is 1040.
                     System.Windows.Forms.Help.ShowHelp(Parent, HelpFilePath, System.Windows.Forms.HelpNavigator.TopicId, "1040");
@@ -474,7 +474,7 @@ namespace StatsDirect.UI
             IList<Pane> availableWindows = new List<Pane>();
             foreach (WindowInformation info in windows)
             {
-                if (info.Window.ImplementsIReport)
+                if (info.Window is IReport)
                 {
                     foreach (Pane pane in info.Window.AvailablePanes)
                     {
@@ -514,7 +514,7 @@ namespace StatsDirect.UI
             IList<Pane> availableWindows = new List<Pane>();
             foreach (WindowInformation info in windows)
             {
-                if (info.Window.ImplementsIGrid)
+                if (info.Window is IGrid)
                 {
                     foreach (Pane pane in info.Window.AvailablePanes)
                     {

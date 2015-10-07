@@ -656,7 +656,7 @@ namespace StatsDirect.UI
                 tabWindows.SelectedTab = tabPage;
 
                 // Add the report to the drop-down reports list
-                if (child.ImplementsIReport)
+                if (child is IReport)
                 {
                     ComboFormAdapter cfa = new ComboFormAdapter(child);
                     cboActiveReport.Items.Add(cfa);
@@ -729,7 +729,7 @@ namespace StatsDirect.UI
         internal void RemoveWindow(StatsDirectForm window)
         {
             RemoveTab(window.WindowInformation.TabPage);
-            if (window.ImplementsIReport)
+            if (window is IReport)
                 RemoveReportFromCombo(window);
         }
 
@@ -5523,11 +5523,11 @@ namespace StatsDirect.UI
             else
             {
                 StatsDirectForm activeWindow = SdApplication.SoleInstance.ActiveWindow.Window;
-                if (activeWindow.ImplementsIGrid)
+                if (activeWindow is IGrid)
                     CreateGrid();
-                else if (activeWindow.ImplementsIReport)
+                else if (activeWindow is IReport)
                     CreateReport();
-                else if (activeWindow.ImplementsIScriptWindow)
+                else if (activeWindow is IScriptWindow)
                     CreateScriptWindow();
             }
         }
@@ -5611,7 +5611,7 @@ namespace StatsDirect.UI
                             lastClickedTab.FriendlyName = newName;
 
                             // If it's a report, we might need to add it with its new name
-                            if (lastClickedTab.HasWindow && lastClickedTab.Window.ImplementsIReport)
+                            if (lastClickedTab.HasWindow && (lastClickedTab.Window is IReport))
                             {
                                 // Force the update - the list only notices a name change when we remove and re-add.
                                 StatsDirectForm f = lastClickedTab.Window;

@@ -148,7 +148,7 @@ namespace StatsDirect.UI
         private void gridKeys_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             gridKeys.BeginEdit(false);
-            if (null != gridKeys.EditingControl && gridKeys.EditingControl is DataGridViewComboBoxEditingControl)
+            if (null != gridKeys.EditingControl && (gridKeys.EditingControl is DataGridViewComboBoxEditingControl))
             {
                 DataGridViewComboBoxEditingControl editingControl = (DataGridViewComboBoxEditingControl)gridKeys.EditingControl;
                 if (editingControl.SelectedIndex == -1)

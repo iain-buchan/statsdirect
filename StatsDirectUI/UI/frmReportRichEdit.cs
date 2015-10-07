@@ -439,11 +439,6 @@ namespace StatsDirect.UI
                 richEditControl1.LoadDocument(pathName, DocumentFormat.Rtf);
         }
 
-        public override bool ImplementsIReport
-        {
-            get { return true; }
-        }
-
         private void frmReport_Activated(object sender, EventArgs e)
         {
             DoOrSwallow(() =>

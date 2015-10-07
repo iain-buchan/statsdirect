@@ -479,14 +479,6 @@ namespace StatsDirect.UI
             Close();
         }
 
-        public override bool ImplementsIScriptWindow
-        {
-            get
-            {
-                return true;
-            }
-        }
-
         internal override bool SaveContents()
         {
             // Nothing to save

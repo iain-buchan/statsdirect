@@ -122,21 +122,6 @@ namespace StatsDirect.UI
             SdApplication.SoleInstance.ShowCurrentHelp();
         }
 
-        public virtual bool ImplementsIReport
-        {
-            get { return false; }
-        }
-
-        public virtual bool ImplementsIGrid
-        {
-            get { return false; }
-        }
-
-        public virtual bool ImplementsIScriptWindow
-        {
-            get { return false; }
-        }
-
         public /* abstract */ virtual IList<Pane> AvailablePanes
         {
             get { throw new NotImplementedException("Subclass should have implemented"); }
