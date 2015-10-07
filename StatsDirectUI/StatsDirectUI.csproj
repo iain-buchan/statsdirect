@@ -301,6 +301,9 @@
     </Compile>
     <Compile Include="Templates\ScaleParameters.cs" />
     <Compile Include="Templates\ScaleType.cs" />
+    <Compile Include="UI\CellArrayProcessor.cs" />
+    <Compile Include="UI\CellColumnSelection.cs" />
+    <Compile Include="UI\CellSelection.cs" />
     <Compile Include="UI\ChartOptionsParameter.cs" />
     <Compile Include="UI\ctlUpdateStatsDirectCheck.cs">
       <SubType>UserControl</SubType>
@@ -315,6 +318,7 @@
       <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\DialogAndAction.cs" />
+    <Compile Include="UI\IGetCells.cs" />
     <Compile Include="UI\UpdateChecker.cs" />
     <Compile Include="UI\RUpdateChecker.cs" />
     <Compile Include="UI\FillableParameter.cs" />
@@ -1703,7 +1707,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
