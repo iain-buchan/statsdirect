@@ -24,7 +24,6 @@
         <frame>
           <name>times</name>
           <prompt>Select data for TIMES</prompt>
-          <same-length>false</same-length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

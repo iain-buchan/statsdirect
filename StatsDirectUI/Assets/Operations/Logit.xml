@@ -8,7 +8,6 @@
         <frame>
           <name>dose</name>
           <prompt>Select data for DOSE levels</prompt>
-          <same-length>false</same-length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

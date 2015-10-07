@@ -8,7 +8,6 @@
         <frame>
           <name>intervals</name>
           <prompt>Select data for age INTERVAL LENGTH</prompt>
-          <same-length>false</same-length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

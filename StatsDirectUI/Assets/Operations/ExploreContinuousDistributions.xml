@@ -7,7 +7,6 @@
         <frame>
           <name>data</name>
           <prompt>Select data to plot</prompt>
-          <same-length>false</same-length>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>10</max-columns>

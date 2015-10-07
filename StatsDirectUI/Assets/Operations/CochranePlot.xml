@@ -8,7 +8,6 @@
         <frame>
           <name>odds</name>
           <prompt>Select SUMMARY STATISTIC (e.g. odds ratio)</prompt>
-          <same-length>false</same-length>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -17,7 +16,6 @@
         <frame>
           <name>lci</name>
           <prompt>Select LOWER confidence limit</prompt>
-          <same-length>true</same-length>
           <mode>NumericSkipMissing</mode>
           <same-length-as>odds</same-length-as>
           <min-columns>1</min-columns>
@@ -27,7 +25,6 @@
         <frame>
           <name>uci</name>
           <prompt>Select UPPER confidence limit</prompt>
-          <same-length>true</same-length>
           <mode>NumericSkipMissing</mode>
           <same-length-as>odds</same-length-as>
           <min-columns>1</min-columns>
@@ -38,7 +35,6 @@
           <name>gn</name>
           <prompt>Select GROUP SIZE/WEIGHT [skip for none]</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
-          <same-length>true</same-length>
           <mode>NumericSkipMissing</mode>
           <same-length-as>odds</same-length-as>
           <min-columns>1</min-columns>
@@ -52,7 +48,6 @@
           <validators>
             <validator>Pooling</validator>
           </validators>
-          <same-length>true</same-length>
           <mode>NumericReplaceMissing</mode>
           <same-length-as>odds</same-length-as>
           <min-columns>1</min-columns>
@@ -63,7 +58,6 @@
           <name>title</name>
           <prompt>Select stratum LABELS [skip for default]</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
-          <same-length>true</same-length>
           <mode>Text</mode>
           <same-length-as>odds</same-length-as>
           <min-columns>1</min-columns>

@@ -10,7 +10,6 @@
 			<frame>
 				<name>data</name>
 				<prompt>Select DATA</prompt>
-				<same-length>false</same-length>
 				<mode>NumericReplaceMissing</mode>
 				<min-columns>2</min-columns>
 				<max-columns>200</max-columns>

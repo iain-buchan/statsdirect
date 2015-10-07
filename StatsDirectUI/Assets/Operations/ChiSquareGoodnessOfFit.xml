@@ -10,7 +10,6 @@
           <name>observed</name>
           <prompt>Select observed counts</prompt>
           <title>Observed counts</title>
-          <same-length>false</same-length>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -20,7 +19,6 @@
           <name>expected</name>
           <prompt>Select cell probabilities or expected counts</prompt>
           <title>Probabilities or expected counts</title>
-          <same-length>false</same-length>
           <same-length-as>observed</same-length-as>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
@@ -31,7 +29,6 @@
           <name>names</name>
           <prompt>Select category names [skip for default names]</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
-          <same-length>true</same-length>
           <same-length-as>observed</same-length-as>
           <mode>Text</mode>
           <min-columns>1</min-columns>

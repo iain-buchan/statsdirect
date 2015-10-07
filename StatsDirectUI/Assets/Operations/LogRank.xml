@@ -8,7 +8,6 @@
         <frame>
           <name>gid</name>
           <prompt>Select data for GROUP IDENTIFIER</prompt>
-          <same-length>false</same-length>
           <mode>CategoryReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

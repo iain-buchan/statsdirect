@@ -9,7 +9,6 @@
           <clear-selection-first>true</clear-selection-first>
           <name>data</name>
           <prompt>Select DATA (each column will be treated as a separate analysis)</prompt>
-          <same-length>false</same-length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>200</max-columns>
@@ -19,7 +18,6 @@
           <clear-selection-first>true</clear-selection-first>
           <name>blocks</name>
           <prompt>Select block/row classifier</prompt>
-          <same-length>false</same-length>
           <mode>CategoryReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -28,7 +26,6 @@
           <clear-selection-first>true</clear-selection-first>
           <name>treatments</name>
           <prompt>Select treatment/column classifier</prompt>
-          <same-length>false</same-length>
           <same-length-as>blocks</same-length-as>
           <mode>CategoryReplaceMissing</mode>
           <min-columns>1</min-columns>

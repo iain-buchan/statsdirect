@@ -8,7 +8,6 @@
         <frame>
           <name>stratum</name>
           <prompt>select data for STRATUM (MATCH GROUP) indicator</prompt>
-          <same-length>false</same-length>
           <mode>CategoryReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -20,7 +19,6 @@
           <validators>
             <validator>Boolean</validator>
           </validators>
-          <same-length>true</same-length>
           <same-length-as>stratum</same-length-as>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
@@ -30,7 +28,6 @@
         <frame>
           <name>predictors</name>
           <prompt>Select data for PREDICTORS</prompt>
-          <same-length>true</same-length>
           <same-length-as>stratum</same-length-as>
           <mode>NumericCodingTextToDummies</mode>
           <min-columns>1</min-columns>

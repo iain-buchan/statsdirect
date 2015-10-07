@@ -8,7 +8,6 @@
         <frame>
           <name>rawValues</name>
           <prompt>Select categorical data to plot as frequencies</prompt>
-          <same-length>false</same-length>
           <mode>CategoryReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>10</max-columns>

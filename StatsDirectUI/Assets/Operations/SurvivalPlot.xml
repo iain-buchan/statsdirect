@@ -23,7 +23,6 @@
               <name>xdatNew</name>
               <prompt>="Select data for times of group " + parameters["group-index"].AsInt32</prompt>
               <must-request>true</must-request>
-              <same-length>false</same-length>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
@@ -34,7 +33,6 @@
               <name>cdatNew</name>
               <prompt>="Select data for censorship/death/event of group " + parameters["group-index"].AsInt32</prompt>
               <must-request>true</must-request>
-              <same-length>true</same-length>
               <same-length-as>xdatNew</same-length-as>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
@@ -46,7 +44,6 @@
               <name>ydatNew</name>
               <prompt>="Select data for survival proportion (S) of group " + parameters["group-index"].AsInt32</prompt>
               <must-request>true</must-request>
-              <same-length>true</same-length>
               <same-length-as>xdatNew</same-length-as>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
@@ -59,7 +56,6 @@
               <prompt>="Select data for lower confidence limit of S of group " + parameters["group-index"].AsInt32</prompt>
               <must-request>true</must-request>
               <cancel-skips-parameter>Skip</cancel-skips-parameter>
-              <same-length>true</same-length>
               <same-length-as>xdatNew</same-length-as>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
@@ -73,7 +69,6 @@
               <cancel-skips-parameter>Skip</cancel-skips-parameter>
               <requires-parameter>ydatlNew</requires-parameter>
               <must-request>true</must-request>
-              <same-length>true</same-length>
               <same-length-as>xdatNew</same-length-as>
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>

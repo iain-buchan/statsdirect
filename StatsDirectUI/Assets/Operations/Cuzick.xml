@@ -8,7 +8,6 @@
         <frame>
           <name>data</name>
           <prompt>Select data for trend test</prompt>
-          <same-length>false</same-length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>2</min-columns>
           <max-columns>200</max-columns>

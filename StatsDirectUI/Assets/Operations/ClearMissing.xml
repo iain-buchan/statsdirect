@@ -8,7 +8,6 @@
         <frame>
           <name>data</name>
           <prompt>Select data to copy and clear MISSING VALUES</prompt>
-          <same-length>false</same-length>
           <mode>Text</mode>
           <min-columns>1</min-columns>
           <max-columns>256</max-columns>

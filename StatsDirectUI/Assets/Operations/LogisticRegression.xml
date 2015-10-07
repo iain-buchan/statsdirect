@@ -48,7 +48,6 @@
           <frame>
             <name>total</name>
             <prompt>Select data for TOTAL number</prompt>
-            <same-length>false</same-length>
             <mode>NumericReplaceMissing</mode>
             <min-columns>1</min-columns>
             <max-columns>1</max-columns>
@@ -57,7 +56,6 @@
           <frame>
             <name>response</name>
             <prompt>Select data for the RESPONSE</prompt>
-            <same-length>true</same-length>
             <same-length-as>total</same-length-as>
             <mode>NumericReplaceMissing</mode>
             <min-columns>1</min-columns>
@@ -72,7 +70,6 @@
           <frame>
             <name>response</name>
             <prompt>Select data for the RESPONSE</prompt>
-            <same-length>false</same-length>
             <mode>NumericReplaceMissing</mode>
             <min-columns>1</min-columns>
             <max-columns>1</max-columns>
@@ -91,7 +88,6 @@
             <name>weight</name>
             <prompt>Select data for PRIOR WEIGHTS (skip for none)</prompt>
             <cancel-skips-parameter>Skip</cancel-skips-parameter>
-            <same-length>true</same-length>
             <same-length-as>response</same-length-as>
             <mode>NumericReplaceMissing</mode>
             <min-columns>1</min-columns>
@@ -105,7 +101,6 @@
         <frame>
           <name>predictors</name>
           <prompt>Select data for PREDICTORS</prompt>
-          <same-length>true</same-length>
           <same-length-as>response</same-length-as>
           <mode>NumericCodingTextToDummies</mode>
           <min-columns>1</min-columns>
