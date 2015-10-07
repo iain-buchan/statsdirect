@@ -194,13 +194,13 @@ namespace StatsDirect.Charting
         ///  <param name="max">The highest value in the input, plus 1 if there's only one value.</param>
         ///  <param name="zmin"></param>
         ///  <param name="zint"></param>
-        /// <param name="outputBins"></param>
+        /// <param name="bins">The number of bins that should be used to plot the histogram.</param>
         /// <remarks></remarks>
-        public void Calculate(List<Series> oneOrMoreSeries, int binsFromUser, bool calculateBinCount, ref double min, ref double max, out double zmin, out double zint, out int outputBins)
+        public void Calculate(List<Series> oneOrMoreSeries, int binsFromUser, bool calculateBinCount, ref double min, ref double max, out double zmin, out double zint, out int bins)
         {
             Debug.Assert(oneOrMoreSeries.Count > 0);
 
-            //  Base the neat model on the longest column if there's more than one column
+            // Base the neat model on the longest column if there's more than one column
             int maxRows = int.MinValue;
             DoubleSeries longestSoFar = null;
             foreach (DoubleSeries s in oneOrMoreSeries)
@@ -213,7 +213,7 @@ namespace StatsDirect.Charting
             }
             Debug.Assert(null != longestSoFar);
 
-            //  Assume there's at least one column, and therefore longestSoFar is never Nothing
+            // Assume there's at least one column, and therefore longestSoFar is never Nothing
             double[] nonMissingData = new double[maxRows];
             int actualRows = 0;
             for (int c = 0; c < maxRows; c++)
@@ -221,80 +221,78 @@ namespace StatsDirect.Charting
                 if (longestSoFar.Data[c] != Constant.MISSING)
                 {
                     nonMissingData[actualRows] = longestSoFar.Data[c];
-                    actualRows += 1;
+                    actualRows++;
                 }
             }
 
             //  By now, xx(0) to xx(actualRows - 1) contain the actual data for the longest row, with missing data excluded.
 
-            int mp = calculateBinCount ? 0 : binsFromUser;
-            bool force = (mp == 0);
+            int bestBinsSoFar = calculateBinCount ? 0 : binsFromUser;
+            bool force = (bestBinsSoFar == 0);
             if (force)
             {
                 //  Work out how many bins we should have at maximum: between 7 and 20, depending on the number of samples
-                int maxcm = Convert.ToInt32(Math.Pow(actualRows, 0.88) / 4.0);
-                if (maxcm > 20)
-                    maxcm = 20;
-                if (maxcm < 7)
-                    maxcm = 7;
+                int maxBins = Convert.ToInt32(Math.Pow(actualRows, 0.88) / 4.0);
+                maxBins = Constrain(maxBins, 7, 20);
                 double mxx = 0.0;
                 int mpp = 0;
-                for (int cm = 1; cm <= maxcm; cm++)
+                for (int cm = 1; cm <= maxBins; cm++)
                 {
+                    // Gather some axis values for cm - 1 intervals
                     v_axis(ref min, ref max, cm - 1, out zmin, out zint);
+
+                    // What about cm intervals (if cm < 10) or cm - 2 intervals (if cm >= 10)?
                     int nmp = cm < 10 ? cm + 1 : cm - 1;
                     double nzmin;
                     double nzint;
                     v_axis(ref min, ref max, nmp - 1, out nzmin, out nzint);
+
+                    // Use whichever gives the "neater" axis (defined as shorter strings)
                     if (nzint.ToString().Length + nzmin.ToString().Length < zint.ToString().Length + zmin.ToString().Length)
                     {
                         zint = nzint;
                         zmin = nzmin;
-                        mp = nmp;
+                        bestBinsSoFar = nmp;
                     }
                     else
                     {
-                        mp = cm;
+                        bestBinsSoFar = cm;
                     }
-                    int c2 = 0;
+                    int firstIndexThisBin = 0;
                     int clm = 0;
-                    for (int c = 1; c <= mp; c++)
+                    for (int c = 1; c <= bestBinsSoFar; c++)
                     {
-                        double high = zmin + (zint * Convert.ToDouble(c - 1)) + zint / 2.0;
-                        int c1;
-                        for (c1 = c2; c1 < actualRows; c1++)
+                        double high = zmin + (zint * (c - 1)) + zint / 2.0;
+                        int firstIndexPastHigh;
+                        for (firstIndexPastHigh = firstIndexThisBin; firstIndexPastHigh < actualRows; firstIndexPastHigh++)
                         {
-                            if (nonMissingData[c1] > high)
+                            if (nonMissingData[firstIndexPastHigh] > high)
                                 break;
                         }
-                        int bin = c1 - c2;
-                        if (bin > 0)
+                        int valuesInThisBin = firstIndexPastHigh - firstIndexThisBin;
+                        if (valuesInThisBin > 0)
                             clm++;
-                        //  If bin > 1 Then clm = clm + 3
-                        c2 = c1;
+                        firstIndexThisBin = firstIndexPastHigh;
                     }
-                    double qxx = Convert.ToDouble(clm);
+                    double qxx = clm;
                     if (qxx > mxx)
                     {
                         mxx = qxx;
-                        mpp = mp;
+                        mpp = bestBinsSoFar;
                     }
                 }
-                mp = mpp;
+                bestBinsSoFar = mpp;
             }
 
             //  Ensure the total number of bins is between 1 and 20
-            if (mp < 1)
-                mp = 1;
-            if (mp > 20)
-                mp = 20;
+            bestBinsSoFar = Constrain(bestBinsSoFar, 1, 20);
 
-            v_axis(ref min, ref max, mp - 1, out zmin, out zint);
+            v_axis(ref min, ref max, bestBinsSoFar - 1, out zmin, out zint);
             if (force)
             {
                 for (int c = 1; c <= 2; c++)
                 {
-                    int nmp = mp - c;
+                    int nmp = bestBinsSoFar - c;
                     double nzmin = 0;
                     double nzint = 0;
                     if (nmp > 3)
@@ -304,11 +302,11 @@ namespace StatsDirect.Charting
                         {
                             zint = nzint;
                             zmin = nzmin;
-                            mp = nmp;
+                            bestBinsSoFar = nmp;
                             break;
                         }
                     }
-                    nmp = mp + c;
+                    nmp = bestBinsSoFar + c;
                     if (nmp <= 20)
                     {
                         v_axis(ref min, ref max, nmp - 1, out nzmin, out nzint);
@@ -316,7 +314,7 @@ namespace StatsDirect.Charting
                         {
                             zint = nzint;
                             zmin = nzmin;
-                            mp = nmp;
+                            bestBinsSoFar = nmp;
                             break;
                         }
                     }
@@ -324,9 +322,9 @@ namespace StatsDirect.Charting
 
                 // Get rid of empty bins on the upper end of the histogram
                 int c2 = actualRows - 1;
-                for (int c = mp; c >= 1; c--)
+                for (int c = bestBinsSoFar - 1; c >= 0; --c)
                 {
-                    double binLeft = zmin + (zint * (c - 1)) - zint / 2.0;
+                    double binLeft = zmin + (zint * c) - zint / 2.0;
                     bool thisBinHasData = false;
                     for (int c1 = c2; c1 >= 0; c1--)
                     {
@@ -340,15 +338,15 @@ namespace StatsDirect.Charting
                     if (thisBinHasData)
                         break;
                     else
-                        --mp;
+                        --bestBinsSoFar;
                 }
 
                 // Get rid of empty bins on the lower end of the histogram
                 int emptyBinsLeft = 0;
                 c2 = 0;
-                for (int c = 1; c <= mp; c++)
+                for (int c = 0; c < bestBinsSoFar; c++)
                 {
-                    double binRight = zmin + (zint * (c - 1)) + zint / 2.0;
+                    double binRight = zmin + (zint * c) + zint / 2.0;
                     bool thisBinHasData = false;
                     for (int c1 = c2; c1 < actualRows; c1++)
                     {
@@ -363,29 +361,32 @@ namespace StatsDirect.Charting
                         break;
                     else
                     {
-                        emptyBinsLeft += 1;
-                        mp -= 1;
+                        emptyBinsLeft++;
+                        --bestBinsSoFar;
                     }
                 }
                 zmin += zint * emptyBinsLeft;
             }
-            outputBins = mp;
+            bins = bestBinsSoFar;
+        }
+
+        private int Constrain(int value, int lowerBound, int upperBound)
+        {
+            if (value < lowerBound)
+                return lowerBound;
+            if (value > upperBound)
+                return upperBound;
+            return value;
         }
 
         public override bool ShowHistogramOptions
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public override bool ShowLegendIsRelevant
         {
-            get
-            {
-                return HistoSeriesOptions.Count > 1;
-            }
+            get { return HistoSeriesOptions.Count > 1; }
         }
     }
 }
