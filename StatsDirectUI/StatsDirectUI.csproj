@@ -718,9 +718,7 @@
     <Compile Include="UI\IToolStripHost.cs" />
     <Compile Include="UI\License.cs" />
     <Compile Include="UI\Pane.cs" />
-    <Compile Include="PJLControls\ColourPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="PJLControls\ColourPanel.cs" />
     <Compile Include="PJLControls\ColourPanelForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -766,7 +764,6 @@
     <Compile Include="TemplateProcessing\TemplateProcessor.cs" />
     <Compile Include="UI\StatsDirectUpdateChecker.cs" />
     <Compile Include="UI\SuggestionTime.cs" />
-    <Compile Include="UI\TextRuler.cs" />
     <Compile Include="UI\UpdateCheckerEventArgs.cs" />
     <Compile Include="UI\VerticalLabel.cs">
       <SubType>Component</SubType>
