@@ -283,11 +283,11 @@ namespace StatsDirect.UI
                 return new ToolStripSeparator { Size = new Size(167, 6) };
             }
             ToolStripMenuItem menuItem = new ToolStripMenuItem
-                                             {
-                                                 DisplayStyle = ToolStripItemDisplayStyle.Text,
-                                                 Size = new Size(167, 22),
-                                                 Text = sdMenuItem.Label
-                                             };
+            {
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Size = new Size(167, 22),
+                Text = sdMenuItem.Label
+            };
             // 167,22 is merely a convenient magic size that came from the VS2005 designer; it may not be "right", but it works.
             if (!string.IsNullOrEmpty(sdMenuItem.Tooltip))
                 menuItem.ToolTipText = sdMenuItem.Tooltip;
@@ -386,20 +386,20 @@ namespace StatsDirect.UI
             try
             {
 #endif
-            ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
-            if (null != menuItem.Tag)
-                Debug.Print((string)menuItem.Tag);
-            object tagObject = ToTagObject(menuItem);
-            if (!(tagObject is Dictionary<string, string>))
-                return;
-            Dictionary<string, string> tags = (Dictionary<string, string>)tagObject;
-            string operationName;
-            if (!tags.TryGetValue("operation", out operationName))
-                return;
-            Operation operation;
-            if (!TemplateFactory.Operations.TryGetValue(operationName, out operation))
-                return;
-            DoOperationWithPossibleBatching(operation);
+                ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
+                if (null != menuItem.Tag)
+                    Debug.Print((string)menuItem.Tag);
+                object tagObject = ToTagObject(menuItem);
+                if (!(tagObject is Dictionary<string, string>))
+                    return;
+                Dictionary<string, string> tags = (Dictionary<string, string>)tagObject;
+                string operationName;
+                if (!tags.TryGetValue("operation", out operationName))
+                    return;
+                Operation operation;
+                if (!TemplateFactory.Operations.TryGetValue(operationName, out operation))
+                    return;
+                DoOperationWithPossibleBatching(operation);
 #if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
@@ -471,13 +471,10 @@ namespace StatsDirect.UI
 
         public void DoOperation(string operationName)
         {
-#if !WATCH_EXCEPTIONS
             try
             {
-#endif
-            Operation operation = TemplateFactory.Operations[operationName];
-            SdApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
-#if !WATCH_EXCEPTIONS
+                Operation operation = TemplateFactory.Operations[operationName];
+                SdApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
             }
             catch (CancelCurrentOperationAndDoException ex)
             {
@@ -490,6 +487,7 @@ namespace StatsDirect.UI
                     throw;
                 }
             }
+#if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.EraseAnyOutstandingParameters();
@@ -1574,18 +1572,16 @@ namespace StatsDirect.UI
 
         private void DoCalculate()
         {
-#if !WATCH_EXCEPTIONS
             try
             {
-#endif
                 DoCalculateInternal();
-#if !WATCH_EXCEPTIONS
             }
             catch (CancelCurrentOperationAndDoException)
             {
                 // If this is thrown, there must be an exception handler further up the stack capable of catching it - make sure we don't get in the way.
                 throw;
             }
+#if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
@@ -2242,13 +2238,13 @@ namespace StatsDirect.UI
                             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
 
                             Label lbl = new Label
-                                            {
-                                                Tag = parameter,
-                                                Padding = new Padding(0, 3, 0, 3),
-                                                AutoSize = true,
-                                                MaximumSize = new Size(500, 500),
-                                                Text = rubric
-                                            };
+                            {
+                                Tag = parameter,
+                                Padding = new Padding(0, 3, 0, 3),
+                                AutoSize = true,
+                                MaximumSize = new Size(500, 500),
+                                Text = rubric
+                            };
                             tlp.Controls.Add(lbl);
                             tlp.SetColumnSpan(lbl, 2);
                         }
@@ -2545,11 +2541,11 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             CheckBox cb = new CheckBox
-                              {
-                                  Padding = new Padding(3, 3, 3, 3),
-                                  AutoSize = true,
-                                  Tag = parameter
-                              };
+            {
+                Padding = new Padding(3, 3, 3, 3),
+                AutoSize = true,
+                Tag = parameter
+            };
             AddAppropriateEventHandlersTo(cb);
             if (context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsBoolean)
             {
@@ -2699,15 +2695,15 @@ namespace StatsDirect.UI
                 MaybeAddHelpTip(cbo, parameter);
 
                 Label lbl = new Label
-                                {
-                                    Tag = parameter,
-                                    Padding = new Padding(0, 6, 0, 3),
-                                    AutoSize = true,
-                                    Text =
+                {
+                    Tag = parameter,
+                    Padding = new Padding(0, 6, 0, 3),
+                    AutoSize = true,
+                    Text =
                                         parameter.HasPrompt
                                             ? parameter.Prompt(processor, context)
                                             : "Confidence (%)"
-                                };
+                };
                 tlp.Controls.Add(lbl);
                 MaybeAddHelpTip(lbl, parameter);
             }
@@ -2843,36 +2839,36 @@ namespace StatsDirect.UI
             panel2By2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
             Label lblColumnsPrompt = new Label
-                                         {
-                                             Padding = new Padding(3, 3, 3, 3),
-                                             AutoSize = true,
-                                             Text = parameter.ColumnsPrompt
-                                         };
+            {
+                Padding = new Padding(3, 3, 3, 3),
+                AutoSize = true,
+                Text = parameter.ColumnsPrompt
+            };
             panel2By2.Controls.Add(lblColumnsPrompt, 0, 0);
             panel2By2.SetColumnSpan(lblColumnsPrompt, 3);
 
             Label lblLeftColumnPrompt = new Label
-                                            {
-                                                Padding = new Padding(3, 6, 3, 3),
-                                                AutoSize = true,
-                                                Text = parameter.LeftColumnPrompt
-                                            };
+            {
+                Padding = new Padding(3, 6, 3, 3),
+                AutoSize = true,
+                Text = parameter.LeftColumnPrompt
+            };
             panel2By2.Controls.Add(lblLeftColumnPrompt, 0, 1);
 
             Label lblRightColumnPrompt = new Label
-                                             {
-                                                 Padding = new Padding(3, 6, 3, 3),
-                                                 AutoSize = true,
-                                                 Text = parameter.RightColumnPrompt
-                                             };
+            {
+                Padding = new Padding(3, 6, 3, 3),
+                AutoSize = true,
+                Text = parameter.RightColumnPrompt
+            };
             panel2By2.Controls.Add(lblRightColumnPrompt, 1, 1);
 
             Label lblRowsPrompt = new Label
-                                      {
-                                          Padding = new Padding(3, 6, 3, 3),
-                                          AutoSize = true,
-                                          Text = parameter.RowsPrompt
-                                      };
+            {
+                Padding = new Padding(3, 6, 3, 3),
+                AutoSize = true,
+                Text = parameter.RowsPrompt
+            };
             panel2By2.Controls.Add(lblRowsPrompt, 2, 1);
 
             TextBox txtTL = new TextBox { Name = "txtTL", Size = new Size(100, 18) };
@@ -2888,11 +2884,11 @@ namespace StatsDirect.UI
             panel2By2.Controls.Add(txtTR, 1, 2);
 
             Label lblTopRowPrompt = new Label
-                                        {
-                                            Padding = new Padding(3, 6, 3, 3),
-                                            AutoSize = true,
-                                            Text = parameter.TopRowPrompt
-                                        };
+            {
+                Padding = new Padding(3, 6, 3, 3),
+                AutoSize = true,
+                Text = parameter.TopRowPrompt
+            };
             panel2By2.Controls.Add(lblTopRowPrompt, 2, 2);
 
             TextBox txtBL = new TextBox { Name = "txtBL", Size = new Size(100, 18) };
@@ -2908,11 +2904,11 @@ namespace StatsDirect.UI
             panel2By2.Controls.Add(txtBR, 1, 3);
 
             Label lblBottomRowPrompt = new Label
-                                           {
-                                               Padding = new Padding(3, 6, 3, 3),
-                                               AutoSize = true,
-                                               Text = parameter.BottomRowPrompt
-                                           };
+            {
+                Padding = new Padding(3, 6, 3, 3),
+                AutoSize = true,
+                Text = parameter.BottomRowPrompt
+            };
             panel2By2.Controls.Add(lblBottomRowPrompt, 2, 3);
 
             tlp.Controls.Add(panel2By2);
@@ -2925,22 +2921,22 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
             TableLayoutPanel panel2By2ByK = new TableLayoutPanel
-                                                {
-                                                    Tag = parameter,
-                                                    RowCount = 5,
-                                                    ColumnCount = 3,
-                                                    AutoSize = true
-                                                };
+            {
+                Tag = parameter,
+                RowCount = 5,
+                ColumnCount = 3,
+                AutoSize = true
+            };
             panel2By2ByK.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel2By2ByK.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel2By2ByK.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
             Label lblColumnsPrompt = new Label
-                                         {
-                                             Padding = new Padding(3, 6, 3, 3),
-                                             AutoSize = true,
-                                             Text = "Characteristic (press F1 for an example)"
-                                         };
+            {
+                Padding = new Padding(3, 6, 3, 3),
+                AutoSize = true,
+                Text = "Characteristic (press F1 for an example)"
+            };
             panel2By2ByK.Controls.Add(lblColumnsPrompt, 0, 0);
             panel2By2ByK.SetColumnSpan(lblColumnsPrompt, 3);
 
@@ -3208,12 +3204,12 @@ namespace StatsDirect.UI
             gridEditGrid.Visible = true;
 
             Label lbl = new Label
-                            {
-                                Tag = parameter,
-                                Padding = new Padding(0, 6, 0, 3),
-                                AutoSize = true,
-                                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
-                            };
+            {
+                Tag = parameter,
+                Padding = new Padding(0, 6, 0, 3),
+                AutoSize = true,
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+            };
             tlp.Controls.Add(lbl);
             return null;
         }
@@ -3358,12 +3354,12 @@ namespace StatsDirect.UI
             }
 
             Label lbl = new Label
-                            {
-                                Tag = parameter,
-                                Padding = new Padding(0, 6, 0, 3),
-                                AutoSize = true,
-                                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
-                            };
+            {
+                Tag = parameter,
+                Padding = new Padding(0, 6, 0, 3),
+                AutoSize = true,
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+            };
             tlp.Controls.Add(lbl);
 
             return null;
@@ -3553,12 +3549,12 @@ namespace StatsDirect.UI
                         foreach (OptionOption optionOption in parameter.Options)
                         {
                             RadioButton rad = new RadioButton
-                                                  {
-                                                      AutoSize = true,
-                                                      Text = optionOption.Label,
-                                                      Tag = optionOption.Value,
-                                                      UseVisualStyleBackColor = true
-                                                  };
+                            {
+                                AutoSize = true,
+                                Text = optionOption.Label,
+                                Tag = optionOption.Value,
+                                UseVisualStyleBackColor = true
+                            };
                             AddAppropriateEventHandlersTo(rad);
                             panelOptions.Controls.Add(rad);
                             rad.Checked = optionOption.Value.Equals(defaultValue);
@@ -3596,25 +3592,25 @@ namespace StatsDirect.UI
                 if (!string.IsNullOrEmpty(prompt))
                 {
                     Label lbl = new Label
-                                    {
-                                        Tag = parameter,
-                                        Padding = new Padding(0, 6, 0, 3),
-                                        AutoSize = true,
-                                        MaximumSize = new Size(500, 500),
-                                        Text = prompt
-                                    };
+                    {
+                        Tag = parameter,
+                        Padding = new Padding(0, 6, 0, 3),
+                        AutoSize = true,
+                        MaximumSize = new Size(500, 500),
+                        Text = prompt
+                    };
                     tlp.Controls.Add(lbl);
                     tlp.SetColumnSpan(lbl, 2);
                 }
             }
 
             TableLayoutPanel panelOptions = new TableLayoutPanel
-                                                {
-                                                    Tag = parameter,
-                                                    RowCount = (parameter.Options.Count + 1) / 2,
-                                                    ColumnCount = parameter.Columns,
-                                                    AutoSize = true
-                                                };
+            {
+                Tag = parameter,
+                RowCount = (parameter.Options.Count + 1) / 2,
+                ColumnCount = parameter.Columns,
+                AutoSize = true
+            };
             for (int column = 0; column < parameter.Columns; column++)
             {
                 panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -3792,23 +3788,23 @@ namespace StatsDirect.UI
             if (parameter.HasPrompt)
             {
                 Label lbl = new Label
-                                {
-                                    Tag = parameter,
-                                    Padding = new Padding(0, 6, 0, 3),
-                                    AutoSize = true,
-                                    Text = parameter.Prompt(processor, context)
-                                };
+                {
+                    Tag = parameter,
+                    Padding = new Padding(0, 6, 0, 3),
+                    AutoSize = true,
+                    Text = parameter.Prompt(processor, context)
+                };
                 tlp.Controls.Add(lbl);
                 tlp.SetColumnSpan(lbl, 2);
             }
 
             TableLayoutPanel holder = new TableLayoutPanel
-                                          {
-                                              AutoSize = true,
-                                              ColumnCount = 2,
-                                              RowCount = parameter.MaximumVariables,
-                                              Tag = parameter
-                                          };
+            {
+                AutoSize = true,
+                ColumnCount = 2,
+                RowCount = parameter.MaximumVariables,
+                Tag = parameter
+            };
             for (int v = 0; v < parameter.MaximumVariables; v++)
             {
                 ComboBox cbo = new ComboBox { FormattingEnabled = true };
@@ -3825,11 +3821,11 @@ namespace StatsDirect.UI
                 AutoSizeCombo(cbo);
                 holder.Controls.Add(cbo);
                 Label l = new Label
-                              {
-                                  Padding = new Padding(3, 6, 3, 3),
-                                  AutoSize = true,
-                                  Text = parameter.LabelAs(processor, context, v)
-                              };
+                {
+                    Padding = new Padding(3, 6, 3, 3),
+                    AutoSize = true,
+                    Text = parameter.LabelAs(processor, context, v)
+                };
                 holder.Controls.Add(l);
             }
             tlp.Controls.Add(holder);
@@ -3853,12 +3849,12 @@ namespace StatsDirect.UI
             if (parameter.AllowMultiple)
             {
                 ListBox lstPickFromList = new ListBox
-                                              {
-                                                  Tag = parameter,
-                                                  FormattingEnabled = true,
-                                                  Name = "lstPickFromList",
-                                                  Size = new Size(250, 48)
-                                              };
+                {
+                    Tag = parameter,
+                    FormattingEnabled = true,
+                    Name = "lstPickFromList",
+                    Size = new Size(250, 48)
+                };
                 foreach (string value in values)
                     lstPickFromList.Items.Add(value);
                 lstPickFromList.SelectionMode = parameter.AllowMultiple ? SelectionMode.MultiSimple : SelectionMode.One;
@@ -3880,15 +3876,15 @@ namespace StatsDirect.UI
             }
 
             Label lbl = new Label
-                            {
-                                Tag = parameter,
-                                Padding = new Padding(0, 6, 0, 3),
-                                AutoSize = true,
-                                Text =
+            {
+                Tag = parameter,
+                Padding = new Padding(0, 6, 0, 3),
+                AutoSize = true,
+                Text =
                                     parameter.HasPrompt
                                         ? parameter.Prompt(processor, context)
                                         : ""
-                            };
+            };
             tlp.Controls.Add(lbl);
             return null;
         }
@@ -3930,11 +3926,11 @@ namespace StatsDirect.UI
                 }
 
                 WorkbookView grid = new WorkbookView
-                                        {
-                                            ContextMenuStrip = contextMenuStrip,
-                                            Padding = new Padding(0, 0, 0, 0),
-                                            Margin = new Padding(0, 0, 0, 0)
-                                        };
+                {
+                    ContextMenuStrip = contextMenuStrip,
+                    Padding = new Padding(0, 0, 0, 0),
+                    Margin = new Padding(0, 0, 0, 0)
+                };
                 grid.GetLock();
                 try
                 {
@@ -4025,12 +4021,12 @@ namespace StatsDirect.UI
             if ("raters-2d".Equals(parameter.SpecialType))
             {
                 TableLayoutPanel ssgContainer = new TableLayoutPanel
-                                                    {
-                                                        Tag = parameter,
-                                                        RowCount = 2,
-                                                        ColumnCount = 2,
-                                                        AutoSize = true
-                                                    };
+                {
+                    Tag = parameter,
+                    RowCount = 2,
+                    ColumnCount = 2,
+                    AutoSize = true
+                };
 
                 Label colsLabel = new Label { Text = "Rater 2", AutoSize = true };
                 ssgContainer.Controls.Add(colsLabel, 1, 0);
@@ -4077,13 +4073,13 @@ namespace StatsDirect.UI
                 if (minimumC != Constant.MISSING)
                 {
                     DoubleParameter dp = new DoubleParameter
-                                             {
-                                                 Name = parameter.Name,
-                                                 PromptExpression = parameter.PromptExpression,
-                                                 MinimumValueExpression = new Expression(minimumC.ToString()),
-                                                 DefaultValueExpression = new Expression(suggestedC.ToString()),
-                                                 CancelSkipsParameter = "Skip"
-                                             };
+                    {
+                        Name = parameter.Name,
+                        PromptExpression = parameter.PromptExpression,
+                        MinimumValueExpression = new Expression(minimumC.ToString()),
+                        DefaultValueExpression = new Expression(suggestedC.ToString()),
+                        CancelSkipsParameter = "Skip"
+                    };
                     return PrepareCombinedParameter(processor, dp, context);
                 }
                 return null;
@@ -4107,11 +4103,11 @@ namespace StatsDirect.UI
             if ("rubric".Equals(parameter.SpecialType))
             {
                 Label ctl = new Label
-                                {
-                                    AutoSize = true,
-                                    Tag = parameter,
-                                    Text = parameter.Prompt(processor, context)
-                                };
+                {
+                    AutoSize = true,
+                    Tag = parameter,
+                    Text = parameter.Prompt(processor, context)
+                };
                 tlp.Controls.Add(ctl);
                 tlp.SetColumnSpan(ctl, 2);
                 return null;
@@ -4173,12 +4169,12 @@ namespace StatsDirect.UI
             AddAppropriateEventHandlersTo(txt);
 
             Label lbl = new Label
-                            {
-                                Tag = parameter,
-                                Padding = new Padding(0, 6, 0, 3),
-                                AutoSize = true,
-                                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
-                            };
+            {
+                Tag = parameter,
+                Padding = new Padding(0, 6, 0, 3),
+                AutoSize = true,
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+            };
 
             MaybeAddHelpTip(lbl, parameter);
             MaybeAddHelpTip(txt, parameter);
@@ -5109,10 +5105,10 @@ namespace StatsDirect.UI
             {
                 string recentFile = recentFiles[i];
                 ToolStripMenuItem menuItem = new ToolStripMenuItem
-                                                 {
-                                                     DisplayStyle = ToolStripItemDisplayStyle.Text,
-                                                     Size = new Size(167, 22)
-                                                 };
+                {
+                    DisplayStyle = ToolStripItemDisplayStyle.Text,
+                    Size = new Size(167, 22)
+                };
                 // 167,22 is merely a convenient magic size that came from the VS2005 designer; it may not be "right", but it works.
                 string displayedFile = Formatting.ShortPath(recentFile);
                 menuItem.Text = (i + 1).ToString() + ". " + displayedFile;

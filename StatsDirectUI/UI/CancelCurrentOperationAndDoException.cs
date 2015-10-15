@@ -1,10 +1,11 @@
 using System;
 using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
     [Serializable]
-    public class CancelCurrentOperationAndDoException : Exception
+    public class CancelCurrentOperationAndDoException : NotAnErrorException
     {
         private readonly Operation operation;
         private readonly ParameterBag inputParameters;
