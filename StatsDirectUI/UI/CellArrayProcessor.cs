@@ -111,15 +111,15 @@ namespace StatsDirect.UI
                 if (null == numericValues)
                     continue;
 
-                string[] textValues = ccs.GetTexts();
-
                 // Find the last row
                 int lastNumericRow;
-                for (lastNumericRow = numericValues.GetUpperBound(0); lastNumericRow >= 0; lastNumericRow--)
+                for (lastNumericRow = numericValues.GetUpperBound(0); lastNumericRow >= 0; --lastNumericRow)
                     if (numericValues[lastNumericRow] != Constant.MISSING)
                         break;
+                // We obtained the DataValues of the numeric values in the row, which sets the title.  Obtain the texts (remembering that the first text might be a title) and compare.
+                string[] textValues = ccs.GetTextValues();
                 int lastTextRow;
-                for (lastTextRow = ccs.NonHiddenRowCount - 1; lastTextRow >= 0; lastTextRow--)
+                for (lastTextRow = textValues.GetUpperBound(0); lastTextRow >= 0; --lastTextRow)
                     if (!string.IsNullOrWhiteSpace(textValues[lastTextRow]))
                         break;
                 int lastRow = Math.Max(lastNumericRow, lastTextRow);

@@ -25,6 +25,7 @@ namespace StatsDirect.UI
         public bool WasFiltered { get { EnsureKnowsNonHiddenRowCount(); return nonHiddenRowCount < RowCount; } }
 
         public int NonHiddenRowCount { get { EnsureKnowsNonHiddenRowCount(); return nonHiddenRowCount; } }
+        public int NonHiddenDataRowCount { get { EnsureKnowsNonHiddenDataRowCount(); return nonHiddenDataRowCount; } }
 
         // Things that are calculated at the same time as titles
         private bool hasColumnTitleValues;
@@ -36,7 +37,9 @@ namespace StatsDirect.UI
 
         // Things that are calculated at the same time as knowing how long the column really is
         private int nonHiddenRowCount = -1;
+        private int nonHiddenDataRowCount = -1;
         private double[] cachedDataValues;
+        private string[] cachedTextValues;
         private string[] cachedTexts;
         private string[] cachedFormulae;
         private object[,] cachedObjects;
@@ -145,6 +148,13 @@ namespace StatsDirect.UI
             return cachedTexts;
         }
 
+        internal string[] GetTextValues()
+        {
+            if (null == cachedTextValues)
+                cachedTextValues = cellGetter.GetCellTexts(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1, out nonHiddenDataRowCount);
+            return cachedTextValues;
+        }
+
         internal string GetFirstCellText()
         {
             return cellGetter.GetCellText(RowIndex, ColumnIndex);
@@ -152,7 +162,7 @@ namespace StatsDirect.UI
 
         internal DateTime[] GetDateValues()
         {
-            return cellGetter.GetCellDateValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1, out nonHiddenRowCount);
+            return cellGetter.GetCellDateValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1, out nonHiddenDataRowCount);
         }
 
         /// <summary>
@@ -161,7 +171,7 @@ namespace StatsDirect.UI
         internal double[] GetDataValues()
         {
             if (null == cachedDataValues)
-                cachedDataValues = cellGetter.GetCellValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1, out nonHiddenRowCount);
+                cachedDataValues = cellGetter.GetCellValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1, out nonHiddenDataRowCount);
             return cachedDataValues;
         }
 
@@ -194,6 +204,12 @@ namespace StatsDirect.UI
             // If we don't know the count yet, looking at the raw object array is by far the cheapest way of finding out whether we've been filtered.
             if (nonHiddenRowCount < 0)
                 GetObjects();
+        }
+
+        private void EnsureKnowsNonHiddenDataRowCount()
+        {
+            if (nonHiddenRowCount < 0)
+                GetDataValues();
         }
 
     }

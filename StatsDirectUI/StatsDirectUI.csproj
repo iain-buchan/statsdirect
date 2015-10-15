@@ -718,7 +718,9 @@
     <Compile Include="UI\IToolStripHost.cs" />
     <Compile Include="UI\License.cs" />
     <Compile Include="UI\Pane.cs" />
-    <Compile Include="PJLControls\ColourPanel.cs" />
+    <Compile Include="PJLControls\ColourPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="PJLControls\ColourPanelForm.cs">
       <SubType>Form</SubType>
     </Compile>
