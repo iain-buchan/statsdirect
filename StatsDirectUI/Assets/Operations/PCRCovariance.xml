@@ -28,9 +28,9 @@
 		<report type="text/rtf" filename="princ.rtf" />
   </steps>
   <suggested-operations>
-	  <suggested-operation>PCRCoefficients</suggested-operation>
+    <suggested-operation>Cronbach</suggested-operation>
+    <suggested-operation>PCRCoefficients</suggested-operation>
 	  <suggested-operation>PCRScores</suggested-operation>
 	  <suggested-operation>PCRMatrix</suggested-operation>
-	  <suggested-operation>Cronbach</suggested-operation>
   </suggested-operations>
 </operation>
