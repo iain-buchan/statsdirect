@@ -453,18 +453,16 @@ namespace StatsDirect.Builtins
             int[] isz_dum = new int[1 + 1 ];
             isz_dum[1] = 1;
             for (int i = 1; i <= rows; i++)
-            {
                 z_dum[i, 1] = 1.0;
-            }
+
             int iter;
             int ifault;
             double devx;
             clogit(rows, 1, strata, z_dum, rows, isz_dum, 1, ic, isi, out devx, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault);
 
             for (int i = 1; i <= cols; i++)
-            {
                 isz[i] = i;
-            }
+
             double dev;
             clogit(rows, cols, strata, z, rows, isz, cols, ic, isi, out dev, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault);
 
@@ -482,15 +480,12 @@ namespace StatsDirect.Builtins
                 case 5:
                     warn = Formatting.ERRCOLON + "Matrix singularity.";
                     if (cols > 2)
-                    {
                         warn = warn + " Try using fewer predictors.";
-                    }
                     break;
                 case 6:
                     warn = Formatting.WRNCOLON + "Regression failed to converge.  Try reducing accuracy.";
                     break;
             }
-
 
             // RTF_LoadTemplate("clogit.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
@@ -593,14 +588,14 @@ namespace StatsDirect.Builtins
         ///  <param name="se"></param>
         ///  <param name="sc"></param>
         ///  <param name="cov"></param>
-        ///  <param name="NCA"></param>
+        ///  <param name="nca"></param>
         ///  <param name="nct"></param>
         ///  <param name="tol"></param>
         ///  <param name="maxit"></param>
         ///  <param name="iter"></param>
         ///  <param name="ifault"></param>
         ///  <remarks></remarks>
-        private static void clogit(int n, int m, int ns, double[,] z, int ldz, int[] isz, int ip, int[] ic, int[] isi, out double dev, double[] b, double[] se, double[] sc, double[] cov, int[] NCA, int[] nct, double tol, int maxit, out int iter, out int ifault)
+        private static void clogit(int n, int m, int ns, double[,] z, int ldz, int[] isz, int ip, int[] ic, int[] isi, out double dev, double[] b, double[] se, double[] sc, double[] cov, int[] nca, int[] nct, double tol, int maxit, out int iter, out int ifault)
         {
             int k; // Used in many ways through this function; this should be optimised, but not trivial to do so
             // int nrec = 1; 
@@ -611,7 +606,7 @@ namespace StatsDirect.Builtins
             iter = 0;
             dev = Constant.MISSING;
 
-            if (m < 1 | n < 2 | ns < 1 | ip < 1 | ldz < n)
+            if (m < 1 || n < 2 || ns < 1 || ip < 1 || ldz < n)
             {
                 return;
             }
@@ -619,70 +614,57 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= m; i++)
             {
                 if ((isz[i] < 0))
-                {
                     return;
-                }
+
                 if (isz[i] > 0)
-                {
-                    j = j + 1;
-                }
+                    j++;
             }
             if (j != ip)
-            {
                 return;
-            }
 
             ifault = 2;
             int nobs = 0;
             for (int i = 1; i <= ns; i++)
             {
-                NCA[i] = 0;
+                nca[i] = 0;
                 nct[i] = 0;
             }
             for (int i = 1; i <= n; i++)
             {
                 j = isi[i];
-                if (j < 0 | j > ns)
-                {
+                if (j < 0 || j > ns)
                     return;
-                }
+
                 if (j > 0)
                 {
-                    nobs = nobs + 1;
+                    nobs++;
                     j = isi[i];
                     if (ic[i] == 0)
-                    {
-                        NCA[j] = NCA[j] + 1;
-                    }
+                        nca[j]++;
                     else if (ic[i] == 1)
-                    {
-                        nct[j] = nct[j] + 1;
-                    }
+                        nct[j]++;
                     else
-                    {
                         return;
-                    }
                 }
             }
+
             if (nobs <= ip)
-            {
                 return;
-            }
+
             ifault = 0;
 
-            nobs = NCA[1] + nct[1];
+            nobs = nca[1] + nct[1];
             int maxobs = nobs;
-            nct[1] = NCA[1];
-            NCA[1] = 0;
+            nct[1] = nca[1];
+            nca[1] = 0;
             for (int i = 2; i <= ns; i++)
             {
-                k = NCA[i];
+                k = nca[i];
                 int l = nct[i];
                 if (k + l > maxobs)
-                {
                     maxobs = k + l;
-                }
-                NCA[i] = nobs;
+
+                nca[i] = nobs;
                 nobs = nobs + k;
                 nct[i] = nobs;
                 nobs = nobs + l;
@@ -704,8 +686,8 @@ namespace StatsDirect.Builtins
                 {
                     if ((ic[i] == 0))
                     {
-                        k = NCA[l];
-                        NCA[l] = k + 1;
+                        k = nca[l];
+                        nca[l] = k + 1;
                     }
                     else if (ic[i] == 1)
                     {
@@ -717,7 +699,7 @@ namespace StatsDirect.Builtins
                     {
                         if (isz[j] > 0)
                         {
-                            k = k + 1;
+                            k++;
                             wk[k] = z[i, j];
                         }
                     }
@@ -725,7 +707,7 @@ namespace StatsDirect.Builtins
             }
 
             //  center covariates
-            int ncase = NCA[1];
+            int ncase = nca[1];
             int ncc = nct[1];
             k = 0;
             for (int l = 1; l <= ns; l++)
@@ -738,64 +720,56 @@ namespace StatsDirect.Builtins
                         int jk = k + j;
                         for (int i = 1; i <= ncase; i++)
                         {
-                            sum = sum + wk[jk];
-                            jk = jk + ip;
+                            sum += wk[jk];
+                            jk += ip;
                         }
                         sum = sum / Convert.ToDouble(ncase);
                         jk = k + j;
                         for (int i = 1; i <= ncc; i++)
                         {
-                            wk[jk] = wk[jk] - sum;
-                            jk = jk + ip;
+                            wk[jk] -= sum;
+                            jk += ip;
                         }
                     }
                 }
                 if (l < ns)
                 {
                     k = nct[l] * ip;
-                    ncase = NCA[l + 1] - nct[l];
+                    ncase = nca[l + 1] - nct[l];
                     ncc = nct[l + 1] - nct[l];
                 }
             }
 
             for (int i = ns; i >= 2; i--)
             {
-                nct[i] = nct[i] - NCA[i];
-                NCA[i] = NCA[i] - nct[i - 1];
+                nct[i] = nct[i] - nca[i];
+                nca[i] = nca[i] - nct[i - 1];
             }
 
-            nct[1] = nct[1] - NCA[1];
+            nct[1] = nct[1] - nca[1];
 
-            // Call CLMAIN(ns, NCA(1), nct(1), ip, wk(1), ip, dev, b(1), sc(1), cov(1), wk(l1), wk(l2), wk(l3), wk(l4), maxit, tol, iter, ifault)
             double[,] wz = new double[ip + 1, nobs + 1];
             for (j = 1; j <= nobs; j++)
-            {
                 for (int i = 1; i <= ip; i++)
-                {
                     wz[i, j] = wk[i + (j - 1) * ip];
-                }
-            }
-            clmain2(nobs, maxobs, ns, wz, NCA, nct, ip, out dev, b, sc, cov, maxit, tol, out iter, ref ifault);
 
-            // dev = -2.0 * dev; 
+            clmain2(nobs, maxobs, ns, wz, nca, nct, ip, out dev, b, sc, cov, maxit, tol, out iter, ref ifault);
+
+            dev = -2.0 * dev; 
             k = 0;
             for (int i = 1; i <= ip; i++)
             {
-                k = k + i;
+                k += i;
                 if (cov[k] > 0.0)
-                {
                     se[i] = Math.Sqrt(cov[k]);
-                }
                 else
-                {
                     se[i] = 0.0;
-                }
             }
 
         }
 
 
-        private static void clmain2(int nobs, int maxobs, int ns, double[,] z, int[] NCA, int[] nct, int ip, out double dlik, double[] b, double[] sc, double[] cov, int maxit, double tol, out int iter, ref int ifault)
+        private static void clmain2(int nobs, int maxobs, int ns, double[,] z, int[] nca, int[] nct, int ip, out double dlik, double[] b, double[] sc, double[] cov, int maxit, double tol, out int iter, ref int ifault)
         {
 
             //      based on applied statistics algorithm as 196 (logcch)
@@ -831,9 +805,9 @@ namespace StatsDirect.Builtins
                 int nid = 0;
                 for (int i = 1; i <= ns; i++)
                 {
-                    int m = NCA[i];
+                    int m = nca[i];
                     int n = m + nct[i];
-                    if (NCA[i] > 0 & nct[i] > 0)
+                    if (nca[i] > 0 & nct[i] > 0)
                     {
                         double sum = 0.0;
                         for (int j = 1; j <= n; j++)
@@ -919,14 +893,12 @@ namespace StatsDirect.Builtins
                         if (iter >= maxit)
                         {
                             ifault = 6;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                         dlikx = dlik;
                     }
                     else
-                    {
-                        break; /* TRANSWARNING: check that break is in correct scope */
-                    }
+                        break;
                 }
                 else if (maxit > 1)
                 {
@@ -935,24 +907,17 @@ namespace StatsDirect.Builtins
                 else if (maxit == 1)
                 {
                     ifault = 6;
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
                 else
-                {
-                    break; /* TRANSWARNING: check that break is in correct scope */
-                }
-
+                    break;
             }
             while (true);
 
             //  invert u (info mat)
-
-            dpptri(ref ip, ref cov, out info);
+            dpptri(ip, cov, out info);
             if (info > 0)
-            {
                 ifault = 5;
-            }
-
         }
 
         private static void Howard2(int m, int n, double[] u, double[,] z, int idz, int ip, double[] wb, double[,] wdb, double[,] wd2b)
@@ -966,13 +931,9 @@ namespace StatsDirect.Builtins
             {
                 wb[j] = 0.0;
                 for (int i = 1; i <= ip; i++)
-                {
                     wdb[i, j] = 0.0;
-                }
                 for (int i = 1; i <= ip * (ip + 1) / 2; i++)
-                {
                     wd2b[i, j] = 0.0;
-                }
             }
 
             wb[1] = 1.0;
@@ -1003,19 +964,18 @@ namespace StatsDirect.Builtins
                     wb[j1] = wb[j1] + u[i] * wb[j];
                 }
             }
-
         }
 
 
         /// <summary>
-        ///   dpptri computes the inverse of a real symmetric positive definite
-        ///   matrix a using the cholesky factorization a = u**t*u or a = l*l**t
-        ///   computed by dpptrf.
+        ///  Computes the inverse of a real symmetric positive definite
+        ///  matrix a using the cholesky factorization a = u**t*u or a = l*l**t
+        ///  computed by dpptrf.
         /// </summary>
         /// <param name="n"></param>
         /// <param name="ap"></param>
         /// <param name="info"></param>
-        private static void dpptri(ref int n, ref double[] ap, out int info)
+        private static void dpptri(int n, double[] ap, out int info)
         {
             info = 0;
             if (n < 0)
@@ -1058,9 +1018,9 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        ///   dpptrs solves a system of linear equations a*x = b with an upper symmetric
-        ///   positive definite matrix a in packed storage using the cholesky
-        ///   factorization a = u**t*u or a = l*l**t computed by dpptrf.
+        /// Solves a system of linear equations a*x = b with an upper symmetric
+        /// positive definite matrix a in packed storage using the cholesky
+        /// factorization a = u**t*u or a = l*l**t computed by dpptrf.
         /// </summary>
         private static void dpptrs(int n, double[] ap, double[,] b, out int info)
         {
@@ -1096,7 +1056,7 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        ///   dpptrf computes the cholesky factorization of an upper real symmetric positive definite matrix a stored in packed format.
+        /// Computes the cholesky factorization of an upper real symmetric positive definite matrix a stored in packed format.
         /// </summary>
         private static void dpptrf(int n, double[] ap, out int info)
         {
@@ -1140,7 +1100,7 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        ///   dspr    performs the symmetric rank 1 operation
+        /// Performs the symmetric rank 1 operation
         /// 
         ///      a := alpha*x*x' + a,
         /// 
@@ -1188,7 +1148,7 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        ///   dtpsv solves one of the systems of equations
+        /// Solves one of the systems of equations
         /// 
         ///      a*x = b,   or   a'*x = b,
         /// 
@@ -1281,7 +1241,7 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        ///   dtpmv  performs one of the matrix-vector operations
+        /// Performs one of the matrix-vector operations
         /// 
         ///      x := a*x,   or   x := a'*x,
         /// 
@@ -1370,7 +1330,7 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// dtptri computes the inverse of a real upper triangular matrix a stored in packed format.
+        /// Computes the inverse of a real upper triangular matrix a stored in packed format.
         /// </summary>
         private static void dtptri(bool udiag, int n, double[] ap, out int info)
         {
@@ -1424,6 +1384,4 @@ namespace StatsDirect.Builtins
         }
 
     }
-
-
 }
