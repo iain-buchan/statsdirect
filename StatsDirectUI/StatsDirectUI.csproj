@@ -291,11 +291,13 @@
       <DependentUpon>RResults.g4</DependentUpon>
     </Compile>
     <Compile Include="R\RResultsParserPartial.cs" />
+    <Compile Include="R\RVersion.cs" />
     <Compile Include="Templates\AxisScaleParameters.cs" />
     <Compile Include="Templates\GroupIdentifierMode.cs" />
     <Compile Include="Templates\IDefaultParameter.cs" />
     <Compile Include="Templates\LabelDirection.cs" />
     <Compile Include="Templates\OptionParameter.cs" />
+    <Compile Include="Templates\Precondition.cs" />
     <Compile Include="Templates\ReportStep.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -1706,7 +1708,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

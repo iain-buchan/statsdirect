@@ -12,7 +12,7 @@ using System.Text;
 
 namespace StatsDirect.R
 {
-    class RController
+    public class RController
     {
         const string RSCRIPT_EXE_NAME = "Rscript.exe";
         const string RSCRIPT_NAME = "script.r";
@@ -29,31 +29,32 @@ namespace StatsDirect.R
             List<RVersion> installedVersions = new List<RVersion>();
             try
             {
-                RegistryKey hklm = Registry.LocalMachine;
-                foreach (string rLocation in rLocations)
+                using (RegistryKey hklm = Registry.LocalMachine)
                 {
-                    RegistryKey rKey = hklm.OpenSubKey(rLocation);
-                    foreach (string version32 in rKey.GetSubKeyNames())
+                    foreach (string rLocation in rLocations)
                     {
-                        RegistryKey versionKey = rKey.OpenSubKey(version32);
-                        object installPathObject = versionKey.GetValue("InstallPath");
-                        if (null != installPathObject)
+                        using (RegistryKey rKey = hklm.OpenSubKey(rLocation))
                         {
-                            bool isX64 = rLocation.EndsWith("64");
-                            string installPath = (string)installPathObject;
-                            RVersion version = new RVersion { IsX64 = isX64, Version = version32, InstallPath = installPath };
-                            // Probe for a binary there to check it's still around and hasn't been uninstalled/deleted
-                            string binaryPath = Path.Combine(version.BinPath, "Rscript.exe");
-                            if (File.Exists(binaryPath))
+                            foreach (string version32 in rKey.GetSubKeyNames())
                             {
-                                installedVersions.Add(version);
+                                using (RegistryKey versionKey = rKey.OpenSubKey(version32))
+                                {
+                                    object installPathObject = versionKey.GetValue("InstallPath");
+                                    if (null != installPathObject)
+                                    {
+                                        bool isX64 = rLocation.EndsWith("64");
+                                        string installPath = (string)installPathObject;
+                                        RVersion version = new RVersion { IsX64 = isX64, VersionString = version32, InstallPath = installPath };
+                                        // Probe for a binary there to check it's still around and hasn't been uninstalled/deleted
+                                        string binaryPath = Path.Combine(version.BinPath, "Rscript.exe");
+                                        if (File.Exists(binaryPath))
+                                            installedVersions.Add(version);
+                                    }
+                                }
                             }
                         }
-                        versionKey.Close();
                     }
-                    rKey.Close();
                 }
-                hklm.Close();
             }
             catch (Exception)
             {
@@ -67,61 +68,13 @@ namespace StatsDirect.R
         /// </summary>
         /// <param name="candidates"></param>
         /// <returns></returns>
-        public static RVersion PreferredRVersion(ICollection<RVersion> candidates)
+        public static RVersion PreferredRVersion()
         {
+            ICollection<RVersion> candidates = CheckR();
             RVersion preferred = null;
             foreach (RVersion candidate in candidates)
-            {
-                if (null == preferred)
+                if (candidate.CompareTo(preferred) > 0)
                     preferred = candidate;
-                else
-                {
-                    // Parse candidate version, expect x.y.z
-                    int candidateMajor;
-                    int candidateMinor;
-                    int candidate3;
-                    string[] candidateSplit = candidate.Version.Split('.');
-                    if (candidateSplit.Length != 3)
-                        continue;
-                    if (!int.TryParse(candidateSplit[0], out candidateMajor))
-                        continue;
-                    if (!int.TryParse(candidateSplit[1], out candidateMinor))
-                        continue;
-                    if (!int.TryParse(candidateSplit[2], out candidate3))
-                        continue;
-
-                    // Parse preferred version, expect x.y.z
-                    int preferredMajor;
-                    int preferredMinor;
-                    int preferred3;
-                    string[] preferredSplit = preferred.Version.Split('.');
-                    if (preferredSplit.Length != 3)
-                        continue;
-                    if (!int.TryParse(preferredSplit[0], out preferredMajor))
-                        continue;
-                    if (!int.TryParse(preferredSplit[1], out preferredMinor))
-                        continue;
-                    if (!int.TryParse(preferredSplit[2], out preferred3))
-                        continue;
-
-                    if (preferredMajor > candidateMajor)
-                        continue;
-                    if (preferredMinor > candidateMinor)
-                        continue;
-                    if (preferred3 > candidate3)
-                        continue;
-
-                    if (preferredMajor == candidateMajor && preferredMinor == candidateMinor && preferred3 == candidate3)
-                    {
-                        // Check bitness
-                        if (preferred.IsX64 && !candidate.IsX64)
-                            continue;
-                    }
-
-                    // If we get here, the candidate is of a greater version or of the same version but greater bitness.
-                    preferred = candidate;
-                }
-            }
             return preferred;
         }
 
@@ -160,12 +113,12 @@ namespace StatsDirect.R
                 File.Delete(errorFilePath);
 
             // TODO: Probably don't do this per-script in the future.
-            RVersion preferredVersion = PreferredRVersion(CheckR());
+            RVersion preferredVersion = PreferredRVersion();
             while (null == preferredVersion)
             {
                 if (!UserMightHaveInstalledR())
                     throw new TemplateOperationCancelledException();
-                preferredVersion = PreferredRVersion(CheckR());
+                preferredVersion = PreferredRVersion();
             }
 
             ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -300,23 +253,6 @@ namespace StatsDirect.R
             {
                 return tr.ReadToEnd().Replace("\r", "");
             }
-        }
-    }
-
-    public class RVersion
-    {
-        public string InstallPath { get; set; }
-        public string Version { get; set; }
-        public bool IsX64 { get; set; }
-
-        public string BinPath
-        {
-            get { return Path.Combine(InstallPath, "bin", IsX64 ? "x64" : "i386"); }
-        }
-
-        public string GuiPath
-        {
-            get { return Path.Combine(BinPath, "Rgui.exe"); }
         }
     }
 }

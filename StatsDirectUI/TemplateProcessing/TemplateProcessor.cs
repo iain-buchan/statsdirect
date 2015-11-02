@@ -32,22 +32,32 @@ namespace StatsDirect.Templates
         /// <summary>
         /// Run the operation to completion or error.
         /// </summary>
-        /// <param name="Operation"></param>
+        /// <param name="operation"></param>
         /// <param name="startingParameters">If non-null, some parameters to be used as defaults.</param>
         /// <param name="isRedo"> </param>
-        public ParameterBag Execute(Operation Operation, ParameterBag startingParameters, bool isRedo)
+        public ParameterBag Execute(Operation operation, ParameterBag startingParameters, bool isRedo)
         {
-            host.Operation = Operation;
+            host.Operation = operation;
             ParameterBag filledParameters = startingParameters ?? new ParameterBag();
 
+            // Check preconditions; fail if any fail.
+            foreach (Precondition precondition in operation.Preconditions)
+            {
+                if (!precondition.Check(this, filledParameters))
+                {
+                    host.Error(precondition.FailureMessage, "Cannot run operation");
+                    return null;
+                }
+            }
+
             // Prepare the steps, to give an opportunity for some parts of the system to set themselves up
-            foreach (Step step in Operation.Steps)
+            foreach (Step step in operation.Steps)
             {
                 Prepare(step, filledParameters);
             }
 
             // Run each step in turn
-            foreach (Step step in Operation.Steps)
+            foreach (Step step in operation.Steps)
             {
                 try
                 {

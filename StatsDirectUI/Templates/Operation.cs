@@ -20,6 +20,7 @@ namespace StatsDirect.Templates
         private IList<string> prerequisiteOperationNames;
         private List<SuggestedOperation> suggestedOperations;
         private List<CustomValidator> customValidators;
+        private List<Precondition> preconditions;
 
         public Operation()
         {
@@ -27,6 +28,7 @@ namespace StatsDirect.Templates
             prerequisiteOperationNames = new List<string>();
             suggestedOperations = new List<SuggestedOperation>();
             customValidators = new List<CustomValidator>();
+            preconditions = new List<Precondition>();
         }
 
         public void FixAfterLoading()
@@ -69,6 +71,30 @@ namespace StatsDirect.Templates
         public IList<CustomValidator> CustomValidators
         {
             get { return customValidators; }
+        }
+
+        [XmlArray(ElementName = "preconditions"),
+        XmlArrayItem(ElementName = "precondition", Type = typeof(Precondition))]
+        public Precondition[] PreconditionsForXml
+        {
+            get
+            {
+                return preconditions.ToArray();
+            }
+            set
+            {
+                if (null != value)
+                {
+                    foreach (Precondition precondition in value)
+                        preconditions.Add(precondition);
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public IList<Precondition> Preconditions
+        {
+            get { return preconditions; }
         }
 
         [XmlArray(ElementName = "suggested-operations"),

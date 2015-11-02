@@ -6343,12 +6343,12 @@ namespace StatsDirect.UI
         {
             try
             {
-                RVersion preferredVersion = RController.PreferredRVersion(RController.CheckR());
+                RVersion preferredVersion = RController.PreferredRVersion();
                 while (null == preferredVersion)
                 {
                     if (!RController.UserMightHaveInstalledR())
                         return;
-                    preferredVersion = RController.PreferredRVersion(RController.CheckR());
+                    preferredVersion = RController.PreferredRVersion();
                 }
                 string guiPath = preferredVersion.GuiPath;
                 Process.Start(guiPath);

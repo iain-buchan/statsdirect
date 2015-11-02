@@ -3,6 +3,12 @@
 	<name>MethodComparisonRegression</name>
   <friendly-name lang="en-GB">Method comparison regression</friendly-name>
   <help chm-id="1396" />
+  <preconditions>
+    <precondition>
+      <condition language="CSharp">=RController.PreferredRVersion().MajorVersion >= 3</condition>
+      <failure-message lang="en-GB">This operation uses the 'mcr' package in R, which requires at least R version 3.0.0. Please install that version, then run this operation again.</failure-message>
+    </precondition>
+  </preconditions>
   <steps>
 			<parameters>
 				<frame>

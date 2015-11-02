@@ -43,7 +43,7 @@ namespace StatsDirect.UI
             MajorMinorPoint latestInstalledVersion = null;
             foreach (RVersion version in RController.CheckR())
             {
-                MajorMinorPoint installedVersion = new MajorMinorPoint(version.Version);
+                MajorMinorPoint installedVersion = new MajorMinorPoint(version.VersionString);
                 if (!(downloadableVersion > installedVersion))
                     downloadableIsNewer = false;
                 if (null == latestInstalledVersion || installedVersion > latestInstalledVersion)
