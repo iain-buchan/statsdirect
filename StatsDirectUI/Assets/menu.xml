@@ -35,7 +35,8 @@
         <menu-item label="&amp;Cleaning and Encoding">
           <help chm-id="1377" />
           <sub-items>
-            <menu-item label="&amp;Search and Replace" operation="SearchAndReplace" />
+            <menu-item label="&amp;Search and Replace (Basic)" operation="SearchAndReplace" />
+            <!-- <menu-item label="&amp;Search and Replace (Advanced)" operation="SearchAndReplaceAdvanced" /> -->
             <menu-item label="Clear &amp;Missing Data" operation="ClearMissing" />
             <menu-item label="&amp;Text to Numbers" operation="TextCode" />
             <menu-item label="&amp;Date and Time Intervals" operation="Dates" />

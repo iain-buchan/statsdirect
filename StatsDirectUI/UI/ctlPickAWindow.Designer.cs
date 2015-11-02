@@ -32,6 +32,7 @@ namespace StatsDirect.UI
             this.cboWindows = new System.Windows.Forms.ComboBox();
             this.rdoFirstColumn = new System.Windows.Forms.RadioButton();
             this.rdoBeforeSelection = new System.Windows.Forms.RadioButton();
+            this.rdoReplaceSelection = new System.Windows.Forms.RadioButton();
             this.rdoAfterSelection = new System.Windows.Forms.RadioButton();
             this.rdoLastColumn = new System.Windows.Forms.RadioButton();
             this.SuspendLayout();
@@ -40,7 +41,7 @@ namespace StatsDirect.UI
             // 
             this.lblSelectWindow.AutoSize = true;
             this.lblSelectWindow.BackColor = System.Drawing.Color.Transparent;
-            this.lblSelectWindow.Location = new System.Drawing.Point(279, 3);
+            this.lblSelectWindow.Location = new System.Drawing.Point(362, 3);
             this.lblSelectWindow.Margin = new System.Windows.Forms.Padding(0, 0, 3, 0);
             this.lblSelectWindow.Name = "lblSelectWindow";
             this.lblSelectWindow.Size = new System.Drawing.Size(133, 13);
@@ -49,15 +50,15 @@ namespace StatsDirect.UI
             // 
             // cboWindows
             // 
-            this.cboWindows.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.cboWindows.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.cboWindows.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboWindows.FormattingEnabled = true;
             this.cboWindows.Location = new System.Drawing.Point(0, 0);
             this.cboWindows.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.cboWindows.MaxDropDownItems = 20;
             this.cboWindows.Name = "cboWindows";
-            this.cboWindows.Size = new System.Drawing.Size(279, 21);
+            this.cboWindows.Size = new System.Drawing.Size(362, 21);
             this.cboWindows.TabIndex = 3;
             // 
             // rdoFirstColumn
@@ -82,14 +83,25 @@ namespace StatsDirect.UI
             this.rdoBeforeSelection.UseVisualStyleBackColor = true;
             this.rdoBeforeSelection.CheckedChanged += new System.EventHandler(this.rdoBeforeSelection_CheckedChanged);
             // 
+            // rdoReplaceSelection
+            // 
+            this.rdoReplaceSelection.AutoSize = true;
+            this.rdoReplaceSelection.Location = new System.Drawing.Point(199, 25);
+            this.rdoReplaceSelection.Name = "rdoReplaceSelection";
+            this.rdoReplaceSelection.Size = new System.Drawing.Size(110, 17);
+            this.rdoReplaceSelection.TabIndex = 6;
+            this.rdoReplaceSelection.Text = "Replace selection";
+            this.rdoReplaceSelection.UseVisualStyleBackColor = true;
+            this.rdoReplaceSelection.CheckedChanged += new System.EventHandler(this.rdoReplaceSelection_CheckedChanged);
+            // 
             // rdoAfterSelection
             // 
             this.rdoAfterSelection.AutoSize = true;
             this.rdoAfterSelection.Checked = true;
-            this.rdoAfterSelection.Location = new System.Drawing.Point(200, 25);
+            this.rdoAfterSelection.Location = new System.Drawing.Point(315, 25);
             this.rdoAfterSelection.Name = "rdoAfterSelection";
             this.rdoAfterSelection.Size = new System.Drawing.Size(92, 17);
-            this.rdoAfterSelection.TabIndex = 6;
+            this.rdoAfterSelection.TabIndex = 7;
             this.rdoAfterSelection.TabStop = true;
             this.rdoAfterSelection.Text = "After selection";
             this.rdoAfterSelection.UseVisualStyleBackColor = true;
@@ -98,10 +110,10 @@ namespace StatsDirect.UI
             // rdoLastColumn
             // 
             this.rdoLastColumn.AutoSize = true;
-            this.rdoLastColumn.Location = new System.Drawing.Point(299, 25);
+            this.rdoLastColumn.Location = new System.Drawing.Point(413, 25);
             this.rdoLastColumn.Name = "rdoLastColumn";
             this.rdoLastColumn.Size = new System.Drawing.Size(82, 17);
-            this.rdoLastColumn.TabIndex = 7;
+            this.rdoLastColumn.TabIndex = 8;
             this.rdoLastColumn.Text = "Last column";
             this.rdoLastColumn.UseVisualStyleBackColor = true;
             this.rdoLastColumn.CheckedChanged += new System.EventHandler(this.rdoLastColumn_CheckedChanged);
@@ -116,11 +128,12 @@ namespace StatsDirect.UI
             this.Controls.Add(this.rdoLastColumn);
             this.Controls.Add(this.rdoAfterSelection);
             this.Controls.Add(this.rdoBeforeSelection);
+            this.Controls.Add(this.rdoReplaceSelection);
             this.Controls.Add(this.rdoFirstColumn);
             this.Controls.Add(this.lblSelectWindow);
             this.Controls.Add(this.cboWindows);
             this.Name = "ctlPickAWindow";
-            this.Size = new System.Drawing.Size(415, 45);
+            this.Size = new System.Drawing.Size(536, 45);
             this.Load += new System.EventHandler(this.ctlPickAWindow_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -133,6 +146,7 @@ namespace StatsDirect.UI
         private System.Windows.Forms.ComboBox cboWindows;
         private System.Windows.Forms.RadioButton rdoFirstColumn;
         private System.Windows.Forms.RadioButton rdoBeforeSelection;
+        private System.Windows.Forms.RadioButton rdoReplaceSelection;
         private System.Windows.Forms.RadioButton rdoAfterSelection;
         private System.Windows.Forms.RadioButton rdoLastColumn;
     }

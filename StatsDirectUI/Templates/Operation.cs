@@ -238,7 +238,7 @@ namespace StatsDirect.Templates
         /// <param name="stepType"></param>
         /// <param name="stepFound"></param>
         /// <returns></returns>
-        public HasInput ShouldRequestTargetAfter(Step stepToFind, Step.StepType stepType, out Step stepFound)
+        public HasInput ShouldRequestTargetAfter(Step stepToFind, Type stepType, out Step stepFound)
         {
             return Step.ShouldRequestTargetAfter(stepToFind, steps, stepType, false, out stepFound);
         }

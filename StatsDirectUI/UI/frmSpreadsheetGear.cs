@@ -16,6 +16,7 @@ using SpreadsheetGear.Windows.Forms;
 using Color = System.Drawing.Color;
 using SystemColors = System.Drawing.SystemColors;
 using StatsDirect.R;
+using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
@@ -73,7 +74,6 @@ namespace StatsDirect.UI
         {
             if (null != Tag)
                 SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
-            // SDApplication.SoleInstance.MostRecentlySelectedGrid = new PaneAndBoolean(this.SelectedPane, true); // By default, new grid data is inserted not appended
             tableLayoutPanel1.Visible = true;
         }
 
@@ -165,17 +165,7 @@ namespace StatsDirect.UI
         public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
             if (null != workbookView.ActiveWorkbook)
-            {
-                workbookView.GetLock();
-                try
-                {
-                    workbookView.ActiveWorkbook.Close();
-                }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
-            }
+                LockWorkbookAnd(() => workbookView.ActiveWorkbook.Close());
             workbookView.GetLock();
             IWorkbook wb;
             try
@@ -183,7 +173,6 @@ namespace StatsDirect.UI
                 wb = workbookView.ActiveWorkbookSet.Workbooks.Open(filename);
                 if (!isTempFile)
                     Path = filename;
-                // dirty = isTempFile; Removed in #909
             }
             finally
             {
@@ -225,16 +214,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                workbookView.GetLock();
-                try
-                {
-                    string name = workbookView.ActiveWorksheet.Name;
-                    return name;
-                }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
+                return LockWorkbookAndReturn(()=> workbookView.ActiveWorksheet.Name);
             }
         }
 
@@ -242,15 +222,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                workbookView.GetLock();
-                try
-                {
-                    return workbookView.ActiveWorkbook.FullName;
-                }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
+                return LockWorkbookAndReturn(() => workbookView.ActiveWorkbook.FullName);
             }
         }
 
@@ -258,15 +230,7 @@ namespace StatsDirect.UI
         {
             int RowsMinusOne = values.GetUpperBound(0) - values.GetLowerBound(0);
             int ColsMinusOne = values.GetUpperBound(1) - values.GetLowerBound(1);
-            workbookView.GetLock();
-            try
-            {
-                workbookView.ActiveWorksheet.Cells[top, left, top + RowsMinusOne, left + ColsMinusOne].Value = values;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            LockWorkbookAnd(() => workbookView.ActiveWorksheet.Cells[top, left, top + RowsMinusOne, left + ColsMinusOne].Value = values);
             dirty = true;
         }
 
@@ -399,6 +363,11 @@ namespace StatsDirect.UI
                         // Move existing contents out of the way
                         shouldMove = true;
                         break;
+                    case RelativePosition.ReplaceSelection:
+                        // The first column is the first column of the current selection
+                        firstColumnOfData = workbookView.RangeSelection.Column;
+                        // Destroy existing contents
+                        break;
                     case RelativePosition.AfterSelection:
                         // The first column is just past the current selection
                         firstColumnOfData = workbookView.RangeSelection.Column + workbookView.RangeSelection.ColumnCount;
@@ -415,7 +384,7 @@ namespace StatsDirect.UI
                 IRange range = worksheet.Range[0, firstColumnOfData, usedRange.Row + usedRange.RowCount + offsetForTitles - 1, firstColumnOfData + frame.VariableCount - 1];
                 // Create a holder that can be captured by the lambda but then can be cleared out so that it doesn't retain large amounts of data
                 WriteDataFrameParametersHolder holder = new WriteDataFrameParametersHolder { Frame = frame, IsFormulae = isFormulae, MissingIndicator = missingIndicator, Range = range, ShouldMove = shouldMove, OffsetForTitles = offsetForTitles };
-                workbookView.ActiveCommandManager.Execute(new UndoWrapper(/* workbookView.RangeSelection */ range.EntireColumn, "Insert data", () => { if (null != holder.Frame) WriteDataFrameInternal(holder.Frame, holder.IsFormulae, holder.MissingIndicator, holder.Range, holder.ShouldMove, holder.OffsetForTitles); return true; }));
+                workbookView.ActiveCommandManager.Execute(new UndoWrapper(range.EntireColumn, "Insert data", () => { if (null != holder.Frame) WriteDataFrameInternal(holder.Frame, holder.IsFormulae, holder.MissingIndicator, holder.Range, holder.ShouldMove, holder.OffsetForTitles); return true; }));
                 // Clear down reference variables
                 holder.Range = null;
                 holder.Frame = null;
@@ -614,15 +583,7 @@ namespace StatsDirect.UI
 
         public void ClearSelection()
         {
-            workbookView.GetLock();
-            try
-            {
-                workbookView.ActiveCell.Select();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            LockWorkbookAnd(() => workbookView.ActiveCell.Select());
         }
 
         #endregion
@@ -662,6 +623,32 @@ namespace StatsDirect.UI
                 // TODO: It'd be nice to know that the exception happened for our diagnostic purposes.
             }
 #endif
+        }
+
+        private void LockWorkbookAnd(Action func)
+        {
+            workbookView.GetLock();
+            try
+            {
+                func();
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
+
+        }
+        private T LockWorkbookAndReturn<T>(Func<T> func)
+        {
+            workbookView.GetLock();
+            try
+            {
+                return func();
+            }
+            finally
+            {
+                workbookView.ReleaseLock();
+            }
         }
 
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -882,16 +869,7 @@ namespace StatsDirect.UI
         /// <returns>MISSING if the value could not be converted, MISSING * 10 if the value was previously MISSING, or the converted value</returns>
         double IGetCells.GetCellValue(int row, int column)
         {
-            workbookView.GetLock();
-            try
-            {
-                object val = workbookView.ActiveWorksheet.Cells[row, column].Value;
-                return ToCellValue(val);
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            return LockWorkbookAndReturn(() => ToCellValue(workbookView.ActiveWorksheet.Cells[row, column].Value));
         }
 
         string IGetCells.GetCellText(int row, int column)
@@ -1281,16 +1259,7 @@ namespace StatsDirect.UI
 
         private void InsertSheet()
         {
-            workbookView.GetLock();
-            try
-            {
-                IWorksheet newSheet = workbookView.ActiveWorkbook.Worksheets.AddBefore(workbookView.ActiveWorksheet);
-                workbookView.ActiveWorksheet = newSheet;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            LockWorkbookAnd(()=>workbookView.ActiveWorksheet = workbookView.ActiveWorkbook.Worksheets.AddBefore(workbookView.ActiveWorksheet));
         }
 
         private void rowToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1365,28 +1334,28 @@ namespace StatsDirect.UI
                             if (InsertShiftDirection.Right == frm.InsertShiftDirection)
                             {
                                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert column", () =>
-                                                                                                                                                         {
-                                                                                                                                                             workbookView.RangeSelection.EntireColumn.Insert();
-                                                                                                                                                             return true;
-                                                                                                                                                         }));
+                                {
+                                    workbookView.RangeSelection.EntireColumn.Insert();
+                                    return true;
+                                }));
                             }
                             else
                             {
                                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Insert row", () =>
-                                                                                                                                                   {
-                                                                                                                                                       workbookView.RangeSelection.EntireRow.Insert();
-                                                                                                                                                       return true;
-                                                                                                                                                   }));
+                                {
+                                    workbookView.RangeSelection.EntireRow.Insert();
+                                    return true;
+                                }));
                             }
                         }
                         else
                         {
                             InsertShiftDirection isd = frm.InsertShiftDirection; // Cached as frm is disposed before any undo might be called.
                             workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Insert area", () =>
-                                                                                                                                      {
-                                                                                                                                          workbookView.RangeSelection.Insert(isd);
-                                                                                                                                          return true;
-                                                                                                                                      }));
+                            {
+                                workbookView.RangeSelection.Insert(isd);
+                                return true;
+                            }));
                         }
                     }
                     finally
@@ -1455,9 +1424,7 @@ namespace StatsDirect.UI
                 string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", "");
                 workbookView.GetLock();
                 if (null != cell)
-                {
                     workbookView.ActiveWorksheet.Cells[cell].Activate();
-                }
             }
             finally
             {
@@ -1497,28 +1464,28 @@ namespace StatsDirect.UI
                             if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
                             {
                                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Delete column", () =>
-                                                                                                                                                         {
-                                                                                                                                                             workbookView.RangeSelection.EntireColumn.Delete();
-                                                                                                                                                             return true;
-                                                                                                                                                         }));
+                                {
+                                    workbookView.RangeSelection.EntireColumn.Delete();
+                                    return true;
+                                }));
                             }
                             else
                             {
                                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Delete row", () =>
-                                                                                                                                                   {
-                                                                                                                                                       workbookView.RangeSelection.EntireRow.Delete();
-                                                                                                                                                       return true;
-                                                                                                                                                   }));
+                                {
+                                    workbookView.RangeSelection.EntireRow.Delete();
+                                    return true;
+                                }));
                             }
                         }
                         else
                         {
                             DeleteShiftDirection dsd = frm.DeleteShiftDirection; // Cached as frm may be disposed before this is used
                             workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Delete area", () =>
-                                                                                                                                      {
-                                                                                                                                          workbookView.RangeSelection.Delete(dsd);
-                                                                                                                                          return true;
-                                                                                                                                      }));
+                            {
+                                workbookView.RangeSelection.Delete(dsd);
+                                return true;
+                            }));
                         }
                     }
                     finally
@@ -1575,7 +1542,7 @@ namespace StatsDirect.UI
 
         private void DeleteSheet()
         {
-            bool shouldDelete = SdApplication.SoleInstance.Query("This will delete the current sheet.  You cannot undo this operation.  Are you sure you want to delete this sheet?", "Delete sheet");
+            bool shouldDelete = SdApplication.SoleInstance.Query("This will delete the current sheet. You cannot undo this operation. Are you sure you want to delete this sheet?", "Delete sheet");
             if (shouldDelete)
             {
                 workbookView.GetLock();

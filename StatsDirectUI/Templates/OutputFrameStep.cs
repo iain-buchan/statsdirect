@@ -13,6 +13,7 @@ namespace StatsDirect.Templates
         public OutputFrameStep()
         {
             MissingIndicator = Formatting.ASTERISK;
+            DefaultPlacement = RelativePosition.AfterSelection;
         }
 
         /// <summary>
@@ -30,16 +31,8 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "missing-indicator")]
         public string MissingIndicator { get; set; }
 
-        /// <summary>
-        /// If true, prefer inserting before the selection.  If false (default), prefer inserting after the selection.
-        /// </summary>
-        [XmlAttribute(AttributeName="prefer-in-place-insertion")]
-        public bool PreferInPlaceInsertion { get; set; }
-
-        public override StepType Type
-        {
-            get { return StepType.OutputFrame; }
-        }
+        [XmlAttribute(AttributeName="default-placement")]
+        public RelativePosition DefaultPlacement { get; set; }
 
         public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {

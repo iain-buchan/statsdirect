@@ -56,11 +56,6 @@ namespace StatsDirect.Templates
             get { return parameters; }
         }
 
-        public override StepType Type
-        {
-            get { return StepType.Parameters; }
-        }
-
         /// <summary>
         /// 
         /// </summary>

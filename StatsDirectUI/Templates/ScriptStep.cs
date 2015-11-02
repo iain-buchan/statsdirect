@@ -23,11 +23,6 @@ namespace StatsDirect.Templates
         [XmlText]
         public string Body { get; set; }
 
-        public override StepType Type
-        {
-            get { return StepType.Script; }
-        }
-
         public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {
             return processor.ExecuteInternal(this, parameters, isRedo);

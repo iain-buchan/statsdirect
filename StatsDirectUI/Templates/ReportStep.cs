@@ -10,11 +10,6 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName="filename")]
         public string FileName { get; set; }
 
-        public override StepType Type
-        {
-            get { return StepType.Report; }
-        }
-
         [XmlText]
         public string Text { get; set; }
 

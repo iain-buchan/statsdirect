@@ -26,9 +26,9 @@ namespace StatsDirect.UI
             InitializeComponent();
             parameterName = parameter.Name;
             this.outputType = outputType;
-            bool preferBefore = parameter is SpecialParameter && null != ((SpecialParameter) parameter).ExtraData &&
-                                (bool) ((object[])((SpecialParameter) parameter).ExtraData)[0];
-            WritePosition = preferBefore ? RelativePosition.BeforeSelection : RelativePosition.AfterSelection;
+            WritePosition = RelativePosition.AfterSelection;
+            if (parameter is SpecialParameter && null != ((SpecialParameter) parameter).ExtraData)
+                WritePosition = (RelativePosition) ((object[])((SpecialParameter) parameter).ExtraData)[0];
         }
 
         [Browsable(true)]
@@ -44,6 +44,9 @@ namespace StatsDirect.UI
                         break;
                     case RelativePosition.BeforeSelection:
                         rdoBeforeSelection.Checked = true;
+                        break;
+                    case RelativePosition.ReplaceSelection:
+                        rdoReplaceSelection.Checked = true;
                         break;
                     case RelativePosition.AfterSelection:
                         rdoAfterSelection.Checked = true;
@@ -81,9 +84,10 @@ namespace StatsDirect.UI
                     newName = "New report";
                     if (null != SdApplication.SoleInstance.MostRecentlySelectedReport)
                         defaultSelection = SdApplication.SoleInstance.MostRecentlySelectedReport.Pane;
-                    rdoAfterSelection.Visible = false;
-                    rdoBeforeSelection.Visible = false;
                     rdoFirstColumn.Visible = false;
+                    rdoBeforeSelection.Visible = false;
+                    rdoReplaceSelection.Visible = false;
+                    rdoAfterSelection.Visible = false;
                     rdoLastColumn.Visible = false;
                     break;
                 default:
@@ -96,10 +100,7 @@ namespace StatsDirect.UI
         public bool ShowLabel
         {
             get { return lblSelectWindow.Visible; }
-            set
-            {
-                lblSelectWindow.Visible = value;
-            }
+            set { lblSelectWindow.Visible = value; }
         }
 
         [Browsable(true)]
@@ -109,19 +110,17 @@ namespace StatsDirect.UI
             set { outputType = value; }
         }
 
-        internal void SetWindows(IList<PaneAndPosition> info, string NewName, Pane defaultSelection)
+        internal void SetWindows(IList<PaneAndPosition> info, string newName, Pane defaultSelection)
         {
             int indexToSelect = -1;
             foreach (PaneAndPosition paneAndLocation in info)
             {
                 cboWindows.Items.Add(paneAndLocation.Pane);
                 if (paneAndLocation.Pane.Equals(defaultSelection))
-                {
                     indexToSelect = cboWindows.Items.Count - 1;
-                }
             }
-            if (null != NewName)
-                cboWindows.Items.Add(new Pane(NewName, null, null));
+            if (null != newName)
+                cboWindows.Items.Add(new Pane(newName, null, null));
             if (indexToSelect >= 0)
                 cboWindows.SelectedIndex = indexToSelect;
 
@@ -153,8 +152,6 @@ namespace StatsDirect.UI
             cboWindows.Select();
         }
 
-        #region IFillParameterBag Members
-
         public Control Fill(ParameterBag outputParameters, bool doValidation)
         {
             PaneAndPosition selectedPaneAndPosition = SelectedPaneAndPosition();
@@ -174,8 +171,6 @@ namespace StatsDirect.UI
             return null;
         }
 
-        #endregion
-
         private void ctlPickAWindow_Load(object sender, EventArgs e)
         {
             SetPanesAndLocations();
@@ -193,6 +188,12 @@ namespace StatsDirect.UI
                 writePosition = RelativePosition.BeforeSelection;
         }
 
+        private void rdoReplaceSelection_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rdoReplaceSelection.Checked)
+                writePosition = RelativePosition.ReplaceSelection;
+        }
+
         private void rdoAfterSelection_CheckedChanged(object sender, EventArgs e)
         {
             if (rdoAfterSelection.Checked)
@@ -204,11 +205,5 @@ namespace StatsDirect.UI
             if (rdoLastColumn.Checked)
                 writePosition = RelativePosition.LastColumn;
         }
-    }
-
-    public enum OutputType
-    {
-        Frame,
-        Report
     }
 }

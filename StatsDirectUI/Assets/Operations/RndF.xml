@@ -38,6 +38,6 @@
         </integer>
       </parameters>
   	<builtin function-name="shtRndF" />
-	  <output-frame frame-name="output" prefer-in-place-insertion="true"/>
+	  <output-frame frame-name="output" default-placement="BeforeSelection"/>
 	</steps>
 </operation>

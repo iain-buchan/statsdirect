@@ -796,7 +796,6 @@ namespace StatsDirect.UI
                     }
                 }
             }
-
         }
 
         private void newReportToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1943,7 +1942,7 @@ namespace StatsDirect.UI
             if (operation.Steps.Count > 0)
             {
                 Step firstStep = operation.Steps[0];
-                if (firstStep.Type == Step.StepType.Parameters)
+                if (firstStep is ParametersStep)
                 {
                     ParametersStep pStep = (ParametersStep)firstStep;
                     foreach (Parameter p in pStep.Parameters)
@@ -3442,7 +3441,7 @@ namespace StatsDirect.UI
                     width = newWidth;
             }
             cbo.DropDownWidth = width;
-            cbo.Size = new Size(width, cbo.PreferredHeight);
+            cbo.Size = new Size(width + SystemInformation.VerticalScrollBarWidth, cbo.PreferredHeight); // Surprisingly, it appears the width of the drop-down arrow part of a ComboBox is the same as that of a vertical scrollbar.
         }
 
         internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, OptionParameter parameter, ParameterBag context)
@@ -3469,12 +3468,15 @@ namespace StatsDirect.UI
                         foreach (OptionOption optionOption in parameter.Options)
                         {
                             cbo.Items.Add(optionOption);
-                            if (optionOption.Value.Equals(defaultValue))
-                                defaultOption = optionOption;
+                            if (null != defaultValue)
+                                if (optionOption.Value.Equals(defaultValue))
+                                    defaultOption = optionOption;
                         }
                         cbo.SelectedIndex = 0;
                         cbo.DropDownStyle = ComboBoxStyle.DropDownList;
-                        cbo.SelectedItem = defaultOption;
+                        AddAppropriateEventHandlersTo(cbo);
+                        if (null != defaultOption)
+                            cbo.SelectedItem = defaultOption;
 
                         // There's no way of autosizing a combo... so we do it by hand!
                         AutoSizeCombo(cbo);
@@ -3557,7 +3559,8 @@ namespace StatsDirect.UI
                             };
                             AddAppropriateEventHandlersTo(rad);
                             panelOptions.Controls.Add(rad);
-                            rad.Checked = optionOption.Value.Equals(defaultValue);
+                            if (null != defaultValue)
+                                rad.Checked = optionOption.Value.Equals(defaultValue);
                         }
 
                         if (null == groupBox)
@@ -3648,6 +3651,8 @@ namespace StatsDirect.UI
                 ((CheckBox)control).CheckedChanged += OptionParameter_CheckedChanged;
             if (control is RadioButton)
                 ((RadioButton)control).CheckedChanged += OptionParameter_CheckedChanged;
+            if (control is ComboBox)
+                ((ComboBox)control).SelectedIndexChanged += OptionParameter_CheckedChanged;
             if (control is ComboBox || control is TextBox)
                 control.KeyPress += EnterMovesDown;
             if (control is ctlPickAWindow)

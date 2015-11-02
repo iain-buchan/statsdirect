@@ -435,13 +435,11 @@ namespace StatsDirect.Templates
                     ParameterBag parmsAndFilledParameters = CombinePreferringLater(parms, filledParameters);
 
                     Step frameStep;
-                    Step outputForFrameStep;
-                    if ((step.Operation.ShouldRequestTargetAfter(step, Step.StepType.OutputFrame, out frameStep) == HasInput.NoAndTypeFound)
-                        || (step.Operation.ShouldRequestTargetAfter(step, Step.StepType.SelectOutputForFrame, out outputForFrameStep) == HasInput.NoAndTypeFound))
+                    if (step.Operation.ShouldRequestTargetAfter(step, typeof(OutputFrameStep), out frameStep) == HasInput.NoAndTypeFound)
                     {
-                        bool preferInPlaceInsertion = null != frameStep && ((OutputFrameStep)frameStep).PreferInPlaceInsertion;
+                        RelativePosition rp = (null == frameStep) ? RelativePosition.AfterSelection : ((OutputFrameStep)frameStep).DefaultPlacement;
                         string missingIndicator = null == frameStep ? Formatting.ASTERISK : ((OutputFrameStep)frameStep).MissingIndicator;
-                        SpecialParameter frameParameter = new SpecialParameter { Name = STATSDIRECT_FRAME_PANE, SpecialType = "frame", ExtraData = new object[] { preferInPlaceInsertion, missingIndicator } };
+                        SpecialParameter frameParameter = new SpecialParameter { Name = STATSDIRECT_FRAME_PANE, SpecialType = "frame", ExtraData = new object[] { rp, missingIndicator } };
                         host.FillParameter(this, frameParameter, parmsAndFilledParameters, true);
                     }
 

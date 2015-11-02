@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+	<name>SearchAndReplaceAdvanced</name>
+  <friendly-name lang="en-GB">Search and replace (Advanced)</friendly-name>
+  <help chm-id="1085" />
+  <steps>
+    <parameters>
+      <option>
+        <name>search-type</name>
+        <prompt>Find</prompt>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+        <lifetime>SessionForThisOperation</lifetime>
+        <must-request>true</must-request>
+        <format-type>Dropdown</format-type>
+        <options>
+          <option value="numeric">Numeric values</option>
+          <option value="text">Text</option>
+        </options>
+      </option>
+      <option>
+        <column>2</column>
+        <name>search-rule</name>
+        <lifetime>SessionForThisOperation</lifetime>
+        <must-request>true</must-request>
+        <format-type>Dropdown</format-type>
+        <options>
+          <option value="equal">=</option>
+          <option value="equal">&gt;</option>
+          <option value="equal">&lt;</option>
+          <option value="equal">&gt;=</option>
+          <option value="equal">&lt;=</option>
+          <option value="equal">&lt;&gt;</option>
+          <option value="equal">matching expression</option>
+        </options>
+      </option>
+      <string>
+        <column>3</column>
+        <name>search-expression</name>
+        <lifetime>SessionForThisOperation</lifetime>
+        <must-request>true</must-request>
+      </string>
+      <option>
+        <name>action</name>
+        <prompt>Action</prompt>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+        <lifetime>SessionForThisOperation</lifetime>
+        <must-request>true</must-request>
+        <format-type>Dropdown</format-type>
+        <options>
+          <option value="count">Count</option>
+          <option value="delete-cells">Delete cells</option>
+          <option value="delete-rows">Delete rows</option>
+          <option value="replace-value">Replace with value:</option>
+          <option value="replace-expression">Replace with expression:</option>
+        </options>
+      </option>
+      <string>
+        <column>3</column>
+        <name>replace-expression</name>
+        <lifetime>SessionForThisOperation</lifetime>
+        <acquire-if-true>=parameters.ContainsKey("action") &amp;&amp; null != parameters["action"] &amp;&amp; null != parameters["action"].AsString &amp;&amp; parameters["action"].AsString.StartsWith("replace")</acquire-if-true>
+        <must-request>true</must-request>
+      </string>
+    </parameters>
+    <test>
+      <condition>=parameters.ContainsKey("search-type") &amp;&amp; null != parameters["search-type"] &amp;&amp; null != parameters["search-type"].AsString &amp;&amp; parameters["search-type"].AsString.StartsWith("numeric")</condition>
+      <iftrue>
+        <parameters>
+          <frame>
+            <name>data</name>
+            <prompt>Select the cells within which you want to search</prompt>
+            <clear-selection-first>false</clear-selection-first>
+            <mode>NumericReplaceMissing</mode>
+            <min-columns>1</min-columns>
+            <max-columns>1024</max-columns>
+          </frame>
+        </parameters>
+      </iftrue>
+      <iffalse>
+        <parameters>
+          <frame>
+            <name>data</name>
+            <prompt>Select the cells within which you want to search</prompt>
+            <clear-selection-first>false</clear-selection-first>
+            <mode>TextNoTitles</mode>
+            <min-columns>1</min-columns>
+            <max-columns>1024</max-columns>
+          </frame>
+        </parameters>
+      </iffalse>
+    </test>
+    <builtin function-name="shtFindAndReplaceAdvanced"/>
+    <output-frame frame-name="output" keep-selection="true" default-placement="ReplaceSelection"/>
+  </steps>
+  <suggested-operations>
+    <suggested-operation>SearchAndReplaceAdvanced</suggested-operation>
+  </suggested-operations>
+</operation>

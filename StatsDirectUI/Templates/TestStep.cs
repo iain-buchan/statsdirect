@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
@@ -96,11 +97,6 @@ namespace StatsDirect.Templates
             get { return falseSteps; }
         }
 
-        public override StepType Type
-        {
-            get { return StepType.Test; }
-        }
-
         public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {
             return processor.ExecuteInternal(this, parameters, isRedo);
@@ -156,7 +152,7 @@ namespace StatsDirect.Templates
             return false;
         }
 
-        public override HasInput ShouldRequestTargetAfter(Step stepToFind, StepType stepType, bool found, out Step stepFound)
+        public override HasInput ShouldRequestTargetAfter(Step stepToFind, Type stepType, bool found, out Step stepFound)
         {
             // If we're actually looking for this step (unlikely!) then we've found it.
             if (this == stepToFind)

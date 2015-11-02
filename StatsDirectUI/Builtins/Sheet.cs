@@ -520,6 +520,16 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
+        {
+            DataFrame dataFrame = parameters["data"].AsDataFrame;
+            bool isNumeric = "numeric".Equals(parameters["search-type"].AsString);
+            string searchRule = parameters["search-rule"].AsString;
+            string searchExpression = parameters["search-expression"].AsString;
+            string action = parameters["action"].AsString;
+            string replaceExpression = parameters["replace-expression"].AsString;
+            throw new NotImplementedException();
+        }
 
         public static ParameterBag ShtStandardize(ITemplateHost host, ParameterBag parameters)
         {
@@ -635,13 +645,11 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static double XSpr(double q)
         {
             double q1 = Math.Abs(q) > Constant.LMREAL ? Constant.MISSING : q;
             return double.IsNaN(q) ? Constant.MISSING : q1;
         }
-
 
         public static ParameterBag ShtCombine(ITemplateHost host, ParameterBag parameters)
         {
@@ -714,8 +722,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-
-
+        
         public static ParameterBag ShtDates(ITemplateHost host, ParameterBag parameters)
         {
 
@@ -773,8 +780,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-
-
+        
         public static ParameterBag ShtGroupSplit(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame gidsFrame = parameters["gids"].AsDataFrame;
@@ -853,8 +859,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-
-
+        
         public static ParameterBag ShtNormal(ITemplateHost host, ParameterBag parameters)
         {
             int n;
@@ -953,20 +958,17 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-
-
+        
         public static ParameterBag ShtPairDifferences(ITemplateHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 1);
         }
-
-
+        
         public static ParameterBag ShtPairMeans(ITemplateHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 2);
         }
-
-
+        
         public static ParameterBag ShtPairSlopes(ITemplateHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 3);

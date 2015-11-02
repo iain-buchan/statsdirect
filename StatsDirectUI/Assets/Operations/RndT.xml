@@ -32,6 +32,6 @@
         </integer>
       </parameters>
   	<builtin function-name="shtRndT" />
-	  <output-frame frame-name="output" prefer-in-place-insertion="true"/>
+	  <output-frame frame-name="output" default-placement="BeforeSelection"/>
 	</steps>
 </operation>

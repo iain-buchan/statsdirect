@@ -85,6 +85,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Antlr4.Runtime.net40">
@@ -293,6 +294,7 @@
     <Compile Include="R\RResultsParserPartial.cs" />
     <Compile Include="R\RVersion.cs" />
     <Compile Include="Templates\AxisScaleParameters.cs" />
+    <Compile Include="Templates\Builtin.cs" />
     <Compile Include="Templates\GroupIdentifierMode.cs" />
     <Compile Include="Templates\IDefaultParameter.cs" />
     <Compile Include="Templates\LabelDirection.cs" />
@@ -321,6 +323,9 @@
     </Compile>
     <Compile Include="UI\DialogAndAction.cs" />
     <Compile Include="UI\IGetCells.cs" />
+    <Compile Include="UI\OutputType.cs" />
+    <Compile Include="UI\PaneAndPosition.cs" />
+    <Compile Include="Templates\RelativePosition.cs" />
     <Compile Include="UI\UpdateChecker.cs" />
     <Compile Include="UI\RUpdateChecker.cs" />
     <Compile Include="UI\FillableParameter.cs" />
@@ -401,7 +406,6 @@
     <Compile Include="Templates\RangeParameter.cs" />
     <Compile Include="Templates\ScriptStep.cs" />
     <Compile Include="Templates\SDPreferences.cs" />
-    <Compile Include="Templates\SelectOutputForFrameStep.cs" />
     <Compile Include="Templates\SpecialParameter.cs" />
     <Compile Include="Templates\Step.cs" />
     <Compile Include="Templates\StringParameter.cs" />
@@ -1241,6 +1245,9 @@
     <Content Include="Assets\Operations\ContractFrequencies.xml">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Assets\Operations\SearchAndReplaceAdvanced.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\TimeSeriesSummary.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1505,7 +1512,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Assets\Operations\RateSmr.xml" />
-    <Content Include="Assets\Operations\ExactSign.xml" />
+    <Content Include="Assets\Operations\ExactSign.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\Crosstabs.xml" />
     <Content Include="Assets\Operations\UniversalRCompare.xml" />
     <Content Include="Assets\Operations\WeightedUnivariateSummary.xml" />

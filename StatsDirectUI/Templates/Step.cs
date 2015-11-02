@@ -29,23 +29,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public abstract class Step : IMightRequireInput
     {
-        // If you add something to this, you should probably also:
-        // - Add the template to ITemplateProcessor
-        // - Add handling for the relevant type to TemplateProcessor::ExecuteInternal
-        // - Add the XML attributes to Operation::StepsForXML, IterationStep::StepsForXML TestStep::TrueStepsForXml and TestStep::FalseStepsForXml
-        public enum StepType
-        {
-            Builtin,
-            Chart,
-            OutputFrame,
-            Iteration,
-            Parameters,
-            Report,
-            Script,
-            SelectOutputForFrame,
-            Test
-        }
-
         private string name;
 
         /// <summary>
@@ -77,11 +60,6 @@ namespace StatsDirect.Templates
         {
             get { return shouldCopyInputParameters; }
             set { shouldCopyInputParameters = value; }
-        }
-
-        public abstract StepType Type
-        {
-            get;
         }
 
         /// <summary>
@@ -150,7 +128,7 @@ namespace StatsDirect.Templates
         /// <param name="found"></param>
         /// <param name="stepFound"></param>
         /// <returns></returns>
-        public static HasInput ShouldRequestTargetAfter(Step stepToFind, IList<Step> steps, StepType stepType, bool found, out Step stepFound)
+        public static HasInput ShouldRequestTargetAfter(Step stepToFind, IList<Step> steps, Type stepType, bool found, out Step stepFound)
         {
             // TODO: How to handle conditionals and recursion?  eg Paired T asking for report inside its conditional
 
@@ -163,7 +141,7 @@ namespace StatsDirect.Templates
                 if (found)
                 {
                     // Some previous step was the one we saw, and we've not yet reached a decision as to whether we should request a report target.
-                    if (candidate.Type == stepType)
+                    if (stepType.IsInstanceOfType(candidate))
                     {
                         // We've reached a report step with no intervening steps that might require user input.
                         stepFound = candidate;
@@ -197,7 +175,7 @@ namespace StatsDirect.Templates
             return HasInput.NoAndTypeNotFound;
         }
 
-        public virtual HasInput ShouldRequestTargetAfter(Step stepToFind, StepType stepType, bool found, out Step foundStep)
+        public virtual HasInput ShouldRequestTargetAfter(Step stepToFind, Type stepType, bool found, out Step foundStep)
         {
             foundStep = null;
             return HasInput.NoAndTypeNotFound;

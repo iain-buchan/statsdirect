@@ -15,11 +15,6 @@ namespace StatsDirect.Templates
             set { functionName = value; }
         }
 
-        public override StepType Type
-        {
-            get { return StepType.Builtin; }
-        }
-
         public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {
             return processor.ExecuteInternal(this, parameters, isRedo);

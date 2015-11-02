@@ -1526,16 +1526,6 @@ namespace StatsDirect.UI
             }
         }
 
-        bool ITemplateHost.CanPresentPanel
-        {
-            get { return false; }
-        }
-
-        bool ITemplateHost.CanPresentWindow
-        {
-            get { return false; }
-        }
-
         string ITemplateHost.zvalp1(double xz)
         {
             double P = 1 - Numerics.PDF.alnorm(xz);
