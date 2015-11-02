@@ -1729,5 +1729,10 @@ namespace StatsDirect.UI
         {
             get { return closingForUpgrade; }
         }
+
+        public static bool IsRunningOnMono
+        {
+            get { return Type.GetType("Mono.Runtime") != null; }
+        }
     }
 }

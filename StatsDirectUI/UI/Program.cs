@@ -66,7 +66,8 @@ namespace StatsDirect.UI
                 SetupInitialFiles();
 
                 // Preload a report, to ensure all the report libraries are ready to go.
-                PreloadReport();
+                if (!SdApplication.IsRunningOnMono)
+                    PreloadReport();
 
                 // Perform any UI hooks we need to...
                 SetupUserInterface();

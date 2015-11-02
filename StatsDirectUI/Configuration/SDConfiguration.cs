@@ -2,6 +2,7 @@
 using System.IO;
 using System.Diagnostics;
 using StatsDirect.UI.Properties;
+using System.Reflection;
 
 namespace StatsDirect.Configuration
 {
@@ -46,7 +47,8 @@ namespace StatsDirect.Configuration
         {
             get
             {
-                string exeName = Process.GetCurrentProcess().MainModule.FileName;
+                // string exeName = Process.GetCurrentProcess().MainModule.FileName;
+                string exeName = Assembly.GetExecutingAssembly().Location;
                 return Path.GetDirectoryName(exeName);
             }
         }
