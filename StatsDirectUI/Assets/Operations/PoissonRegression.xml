@@ -42,6 +42,7 @@
         <option>
           <name>has-exposure</name>
           <lifetime>SessionForThisOperation</lifetime>
+          <must-request>true</must-request>
           <options>
             <option value="false">Counts of events only</option>
             <option value="true">Counts of events and exposure (person-time)</option>
