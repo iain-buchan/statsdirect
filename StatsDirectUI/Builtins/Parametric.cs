@@ -609,7 +609,7 @@ namespace StatsDirect.Builtins
 
                 // D'Agostino omnibus skewness and kurtosis test
                 double mean, sd, skewness, kurtosis, b1, b1P, b2, b2P, k2, k2P;
-                normality_sk(data, 0, n - 1, out mean, out sd, out skewness, out kurtosis, out b1, out b1P, out b2, out b2P, out k2, out k2P);
+                normality_sk(data, 0, n, out mean, out sd, out skewness, out kurtosis, out b1, out b1P, out b2, out b2P, out k2, out k2P);
                 variableParameters.AddOutput("mean", host.RoundU(mean));
                 variableParameters.AddOutput("sd", host.RoundU(sd));
                 string xtra = n < 8 ? "" : ",";
@@ -632,7 +632,7 @@ namespace StatsDirect.Builtins
 
                 // Shapiro-Wilk
                 double sw_w, sw_p, sw_z = 0, sw_v = 0;
-                normality_sw(data, 0, n - 1, out sw_w, out sw_p, ref sw_z, ref sw_v);
+                normality_sw(data, 0, n, out sw_w, out sw_p, ref sw_z, ref sw_v);
                 if (n < 3)
                 {
                     variableParameters.AddOutput("sw_w", "Not calculated if sample size < 3");
@@ -649,7 +649,7 @@ namespace StatsDirect.Builtins
 
                 // Shapiro-Francia
                 double sf_w, sf_p, sf_v, sf_z;
-                normality_sf(data, 0, n - 1, out sf_w, out sf_v, out sf_z, out sf_p);
+                normality_sf(data, 0, n, out sf_w, out sf_v, out sf_z, out sf_p);
                 if (n < 5)
                 {
                     variableParameters.AddOutput("sf_w", "Not calculated if sample size < 5");
@@ -744,12 +744,12 @@ namespace StatsDirect.Builtins
             double nx = 0.0;
             double sum = 0.0;
             int i;
-            for (i = lowerBound; i <= n + lowerBound - 1; i++)
+            for (i = lowerBound; i < n + lowerBound; i++)
             {
                 if (x[i] != Constant.MISSING)
                 {
                     nx += 1.0;
-                    sum = sum + x[i];
+                    sum += x[i];
                 }
             }
             mean = sum / nx;
@@ -760,32 +760,26 @@ namespace StatsDirect.Builtins
             double m3 = 0.0;
             double m4 = 0.0;
             // bool toobig = false; 
-            for (i = lowerBound; i <= n + lowerBound - 1; i++)
+            for (i = lowerBound; i < n + lowerBound; i++)
             {
                 double s = x[i] - mean;
                 m2 = m2 + Math.Pow(s, 2.0);
                 m3 = m3 + Math.Pow(s, 3.0);
                 m4 = m4 + Math.Pow(s, 4.0);
                 if (m4 > 1.0E+300)
-                {
                     return;
-                }
             }
             double var = (m2 - m1 * 2.0 / nx) / (nx - 1.0);
             sd = Math.Sqrt(var);
             if (var == 0.0)
-            {
                 return;
-            }
             m2 = m2 / nx;
             m3 = m3 / nx;
             m4 = m4 / nx;
             skewness = m3 * Math.Pow(m2, (-1.5));
             kurtosis = m4 * Math.Pow(m2, (-2.0));
             if (n < 8)
-            {
                 return;
-            }
 
             // tests of skewness, kurtosis and omnibus k2
             sqrtb1 = (nx - 2.0) / Math.Sqrt(nx * (nx - 1.0)) * skewness;
@@ -860,10 +854,10 @@ namespace StatsDirect.Builtins
             p = Constant.MISSING;
 
             // clean observations
-            double[] q = new double[n + 1 ];
+            double[] q = new double[n + 1];
             int i;
             int k = 0;
-            for (i = lowerBound; i <= n + lowerBound - 1; i++)
+            for (i = lowerBound; i < n + lowerBound; i++)
             {
                 if (x[i] != Constant.MISSING)
                 {
@@ -872,12 +866,10 @@ namespace StatsDirect.Builtins
                 }
             }
             if (n < 3.0)
-            {
                 return;
-            }
 
             // ranks
-            double[] r = new double[n + 1 ];
+            double[] r = new double[n + 1];
             double xf;
             Array.Sort(q, 1, k);
             ExFortran.Rank(q, r, 1, k, 1, out xf);
@@ -887,9 +879,7 @@ namespace StatsDirect.Builtins
             if (k == 3)
             {
                 for (i = 1; i <= k; i++)
-                {
                     r[i] = Math.Sqrt(0.5) * Convert.ToDouble(i - 2);
-                }
             }
             else
             {
@@ -898,15 +888,11 @@ namespace StatsDirect.Builtins
                     int ifault;
                     r[i] = PDF.gauinv((r[i] - 0.375) / (nx + 0.25), out ifault);
                     if (ifault != 0)
-                    {
                         return;
-                    }
                 }
                 double mean = 0.0;
                 for (i = 1; i <= k; i++)
-                {
                     mean += r[i];
-                }
                 mean = mean / nx;
                 double m1 = 0.0;
                 double m2 = 0.0;
@@ -916,15 +902,11 @@ namespace StatsDirect.Builtins
                     double sx = r[i] - mean;
                     m2 = m2 + Math.Pow(sx, 2.0);
                     if (m2 > 1.0E+300)
-                    {
                         return;
-                    }
                 }
                 double var = (m2 - m1 * 2.0 / n) / (nx - 1.0);
                 if (var == 0.0)
-                {
                     return;
-                }
                 double summ2 = var * (nx - 1.0);
                 double xx = 1.0 / Math.Sqrt(nx);
                 double a1 = r[k] / Math.Sqrt(summ2) + xx * (0.221157 + xx * (-0.147981 + xx * (-2.07119 + xx * (4.434685 - xx * 2.706056))));
@@ -949,9 +931,7 @@ namespace StatsDirect.Builtins
                 }
                 int i2 = k - i1 + 1;
                 for (i = i1; i <= i2; i++)
-                {
                     r[i] = r[i] / fac;
-                }
             }
 
             double rho = MathDbl.corr(q, r, 1, k, true);
@@ -1027,7 +1007,7 @@ namespace StatsDirect.Builtins
             double[] q = new double[n + 1 ];
             int i;
             int k = 0;
-            for (i = lowerBound; i <= n + lowerBound - 1; i++)
+            for (i = lowerBound; i < n + lowerBound; i++)
             {
                 if (x[i] != Constant.MISSING)
                 {
