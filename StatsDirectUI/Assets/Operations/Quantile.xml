@@ -15,6 +15,8 @@
         </frame>
         <confidence-interval>
           <name>gamma</name>
+          <must-request>true</must-request>
+          <can-default>false</can-default>
         </confidence-interval>
         <boolean>
           <name>conservative-ci</name>
