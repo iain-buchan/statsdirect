@@ -6684,7 +6684,7 @@ namespace StatsDirect.Builtins
 
             using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                string rtf = ch.PlotLogitAndReturnRtf(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle, clog);
+                string rtf = ch.PlotLogitAndReturnRtf(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle);
                 outputParameters.AddOutput("chart", rtf);
             }
             return outputParameters;

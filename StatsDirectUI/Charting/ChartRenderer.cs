@@ -2481,7 +2481,8 @@ namespace StatsDirect.Charting
             }
             DrawMarkerSeries(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            double xstep = xInt / 2;
+            // Aim for 100 steps across the chart - anything coarser gives terrible resolution for tight curves (e.g. log10 of the sample data)
+            double xstep = (axisXMax - axisXMin) / 100.0;
 
             // This routine has changed from the original
             // It is more efficient in drawing - but bigger in code
@@ -2491,17 +2492,20 @@ namespace StatsDirect.Charting
             {
                 double oldx = Constant.MISSING;
                 double oldy = 0;
+                // Transformations on this get messy: axisXMin and axisXMax are in transformed non-canvas units (e.g. log10); originalX is therefore the original value.
+                // However a and b are based on the transformed non-canvas unit!
+                // So we need to keep both around.
+                // TODO: Better names for Transform and InverseTransform.
                 for (double calcx = axisXMin; calcx <= axisXMax; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
-                    double log10X = Math.Log(originalX) / log10;
-                    double calcy = a + b * log10X;
+                    double calcY = a + b * calcx;
                     if (model == 1)
-                        calcy = PDF.alnorm(calcy);
+                        calcY = PDF.alnorm(calcY);
                     else
-                        calcy = Math.Exp(calcy * 2.0) / (1.0 + Math.Exp(calcy * 2.0));
+                        calcY = Math.Exp(calcY * 2.0) / (1.0 + Math.Exp(calcY * 2.0));
                     double x1 = ToCanvasX(originalX);
-                    double y1 = ToCanvasY(calcy);
+                    double y1 = ToCanvasY(calcY);
                     if (y1 >= yAxisCanvas && y1 <= yAxisCanvas + yExtCanvas && oldx != Constant.MISSING && oldy >= yAxisCanvas && oldy <= yAxisCanvas + yExtCanvas)
                         statsDirectCanvas.DrawLine(greenPen, x1, y1, oldx, oldy);
                     oldx = x1;
@@ -2517,9 +2521,8 @@ namespace StatsDirect.Charting
                 for (double calcx = axisXMin; calcx <= axisXMax; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
-                    double log10X = Math.Log(originalX) / log10;
-                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow((log10X - xm), 2.0) / s1);
-                    double calcy = a + b * log10X;
+                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow((calcx - xm), 2.0) / s1);
+                    double calcy = a + b * calcx;
                     double cly = calcy + cl;
                     if (model == 1)
                         cly = PDF.alnorm(cly);
@@ -2538,9 +2541,8 @@ namespace StatsDirect.Charting
                 for (double calcx = axisXMin; calcx <= axisXMax; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
-                    double log10X = Math.Log(originalX) / log10;
-                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow((log10X - xm), 2.0) / s1);
-                    double calcy = a + b * log10X;
+                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow((calcx - xm), 2.0) / s1);
+                    double calcy = a + b * calcx;
                     double cly = calcy - cl;
                     if (model == 1)
                         cly = PDF.alnorm(cly);
