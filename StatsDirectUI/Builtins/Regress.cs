@@ -3804,7 +3804,7 @@ namespace StatsDirect.Builtins
 
         private struct Tri
         {
-            public double D;
+            public double d;
             public double r;
             public double s;
         }
@@ -3814,9 +3814,9 @@ namespace StatsDirect.Builtins
         {
             private static int Compare(Tri x, Tri y)
             {
-                if (x.D > y.D)
+                if (x.d > y.d)
                     return 1;
-                if (x.D == y.D)
+                if (x.d == y.d)
                     return 0;
                 return -1;
             }
@@ -4040,7 +4040,7 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= N; i++)
                 {
                     PP = fvl[i] / t[i];
-                    z[i].D = PP;
+                    z[i].d = PP;
                     z[i].r = y[i];
                     z[i].s = t[i];
                 }
@@ -4060,7 +4060,7 @@ namespace StatsDirect.Builtins
                     tot[ctr] = tot[ctr] + z[i].s;
                     ncum = ncum + z[i].s;
                     OBS[ctr] = OBS[ctr] + z[i].r;
-                    mpi[ctr] = mpi[ctr] + z[i].D * z[i].s;
+                    mpi[ctr] = mpi[ctr] + z[i].d * z[i].s;
                     if (ncum >= ntot)
                     {
                         break;
@@ -5883,9 +5883,6 @@ namespace StatsDirect.Builtins
 
             double ici = parameters["conf"].AsDouble;
             bool clog = parameters["calc-log10-doses"].AsBoolean;
-            // Get the data into the Public arrays
-            //  0 = dv, 1 = sv, 2 = rv
-            //  calc_probit(PASS_ERR, PASS_X(), PASS_Y(), PASS_R(), Pass_H(), PASS_N, PASS_DOC, PASS_P, PASS_DF)
 
             int ifa = 0;
             int laps = 0;
@@ -5898,37 +5895,37 @@ namespace StatsDirect.Builtins
             double nohetulm = 0; double hetllm = 0; double hetulm = 0; double nohetllq = 0; double nohetulq = 0; double hetllq = 0; double hetulq = 0; double TM = 0; double ym = 0; double del = 0; double s4 = 0; double s6 = 0;
 
             ParameterBag outputParameters = new ParameterBag();
-            int N; int nx = 0;
+            int nx = 0;
 
             int k = rows;
             double C1 = 0.0;
-            double[] D = new double[k + 1 ];
-            double[] s = new double[k + 1 ];
-            double[] r = new double[k + 1 ];
-            for (N = 1; N <= k; N++)
+            double[] d = new double[k + 1];
+            double[] s = new double[k + 1];
+            double[] r = new double[k + 1];
+            for (int n = 1; n <= k; n++)
             {
-                if (dv[N] != Constant.MISSING && sv[N] != Constant.MISSING && rv[N] != Constant.MISSING)
+                if (dv[n] != Constant.MISSING && sv[n] != Constant.MISSING && rv[n] != Constant.MISSING)
                 {
-                    if (dv[N] == 0 && C1 == 0.0)
+                    if (dv[n] == 0 && C1 == 0.0)
                     {
-                        nc = Convert.ToInt32(sv[N]);
-                        nrc = Convert.ToInt32(rv[N]);
+                        nc = Convert.ToInt32(sv[n]);
+                        nrc = Convert.ToInt32(rv[n]);
                         C1 = -1.0;
                     }
                     else
                     {
                         nx++;
-                        D[nx] = dv[N];
-                        s[nx] = sv[N];
-                        r[nx] = rv[N];
+                        d[nx] = dv[n];
+                        s[nx] = sv[n];
+                        r[nx] = rv[n];
                     }
                 }
             }
             k = nx;
             // create temp variable for copying values 
             double[] transTemp14 = new double[k + 1];
-            Array.Copy(D, transTemp14, Math.Min(D.Length, transTemp14.Length));
-            D = transTemp14;
+            Array.Copy(d, transTemp14, Math.Min(d.Length, transTemp14.Length));
+            d = transTemp14;
             // create temp variable for copying values 
             double[] transTemp15 = new double[k + 1 ];
             Array.Copy(s, transTemp15, Math.Min(s.Length, transTemp15.Length));
@@ -5950,18 +5947,16 @@ namespace StatsDirect.Builtins
             if (qld >= 100.0 || qld <= 0.0)
                 qld = 90.0;
 
-            double[] P = new double[k + 1 ];
-            double[] w = new double[k + 1 ];
-            double[] y = new double[k + 1 ];
-            double[] pob = new double[k + 1 ];
-            double[] x = new double[k + 1 ];
-            x_sortbydose(ref D, ref s, ref r, k);
-            double C = 0;
-            x_probits(model, k, ref C1, ref C, ref nc, nrc, clog, qld, D, s, r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out ifault);
+            double[] P = new double[k + 1];
+            double[] w = new double[k + 1];
+            double[] y = new double[k + 1];
+            double[] pob = new double[k + 1];
+            double[] x = new double[k + 1];
+            x_sortbydose(d, s, r, k);
+            double c = 0;
+            x_probits(model, k, ref C1, ref c, ref nc, nrc, clog, qld, d, s, r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out ifault);
             if (ifault == 0)
-            {
-                x_qdcl(ref model, ref k, out C2, ref ici, ref clog, ref qld, ref dose50, ref doseq, ref a, ref b, ref nohetllm, ref nohetulm, ref hetllm, ref hetulm, ref nohetllq, ref nohetulq, ref hetllq, ref hetulq, ref C, out se, ref cse, out seh, ref cseh, ref I1, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref sw, out varb, ref icount, out ifault2);
-            }
+                x_qdcl(model, k, out C2, ici, clog, qld, ref dose50, ref doseq, a, b, ref nohetllm, ref nohetulm, ref hetllm, ref hetulm, ref nohetllq, ref nohetulq, ref hetllq, ref hetulq, ref c, out se, ref cse, out seh, ref cseh, ref I1, ref S1, ref S2, ref s3, s4, s6, del, TM, XM, sw, out varb, icount, out ifault2);
             outputParameters.AddOutput("title", model == ProbitModel.Probit ? "probit sigmoid curve" : "logit sigmoid curve");
             x_profolt(ifault, host);
             if (ifault != 0)
@@ -5974,7 +5969,7 @@ namespace StatsDirect.Builtins
             {
                 throw new TemplateOperationCancelledException();
             }
-            double hetp = PDF.chivalp(C, I1);
+            double hetp = PDF.chivalp(c, I1);
             outputParameters.AddOutput("mxd", host.RoundU(dose50));
             if (hetp < 0.05)
             {
@@ -6002,24 +5997,18 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("from_cent", host.RoundU(nohetllq));
                 outputParameters.AddOutput("to_cent", host.RoundU(nohetulq));
             }
-            outputParameters.AddOutput("dev", host.RoundU(C));
+            outputParameters.AddOutput("dev", host.RoundU(c));
             outputParameters.AddOutput("df", I1.ToString());
             outputParameters.AddOutput("p", host.pval(hetp));
             if (hetp < 0.05)
-            {
                 t = b / seh;
-            }
             else
-            {
                 t = b / se;
-            }
             outputParameters.AddOutput("t_slope", host.RoundU(t));
             outputParameters.AddOutput("df_slope", I1.ToString());
             double tp = PDF.tvalp(t, I1);
             if (tp > 1.0 - tp)
-            {
                 tp = 1.0 - tp;
-            }
             tp = 2.0 * tp;
             outputParameters.AddOutput("p_slope", host.pval(tp));
             if (tp > 0.05)
@@ -6053,7 +6042,7 @@ namespace StatsDirect.Builtins
             context.ARG[17] = C1;
             context.ARG[18] = C2;
             context.M = (int)model;
-            context.X1 = D;
+            context.X1 = d;
             context.Y = s;
             context.R = r;
             context.H1 = P;
@@ -6073,19 +6062,19 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_sortbydose(ref double[] D, ref double[] s, ref double[] r, int k)
+        private static void x_sortbydose(double[] d, double[] s, double[] r, int k)
         {
-            Tri[] swp = new Tri[k + 1 ];
+            Tri[] swp = new Tri[k + 1];
             for (int i = 1; i <= k; i++)
             {
-                swp[i].D = D[i];
+                swp[i].d = d[i];
                 swp[i].s = s[i];
                 swp[i].r = r[i];
             }
             Array.Sort(swp, 1, k, new TriByDAscending());
             for (int i = 1; i <= k; i++)
             {
-                D[i] = swp[i].D;
+                d[i] = swp[i].d;
                 s[i] = swp[i].s;
                 r[i] = swp[i].r;
             }
@@ -6094,7 +6083,7 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="Model"></param>
+        /// <param name="model"></param>
         /// <param name="k"></param>
         /// <param name="C1">Experimental value of natural mortality</param>
         /// <param name="C"></param>
@@ -6125,7 +6114,7 @@ namespace StatsDirect.Builtins
         /// <param name="sw"></param>
         /// <param name="icount"></param>
         /// <param name="ifault"></param>
-        public static void x_probits(ProbitModel Model, int k, ref double C1, ref double C, ref int nc, int nrc, bool clog, double qld, double[] D, double[] s, double[] r, double[] P, double[] w, double[] y, double[] pob, double[] x, ref double a, ref double b, ref int laps, ref double S1, ref double S2, ref double s3, ref double s4, ref double s6, ref double del, ref double TM, ref double XM, ref double ym, ref double sw, ref int icount, out int ifault)
+        public static void x_probits(ProbitModel model, int k, ref double C1, ref double C, ref int nc, int nrc, bool clog, double qld, double[] D, double[] s, double[] r, double[] P, double[] w, double[] y, double[] pob, double[] x, ref double a, ref double b, ref int laps, ref double S1, ref double S2, ref double s3, ref double s4, ref double s6, ref double del, ref double TM, ref double XM, ref double ym, ref double sw, ref int icount, out int ifault)
         {
             int i;
             double PP;
@@ -6253,7 +6242,7 @@ namespace StatsDirect.Builtins
                     }
                 }
                 int ifa;
-                double z = Model == ProbitModel.Probit ? PDF.gauinv(PP, out ifa) : 0.5 * Math.Log(PP / (1.0 - PP));
+                double z = model == ProbitModel.Probit ? PDF.gauinv(PP, out ifa) : 0.5 * Math.Log(PP / (1.0 - PP));
                 pob[i] = z;
                 sumxz = sumxz + z * x[i];
                 sumx = sumx + x[i];
@@ -6278,7 +6267,7 @@ namespace StatsDirect.Builtins
                     double v = y[i];
                     double dd;
                     double Q;
-                    if (Model == ProbitModel.Probit)
+                    if (model == ProbitModel.Probit)
                     {
                         PP = PDF.alnorm(v);
                         Q = 1.0 - PP;
@@ -6428,8 +6417,7 @@ namespace StatsDirect.Builtins
             del = dell;
             ifault = 0;
         }
-
-
+        
         public static void x_profolt(int ifault, ITemplateHost host)
         {
             if (ifault != 0)
@@ -6472,8 +6460,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_qdcl(ref ProbitModel Model, ref int k, out double C2, ref double ici, ref bool clog, ref double qld, ref double dose50, ref double doseq, ref double a, ref double b, ref double nohetllm, ref double nohetulm, ref double hetllm, ref double hetulm, ref double nohetllq, ref double nohetulq, ref double hetllq, ref double hetulq, ref double C, out double se, ref double cse, out double seh, ref double cseh, ref double I1, ref double S1, ref double S2, ref double s3, ref double s4, ref 
-        double s6, ref double del, ref double TM, ref double XM, ref double sw, out double varb, ref int icount, out int ifault)
+        private static void x_qdcl(ProbitModel model, int k, out double C2, double ici, bool clog, double qld, ref double dose50, ref double doseq, double a, double b, ref double nohetllm, ref double nohetulm, ref double hetllm, ref double hetulm, ref double nohetllq, ref double nohetulq, ref double hetllq, ref double hetulq, ref double C, out double se, ref double cse, out double seh, ref double cseh, ref double I1, ref double S1, ref double S2, ref double s3, double s4, double s6, double del, double TM, double XM, double sw, out double varb, int icount, out int ifault)
         {
             double covar = 0;
             double vardcb = 0;
@@ -6514,7 +6501,7 @@ namespace StatsDirect.Builtins
                 double qldz;
                 if (ibit == 1)
                 {
-                    if (Model == ProbitModel.Probit)
+                    if (model == ProbitModel.Probit)
                     {
                         qldz = PDF.gauinv(qld / 100.0, out ifa);
                     }
@@ -6673,7 +6660,7 @@ namespace StatsDirect.Builtins
             double sw = context.ARG[5];
             double S1 = context.ARG[6];
             double ici = context.ARG[16];
-            bool clog = false; // TODO: context.DoC;
+            bool clog = context.DoC;
             if (context.ARG[13] < 0.05)
             {
                 t = PDF.tfromp(ici + ((1.0 - ici) / 2.0), context.ARG[14]);
@@ -6697,7 +6684,7 @@ namespace StatsDirect.Builtins
 
             using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                string rtf = ch.PlotLogitAndReturnRtf(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle);
+                string rtf = ch.PlotLogitAndReturnRtf(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle, clog);
                 outputParameters.AddOutput("chart", rtf);
             }
             return outputParameters;
