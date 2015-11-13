@@ -2220,29 +2220,25 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptWilcoxon(ITemplateHost host, ParameterBag parameters)
         {
-            int n; double xf = 0; double ned = 0; double w = 0; double pl = 0; double pu = 0; double p2 = 0;
-            int n1 = 0; int cnt = 0;
-            string txc;
-            bool fault;
-
-
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0)
-            {
                 throw new Exception("Gamma must be greater than zero");
-            }
+
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
-            double[] x = new double[v0.Length + 1 ];
-            double[] y = new double[v0.Length + 1 ];
+            double[] x = new double[v0.Length + 1];
+            double[] y = new double[v0.Length + 1];
 
+            int n;
+            string txc;
             if (frame.VariableCount == 1)
             {
-                for (n = 0; n <= v0.Length - 1; n++)
+                int cnt = 0;
+                for (n = 0; n < v0.Length; n++)
                 {
                     if (v0.Data[n] != Constant.MISSING)
                     {
-                        cnt = cnt + 1;
+                        ++cnt;
                         y[cnt] = 0;
                         x[cnt] = v0.Data[n];
                     }
@@ -2252,12 +2248,13 @@ namespace StatsDirect.Builtins
             }
             else
             {
+                int cnt = 0;
                 DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
-                for (n = 0; n <= v0.Length - 1; n++)
+                for (n = 0; n < v0.Length; n++)
                 {
                     if (v0.Data[n] != Constant.MISSING & v1.Data[n] != Constant.MISSING)
                     {
-                        cnt = cnt + 1;
+                        ++cnt;
                         y[cnt] = v1.Data[n];
                         x[cnt] = v0.Data[n];
                     }
@@ -2267,13 +2264,15 @@ namespace StatsDirect.Builtins
             }
 
             if (n < 2)
-            {
                 throw new TemplateOperationCancelledException();
+
+            double xf, ned, w, pl, pu, p2;
+            int n1;
+            try
+            {
+                XWilcoxonSignedRanks(x, y, n, out w, out n1, out ned, out xf, out pl, out pu, out p2);
             }
-
-            XWSR(x, y, n, ref w, ref n1, ref ned, ref xf, ref pl, ref pu, ref p2, out fault);
-
-            if (fault)
+            catch (Exception)
             {
                 host.Error("Calculation Error", "Wilcoxon");
                 throw new TemplateOperationCancelledException();
@@ -2285,13 +2284,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("non_0", n1.ToString());
 
             if (ned == 0)
-            {
                 outputParameters.AddOutput("sum", "Sum of ranks for positive differences = " + host.RoundU(w));
-            }
             else
-            {
                 outputParameters.AddOutput("sum", "Sum of signed ranks for all differences = " + host.RoundU(w));
-            }
 
             string adj = xf != 0 ? " (adjusted for ties)" : "";
 
@@ -2342,46 +2337,47 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        private static void XWSR(double[] x, double[] y, int n, ref double w, ref int nonzero, ref double ned, ref double xf, ref double pl, ref double pu, ref double p2, out bool fault)
+        /// <summary>
+        /// Calculate Wilcoxon signed ranks.
+        /// </summary>
+        /// <param name="x">1-based array of values</param>
+        /// <param name="y">1-based array of values</param>
+        /// <param name="n">Number of values in x and y</param>
+        /// <param name="w"></param>
+        /// <param name="nonzero"></param>
+        /// <param name="ned"></param>
+        /// <param name="xf"></param>
+        /// <param name="pLower"></param>
+        /// <param name="pUpper"></param>
+        /// <param name="p2"></param>
+        /// <param name="fault"></param>
+        private static void XWilcoxonSignedRanks(double[] x, double[] y, int n, out double w, out int nonzero, out double ned, out double xf, out double pLower, out double pUpper, out double p2)
         {
 
-            fault = true;
             if (n < 1)
-            {
-                return;
-            }
+                throw new ArgumentException("At least one pair of values required", "n");
 
             //count the number of non-zero differences and record their signs and absolute values
             nonzero = 0;
             double[] d = new double[n + 1];
-            bool[] pos = new bool[n + 1];
-            int i;
+            bool[] isPositiveDifference = new bool[n + 1];
             int nz = 0;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
             {
                 double delta = x[i] - y[i];
                 if (delta != 0.0)
                 {
-                    nonzero = nonzero + 1;
+                    ++nonzero;
                     d[nonzero] = Math.Abs(delta);
-                    if (delta > 0.0)
-                    {
-                        pos[nonzero] = true;
-                    }
-                    else
-                    {
-                        pos[nonzero] = false;
-                    }
+                    isPositiveDifference[nonzero] = delta > 0.0;
                 }
                 else
                 {
-                    nz = nz + 1;
+                    nz++;
                 }
             }
             if (nonzero < 1)
-            {
-                return;
-            }
+                throw new ArgumentException("All differences are zero; at least one nonzero difference is required", "x, y");
 
             //rank the non-zero differences and calculate the tie correction factor (ties^3-ties)/12
             double[] r = new double[nonzero + 1];
@@ -2389,9 +2385,9 @@ namespace StatsDirect.Builtins
 
             //compute the test statistic as a sum of ranks for positive differences
             w = 0.0;
-            for (i = 1; i <= nonzero; i++)
+            for (int i = 1; i <= nonzero; i++)
             {
-                if (pos[i])
+                if (isPositiveDifference[i])
                     w += r[i];
             }
             double wmax = nonzero * (nonzero + 1) / 2.0;
@@ -2401,33 +2397,24 @@ namespace StatsDirect.Builtins
                 //compute the normalized test
                 double var = 0.0;
                 double q = 0.0;
-                for (i = 1; i <= nonzero; i++)
+                for (int i = 1; i <= nonzero; i++)
                 {
-                    if (!pos[i])
-                    {
-                        var = var + r[i] * r[i];
-                        q = q + (r[i] * -1);
-                    }
+                    var += r[i] * r[i];
+                    if (!isPositiveDifference[i])
+                        q += r[i] * -1;
                     else
-                    {
-                        var = var + r[i] * r[i];
-                        q = q + r[i];
-                    }
+                        q += r[i];
                 }
                 ned = q / Math.Sqrt(var);
 
                 //lower tail P
-                pl = w == wmax ? 1.0 : PDF.alnorm((q + 1.0) / var);
+                pLower = w == wmax ? 1.0 : PDF.alnorm((q + 1.0) / var);
 
                 //upper tail P
                 if (q > 0.0)
-                {
-                    pu = 1.0 - PDF.alnorm(ned);
-                }
+                    pUpper = 1.0 - PDF.alnorm(ned);
                 else
-                {
-                    pu = w == 0.0 ? 1.0 : PDF.alnorm((q - 1.0) / var);
-                }
+                    pUpper = w == 0.0 ? 1.0 : PDF.alnorm((q - 1.0) / var);
 
                 //two tailed P	
                 p2 = PDF.alnorm(ned);
@@ -2436,25 +2423,20 @@ namespace StatsDirect.Builtins
             else
             {
                 //compute the exact test
-
                 int iwmax = Convert.ToInt32(wmax);
 
                 int[] ir = new int[nonzero + 1];
                 int iw;
                 if (xf == 0.0)
                 {
-                    for (i = 1; i <= nonzero; i++)
-                    {
+                    for (int i = 1; i <= nonzero; i++)
                         ir[i] = Convert.ToInt32(r[i]);
-                    }
                     iw = Convert.ToInt32(w);
                 }
                 else
                 {
-                    for (i = 1; i <= nonzero; i++)
-                    {
+                    for (int i = 1; i <= nonzero; i++)
                         ir[i] = Convert.ToInt32(2 * r[i]);
-                    }
                     iw = Convert.ToInt32(2 * w);
                     iwmax = 2 * iwmax;
                 }
@@ -2463,62 +2445,63 @@ namespace StatsDirect.Builtins
                 //lower tail P
                 if (iw == iwmax)
                 {
-                    pl = 1.0;
+                    pLower = 1.0;
                 }
                 else if (2 * iw > iwmax)
                 {
-                    pl = XWSRLTP(ir, iwmax - iw - 1, nonzero);
-                    pl = 1.0 - pl;
+                    pLower = XWilcoxonSignedRankLowerTailProbability(ir, iwmax - iw - 1, nonzero);
+                    pLower = 1.0 - pLower;
                 }
                 else
                 {
-                    pl = XWSRLTP(ir, iw, nonzero);
+                    pLower = XWilcoxonSignedRankLowerTailProbability(ir, iw, nonzero);
                 }
 
                 //upper tail P
                 if (iw == 0)
                 {
-                    pu = 1.0;
+                    pUpper = 1.0;
                 }
                 else if (2 * iw > iwmax)
                 {
-                    pu = XWSRLTP(ir, iwmax - iw, nonzero);
+                    pUpper = XWilcoxonSignedRankLowerTailProbability(ir, iwmax - iw, nonzero);
                 }
                 else
                 {
-                    pu = XWSRLTP(ir, iw - 1, nonzero);
-                    pu = 1.0 - pu;
+                    pUpper = XWilcoxonSignedRankLowerTailProbability(ir, iw - 1, nonzero);
+                    pUpper = 1.0 - pUpper;
                 }
 
                 //two tailed P		
                 if (2 * iw > iwmax)
-                {
-                    p2 = 2.0 * XWSRLTP(ir, iwmax - iw, nonzero);
-                }
+                    p2 = 2.0 * XWilcoxonSignedRankLowerTailProbability(ir, iwmax - iw, nonzero);
                 else
-                {
-                    p2 = 2.0 * XWSRLTP(ir, iw, nonzero);
-                }
-                if (p2 > 1.0) p2 = 1.0;
+                    p2 = 2.0 * XWilcoxonSignedRankLowerTailProbability(ir, iw, nonzero);
 
+                if (p2 > 1.0)
+                    p2 = 1.0;
+
+                ned = 0;
             }
-
-            fault = false;
         }
 
-        private static double XWSRLTP(int[] rank, int score, int n)
+        /// <summary>
+        /// Given a vector of ranks and the Wilcoxon signed ranks test statistic
+        /// this calculates a lower side probability based on Norbert Neumann's
+        /// shift algorithm in Statistical Software Newsletter 1988.
+        /// </summary>
+        /// <param name="rank"></param>
+        /// <param name="score"></param>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        private static double XWilcoxonSignedRankLowerTailProbability(int[] rank, int score, int n)
         {
-            //given a vector of ranks and the Wilcoxon signed ranks test statistic
-            //this calculated a lower side probability based on Norbert Neumann's
-            //shift algorithm in Statistical Software Newsletter 1988
 
             int iwork = n * (n / 2) + (n / 2) + 1;
             double[] prob = new double[iwork + 1];
             int i;
             for (i = 1; i <= score + 1; i++)
-            {
                 prob[i] = 1.0;
-            }
 
             score = Math.Abs(score);
 
@@ -2533,17 +2516,20 @@ namespace StatsDirect.Builtins
                 }
                 upper = upper + shift;
                 int limit = upper + 1;
-                if (upper > score) limit = score + 1;
-                int k;
-                for (k = limit; k >= 1; k--)
+                if (upper > score)
+                    limit = score + 1;
+                for (int k = limit; k >= 1; k--)
                 {
                     prob[k] = 0.5 * prob[k];
-                    if (shift <= k - 1) prob[k] = prob[k] + 0.5 * prob[k - shift];
+                    if (shift <= k - 1)
+                        prob[k] = prob[k] + 0.5 * prob[k - shift];
                 }
             }
             double p = prob[score + 1];
-            if (p < 0.0) p = 0.0;
-            if (p > 1.0) p = 1.0;
+            if (p < 0.0)
+                p = 0.0;
+            if (p > 1.0)
+                p = 1.0;
             return p;
         }
 
@@ -2557,8 +2543,7 @@ namespace StatsDirect.Builtins
             else
             {
                 double s = Convert.ToDouble(sizei);
-                int ifault;
-                k = Convert.ToInt32(Math.Floor(((s * (s + 1)) / 4) + (PDF.gauinv(alpha, out ifault) * Math.Sqrt((s * (s + 1) * ((2 * s) + 1)) / 24)))) + 1;
+                k = Convert.ToInt32(Math.Floor(((s * (s + 1)) / 4) + (PDF.gauinv(alpha) * Math.Sqrt((s * (s + 1) * ((2 * s) + 1)) / 24)))) + 1;
             }
             if (k == -99)
             {
@@ -2586,7 +2571,8 @@ namespace StatsDirect.Builtins
         /// <returns></returns>
         private static double wsr_p(double x, int n)
         {
-            if (n <= 0) return Double.NaN;
+            if (n <= 0)
+                return Double.NaN;
             x = Math.Floor(x + 1e-7);
             if (x < 0.0) return 0.0;
             if (x >= n * (n + 1) / 2.0) return 1.0;
@@ -2595,16 +2581,15 @@ namespace StatsDirect.Builtins
 
             double f = Math.Exp(-n * Math.Log(2.0));
             double p = 0;
-            int i;
             if (x <= (n * (n + 1) / 4.0))
             {
-                for (i = 0; i <= x; i++)
+                for (int i = 0; i <= x; i++)
                     p += wsr_enum(i, n, ref w) * f;
             }
             else
             {
                 x = n * (n + 1) / 2.0 - x;
-                for (i = 0; i < x; i++)
+                for (int i = 0; i < x; i++)
                     p += wsr_enum(i, n, ref w) * f;
             }
 
@@ -2612,16 +2597,19 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// inverse of Wilcoxon signed ranks statistic distribution for sample size n and upper tail probability p
+        /// Inverse of Wilcoxon signed ranks statistic distribution for sample size n and upper tail probability p.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="n"></param>
         /// <returns></returns>
         private static int wsr_inv(double x, int n)
         {
-            if (n <= 0) return -99;
-            if (x <= 0) return 0;
-            if (x >= 1) return n * (n + 1) / 2;
+            if (n <= 0)
+                return -99;
+            if (x <= 0)
+                return 0;
+            if (x >= 1)
+                return n * (n + 1) / 2;
 
             double[] w = new double[((n * (n + 1) / 2) / 2) + 1];
 
@@ -2711,24 +2699,20 @@ namespace StatsDirect.Builtins
             for (j = 1; j <= size; j++)
             {
                 if (x[j] > bigx)
-                {
                     bigx = x[j];
-                }
                 if (y[j] > bigx)
-                {
                     bigx = y[j];
-                }
             }
+
             double scaler = 100000;
             do
             {
                 if (bigx * scaler < Convert.ToDouble(long.MaxValue) / 10.0)
-                {
                     break;
-                }
                 scaler = scaler / 10;
             }
             while (true);
+
             long[] xx = new long[size + 1 ];
             for (j = 1; j <= size; j++)
             {
