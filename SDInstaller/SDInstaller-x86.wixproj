@@ -12,29 +12,32 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug;OperationsDir=$(SolutionDir)StatsDirectUI\Assets\Operations</DefineConstants>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug;OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\AnyCPU\$(Configuration)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsDir=$(SolutionDir)StatsDirectUI\Assets\Operations</DefineConstants>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\AnyCPU\$(Configuration)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|x86' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template</DefineConstants>
+    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\AnyCPU\$(Configuration)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)bin\$(Configuration)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|Any CPU' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)bin\$(Configuration)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DllsFragment.wxs" />
     <Compile Include="OperationsFragment.wxs" />
     <Compile Include="StatsDirect-x86.wxs" />
     <Compile Include="TemplateFragment.wxs" />
@@ -64,6 +67,7 @@
     <Content Include="bannrbmp-sd.bmp" />
     <Content Include="Component.wxi" />
     <Content Include="Desktop.wxi" />
+    <Content Include="DllsOnly.xslt" />
     <Content Include="Package.wxi" />
     <Content Include="StartMenu.wxi" />
     <Content Include="Ui.wxi" />
@@ -81,13 +85,12 @@
     </HeatDirectory>
     <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="TemplateFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="%(HarvestDirectory.Transforms)" Directory="$(SolutionDir)StatsDirectUI\Assets\Template" ComponentGroupName="Template" DirectoryRefId="Template" KeepEmptyDirectories="false" PreprocessorVariable="var.TemplateSource" SuppressCom="%(HarvestDirectory.SuppressCom)" SuppressRootDirectory="true" SuppressRegistry="%(HarvestDirectory.SuppressRegistry)">
     </HeatDirectory>
+    <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="DllsFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="$(SolutionDir)SDInstaller\DllsOnly.xslt" Directory="$(SolutionDir)StatsDirectUI\bin\AnyCPU\$(Configuration)" ComponentGroupName="Dlls" DirectoryRefId="INSTALLLOCATION" KeepEmptyDirectories="false" PreprocessorVariable="var.DllsSource" SuppressCom="true" SuppressRootDirectory="true" SuppressRegistry="true">
+    </HeatDirectory>
   </Target>
   <Target Name="AfterBuild">
   </Target>
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent />
   </PropertyGroup>
 </Project>

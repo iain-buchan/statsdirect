@@ -8,32 +8,11 @@
     <!-- Main files -->
     <ComponentRef Id="ProductComponent" />
 
-    <!-- DevExpress -->
-    <ComponentRef Id="DevExpress.Data.v15.1.dll" />
-    <ComponentRef Id="DevExpress.Docs.v15.1.dll" />
-    <ComponentRef Id="DevExpress.Office.v15.1.Core.dll" />
-    <ComponentRef Id="DevExpress.Printing.v15.1.Core.dll" />
-    <ComponentRef Id="DevExpress.RichEdit.v15.1.Core.dll" />
-    <ComponentRef Id="DevExpress.Sparkline.v15.1.Core.dll" />
-    <ComponentRef Id="DevExpress.Utils.v15.1.dll" />
-    <ComponentRef Id="DevExpress.XtraBars.v15.1.dll" />
-    <ComponentRef Id="DevExpress.XtraEditors.v15.1.dll" />
-    <ComponentRef Id="DevExpress.XtraPrinting.v15.1.dll" />
-    <ComponentRef Id="DevExpress.XtraRichEdit.v15.1.dll" />
-    <ComponentRef Id="DevExpress.XtraRichEdit.v15.1.Extensions.dll" />
-    <ComponentRef Id="DevExpress.XtraTreeList.v15.1.dll" />
-
-    <!-- SpreadsheetGear -->
-    <ComponentRef Id="SpreadsheetGear2012.Core.dll" />
-    <ComponentRef Id="SpreadsheetGear2012.Drawing.dll" />
-    <ComponentRef Id="SpreadsheetGear2012.Windows.Forms.dll" />
-
     <!-- Other StatsDirect -->
     <ComponentRef Id="menu.xml" />
-    <ComponentRef Id="StatsDirect.XmlSerializers.dll" />
-    <ComponentRef Id="Antlr4.Runtime.net40.dll" />
     <ComponentRef Id="STATSDIRECT.chm" />
     <ComponentRef Id="StatsDirect.exe.config" />
+    <ComponentGroupRef Id="Dlls" />
 
     <!-- Sample files -->
     <ComponentRef Id="test.xlsx" />
