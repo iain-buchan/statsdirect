@@ -141,14 +141,6 @@ namespace StatsDirect.Data
             } 
         } 
         
-        public override VariableType VariableType 
-        { 
-            get 
-            { 
-                return StatsDirect.Data.VariableType.Variant; 
-            } 
-        } 
-        
         public override object CopyAndStripForRedo( bool shouldKeepData ) 
         { 
             VariantVariable copy = new VariantVariable(); 

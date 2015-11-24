@@ -421,94 +421,97 @@ namespace StatsDirect.UI
                     string title = frame.Variables[v].Title;
                     if (null != title)
                         values.SetText(0, firstColumnOfData + v, title);
-                    switch (frame.Variables[v].VariableType)
+                    if (frame.Variables[v].IsStringVariable)
                     {
-                        case VariableType.StringType:
+                        StringVariable variable = frame.Variables[v].AsStringVariable;
+                        string[] data = variable.Data;
+                        for (int i = 0; i < data.Length; i++)
+                        {
+                            string value = data[i] ?? "";
+                            if (isFormulae && value.Length > 0)
                             {
-                                StringVariable variable = frame.Variables[v].AsStringVariable;
-                                string[] data = variable.Data;
-                                for (int i = 0; i < data.Length; i++)
+                                try
                                 {
-                                    string value = data[i] ?? "";
-                                    if (isFormulae && value.Length > 0)
-                                    {
-                                        try
-                                        {
-                                            values.SetFormula(i + offsetForTitles, firstColumnOfData + v, value);
-                                        }
-                                        catch (ArgumentException)
-                                        {
-                                            // Almost certainly trying to set something that's not legal as a formula.  Try it as text instead.
-                                            values.SetText(i + offsetForTitles, firstColumnOfData + v, value);
-                                        }
-                                    }
+                                    values.SetFormula(i + offsetForTitles, firstColumnOfData + v, value);
+                                }
+                                catch (ArgumentException)
+                                {
+                                    // Almost certainly trying to set something that's not legal as a formula.  Try it as text instead.
+                                    values.SetText(i + offsetForTitles, firstColumnOfData + v, value);
+                                }
+                            }
+                            else
+                            {
+                                values.SetText(i + offsetForTitles, firstColumnOfData + v, value);
+                            }
+                        }
+                    }
+                    else if (frame.Variables[v].IsDoubleVariable)
+                    {
+                        DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
+                        double[] data = variable.Data;
+                        if (null != data)
+                        {
+                            for (int i = 0; i < data.Length; i++)
+                                if (Constant.MISSING == data[i] || double.IsNaN(data[i]))
+                                    values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
+                                else
+                                    values.SetNumber(i + offsetForTitles, firstColumnOfData + v, data[i]);
+                        }
+                    }
+                    else if (frame.Variables[v].IsClassifierVariable)
+                    {
+                        ClassifierVariable variable = frame.Variables[v].AsClassifierVariable;
+                        double[] data = variable.Data;
+                        if (null != data)
+                        {
+                            for (int i = 0; i < data.Length; i++)
+                                values.SetText(i + offsetForTitles, firstColumnOfData + v,
+                                               Constant.MISSING == data[i]
+                                                   ? missingIndicator
+                                                   : variable.Groups[(int)data[i]].Label);
+                        }
+                    }
+                    else if (frame.Variables[v].IsVariantVariable)
+                    {
+                        VariantVariable variable = frame.Variables[v].AsVariantVariable;
+                        object[] data = variable.Data;
+                        if (null != data)
+                        {
+                            for (int i = 0; i < data.Length; i++)
+                                if (data[i] is double)
+                                {
+                                    double val = (double)data[i];
+                                    if (Constant.MISSING == val || double.IsNaN(val))
+                                        values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
                                     else
-                                    {
-                                        values.SetText(i + offsetForTitles, firstColumnOfData + v, value);
-                                    }
+                                        values.SetNumber(i + offsetForTitles, firstColumnOfData + v, val);
                                 }
-                            }
-                            break;
-                        case VariableType.Double:
-                            {
-                                DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
-                                double[] data = variable.Data;
-                                if (null != data)
-                                {
-                                    for (int i = 0; i < data.Length; i++)
-                                        if (Constant.MISSING == data[i] || double.IsNaN(data[i]))
-                                            values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
-                                        else
-                                            values.SetNumber(i + offsetForTitles, firstColumnOfData + v, data[i]);
-                                }
-                            }
-                            break;
-                        case VariableType.ClassifierType:
-                            {
-                                ClassifierVariable variable = frame.Variables[v].AsClassifierVariable;
-                                double[] data = variable.Data;
-                                if (null != data)
-                                {
-                                    for (int i = 0; i < data.Length; i++)
-                                        values.SetText(i + offsetForTitles, firstColumnOfData + v,
-                                                       Constant.MISSING == data[i]
-                                                           ? missingIndicator
-                                                           : variable.Groups[(int)data[i]].Label);
-                                }
-                            }
-                            break;
-                        case VariableType.Variant:
-                            {
-                                VariantVariable variable = frame.Variables[v].AsVariantVariable;
-                                object[] data = variable.Data;
-                                if (null != data)
-                                {
-                                    for (int i = 0; i < data.Length; i++)
-                                        if (data[i] is double)
-                                        {
-                                            double val = (double)data[i];
-                                            if (Constant.MISSING == val || double.IsNaN(val))
-                                                values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
-                                            else
-                                                values.SetNumber(i + offsetForTitles, firstColumnOfData + v, val);
-                                        }
-                                        else if (data[i] is bool)
-                                        {
-                                            values.SetLogical(i + offsetForTitles, firstColumnOfData + v, (bool)data[i]);
-                                        }
-                                        else if (null == data[i])
-                                        {
-                                            values.Clear(i + offsetForTitles, firstColumnOfData + v);
-                                        }
-                                        else
-                                        {
-                                            values.SetText(i + offsetForTitles, firstColumnOfData + v, data[i].ToString());
-                                        }
-                                }
-                            }
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException("frame", frame.Variables[v].VariableType, "Unknown variable type");
+                                else if (data[i] is bool)
+                                    values.SetLogical(i + offsetForTitles, firstColumnOfData + v, (bool)data[i]);
+                                else if (null == data[i])
+                                    values.Clear(i + offsetForTitles, firstColumnOfData + v);
+                                else
+                                    values.SetText(i + offsetForTitles, firstColumnOfData + v, data[i].ToString());
+                        }
+                    }
+                    else if (frame.Variables[v].IsDateVariable)
+                    {
+                        DateVariable variable = frame.Variables[v].AsDateVariable;
+                        DateTime[] data = variable.Data;
+                        if (null != data)
+                        {
+                            for (int i = 0; i < data.Length; i++)
+                                if (DateTime.MinValue == data[i])
+                                    values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
+                                else
+                                    values.SetNumber(i + offsetForTitles, firstColumnOfData + v, data[i].ToOADate());
+                        }
+                        // TODO: Set date formatting for range
+                    }
+                    else
+                    { 
+                            throw new ArgumentOutOfRangeException("Unknown variable type in frame");
                     }
                 }
                 IRange insertedRange = range[0, 0, frame.MaxRows + offsetForTitles - 1, range.ColumnCount - 1];

@@ -110,14 +110,6 @@ namespace StatsDirect.Data
             }
         }
 
-        public override VariableType VariableType
-        {
-            get
-            {
-                return StatsDirect.Data.VariableType.StringType;
-            }
-        }
-
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
             StringVariable copy = new StringVariable();

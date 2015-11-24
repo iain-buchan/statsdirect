@@ -202,14 +202,6 @@ namespace StatsDirect.Data
             }
         }
 
-        public override VariableType VariableType
-        {
-            get
-            {
-                return StatsDirect.Data.VariableType.Double;
-            }
-        }
-
         ///  <summary>
         ///  True if this Variable is a classifier variable; false if it is not
         ///  </summary>

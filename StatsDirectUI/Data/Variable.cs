@@ -187,9 +187,6 @@ namespace StatsDirect.Data
             }
         }
 
-        [XmlIgnore]
-        public abstract VariableType VariableType { get; }
-
         public abstract object CopyAndStripForRedo(bool shouldKeepData);
 
         ///  <summary>

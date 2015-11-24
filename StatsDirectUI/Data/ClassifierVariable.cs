@@ -64,14 +64,6 @@ namespace StatsDirect.Data
             }
         }
 
-        public override VariableType VariableType
-        {
-            get
-            {
-                return StatsDirect.Data.VariableType.ClassifierType;
-            }
-        }
-
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
             ClassifierVariable copy = new ClassifierVariable();
