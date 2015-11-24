@@ -2772,7 +2772,7 @@ namespace StatsDirect.UI
         internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, DoubleParameter parameter, ParameterBag context)
         {
             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
-            TextBox txt = new TextBox { Size = new Size(70, 18), Tag = parameter };
+            TextBox txt = new TextBox { Size = new Size(100, 18), Tag = parameter };
             if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsDouble)
             {
                 double defaultValue = context[parameter.Name].AsDouble;
@@ -3367,7 +3367,7 @@ namespace StatsDirect.UI
         internal FilledParameter PrepareCombinedParameter(ITemplateProcessor processor, IntegerParameter parameter, ParameterBag context)
         {
             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
-            TextBox txt = new TextBox { Size = new Size(70, 18), Tag = parameter };
+            TextBox txt = new TextBox { Size = new Size(100, 18), Tag = parameter };
             if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsInt32)
             {
                 txt.Text = context[parameter.Name].AsInt32.ToString();
@@ -3885,10 +3885,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text =
-                                    parameter.HasPrompt
-                                        ? parameter.Prompt(processor, context)
-                                        : ""
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
             };
             tlp.Controls.Add(lbl);
             return null;
@@ -4155,9 +4152,16 @@ namespace StatsDirect.UI
                 txt.Size = new Size(250, 18);
             else
             {
-                // TODO: Measure length in the face of multiple fonts and sizes.
+                // Windows kerns fonts; so we measure two different strings to give us an idea of the kerning.
+                float enWidth;
+                float enEnWidth;
+                using (Graphics tapeMeasure = txt.CreateGraphics())
+                {
+                    enWidth = tapeMeasure.MeasureString("n", txt.Font).Width;
+                    enEnWidth = tapeMeasure.MeasureString("nn", txt.Font).Width;
+                }
                 txt.MaxLength = parameter.MaxLength;
-                txt.Size = new Size(6 + CHARWIDTH * parameter.MaxLength, 18);
+                txt.Size = new Size(6 + (int)Math.Ceiling(enWidth + ((enEnWidth - enWidth) * (parameter.MaxLength - 1))), 18);
             }
             txt.Tag = parameter;
             if ((!parameter.ForceDefault) && context.ContainsKey(parameter.Name) && null != context[parameter.Name] && context[parameter.Name].IsInputParameter && context[parameter.Name].IsString)
