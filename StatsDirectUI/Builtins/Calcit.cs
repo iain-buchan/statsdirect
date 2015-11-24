@@ -9,7 +9,6 @@ namespace StatsDirect.Builtins
 {
     public class Calcit  
     {
-        //private static readonly string THOUSANDS_SEPARATOR = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
         private object instance;
         private MethodInfo methodInfo;
 

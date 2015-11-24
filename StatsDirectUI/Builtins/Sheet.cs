@@ -525,9 +525,40 @@ namespace StatsDirect.Builtins
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             bool isNumeric = "numeric".Equals(parameters["search-type"].AsString);
             string searchRule = parameters["search-rule"].AsString;
-            string searchExpression = parameters["search-expression"].AsString;
+            string userSearchExpression = parameters["search-expression"].AsString;
             string action = parameters["action"].AsString;
-            string replaceExpression = parameters["replace-expression"].AsString;
+            string replaceExpression = parameters.ContainsKey("replace-expression") ? parameters["replace-expression"].AsString : null;
+
+            // Use the expression parser and evaluator to make this simple
+            string wrappedUserSearchExpression = isNumeric ? userSearchExpression : ("\"" + userSearchExpression.Replace("\"", "\"\"") + "\"");
+            string searchExpression;
+            switch (searchRule)
+            {
+                case "equal":
+                    searchExpression = "X = " + wrappedUserSearchExpression;
+                    break;
+                case "gt":
+                    searchExpression = "X > " + wrappedUserSearchExpression;
+                    break;
+                case "lt":
+                    searchExpression = "X < " + wrappedUserSearchExpression;
+                    break;
+                case "ge":
+                    searchExpression = "X >= " + wrappedUserSearchExpression;
+                    break;
+                case "le":
+                    searchExpression = "X <= " + wrappedUserSearchExpression;
+                    break;
+                case "ne":
+                    searchExpression = "X <> " + wrappedUserSearchExpression;
+                    break;
+                case "match":
+                    searchExpression = userSearchExpression;
+                    break;
+                default:
+                    throw new Exception("Unknown operation");
+            }
+            Calcit searcher = new Calcit(searchExpression);
             throw new NotImplementedException();
         }
 

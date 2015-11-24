@@ -25,12 +25,12 @@
         <format-type>Dropdown</format-type>
         <options>
           <option value="equal">=</option>
-          <option value="equal">&gt;</option>
-          <option value="equal">&lt;</option>
-          <option value="equal">&gt;=</option>
-          <option value="equal">&lt;=</option>
-          <option value="equal">&lt;&gt;</option>
-          <option value="equal">matching expression</option>
+          <option value="gt">&gt;</option>
+          <option value="lt">&lt;</option>
+          <option value="ge">&gt;=</option>
+          <option value="le">&lt;=</option>
+          <option value="ne">&lt;&gt;</option>
+          <option value="match">matching expression</option>
         </options>
       </option>
       <string>
