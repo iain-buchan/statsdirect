@@ -249,6 +249,7 @@
     <Compile Include="Charting\ROCOptions.cs" />
     <Compile Include="Charting\ROCSeriesRecord.cs" />
     <Compile Include="Charting\RtfImageConverter.cs" />
+    <Compile Include="Charting\RtfImageRenderer.cs" />
     <Compile Include="Charting\ScatterXYOptions.cs" />
     <Compile Include="Charting\SDGlobalStub.cs" />
     <Compile Include="Charting\Series.cs" />
@@ -271,7 +272,6 @@
     <Compile Include="Data\IStripForRedo.cs" />
     <Compile Include="Data\StringVariable.cs" />
     <Compile Include="Data\Variable.cs" />
-    <Compile Include="Data\VariableType.cs" />
     <Compile Include="Data\WorksheetOrigin.cs" />
     <Compile Include="Expressions\Argument.cs" />
     <Compile Include="Expressions\Converter.cs" />
@@ -1717,7 +1717,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

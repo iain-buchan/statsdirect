@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using StatsDirect.Templates;
+using System.Windows.Forms;
 
 namespace StatsDirect.Charting
 {
@@ -11,59 +12,61 @@ namespace StatsDirect.Charting
     /// </summary>
     class EmfCanvas : IStatsDirectCanvas
     {
-        private Metafile metaFile;
-        private Graphics canvas;
+        private Metafile metafile;
+        private Graphics metafileGraphics;
         private Stream outputStream;
         private double width;
         private double height;
 
         public void Dispose()
         {
-            if (null != canvas)
+            if (null != metafileGraphics)
             {
-                canvas.Dispose();
-                canvas = null;
+                metafileGraphics.Dispose();
+                metafileGraphics = null;
             }
-            if (null != metaFile)
+            if (null != metafile)
             {
-                metaFile.Dispose();
-                metaFile = null;
+                metafile.Dispose();
+                metafile = null;
             }
-            outputStream = null;
+            if (null != outputStream)
+            {
+                outputStream.Dispose();
+                outputStream = null;
+            }
         }
 
         public EmfCanvas(double width, double height)
         {
-            SetupGraphics((float)width, (float)height);
+            this.width = width;
+            this.height = height;
+            SetupGraphics();
         }
 
-        private void SetupGraphics(float w, float h)
+        private void SetupGraphics()
         {
-            width = w;
-            height = h;
             outputStream = new MemoryStream();
             //  Create temporary graphics object for metafile creation and get handle to its device context.
             using (Bitmap b = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
             {
-                b.SetResolution(96.0f, 96.0f);
                 using (Graphics newGraphics = Graphics.FromImage(b))
                 {
-                    IntPtr hdc = newGraphics.GetHdc();
-                    outputStream.Position = 0; //  Just in case we're resetting an earlier metafile output
                     //  Create metafile object to do the recording.
-                    metaFile = new Metafile(outputStream, hdc, new RectangleF(0, 0, w, h), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
-                    //  Create graphics object as our interface to the recording metaFile.
-                    canvas = Graphics.FromImage(metaFile);
-                    canvas.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                    //  Release handle to scratch device context.
+                    IntPtr hdc = newGraphics.GetHdc();
+                    metafile = new Metafile(outputStream, hdc, new RectangleF(0, 0, (float)width, (float)height), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
                     newGraphics.ReleaseHdc(hdc);
+
+                    MetafileHeader header = metafile.GetMetafileHeader();
+                    metafileGraphics = Graphics.FromImage(metafile);
+                    metafileGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 }
             }
         }
 
         public void DrawString(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat)
         {
-            canvas.DrawString(s, font, brush, Convert.ToSingle(x), Convert.ToSingle(height - y), txtFormat);
+            metafileGraphics.DrawString(s, font, brush, Convert.ToSingle(x), Convert.ToSingle(height - y), txtFormat);
         }
 
         ///  <summary>
@@ -116,11 +119,14 @@ namespace StatsDirect.Charting
                 }
             }
             float angle = DirectionToAngle(direction);
-            canvas.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(height - y));
-            canvas.RotateTransform(angle);
-            canvas.DrawString(s, font, brush, 0, 0, txtFormat);
-            canvas.ResetTransform();
-            SizeF uprightSize = canvas.MeasureString(s, font);
+            metafileGraphics.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(height - y));
+            metafileGraphics.RotateTransform(angle);
+            metafileGraphics.DrawString(s, font, brush, 0, 0, txtFormat);
+            // Undo the transform
+            metafileGraphics.RotateTransform(0f - angle);
+            metafileGraphics.TranslateTransform(0f - Convert.ToSingle(x), 0f - Convert.ToSingle(height - y));
+
+            SizeF uprightSize = metafileGraphics.MeasureString(s, font);
             SizeF boundingSize = ToBoundingSize(uprightSize, direction);
             return boundingSize;
         }
@@ -164,20 +170,20 @@ namespace StatsDirect.Charting
 
         public SizeF MeasureString(string s, Font font)
         {
-            return canvas.MeasureString(s, font);
+            return metafileGraphics.MeasureString(s, font);
         }
 
         public Stream DetachAndReturnImageStream()
         {
-            if (null != canvas)
+            if (null != metafileGraphics)
             {
-                canvas.Dispose();
-                canvas = null;
+                metafileGraphics.Dispose();
+                metafileGraphics = null;
             }
-            if (null != metaFile)
+            if (null != metafile)
             {
-                metaFile.Dispose();
-                metaFile = null;
+                metafile.Dispose();
+                metafile = null;
             }
             if (null == outputStream)
                 return null;
@@ -245,11 +251,11 @@ namespace StatsDirect.Charting
             {
                 using (Brush b = new SolidBrush(p.Color))
                 {
-                    canvas.FillPolygon(b, pt);
+                    metafileGraphics.FillPolygon(b, pt);
                 }
             }
             // Draw the diamond
-            canvas.DrawPolygon(p, pt);
+            metafileGraphics.DrawPolygon(p, pt);
         }
 
         public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, Pen p)
@@ -295,12 +301,12 @@ namespace StatsDirect.Charting
                     {
                         using (Brush b = new SolidBrush(p.Color))
                         {
-                            canvas.FillPolygon(b, points);
+                            metafileGraphics.FillPolygon(b, points);
                         }
                     }
                     else
                     {
-                        canvas.DrawPolygon(p, points);
+                        metafileGraphics.DrawPolygon(p, points);
                     }
                 }
                     break;
@@ -373,32 +379,32 @@ namespace StatsDirect.Charting
 
         private void FillEllipse(Brush b, double x, double y, double w, double h)
         {
-            canvas.FillEllipse(b, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
+            metafileGraphics.FillEllipse(b, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
         }
 
         private void DrawEllipse(Pen p, double x, double y, double w, double h)
         {
-            canvas.DrawEllipse(p, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            metafileGraphics.DrawEllipse(p, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
         public void FillRectangle(Brush b, double x, double y, double w, double h)
         {
-            canvas.FillRectangle(b, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            metafileGraphics.FillRectangle(b, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
         public void DrawRectangle(Pen p, double x, double y, double w, double h)
         {
-            canvas.DrawRectangle(p, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            metafileGraphics.DrawRectangle(p, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
         public void DrawLine(Pen p, double x1, double y1, double x2, double y2)
         {
-            canvas.DrawLine(p, Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(height - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(height - y2, 0)));
+            metafileGraphics.DrawLine(p, Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(height - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(height - y2, 0)));
         }
 
         public double GetFontHeight(Font f)
         {
-            return f.GetHeight(canvas);
+            return f.GetHeight(metafileGraphics);
         }
     }
 }

@@ -3571,7 +3571,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3582,7 +3582,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = dsul;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3889,7 +3889,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3900,7 +3900,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = dsul;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3911,7 +3911,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = wmrUcl;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -4363,7 +4363,7 @@ namespace StatsDirect.Builtins
 
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -4374,7 +4374,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = dsul;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCPAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);

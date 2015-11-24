@@ -122,11 +122,11 @@ namespace StatsDirect.Charting
         private int minorTicsPerMajorTic;
         private double scaleYAxis = 1.0;
         private double scaleXAxis = 1.0;
-        private const double DEFAULT_METAFILE_HEIGHT = 800;
-        private const double DEFAULT_METAFILE_WIDTH = 1132;
+        private const int DEFAULT_METAFILE_HEIGHT = 800;
+        private const int DEFAULT_METAFILE_WIDTH = 1132;
         private const double DEFAULT_Y_GAP = 80;
-        private double metafileHeight = DEFAULT_METAFILE_HEIGHT;
-        private double metafileWidth = DEFAULT_METAFILE_WIDTH;
+        private int imageHeight = DEFAULT_METAFILE_HEIGHT;
+        private int imageWidth = DEFAULT_METAFILE_WIDTH;
         private const int LABEL_TO_AXIS_LABEL_GAP = 20;
 
         //  Box and Whisker constants
@@ -346,13 +346,6 @@ namespace StatsDirect.Charting
                     throw new Exception("Unknown chart type");
             }
 
-        }
-
-        public ParameterBag PlotAndReturnRtf(ITemplateHost host, out string rtf)
-        {
-            ParameterBag results = Plot(host);
-            rtf = ImageStreamToRtf(GetImageStream());
-            return results;
         }
 
         /// <summary>
@@ -698,17 +691,17 @@ namespace StatsDirect.Charting
         private void DefaultAxes(double extraHeightRequiredAtBottom)
         {
             //  xaxis also needs to be reset in routines with legends
-            xAxisCanvas = metafileWidth / 7.55;
-            yAxisCanvas = Math.Min(metafileHeight / 8, DEFAULT_Y_GAP) + extraHeightRequiredAtBottom;
-            xExtCanvas = metafileWidth / 1.25 * scaleXAxis;
-            yExtCanvas = metafileHeight - Math.Min(metafileHeight / 4, 2 * DEFAULT_Y_GAP * scaleYAxis) - extraHeightRequiredAtBottom;
+            xAxisCanvas = imageWidth / 7.55;
+            yAxisCanvas = Math.Min(imageHeight / 8, DEFAULT_Y_GAP) + extraHeightRequiredAtBottom;
+            xExtCanvas = imageWidth / 1.25 * scaleXAxis;
+            yExtCanvas = imageHeight - Math.Min(imageHeight / 4, 2 * DEFAULT_Y_GAP * scaleYAxis) - extraHeightRequiredAtBottom;
         }
 
         ///  <summary>
-        ///  Prepare to plot a metafile chart to the specified stream.
+        ///  Prepare to plot a vector chart to the specified stream.
         ///  </summary>
         ///  <remarks></remarks>
-        private void StartMetafile(bool shouldDefaultAxes = true)
+        private void StartVectorPlot(bool shouldDefaultAxes = true)
         {
             // Initialise scaling and resources
             IsAscii = false;
@@ -728,7 +721,7 @@ namespace StatsDirect.Charting
             axisPen = new Pen(grAxis, 1);
             axisBrush = new SolidBrush(Color.Black);
 
-            statsDirectCanvas = new EmfCanvas(metafileWidth, metafileHeight);
+            statsDirectCanvas = new EmfCanvas(imageWidth, imageHeight);
         }
 
         private bool ReconstituteFonts()
@@ -742,10 +735,10 @@ namespace StatsDirect.Charting
         }
 
         ///  <summary>
-        ///  Stop plotting a metafile chart and release resources.
+        ///  Stop plotting a vector chart and release resources.
         ///  </summary>
         ///  <remarks></remarks>
-        private void EndMetafile()
+        private void EndVectorPlot()
         {
             //  Series are kept in case of redoing a preview.  TODO: Is this appropriate?  Isn't a new renderer used each time?
 
@@ -811,7 +804,7 @@ namespace StatsDirect.Charting
                     txtFormat.Alignment = StringAlignment.Center;
                     txtFormat.LineAlignment = StringAlignment.Center;
                     double x = xAxisCanvas - axisLabelFont.Height - AXIS_BIG_TICK - yShift - LABEL_TO_AXIS_LABEL_GAP;
-                    double y = metafileHeight - (yExtCanvas / 2 + yAxisCanvas);
+                    double y = imageHeight - (yExtCanvas / 2 + yAxisCanvas);
                     statsDirectCanvas.DrawStringAtAngle(title, axisTitleFont, Brushes.Black, x, y, txtFormat, LabelDirection.Up);
                 }
             }
@@ -832,14 +825,12 @@ namespace StatsDirect.Charting
             if (!DrawAxesOrFail(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition, out extraHeightRequired))
             {
                 extraHeightRequired = Math.Ceiling(extraHeightRequired);
-                metafileHeight += extraHeightRequired;
+                imageHeight += (int)Math.Ceiling(extraHeightRequired);
                 statsDirectCanvas.Dispose();
-                statsDirectCanvas = new EmfCanvas(metafileWidth, metafileHeight);
+                statsDirectCanvas = new EmfCanvas(imageWidth, imageHeight);
                 DefaultAxes(extraHeightRequired);
                 if (!DrawAxesOrFail(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition, out extraHeightRequired))
-                {
                     throw new Exception("Even after trying to enlarge the canvas, I don't have enough space for the chart.");
-                }
             }
         }
 
@@ -1067,9 +1058,7 @@ namespace StatsDirect.Charting
                                 AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
                             }
                             if (hasGridLines)
-                            {
                                 statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
-                            }
                         }
                     }
                 }
@@ -1088,10 +1077,9 @@ namespace StatsDirect.Charting
                         int s = Convert.ToInt32((x * (60 / xDiv)) + 15);
                         int s2;
                         if (lab.Substring(0, 1) == "-")
-                        {
                             s2 = s - 1;
-                        }
-                        else { s2 = s; }
+                        else
+                            s2 = s;
                         WriteAsciiYX(ASCII_Ytxt - 2, s2, lab);
                         WriteAsciiYX(ASCII_Ytxt - 1, s, "+");
                     }
@@ -1128,9 +1116,7 @@ namespace StatsDirect.Charting
                 //  Use the values in our scale parameters
                 AxisScaleParameters asp = IsY ? definition.ScaleParameters.Y : definition.ScaleParameters.X;
                 if ((asp != null) && asp.HasAxisScale)
-                {
                     return asp.Mask;
-                }
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
             return AxisScaler.AxisMask(stepp, znmin, nstep, sp, ScaleType);
@@ -1182,13 +1168,10 @@ namespace StatsDirect.Charting
                             //  Major tic
                             double value;
                             if (reverse)
-                            {
-                                value = axisYMin + (Convert.ToDouble(yDiv - y) * aint);
-                            }
+                                value = axisYMin + ((yDiv - y) * aint);
                             else
-                            {
-                                value = axisYMin + (Convert.ToDouble(y) * aint);
-                            }
+                                value = axisYMin + (y * aint);
+
                             //  Un-transform value for non-linear scales
                             switch (scaleType)
                             {
@@ -1207,9 +1190,7 @@ namespace StatsDirect.Charting
                             maxWidth = Math.Max(Convert.ToSingle(maxWidth), AxisDrawStringAtAngleRM(lab, xAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction).Width);
                             AxisDrawline(xAxisCanvas - AXIS_BIG_TICK, y1, xAxisCanvas, y1);
                             if (hasGridLines)
-                            {
                                 statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
-                            }
                         }
                     }
                 }
@@ -1332,9 +1313,7 @@ namespace StatsDirect.Charting
                         maxWidth = Math.Max(Convert.ToSingle(maxWidth), statsDirectCanvas.DrawStringAtAngle(labels[y], axisLabelFont, axisBrush, xAxisCanvas - (AXIS_BIG_TICK + 3), yctr, txtFormat, direction).Width);
                         AxisDrawline(xAxisCanvas - AXIS_BIG_TICK, ytic, xAxisCanvas, ytic);
                         if (hasGridLines)
-                        {
                             statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, ytic, xAxisCanvas + xExtCanvas, ytic);
-                        }
                     }
                 }
                 return maxWidth;
@@ -1591,7 +1570,7 @@ namespace StatsDirect.Charting
             if (!(IsAscii))
             {
                 // Plot a metafile version
-                StartMetafile();
+                StartVectorPlot();
                 SetFontsAndThicknessesFromOptions(sOptions);
                 AssignMarkersToSeries(sOptions);
                 //  What extra space do we need before the X axis?
@@ -1658,7 +1637,7 @@ namespace StatsDirect.Charting
                     DrawMarkerSeries(xys, ys.MarkerDetails.MarkerSize, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, joinMarkersWithLines, shouldDrawMarkers);
                 }
                 MaybeDrawMarkerLines();
-                EndMetafile();
+                EndVectorPlot();
             }
             else
             {
@@ -1729,7 +1708,7 @@ namespace StatsDirect.Charting
             bool fullWidth = lrOptions.FullWidth;
 
             // Plot a metafile version
-            StartMetafile();
+            StartVectorPlot();
             AssignMarkersToSeries();
             //  What extra space do we need before the X axis?
             double xtra = 0;
@@ -1802,13 +1781,13 @@ namespace StatsDirect.Charting
             }
 
             MaybeDrawMarkerLines();
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
         public string PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(ITemplateHost host, string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle, double PERT, int nx, double MS, double SUMX, double SSX, bool isPredictionInterval)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotLinearRegressionInternal(title, slope, intercept, fullWidth, xAxisTitle, yAxisTitle);
             if (PERT != 0)
                 PlotSeCiOrPredictionInterval(PERT, slope, intercept, nx, MS, SUMX, SSX, isPredictionInterval);
@@ -1898,15 +1877,15 @@ namespace StatsDirect.Charting
 
         public string PlotCox2AndReturnRtf(ITemplateHost host, int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotCox2Internal(gn, igroups, xp, yp, cdat1, groupid);
             return EndMetafileAndReturnRtf();
         }
 
         private string EndMetafileAndReturnRtf()
         {
-            EndMetafile();
-            return ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream());
+            EndVectorPlot();
+            return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), (int)imageWidth, (int)imageHeight);
         }
 
         private void PlotCox2Internal(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
@@ -1965,7 +1944,7 @@ namespace StatsDirect.Charting
 
         public string PlotCox1AndReturnRtf(ITemplateHost host, string title, CoxP[] z, int iobs, bool stratified, bool grouped, int istrata, int igroups, ColumnData[] cdat1, int groupid, bool use_marker, bool use_tic, double[, ,] ARR3, int j3, string xAxisTitle, string yAxisTitle, ref int[] gn)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotCox1Internal(title, z, iobs, stratified, grouped, istrata, igroups, cdat1, groupid, use_marker, use_tic, ARR3, j3, xAxisTitle, yAxisTitle, ref gn);
             return EndMetafileAndReturnRtf();
         }
@@ -2151,7 +2130,7 @@ namespace StatsDirect.Charting
 
         public string PlotLinearizedEstimationAndReturnRtf(ITemplateHost host, string title, int model, double a, double b, string XAxisTitle, string YAxisTitle)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotLinearizedEstimationInternal(title, model, a, b, XAxisTitle, YAxisTitle);
             return EndMetafileAndReturnRtf();
         }
@@ -2240,7 +2219,7 @@ namespace StatsDirect.Charting
 
         public string PlotPolynomialRegressionAndReturnRtf(ITemplateHost host, string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P, double gamma, string xAxisTitle, string yAxisTitle)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotPolynomialRegressionInternal(title, mode, xtxi, bd, rss, nx, P, gamma, xAxisTitle, yAxisTitle);
             return EndMetafileAndReturnRtf();
         }
@@ -2422,7 +2401,7 @@ namespace StatsDirect.Charting
 
         public string PlotLogitAndReturnRtf(ITemplateHost host, string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotLogitInternal(title, model, t, sw, s1, a, b, xAxisTitle, yAxisTitle);
             return EndMetafileAndReturnRtf();
         }
@@ -2765,12 +2744,12 @@ namespace StatsDirect.Charting
                 scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                     scaleYAxis = 5;
-                metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
             {
                 scaleYAxis = 1;
-                metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
 
             // sort the array and get the min, max values
@@ -2783,7 +2762,7 @@ namespace StatsDirect.Charting
                 P = 1.0 - P;
 
             // Plot a Metafile version
-            StartMetafile();
+            StartVectorPlot();
 
             //  Fonts
             if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
@@ -3082,7 +3061,7 @@ namespace StatsDirect.Charting
                 }
             }
             MaybeDrawMarkerLines();
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -3094,12 +3073,12 @@ namespace StatsDirect.Charting
                 scaleXAxis = 1 + (k - 10) / 20.0;
                 if (scaleXAxis > 5)
                     scaleXAxis = 5;
-                metafileWidth = scaleXAxis * DEFAULT_METAFILE_WIDTH;
+                imageWidth = (int)Math.Ceiling(scaleXAxis * DEFAULT_METAFILE_WIDTH);
             }
             else
             {
                 scaleXAxis = 1;
-                metafileWidth = DEFAULT_METAFILE_WIDTH;
+                imageWidth = DEFAULT_METAFILE_WIDTH;
             }
 
             // sort the array and get the min, max values
@@ -3112,7 +3091,7 @@ namespace StatsDirect.Charting
                 P = 1.0 - P;
 
             // Plot a Metafile version
-            StartMetafile();
+            StartVectorPlot();
 
             //  Fonts
             if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
@@ -3440,7 +3419,7 @@ namespace StatsDirect.Charting
                 }
             }
             MaybeDrawMarkerLines();
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -3727,10 +3706,10 @@ namespace StatsDirect.Charting
             bool shouldDrawLegend = bOptions.Stacked || (bOptions.ShowLegend && bOptions.ShowLegendIsRelevant);
 
             //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartMetafile();
+            StartVectorPlot();
             SetFontsAndThicknessesFromOptions(bOptions);
             double legendFontHeight = statsDirectCanvas.GetFontHeight(legendFont);
-            EndMetafile();
+            EndVectorPlot();
 
             //  By now, all measurements are known.  Set up the plot areas.
             double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
@@ -3768,7 +3747,7 @@ namespace StatsDirect.Charting
                 DataMinY = 0;
                 DataMaxY = 0;
 
-                StartMetafile(false);
+                StartVectorPlot(false);
                 SetFontsAndThicknessesFromOptions(bOptions);
 
                 // Draw the scale
@@ -3921,7 +3900,7 @@ namespace StatsDirect.Charting
             {
                 //  Not horizontal, so vertical
 
-                StartMetafile(false);
+                StartVectorPlot(false);
                 SetFontsAndThicknessesFromOptions(bOptions);
                 AssignMarkersToSeries(bOptions);
 
@@ -4083,7 +4062,7 @@ namespace StatsDirect.Charting
                 }
             }
             MaybeDrawMarkerLines();
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -4510,9 +4489,9 @@ namespace StatsDirect.Charting
                 if (!IsAscii)
                 {
                     //  If there's more than one series, they're to be plotted separately.  Each plot is the same height as the original.
-                    metafileHeight *= seriesToUse.Count;
+                    imageHeight *= seriesToUse.Count;
 
-                    StartMetafile();
+                    StartVectorPlot();
 
                     originalMarkerTypes = SharedMarkerTypes;
                     SharedMarkerTypes = new MarkerType[originalMarkerTypes.Length];
@@ -4580,13 +4559,13 @@ namespace StatsDirect.Charting
                     if (!IsAscii)
                     {
                         // Plot a Metafile version
-                        double heightPerChart = metafileHeight / seriesToUse.Count; //  Should end up as the old MetaH
-                        double thisChartTop = metafileHeight - (seriesIndex * heightPerChart);
+                        double heightPerChart = imageHeight / seriesToUse.Count; //  Should end up as the old MetaH
+                        double thisChartTop = imageHeight - (seriesIndex * heightPerChart);
                         double thisChartBottom = thisChartTop - heightPerChart;
 
                         //  No longer the default Y axis!
                         DefaultAxes(0);
-                        yAxisCanvas = thisChartBottom + Math.Min(Math.Floor(metafileHeight / 8), DEFAULT_Y_GAP);
+                        yAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DEFAULT_Y_GAP);
                         yExtCanvas = heightPerChart - Math.Min(heightPerChart / 4, 2 * DEFAULT_Y_GAP) * scaleYAxis;
 
                         //  If necessary, extend the Y axis to accommodate the normal curve
@@ -4702,7 +4681,7 @@ namespace StatsDirect.Charting
                 if (!IsAscii)
                 {
                     MaybeDrawMarkerLines();
-                    EndMetafile();
+                    EndVectorPlot();
                 }
                 else
                 {
@@ -4820,14 +4799,14 @@ namespace StatsDirect.Charting
 
         public string PlotXYAndReturnRtf(ITemplateHost host, double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotXY(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition);
             return EndMetafileAndReturnRtf();
         }
 
         public string PlotXYZAndReturnRtf(ITemplateHost host, double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotXYZ(x, y, z, 1, x.Length - 1, xtxt, ytxt, title, zPlot, minMaxY, MarkerShape.Circle, false, Pens.Black, null);
             return EndMetafileAndReturnRtf();
         }
@@ -5040,17 +5019,17 @@ namespace StatsDirect.Charting
                 {
                     scaleYAxis = 5;
                 }
-                metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
             {
                 scaleYAxis = 1;
-                metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
 
             GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
 
-            StartMetafile();
+            StartVectorPlot();
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
             foreach (Series s in seriesToUse)
@@ -5137,7 +5116,7 @@ namespace StatsDirect.Charting
                     r = r1;
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -5152,17 +5131,17 @@ namespace StatsDirect.Charting
                 scaleXAxis = 1 + (k - 10) / 20.0;
                 if (scaleXAxis > 5)
                     scaleXAxis = 5;
-                metafileWidth = scaleXAxis * DEFAULT_METAFILE_WIDTH;
+                imageWidth = (int)Math.Ceiling(scaleXAxis * DEFAULT_METAFILE_WIDTH);
             }
             else
             {
                 scaleXAxis = 1;
-                metafileWidth = DEFAULT_METAFILE_WIDTH;
+                imageWidth = DEFAULT_METAFILE_WIDTH;
             }
 
             GetMinMaxSort(seriesToUse, out DataMinY, out DataMaxY);
 
-            StartMetafile();
+            StartVectorPlot();
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
 
@@ -5241,7 +5220,7 @@ namespace StatsDirect.Charting
                 }
 
             }
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -5304,13 +5283,13 @@ namespace StatsDirect.Charting
             // Work out how many series there are and extend the plot area as required to hold the legend
 
             // Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartMetafile();
+            StartVectorPlot();
             SetFontsAndThicknessesFromOptions(rOptions);
             double smallerExt = Math.Min(xExtCanvas, yExtCanvas);
             xExtCanvas = smallerExt;
             yExtCanvas = smallerExt;
             double legendFontHeight = statsDirectCanvas.GetFontHeight(legendFont);
-            EndMetafile();
+            EndVectorPlot();
 
             // By now, all measurements are known.  Set up the plot areas.
             double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
@@ -5322,14 +5301,14 @@ namespace StatsDirect.Charting
                 double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
 
                 //  Add in the extra space
-                metafileHeight += extraSpaceRequired;
+                imageHeight += (int)Math.Ceiling(extraSpaceRequired);
                 yAxisCanvas += extraSpaceRequired;
                 legendTop += extraSpaceRequired;
                 // legendBottom += extraSpaceRequired; 
             }
 
             // We've hacked at the axes; don't re-default them.
-            StartMetafile(false);
+            StartVectorPlot(false);
             SetFontsAndThicknessesFromOptions(rOptions);
             AssignMarkersToSeries(rOptions);
 
@@ -5680,7 +5659,7 @@ namespace StatsDirect.Charting
                     thisResults.AddOutput("likely_despite_change", Formatting.XRound(temp2, 2));
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
             return results;
         }
 
@@ -5817,15 +5796,15 @@ namespace StatsDirect.Charting
             for (int j = 0; j < rows; j++)
                 y[j] = xs0.Data[j];
 
-            StartMetafile();
+            StartVectorPlot();
             ParameterBag outputParameters = Plot_Normal(y);
-            EndMetafile();
+            EndVectorPlot();
             return outputParameters;
         }
 
         public string PlotNormalAndReturnRtf(ITemplateHost host, double[] y)
         {
-            StartMetafile();
+            StartVectorPlot();
             Plot_Normal(y);
             return EndMetafileAndReturnRtf();
         }
@@ -6077,15 +6056,15 @@ namespace StatsDirect.Charting
                 {
                     scaleYAxis = 5;
                 }
-                metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
             {
                 scaleYAxis = 1;
-                metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
 
-            StartMetafile();
+            StartVectorPlot();
 
             SetFontsAndThicknessesFromOptions(pOptions);
 
@@ -6172,9 +6151,9 @@ namespace StatsDirect.Charting
 
                         statsDirectCanvas.DrawString("Scale maximum = " + ScaleMax, axisLabelFont, Brushes.Black, 40, yAxisCanvas - 40, leftFormat);
 
-                        EndMetafile();
+                        EndVectorPlot();
                         scaleYAxis = 1;
-                        metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                        imageHeight = DEFAULT_METAFILE_HEIGHT;
                         return new ParameterBag();
                     }
                 }
@@ -6234,7 +6213,7 @@ namespace StatsDirect.Charting
 
         public string PlotXYRAndReturnRtf(ITemplateHost host, double[,] x, double[, ,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotXYR(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam);
             return EndMetafileAndReturnRtf();
         }
@@ -6472,7 +6451,7 @@ namespace StatsDirect.Charting
 
         public string PlotLAbbeAndReturnRtf(ITemplateHost host, int k, double[,] o, double rmh)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotLAbbe(k, o, rmh);
             return EndMetafileAndReturnRtf();
         }
@@ -6535,7 +6514,7 @@ namespace StatsDirect.Charting
         {
             // Get the plot title
             LadderOptions lOptions = ((LadderOptions)(definition.ChartOptions));
-            StartMetafile();
+            StartVectorPlot();
             SetFontsAndThicknessesFromOptions(lOptions);
             AssignMarkersToSeries(definition.YSeries, lOptions);
 
@@ -6578,7 +6557,7 @@ namespace StatsDirect.Charting
                     }
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -6779,7 +6758,7 @@ namespace StatsDirect.Charting
 
             const int RHS_LABEL_GAP = 7;
 
-            StartMetafile();
+            StartVectorPlot();
 
             //  Fonts
             SetFontsAndThicknessesFromOptions(cOptions);
@@ -6990,7 +6969,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -7079,10 +7058,10 @@ namespace StatsDirect.Charting
             //  If there's a legend, work out how many series there are and extend the plot area as required to hold the legend
 
             //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartMetafile();
+            StartVectorPlot();
             SetFontsAndThicknessesFromOptions(eOptions);
             double legendFontHeight = statsDirectCanvas.GetFontHeight(legendFont);
-            EndMetafile();
+            EndVectorPlot();
 
             //  By now, all measurements are known.  Set up the plot areas.
             double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
@@ -7097,14 +7076,14 @@ namespace StatsDirect.Charting
                     double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
 
                     //  Add in the extra space
-                    metafileHeight += extraSpaceRequired;
+                    imageHeight += (int)Math.Ceiling(extraSpaceRequired);
                     yAxisCanvas += extraSpaceRequired;
                     legendTop += extraSpaceRequired;
                     // legendBottom += extraSpaceRequired; 
                 }
             }
 
-            StartMetafile(false);
+            StartVectorPlot(false);
             SetFontsAndThicknessesFromOptions(eOptions);
             AssignMarkersToSeries(eOptions);
 
@@ -7213,7 +7192,7 @@ namespace StatsDirect.Charting
                     DrawStringLegendL(eOptions.SeriesTitles[seriesIndex], xAxisCanvas + LEGEND_MARKER_SIZE * 2, legendY);
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -7289,12 +7268,12 @@ namespace StatsDirect.Charting
                 scaleYAxis = 1.0 + (k - 10.0) / 20.0;
                 if (scaleYAxis > 5)
                     scaleYAxis = 5;
-                metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
             {
                 scaleYAxis = 1;
-                metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
 
             int kok = 0;
@@ -7374,7 +7353,7 @@ namespace StatsDirect.Charting
                 CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
             }
             
-            StartMetafile();
+            StartVectorPlot();
             
             SetFontsAndThicknessesFromOptions(fOptions);
 
@@ -7503,7 +7482,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -7621,14 +7600,14 @@ namespace StatsDirect.Charting
             //  If there is a legend, work out how many series there are and extend the plot area as required to hold the legend
 
             //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartMetafile();
+            StartVectorPlot();
             SetFontsAndThicknessesFromOptions(sOptions);
             DefaultAxes(0);
             //double smallerExt = Math.Min(xExtCanvas, yExtCanvas);
             //xExtCanvas = smallerExt;
             //yExtCanvas = smallerExt;
             double legendFontHeight = statsDirectCanvas.GetFontHeight(legendFont);
-            EndMetafile();
+            EndVectorPlot();
 
             //  By now, all measurements are known.  Set up the plot areas.
             double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
@@ -7656,7 +7635,7 @@ namespace StatsDirect.Charting
             }
 #endif
 
-            StartMetafile(false);
+            StartVectorPlot(false);
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
 
@@ -7758,7 +7737,7 @@ namespace StatsDirect.Charting
                     }
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -7786,7 +7765,7 @@ namespace StatsDirect.Charting
             GiniOptions gOptions = ((GiniOptions)(definition.ChartOptions));
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
-            StartMetafile();
+            StartVectorPlot();
 
             DataMinX = 0.0;
             DataMaxX = 1.0;
@@ -7819,14 +7798,14 @@ namespace StatsDirect.Charting
                     lastY = y;
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
         public string PlotBiasMAAndReturnRtf(ITemplateHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
         {
                 Plot_Bias_MA(host, x, yy, yw, rows, xtxt, cl, cu, cco, cit, rmh, xform, diagonal);
-                return ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream());
+                return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), (int)imageWidth, (int)imageHeight);
         }
 
         private void Plot_Bias_MA(ITemplateHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
@@ -7939,7 +7918,7 @@ namespace StatsDirect.Charting
                     break;
             }
 
-            StartMetafile();
+            StartVectorPlot();
             // Peto plots are boxed
             DrawAxesOrEnlargeCanvas(title, new Axis(xtxt, AxisMode.Scale, 0, ScaleType.Linear), new Axis(ytx, reverse ? AxisMode.ReverseScale : AxisMode.Scale, 0, ScaleType.Linear), !reverse && diagonal, false);
 
@@ -8061,12 +8040,12 @@ namespace StatsDirect.Charting
                     statsDirectCanvas.DrawLine(tenPen, xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas);
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
         }
 
         public string PlotTiesAndReturnMetafile(ITemplateHost host, double[] x, double[] y, int nx, double lla, double ula, double GAMMA, string v0Title, string v1Title, double mean)
         {
-            StartMetafile();
+            StartVectorPlot();
             PlotTies(x, y, nx, lla, ula, GAMMA, v0Title, v1Title, mean);
             return EndMetafileAndReturnRtf();
         }
@@ -8181,7 +8160,7 @@ namespace StatsDirect.Charting
         private ParameterBag PlotAgreementPair()
         {
             AgreementOptions aOptions = ((AgreementOptions)(definition.ChartOptions));
-            StartMetafile();
+            StartVectorPlot();
             GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType, out axisYMin, out axisYMax);
             using (Pen p = GetMarkerPen(SharedMarkerTypes[0]))
             {
@@ -8238,7 +8217,7 @@ namespace StatsDirect.Charting
                     statsDirectCanvas.DrawLine(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
             return new ParameterBag();
         }
 
@@ -8766,7 +8745,7 @@ namespace StatsDirect.Charting
                     cnx[k] = nx;
                 }
                 // Plot the results
-                    StartMetafile();
+                    StartVectorPlot();
                     DataMaxX = double.MinValue;
                     DataMaxY = double.MinValue;
                     DataMinX = double.MaxValue;
@@ -8865,8 +8844,8 @@ namespace StatsDirect.Charting
                             }
                         }
                     }
-                    EndMetafile();
-                    outputImages.Add(ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream()));
+                    EndVectorPlot();
+                    outputImages.Add(RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), imageWidth, imageHeight));
             }
             return outputImages;
         }
@@ -8874,7 +8853,7 @@ namespace StatsDirect.Charting
         public string PlotMHAndReturnRtf(ITemplateHost host, int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault, object xlabel)
         {
                 Plot_MH(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
-                return ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream());
+                return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), imageWidth, imageHeight);
         }
 
         private void Plot_MH(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
@@ -8890,12 +8869,12 @@ namespace StatsDirect.Charting
                 {
                     scaleYAxis = 5;
                 }
-                metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
             {
                 scaleYAxis = 1;
-                metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
             double[] gw = new double[k + 1];
             double ormax = double.NegativeInfinity;
@@ -8968,7 +8947,7 @@ namespace StatsDirect.Charting
             double realamin, realamax;
             CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
 
-            StartMetafile();
+            StartVectorPlot();
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
@@ -9146,7 +9125,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            EndMetafile();
+            EndVectorPlot();
 
             ifault = false;
         }
@@ -9216,7 +9195,7 @@ namespace StatsDirect.Charting
         public string PlotMHRDAndReturnRtf(ITemplateHost host, int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
         {
             Plot_MHRD(k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
-            return ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream());
+            return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), imageWidth, imageHeight);
         }
 
         private void Plot_MHRD(int k, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool fault)
@@ -9230,14 +9209,14 @@ namespace StatsDirect.Charting
                 scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                     scaleYAxis = 5;
-                metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
             {
                 scaleYAxis = 1;
-                metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
-            StartMetafile();
+            StartVectorPlot();
 
             double[] gw = new double[k + 1];
             double orMax = double.NegativeInfinity;
@@ -9449,13 +9428,13 @@ namespace StatsDirect.Charting
             }
 
             fault = false;
-            EndMetafile();
+            EndVectorPlot();
         }
 
         public string PlotEffectAndReturnRtf(ITemplateHost host, int k, double[] cn, double[] En, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
         {
                 PlotEffect(host, k, cn, En, title, rmh, ll, ul, cco, odr, odrl, odru, cap, pbias, qid);
-                return ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream());
+                return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), imageWidth, imageHeight);
         }
 
         private void PlotEffect(ITemplateHost host, int k, double[] cn, double[] En, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
@@ -9467,14 +9446,14 @@ namespace StatsDirect.Charting
                 {
                     scaleYAxis = 5;
                 }
-                metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
             {
                 scaleYAxis = 1;
-                metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
-            StartMetafile();
+            StartVectorPlot();
 
             double[] gn = new double[k + 1];
             int kok = 0;
@@ -9487,57 +9466,35 @@ namespace StatsDirect.Charting
             {
                 gn[i] = cn[i] + En[i];
                 if (gn[i] > max_gn)
-                {
                     max_gn = gn[i];
-                }
                 if (odr[i] != Constant.MISSING)
                 {
                     kok = kok + 1;
                     if (odr[i] > ormax)
-                    {
                         ormax = odr[i];
-                    }
                     if (odr[i] < ormin)
-                    {
                         ormin = odr[i];
-                    }
                     if (odrl[i] < orlmin)
-                    {
                         orlmin = odrl[i];
-                    }
                     if (odru[i] > orumax)
-                    {
                         orumax = odru[i];
-                    }
                 }
             }
 
             DataMaxX = ormax;
             DataMinX = ormin;
             if (DataMaxX < rmh)
-            {
                 DataMaxX = rmh;
-            }
             if (DataMaxX < ul && ul != Constant.MISSING)
-            {
                 DataMaxX = ul;
-            }
             if (DataMaxX < orumax && orumax != Constant.MISSING)
-            {
                 DataMaxX = orumax;
-            }
             if (DataMinX > rmh)
-            {
                 DataMinX = rmh;
-            }
             if (DataMinX > ll && ll != Constant.MISSING)
-            {
                 DataMinX = ll;
-            }
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
-            {
                 DataMinX = orlmin;
-            }
 
             double aint; double amin;
             AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
@@ -9652,13 +9609,13 @@ namespace StatsDirect.Charting
                     DrawStringLabel(lab, xAxisCanvas + xExtCanvas / 2, 50, StringAlignment.Center);
                 }
             }
-            EndMetafile();
+            EndVectorPlot();
         }
 
-        public string PlotCPAndReturnRtf(ITemplateHost host, int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
+        public string PlotCorrelationAndReturnRtf(ITemplateHost host, int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
-            Plot_CP(k, title, odr, odrl, odru, gn, pg, cap, qid, xform, isDifference);
-            return ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream());
+            PlotCorrelation(k, title, odr, odrl, odru, gn, pg, cap, qid, xform, isDifference);
+            return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), imageWidth, imageHeight);
         }
 
         /// <summary>
@@ -9674,22 +9631,22 @@ namespace StatsDirect.Charting
         /// <param name="cap"></param>
         /// <param name="qid"></param>
         /// <param name="xform"></param>
-        private void Plot_CP(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
+        private void PlotCorrelation(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
             if (k > 10)
             {
                 scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                     scaleYAxis = 5;
-                metafileHeight = scaleYAxis * DEFAULT_METAFILE_HEIGHT;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
             {
                 scaleYAxis = 1;
-                metafileHeight = DEFAULT_METAFILE_HEIGHT;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
 
-            StartMetafile();
+            StartVectorPlot();
 
             int kok = 0;
             double ormax = double.NegativeInfinity;
@@ -10055,7 +10012,7 @@ namespace StatsDirect.Charting
                     }
             }
 
-            EndMetafile();
+            EndVectorPlot();
         }
 
         private void PlotSeCiOrPredictionInterval(double pert, double slope, double yIntercept, int nx, double ms, double sumx, double ssx, bool isPredictionInterval)
@@ -10369,16 +10326,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        private string ImageStreamToRtf(Stream stream)
-        {
-            try
-            {
-                return RtfImageConverter.MetastreamToRtf(stream, (int)metafileWidth, (int)metafileHeight);
-            }
-            catch (OutOfMemoryException ex)
-            {
-                throw new Exception("Couldn't convert a chart to RTF", ex);
-            }
-        }
+        public int ImageWidth {  get { return imageWidth; } }
+        public int ImageHeight { get { return imageHeight; } }
     }
 }

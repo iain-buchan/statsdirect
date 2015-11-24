@@ -254,7 +254,7 @@ namespace StatsDirect.Templates
                 else
                 {
                     string rtf;
-                    results = ch.PlotAndReturnRtf(host, out rtf);
+                    results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
                     results.Add(step.ChartName, new FilledParameter(false, rtf));
                 }
                 SaveChartDefinition(step, results, definition);

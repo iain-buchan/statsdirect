@@ -1058,7 +1058,7 @@ namespace StatsDirect.Builtins
                 cd.ChartOptions = options;
                 Charting.ChartRenderer chart = new Charting.ChartRenderer(cd);
                 string rtf;
-                ParameterBag scrap = chart.PlotAndReturnRtf(host, out rtf);
+                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
                 groupParameters.AddOutput("chart", rtf);
             }
 
@@ -1082,7 +1082,7 @@ namespace StatsDirect.Builtins
                 cd.ChartOptions = options;
                 ChartRenderer chart = new Charting.ChartRenderer(cd);
                 string rtf;
-                ParameterBag results = chart.PlotAndReturnRtf(host, out rtf);
+                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
                 outputParameters.AddOutput("aucNormalChart", rtf);
                 outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
 
@@ -1093,7 +1093,7 @@ namespace StatsDirect.Builtins
                 options.Title = "Normal Plot for Log(AUC)";
                 options.XAxisTitle = "Log Area Under Curve";
                 chart = new ChartRenderer(cd);
-                results = chart.PlotAndReturnRtf(host, out rtf);
+                results = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
                 outputParameters.AddOutput("aucLogNormalChart", rtf);
                 outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
             }
@@ -1139,7 +1139,7 @@ namespace StatsDirect.Builtins
                 cd.ChartOptions = options;
                 Charting.ChartRenderer chart = new Charting.ChartRenderer(cd);
                 string rtf;
-                ParameterBag scrap = chart.PlotAndReturnRtf(host, out rtf);
+                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
                 outputParameters.AddOutput("meanAucChart", rtf);
             }
 
