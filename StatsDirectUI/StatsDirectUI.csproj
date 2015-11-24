@@ -322,6 +322,12 @@
       <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\DialogAndAction.cs" />
+    <Compile Include="UI\ctlOperation.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlOperation.Designer.cs">
+      <DependentUpon>ctlOperation.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\IGetCells.cs" />
     <Compile Include="UI\OutputType.cs" />
     <Compile Include="UI\PaneAndPosition.cs" />
@@ -843,6 +849,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInstallR.resx">
       <DependentUpon>frmInstallR.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlOperation.resx">
+      <DependentUpon>ctlOperation.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmReportRichEditDummy.resx">
@@ -1717,7 +1727,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
