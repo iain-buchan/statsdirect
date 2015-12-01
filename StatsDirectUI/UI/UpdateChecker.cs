@@ -6,6 +6,11 @@ namespace StatsDirect.UI
 {
     delegate void StatusChangedEventHandler(object sender, UpdateCheckerEventArgs e);
 
+    /// <summary>
+    /// Abstract superclass for things that check a URL for updated versions. This abstracts out DNS resolution and a HTTP GET, and calls DownloadStringCompleted when done.
+    /// The check is designed not to slow down a UI, so runs asynchronously once started (via StartCheck), and therefore callbacks may be run on a background thread.
+    /// Clients or subclasses may hand in a status changed handler, which will get called on significant changes; this can for example be used to enable/disable buttons or update textual status.
+    /// </summary>
     abstract class UpdateChecker
     {
         private Uri Uri { get; set; }
@@ -19,7 +24,7 @@ namespace StatsDirect.UI
             DnsDomain = uri.DnsSafeHost;
             if (null != handler)
                 statusChanged += handler;
-            // Just using DownloadStringAsync can block on DNS resolution; so perform async DNS resolution for cran.r-project.org
+            // Just using DownloadStringAsync can block on DNS resolution; so perform async DNS resolution.
             Dns.BeginGetHostAddresses(DnsDomain, DnsCompleted, null);
         }
 
@@ -29,6 +34,9 @@ namespace StatsDirect.UI
                 webClient.CancelAsync();
         }
 
+        /// <summary>
+        /// Invoked when DNS resolution completes or times out.
+        /// </summary>
         private void DnsCompleted(IAsyncResult ar)
         {
             if (!ar.IsCompleted)
@@ -41,7 +49,6 @@ namespace StatsDirect.UI
                 var addresses = Dns.EndGetHostAddresses(ar);
                 UpdateStatus(false, false, false, "Contacting " + DnsDomain + "...");
 
-                // Uri numericUri = new UriBuilder(Uri.Scheme, addresses[0].ToString(), Uri.Port, Uri.AbsolutePath, Uri.Query).Uri; // Can't use this as R, at least, needs host headers intact.
                 webClient = new WebClient();
                 webClient.DownloadStringCompleted += DownloadStringCompleted;
                 webClient.DownloadStringAsync(Uri);
@@ -58,6 +65,9 @@ namespace StatsDirect.UI
                 statusChanged.Invoke(this, new UpdateCheckerEventArgs { IsFinal = isFinal, Succeeded = successful, NewerVersionAvailable = newerVersionAvailable, Message = message });
         }
 
+        /// <summary>
+        /// Invoked when the HTTP request completes or times out.  Subclasses should implement to do what they need with the result.
+        /// </summary>
         protected abstract void DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e);
     }
 }
