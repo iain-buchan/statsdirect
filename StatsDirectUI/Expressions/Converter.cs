@@ -29,9 +29,9 @@ namespace StatsDirect.Expressions
             // The parser seems to dislike recognising EOF (for some reason - TODO: find out why) so instead test that we're at EOF at the end of the parse
             if (!"<EOF>".Equals(parser.CurrentToken.Text))
                 throw new Exception("Couldn't parse your expression: syntax error near \"" + parser.CurrentToken.Text + "\"");
-            if (null == retval || null == retval.builtExpression)
+            if (null == retval || null == retval.node)
                 throw new Exception("Syntax error");
-            return retval.builtExpression;
+            return new CSharpRenderer().Render(retval.node);
         }
 
         private static StatsDirectExpressionLexer.SeparatorStructure GetSeparatorStructure()

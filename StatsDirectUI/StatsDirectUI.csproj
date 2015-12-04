@@ -274,13 +274,27 @@
     <Compile Include="Data\Variable.cs" />
     <Compile Include="Data\WorksheetOrigin.cs" />
     <Compile Include="Expressions\Argument.cs" />
+    <Compile Include="Expressions\ConstantNode.cs" />
     <Compile Include="Expressions\Converter.cs" />
     <Compile Include="Expressions\Arguments.cs" />
+    <Compile Include="Expressions\CSharpRenderer.cs" />
+    <Compile Include="Expressions\StringNode.cs" />
+    <Compile Include="Expressions\DoubleNode.cs" />
+    <Compile Include="Expressions\DyadicNode.cs" />
+    <Compile Include="Expressions\DyadicOperator.cs" />
     <Compile Include="Expressions\FunctionDefinition.cs" />
+    <Compile Include="Expressions\FunctionNode.cs" />
     <Compile Include="Expressions\FunctionRegistry.cs" />
+    <Compile Include="Expressions\IExpressionVisitor.cs" />
+    <Compile Include="Expressions\INode.cs" />
+    <Compile Include="Expressions\IntegerNode.cs" />
+    <Compile Include="Expressions\MonadicNode.cs" />
+    <Compile Include="Expressions\MonadicOperator.cs" />
+    <Compile Include="Expressions\ParserConstant.cs" />
     <Compile Include="Expressions\SDMath.cs" />
     <Compile Include="Expressions\StatsDirectExpressionLexerPartial.cs" />
     <Compile Include="Expressions\StatsDirectExpressionParserPartial.cs" />
+    <Compile Include="Expressions\VariableNode.cs" />
     <Compile Include="Numerics\Utilities.cs" />
     <Compile Include="R\FrameType.cs" />
     <Compile Include="R\RConvert.cs" />
@@ -1244,9 +1258,6 @@
     <Content Include="Assets\menu-sd2.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\menu-shell.xml">
-      <SubType>Designer</SubType>
-    </Content>
     <Content Include="Assets\Operations\BarPlotFrequency.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1727,7 +1738,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

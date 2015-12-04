@@ -1,62 +1,63 @@
 grammar StatsDirectExpression;
 
-r returns [string builtExpression]
-	: EQ? expr { $builtExpression = $expr.builtExpression; }
+r returns [INode node]
+	: EQ? expr { $node = $expr.node; }
 	;
 
-expr returns [string builtExpression]
-	: lhs=andexpr { $builtExpression = $lhs.builtExpression; }
-		(op=OR rhs=andexpr { $builtExpression = "(" + $builtExpression + " || " + $rhs.builtExpression + ")"; })* 
+expr returns [INode node]
+	: lhs=expr op=OR rhs=andexpr { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.Or, Right = $rhs.node }; }
+	| andexpr { $node = $andexpr.node; }
 	;
 
-andexpr returns [string builtExpression]
-	: lhs=notexpr { $builtExpression = $lhs.builtExpression; }
-		(op=AND rhs=notexpr { $builtExpression = "(" + $builtExpression + " && " + $rhs.builtExpression + ")"; })* 
+andexpr returns [INode node]
+	: lhs=andexpr op=AND rhs=notexpr { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.And, Right = $rhs.node }; }
+	| notexpr { $node = $notexpr.node; }
 	;
 
-notexpr returns [string builtExpression]
-	: ( NOT rhs=relexpr { $builtExpression = "(!(" + $rhs.builtExpression + "))"; } )
-	| relexpr { $builtExpression = $relexpr.builtExpression; }
+notexpr returns [INode node]
+	: NOT rhs=relexpr { $node = new MonadicNode { Operator = MonadicOperator.Not, Node = $rhs.node }; }
+	| relexpr { $node = $relexpr.node; }
 	;
 
-relexpr returns [string builtExpression]
-	: lhs=numexpr { $builtExpression = $lhs.builtExpression; }
-		(op=relop rhs=numexpr { $builtExpression = "(" + $builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; })? 
+relexpr returns [INode node]
+	: lhs=numexpr op=relop rhs=numexpr { $node = new DyadicNode { Left = $lhs.node, Operator = $op.operator, Right = $rhs.node }; }
+	| numexpr { $node = $numexpr.node; }
 	;
 
-numexpr returns [string builtExpression]
-	: lhs=mulexpr { $builtExpression = $lhs.builtExpression; }
-		(op=addop rhs=mulexpr { $builtExpression = "(" + $builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; })* 
+numexpr returns [INode node]
+	: lhs=numexpr op=addop rhs=mulexpr { $node = new DyadicNode { Left = $lhs.node, Operator = $op.operator, Right = $rhs.node }; }
+	| mulexpr { $node = $mulexpr.node; }
 	;
 	
-mulexpr returns [string builtExpression]
-	: lhs=powexpr { $builtExpression = $lhs.builtExpression; }
-		(op=mulop rhs=powexpr { if ("idiv".Equals($op.builtExpression)) $builtExpression = "SDMath.Idiv(" + $builtExpression + ", " + $rhs.builtExpression + ")"; else $builtExpression = "(" + $builtExpression + " " + $op.builtExpression + " " + $rhs.builtExpression + ")"; } )*
+mulexpr returns [INode node]
+	: lhs=mulexpr op=mulop rhs=powexpr { $node = new DyadicNode { Left = $lhs.node, Operator = $op.operator, Right = $rhs.node }; }
+	| powexpr { $node = $powexpr.node; }
 	;
 
-powexpr returns [string builtExpression]
-	: lhs=factorial { $builtExpression = $lhs.builtExpression; }
-		((CARET | STARSTAR) rhs=factorial { $builtExpression = "Math.Pow(" + $builtExpression + ", " + $rhs.builtExpression + ")"; } )* 
+powexpr returns [INode node]
+	: lhs=powexpr (CARET | STARSTAR) rhs=factorial { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.Pow, Right = $rhs.node }; }
+	| factorial { $node = $factorial.node; }
 	;
 
-factorial returns [string builtExpression]
-	: term { $builtExpression = $term.builtExpression; }
-	(EXCLAIM { $builtExpression = "SDMath.Factorial(" + $term.builtExpression + ")"; })?
+factorial returns [INode node]
+	: term { $node = $term.node; }
+	| term EXCLAIM { $node = new MonadicNode { Operator = MonadicOperator.Factorial, Node = $term.node }; }
 	;
 	
-term returns [string builtExpression]
-	: INTEGER { $builtExpression = "((double)" + double.Parse($INTEGER.text).ToString() + ")"; }
-	| MINUS INTEGER { $builtExpression = "((double)-" + double.Parse($INTEGER.text).ToString() + ")"; }
-	| FLOAT { $builtExpression = double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")).ToString(); }
-	| MINUS FLOAT { $builtExpression = "-" + double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")).ToString(); }
-	| LPAREN expr RPAREN { $builtExpression = "(" + $expr.builtExpression + ")"; }
-	| constant { $builtExpression = $constant.builtExpression; }
-	| function { $builtExpression = $function.builtExpression; }
-	| IDENTIFIER { $builtExpression = RenderVariable($IDENTIFIER.text); }
+term returns [INode node]
+	: INTEGER { $node = new IntegerNode { Value = int.Parse($INTEGER.text) }; }
+	| MINUS INTEGER { $node = new IntegerNode { Value = 0 - int.Parse($INTEGER.text) }; }
+	| FLOAT { $node = new DoubleNode { Value = double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")) }; }
+	| MINUS FLOAT { $node = new DoubleNode { Value = 0.0 - double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")) }; }
+	| STRING { $node = ParseString($STRING.text); }
+	| LPAREN expr RPAREN { $node = $expr.node; }
+	| constant { $node = $constant.node; }
+	| function { $node = $function.node; }
+	| IDENTIFIER { $node = ParseVariable($IDENTIFIER.text); }
 	;
 	
-function returns [string builtExpression]
-	: IDENTIFIER LPAREN argumentlist RPAREN { $builtExpression = RenderFunction($IDENTIFIER.text.ToUpper(), $argumentlist.arguments); }
+function returns [FunctionNode node]
+	: functionName=IDENTIFIER LPAREN argumentlist RPAREN { $node = new FunctionNode { Name = $functionName.text.ToUpper(), Arguments = $argumentlist.arguments }; }
 	;
 	
 argumentlist returns [Arguments arguments]
@@ -65,38 +66,37 @@ argumentlist returns [Arguments arguments]
 	;
 	
 arg returns [Argument argument]
-	: expr { $argument = new Argument($expr.builtExpression); }
-	| explicitParameterName GETS expr { $argument = new Argument($explicitParameterName.text, $expr.builtExpression); }
+	: expr { $argument = new Argument { Node = $expr.node }; }
+	| explicitParameterName GETS expr { $argument = new Argument { ExplicitParameterName = $explicitParameterName.text, Node = $expr.node }; }
 	| { $argument = null; }
 	;
 	
-constant returns [string builtExpression]
-	: PI { $builtExpression = "Math.PI"; }
-	| EE { $builtExpression = "Math.E"; }
-	| FALSE { $builtExpression = "false"; }
-	| TRUE { $builtExpression = "true"; }
-//	| LR { throw new System.NotImplementedException(); }
+constant returns [ConstantNode node]
+	: PI { $node = new ConstantNode { Constant = ParserConstant.Pi }; }
+	| EE { $node = new ConstantNode { Constant = ParserConstant.E }; }
+	| FALSE { $node = new ConstantNode { Constant = ParserConstant.False }; }
+	| TRUE { $node = new ConstantNode { Constant = ParserConstant.True }; }
 	;
 	
-relop returns [string builtExpression]
-	: NE { $builtExpression = "!="; }
-	| LE { $builtExpression = "<="; }
-	| LT { $builtExpression = "<"; }
-	| GE { $builtExpression = ">="; }
-	| GT { $builtExpression = ">"; }
-	| EQ { $builtExpression = "=="; }
+relop returns [DyadicOperator operator]
+	: NE { $operator = DyadicOperator.NotEqual; }
+	| LE { $operator = DyadicOperator.LessThanOrEqual; }
+	| LT { $operator = DyadicOperator.LessThan; }
+	| GE { $operator = DyadicOperator.GreaterThanOrEqual; }
+	| GT { $operator = DyadicOperator.GreaterThan; }
+	| EQ { $operator = DyadicOperator.Equal; }
 	;
 
-addop returns [string builtExpression]
-	: PLUS { $builtExpression = "+"; }
-	| MINUS { $builtExpression = "-"; }
+addop returns [DyadicOperator operator]
+	: PLUS { $operator = DyadicOperator.Add; }
+	| MINUS { $operator = DyadicOperator.Subtract; }
 	;
 	
-mulop returns [string builtExpression]
-	: STAR { $builtExpression = "*"; }
-	| SLASH { $builtExpression = "/"; }
-	| BACKSLASH { $builtExpression = "idiv"; }
-	| MOD { $builtExpression = "%"; }
+mulop returns [DyadicOperator operator]
+	: STAR { $operator = DyadicOperator.Multiply; }
+	| SLASH { $operator = DyadicOperator.Divide; }
+	| BACKSLASH { $operator = DyadicOperator.IntegerDivide; }
+	| MOD { $operator = DyadicOperator.Modulo; }
 	;
 
 explicitParameterName
