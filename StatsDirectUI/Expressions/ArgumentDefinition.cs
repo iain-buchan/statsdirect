@@ -2,41 +2,29 @@
 {
     public class ArgumentDefinition
     {
-        public string ParameterName { get; set; }
-        public bool IsOptional { get; set; }
-        public string ParameterDefault { get; set; }
+        public string Name { get; private set; }
+        public bool IsOptional { get; private set; }
+        public string Default { get; private set; }
+        public DataType DataType { get; private set; }
 
-        public ArgumentDefinition(string parameterName, bool isOptional, string parameterDefault)
+        public ArgumentDefinition(string name, DataType dataType, bool isOptional = false, string parameterDefault = null)
         {
-            ParameterName = parameterName;
+            Name = name;
+            DataType = dataType;
             IsOptional = isOptional;
-            ParameterDefault = parameterDefault;
-        }
-
-        public ArgumentDefinition(string parameterName)
-        {
-            ParameterName = parameterName;
-            IsOptional = false;
-            ParameterDefault = null;
-        }
-
-        public ArgumentDefinition(string parameterName, string parameterDefault)
-        {
-            ParameterName = parameterName;
-            IsOptional = true;
-            ParameterDefault = parameterDefault;
+            Default = parameterDefault;
         }
 
         public override string ToString()
         {
             // Mandatory parameters only show their name.
             if (!IsOptional)
-                return ParameterName;
+                return Name;
 
             // Optional parameters show different strings depending on whether or not they have a default.
-            if (null != ParameterDefault)
-                return string.Format("{0}:={1} (default)", ParameterName, ParameterDefault);
-            return ParameterName + " (optional)";
+            if (null != Default)
+                return string.Format("{0}:={1} (default)", Name, Default);
+            return Name + " (optional)";
         }
     }
 }

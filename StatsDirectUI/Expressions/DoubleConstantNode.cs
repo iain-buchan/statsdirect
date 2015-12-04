@@ -2,14 +2,13 @@
 
 namespace StatsDirect.Expressions
 {
-    public class FunctionNode : INode
+    public class DoubleConstantNode : INode
     {
-        public string Name { get; set; }
-        public Arguments Arguments { get; set; }
+        public ParserConstant Constant { get; set; }
 
         DataType INode.DataType(DataType[] passedVariableTypes)
         {
-            return FunctionRegistry.SoleInstance.FunctionNamed(Name).DataType;
+            return DataType.Double;
         }
 
         void INode.Accept(IExpressionVisitor visitor)

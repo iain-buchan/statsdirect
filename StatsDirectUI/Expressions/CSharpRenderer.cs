@@ -59,7 +59,7 @@ namespace StatsDirect.Expressions
             return rendered;
         }
 
-        void IExpressionVisitor.Visit(ConstantNode node)
+        void IExpressionVisitor.Visit(BooleanConstantNode node)
         {
             string cSharpValue;
             if (parserConstants.TryGetValue(node.Constant, out cSharpValue))
@@ -73,6 +73,17 @@ namespace StatsDirect.Expressions
         void IExpressionVisitor.Visit(DoubleNode node)
         {
             activeBuilder.Append(node.Value);
+        }
+
+        void IExpressionVisitor.Visit(DoubleConstantNode node)
+        {
+            string cSharpValue;
+            if (parserConstants.TryGetValue(node.Constant, out cSharpValue))
+            {
+                activeBuilder.Append(cSharpValue);
+                return;
+            }
+            throw new Exception("Unknown constant");
         }
 
         void IExpressionVisitor.Visit(DyadicNode node)
@@ -133,7 +144,7 @@ namespace StatsDirect.Expressions
             List<ArgumentDefinition> defs = functionDefinition.ArgumentDefinitions;
             string[] parameterValues = new string[defs.Count];
             for (int i = 0; i < parameterValues.Length; i++)
-                parameterValues[i] = defs[i].ParameterDefault;
+                parameterValues[i] = defs[i].Default;
             for (int i = 0; i < node.Arguments.Count; i++)
             {
                 Argument argument = node.Arguments[i];
@@ -152,7 +163,7 @@ namespace StatsDirect.Expressions
                         bool found = false;
                         for (int pos = 0; pos < defs.Count; pos++)
                         {
-                            if (argument.ExplicitParameterName.Equals(defs[pos].ParameterName))
+                            if (argument.ExplicitParameterName.Equals(defs[pos].Name))
                             {
                                 found = true;
                                 parameterValues[pos] = RenderInNewContext(argument.Node);
@@ -169,7 +180,7 @@ namespace StatsDirect.Expressions
             for (int i = 0; i < parameterValues.Length; i++)
             {
                 if (null == parameterValues[i])
-                    throw new Exception("You must supply a value for " + defs[i].ParameterName + " in " + functionDefinition);
+                    throw new Exception("You must supply a value for " + defs[i].Name + " in " + functionDefinition);
             }
 
             activeBuilder.Append(functionDefinition.ClrName);
@@ -185,21 +196,11 @@ namespace StatsDirect.Expressions
 
         void IExpressionVisitor.Visit(MonadicNode node)
         {
-            switch (node.Operator)
-            {
-                case MonadicOperator.Factorial:
-                    activeBuilder.Append("SDMath.Factorial(");
-                    node.Node.Accept(this);
-                    activeBuilder.Append(')');
-                    break;
-                case MonadicOperator.Not:
-                    activeBuilder.Append("(!(");
-                    node.Node.Accept(this);
-                    activeBuilder.Append("))");
-                    break;
-                default:
-                    throw new Exception("Unknown monadic operation");
-            }
+            MonadicOperatorDefinition definition = MonadicOperatorRegistry.SoleInstance.DefinitionFor(node.Operator);
+            activeBuilder.Append(definition.ClrName);
+            activeBuilder.Append('(');
+            node.Node.Accept(this);
+            activeBuilder.Append(')');
         }
 
         void IExpressionVisitor.Visit(StringNode node)

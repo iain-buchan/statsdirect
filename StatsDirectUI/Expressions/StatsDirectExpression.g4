@@ -71,11 +71,11 @@ arg returns [Argument argument]
 	| { $argument = null; }
 	;
 	
-constant returns [ConstantNode node]
-	: PI { $node = new ConstantNode { Constant = ParserConstant.Pi }; }
-	| EE { $node = new ConstantNode { Constant = ParserConstant.E }; }
-	| FALSE { $node = new ConstantNode { Constant = ParserConstant.False }; }
-	| TRUE { $node = new ConstantNode { Constant = ParserConstant.True }; }
+constant returns [INode node]
+	: PI { $node = new DoubleConstantNode { Constant = ParserConstant.Pi }; }
+	| EE { $node = new DoubleConstantNode { Constant = ParserConstant.E }; }
+	| FALSE { $node = new BooleanConstantNode { Constant = ParserConstant.False }; }
+	| TRUE { $node = new BooleanConstantNode { Constant = ParserConstant.True }; }
 	;
 	
 relop returns [DyadicOperator operator]

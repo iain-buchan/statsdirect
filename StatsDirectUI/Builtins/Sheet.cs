@@ -23,12 +23,10 @@ namespace StatsDirect.Builtins
                 if (double.TryParse(Title, out mti) && double.TryParse(other.Title, out oti))
                 {
                     if (mti < oti)
-                    {
                         return -1;
-                    }
                     return mti == oti ? 0 : 1;
                 }
-                return String.CompareOrdinal(Title, other.Title);
+                return string.CompareOrdinal(Title, other.Title);
             }
             // interface methods implemented by CompareTo
             int IComparable<Catvar>.CompareTo(Catvar other)
@@ -40,12 +38,12 @@ namespace StatsDirect.Builtins
 
         private class SortPair : IComparable<SortPair>
         {
-            private readonly double value;
-            public readonly int Row;
+            public double Value { get; private set; }
+            public int Row { get; private set; }
 
             private int CompareTo(SortPair other)
             {
-                return value.CompareTo(other.value);
+                return Value.CompareTo(other.Value);
             }
 
             int IComparable<SortPair>.CompareTo(SortPair other)
@@ -55,7 +53,7 @@ namespace StatsDirect.Builtins
 
             public SortPair(double value, int row)
             {
-                this.value = value;
+                Value = value;
                 Row = row;
             }
         }
@@ -70,21 +68,18 @@ namespace StatsDirect.Builtins
             double startval = parameters["startval"].AsDouble;
             string formula = parameters["formula"].AsString.ToUpper();
             if (formula.Length < 3)
-            {
                 formula = "x+1";
-            }
-            string ti = parameters["title"].AsString;
-            if (ti.Length < 1)
-            {
-                ti = "series=" + formula;
-            }
+
+            string title = parameters["title"].AsString;
+            if (title.Length < 1)
+                title = "series=" + formula;
 
             double currentval = startval;
-            DoubleVariable v = new DoubleVariable(rows, ti);
+            DoubleVariable v = new DoubleVariable(rows, title);
             Calcit c = new Calcit(formula);
             DataFrame outputFrame = new DataFrame(v);
             double[] x = new double[1];
-            for (int i = 0; i <= rows - 1; i++)
+            for (int i = 0; i < rows; i++)
             {
                 v.SetData(i, currentval);
                 x[0] = currentval;
@@ -137,18 +132,14 @@ namespace StatsDirect.Builtins
             //  Suggest constant to make all fn(x) possible
             double aMin = double.MaxValue;
             double aMax = double.MinValue;
-            for (int n = lowerBound; n <= rows + lowerBound - 1; n++)
+            for (int n = lowerBound; n < rows + lowerBound; n++)
             {
                 if (data[n] != Constant.MISSING)
                 {
                     if (data[n] < aMin)
-                    {
                         aMin = data[n];
-                    }
                     if (data[n] > aMax)
-                    {
                         aMax = data[n];
-                    }
                 }
             }
             if (aMin < 0)
@@ -164,7 +155,6 @@ namespace StatsDirect.Builtins
                 suggestedC = Constant.MISSING;
             }
         }
-
 
         public static ParameterBag ShtClearMissing(ITemplateHost host, ParameterBag parameters)
         {
@@ -218,9 +208,7 @@ namespace StatsDirect.Builtins
                     for (int c = 0; c <= totcols - 1; c++)
                     {
                         if (hold[r, c].Length > 0)
-                        {
                             ctrx++;
-                        }
                     }
                     if (ctrx == totcols)
                     {
@@ -228,17 +216,13 @@ namespace StatsDirect.Builtins
                         for (int c = 0; c <= totcols - 1; c++)
                         {
                             if (ctr > maxctr)
-                            {
                                 maxctr = ctr;
-                            }
                             outputFrame.Variables[c].AsStringVariable.SetData(ctr - 1, hold[r, c]);
                         }
                     }
                 }
                 for (int c = 0; c <= totcols - 1; c++)
-                {
                     outputFrame.Variables[c].EnsureLength(ctr);
-                }
             }
             else
             {
@@ -247,14 +231,11 @@ namespace StatsDirect.Builtins
                     ctr = 0;
                     for (r = 1; r <= totrows; r++)
                     {
-                        string transTemp2 = hold[r, c];
-                        if (  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ transTemp2.Length > 0)
+                        if (hold[r, c].Length > 0)
                         {
                             ctr = ctr + 1;
                             if (ctr > maxctr)
-                            {
                                 maxctr = ctr;
-                            }
                             outputFrame.Variables[c].AsStringVariable.SetData(ctr - 1, hold[r, c]);
                         }
                     }
@@ -272,22 +253,17 @@ namespace StatsDirect.Builtins
             double x;
             if (double.TryParse(value, out x))
             {
-                //  It's a double.  If it's MISSING, it's missing.
+                // It's a double.  If it's MISSING, it's missing.
                 if (x == Constant.MISSING)
-                {
                     return true;
-                }
-                //  If there is a user number and x is that user number, it's missing.
+                // If there is a user number and x is that user number, it's missing.
                 return userNumber != Constant.MISSING && x == userNumber;
             }
             if (value == null || Formatting.ASTERISK.Equals(value) || "MISSING".Equals(value.ToUpper()) || Formatting.FULLSTOP.Equals(value) || value.Trim().Length == 0)
-            {
                 return true;
-            }
+
             return !string.IsNullOrEmpty(userText) && userText.Equals(value);
         }
-
-
 
         public static ParameterBag ShtDummyVariables(ITemplateHost host, ParameterBag parameters)
         {
@@ -559,6 +535,15 @@ namespace StatsDirect.Builtins
                     throw new Exception("Unknown operation");
             }
             Calcit searcher = new Calcit(searchExpression);
+
+            foreach (Variable inputVariable in dataFrame.Variables)
+            {
+                double[] values = new double[1];
+                for (int i = 0; i < inputVariable.Length; i++)
+                {
+                    double result = searcher.Evaluate(values);
+                }
+            }
             throw new NotImplementedException();
         }
 

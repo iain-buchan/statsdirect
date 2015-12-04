@@ -2,8 +2,9 @@
 {
     public interface IExpressionVisitor
     {
-        void Visit(ConstantNode node);
+        void Visit(BooleanConstantNode node);
         void Visit(DoubleNode node);
+        void Visit(DoubleConstantNode node);
         void Visit(DyadicNode node);
         void Visit(FunctionNode node);
         void Visit(IntegerNode node);
