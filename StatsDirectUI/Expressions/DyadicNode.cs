@@ -1,4 +1,6 @@
-﻿namespace StatsDirect.Expressions
+﻿using System;
+
+namespace StatsDirect.Expressions
 {
     /// <summary>
     /// A representation of a part of an expression with two operands
@@ -9,9 +11,38 @@
         public INode Right { get; set; }
         public DyadicOperator Operator { get; set; }
 
-        void INode.Accept(IExpressionVisitor visitor)
+        public void Accept(IExpressionVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public InOutDataTypeDefinition InOut(DataType[] passedVariableTypes)
+        {
+            DyadicOperatorDefinition definition = DyadicOperatorRegistry.SoleInstance.DefinitionFor(Operator);
+            // Find the first match, allowing for type promotion.
+            DataType leftType = Left.DataType(passedVariableTypes);
+            DataType rightType = Right.DataType(passedVariableTypes);
+            foreach (InOutDataTypeDefinition candidate in definition.InOutDataTypeDefinitions)
+                if (CanBePromotedFromTo(leftType, candidate.InputTypes[0]) && CanBePromotedFromTo(rightType, candidate.InputTypes[1]))
+                    return candidate;
+            throw new Exception("Type mismatch: " + Operator.ToString() + " doesn't expect parameters of type " + leftType.ToString() + " and " + rightType.ToString());
+        }
+
+        private bool CanBePromotedFromTo(DataType from, DataType to)
+        {
+            // Common case: Identical
+            if (from == to)
+                return true;
+            // Integers can be promoted to doubles
+            if (from == Expressions.DataType.Integer && to == Expressions.DataType.Double)
+                return true;
+            // Everything else is incompatible.  In particular, we don't automatically promote to string, as otherwise we get dangerous things like boolean + double returning a string.
+            return false;
+        }
+
+        public DataType DataType(DataType[] passedVariableTypes)
+        {
+            return InOut(passedVariableTypes).ReturnType;
         }
     }
 }

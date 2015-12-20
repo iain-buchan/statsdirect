@@ -7,6 +7,7 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using StatsDirect.Expressions;
 
 namespace StatsDirect.Builtins
 {
@@ -76,7 +77,7 @@ namespace StatsDirect.Builtins
 
             double currentval = startval;
             DoubleVariable v = new DoubleVariable(rows, title);
-            Calcit c = new Calcit(formula);
+            Calcit c = new Calcit(formula, new DataType[] { DataType.Double });
             DataFrame outputFrame = new DataFrame(v);
             double[] x = new double[1];
             for (int i = 0; i < rows; i++)
@@ -96,7 +97,7 @@ namespace StatsDirect.Builtins
             string[] splitConversion = conversion.Split('|');
             string formula = splitConversion[0];
             string outputUnits = splitConversion[1];
-            Calcit c = new Calcit(formula);
+            Calcit c = new Calcit(formula, new DataType[] { DataType.Double });
             double[] x = new double[1];
 
             DataFrame dataFrame = parameters["data"].AsDataFrame;
@@ -534,7 +535,7 @@ namespace StatsDirect.Builtins
                 default:
                     throw new Exception("Unknown operation");
             }
-            Calcit searcher = new Calcit(searchExpression);
+            Calcit searcher = new Calcit(searchExpression, new DataType[] { DataType.Double });
 
             foreach (Variable inputVariable in dataFrame.Variables)
             {
@@ -1618,7 +1619,10 @@ namespace StatsDirect.Builtins
             int cols = data.VariableCount;
 
             // Work through the rows
-            Calcit clc = new Calcit(expression);
+            DataType[] dataTypes = new DataType[cols];
+            for (int col = 0; col < cols; col++)
+                dataTypes[col] = DataType.Double;
+            Calcit clc = new Calcit(expression, dataTypes);
 
             double[] x = new double[cols];
             SortPair[] sortArray = new SortPair[rows];

@@ -5,6 +5,7 @@ using StatsDirect.Builtins;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using StatsDirect.Expressions;
 
 namespace StatsDirect.UI
 {
@@ -63,7 +64,10 @@ namespace StatsDirect.UI
                 StringVariable outputVariable = new StringVariable(rows, expressionWithOriginalNames);
                 outputFrame.Variables.Add(outputVariable);
                 int cnt = 0;
-                Calcit calcit = new Calcit(expression);
+                DataType[] dataTypes = new DataType[cols];
+                for (int col = 0; col < cols; col++)
+                    dataTypes[col] = DataType.Double;
+                Calcit calcit = new Calcit(expression, dataTypes);
                 double[] x = new double[cols];
                 for (int n = 0; n < rows; n++)
                 {
@@ -72,9 +76,7 @@ namespace StatsDirect.UI
    
                         // Put row into working array
                         for (int j = 0; j < cols; j++)
-                        {
                             x[j] = options.IdentifiersFrame.Variables[j].AsDoubleVariable.Data[n];
-                        }
   
                         // See if expression is true
                         if (1 == calcit.Evaluate(x))
@@ -91,11 +93,13 @@ namespace StatsDirect.UI
 
                 outputParameters.AddOutput("extracted", outputFrame);
             }
- 
             else
             {
                 int cnt = 0;
-                Calcit calcit = new Calcit(expression);
+                DataType[] dataTypes = new DataType[cols];
+                for (int col = 0; col < cols; col++)
+                    dataTypes[col] = DataType.Double;
+                Calcit calcit = new Calcit(expression, dataTypes);
                 double[] x = new double[cols];
                 for (int N = 0; N < rows; N++)
                 {
@@ -103,9 +107,7 @@ namespace StatsDirect.UI
                     {
                         // Put row into working array
                         for (int j = 0; j < cols; j++)
-                        {
                             x[j] = options.IdentifiersFrame.Variables[j].AsDoubleVariable.Data[N];
-                        }
   
                         // See if expression is true
                         if (1 == calcit.Evaluate(x))

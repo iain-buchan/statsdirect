@@ -1,17 +1,15 @@
-﻿using System;
-
-namespace StatsDirect.Expressions
+﻿namespace StatsDirect.Expressions
 {
     public class StringNode : INode
     {
         public string Value { get; set; }
 
-        DataType INode.DataType(DataType[] passedVariableTypes)
+        public DataType DataType(DataType[] passedVariableTypes)
         {
-                return DataType.String;
+                return Expressions.DataType.String;
         }
 
-        void INode.Accept(IExpressionVisitor visitor)
+        public void Accept(IExpressionVisitor visitor)
         {
             visitor.Visit(this);
         }

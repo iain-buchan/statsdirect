@@ -7,33 +7,11 @@ namespace StatsDirect.Expressions
     public class CSharpRenderer : IExpressionVisitor
     {
         private StringBuilder activeBuilder;
-        private Dictionary<DyadicOperator, string> infixDyadicOperations;
-        private Dictionary<DyadicOperator, string> prefixDyadicOperations;
         private Dictionary<ParserConstant, string> parserConstants;
+        private DataType[] passedVariableTypes;
 
         public CSharpRenderer()
         {
-            infixDyadicOperations = new Dictionary<DyadicOperator, string>
-            {
-                { DyadicOperator.Add, " + " },
-                { DyadicOperator.And, " && " },
-                { DyadicOperator.Divide, " / (double)" }, // Forces floating-point divide even when both strings parse to integers; otherwise 12 / 5 gives 2, not 2.4.
-                { DyadicOperator.Modulo, " % " },
-                { DyadicOperator.Multiply, " * " },
-                { DyadicOperator.Or, " || " },
-                { DyadicOperator.Subtract, " - " },
-                { DyadicOperator.Equal, " == " },
-                { DyadicOperator.GreaterThan, " > " },
-                { DyadicOperator.GreaterThanOrEqual, " >= " },
-                { DyadicOperator.LessThan, " < " },
-                { DyadicOperator.LessThanOrEqual, " <= " },
-                { DyadicOperator.NotEqual, " != " }
-            };
-            prefixDyadicOperations = new Dictionary<DyadicOperator, string>
-            {
-                { DyadicOperator.IntegerDivide, "SDMath.IDiv" },
-                { DyadicOperator.Pow, "Math.Pow" }
-            };
             parserConstants = new Dictionary<ParserConstant, string>
             {
                 { ParserConstant.E, "Math.E" },
@@ -43,7 +21,13 @@ namespace StatsDirect.Expressions
             };
         }
 
-        public string Render(INode node)
+        public string Render(INode node, DataType[] passedVariableTypes)
+        {
+            this.passedVariableTypes = passedVariableTypes;
+            return Render(node);
+        }
+
+        private string Render(INode node)
         {
             activeBuilder = new StringBuilder();
             node.Accept(this);
@@ -59,7 +43,7 @@ namespace StatsDirect.Expressions
             return rendered;
         }
 
-        void IExpressionVisitor.Visit(BooleanConstantNode node)
+        public void Visit(BooleanConstantNode node)
         {
             string cSharpValue;
             if (parserConstants.TryGetValue(node.Constant, out cSharpValue))
@@ -70,12 +54,13 @@ namespace StatsDirect.Expressions
             throw new Exception("Unknown constant");
         }
 
-        void IExpressionVisitor.Visit(DoubleNode node)
+        public void Visit(DoubleNode node)
         {
             activeBuilder.Append(node.Value);
+            activeBuilder.Append("D");
         }
 
-        void IExpressionVisitor.Visit(DoubleConstantNode node)
+        public void Visit(DoubleConstantNode node)
         {
             string cSharpValue;
             if (parserConstants.TryGetValue(node.Constant, out cSharpValue))
@@ -86,36 +71,70 @@ namespace StatsDirect.Expressions
             throw new Exception("Unknown constant");
         }
 
-        void IExpressionVisitor.Visit(DyadicNode node)
+        public void Visit(DyadicNode node)
         {
-            string cSharpOp;
-            if (infixDyadicOperations.TryGetValue(node.Operator, out cSharpOp))
+            DyadicOperatorDefinition definition = DyadicOperatorRegistry.SoleInstance.DefinitionFor(node.Operator);
+            InOutDataTypeDefinition typesAfterPromotion = node.InOut(passedVariableTypes);
+            if (definition.ClrIsPrefix)
+            {
+                // op(Left, Right)
+                activeBuilder.Append(definition.ClrName);
+                activeBuilder.Append('(');
+                RenderWithPossibleTypePromotion(node.Left, typesAfterPromotion.InputTypes[0]);
+                activeBuilder.Append(", ");
+                RenderWithPossibleTypePromotion(node.Right, typesAfterPromotion.InputTypes[1]);
+                activeBuilder.Append(')');
+                return;
+            }
+            else
             {
                 // Left op Right
                 activeBuilder.Append('(');
-                node.Left.Accept(this);
+                RenderWithPossibleTypePromotion(node.Left, typesAfterPromotion.InputTypes[0]);
                 activeBuilder.Append(')');
-                activeBuilder.Append(cSharpOp);
+                activeBuilder.Append(definition.ClrName);
                 activeBuilder.Append('(');
-                node.Right.Accept(this);
-                activeBuilder.Append(')');
-                return;
-            }
-            if (prefixDyadicOperations.TryGetValue(node.Operator, out cSharpOp))
-            {
-                // op(Left, Right)
-                activeBuilder.Append(cSharpOp);
-                activeBuilder.Append('(');
-                node.Left.Accept(this);
-                activeBuilder.Append(", ");
-                node.Right.Accept(this);
+                RenderWithPossibleTypePromotion(node.Right, typesAfterPromotion.InputTypes[1]);
                 activeBuilder.Append(')');
                 return;
             }
             throw new Exception("Unknown dyadic operation");
         }
 
-        void IExpressionVisitor.Visit(FunctionNode node)
+        private void RenderWithPossibleTypePromotion(INode node, DataType typeAfterPromotion)
+        {
+            string prePromote;
+            string postPromote;
+            if (GetTypePromotionStrings(node.DataType(passedVariableTypes), typeAfterPromotion, out prePromote, out postPromote))
+            {
+                // Promotion required; wrap the inner node as necessary.
+                activeBuilder.Append(prePromote);
+                node.Accept(this);
+                activeBuilder.Append(postPromote);
+            }
+            else
+            {
+                // No promotion required
+                node.Accept(this);
+            }
+        }
+
+        private bool GetTypePromotionStrings(DataType from, DataType to, out string prePromote, out string postPromote)
+        {
+            // Integers can be promoted to doubles
+            if (from == DataType.Integer && to == DataType.Double)
+            {
+                prePromote = "(double)(";
+                postPromote = ")";
+                return true;
+            }
+            // Everything else is either default or incompatible (which should have been caught earlier); either way, we don't write in anything special.
+            prePromote = string.Empty;
+            postPromote = string.Empty;
+            return false;
+        }
+
+        public void Visit(FunctionNode node)
         {
             // Check for positional parameters after named ones.  We don't allow these, as we don't know what the position is.
             bool foundNamedParameter = false;
@@ -189,12 +208,12 @@ namespace StatsDirect.Expressions
             activeBuilder.Append(")");
         }
 
-        void IExpressionVisitor.Visit(IntegerNode node)
+        public void Visit(IntegerNode node)
         {
             activeBuilder.Append(node.Value);
         }
 
-        void IExpressionVisitor.Visit(MonadicNode node)
+        public void Visit(MonadicNode node)
         {
             MonadicOperatorDefinition definition = MonadicOperatorRegistry.SoleInstance.DefinitionFor(node.Operator);
             activeBuilder.Append(definition.ClrName);
@@ -203,7 +222,7 @@ namespace StatsDirect.Expressions
             activeBuilder.Append(')');
         }
 
-        void IExpressionVisitor.Visit(StringNode node)
+        public void Visit(StringNode node)
         {
             activeBuilder.Append('"');
             // C# strings embed \ as \\ and " as \"; ensure this is respected or we'll get parse errors or (worse) compilation of arbitrary code.
@@ -211,7 +230,7 @@ namespace StatsDirect.Expressions
             activeBuilder.Append('"');
         }
 
-        void IExpressionVisitor.Visit(VariableNode node)
+        public void Visit(VariableNode node)
         {
             // Variables are passed in as a double array x[].
             activeBuilder.Append("x[");

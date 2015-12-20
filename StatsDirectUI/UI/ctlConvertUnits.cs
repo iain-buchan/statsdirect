@@ -4,6 +4,7 @@ using StatsDirect.Builtins;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using StatsDirect.Expressions;
 
 namespace StatsDirect.UI
 {
@@ -122,7 +123,7 @@ namespace StatsDirect.UI
             else
             {
                 Conversion conversion = (Conversion)cboConversion.SelectedItem;
-                Calcit c = new Calcit(conversion.Expression);
+                Calcit c = new Calcit(conversion.Expression, new DataType[] { DataType.Double });
                 double[] x = new double[1];
                 x[0] = from;
                 txtTo.Text = c.Evaluate(x).ToString();

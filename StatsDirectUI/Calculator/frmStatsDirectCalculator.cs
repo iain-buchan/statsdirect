@@ -7,6 +7,7 @@ using StatsDirect.UI;
 using StatsDirect.Utilities;
 using StatsDirect.Builtins;
 using StatsDirect.UI.Properties;
+using StatsDirect.Expressions;
 
 namespace StatsDirect.Calculator
 {
@@ -24,12 +25,14 @@ namespace StatsDirect.Calculator
 
         private void DoCalculate()
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 string equation = txtExpression.Text;
                 if (equation.Length > 0)
                 {
-                    Calcit c = new Calcit(equation);
+                    Calcit c = new Calcit(equation, new DataType[0]);
                     double res = c.Evaluate(null);
                     txtResult.Text = Constant.MISSING == res ? Formatting.ERRR : " " + res.ToString();
                 }
@@ -39,11 +42,13 @@ namespace StatsDirect.Calculator
                     SystemSounds.Beep.Play();
                 }
                 txtExpression.Focus();
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
                 HandleException(ex);
             }
+#endif
         }
 
         private void cmdSave_Click(object sender, EventArgs e)
@@ -54,8 +59,10 @@ namespace StatsDirect.Calculator
 
         private void DoSave()
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 if (txtExpression.Text.Trim().Length > 0)
                 {
                     lstSavedExpressions.Items.Add(txtExpression.Text.Trim() + "\t" + txtResult.Text);
@@ -66,11 +73,13 @@ namespace StatsDirect.Calculator
                     SystemSounds.Beep.Play();
                 }
                 txtExpression.Focus();
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
                 HandleException(ex);
             }
+#endif
         }
 
         private void cmdClose_Click(object sender, EventArgs e)
@@ -107,8 +116,10 @@ namespace StatsDirect.Calculator
 
         private void DoPaste()
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 if (lstSavedExpressions.SelectedIndex >= 0)
                 {
                     string toPaste = ((string)lstSavedExpressions.SelectedItem);
@@ -120,17 +131,21 @@ namespace StatsDirect.Calculator
                 {
                     SystemSounds.Beep.Play();
                 }
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
                 HandleException(ex);
             }
+#endif
         }
 
         private void cmdDelete_Click(object sender, EventArgs e)
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 if (lstSavedExpressions.SelectedIndex >= 0)
                 {
                     lstSavedExpressions.Items.RemoveAt(lstSavedExpressions.SelectedIndex);
@@ -145,12 +160,13 @@ namespace StatsDirect.Calculator
                 {
                     SystemSounds.Beep.Play();
                 }
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
                 HandleException(ex);
             }
-
+#endif
         }
 
         private void cmdHelp_Click(object sender, EventArgs e)
@@ -171,8 +187,10 @@ namespace StatsDirect.Calculator
 
         private void frmStatsDirectCalculator_FormClosing(object sender, FormClosingEventArgs e)
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 SavePosition();
                 if (lstSavedExpressions.Items.Count > 0)
                 {
@@ -191,12 +209,13 @@ namespace StatsDirect.Calculator
                         Clipboard.SetText(sb.ToString());
                     }
                 }
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
                 HandleException(ex);
             }
-
+#endif
         }
 
         private void frmStatsDirectCalculator_Load(object sender, EventArgs e)

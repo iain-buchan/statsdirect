@@ -6,12 +6,12 @@ namespace StatsDirect.Expressions
     {
         public int Value { get; set; }
 
-        DataType INode.DataType(DataType[] passedVariableTypes)
+        public DataType DataType(DataType[] passedVariableTypes)
         {
-            return DataType.Integer;
+            return Expressions.DataType.Integer;
         }
 
-        void INode.Accept(IExpressionVisitor visitor)
+        public void Accept(IExpressionVisitor visitor)
         {
             visitor.Visit(this);
         }

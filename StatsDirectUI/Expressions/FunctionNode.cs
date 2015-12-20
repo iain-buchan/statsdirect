@@ -7,12 +7,12 @@ namespace StatsDirect.Expressions
         public string Name { get; set; }
         public Arguments Arguments { get; set; }
 
-        DataType INode.DataType(DataType[] passedVariableTypes)
+        public DataType DataType(DataType[] passedVariableTypes)
         {
             return FunctionRegistry.SoleInstance.FunctionNamed(Name).DataType;
         }
 
-        void INode.Accept(IExpressionVisitor visitor)
+        public void Accept(IExpressionVisitor visitor)
         {
             visitor.Visit(this);
         }

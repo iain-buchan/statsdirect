@@ -4,6 +4,7 @@ using StatsDirect.Builtins;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using StatsDirect.Expressions;
 
 namespace StatsDirect.UI
 {
@@ -26,11 +27,12 @@ namespace StatsDirect.UI
             string searchExpression = txtExpression.Text.Trim().ToUpper();
             if (0 == searchExpression.Length)
                 return txtExpression;
-            Calcit finder = new Calcit(searchExpression);
+            DataType[] oneDouble = new DataType[] { DataType.Double };
+            Calcit finder = new Calcit(searchExpression, oneDouble);
             string replaceExpression = txtReplace.Text.Trim().ToUpper();
             if (0 == replaceExpression.Length)
                 return txtReplace;
-            Calcit replacer = new Calcit(replaceExpression);
+            Calcit replacer = new Calcit(replaceExpression, oneDouble);
 
             using (WaitCursor wc = new WaitCursor())
             {

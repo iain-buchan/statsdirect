@@ -7,7 +7,7 @@ namespace StatsDirect.Expressions
 {
     public class Converter
     {
-        public static string ConvertToCSharp(string expr)
+        public static string ConvertToCSharp(string expr, DataType[] passedVariableTypes)
         {
             // Spaces in the input stream get confused with spaces in thousand separators, so smash spaces if the thousands separator is spaces.
             if (" ".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator))
@@ -31,7 +31,7 @@ namespace StatsDirect.Expressions
                 throw new Exception("Couldn't parse your expression: syntax error near \"" + parser.CurrentToken.Text + "\"");
             if (null == retval || null == retval.node)
                 throw new Exception("Syntax error");
-            return new CSharpRenderer().Render(retval.node);
+            return new CSharpRenderer().Render(retval.node, passedVariableTypes);
         }
 
         private static StatsDirectExpressionLexer.SeparatorStructure GetSeparatorStructure()

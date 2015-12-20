@@ -1,3 +1,4 @@
+using StatsDirect.Expressions;
 using System;
 using System.CodeDom.Compiler;
 using System.Diagnostics;
@@ -12,16 +13,16 @@ namespace StatsDirect.Builtins
         private object instance;
         private MethodInfo methodInfo;
 
-        public Calcit(string equation)
+        public Calcit(string equation, DataType[] passedVariableTypes)
         {
-            SetEquation(equation);
+            SetEquation(equation, passedVariableTypes);
         }
 
-        private void SetEquation(string equation)
+        private void SetEquation(string equation, DataType[] passedVariableTypes)
         {
             const string typeName = "Temp1";
             const string methodName = "DoIt";
-            string cSharpExpression = Expressions.Converter.ConvertToCSharp(equation);
+            string cSharpExpression = Expressions.Converter.ConvertToCSharp(equation, passedVariableTypes);
 
             // By now, cSharpExpression will either be safe (every character has been through the parser) or an exception will have been thrown.  Therefore, it's reasonable to throw the expression at the compiler.
             string cSharpFunction =
