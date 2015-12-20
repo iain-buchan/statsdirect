@@ -11,7 +11,7 @@ namespace StatsDirect.UI
     /// The check is designed not to slow down a UI, so runs asynchronously once started (via StartCheck), and therefore callbacks may be run on a background thread.
     /// Clients or subclasses may hand in a status changed handler, which will get called on significant changes; this can for example be used to enable/disable buttons or update textual status.
     /// </summary>
-    abstract class UpdateChecker
+    abstract class UpdateChecker : IDisposable
     {
         private Uri Uri { get; set; }
         private string DnsDomain { get; set; }
@@ -69,5 +69,26 @@ namespace StatsDirect.UI
         /// Invoked when the HTTP request completes or times out.  Subclasses should implement to do what they need with the result.
         /// </summary>
         protected abstract void DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e);
+
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    if (null != webClient)
+                        webClient.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
     }
 }
