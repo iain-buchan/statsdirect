@@ -38,19 +38,6 @@ namespace StatsDirect.Data
         ///  <remarks></remarks>
         public DateTime[] Data { get; set; }
 
-        ///  <summary>
-        ///  Access a single element of the data array
-        ///  </summary>
-        ///  <param name="index">The element to access</param>
-        ///  <param name="value">The new value to set. Storage management is done internally, so the array is always sufficently large to hold the value</param>
-        ///  <returns>The value at the specified index, or an exception if the index is out of bounds</returns>
-        ///  <remarks></remarks>
-        public void set_Data(int index, DateTime value)
-        {
-            EnsureLength(index + 1);
-            Data[index] = value;
-        }
-
         public override int Length
         {
             get { return (Data == null) ? 0 : Data.Length; }
