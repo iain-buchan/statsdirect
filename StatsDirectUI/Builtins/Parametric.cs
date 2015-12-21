@@ -24,7 +24,7 @@ namespace StatsDirect.Builtins
                 if (Math.Abs(sumsqdev) > 1.0E+300)
                 {
                     sumsqdev = Constant.MISSING;
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
                 sumsqdev = sumsqdev + (arr1[N] - mean) * (arr1[N] - mean);
             }
@@ -66,7 +66,7 @@ namespace StatsDirect.Builtins
                         if (Math.Abs(sumsqdev) > 1.0E+300)
                         {
                             sumsqdev = Constant.MISSING;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                         sumsqdev = sumsqdev + (v - mean[D]) * (v - mean[D]);
                     }

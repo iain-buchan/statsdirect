@@ -136,7 +136,7 @@ namespace StatsDirect.Builtins
                         } 
                         else 
                         { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
+                            break; 
                         } 
                     } 
                 } 
@@ -151,7 +151,7 @@ namespace StatsDirect.Builtins
                         } 
                         else 
                         { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
+                            break; 
                         } 
                     } 
                 } 
@@ -402,7 +402,7 @@ namespace StatsDirect.Builtins
                             i = i + 1; 
                             if ( i == j )
                             { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
+                                break; 
                             } 
                             for ( ii=1; ii <= nr1; ii++ ) 
                             { 
@@ -424,7 +424,7 @@ namespace StatsDirect.Builtins
                                     mxsrt3( kr, WK, irowx - 1, x, irowx + ( k - 1 ) * nrx - 1, out kompar ); 
                                     if ( kompar != -1 )
                                     { 
-                                        break; /* TRANSWARNING: check that break is in correct scope */ 
+                                        break; 
                                     } 
                                 } 
                                 while ( true ); 
@@ -689,7 +689,7 @@ namespace StatsDirect.Builtins
                             l = l - 1; 
                             if ( iy[ l ] <= ic )
                             { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
+                                break; 
                             } 
                         } 
                         while ( true ); 
@@ -699,13 +699,13 @@ namespace StatsDirect.Builtins
                             k = k + 1; 
                             if ( iy[ k ] >= ic )
                             { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
+                                break; 
                             } 
                         } 
                         while ( true ); 
                         if ( k > l )
                         { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
+                            break; 
                         } 
                         if ( iy[ l ] != iy[ k ] ) 
                         { 
@@ -761,7 +761,7 @@ namespace StatsDirect.Builtins
                             i = i + 1; 
                             if ( i == j )
                             { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
+                                break; 
                             } 
                             ic = iy[ i + 1 ]; 
                             if ( iy[ i ] > ic ) 
@@ -773,7 +773,7 @@ namespace StatsDirect.Builtins
                                     k = k - 1; 
                                     if ( ic >= iy[ k ] )
                                     { 
-                                        break; /* TRANSWARNING: check that break is in correct scope */ 
+                                        break; 
                                     } 
                                 } 
                                 while ( true ); 
@@ -875,7 +875,7 @@ namespace StatsDirect.Builtins
                             l = l - 1; 
                             if ( y[ l ] <= cp )
                             { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
+                                break; 
                             } 
                         } 
                         while ( true ); 
@@ -885,13 +885,13 @@ namespace StatsDirect.Builtins
                             k = k + 1; 
                             if ( y[ k ] >= cp )
                             { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
+                                break; 
                             } 
                         } 
                         while ( true ); 
                         if ( k > l )
                         { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
+                            break; 
                         } 
                         if ( y[ l ] != y[ k ] ) 
                         { 
@@ -959,7 +959,7 @@ namespace StatsDirect.Builtins
                             i = i + 1; 
                             if ( i == j )
                             { 
-                                break; /* TRANSWARNING: check that break is in correct scope */ 
+                                break; 
                             } 
                             cp = y[ i + 1 ]; 
                             it = ipmu[ i + 1 ]; 
@@ -973,7 +973,7 @@ namespace StatsDirect.Builtins
                                     k = k - 1; 
                                     if ( cp >= y[ k ] )
                                     { 
-                                        break; /* TRANSWARNING: check that break is in correct scope */ 
+                                        break; 
                                     } 
                                 } 
                                 while ( true ); 

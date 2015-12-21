@@ -607,7 +607,7 @@ namespace StatsDirect.Numerics
                         } 
                         else 
                         { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
+                            break; 
                         } 
                     } 
                     while ( true ); 

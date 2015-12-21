@@ -1212,7 +1212,7 @@ namespace StatsDirect.Builtins
                         {
                             matrix[l, j] = 0;
                         }
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
 
                     //   Generate a pseudo-random number.
@@ -1240,7 +1240,7 @@ namespace StatsDirect.Builtins
 
                         if (r <= x)
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
 
                         double sumprb = x;
@@ -1268,7 +1268,7 @@ namespace StatsDirect.Builtins
                                 if ((r <= sumprb))
                                 {
                                     done1 = true;
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
 
                             }
@@ -1285,7 +1285,7 @@ namespace StatsDirect.Builtins
                                 if (j == 0)
                                 {
                                     lsm = true;
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
 
                                 nll -= 1;
@@ -1296,26 +1296,26 @@ namespace StatsDirect.Builtins
                                 {
                                     nlm = nll;
                                     done2 = true;
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
 
                                 if (lsp == false)
                                 {
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
 
                             }
 
                             if (done2)
                             {
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
 
                         }
 
                         if (done1 || done2)
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
 
                         r = rng.NextDouble();

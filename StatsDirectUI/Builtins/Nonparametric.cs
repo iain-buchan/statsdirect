@@ -356,7 +356,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     while (j2 <= n2)
@@ -368,7 +368,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     dt = f1n - f2n;
@@ -1240,7 +1240,7 @@ namespace StatsDirect.Builtins
                             if (pick <= cx[jj])
                             {
                                 rb[jj] = rb[jj] + 1;
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                         }
                     }
@@ -4101,7 +4101,7 @@ namespace StatsDirect.Builtins
                         if (host.UpdateProgress(i / (double)boots))
                         {
                             OK = false;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                 }

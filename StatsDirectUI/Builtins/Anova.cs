@@ -17,42 +17,32 @@ namespace StatsDirect.Builtins
         {
             fault = true;
             if (frame.VariableCount < 2)
-            {
                 return;
-            }
 
             //  Check the expected number of subgroups
             int lsum = 0;
             for (int i = 0; i <= frame.VariableCount - 1; i++)
-            {
                 lsum += frame.Variables[i].Count;
-            }
             if (lsum != L)
-            {
                 return;
-            }
 
             //  Check the expected number of observations
             int nsum = 0;
             for (int i = 1; i <= L; i++)
             {
                 if (nobs[i] <= 0)
-                {
                     return;
-                }
                 nsum += nobs[i];
             }
             if (nsum != N)
-            {
                 return;
-            }
 
             int nlo = 1;
             int nsub = 0;
             double ydd = 0.0;
             double s4 = 0.0;
 
-            ngp = new int[frame.VariableCount + 1 ];
+            ngp = new int[frame.VariableCount + 1];
             gbar = new double[frame.VariableCount + 1];
             for (int i = 0; i < frame.VariableCount; i++)
             {
@@ -87,13 +77,10 @@ namespace StatsDirect.Builtins
             }
 
             for (int i = 1; i <= 4; i++)
-            {
                 ss[i] = 0.0;
-            }
             if (s4 <= 0.0)
-            {
                 return;
-            }
+
             double S1 = 0.0;
             double S2 = 0.0;
             nsub = 0;
@@ -120,9 +107,7 @@ namespace StatsDirect.Builtins
             idf[3] = N - L;
             idf[4] = N - 1;
             if (ss[3] <= 0.0)
-            {
                 return;
-            }
 
             double fden = ss[3] / Convert.ToDouble(idf[3]);
             for (int i = 1; i <= 2; i++)
@@ -132,9 +117,7 @@ namespace StatsDirect.Builtins
                 fp[i] = PDF.fvalp(f[i], Convert.ToDouble(idf[i]), Convert.ToDouble(idf[3]));
             }
             fault = false;
-
         }
-
 
         private static void XTwoWay(double[,,] y, out double[] col, int nr, int nc, int nm, out double ssrow, out double sscol, out double ssint, out double sstot, out double ssres, out int dfrow, out int dfcol, out int dfint, out int dftot, out int dfres, out int fault)
         {
@@ -159,8 +142,8 @@ namespace StatsDirect.Builtins
             double dnm = Convert.ToDouble(nm);
             double yt = 0.0;
             double[,] cell = new double[nr + 1, nc + 1];
-            double[] row = new double[nr + 1 ];
-            col = new double[nc + 1 ];
+            double[] row = new double[nr + 1];
+            col = new double[nc + 1];
             for (int i = 1; i <= nr; i++)
             {
                 double yr = 0.0;
@@ -199,9 +182,7 @@ namespace StatsDirect.Builtins
                 {
                     ssint = ssint + (cell[i, j] - (row[i] - gm) - col[j]) * (cell[i, j] - (row[i] - gm) - col[j]);
                     for (int k = 1; k <= nm; k++)
-                    {
-                        sstot = sstot + (y[k, i, j] - gm) * (y[k, i, j] - gm);
-                    }
+                        sstot += (y[k, i, j] - gm) * (y[k, i, j] - gm);
                 }
             }
             fault = 2;
@@ -234,9 +215,7 @@ namespace StatsDirect.Builtins
                 dfres = dfint;
             }
             for (int j = 1; j <= nc; j++)
-            {
                 col[j - 1] = col[j];
-            }
             fault = 0;
         }
 
@@ -260,8 +239,8 @@ namespace StatsDirect.Builtins
             double ps; double s = 0; double varf = 0;
             double hn = 0;
             //  Note: x and y are 1-based
-            double[] x = new double[rx + 1 ];
-            double[] y = new double[rx + 1 ];
+            double[] x = new double[rx + 1];
+            double[] y = new double[rx + 1];
             tau = Formatting.ERRR;
             P2 = tau;
             bool fault = true;
@@ -297,21 +276,13 @@ namespace StatsDirect.Builtins
                         for (int N = pn + 1; N <= nxx; N++)
                         {
                             if ((x[pn] > x[N] & y[pn] > y[N]) | (x[pn] < x[N] & y[pn] < y[N]))
-                            {
                                 p = p + 1.0;
-                            }
                             if ((x[pn] > x[N] & y[pn] < y[N]) | (x[pn] < x[N] & y[pn] > y[N]))
-                            {
                                 q = q + 1.0;
-                            }
                             if (x[pn] == x[N])
-                            {
                                 xtie = xtie + 1;
-                            }
                             if (y[pn] == y[N])
-                            {
                                 ytie = ytie + 1;
-                            }
                         }
                         int cnt = xtie + 1;
                         if (cnt > 1)
@@ -333,17 +304,16 @@ namespace StatsDirect.Builtins
                     host.FinishProgress();
                     s = p - q;
                     double xn = Convert.ToDouble(nx);
-                    hn = ( xn * ( xn - 1.0 ) ) / 2.0; 
+                    hn = (xn * (xn - 1.0)) / 2.0;
                     double tievar1 = ((xn * (xn - 1.0) * ((2.0 * xn) + 5.0)) - sigat3 - sigbt3) / 18.0;
                     double tievar2 = (sigat2 * sigbt2) / ((9.0 * xn) * (xn - 1.0) * (xn - 2.0));
                     double tievar3 = (sigat1 * sigbt1) / (2.0 * xn * (xn - 1.0));
                     double tievar = tievar1 + tievar2 + tievar3;
                     double kendvar = xn * (xn - 1.0) * ((2.0 * xn) + 5.0) / 18.0;
-                    if (siga != 0 | sigb != 0)
-                    {
+                    if (siga != 0 || sigb != 0)
                         varf = tievar;
-                    }
-                    else { varf = kendvar; }
+                    else
+                        varf = kendvar;
                 }
             }
             catch (Exception ex)
@@ -384,12 +354,10 @@ namespace StatsDirect.Builtins
                 else
                 {
                     if (ps > 1.0 - ps)
-                    {
                         ps = 1.0 - ps;
-                    }
                 }
             }
-            if (ps == Constant.MISSING | fault | siga != 0 | sigb != 0)
+            if (ps == Constant.MISSING || fault || siga != 0 || sigb != 0)
             {
                 double kzc = (Math.Abs(s) - 1.0) / Math.Sqrt(varf);
                 double pvs = 1.0 - PDF.alnorm(kzc);
@@ -404,15 +372,13 @@ namespace StatsDirect.Builtins
                 P2 = Formatting.pval(ps * 2, host.Preferences.PDecimalPlaces, host.Preferences.UseScientificNotationForSmallPValues);
             }
             if (nxx < 11)
-            {
-                P2 = P2 + " (low power)";
-            }
+                P2 += " (low power)";
         }
 
 
         public static ParameterBag RptAgreement(ITemplateHost host, ParameterBag parameters)
         {
-            int C; long ntot = 0;
+            long ntot = 0;
             double sum;
             double cit; double P0;
             double sumvr = 0;
@@ -422,100 +388,85 @@ namespace StatsDirect.Builtins
 
             double GAMMA = parameters["ci"].AsDouble;
             if (GAMMA <= 0)
-            {
                 return null;
-            }
 
             DataFrame frame = parameters["data"].AsDataFrame;
             int rows = frame.Variables[0].Length;
             int cols = frame.VariableCount;
             double[][] ARR2 = new double[cols][];
-            for (C = 0; C < cols; C++)
-            {
-                ARR2[C] = ((DoubleVariable)(frame.Variables[C])).Data;
-            }
+            for (int c = 0; c < cols; c++)
+                ARR2[c] = ((DoubleVariable)(frame.Variables[c])).Data;
 
             double[] av = new double[rows + 1];
-            double[] mxd = new double[rows + 1 ];
-            double[] xd = new double[rows + 1 ];
-            double[] vr = new double[rows + 1 ];
-            double[] ssd = new double[rows + 1 ];
-            double[] xxm = new double[rows + 1 ];
+            double[] mxd = new double[rows + 1];
+            double[] xd = new double[rows + 1];
+            double[] vr = new double[rows + 1];
+            double[] ssd = new double[rows + 1];
+            double[] xxm = new double[rows + 1];
 
             // Get Min, Max range (into xd) for all rows
             int rx = 0;
-            for (int r = 0; r <= rows - 1; r++)
+            for (int r = 0; r < rows; r++)
             {
-                bool OK = true;
-                for (C = 0; C <= cols - 1; C++)
+                bool ok = true;
+                for (int c = 0; c <= cols - 1; c++)
                 {
-                    if (ARR2[C][r] == Constant.MISSING)
-                    {
-                        OK = false;
-                    }
+                    if (ARR2[c][r] == Constant.MISSING)
+                        ok = false;
                 }
-                if (OK)
+                if (ok)
                 {
                     double mx = ARR2[0][r] - ARR2[1][r];
                     int cnt = 0;
-                    for (C = 0; C <= cols - 2; C++)
+                    for (int c = 0; c < cols - 1; c++)
                     {
-                        for (int j = C + 1; j <= cols - 1; j++)
+                        for (int j = c + 1; j < cols; j++)
                         {
-                            double xq = ARR2[C][r] - ARR2[j][r];
+                            double xq = ARR2[c][r] - ARR2[j][r];
                             if (Math.Abs(xq) > Math.Abs(mx))
-                            {
                                 mx = xq;
-                            }
-                            cnt = cnt + 1;
+                            cnt++;
                         }
                     }
-                    xd[rx] = mx / Convert.ToDouble(cnt);
+                    xd[rx] = mx / cnt;
                     mxd[rx] = mx;
                     sum = 0;
                     double sumsq = 0;
-                    for (C = 0; C <= cols - 1; C++)
+                    for (int c = 0; c < cols; c++)
                     {
-                        sum = sum + ARR2[C][r];
-                        sumsq = sumsq + ARR2[C][r] * ARR2[C][r];
+                        sum += ARR2[c][r];
+                        sumsq += ARR2[c][r] * ARR2[c][r];
                     }
                     double avg = sum / Convert.ToDouble(cols);
                     double sumsqdev = 0;
-                    for (C = 0; C <= cols - 1; C++)
+                    for (int c = 0; c < cols; c++)
                     {
                         if (Math.Abs(sumsqdev) > 1.0E+300)
                         {
                             sumsqdev = Constant.MISSING;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
-                        sumsqdev = sumsqdev + (ARR2[C][r] - avg) * (ARR2[C][r] - avg);
+                        sumsqdev += (ARR2[c][r] - avg) * (ARR2[c][r] - avg);
                     }
                     if (sumsqdev == Constant.MISSING)
-                    {
                         vr[rx] = Constant.MISSING;
-                    }
                     else
-                    {
                         vr[rx] = sumsqdev / Convert.ToDouble(cols - 1);
-                    }
                     ssd[rx] = Math.Sqrt(vr[rx]);
-                    sumvr = sumvr + vr[rx];
+                    sumvr += vr[rx];
                     av[rx] = avg;
-                    tot = tot + xd[rx];
-                    totsq = totsq + xd[rx] * xd[rx];
-                    for (C = 0; C <= cols - 1; C++)
-                    {
-                        xxm[rx] = xxm[rx] + Math.Abs(ARR2[C][r] - av[rx]);
-                    }
-                    rx = rx + 1;
+                    tot += xd[rx];
+                    totsq += xd[rx] * xd[rx];
+                    for (int c = 0; c < cols; c++)
+                        xxm[rx] += Math.Abs(ARR2[c][r] - av[rx]);
+                    rx++;
                 }
             }
-            double meanvr = sumvr / Convert.ToDouble(rx);
-            double mean = tot / Convert.ToDouble(rx);
-            double ss = totsq - ((tot * tot) / Convert.ToDouble(rx));
-            double sd = Math.Sqrt(ss / Convert.ToDouble(rx - 1));
-            int ifault;
-            double z = PDF.gauinv(1 - (1 - GAMMA) / 2, out ifault);
+            double meanvr = sumvr / rx;
+            double mean = tot / rx;
+            double ss = totsq - ((tot * tot) / rx);
+            double sd = Math.Sqrt(ss / (rx - 1));
+            double z = PDF.gauinv(1 - (1 - GAMMA) / 2);
             // create temp variable for copying values 
             double[] transTemp0 = new double[rx];
             Array.Copy(av, transTemp0, Math.Min(av.Length, transTemp0.Length));
@@ -545,41 +496,37 @@ namespace StatsDirect.Builtins
             MathDbl.civ(0, out cit, GAMMA, out P0);
             double lla = mean - (cit * sd);
             double ula = mean + (cit * sd);
-            for (int r = 0; r <= rows - 1; r++)
+            for (int r = 0; r < rows; r++)
             {
                 long nx = 0;
                 double sq = 0.0;
                 sum = 0.0;
-                for (C = 0; C <= cols - 1; C++)
+                for (int c = 0; c < cols; c++)
                 {
-                    if (ARR2[C][r] != Constant.MISSING)
+                    if (ARR2[c][r] != Constant.MISSING)
                     {
-                        nx = nx + 1;
-                        sum = sum + ARR2[C][r];
-                        sq = sq + (ARR2[C][r] * ARR2[C][r]);
+                        nx++;
+                        sum += ARR2[c][r];
+                        sq += ARR2[c][r] * ARR2[c][r];
                     }
                 }
-                sqtot = sqtot + sq;
+                sqtot += sq;
                 if (nx != 0)
-                {
-                    sum2tot = sum2tot + (sum * sum) / Convert.ToDouble(nx);
-                }
-                ntot = ntot + nx;
-                sumtot = sumtot + sum;
+                    sum2tot += (sum * sum) / nx;
+                ntot += nx;
+                sumtot += sum;
             }
             string tlist = string.Empty;
-            for (C = 0; C <= cols - 1; C++)
+            for (int c = 0; c < cols; c++)
             {
-                if (C > 0)
-                {
+                if (c > 0)
                     tlist += ", ";
-                }
-                tlist += frame.Variables[C].Title;
+                tlist += frame.Variables[c].Title;
             }
-            double cc = (sumtot * sumtot) / Convert.ToDouble(ntot);
+            double cc = (sumtot * sumtot) / ntot;
             double sstot = sqtot - cc;
             double ssgroup = sum2tot - cc;
-            double M = Convert.ToDouble(cols);
+            double M = cols;
             double icc = (M * ssgroup - sstot) / ((M - 1.0) * sstot);
             string tau;
             string P2;
@@ -627,11 +574,11 @@ namespace StatsDirect.Builtins
             //  Q-Q plot
             const double p_start = 0.01;
             const double p_finish = 0.99;
-            double p_inc = (p_finish - p_start) / Convert.ToDouble(rx - 1);
+            double p_inc = (p_finish - p_start) / (rx - 1);
             double P = p_start;
             double df = cols - 1;
             double[] pvalues = new double[rx];
-            for (int r = 0; r <= rx - 1; r++)
+            for (int r = 0; r < rx; r++)
             {
                 int fault;
                 pvalues[r] = PDF.ppchi2(P, df, out fault);
@@ -643,7 +590,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static ParameterBag RptOneWay(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -653,9 +599,9 @@ namespace StatsDirect.Builtins
             double sumtot = 0.0;
             int ntot = 0;
             string tlist = string.Empty;
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[D].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
                 int nx = 0;
                 double sum = 0;
                 foreach (double val in v.Data)
@@ -666,37 +612,29 @@ namespace StatsDirect.Builtins
                         sum += val;
                     }
                 }
-                tnx[D] = nx;
-                ntot = ntot + nx;
-                mean[D] = sum / nx;
-                sumtot = sumtot + sum;
+                tnx[d] = nx;
+                ntot += nx;
+                mean[d] = sum / nx;
+                sumtot += sum;
 
-                if (D > 0)
-                {
+                if (d > 0)
                     tlist += ", ";
-                }
                 tlist += v.Title;
             }
 
             double gm = sumtot / Convert.ToDouble(ntot);
             double sstot = 0;
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[D].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
                 foreach (double val in v.Data)
-                {
                     if (val != Constant.MISSING)
-                    {
                         sstot += (val - gm) * (val - gm);
-                    }
-                }
             }
 
             double ssgroup = 0;
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
-            {
-                ssgroup += (mean[D] - gm) * (mean[D] - gm) * tnx[D];
-            }
+            for (int d = 0; d <= frame.VariableCount - 1; d++)
+                ssgroup += (mean[d] - gm) * (mean[d] - gm) * tnx[d];
 
             int dftot = ntot - 1;
             int dfgroup = frame.VariableCount - 1;
@@ -759,7 +697,7 @@ namespace StatsDirect.Builtins
                         if (groupVariable.Data[vIndex] == groupId && v.Data[vIndex] != Constant.MISSING)
                         {
                             oneWayVariable.SetData(oneWayIndex, v.Data[vIndex]);
-                            oneWayIndex += 1;
+                            oneWayIndex++;
                         }
                     }
                     //  By now, oneWayIndex contains the number of non-MISSING elements.  Truncate the variable if required.
@@ -775,7 +713,6 @@ namespace StatsDirect.Builtins
             }
             return outputParameters;
         }
-
 
         ///  <summary>
         ///  Given one or more data columns, a row grouping column and a column grouping column: split each data column in turn into variables based on the grouping columns, and run one two-way ANOVA for each data column.
@@ -800,10 +737,8 @@ namespace StatsDirect.Builtins
                 foreach (Group g in treatmentsVariable.Groups)
                 {
                     DoubleVariable newV = new DoubleVariable(maxBlocks, g.Label);
-                    for (int i = 0; i <= maxBlocks - 1; i++)
-                    {
-                        newV.SetData(i, Constant.MISSING);
-                    }
+                    for (int i = 0; i < maxBlocks; i++)
+                        newV.Data[i] = Constant.MISSING;
                     twoWayFrame.Variables.Add(newV);
                 }
                 // Use the shorter of the group variables (which are guaranteed to be the same length) and the data variable
@@ -1082,12 +1017,12 @@ namespace StatsDirect.Builtins
             int ivar = 0;
             for (int j = 0; j < frame.VariableCount; j++)
                 ivar += frame.Variables[j].Count;
-            int[] nobs = new int[ivar + 1 ];
-            double[] sgbar = new double[ivar + 1 ];
+            int[] nobs = new int[ivar + 1];
+            double[] sgbar = new double[ivar + 1];
             ivar = 0;
             int ctr = 0;
             string tlist = string.Empty;
-            double[] y = new double[1 + 1 ];
+            double[] y = new double[1 + 1];
             for (int j = 0; j < frame.VariableCount; j++)
             {
                 tlist += " (";
@@ -1124,10 +1059,10 @@ namespace StatsDirect.Builtins
             }
 
             bool fault;
-            double[] ss = new double[5 + 1 ];
-            int[] idf = new int[5 + 1 ];
-            double[] f = new double[3 + 1 ];
-            double[] fp = new double[3 + 1 ];
+            double[] ss = new double[5 + 1];
+            int[] idf = new int[5 + 1];
+            double[] f = new double[3 + 1];
+            double[] fp = new double[3 + 1];
             int[] ngp = null;
             double[] gbar = null;
             double gm = 0;
@@ -1349,7 +1284,7 @@ namespace StatsDirect.Builtins
             double msx = carrier.Msx;
 
             int kn = frame.VariableCount;
-            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1 ]; //  1-based
+            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1]; //  1-based
 
             int totn = 0;
             for (int N = 0; N <= kn - 1; N++)
@@ -1386,17 +1321,17 @@ namespace StatsDirect.Builtins
                     double lci = DELTA - crit * se;
                     double uci = DELTA + crit * se;
                     hold[ctr] = new Contraster
-                                    {
-                                        Lab1 = frame.Variables[i].Title,
-                                        Lab2 = frame.Variables[j].Title,
-                                        Mean1 = mean[i],
-                                        Mean2 = mean[j],
-                                        Delta = DELTA,
-                                        Absdelta = Math.Abs(L),
-                                        P = PDF.fvalp(L * L / dfn, dfn, dfd),
-                                        Ll = lci,
-                                        Ul = uci
-                                    };
+                    {
+                        Lab1 = frame.Variables[i].Title,
+                        Lab2 = frame.Variables[j].Title,
+                        Mean1 = mean[i],
+                        Mean2 = mean[j],
+                        Delta = DELTA,
+                        Absdelta = Math.Abs(L),
+                        P = PDF.fvalp(L * L / dfn, dfn, dfd),
+                        Ll = lci,
+                        Ul = uci
+                    };
                 }
             }
 
@@ -1518,15 +1453,15 @@ namespace StatsDirect.Builtins
                     double delta = mean[i] - mean[j];
                     double q = Math.Abs(delta) / se;
                     hold[ctr] = new Contraster
-                                    {
-                                        Lab1 = frame.Variables[i].Title,
-                                        Lab2 = frame.Variables[j].Title,
-                                        Mean1 = mean[i],
-                                        Mean2 = mean[j],
-                                        Delta = delta,
-                                        Absdelta = Math.Abs(delta),
-                                        Q = q
-                                    };
+                    {
+                        Lab1 = frame.Variables[i].Title,
+                        Lab2 = frame.Variables[j].Title,
+                        Mean1 = mean[i],
+                        Mean2 = mean[j],
+                        Delta = delta,
+                        Absdelta = Math.Abs(delta),
+                        Q = q
+                    };
                     // find separation of contrast, ties are included in separation
                     double a;
                     double b;
@@ -1609,8 +1544,8 @@ namespace StatsDirect.Builtins
             }
 
             int k = kn - 1;
-            Contraster[] hold = new Contraster[kn + 2 ]; //  1-based
-            double[] lam = new double[k + 1 ];
+            Contraster[] hold = new Contraster[kn + 2]; //  1-based
+            double[] lam = new double[k + 1];
 
             int nu = 0;
             for (int N = 0; N <= k; N++)
@@ -1652,15 +1587,15 @@ namespace StatsDirect.Builtins
             {
                 if (i != ic)
                 {
-                    ctr ++;
+                    ctr++;
                     double delta = mean[i] - mean[ic];
                     hold[ctr] = new Contraster
-                                    {
-                                        Delta = delta,
-                                        Absdelta = Math.Abs(delta),
-                                        Lab1 = frame.Variables[i].Title,
-                                        Gps = tnx[i]
-                                    };
+                    {
+                        Delta = delta,
+                        Absdelta = Math.Abs(delta),
+                        Lab1 = frame.Variables[i].Title,
+                        Gps = tnx[i]
+                    };
                     double lci = delta - d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]));
                     hold[ctr].Ll = lci;
                     double uci = delta + d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]));
@@ -1934,10 +1869,10 @@ namespace StatsDirect.Builtins
             DataFrame observationFrame = parameters["observations"].AsDataFrame;
             DoubleVariable observationVariable = observationFrame.Variables[0].AsDoubleVariable;
             int nn = observationVariable.Length;
-            double[] v = new double[nn + 1 ];
-            double[] vcx = new double[nn + 1 ];
-            double[] vrx = new double[nn + 1 ];
-            double[] vlx = new double[nn + 1 ];
+            double[] v = new double[nn + 1];
+            double[] vcx = new double[nn + 1];
+            double[] vrx = new double[nn + 1];
+            double[] vlx = new double[nn + 1];
             int n = Convert.ToInt32(Math.Sqrt(nn));
             for (int i = 1; i <= nn; i++)
             {
@@ -1973,9 +1908,9 @@ namespace StatsDirect.Builtins
 
             // set up calculation variables
             double[,] x = new double[n + 1, n + 1];
-            double[] tx = new double[n + 1 ];
-            double[] sr = new double[n + 1 ];
-            double[] sc = new double[n + 1 ];
+            double[] tx = new double[n + 1];
+            double[] sr = new double[n + 1];
+            double[] sc = new double[n + 1];
 
             // make sure row and column pointers range from 1 to n
             double vx = 1.0 - MathDbl.vector_min(vcx, 1, n);
@@ -2122,8 +2057,8 @@ namespace StatsDirect.Builtins
             {
                 group1BaselineData = null;
             }
-            double[] x1d = new double[rows + 1 ];
-            double[] x1p = new double[rows + 1 ];
+            double[] x1d = new double[rows + 1];
+            double[] x1p = new double[rows + 1];
             int ng1 = 0;
             for (int j = 0; j <= rows - 1; j++)
             {
@@ -2155,8 +2090,8 @@ namespace StatsDirect.Builtins
             {
                 group2BaselineData = null;
             }
-            double[] x2d = new double[rows + 1 ];
-            double[] x2p = new double[rows + 1 ];
+            double[] x2d = new double[rows + 1];
+            double[] x2p = new double[rows + 1];
             int ng2 = 0;
             for (int j = 0; j <= rows - 1; j++)
             {

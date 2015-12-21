@@ -77,7 +77,7 @@ namespace StatsDirect.Numerics
                 u = u + u; 
                 if ( u >= 1.0 )
                 { 
-                    break; /* TRANSWARNING: check that break is in correct scope */ 
+                    break; 
                 } 
                 a = a + Q0; 
             } 

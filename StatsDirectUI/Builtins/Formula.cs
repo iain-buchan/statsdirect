@@ -1032,11 +1032,11 @@ namespace StatsDirect.Builtins
                 else if (rm == 1.0)
                 {
                     n1 = Math.Pow((zbeta * spsi + zalpha * S1), 2.0) / Math.Pow((epsi - E1), 2.0);
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
                 else
                 {
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
             while (true);

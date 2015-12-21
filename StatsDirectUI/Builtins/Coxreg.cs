@@ -1734,7 +1734,7 @@ namespace StatsDirect.Builtins
                                 if (j > nobs)
                                 {
                                     OK = false;
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
                                 kk = iptr[j];
                             }
@@ -1798,7 +1798,7 @@ namespace StatsDirect.Builtins
                 }
                 if (!(strat))
                 {
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
             while (true);
@@ -1834,7 +1834,7 @@ namespace StatsDirect.Builtins
                     if (Math.Abs(xcovx) < tol)
                     {
                         ifault = ifault + i;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 return;
@@ -1886,7 +1886,7 @@ namespace StatsDirect.Builtins
                 if (Variable.Data[i] != x1)
                 {
                     x2 = Variable.Data[i];
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
             if (i >= Variable.Length)
@@ -1900,7 +1900,7 @@ namespace StatsDirect.Builtins
                 if (Variable.Data[i] != x1 & Variable.Data[i] != x2)
                 {
                     OK = false;
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
 
@@ -2275,7 +2275,7 @@ namespace StatsDirect.Builtins
                     ir1 = ir0;
                     if (ir0 == 0)
                     {
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 while (true);

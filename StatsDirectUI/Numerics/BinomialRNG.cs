@@ -187,7 +187,7 @@ namespace StatsDirect.Numerics
                         } 
                         if ( v <= f )
                         { 
-                            break; /* TRANSWARNING: check that break is in correct scope */ 
+                            break; 
                         } 
                     } 
                     else 

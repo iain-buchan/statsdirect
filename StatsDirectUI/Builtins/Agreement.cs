@@ -103,7 +103,7 @@ namespace StatsDirect.Builtins
                     if (standardArray[finder])
                     {
                         referenceName = groupNames[finder];
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 if (referenceName == null)

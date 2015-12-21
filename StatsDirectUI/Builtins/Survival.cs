@@ -131,7 +131,7 @@ namespace StatsDirect.Builtins
                     if (v == 0)
                     {
                         zbase = 1;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 // Store the group data
@@ -176,7 +176,7 @@ namespace StatsDirect.Builtins
                         if (gpid[j] == g[r])
                         {
                             g[r] = j;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                 }
@@ -404,7 +404,7 @@ namespace StatsDirect.Builtins
                         tk = stime[i, lap];
                         stk = s[i, lap];
                         lastk = i;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 double tl = stime[last, lap];
@@ -424,12 +424,12 @@ namespace StatsDirect.Builtins
                 {
                     if (stime[i, lap] != tk)
                     {
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                     if (cen[i] == 1)
                     {
                         lastCen = true;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 //  get variance of mu
@@ -609,7 +609,7 @@ namespace StatsDirect.Builtins
                 {
                     emd = (50000.0 - sl[i]) / (sl[i - 1] - sl[i]);
                     emd = emd * (x[i - 1] - x[i]) + x[i];
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
         }
@@ -790,14 +790,14 @@ namespace StatsDirect.Builtins
                         l = l + 1;
                         if (i == irow)
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                         w = w - u[l] * u[m];
                         m = m + 1;
                     }
                     if (irow == icol)
                     {
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                     if (u[l] == 0)
                     {
@@ -917,7 +917,7 @@ namespace StatsDirect.Builtins
                             if (x[r, j] == 0.0 & s[r, j] == 1)
                             {
                                 missingCode = minTime - 1.0;
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                         }
                     }
@@ -1252,7 +1252,7 @@ namespace StatsDirect.Builtins
                         {
                             if (k == irow)
                             {
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                             x = x - w[k] * c[l];
                             k = k - 1;
@@ -1266,7 +1266,7 @@ namespace StatsDirect.Builtins
                         c[l] = x / w[irow];
                         if (icol == irow)
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                         mdiag = mdiag - icol;
                         icol = icol - 1;
@@ -1461,7 +1461,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     nat[nx + 1] = nat[nx] - dead[nx, lap] - wdr;
@@ -1592,7 +1592,7 @@ namespace StatsDirect.Builtins
                             if (temp == sid[j])
                             {
                                 ok = false;
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                         }
                         if (ok)
@@ -1614,7 +1614,7 @@ namespace StatsDirect.Builtins
                         if (sid[j] == s[r])
                         {
                             s[r] = j;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                 }
@@ -2376,7 +2376,7 @@ namespace StatsDirect.Builtins
                         {
                             if (n >= ntx)
                             {
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                             if (q[n].Tm == q[n + 1].Tm)
                             {
@@ -2390,7 +2390,7 @@ namespace StatsDirect.Builtins
                             }
                             else
                             {
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                         }
                         while (true);

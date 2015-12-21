@@ -2856,32 +2856,32 @@ namespace StatsDirect.Builtins
                     if (cnt > 10000)
                     {
                         fault = true;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                     gotx = gotx + INC;
                     double goty = Regress1.polyfunc(gotx, bd, P);
                     double dif = Math.Abs(goty - y);
                     if (dif == lastdif)
                     {
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                     lastdif = dif;
                     if (dif < Math.Abs(yinc * 10))
                     {
                         yinc = yinc / 10.0;
                         gotx = gotx - INC;
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 while (true);
                 INC = INC / 10.0;
                 if (INC < Constant.EPSNEG * 10.0)
                 {
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
                 if (fault)
                 {
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
             while (true);
@@ -6610,7 +6610,7 @@ namespace StatsDirect.Builtins
                         {
                             hetllm = ans2;
                             hetulm = ans1;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     else
@@ -6625,7 +6625,7 @@ namespace StatsDirect.Builtins
                         {
                             hetllq = ans2;
                             hetulq = ans1;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                 }
@@ -6640,7 +6640,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     doseq = dose;
-                    break; /* TRANSWARNING: check that break is in correct scope */
+                    break;
                 }
             }
             while (true);

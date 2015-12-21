@@ -5069,7 +5069,7 @@ namespace StatsDirect.Charting
                     {
                         if (Math.Abs(v1 - s.Data[r1]) > xxwid)
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     int count = r1 - r;
@@ -5096,7 +5096,7 @@ namespace StatsDirect.Charting
                     {
                         if (Math.Abs(v1 - s.Data[r1]) > xxwid)
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     // Plot r1-r markers

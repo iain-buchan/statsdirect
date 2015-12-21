@@ -249,7 +249,7 @@ namespace StatsDirect.Builtins
                         nm = L - 1;
                         if ((Math.Abs(rv1[L]) + anorm) == anorm)
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                         if ((Math.Abs(wd[nm]) + anorm) == anorm)
                         {
@@ -259,7 +259,7 @@ namespace StatsDirect.Builtins
                                 f = s * rv1[i];
                                 if ((Math.Abs(f) + anorm) != anorm)
                                 {
-                                    break; /* TRANSWARNING: check that break is in correct scope */
+                                    break;
                                 }
                                 g = wd[i];
                                 h = X_PYTHAG(f, g);
@@ -275,7 +275,7 @@ namespace StatsDirect.Builtins
                                     ad[j, i] = -(y * s) + (z * C);
                                 }
                             }
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     z = wd[k];
@@ -289,7 +289,7 @@ namespace StatsDirect.Builtins
                                 vd[j, k] = -vd[j, k];
                             }
                         }
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                     if (its >= maxit)
                     {
@@ -2159,14 +2159,14 @@ namespace StatsDirect.Builtins
                         if (tst2 == tst1)
                         {
                             skip = true;
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                         //      .......... rv1(1) is always zero, so there is no exit
                         //                 through the bottom of the loop ..........
                         tst2 = tst1 + Math.Abs(w[l1]);
                         if (tst2 == tst1)
                         {
-                            break; /* TRANSWARNING: check that break is in correct scope */
+                            break;
                         }
                     }
                     double c;
@@ -2183,7 +2183,7 @@ namespace StatsDirect.Builtins
                             tst2 = tst1 + Math.Abs(f);
                             if (tst2 == tst1)
                             {
-                                break; /* TRANSWARNING: check that break is in correct scope */
+                                break;
                             }
                             g = w[i];
                             h = pythag(f, g);
@@ -2269,7 +2269,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        break; /* TRANSWARNING: check that break is in correct scope */
+                        break;
                     }
                 }
                 while (true);
