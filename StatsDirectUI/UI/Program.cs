@@ -94,6 +94,7 @@ namespace StatsDirect.UI
         {
             using (frmReportRichEditDummy f = new frmReportRichEditDummy())
             {
+                // Ensure the form loads off the visible area on any screen - it'll load just to the right of the furthest-right screen.
                 int largestVisibleX = int.MinValue;
                 int smallestVisibleY = int.MaxValue;
                 foreach (Screen screen in Screen.AllScreens)
