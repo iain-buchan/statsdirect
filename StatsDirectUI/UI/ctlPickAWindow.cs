@@ -21,14 +21,14 @@ namespace StatsDirect.UI
             WritePosition = RelativePosition.AfterSelection;
         }
 
-        public ctlPickAWindow(OutputType outputType, Parameter parameter)
+        public ctlPickAWindow(OutputType outputType, SpecialParameter parameter)
         {
             InitializeComponent();
             parameterName = parameter.Name;
             this.outputType = outputType;
             WritePosition = RelativePosition.AfterSelection;
-            if (parameter is SpecialParameter && null != ((SpecialParameter) parameter).ExtraData)
-                WritePosition = (RelativePosition) ((object[])((SpecialParameter) parameter).ExtraData)[0];
+            if (null != parameter.ExtraData)
+                WritePosition = (RelativePosition) ((object[])parameter.ExtraData)[0];
         }
 
         [Browsable(true)]

@@ -337,6 +337,7 @@ namespace StatsDirect.UI
                 if (availableColumns - firstFreeColumn < frame.Variables.Count)
                     throw new Exception("No room to write output data on the sheet");
 
+                // If any variable has a title, leave a title row.
                 int offsetForTitles = 0;
                 foreach (Variable v in frame.Variables)
                 {
@@ -413,6 +414,11 @@ namespace StatsDirect.UI
                 {
                     // Move existing contents out of the way
                     range.Insert(InsertShiftDirection.Right);
+                }
+                else
+                {
+                    // We might be in clear space at the end of the sheet, or we might be replacing an existing selection.  Either way, blank the contents of the existing selection.
+                    range.ClearContents();
                 }
 
                 // Now do the inserts.  Frames may contain any types of variables.

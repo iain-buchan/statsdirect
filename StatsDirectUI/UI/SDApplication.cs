@@ -547,7 +547,7 @@ namespace StatsDirect.UI
         /// <param name="allowNew">If true, the user may select a new grid as well as any existing ones.  If false, only existing grids may be picked.</param>
         /// <param name="relativePosition"></param>
         /// <returns></returns>
-        public IGrid PickGridWindow(bool allowNew, out RelativePosition relativePosition)
+        public IGrid PickGridWindow(bool allowNew, ref RelativePosition relativePosition)
         {
             IList<Pane> availableWindows = AvailableFramePanes();
             try
@@ -560,9 +560,8 @@ namespace StatsDirect.UI
                     {
                         SpecialType = "frame",
                         Name = KEY,
-                        PromptExpression =
-                            new Expression(
-                            "Pick the sheet in which you want the output to appear")
+                        ExtraData = new object[] { relativePosition },
+                        PromptExpression = new Expression("Pick the sheet in which you want the output to appear")
                     };
                     ParameterBag results = FillSingleParameter(parameter); // Will never return a null value as the parameter cannot be skipped
                     bool cancelled = (null == results || !results.ContainsKey(KEY));
@@ -638,21 +637,19 @@ namespace StatsDirect.UI
         /// <summary>
         /// Append the data in the frame to a new or existing user-selected grid window.
         /// </summary>
-        /// <param name="frame">The frame to output</param>
-        /// <param name="keepSelection"></param>
-        /// <param name="isFormulae"></param>
-        /// <param name="missingIndicator"> </param>
-        /// <param name="preferredOutputLocation"></param>
-        void ITemplateHost.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation)
+        void ITemplateHost.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
         {
             IGrid grid;
-            RelativePosition writePosition;
+            RelativePosition writePosition = defaultPosition;
 
             if (keepSelection && null != activeGrid)
             {
                 grid = (IGrid)activeGrid.Window;
-                // If we're writing multiple outputs, each one is selected after it is written.  Therefore we can use that to ensure subsequent output is written directly after the initial output.
-                writePosition = RelativePosition.AfterSelection;
+                // If we're writing multiple outputs that won't be written over the top of each other, each one is selected after it is written.  Therefore we can use that to ensure subsequent output is written directly after the initial output.
+                if (defaultPosition != RelativePosition.ReplaceSelection)
+                    writePosition = RelativePosition.AfterSelection;
+                else
+                    writePosition = defaultPosition;
             }
             else
             {
@@ -665,7 +662,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    grid = PickGridWindow(true, out writePosition);
+                    grid = PickGridWindow(true, ref writePosition);
                 }
             }
             if (null == grid)
@@ -673,18 +670,7 @@ namespace StatsDirect.UI
             grid.WriteDataFrame(frame, isFormulae, missingIndicator, writePosition);
             grid.EnsureActive();
         }
-        /*
-        /// <summary>
-        /// Select a new or existing user-selected grid window for future output.
-        /// </summary>
-        public void SelectOutputForFrame()
-        {
-            RelativePosition scrap;
-            IGrid grid = PickGridWindow(true, out scrap);
-            if (null == grid)
-                throw new TemplateOperationCancelledException();
-        }
-        */
+
         private static void InitialiseFunctionRegistry()
         {
             BuiltinRegistry.SoleInstance.AddAll(Builtins.Registry.GetFunctionRegistry());

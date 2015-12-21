@@ -320,17 +320,10 @@ namespace StatsDirect.Templates
                 if (parameters.ContainsKey(STATSDIRECT_FRAME_PANE)
                     && null != parameters[STATSDIRECT_FRAME_PANE])
                     preferredPaneAndPosition = parameters[STATSDIRECT_FRAME_PANE].AsPaneAndPosition;
-                host.OutputFrame(frame, step.KeepSelection, step.IsFormulae, step.MissingIndicator, preferredPaneAndPosition);
+                host.OutputFrame(frame, step.KeepSelection, step.IsFormulae, step.MissingIndicator, preferredPaneAndPosition, step.DefaultPlacement);
             }
             return new ParameterBag();
         }
-        /*
-        public StepResult ExecuteInternal(SelectOutputForFrameStep step, ParameterBag parameters, bool isRedo)
-        {
-            if ((!parameters.ContainsKey(STATSDIRECT_FRAME_PANE)) || null == parameters[STATSDIRECT_FRAME_PANE])
-                host.SelectOutputForFrame();
-            return new StepResult(StepSuccess.Success, new ParameterBag());
-        }*/
 
         /// <summary>
         /// 

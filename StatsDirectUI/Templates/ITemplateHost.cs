@@ -131,7 +131,8 @@ namespace StatsDirect.Templates
         /// <param name="isFormulae">If true, the frame is assumed to contain strings to be set as formulae; if false, the frame is assumed to contain data values.</param>
         /// <param name="missingIndicator">The text to place in the output if a value in the frame is missing.</param>
         /// <param name="preferredOutputLocation">If non-null, indicates a possible host-controlled place to put the output</param>
-        void OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation);
+        /// <param name="defaultPosition">A hint for the step's preferred place to put the output. TODO: This is user-interfacey; we should find a better way of communicating this.</param>
+        void OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition);
         /*
         /// <summary>
         /// In systems that have a choice of output location for frames (such as multiple grids), ask the user where they want to output future frames.
