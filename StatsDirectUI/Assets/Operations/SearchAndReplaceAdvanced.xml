@@ -39,6 +39,17 @@
         <lifetime>SessionForThisOperation</lifetime>
         <must-request>true</must-request>
       </string>
+      <!-- Ideally we'd provide a way of comparing case-sensitive or case-insensitive. However, this reaches a long way down the expression renderer due to the way string comparisons work - so we're not.
+      <boolean>
+        <column>4</column>
+        <name>ignore-case</name>
+        <prompt>Ignore case</prompt>
+        <lifetime>SessionForThisOperation</lifetime>
+        <acquire-if-true>=parameters.ContainsKey("search-type") &amp;&amp; null != parameters["search-type"] &amp;&amp; null != parameters["search-type"].AsString &amp;&amp; parameters["search-type"].AsString.StartsWith("text")</acquire-if-true>
+        <must-request>true</must-request>
+        <default-value>true</default-value>
+      </boolean>
+      -->
       <option>
         <name>action</name>
         <prompt>Action</prompt>
