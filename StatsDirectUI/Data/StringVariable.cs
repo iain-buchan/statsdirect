@@ -110,6 +110,11 @@ namespace StatsDirect.Data
             }
         }
 
+        public override object DataAsObject(int i)
+        {
+            return Data[i];
+        }
+
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
             StringVariable copy = new StringVariable();

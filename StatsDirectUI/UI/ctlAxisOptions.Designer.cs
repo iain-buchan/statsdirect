@@ -80,7 +80,7 @@
             this.ctlOneAxisOptionsX.Name = "ctlOneAxisOptionsX";
             this.ctlOneAxisOptionsX.Size = new System.Drawing.Size(234, 249);
             this.ctlOneAxisOptionsX.TabIndex = 0;
-            this.ctlOneAxisOptionsX.Title = "";
+            this.ctlOneAxisOptionsX.Title = string.Empty;
             // 
             // ctlOneAxisOptionsY
             // 
@@ -91,7 +91,7 @@
             this.ctlOneAxisOptionsY.Name = "ctlOneAxisOptionsY";
             this.ctlOneAxisOptionsY.Size = new System.Drawing.Size(234, 249);
             this.ctlOneAxisOptionsY.TabIndex = 0;
-            this.ctlOneAxisOptionsY.Title = "";
+            this.ctlOneAxisOptionsY.Title = string.Empty;
             // 
             // ctlAxisOptions
             // 

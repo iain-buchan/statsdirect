@@ -102,19 +102,19 @@ namespace StatsDirect.Builtins
                 double ptwo;
                 double zPone;
                 Fisherp(a, b, c, d, out zPone, out ptwo, out fault);
-                outputParameters.AddOutput("tail_1", "");
+                outputParameters.AddOutput("tail_1", string.Empty);
                 if (fault != 0)
                 {
                     outputParameters.AddOutput("p_1", "err");
                     outputParameters.AddOutput("p_1d", "err");
-                    outputParameters.AddOutput("tail_2", "");
+                    outputParameters.AddOutput("tail_2", string.Empty);
                     outputParameters.AddOutput("p_2", "err");
                 }
                 else
                 {
                     outputParameters.AddOutput("p_1", host.pval(zPone));
                     outputParameters.AddOutput("p_1d", host.pval(zPone * 2.0));
-                    outputParameters.AddOutput("tail_2", "");
+                    outputParameters.AddOutput("tail_2", string.Empty);
                     outputParameters.AddOutput("p_2", host.pval(ptwo));
                 }
                 const string x = "not possible, use Monte Carlo";
@@ -313,12 +313,12 @@ namespace StatsDirect.Builtins
             SortName(xcats + ycats, maxcat, lowerBound);
             for (int i = lowerBound + 1; i <= xcats + ycats - 1 + lowerBound; i++)
                 if (maxcat[i - 1].Ti == maxcat[i].Ti)
-                    maxcat[i - 1].Ti = "";
+                    maxcat[i - 1].Ti = string.Empty;
             SortName(xcats + ycats, maxcat, lowerBound);
             int g = 1;
             for (int i = xcats + ycats - 1 + lowerBound; i >= lowerBound; i--)
             {
-                if (maxcat[i].Ti == "")
+                if (maxcat[i].Ti == string.Empty)
                 {
                     g = i + 1;
                     break;
@@ -1108,7 +1108,7 @@ namespace StatsDirect.Builtins
                     {
                         outputParameters.AddOutput("x2m", "[not calculated - zero cells]");
                         outputParameters.AddOutput("dfmcnemar", dfm.ToString());
-                        outputParameters.AddOutput("pmcnemar", "");
+                        outputParameters.AddOutput("pmcnemar", string.Empty);
                     }
                     else
                     {
@@ -1931,9 +1931,9 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                w2 = "";
+                w2 = string.Empty;
             }
-            string warn = "";
+            string warn = string.Empty;
             if (expectedsBelow5 > 0)
             {
                 warn += Formatting.XRound(100 * Convert.ToDouble(expectedsBelow5) / Convert.ToDouble(nx), 1) + "% of the expected frequencies < 5";
@@ -2007,7 +2007,7 @@ namespace StatsDirect.Builtins
         //     Dim i As Integer, N As Integer, nx As Integer, total As Integer, OK As Integer, df As Integer
         //     Dim gotx As Boolean
         //     Dim w2 As String
-        //     Dim warn As String = ""
+        //     Dim warn As String = string.Empty
         //     Dim cgft As String = "Chi-square goodness of fit test"
 
         //     Dim frame As DataFrame = parameters("data").AsDataFrame
@@ -2561,8 +2561,8 @@ namespace StatsDirect.Builtins
             double[] tbl = new double[istrata * irows * icols + 1];
             int ctr = 0;
             double ntot = 0;
-            string cscores = "";
-            string rscores = "";
+            string cscores = string.Empty;
+            string rscores = string.Empty;
             for (int i = 1; i <= icols; i++)
             {
                 for (int j = 1; j <= istrata; j++)
@@ -2638,12 +2638,12 @@ namespace StatsDirect.Builtins
             //  row scores are scores for each column entry in the row and vice versa
             for (int i = 1; i <= icols; i++)
             {
-                ender = i < icols ? ", " : "";
+                ender = i < icols ? ", " : string.Empty;
                 cscores = cscores + rowScore[i].ToString() + ender;
             }
             for (int i = 1; i <= irows; i++)
             {
-                ender = i < irows ? ", " : "";
+                ender = i < irows ? ", " : string.Empty;
                 rscores = rscores + colScore[i].ToString() + ender;
             }
             //  RTF_LoadTemplate("gencmh.rtf")
@@ -3320,7 +3320,7 @@ namespace StatsDirect.Builtins
 
             // Fisher's - by network algorithm
             // crashes if non integer observations or too large
-            string lb = "";
+            string lb = string.Empty;
             if (doExact && rows > 1 && cols > 1)
             {
                 double emin = 1.0;
@@ -3336,7 +3336,7 @@ namespace StatsDirect.Builtins
                 }
                 if (ierr != 0)
                 {
-                    lb = "";
+                    lb = string.Empty;
                     outputParameters.AddOutput("p2", "not possible, use Monte Carlo");
                 }
                 else
@@ -3346,16 +3346,16 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                lb = "";
+                lb = string.Empty;
                 outputParameters.AddOutput("p2", "not calculated");
             }
             outputParameters.AddOutput("lb", lb);
             
             //Monte Carlo if required
-            string pmcx2 = "";
-            string pmcx2trend = "";
-            string pmcx2eq = "";
-            string pmcg2 = "";
+            string pmcx2 = string.Empty;
+            string pmcx2trend = string.Empty;
+            string pmcx2eq = string.Empty;
+            string pmcg2 = string.Empty;
             if (doMonteCarlo)
             {
                 int ierrormc = 0;
@@ -3602,7 +3602,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("b", o[i, 2].ToString());
                 inputsParameters.AddOutput("c", o[i, 3].ToString());
                 inputsParameters.AddOutput("d", o[i, 4].ToString());
-                inputsParameters.AddOutput("lb", "");
+                inputsParameters.AddOutput("lb", string.Empty);
             }
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
@@ -3635,11 +3635,11 @@ namespace StatsDirect.Builtins
                 //    orParameters = new ParameterBag();
                 //    orList.Add(orParameters);
                 //    orParameters.AddOutput("st", "* " + i.ToString());
-                //    orParameters.AddOutput("or", "");
+                //    orParameters.AddOutput("or", string.Empty);
                 //    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
                 //    orParameters.AddOutput("uci", host.RoundU(odru[i]));
-                //    orParameters.AddOutput("wt", "");
-                //    orParameters.AddOutput("dwt", "");
+                //    orParameters.AddOutput("wt", string.Empty);
+                //    orParameters.AddOutput("dwt", string.Empty);
                 //    orParameters.AddOutput("lb", " * [Cornfield limits]");
                 //}
             }

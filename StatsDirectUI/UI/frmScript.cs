@@ -81,7 +81,7 @@ namespace StatsDirect.UI
             }
             else
                 rtbDoc.Clear();
-            currentFile = "";
+            currentFile = string.Empty;
             this.Text = "Editor: New Document";
         }
          */

@@ -7,12 +7,12 @@ namespace StatsDirect.Expressions
 {
     public class Converter
     {
-        public static string ConvertToCSharp(string expr, DataType[] passedVariableTypes)
+        public static string ConvertToCSharp(string expr, DataType[] passedVariableTypes, bool inputsAreObjects, out DataType resultType)
         {
             // Spaces in the input stream get confused with spaces in thousand separators, so smash spaces if the thousands separator is spaces.
             // TODO: This also smashes spaces in strings, which we don't want!
             if (" ".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator))
-                expr = expr.Replace(" ", "");
+                expr = expr.Replace(" ", string.Empty);
 
             AntlrInputStream input = new AntlrInputStream(expr);
             StatsDirectExpressionLexer lexer = new StatsDirectExpressionLexer(input);
@@ -22,7 +22,7 @@ namespace StatsDirect.Expressions
             StringBuilder errorBuilder = new StringBuilder();
             parser.RemoveErrorListeners();
             parser.AddErrorListener(new AccumulateErrors(errorBuilder));
-            StatsDirect.Expressions.StatsDirectExpressionParser.RContext retval = parser.r();
+            StatsDirectExpressionParser.RContext retval = parser.r();
             if (parser.NumberOfSyntaxErrors > 0)
                 throw new Exception("Couldn't parse your expression: " + errorBuilder.ToString());
 
@@ -31,7 +31,7 @@ namespace StatsDirect.Expressions
                 throw new Exception("Couldn't parse your expression: syntax error near \"" + parser.CurrentToken.Text + "\"");
             if (null == retval || null == retval.node)
                 throw new Exception("Syntax error");
-            return new CSharpRenderer().Render(retval.node, passedVariableTypes);
+            return new CSharpRenderer().Render(retval.node, passedVariableTypes, inputsAreObjects, out resultType);
         }
 
         private static StatsDirectExpressionLexer.SeparatorStructure GetSeparatorStructure()

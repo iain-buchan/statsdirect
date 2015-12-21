@@ -118,7 +118,7 @@ namespace StatsDirect.UI
             else
             {
                 if (selectedTest == DistributionType.Rho || selectedTest == DistributionType.Kendall)
-                    txtPdf.Text = "";
+                    txtPdf.Text = string.Empty;
             }
         }
 
@@ -172,15 +172,15 @@ namespace StatsDirect.UI
             switch (lastTouchedValue)
             {
                 case TouchedValue.Pdf:
-                    lblError.Text = "";
+                    lblError.Text = string.Empty;
                     CalculatePdf();
                     break;
                 case TouchedValue.Df:
-                    lblError.Text = "";
+                    lblError.Text = string.Empty;
                     CalculateDf();
                     break;
                 case TouchedValue.Df2:
-                    lblError.Text = "";
+                    lblError.Text = string.Empty;
                     CalculateDf2();
                     break;
             }
@@ -196,15 +196,15 @@ namespace StatsDirect.UI
             switch (tv)
             {
                 case TouchedValue.Lp:
-                    lblError.Text = "";
+                    lblError.Text = string.Empty;
                     CalculateLp();
                     break;
                 case TouchedValue.Up:
-                    lblError.Text = "";
+                    lblError.Text = string.Empty;
                     CalculateUp();
                     break;
                 case TouchedValue.P2:
-                    lblError.Text = "";
+                    lblError.Text = string.Empty;
                     Calculate2P();
                     break;
                 case TouchedValue.Df:
@@ -684,9 +684,9 @@ namespace StatsDirect.UI
                     lblPdf.Text = "Probability of success per trial";
                     lblDf.Text = "Number of trials";
                     lblDf2.Text = "Number of successes";
-                    lblLp.Text = "";
-                    lblUp.Text = "";
-                    lbl2p.Text = "";
+                    lblLp.Text = string.Empty;
+                    lblUp.Text = string.Empty;
+                    lbl2p.Text = string.Empty;
                     pnlDf2.Visible = true;
                     txtPdf.Text = ".5";
                     break;
@@ -695,9 +695,9 @@ namespace StatsDirect.UI
                     pnlPdf.Visible = false;
                     lblDf.Text = "Number of random events";
                     lblDf2.Text = "Mean";
-                    lblLp.Text = "";
-                    lblUp.Text = "";
-                    lbl2p.Text = "";
+                    lblLp.Text = string.Empty;
+                    lblUp.Text = string.Empty;
+                    lbl2p.Text = string.Empty;
                     pnlDf2.Visible = true;
                     break;
                 case DistributionType.Kendall:

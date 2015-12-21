@@ -270,21 +270,21 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("qxv_any", host.RoundU(xq));
             string contype = do_conservative ? "(conservative)" : "(non-conservative)";
             outputParameters.AddOutput("type", contype);
-            string x = capLower ? "* " : "";
+            string x = capLower ? "* " : string.Empty;
             outputParameters.AddOutput("from_any", x + host.RoundU(ll));
-            x = capUpper ? "* " : "";
+            x = capUpper ? "* " : string.Empty;
             outputParameters.AddOutput("to_any", x + host.RoundU(ul));
-            x = capLower | capUpper ? "  (* limit capped at min/max)" : "";
+            x = capLower | capUpper ? "  (* limit capped at min/max)" : string.Empty;
             outputParameters.AddOutput("co_any", host.RoundU(cover) + "%" + x);
             qc = 1.0 - ((1.0 - qrr) / 2.0);
             Nonparametric.XQci(qc, rx, r, ref xq, GAMMA, out ll, out ul, ref cover, do_conservative, ref capUpper, ref capLower, out fault);
             outputParameters.AddOutput("qx", host.RoundU(qc));
             outputParameters.AddOutput("qxv", host.RoundU(xq));
-            x = capLower ? "* " : "";
+            x = capLower ? "* " : string.Empty;
             outputParameters.AddOutput("from", x + host.RoundU(ll));
-            x = capUpper ? "* " : "";
+            x = capUpper ? "* " : string.Empty;
             outputParameters.AddOutput("to", x + host.RoundU(ul));
-            x = capLower | capUpper ? "  (* limit capped at min/max)" : "";
+            x = capLower | capUpper ? "  (* limit capped at min/max)" : string.Empty;
             outputParameters.AddOutput("co", host.RoundU(cover) + "%" + x);
 
             return outputParameters;
@@ -391,7 +391,7 @@ namespace StatsDirect.Builtins
                 sampleParameters.AddOutput("ti", variable.Title);
                 string wrn = non_neg
                                  ? "(error - negative values used)"
-                                 : (not_int ? "(warning - source data not integers)" : "");
+                                 : (not_int ? "(warning - source data not integers)" : string.Empty);
                 sampleParameters.AddOutput("warn", wrn);
                 sampleParameters.AddOutput("n", nobs.ToString());
 
@@ -612,15 +612,15 @@ namespace StatsDirect.Builtins
                 normality_sk(data, 0, n, out mean, out sd, out skewness, out kurtosis, out b1, out b1P, out b2, out b2P, out k2, out k2P);
                 variableParameters.AddOutput("mean", host.RoundU(mean));
                 variableParameters.AddOutput("sd", host.RoundU(sd));
-                string xtra = n < 8 ? "" : ",";
+                string xtra = n < 8 ? string.Empty : ",";
                 variableParameters.AddOutput("skewness", host.RoundU(skewness) + xtra);
                 variableParameters.AddOutput("kurtosis", host.RoundU(kurtosis) + xtra);
                 if (n < 8)
                 {
-                    variableParameters.AddOutput("b1_p", "");
-                    variableParameters.AddOutput("b2_p", "");
+                    variableParameters.AddOutput("b1_p", string.Empty);
+                    variableParameters.AddOutput("b2_p", string.Empty);
                     variableParameters.AddOutput("k2", "Not calculated if sample size < 8");
-                    variableParameters.AddOutput("k2_p", "");
+                    variableParameters.AddOutput("k2_p", string.Empty);
                 }
                 else
                 {
@@ -636,14 +636,14 @@ namespace StatsDirect.Builtins
                 if (n < 3)
                 {
                     variableParameters.AddOutput("sw_w", "Not calculated if sample size < 3");
-                    variableParameters.AddOutput("sw_v", "");
-                    variableParameters.AddOutput("sw_p", "");
+                    variableParameters.AddOutput("sw_v", string.Empty);
+                    variableParameters.AddOutput("sw_p", string.Empty);
                 }
                 else
                 {
                     variableParameters.AddOutput("sw_w", host.RoundU(sw_w) + ",");
                     variableParameters.AddOutput("sw_v", "V = " + host.RoundU(sw_v) + ",");
-                    xtra = n > 2000 ? ": Test unreliable with more than 2000 observations." : "";
+                    xtra = n > 2000 ? ": Test unreliable with more than 2000 observations." : string.Empty;
                     variableParameters.AddOutput("sw_p", host.pval(sw_p) + xtra);
                 }
 
@@ -653,14 +653,14 @@ namespace StatsDirect.Builtins
                 if (n < 5)
                 {
                     variableParameters.AddOutput("sf_w", "Not calculated if sample size < 5");
-                    variableParameters.AddOutput("sf_v", "");
-                    variableParameters.AddOutput("sf_p", "");
+                    variableParameters.AddOutput("sf_v", string.Empty);
+                    variableParameters.AddOutput("sf_p", string.Empty);
                 }
                 else
                 {
                     variableParameters.AddOutput("sf_w", host.RoundU(sf_w) + ",");
                     variableParameters.AddOutput("sf_v", "V' = " + host.RoundU(sf_v) + ",");
-                    xtra = n > 5000 ? ": Test unreliable with more than 5000 observations." : "";
+                    xtra = n > 5000 ? ": Test unreliable with more than 5000 observations." : string.Empty;
                     variableParameters.AddOutput("sf_p", host.pval(sf_p) + xtra);
                 }
 

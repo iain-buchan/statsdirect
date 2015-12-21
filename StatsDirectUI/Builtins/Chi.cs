@@ -479,7 +479,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("b", o[i, 2].ToString());
                 inputsParameters.AddOutput("c", o[i, 3].ToString());
                 inputsParameters.AddOutput("d", o[i, 4].ToString());
-                inputsParameters.AddOutput("lb", "");
+                inputsParameters.AddOutput("lb", string.Empty);
             }
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
@@ -510,11 +510,11 @@ namespace StatsDirect.Builtins
                 //    orParameters = new ParameterBag();
                 //    orList.Add(orParameters);
                 //    orParameters.AddOutput("st", "* " + i.ToString());
-                //    orParameters.AddOutput("or", "");
+                //    orParameters.AddOutput("or", string.Empty);
                 //    orParameters.AddOutput("lci", host.RoundU(odrl[i]));
                 //    orParameters.AddOutput("uci", host.RoundU(odru[i]));
-                //    orParameters.AddOutput("wt", "");
-                //    orParameters.AddOutput("dwt", "");
+                //    orParameters.AddOutput("wt", string.Empty);
+                //    orParameters.AddOutput("dwt", string.Empty);
                 //    orParameters.AddOutput("lb", " * [Cornfield limits]");
                 //}
             }
@@ -982,8 +982,8 @@ namespace StatsDirect.Builtins
             double p = 0.0;
             double ll = 0.0;
             double ul = 0.0;
-            string warn = "";
-            string res = "";
+            string warn = string.Empty;
+            string res = string.Empty;
             if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
             {
                 p = Convert.ToDouble(r) / Convert.ToDouble(its);

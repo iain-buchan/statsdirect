@@ -31,21 +31,21 @@ namespace StatsDirect.Expressions
             definitions = new Dictionary<DyadicOperator, DyadicOperatorDefinition>();
             AddAll(new[]
             {
-                new DyadicOperatorDefinition(DyadicOperator.IntegerDivide,       "SDMath.IDiv",  true,  new[] { idd }),
-                new DyadicOperatorDefinition(DyadicOperator.Pow,                 "Math.Pow",     true,  new[] { ddd }),
-                new DyadicOperatorDefinition(DyadicOperator.Add,                 " + ",          false, new[] { iii, ddd, sss, ssd, ssi, ssb }),
-                new DyadicOperatorDefinition(DyadicOperator.And,                 " && ",         false, new[] { bbb }),
-                new DyadicOperatorDefinition(DyadicOperator.Divide,              " / ",          false, new[] { ddd }),
-                new DyadicOperatorDefinition(DyadicOperator.Modulo,              " % ",          false, new[] { ddd }),
-                new DyadicOperatorDefinition(DyadicOperator.Multiply,            " * ",          false, new[] { ddd }),
-                new DyadicOperatorDefinition(DyadicOperator.Or,                  " || ",         false, new[] { bbb }),
-                new DyadicOperatorDefinition(DyadicOperator.Subtract,            " - ",          false, new[] { iii, ddd }),
-                new DyadicOperatorDefinition(DyadicOperator.Equal,               " == ",         false, new[] { bbb, bii, bdd, bss }),
-                new DyadicOperatorDefinition(DyadicOperator.GreaterThan,         " > ",          false, new[] { bii, bdd, bss }),
-                new DyadicOperatorDefinition(DyadicOperator.GreaterThanOrEqual,  " >= ",         false, new[] { bii, bdd, bss }),
-                new DyadicOperatorDefinition(DyadicOperator.LessThan,            " < ",          false, new[] { bii, bdd, bss }),
-                new DyadicOperatorDefinition(DyadicOperator.LessThanOrEqual,     " <= ",         false, new[] { bii, bdd, bss }),
-                new DyadicOperatorDefinition(DyadicOperator.NotEqual,            " != ",         false, new[] { bbb, bii, bdd, bss })
+                new DyadicOperatorDefinition(DyadicOperator.IntegerDivide,       "SDMath.IDiv({0}, {1})",       new[] { idd }),
+                new DyadicOperatorDefinition(DyadicOperator.Pow,                 "Math.Pow({0}, {1})",          new[] { ddd }),
+                new DyadicOperatorDefinition(DyadicOperator.Add,                 "({0}) + ({1})",               new[] { iii, ddd, sss, ssd, ssi, ssb }),
+                new DyadicOperatorDefinition(DyadicOperator.And,                 "({0}) && ({1})",              new[] { bbb }),
+                new DyadicOperatorDefinition(DyadicOperator.Divide,              "({0}) / ({1})",               new[] { ddd }),
+                new DyadicOperatorDefinition(DyadicOperator.Modulo,              "({0}) % ({1})",               new[] { ddd }),
+                new DyadicOperatorDefinition(DyadicOperator.Multiply,            "({0}) * ({1})",               new[] { ddd }),
+                new DyadicOperatorDefinition(DyadicOperator.Or,                  "({0}) || ({1})",              new[] { bbb }),
+                new DyadicOperatorDefinition(DyadicOperator.Subtract,            "({0}) - ({1})",               new[] { iii, ddd }),
+                new DyadicOperatorDefinition(DyadicOperator.Equal,               "({0}).CompareTo({1}) == 0",   new[] { bbb, bii, bdd, bss }),
+                new DyadicOperatorDefinition(DyadicOperator.GreaterThan,         "({0}).CompareTo({1}) > 0",    new[] { bii, bdd, bss }),
+                new DyadicOperatorDefinition(DyadicOperator.GreaterThanOrEqual,  "({0}).CompareTo({1}) >= 0",   new[] { bii, bdd, bss }),
+                new DyadicOperatorDefinition(DyadicOperator.LessThan,            "({0}).CompareTo({1}) < 0",    new[] { bii, bdd, bss }),
+                new DyadicOperatorDefinition(DyadicOperator.LessThanOrEqual,     "({0}).CompareTo({1}) <= 0",   new[] { bii, bdd, bss }),
+                new DyadicOperatorDefinition(DyadicOperator.NotEqual,            "({0}).CompareTo({1}) != 0",   new[] { bbb, bii, bdd, bss })
             });
 
         }

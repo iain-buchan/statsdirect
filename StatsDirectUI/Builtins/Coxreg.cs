@@ -2440,13 +2440,13 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxBaselineToReport(ITemplateHost host, ParameterBag parameters)
         {
-            return RptCoxBaseline(host, parameters, false, "", false);
+            return RptCoxBaseline(host, parameters, false, string.Empty, false);
         }
 
 
         public static ParameterBag RptCoxBaselineToWorksheet(ITemplateHost host, ParameterBag parameters)
         {
-            return RptCoxBaseline(host, parameters, false, "", true);
+            return RptCoxBaseline(host, parameters, false, string.Empty, true);
         }
 
 

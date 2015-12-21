@@ -6,7 +6,8 @@
 
         public DataType DataType(DataType[] passedVariableTypes)
         {
-            return passedVariableTypes[Index];
+            // Index is 1-based, array indices in C# (hence passedVariableTypes) start from 0.
+            return passedVariableTypes[Index - 1];
         }
 
         public void Accept(IExpressionVisitor visitor)

@@ -353,7 +353,7 @@ namespace StatsDirect.Builtins
             const int k = 24;
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Title: " + v0.Title);
-            sb.AppendLine("");
+            sb.AppendLine(string.Empty);
             sb.AppendLine(Formatting.PadTo("Valid data", k) + sx.ValidData);
             sb.AppendLine(Formatting.PadTo("Missing", k) + sx.MissingData);
             sb.AppendLine(Formatting.PadTo("Sum", k) + Formatting.RoundOut(sx.Sum, flt));

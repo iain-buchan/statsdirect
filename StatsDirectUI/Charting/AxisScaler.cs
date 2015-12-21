@@ -502,7 +502,7 @@ namespace StatsDirect.Charting
                 maxc++;
             if (maxc > 6)
                 numberOfDecimalPlaces = -1;
-            string axisMaskReturn = "";
+            string axisMaskReturn = string.Empty;
             if (numberOfDecimalPlaces > 0)
                 axisMaskReturn = new string('#', maxc - 1) + "0." + new string('0', numberOfDecimalPlaces);
             else if (numberOfDecimalPlaces == 0)

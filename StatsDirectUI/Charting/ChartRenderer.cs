@@ -962,7 +962,7 @@ namespace StatsDirect.Charting
         private double DrawXScale(bool drawLabels, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
             double aint = 0;
-            string msk = "";
+            string msk = string.Empty;
             double labelHeight = 0;
 
             if (IsAscii || drawLabels)
@@ -4674,7 +4674,7 @@ namespace StatsDirect.Charting
                             savedLines.Insert(0, shTx[i]);
 
                         //  Separator
-                        savedLines.Insert(0, "");
+                        savedLines.Insert(0, string.Empty);
                     }
                 }
 
@@ -4960,7 +4960,7 @@ namespace StatsDirect.Charting
                 maxc++;
             if (maxc > 6)
                 dp = -1;
-            string msk = "";
+            string msk = string.Empty;
             if (dp > 0)
                 msk = new string('#', maxc - 1) + "0." + new string('0', dp);
             else if (dp == 0)
@@ -8086,7 +8086,7 @@ namespace StatsDirect.Charting
             // Draw the scale
             string xtxt = "Mean ((" + v0Title + " + " + v1Title + ") / 2)";
             string ytxt = "Difference (" + v0Title + " - " + v1Title + ")";
-            DrawAxesOrEnlargeCanvas("", new Axis(xtxt, AxisMode.Scale, 0, ScaleType.Linear), new Axis(ytxt, AxisMode.Scale, 0, ScaleType.Linear), false, false);
+            DrawAxesOrEnlargeCanvas(string.Empty, new Axis(xtxt, AxisMode.Scale, 0, ScaleType.Linear), new Axis(ytxt, AxisMode.Scale, 0, ScaleType.Linear), false, false);
 
             // Draw the titles
             int size2 = labelFont.Height * 2;
@@ -9603,7 +9603,7 @@ namespace StatsDirect.Charting
                         statsDirectCanvas.DrawLine(pooledEffectPen, xm, save_yc, xm, yt);
                     }
                     lab = "pooled " + qid + " = " + host.RoundU(rmh) + "  (" + Formatting.XRound(cco * 100, 1) + "% CI = " + host.RoundU(ll) + " to " + host.RoundU(ul) + ")";
-                    string xlab = cap.IndexOf("fixed", StringComparison.Ordinal) + 1 != 0 ? "" : "DL ";
+                    string xlab = cap.IndexOf("fixed", StringComparison.Ordinal) + 1 != 0 ? string.Empty : "DL ";
                     //  If hSS <> -99 Then Lab = xlab & Lab
                     lab = xlab + lab;
                     DrawStringLabel(lab, xAxisCanvas + xExtCanvas / 2, 50, StringAlignment.Center);

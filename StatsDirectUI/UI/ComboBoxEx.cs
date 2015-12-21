@@ -68,7 +68,7 @@ namespace StatsDirect.UI
         public int ImageIndex { get; set; }
 
         public ComboBoxExItem()
-            : this("")
+            : this(string.Empty)
         {
         }
 

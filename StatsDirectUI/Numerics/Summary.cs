@@ -93,7 +93,7 @@ namespace StatsDirect.Numerics
             else
             {
                 doUserCentL = false;
-                UserCentileLCaption = "";
+                UserCentileLCaption = string.Empty;
             }
             bool doUserCentU;
             if (userCentU > 0.0 && userCentU < 100.0)
@@ -104,7 +104,7 @@ namespace StatsDirect.Numerics
             else
             {
                 doUserCentU = false;
-                UserCentileUCaption = "";
+                UserCentileUCaption = string.Empty;
             }
             ValidData = rows;
             xs = new VarAndWeight[ValidData + 1]; // 1-based

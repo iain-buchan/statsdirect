@@ -19,10 +19,10 @@ namespace StatsDirect.UI
 
         private void SetupArrays()
         {
-            cboLineThickness.Items.Add(new ComboBoxExItem("", 0));
-            cboLineThickness.Items.Add(new ComboBoxExItem("", 1));
-            cboLineThickness.Items.Add(new ComboBoxExItem("", 2));
-            cboLineThickness.Items.Add(new ComboBoxExItem("", 3));
+            cboLineThickness.Items.Add(new ComboBoxExItem(string.Empty, 0));
+            cboLineThickness.Items.Add(new ComboBoxExItem(string.Empty, 1));
+            cboLineThickness.Items.Add(new ComboBoxExItem(string.Empty, 2));
+            cboLineThickness.Items.Add(new ComboBoxExItem(string.Empty, 3));
         }
 
         [Browsable(true)]

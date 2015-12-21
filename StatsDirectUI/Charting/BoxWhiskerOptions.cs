@@ -99,8 +99,8 @@ namespace StatsDirect.Charting
             } 
             else 
             { 
-                XAxisTitle = XAxisTitle.Replace( "%MEAN%", "" ); 
-                XAxisTitle = XAxisTitle.Replace( "%MEDIAN%", "" ); 
+                XAxisTitle = XAxisTitle.Replace( "%MEAN%", string.Empty ); 
+                XAxisTitle = XAxisTitle.Replace( "%MEDIAN%", string.Empty ); 
             } 
         } 
         

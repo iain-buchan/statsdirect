@@ -70,6 +70,7 @@
             <name>data</name>
             <prompt>Select the cells within which you want to search</prompt>
             <clear-selection-first>false</clear-selection-first>
+            <must-request>true</must-request>
             <mode>NumericReplaceMissing</mode>
             <min-columns>1</min-columns>
             <max-columns>1024</max-columns>
@@ -82,6 +83,7 @@
             <name>data</name>
             <prompt>Select the cells within which you want to search</prompt>
             <clear-selection-first>false</clear-selection-first>
+            <must-request>true</must-request>
             <mode>TextNoTitles</mode>
             <min-columns>1</min-columns>
             <max-columns>1024</max-columns>
@@ -90,7 +92,18 @@
       </iffalse>
     </test>
     <builtin function-name="shtFindAndReplaceAdvanced"/>
-    <output-frame frame-name="output" keep-selection="true" default-placement="ReplaceSelection"/>
+    <test>
+      <condition>="count".Equals(parameters["action"].AsString)</condition>
+      <iftrue>
+        <script language="C#"><![CDATA[
+        System.Windows.Forms.MessageBox.Show(parameters["matches"].AsInt32.ToString() + " cells match your search", "StatsDirect", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+        return new ParameterBag();
+        ]]></script>
+      </iftrue>
+      <iffalse>
+        <output-frame frame-name="output" keep-selection="true" default-placement="ReplaceSelection"/>
+      </iffalse>
+    </test>
   </steps>
   <suggested-operations>
     <suggested-operation>SearchAndReplaceAdvanced</suggested-operation>

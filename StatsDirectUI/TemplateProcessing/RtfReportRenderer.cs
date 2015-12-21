@@ -125,7 +125,7 @@ namespace StatsDirect.TemplateProcessing
                     }
                     else
                     {
-                        string value = "";
+                        string value = string.Empty;
                         if (null != pair.Value && pair.Value.HasData)
                             value = pair.Value.Data.ToString();
                         template = template.Replace("/*" + pair.Key + "/", value);
@@ -136,7 +136,7 @@ namespace StatsDirect.TemplateProcessing
                 {
                     string nestedTemplate = FindNestedTemplate(template, null);
                     if (null != nestedTemplate)
-                        template = template.Replace(nestedTemplate, "");
+                        template = template.Replace(nestedTemplate, string.Empty);
                 }
             }
             return template;
@@ -162,7 +162,7 @@ namespace StatsDirect.TemplateProcessing
             }
 
             // We now have a naked template.  Replicate it the appropriate number of times, and fill it in.
-            string filledValue = "";
+            string filledValue = string.Empty;
             if (null != substitutions)
             {
                 foreach (ParameterBag substitutionDictionary in substitutions)
@@ -181,7 +181,7 @@ namespace StatsDirect.TemplateProcessing
         /// <returns></returns>
         private static string FindNestedTemplate(string template, string templateName)
         {
-            string searchSuffix = "";
+            string searchSuffix = string.Empty;
             if (null != templateName)
                 searchSuffix = ((0 == templateName.Length) ? templateName : " " + templateName) + "/";
 

@@ -135,7 +135,7 @@ namespace StatsDirect.Builtins
                 groupsParameters.AddOutput("group", host.RoundU(asm[j]));
                 groupsParameters.AddOutput("observed", spop[j].ToString());
                 groupsParameters.AddOutput("expected", host.RoundU(spop[j] * asm[j]));
-                groupsParameters.AddOutput("lb", stratlab ? title[j] : "");
+                groupsParameters.AddOutput("lb", stratlab ? title[j] : string.Empty);
             }
             outputParameters.AddOutput("total", etot.ToString());
 
@@ -513,8 +513,8 @@ namespace StatsDirect.Builtins
                 // Poisson rate CI
                 poisson_ci(alpha, asum, pt1Sum, out crel, out creu);
                 poisson_ci(alpha, bsum, pt2Sum, out crnel, out crneu);
-                warn1 = "";
-                warn2 = "";
+                warn1 = string.Empty;
+                warn2 = string.Empty;
             }
             else
             {
@@ -736,7 +736,7 @@ namespace StatsDirect.Builtins
                 strataParameters.AddOutput("pt1", pt1[i].ToString());
                 strataParameters.AddOutput("b", b[i].ToString());
                 strataParameters.AddOutput("pt2", pt2[i].ToString());
-                tmp = stratlab ? title[i] : "";
+                tmp = stratlab ? title[i] : string.Empty;
                 strataParameters.AddOutput("lb", tmp);
             }
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
@@ -753,7 +753,7 @@ namespace StatsDirect.Builtins
                 ratesParameters.AddOutput("lci", host.RoundU(rkrl[i]));
                 ratesParameters.AddOutput("uci", host.RoundU(rkru[i]));
                 ratesParameters.AddOutput("wt", host.RoundU(rkw[i]));
-                tmp = stratlab ? title[i] : "";
+                tmp = stratlab ? title[i] : string.Empty;
                 ratesParameters.AddOutput("lb", tmp);
             }
 

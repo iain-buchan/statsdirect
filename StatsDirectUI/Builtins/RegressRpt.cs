@@ -79,7 +79,7 @@ namespace StatsDirect.Builtins
             double devssq = totssq - regssq - rsdssq;
             double vr = regssq / (rsdssq / (totny - nx));
             double P = PDF.fvalp(vr, 1.0, totny - nx);
-            string Q2 = P > 0.05 ? "NOT " : "";
+            string Q2 = P > 0.05 ? "NOT " : string.Empty;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("reg_ssq", host.RoundU(regssq));
             outputParameters.AddOutput("reg_df", "1");
@@ -88,7 +88,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("reg_p", host.pval(P));
             vr = (devssq / Convert.ToDouble(nx - 2)) / (rsdssq / (totny - nx));
             P = PDF.fvalp(vr, nx - 2, totny - nx);
-            string Q = P <= 0.05 ? "NOT " : "";
+            string Q = P <= 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("dev_ssq", host.RoundU(devssq));
             outputParameters.AddOutput("dev_df", (nx - 2).ToString());
             outputParameters.AddOutput("dev_msq", host.RoundU(devssq / Convert.ToDouble(nx - 2)));
@@ -199,7 +199,7 @@ namespace StatsDirect.Builtins
             double residmsq = residssq / (grandn - 2 * k);
             double vr = comssq / (residssq / (grandn - 2 * k));
             double p = PDF.fvalp(vr, 1.0, grandn - 2 * k);
-            string Q = p > 0.05 ? "NOT " : "";
+            string Q = p > 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("com_ssq", host.RoundU(comssq));
             outputParameters.AddOutput("com_df", "1");
             outputParameters.AddOutput("com_msq", host.RoundU(comssq));
@@ -207,7 +207,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("com_p", host.pval(p));
             vr = (btwnssq / Convert.ToDouble(k - 1)) / (residssq / (grandn - 2 * k));
             p = PDF.fvalp(vr, k - 1, grandn - 2 * k);
-            string q2 = p > 0.05 ? "NOT " : "";
+            string q2 = p > 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("bet_ssq", host.RoundU(btwnssq));
             outputParameters.AddOutput("bet_df", (k - 1).ToString());
             outputParameters.AddOutput("bet_msq", host.RoundU(btwnssq / Convert.ToDouble(k - 1)));
@@ -288,7 +288,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("cr_with_msq", host.RoundU(cssw / crWithDf));
             outputParameters.AddOutput("cr_tot_ssq", host.RoundU(csst));
             outputParameters.AddOutput("cr_tot_df", (tnx - 2).ToString());
-            Q = p <= 0.05 ? "NOT " : "";
+            Q = p <= 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("p", host.pval(p));
             double bs = sxyw / sxxw;
             outputParameters.AddOutput("x_mean", host.RoundU(mx0));
@@ -468,7 +468,7 @@ namespace StatsDirect.Builtins
 
             double lrx2 = Math.Abs(devx - dev);
 
-            string warn = "";
+            string warn = string.Empty;
             switch (ifault)
             {
                 case 1:

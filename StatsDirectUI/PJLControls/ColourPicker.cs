@@ -653,7 +653,7 @@ namespace StatsDirect.PJLControls
         /// </summary>
         public void Reset_Text()
         {
-            base.Text = "";
+            base.Text = string.Empty;
         }
 
         /// <summary>

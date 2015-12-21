@@ -382,7 +382,7 @@ namespace StatsDirect.UI
                 for (int i = 0; i < ccs.NonHiddenRowCount; i++)
                 {
                     string t = columnArray[i];
-                    string bufr = (null == t) ? "" : t.Trim();
+                    string bufr = (null == t) ? string.Empty : t.Trim();
                     hold[rx++, c] = bufr;
                 }
                 // Fill in blanks for any rows that have been filtered out

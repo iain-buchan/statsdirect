@@ -18,7 +18,7 @@ namespace StatsDirect.UI
 
         public override string ToString()
         {
-            string renderedPosition = "";
+            string renderedPosition = string.Empty;
             switch (WritePosition)
             {
                 case RelativePosition.FirstColumn:

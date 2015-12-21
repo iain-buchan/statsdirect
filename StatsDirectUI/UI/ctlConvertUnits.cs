@@ -123,7 +123,7 @@ namespace StatsDirect.UI
             else
             {
                 Conversion conversion = (Conversion)cboConversion.SelectedItem;
-                Calcit c = new Calcit(conversion.Expression, new DataType[] { DataType.Double });
+                Calcit c = new Calcit(conversion.Expression, new DataType[] { DataType.Double }, false);
                 double[] x = new double[1];
                 x[0] = from;
                 txtTo.Text = c.Evaluate(x).ToString();

@@ -209,5 +209,10 @@ namespace StatsDirect.Data
         ///  <returns></returns>
         ///  <remarks></remarks>
         protected abstract bool HasData { get; }
+
+        /// <summary>
+        /// Polymorphism: return the ith element of this variable's data encapsulated as an object.
+        /// </summary>
+        public abstract object DataAsObject(int i);
     }
 }

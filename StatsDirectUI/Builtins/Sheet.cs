@@ -77,7 +77,7 @@ namespace StatsDirect.Builtins
 
             double currentval = startval;
             DoubleVariable v = new DoubleVariable(rows, title);
-            Calcit c = new Calcit(formula, new DataType[] { DataType.Double });
+            Calcit c = new Calcit(formula, new DataType[] { DataType.Double }, false);
             DataFrame outputFrame = new DataFrame(v);
             double[] x = new double[1];
             for (int i = 0; i < rows; i++)
@@ -97,7 +97,7 @@ namespace StatsDirect.Builtins
             string[] splitConversion = conversion.Split('|');
             string formula = splitConversion[0];
             string outputUnits = splitConversion[1];
-            Calcit c = new Calcit(formula, new DataType[] { DataType.Double });
+            Calcit c = new Calcit(formula, new DataType[] { DataType.Double }, false);
             double[] x = new double[1];
 
             DataFrame dataFrame = parameters["data"].AsDataFrame;
@@ -172,7 +172,7 @@ namespace StatsDirect.Builtins
             double userNumber = parameters.ContainsKey("missing-double") ? parameters["missing-double"].AsDouble : Constant.MISSING;
             string userText = parameters.ContainsKey("missing-text") && parameters["missing-text"].AsString.Trim().Length > 0
                                   ? parameters["missing-text"].AsString
-                                  : "";
+                                  : string.Empty;
             for (int c = 0; c <= totcols - 1; c++)
             {
                 StringVariable v = data.Variables[c].AsStringVariable;
@@ -180,7 +180,7 @@ namespace StatsDirect.Builtins
                 for (r = 0; r <= totrows - 1; r++)
                 {
                     rx++;
-                    hold[rx, c] = ((v.Length <= r) || IsMissing(v.Data[r], userNumber, userText)) ? "" : v.Data[r];
+                    hold[rx, c] = ((v.Length <= r) || IsMissing(v.Data[r], userNumber, userText)) ? string.Empty : v.Data[r];
                 }
                 hold[0, c] = v.Title;
             }
@@ -499,12 +499,14 @@ namespace StatsDirect.Builtins
 
         internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
         {
-            DataFrame dataFrame = parameters["data"].AsDataFrame;
+            DataFrame inputFrame = parameters["data"].AsDataFrame;
             bool isNumeric = "numeric".Equals(parameters["search-type"].AsString);
             string searchRule = parameters["search-rule"].AsString;
             string userSearchExpression = parameters["search-expression"].AsString;
             string action = parameters["action"].AsString;
             string replaceExpression = parameters.ContainsKey("replace-expression") ? parameters["replace-expression"].AsString : null;
+
+            DataType inputType = isNumeric ? DataType.Double : DataType.String;
 
             // Use the expression parser and evaluator to make this simple
             string wrappedUserSearchExpression = isNumeric ? userSearchExpression : ("\"" + userSearchExpression.Replace("\"", "\"\"") + "\"");
@@ -535,17 +537,74 @@ namespace StatsDirect.Builtins
                 default:
                     throw new Exception("Unknown operation");
             }
-            Calcit searcher = new Calcit(searchExpression, new DataType[] { DataType.Double });
+            Calcit searcher = new Calcit(searchExpression, new DataType[] { inputType }, true);
+            if (searcher.OutputType != DataType.Boolean)
+                throw new Exception("Please specify a valid search expression");
 
-            foreach (Variable inputVariable in dataFrame.Variables)
+            // Output
+            bool counting = "count".Equals(action);
+            bool deletingCells = "delete-cells".Equals(action);
+            bool deletingRows = "delete-rows".Equals(action);
+            bool replacingWithValue = "replace-value".Equals(action);
+            bool replacingWithExpression = "replace-expression".Equals(action);
+
+            Calcit replacer = null;
+            if (replacingWithExpression)
+                replacer = new Calcit(replaceExpression, new DataType[] { inputType }, true);
+
+            DataFrame outputFrame = new DataFrame();
+            bool[] rowsToDelete = new bool[inputFrame.MaxRows];
+            int matches = 0;
+            object[] values = new object[1];
+            foreach (Variable inputVariable in inputFrame.Variables)
             {
-                double[] values = new double[1];
-                for (int i = 0; i < inputVariable.Length; i++)
+                VariantVariable outputVariable = new VariantVariable(inputVariable.Length, inputVariable.Title);
+                outputFrame.Variables.Add(outputVariable);
+                int outputIndex = 0;
+                for (int inputIndex = 0; inputIndex < inputVariable.Length; inputIndex++)
                 {
-                    double result = searcher.Evaluate(values);
+                    values[0] = inputVariable.DataAsObject(inputIndex);
+                    bool isMatch = (bool)searcher.EvaluateObject(values);
+                    if (isMatch)
+                    {
+                        matches++; // In case counting - faster to just do this than branch and cause a bubble in the CPU pipeline.
+                        // If deleting matching cells, do nothing - this avoids copying the value to the output, effectively deleting it.
+                        rowsToDelete[inputIndex] = true; // In case deleting rows - probably faster to just do this than branch.
+                        if (replacingWithValue)
+                            outputVariable.Data[outputIndex++] = replaceExpression;
+                        else if (replacingWithExpression)
+                        {
+                            // values still holds the value we need; we can simply re-use it.
+                            outputVariable.Data[outputIndex++] = replacer.EvaluateObject(values);
+                        }
+                    }
+                    else
+                    {
+                        outputVariable.Data[outputIndex++] = inputVariable.DataAsObject(inputIndex);
+                    }
+                }
+                // If deleting cells, the output variable may well be shorter than the input.
+                if (deletingCells)
+                    outputVariable.TruncateDataToLength(outputIndex);
+            }
+
+            // If deleting rows, knock out any that have been detected.
+            if (deletingRows)
+            {
+                foreach (VariantVariable vv in outputFrame.Variables)
+                {
+                    int outputLocation = 0;
+                    for (int i = 0; i < vv.Length; i++)
+                        if (!rowsToDelete[i])
+                            vv.Data[outputLocation++] = vv.Data[i];
+                    vv.TruncateDataToLength(outputLocation);
                 }
             }
-            throw new NotImplementedException();
+
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("matches", matches);
+            outputParameters.AddOutput("output", outputFrame);
+            return outputParameters;
         }
 
         public static ParameterBag ShtStandardize(ITemplateHost host, ParameterBag parameters)
@@ -609,13 +668,11 @@ namespace StatsDirect.Builtins
                 int ierr;
                 MathDbl.ecdf(inputVariable.Data, outputVariable.Data, out ierr);
                 if (ierr == 1)
-                {
                     throw new ArgumentException("Must have at least 3 data values to calculate empirical CDF");
-                }
             }
             else
             {
-                for (int c = 0; c <= inputVariable.Length - 1; c++)
+                for (int c = 0; c < inputVariable.Length; c++)
                 {
                     double x = inputVariable.Data[c];
                     if (inputVariable.Data[c] != Constant.MISSING)
@@ -625,23 +682,15 @@ namespace StatsDirect.Builtins
                         {
                             case 1:
                                 if (sd != 0.0)
-                                {
                                     tr = (x - mean) / sd;
-                                }
                                 else
-                                {
                                     tr = Constant.MISSING;
-                                }
                                 break;
                             case 2:
                                 if (sd != 0.0)
-                                {
                                     tr = x / sd;
-                                }
                                 else
-                                {
                                     tr = Constant.MISSING;
-                                }
                                 break;
                             default:
                                 tr = x - mean;
@@ -676,12 +725,11 @@ namespace StatsDirect.Builtins
 
             DataFrame data = parameters["data"].AsDataFrame;
             foreach (Variable v in data.Variables)
-            {
                 totrows += v.Length;
-            }
+
             // reconstitute original labels if split using split function --->
             bool ok = true;
-            for (int c = 0; c <= data.VariableCount - 1; c++)
+            for (int c = 0; c < data.VariableCount; c++)
             {
                 DoubleVariable v = data.Variables[c].AsDoubleVariable;
                 ep = v.Title.IndexOf("=", StringComparison.Ordinal);
@@ -742,7 +790,6 @@ namespace StatsDirect.Builtins
         
         public static ParameterBag ShtDates(ITemplateHost host, ParameterBag parameters)
         {
-
             DataFrame data = parameters["data"].AsDataFrame;
             DateVariable inputVariable = data.Variables[0].AsDateVariable;
 
@@ -776,21 +823,16 @@ namespace StatsDirect.Builtins
                     throw new ArgumentException("parameters[interval]: Unexpected interval", "parameters");
             }
 
-
             string outputTitle = inputVariable.Title + "~" + q + " from " + indate;
             DataFrame outputFrame = new DataFrame();
             DoubleVariable outputVariable = new DoubleVariable(inputVariable.Length, outputTitle);
             outputFrame.Variables.Add(outputVariable);
-            for (int i = 0; i <= inputVariable.Length - 1; i++)
+            for (int i = 0; i < inputVariable.Length; i++)
             {
                 if (inputVariable.Data[i] == DateTime.MinValue)
-                {
-                    outputVariable.SetData(i, Constant.MISSING);
-                }
+                    outputVariable.Data[i] = Constant.MISSING;
                 else
-                {
                     outputVariable.Data[i] = DateAndTime.DateDiff(interval, indate, inputVariable.Data[i]);
-                }
             }
 
             ParameterBag outputParameters = new ParameterBag();
@@ -879,34 +921,25 @@ namespace StatsDirect.Builtins
         
         public static ParameterBag ShtNormal(ITemplateHost host, ParameterBag parameters)
         {
-            int n;
-            int method; int nx = 0;
-            int cx = 0; int c;
-            double den;
-
             string lab = parameters["method"].AsString;
+            int method;
             if ("vdW".Equals(lab))
-            {
                 method = 1;
-            }
             else if ("Blom".Equals(lab))
-            {
                 method = 2;
-            }
             else
-            {
                 method = 3;
-            }
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
             int rows = dataVariable.Length;
             double[] prk = new double[rows + 1 ];
-            for (n = 1; n <= rows; n++)
+            int nx = 0;
+            for (int n = 0; n < rows; n++)
             {
-                if (dataVariable.Data[n - 1] != Constant.MISSING)
+                if (dataVariable.Data[n] != Constant.MISSING)
                 {
-                    nx = nx + 1;
-                    prk[nx] = dataVariable.Data[n - 1];
+                    nx++;
+                    prk[nx] = dataVariable.Data[n];
                 }
             }
             double[] r = new double[nx + 1 ];
@@ -924,19 +957,17 @@ namespace StatsDirect.Builtins
             DataFrame outputFrame = new DataFrame();
             DoubleVariable outputVariable = new DoubleVariable(rows, pre + dataVariable.Title);
             outputFrame.Variables.Add(outputVariable);
+            double den;
             if (method == 1)
-            {
                 den = Convert.ToDouble(rows + 1L);
-            }
             else
-            {
                 den = Convert.ToDouble(rows) + 1.0 / 4.0;
-            }
-            for (c = 1; c <= rows; c++)
+            int cx = 0;
+            for (int c = 0; c < rows; c++)
             {
-                if (dataVariable.Data[c - 1] != Constant.MISSING)
+                if (dataVariable.Data[c] != Constant.MISSING)
                 {
-                    cx = cx + 1;
+                    cx++;
                     double tr;
                     int ifault;
                     switch (method)
@@ -945,17 +976,13 @@ namespace StatsDirect.Builtins
                             // van der Waerden, Conover P396
                             tr = PDF.gauinv(r[cx] / den, out ifault);
                             if (ifault != 0)
-                            {
                                 tr = Constant.MISSING;
-                            }
                             break;
                         case 2:
                             // Blom
                             tr = PDF.gauinv((r[cx] - 3.0 / 8.0) / den, out ifault);
                             if (ifault != 0)
-                            {
                                 tr = Constant.MISSING;
-                            }
                             break;
                         default:
                             // expected normal order
@@ -963,11 +990,11 @@ namespace StatsDirect.Builtins
                             break;
                     }
 
-                    outputVariable.SetData(c - 1, tr == Constant.MISSING ? Constant.MISSING : tr);
+                    outputVariable.Data[c] = tr == Constant.MISSING ? Constant.MISSING : tr;
                 }
                 else
                 {
-                    outputVariable.SetData(c - 1, Constant.MISSING);
+                    outputVariable.Data[c] = Constant.MISSING;
                 }
             }
 
@@ -990,7 +1017,6 @@ namespace StatsDirect.Builtins
         {
             return ShtPair(host, parameters, 3);
         }
-
 
         ///  <param name="parameters"></param>
         /// <param name="index">1 = differences, 2 = means, 3 = slopes</param>
@@ -1131,14 +1157,10 @@ namespace StatsDirect.Builtins
                         {
                             Debug.Assert(y != null, "y != null");
                             if (x[i] == Constant.MISSING || y[j] == Constant.MISSING)
-                            {
                                 outputVariable.SetData(cnt, Constant.MISSING);
-                            }
                             else
-                            {
                                 outputVariable.SetData(cnt, x[i] - y[j]);
-                            }
-                            cnt = cnt + 1;
+                            cnt++;
                         }
                     }
                     break;
@@ -1148,14 +1170,10 @@ namespace StatsDirect.Builtins
                         for (j = i; j <= rows; j++)
                         {
                             if (x[i] == Constant.MISSING)
-                            {
                                 outputVariable.SetData(cnt, Constant.MISSING);
-                            }
                             else
-                            {
                                 outputVariable.SetData(cnt, (x[i] + x[j]) / 2.0);
-                            }
-                            cnt = cnt + 1;
+                            cnt++;
                         }
                     }
                     break;
@@ -1168,14 +1186,10 @@ namespace StatsDirect.Builtins
                             if (x[i] != x[j])
                             {
                                 if (x[i] == Constant.MISSING || y[j] == Constant.MISSING || x[i] - x[j] == 0.0)
-                                {
                                     outputVariable.SetData(cnt, Constant.MISSING);
-                                }
                                 else
-                                {
                                     outputVariable.SetData(cnt, (y[i] - y[j]) / (x[i] - x[j]));
-                                }
-                                cnt = cnt + 1;
+                                cnt++;
                             }
                         }
                     }
@@ -1215,21 +1229,13 @@ namespace StatsDirect.Builtins
                             int si = Convert.ToInt32(0.5 * Convert.ToDouble(cnt + ix));
                             double imdn = 0.5 * Convert.ToDouble(cnt + 1);
                             if (imdn < 1.0)
-                            {
                                 imdn = 1.0;
-                            }
                             if (imdn > cnt)
-                            {
                                 imdn = cnt;
-                            }
                             if (imdn - Math.Floor(imdn) == 0.0)
-                            {
                                 mdn = pws[Convert.ToInt32(imdn)];
-                            }
                             if (imdn - Math.Floor(imdn) != 0.0)
-                            {
                                 mdn = pws[((int)(Math.Floor(imdn)))] + (pws[Convert.ToInt32(Math.Floor(imdn) + 1.0)] - pws[((int)(Math.Floor(imdn)))]) * (imdn - Math.Floor(imdn));
-                            }
                             double lci = pws[ri];
                             double uci = pws[si];
                             t = t + " [Median slope (" + Formatting.XRound(gamma * 100, 2) + "% CI)= " + host.RoundU(mdn) + " (" + host.RoundU(lci) + " to " + host.RoundU(uci) + ")]";
@@ -1278,7 +1284,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndCauchy(host, rows, cols, l, s, seed));
         }
 
-
         public static ParameterBag ShtRndChiSquare(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1288,7 +1293,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndChi(host, rows, cols, df, seed));
         }
 
-
         public static ParameterBag ShtRndExponential(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1297,7 +1301,6 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             return WrapFrame("output", Random.rndExpo(host, rows, cols, xm, seed));
         }
-
 
         public static ParameterBag ShtRndF(ITemplateHost host, ParameterBag parameters)
         {
@@ -1309,7 +1312,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndF(host, rows, cols, dfn, dfd, seed));
         }
 
-
         public static ParameterBag ShtRndGamma(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1320,7 +1322,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndGamma(host, rows, cols, a, b, seed));
         }
 
-
         public static ParameterBag ShtRndGeometric(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1329,7 +1330,6 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             return WrapFrame("output", Random.rndGeom(host, rows, cols, p, seed));
         }
-
 
         public static ParameterBag ShtRndLogit(ITemplateHost host, ParameterBag parameters)
         {
@@ -1341,7 +1341,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndLogit(host, rows, cols, mu, sigma, seed));
         }
 
-
         public static ParameterBag ShtRndLogNormal(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1351,7 +1350,6 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             return WrapFrame("output", Random.rndLogNorm(host, rows, cols, xm, sd, seed));
         }
-
 
         public static ParameterBag ShtRndNegativeBinomial(ITemplateHost host, ParameterBag parameters)
         {
@@ -1363,7 +1361,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndNegBin(host, rows, cols, n, p, seed));
         }
 
-
         public static ParameterBag ShtRndNormal(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1374,7 +1371,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndNorm(host, rows, cols, xm, sd, seed));
         }
 
-
         public static ParameterBag ShtRndPoisson(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1383,7 +1379,6 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             return WrapFrame("output", Random.rndPoisson(host, rows, cols, xm, seed));
         }
-
 
         public static ParameterBag ShtRndT(ITemplateHost host, ParameterBag parameters)
         {
@@ -1394,7 +1389,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndT(host, rows, cols, df, seed));
         }
 
-
         public static ParameterBag ShtRndUniform01(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1402,7 +1396,6 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             return WrapFrame("output", Random.rndUni(host, rows, cols, Constant.MISSING, Constant.MISSING, false, seed));
         }
-
 
         public static ParameterBag ShtRndUniformAB(ITemplateHost host, ParameterBag parameters)
         {
@@ -1415,7 +1408,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndUni(host, rows, cols, a, b, isCount, seed));
         }
 
-
         public static ParameterBag ShtRndWeibull(ITemplateHost host, ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
@@ -1426,7 +1418,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.rndWeibull(host, rows, cols, a, b, seed));
         }
 
-
         private static ParameterBag WrapFrame(string name, DataFrame frame)
         {
             ParameterBag outputParameters = new ParameterBag();
@@ -1434,54 +1425,42 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static ParameterBag ShtRank(ITemplateHost host, ParameterBag parameters)
         {
-            int c; int cx = 0;
-            int nx = 0;
-            double tie;
-            string temp;
-
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
             int q = Parsing.Cint_Txt(parameters["tie-correction"].AsString);
             int rows = inputVariable.Length;
             double[] prk = new double[rows + 1 ];
+            int nx = 0;
             foreach (double value in inputVariable.Data)
             {
                 if (value != Constant.MISSING)
                 {
-                    nx = nx + 1;
+                    nx++;
                     prk[nx] = value;
                 }
             }
             double[] r = new double[nx + 1 ];
+            double tie;
             ExFortran.Rank(prk, r, 1, nx, q, out tie);
-            const string pre = "Rank: ";
-            if (q < 2)
-            {
-                temp = "";
-            }
-            else { temp = " [tie correction = " + tie.ToString() + "]"; }
-            string title = pre + inputVariable.Title + temp;
+            string title = "Rank: " + inputVariable.Title + ((q < 2) ? string.Empty : " [tie correction = " + tie.ToString() + "]");
             DataFrame outputFrame = new DataFrame();
             DoubleVariable outputVariable = new DoubleVariable(rows, title);
             outputFrame.Variables.Add(outputVariable);
-            for (c = 1; c <= rows; c++)
+            int cx = 0;
+            for (int c = 0; c < rows; c++)
             {
-                if (inputVariable.Data[c - 1] != Constant.MISSING)
+                if (inputVariable.Data[c] != Constant.MISSING)
                 {
-                    cx = cx + 1;
-                    outputVariable.SetData(c - 1, r[cx] == Constant.MISSING ? Constant.MISSING : r[cx]);
+                    cx++;
+                    outputVariable.SetData(c, r[cx] == Constant.MISSING ? Constant.MISSING : r[cx]);
                 }
                 else
-                {
-                    outputVariable.SetData(c - 1, Constant.MISSING);
-                }
+                    outputVariable.SetData(c, Constant.MISSING);
             }
             return WrapFrame("output", outputFrame);
         }
-
 
         ///  <summary>
         ///  Assumes the input is a frame of string variables.  Returns a frame mirrored around x=y.
@@ -1503,9 +1482,7 @@ namespace StatsDirect.Builtins
                 {
                     StringVariable inv = data.Variables[col].AsStringVariable;
                     if (inv.Length > row)
-                    {
                         v.SetData(col, inv.Data[row]);
-                    }
                 }
             }
             return WrapFrame("output", outputFrame);
@@ -1516,13 +1493,9 @@ namespace StatsDirect.Builtins
             private static int Compare(double x, double y)
             {
                 if (x > y)
-                {
                     return 1;
-                }
                 if (x == y)
-                {
                     return 0;
-                }
                 return -1;
             }
 
@@ -1533,7 +1506,6 @@ namespace StatsDirect.Builtins
             }
 
         }
-
 
         private class DoubleDescending : IComparer<double>
         {
@@ -1602,7 +1574,6 @@ namespace StatsDirect.Builtins
                 Array.Sort(dataArray, 0, nx, comp);
             }
 
-
             DataFrame outputFrame = new DataFrame();
             DoubleVariable outputVariable = new DoubleVariable(dataArray, t);
             outputVariable.TruncateDataToLength(nx);
@@ -1622,7 +1593,7 @@ namespace StatsDirect.Builtins
             DataType[] dataTypes = new DataType[cols];
             for (int col = 0; col < cols; col++)
                 dataTypes[col] = DataType.Double;
-            Calcit clc = new Calcit(expression, dataTypes);
+            Calcit clc = new Calcit(expression, dataTypes, false);
 
             double[] x = new double[cols];
             SortPair[] sortArray = new SortPair[rows];
@@ -1943,9 +1914,7 @@ namespace StatsDirect.Builtins
                 int err;
                 MathDbl.zscore(inputData, ref fn, true, out err);
                 if (err == 0)
-                {
                     return WrapDoubleVariable(fn, "Z score (ECDF): " + inputVariable.Title);
-                }
                 throw new ArgumentException("Insufficient data");
             }
             throw new ArgumentException("Unknown index");
@@ -1964,9 +1933,7 @@ namespace StatsDirect.Builtins
                     {
                         allMissing = false;
                         if (Math.Abs(v) > maxi)
-                        {
                             maxi = Math.Abs(v);
-                        }
                     }
                 }
                 return allMissing ? Constant.MISSING : maxi;
@@ -2041,7 +2008,7 @@ namespace StatsDirect.Builtins
                 DataFrame identifiersFrame = parameters["identifiers"].AsDataFrame;
 
                 int cols = identifiersFrame.VariableCount;
-                string l = "";
+                string l = string.Empty;
                 /* #537: Always use X1, X2 etc.
                 if (cols == 1)
                 {
@@ -2237,12 +2204,12 @@ namespace StatsDirect.Builtins
                 }
                 string valuesTitle = categoriesVariable.Title;
                 if (valuesTitle.EndsWith("_Individual"))
-                    valuesTitle = valuesTitle.Replace("_Individual", "");
+                    valuesTitle = valuesTitle.Replace("_Individual", string.Empty);
                 else
                     valuesTitle += "_Grouped";
                 string frequenciesTitle = categoriesVariable.Title;
                 if (frequenciesTitle.EndsWith("_Individual"))
-                    frequenciesTitle = frequenciesTitle.Replace("_Individual", "");
+                    frequenciesTitle = frequenciesTitle.Replace("_Individual", string.Empty);
                 StringVariable valuesVariable = new StringVariable(outputValues, valuesTitle);
                 DoubleVariable frequenciesVariable = new DoubleVariable(outputFrequencies, frequenciesTitle);
                 DataFrame outputFrame = new DataFrame();
@@ -2364,7 +2331,7 @@ namespace StatsDirect.Builtins
             {
                 string title = labelsOrNull.Title;
                 if (title.EndsWith("_Grouped"))
-                    title = title.Replace("_Grouped", "");
+                    title = title.Replace("_Grouped", string.Empty);
                 else
                     title += "_Individual";
                 outputLabels = new StringVariable(totalOutputRows, title);
@@ -2610,7 +2577,7 @@ namespace StatsDirect.Builtins
                 if (double.TryParse(x, out numericX) && double.TryParse(y, out numericY))
                     lower = numericX <= numericY;
                 else
-                    lower = String.CompareOrdinal(x, y) < 0;
+                    lower = string.CompareOrdinal(x, y) < 0;
 
                 return lower ? -1 : 1;
             }

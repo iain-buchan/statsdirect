@@ -165,7 +165,7 @@ return.item.to.statsdirect <- function(result, op, prefix) {
 return.list.to.statsdirect <- function(result, op, prefix) {
   lapply(seq_along(result),
     function(ind, list, names, op, prefix) {
-      n <- if (is.null(names) || names[ind] == "") ind else names[ind]
+      n <- if (is.null(names) || names[ind] == string.Empty) ind else names[ind]
       return.item.to.statsdirect(list[[ind]], op, statsdirect.mkname(prefix, n))
     },
     list = result,

@@ -576,7 +576,7 @@ namespace StatsDirect.Builtins
             // first do the pca to check for scale reversal like Stata alpha command without the asis subcommand
             x_principal(N, ref nx, ref x, out xc, out xr, out u, out w, out v, ref irv, ref ifault);
             bool signrev = false;
-            string revlab = "";
+            string revlab = string.Empty;
             x_pscore1_corr(N, nx, x, v, irv, revx);
             for (i = 1; i <= N; i++)
             {
@@ -811,7 +811,7 @@ namespace StatsDirect.Builtins
             context.Y = new double[context.N + 1 ];
             context.S = new double[context.N + 1 ];
             context.outcomeTitle = outcomeVariable.Title;
-            context.weightTitle = weighted ? weightsVariable.Title : "";
+            context.weightTitle = weighted ? weightsVariable.Title : string.Empty;
             if (calculateIntercept)
             {
                 // intercept
@@ -880,7 +880,7 @@ namespace StatsDirect.Builtins
             int nrmiss = 0;
             double rdf = 0; double rss = 0;
             double s;
-            context.warn = "";
+            context.warn = string.Empty;
             int original_p = P;
             SEB = new double[P + 1 ];
             bd = new double[P * P + 1];
@@ -1179,7 +1179,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        colParameters.AddOutput("rp", "");
+                        colParameters.AddOutput("rp", string.Empty);
                     }
                     colParameters.AddOutput("t", host.RoundU(t));
                     colParameters.AddOutput("p", host.pval(prob));
@@ -1338,7 +1338,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                extra = "";
+                extra = string.Empty;
             }
             outputParameters.AddOutput("r", host.RoundU(r) + extra);
             outputParameters.AddOutput("r2", host.RoundU(r2 * 100) + "%");
@@ -1396,7 +1396,7 @@ namespace StatsDirect.Builtins
                 ParameterBag xParameters = new ParameterBag();
                 xParameters.AddOutput("x", context.Titles[i - iq] + " = " + host.RoundU(newx[i]));
             }
-            string msg = lsqmean ? "  (least squares mean)" : "";
+            string msg = lsqmean ? "  (least squares mean)" : string.Empty;
             outputParameters.AddOutput("y", context.outcomeTitle + " = " + host.RoundU(newy) + msg);
             double rdf = Convert.ToDouble((context.N - 1) - (context.P - 1));
             double rss = context.SSY - context.SSREG;
@@ -1564,7 +1564,7 @@ namespace StatsDirect.Builtins
                         vifList.Add(vifParameters);
                         vifParameters.AddOutput("label", ti[i]);
                         vifParameters.AddOutput("vif", host.RoundU(vif2[i]));
-                        vifParameters.AddOutput("x", vif2[i] > 20.0 ? Formatting.ASTERISK : "");
+                        vifParameters.AddOutput("x", vif2[i] > 20.0 ? Formatting.ASTERISK : string.Empty);
                         vifParameters.AddOutput("rvif", host.RoundU(1.0 / vif2[i]));
                     }
                 }
@@ -1619,7 +1619,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*xxi", xxiList);
             for (int i = 1; i <= context.P; i++)
             {
-                string rw = "";
+                string rw = string.Empty;
                 ParameterBag xxiParameters;
                 for (int j = 1; j <= context.P; j++)
                 {
@@ -1629,7 +1629,7 @@ namespace StatsDirect.Builtins
                         xxiParameters = new ParameterBag();
                         xxiList.Add(xxiParameters);
                         xxiParameters.AddOutput("x", rw);
-                        rw = "";
+                        rw = string.Empty;
                     }
                 }
                 xxiParameters = new ParameterBag();
@@ -1641,7 +1641,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*covar", covarList);
             for (int i = 1; i <= context.P; i++)
             {
-                string rw = "";
+                string rw = string.Empty;
                 ParameterBag covarParameters;
                 for (int j = 1; j <= context.P; j++)
                 {
@@ -1651,7 +1651,7 @@ namespace StatsDirect.Builtins
                         covarParameters = new ParameterBag();
                         covarList.Add(covarParameters);
                         covarParameters.AddOutput("x", rw);
-                        rw = "";
+                        rw = string.Empty;
                     }
                 }
                 covarParameters = new ParameterBag();
@@ -1758,11 +1758,11 @@ namespace StatsDirect.Builtins
                 ParameterBag studentisedParameters = new ParameterBag();
                 studentisedList.Add(studentisedParameters);
                 studentisedParameters.AddOutput("index", i.ToString());
-                studentisedParameters.AddOutput("index*", Math.Abs(rstd[i]) > srcrit ? Formatting.ASTERISK : "");
+                studentisedParameters.AddOutput("index*", Math.Abs(rstd[i]) > srcrit ? Formatting.ASTERISK : string.Empty);
                 studentisedParameters.AddOutput("stu", host.RoundU(rstd[i]));
-                studentisedParameters.AddOutput("stu*", Math.Abs(hi[i]) > hicrit ? Formatting.ASTERISK : "");
+                studentisedParameters.AddOutput("stu*", Math.Abs(hi[i]) > hicrit ? Formatting.ASTERISK : string.Empty);
                 studentisedParameters.AddOutput("hi", host.RoundU(hi[i]));
-                studentisedParameters.AddOutput("hi*", Math.Abs(cd[i]) > cdcrit ? Formatting.ASTERISK : "");
+                studentisedParameters.AddOutput("hi*", Math.Abs(cd[i]) > cdcrit ? Formatting.ASTERISK : string.Empty);
                 studentisedParameters.AddOutput("cook", host.RoundU(cd[i]));
             }
             if (shouldSaveStudentisedResidual)
@@ -1789,9 +1789,9 @@ namespace StatsDirect.Builtins
                 ParameterBag jackknifeParameters = new ParameterBag();
                 jackknifeList.Add(jackknifeParameters);
                 jackknifeParameters.AddOutput("index", i.ToString());
-                jackknifeParameters.AddOutput("index*", Math.Abs(rstudent[i]) > jackcrit ? Formatting.ASTERISK : "");
+                jackknifeParameters.AddOutput("index*", Math.Abs(rstudent[i]) > jackcrit ? Formatting.ASTERISK : string.Empty);
                 jackknifeParameters.AddOutput("jack", host.RoundU(rstudent[i]));
-                jackknifeParameters.AddOutput("jack*", Math.Abs(dff[i]) > dfcrit ? Formatting.ASTERISK : "");
+                jackknifeParameters.AddOutput("jack*", Math.Abs(dff[i]) > dfcrit ? Formatting.ASTERISK : string.Empty);
                 jackknifeParameters.AddOutput("dfit", host.RoundU(dff[i]));
             }
             if (shouldSaveJackknifeResidual)
@@ -2205,7 +2205,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    rawParameters.AddOutput("x", "");
+                    rawParameters.AddOutput("x", string.Empty);
                 }
                 rawParameters.AddOutput("a-t", host.RoundU(alpha - talpha));
             }
@@ -2274,7 +2274,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    standardParameters.AddOutput("x", "");
+                    standardParameters.AddOutput("x", string.Empty);
                 }
                 standardParameters.AddOutput("a-t", host.RoundU(alpha - talpha));
             }
@@ -2496,7 +2496,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             using (ChartRenderer ch = new ChartRenderer(cd))
             {
-                string rtf = ch.PlotLinearizedEstimationAndReturnRtf(host, "", model, context.A, context.G, vX.Title, vY.Title);
+                string rtf = ch.PlotLinearizedEstimationAndReturnRtf(host, string.Empty, model, context.A, context.G, vX.Title, vY.Title);
                 outputParameters.AddOutput("chart", rtf);
             }
             return outputParameters;
@@ -2651,12 +2651,12 @@ namespace StatsDirect.Builtins
             double GAMMA = parameters["gamma"].AsDouble;
             double P0; double cit;
             MathDbl.civ(nx - P, out cit, GAMMA, out P0);
-            string title = "";
+            string title = string.Empty;
             // Select the title
             switch (mode)
             {
                 case 0:
-                    title = "";
+                    title = string.Empty;
                     break;
                 case 1:
                     title = (Formatting.XRound((1.0 - P0) * 100, 1) + "% CI for the regression estimate");
@@ -3117,8 +3117,8 @@ namespace StatsDirect.Builtins
             double[] residual = new double[records + 1];
             double[] leverage = new double[records + 1];
             double[] offset = new double[records + 1 ];
-            string dropped = "";
-            string err_msg = "";
+            string dropped = string.Empty;
+            string err_msg = string.Empty;
             Regress1.X_Logistic_Regression(false, false, ref use_weights, records, x2, 1, select_x, 1, y, t, wt, out deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
             int idfx = df;
             if (mean == false)
@@ -3144,8 +3144,8 @@ namespace StatsDirect.Builtins
             residual = new double[records + 1];
             leverage = new double[records + 1];
             offset = new double[records + 1];
-            dropped = "";
-            err_msg = "";
+            dropped = string.Empty;
+            err_msg = string.Empty;
             Regress1.X_Logistic_Regression(mean, false, ref use_weights, records, x, predictors, select_x, p, y, t, wt, out deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
             if (fault != 0 && fault != 3)
             {
@@ -3157,7 +3157,7 @@ namespace StatsDirect.Builtins
             if (fault == 3 && err_msg.Length > 0)
                 warn = Formatting.WRNCOLON + err_msg;
             else
-                warn = "";
+                warn = string.Empty;
             if (rank != p)
             {
                 if (warn.Length > 0)
@@ -3189,7 +3189,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", df.ToString());
             double prob = PDF.chivalp(deviance, Convert.ToDouble(df));
             outputParameters.AddOutput("p", host.pval(prob));
-            warn = prob < 0.05 ? Formatting.ASTERISK : "";
+            warn = prob < 0.05 ? Formatting.ASTERISK : string.Empty;
             outputParameters.AddOutput("w", warn);
             double x2dev = devx - deviance;
             if (x2dev < 0.0)
@@ -3236,7 +3236,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     varParameters.AddOutput("or", "n/a");
-                    varParameters.AddOutput("ci", "");
+                    varParameters.AddOutput("ci", string.Empty);
                 }
                 double z;
                 if (se_beta[i] == 0.0)
@@ -4341,8 +4341,8 @@ namespace StatsDirect.Builtins
             int p = context.P;
             int m = context.M;
             double tol = context.TOL;
-            string dropped = "";
-            string err_msg = "";
+            string dropped = string.Empty;
+            string err_msg = string.Empty;
             //intercept deviance and degrees of freedom can be used from original fit
             int dfx = context.DFX;
             double devx = context.DEVX;
@@ -4368,8 +4368,8 @@ namespace StatsDirect.Builtins
             int rank = 0;
             bool iweight = true;
             int fault;
-            dropped = "";
-            err_msg = "";
+            dropped = string.Empty;
+            err_msg = string.Empty;
             host.StartProgress("Checking significance with all predictors", false);
             Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
             LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
@@ -4632,7 +4632,7 @@ namespace StatsDirect.Builtins
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 ch.SetBox0To1();
-                outputParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, rx, ry, "1-specificity", "sensitivity", "", false, DataMinMax.XPreset_YPreset, false));
+                outputParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, rx, ry, "1-specificity", "sensitivity", string.Empty, false, DataMinMax.XPreset_YPreset, false));
             }
             return outputParameters;
         }
@@ -4664,8 +4664,8 @@ namespace StatsDirect.Builtins
             int j; int i;
             int iq = 0;
             double cit; double P0; double[] offst;
-            string dropped = "";
-            string err_msg = "";
+            string dropped = string.Empty;
+            string err_msg = string.Empty;
 
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out cit, GAMMA, out P0);
@@ -4742,8 +4742,8 @@ namespace StatsDirect.Builtins
                 offst = new double[n + 1 ];
                 bool iweight = true;
                 int fault;
-                dropped = "";
-                err_msg = "";
+                dropped = string.Empty;
+                err_msg = string.Empty;
                 Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
                 if (fault == 0)
                 {
@@ -4811,8 +4811,8 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    parametersParameters.AddOutput("bias", "");
-                    parametersParameters.AddOutput("ci", "");
+                    parametersParameters.AddOutput("bias", string.Empty);
+                    parametersParameters.AddOutput("ci", string.Empty);
                 }
             }
             //  recalculate full model
@@ -4823,8 +4823,8 @@ namespace StatsDirect.Builtins
             dr = new double[n + 1 ];
             h = new double[n + 1];
             offst = new double[n + 1 ];
-            dropped = "";
-            err_msg = "";
+            dropped = string.Empty;
+            err_msg = string.Empty;
             int scrapFault;
             Regress1.X_Logistic_Regression(mean, false, ref use_weights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out scrapFault, ref dropped, ref err_msg);
             return outputParameters;
@@ -4884,7 +4884,7 @@ namespace StatsDirect.Builtins
                 predictorsList.Add(predictorsParameters);
                 predictorsParameters.AddOutput("x", labels[i] + " = " + host.RoundU(newx[i + iq]));
             }
-            string msg = lsqmean ? "  (regression mean)" : "";
+            string msg = lsqmean ? "  (regression mean)" : string.Empty;
             //  sd of Y from covariance matrix as sqr(xVx')
             double sey = 0.0;
             for (j = 1; j <= P; j++)
@@ -5309,8 +5309,8 @@ namespace StatsDirect.Builtins
                 for (int j = 1; j <= records; j++)
                     offset[j] = Math.Log(t[j]);
             }
-            string dropped = "";
-            string err_msg = "";
+            string dropped = string.Empty;
+            string err_msg = string.Empty;
             Regress1.X_Poisson_Regression(false, use_offset, ref weighted, records, x2, 1, selectX, 1, y, t, weight, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
             int idfx = df;
             if (!mean)
@@ -5343,7 +5343,7 @@ namespace StatsDirect.Builtins
             if (fault == 3 && err_msg.Length> 0)
                 warn = Formatting.WRNCOLON + err_msg;
             else
-                warn = "";
+                warn = string.Empty;
             if (rank != p)
             {
                 if (warn.Length > 0)
@@ -5385,7 +5385,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_dev", df.ToString());
             double prob = PDF.chivalp(deviance, Convert.ToDouble(df));
             outputParameters.AddOutput("p_dev", host.pval(prob));
-            warn = prob < 0.05 ? Formatting.ASTERISK : "";
+            warn = prob < 0.05 ? Formatting.ASTERISK : string.Empty;
             outputParameters.AddOutput("w", warn);
             double x2dev = devx - deviance;
             if (x2dev < 0.0)
@@ -6736,7 +6736,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                outputParameters.AddOutput("mort", "");
+                outputParameters.AddOutput("mort", string.Empty);
             }
             return outputParameters;
         }
@@ -6762,7 +6762,7 @@ namespace StatsDirect.Builtins
             // RTF_LoadTemplate("intproby.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("resp", host.RoundU(yval));
-            outputParameters.AddOutput("mort", C2 > 0 ? "Not considering natural mortality." : "");
+            outputParameters.AddOutput("mort", C2 > 0 ? "Not considering natural mortality." : string.Empty);
             if (Model == 1)
             {
                 int ifa;

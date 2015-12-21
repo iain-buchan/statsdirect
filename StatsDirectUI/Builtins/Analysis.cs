@@ -112,7 +112,7 @@ namespace StatsDirect.Builtins
                 Rates.poisson_ci(alpha, idxy[j], idxn[j], out xl, out xu);
                 cisParameters.AddOutput("from", host.RoundU(xl * nunit));
                 cisParameters.AddOutput("to", host.RoundU(xu * nunit));
-                cisParameters.AddOutput("label", "");
+                cisParameters.AddOutput("label", string.Empty);
             }
 
             // pooled
@@ -1399,7 +1399,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    brt = "";
+                    brt = string.Empty;
                 }
                 adjustedParameters.AddOutput("type", brt);
                 adjustedParameters.AddOutput("brr", Formatting.XRound(100.0 * brr, 2));

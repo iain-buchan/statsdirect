@@ -100,7 +100,7 @@ namespace StatsDirect.UI
                         XmlDeclaration dec = m_SettingsXML.CreateXmlDeclaration("1.0", "utf-8", string.Empty);
                         m_SettingsXML.AppendChild(dec);
 
-                        XmlNode nodeRoot = m_SettingsXML.CreateNode(XmlNodeType.Element, SETTINGSROOT, "");
+                        XmlNode nodeRoot = m_SettingsXML.CreateNode(XmlNodeType.Element, SETTINGSROOT, string.Empty);
                         m_SettingsXML.AppendChild(nodeRoot);
                     }
                 }

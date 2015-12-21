@@ -191,7 +191,7 @@ namespace StatsDirect.Builtins
                     g[r] = 1;
                 }
                 groups = 1;
-                gid = "";
+                gid = string.Empty;
             }
 
             // Put the data back into the Public array
@@ -461,7 +461,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    groupParameters.AddOutput("lim", "");
+                    groupParameters.AddOutput("lim", string.Empty);
                 }
                 groupParameters.AddOutput("mu", host.RoundU(mu));
                 if (totdead > 1 & vmu > 0)
@@ -1163,7 +1163,7 @@ namespace StatsDirect.Builtins
             for (r = 1; r <= nr; r++)
             {
                 zImax = r + zImax;
-                tx = "";
+                tx = string.Empty;
                 for (i = zImin; i <= zImax; i++)
                 {
                     tx = tx + host.RoundU(sigma[i]) + "\t";
@@ -1180,7 +1180,7 @@ namespace StatsDirect.Builtins
             for (r = 1; r <= nr; r++)
             {
                 zImax = r + zImax;
-                tx = "";
+                tx = string.Empty;
                 for (i = zImin; i <= zImax; i++)
                 {
                     tx = tx + host.RoundU(siginv[i]) + "\t";
@@ -1299,7 +1299,7 @@ namespace StatsDirect.Builtins
             double sumn = 0.0;
             double sumd = 0.0;
             string g = Formatting.XRound(gamma * 100, 1);
-            string grp = dead.GetUpperBound(1) > 1 ? " (group " + lap.ToString() + ")" : "";
+            string grp = dead.GetUpperBound(1) > 1 ? " (group " + lap.ToString() + ")" : string.Empty;
             DoubleVariable timeVariable = new DoubleVariable(nx, "Time" + grp);
             StringVariable deathVariable = new StringVariable(nx, "Death/Event" + grp);
             DoubleVariable survivalVariable = new DoubleVariable(nx, "Survival Proportion (S)" + grp);
@@ -2587,7 +2587,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        outerParameters.AddOutput("strata", "");
+                        outerParameters.AddOutput("strata", string.Empty);
                     }
                     double rr;
                     if (test == 1)
@@ -2618,7 +2618,7 @@ namespace StatsDirect.Builtins
                         outerParameters.AddOutput("*groups", null);
                     }
                     //  test statistics and variance-covariance matrix
-                    string x = "";
+                    string x = string.Empty;
                     for (j = 1; j <= groups; j++)
                     {
                         x = x + host.RoundU(u0[j]) + "\t";
@@ -2628,7 +2628,7 @@ namespace StatsDirect.Builtins
                     outerParameters.AddOutput("*covar", covarList);
                     for (j = 1; j <= groups; j++)
                     {
-                        x = "";
+                        x = string.Empty;
                         for (j2 = 1; j2 <= groups; j2++)
                         {
                             x = x + host.RoundU(vinv[j2, j]) + "\t";
@@ -2642,7 +2642,7 @@ namespace StatsDirect.Builtins
                     outerParameters.AddOutput("p",
                                               x2 != Constant.MISSING
                                                   ? host.pval(PDF.chivalp(x2, Convert.ToDouble(groups - 1)))
-                                                  : "");
+                                                  : string.Empty);
                     if (groups > 2)
                     {
                         IList<ParameterBag> trendsList = new List<ParameterBag>();

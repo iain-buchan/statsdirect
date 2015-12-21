@@ -20,11 +20,11 @@ namespace StatsDirect.UI
 
         private void SetupArrays()
         {
-            cboFillStyle.Items.Add(new ComboBoxExItem("", 0));
-            cboFillStyle.Items.Add(new ComboBoxExItem("", 1));
-            cboFillStyle.Items.Add(new ComboBoxExItem("", 2));
-            cboFillStyle.Items.Add(new ComboBoxExItem("", 3));
-            cboFillStyle.Items.Add(new ComboBoxExItem("", 4));
+            cboFillStyle.Items.Add(new ComboBoxExItem(string.Empty, 0));
+            cboFillStyle.Items.Add(new ComboBoxExItem(string.Empty, 1));
+            cboFillStyle.Items.Add(new ComboBoxExItem(string.Empty, 2));
+            cboFillStyle.Items.Add(new ComboBoxExItem(string.Empty, 3));
+            cboFillStyle.Items.Add(new ComboBoxExItem(string.Empty, 4));
         }
 
         public Charting.FillStyle FillStyle

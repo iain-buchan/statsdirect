@@ -165,7 +165,7 @@ namespace StatsDirect.UI
         {
             Text += titleSuffix;
             lblOptimum.Text = "For optimum, sensitivity:specificity weighting = " + weight.ToString() + ":1";
-            string Q = "";
+            string Q = string.Empty;
             switch (originalRecord.comp)
             {
                 case Charting.ComparisonValue.GE:

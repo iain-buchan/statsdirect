@@ -7,8 +7,10 @@ namespace StatsDirect.Expressions
     public class CSharpRenderer : IExpressionVisitor
     {
         private StringBuilder activeBuilder;
-        private Dictionary<ParserConstant, string> parserConstants;
+        private readonly Dictionary<ParserConstant, string> parserConstants;
+        private readonly Dictionary<DataType, string> clrTypes;
         private DataType[] passedVariableTypes;
+        private bool renderObjectArray;
 
         public CSharpRenderer()
         {
@@ -19,11 +21,20 @@ namespace StatsDirect.Expressions
                 { ParserConstant.Pi, "Math.PI" },
                 { ParserConstant.True, "true" }
             };
+            clrTypes = new Dictionary<DataType, string>
+            {
+                { DataType.Boolean, "bool" },
+                { DataType.Double, "double" },
+                { DataType.Integer, "int" },
+                { DataType.String, "string" }
+            };
         }
 
-        public string Render(INode node, DataType[] passedVariableTypes)
+        public string Render(INode node, DataType[] passedVariableTypes, bool renderObjectArray, out DataType returnType)
         {
             this.passedVariableTypes = passedVariableTypes;
+            this.renderObjectArray = renderObjectArray;
+            returnType = node.DataType(passedVariableTypes);
             return Render(node);
         }
 
@@ -74,49 +85,23 @@ namespace StatsDirect.Expressions
         public void Visit(DyadicNode node)
         {
             DyadicOperatorDefinition definition = DyadicOperatorRegistry.SoleInstance.DefinitionFor(node.Operator);
+            if (null == definition)
+                throw new Exception("Unknown dyadic operation");
+
             InOutDataTypeDefinition typesAfterPromotion = node.InOut(passedVariableTypes);
-            if (definition.ClrIsPrefix)
-            {
-                // op(Left, Right)
-                activeBuilder.Append(definition.ClrName);
-                activeBuilder.Append('(');
-                RenderWithPossibleTypePromotion(node.Left, typesAfterPromotion.InputTypes[0]);
-                activeBuilder.Append(", ");
-                RenderWithPossibleTypePromotion(node.Right, typesAfterPromotion.InputTypes[1]);
-                activeBuilder.Append(')');
-                return;
-            }
-            else
-            {
-                // Left op Right
-                activeBuilder.Append('(');
-                RenderWithPossibleTypePromotion(node.Left, typesAfterPromotion.InputTypes[0]);
-                activeBuilder.Append(')');
-                activeBuilder.Append(definition.ClrName);
-                activeBuilder.Append('(');
-                RenderWithPossibleTypePromotion(node.Right, typesAfterPromotion.InputTypes[1]);
-                activeBuilder.Append(')');
-                return;
-            }
-            throw new Exception("Unknown dyadic operation");
+            string lhs = RenderWithPossibleTypePromotion(node.Left, typesAfterPromotion.InputTypes[0]);
+            string rhs = RenderWithPossibleTypePromotion(node.Right, typesAfterPromotion.InputTypes[1]);
+            activeBuilder.Append(string.Format(definition.ClrFormat, lhs, rhs));
         }
 
-        private void RenderWithPossibleTypePromotion(INode node, DataType typeAfterPromotion)
+        private string RenderWithPossibleTypePromotion(INode node, DataType typeAfterPromotion)
         {
             string prePromote;
             string postPromote;
             if (GetTypePromotionStrings(node.DataType(passedVariableTypes), typeAfterPromotion, out prePromote, out postPromote))
-            {
-                // Promotion required; wrap the inner node as necessary.
-                activeBuilder.Append(prePromote);
-                node.Accept(this);
-                activeBuilder.Append(postPromote);
-            }
+                return prePromote + RenderInNewContext(node) + postPromote;
             else
-            {
-                // No promotion required
-                node.Accept(this);
-            }
+                return RenderInNewContext(node);
         }
 
         private bool GetTypePromotionStrings(DataType from, DataType to, out string prePromote, out string postPromote)
@@ -232,6 +217,15 @@ namespace StatsDirect.Expressions
 
         public void Visit(VariableNode node)
         {
+            if (passedVariableTypes.Length < node.Index)
+                throw new Exception("You can only use a variable that will be passed into the expression. You've used variable " + node.Index + ", but only " + passedVariableTypes.Length + " variable(s) will be passed in.");
+            if (renderObjectArray)
+            {
+                // Variables in the expression are 1-based; variables in C# are 0-based.
+                activeBuilder.Append('(');
+                activeBuilder.Append(clrTypes[passedVariableTypes[node.Index - 1]]);
+                activeBuilder.Append(')');
+            }
             // Variables are passed in as a double array x[].
             activeBuilder.Append("x[");
             // Variables in the expression are 1-based; variables in C# are 0-based.

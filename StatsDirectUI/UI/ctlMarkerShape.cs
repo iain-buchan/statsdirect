@@ -20,15 +20,15 @@ namespace StatsDirect.UI
 
         private void SetupArrays()
         {
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 0));
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 1));
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 2));
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 3));
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 4));
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 5));
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 6));
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 7));
-            cboMarkerShape.Items.Add(new ComboBoxExItem("", 8));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 0));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 1));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 2));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 3));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 4));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 5));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 6));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 7));
+            cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 8));
         }
 
         public Charting.MarkerShape MarkerShape

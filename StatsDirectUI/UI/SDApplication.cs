@@ -921,7 +921,7 @@ namespace StatsDirect.UI
         ParameterBag FillParameter(ITemplateProcessor processor, IntegerParameter Parameter, ParameterBag context)
         {
             // Prompt for the range
-            string suffix = "";
+            string suffix = string.Empty;
             if (Parameter.MinimumValue > Int32.MinValue || Parameter.MaximumValue < Int32.MaxValue)
             {
                 suffix = " (";
@@ -974,7 +974,7 @@ namespace StatsDirect.UI
             double minimumValue = Parameter.MinimumValue(processor, context);
             double maximumValue = Parameter.MaximumValue(processor, context);
             // Prompt for the range
-            string suffix = "";
+            string suffix = string.Empty;
             if (minimumValue > double.MinValue || maximumValue < double.MaxValue)
             {
                 suffix = " (";
@@ -987,7 +987,7 @@ namespace StatsDirect.UI
             }
             while (true)
             {
-                string defaultValueString = "";
+                string defaultValueString = string.Empty;
                 double? defaultValue = Parameter.DefaultValue(processor, context);
                 if (defaultValue.HasValue && !double.IsNaN(defaultValue.Value))
                     defaultValueString = defaultValue.Value.ToString();
@@ -1043,7 +1043,7 @@ namespace StatsDirect.UI
         /// <param name="showHelpButton"></param>
         internal void FriendlyError(string explanation, Exception ex, bool showHelpButton)
         {
-            MsgboxX(explanation + (null == ex ? "" : ("\r\n" + ex.Message)), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
+            MsgboxX(explanation + (null == ex ? string.Empty : ("\r\n" + ex.Message)), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
         }
 
         public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon)

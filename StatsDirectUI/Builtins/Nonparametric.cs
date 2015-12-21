@@ -1038,7 +1038,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("groups", frame.VariableCount.ToString());
             outputParameters.AddOutput("obs", n.ToString());
-            string qtq = "";
+            string qtq = string.Empty;
             for (int j = 0; j < frame.VariableCount; j++)
             {
                 qtq += frame.Variables[j].Title + " (" + score[j] + ")";
@@ -1567,7 +1567,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    varParameters.AddOutput("msg", "");
+                    varParameters.AddOutput("msg", string.Empty);
                 }
                 varParameters.AddOutput("s", rx.ToString());
                 varParameters.AddOutput("stotal", stotal.ToString());
@@ -1675,7 +1675,7 @@ namespace StatsDirect.Builtins
 
             if (!(fault))
             {
-                string adj = xf > 0 ? " (adjusted for ties)" : "";
+                string adj = xf > 0 ? " (adjusted for ties)" : string.Empty;
                 double n1d = Convert.ToDouble(n1);
                 double nd = Convert.ToDouble(n);
                 double dimlim = n1d + n1d * (n1d + 1.0) * nd - (n1d * (n1d + 1.0) * (2.0 * n1d + 1.0)) / 3.0 + 1.0;
@@ -2084,7 +2084,7 @@ namespace StatsDirect.Builtins
             if (fault)
             {
                 tau = Constant.MISSING;
-                taulab = "";
+                taulab = string.Empty;
                 ptau = Constant.MISSING;
             }
             else
@@ -2288,7 +2288,7 @@ namespace StatsDirect.Builtins
             else
                 outputParameters.AddOutput("sum", "Sum of signed ranks for all differences = " + host.RoundU(w));
 
-            string adj = xf != 0 ? " (adjusted for ties)" : "";
+            string adj = xf != 0 ? " (adjusted for ties)" : string.Empty;
 
             if (ned != 0)
             {
@@ -2900,11 +2900,11 @@ namespace StatsDirect.Builtins
                 variableParameters.AddOutput("value", host.RoundU(xq));
                 variableParameters.AddOutput("pc", (GAMMA * 100).ToString());
                 variableParameters.AddOutput("type", do_conservative ? "(conservative)" : "(non-conservative)");
-                string x = cap_lower ? "* " : "";
+                string x = cap_lower ? "* " : string.Empty;
                 variableParameters.AddOutput("from", x + host.RoundU(ll));
-                x = cap_upper ? "* " : "";
+                x = cap_upper ? "* " : string.Empty;
                 variableParameters.AddOutput("to", x + host.RoundU(ul));
-                x = cap_lower || cap_upper ? "  (* limit capped at min/max)" : "";
+                x = cap_lower || cap_upper ? "  (* limit capped at min/max)" : string.Empty;
                 variableParameters.AddOutput("exact", host.RoundU(cover) + "%" + x);
                 variableList.Add(variableParameters);
             }
@@ -2986,7 +2986,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                outputParameters.AddOutput("adj", "");
+                outputParameters.AddOutput("adj", string.Empty);
             }
             IList<ParameterBag> smallSampleList = nxx < 11 ? new List<ParameterBag> { new ParameterBag() } : null;
             outputParameters.AddOutput("*smallsample", smallSampleList);
@@ -3051,7 +3051,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                outputParameters.AddOutput("adjexact", "");
+                outputParameters.AddOutput("adjexact", string.Empty);
             }
             outputParameters.AddOutput("p_uexact", host.pval(1.0 - pl));
             outputParameters.AddOutput("p_lexact", host.pval(pl));
@@ -3181,7 +3181,7 @@ namespace StatsDirect.Builtins
             bool numbersAreSmall;
             CalcFriedman(frame, out w2, out N, ref A2, ref B2, ref t1, ref t2, ref nd, out allAreBinary, out numbersAreSmall);
 
-            string tlist = ""; string rlist = "";
+            string tlist = string.Empty; string rlist = string.Empty;
             for (int D = 0; D <= frame.VariableCount - 1; D++)
             {
                 if (D == 0)
@@ -3497,7 +3497,7 @@ namespace StatsDirect.Builtins
             int ifault;
             x_kwt(x, lx, L, frame.VariableCount, out h, ref ha, ref t, ref w1, out ifault);
 
-            string tlist = "";
+            string tlist = string.Empty;
             for (int D = 0; D <= frame.VariableCount - 1; D++)
             {
                 if (D > 0)
@@ -4188,7 +4188,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    varParameters.AddOutput("msg", "");
+                    varParameters.AddOutput("msg", string.Empty);
                 }
                 varParameters.AddOutput("cv", host.RoundU(cv));
                 varParameters.AddOutput("boots", boots.ToString("N0"));

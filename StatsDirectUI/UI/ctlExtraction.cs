@@ -67,7 +67,7 @@ namespace StatsDirect.UI
                 DataType[] dataTypes = new DataType[cols];
                 for (int col = 0; col < cols; col++)
                     dataTypes[col] = DataType.Double;
-                Calcit calcit = new Calcit(expression, dataTypes);
+                Calcit calcit = new Calcit(expression, dataTypes, false);
                 double[] x = new double[cols];
                 for (int n = 0; n < rows; n++)
                 {
@@ -99,7 +99,7 @@ namespace StatsDirect.UI
                 DataType[] dataTypes = new DataType[cols];
                 for (int col = 0; col < cols; col++)
                     dataTypes[col] = DataType.Double;
-                Calcit calcit = new Calcit(expression, dataTypes);
+                Calcit calcit = new Calcit(expression, dataTypes, false);
                 double[] x = new double[cols];
                 for (int N = 0; N < rows; N++)
                 {

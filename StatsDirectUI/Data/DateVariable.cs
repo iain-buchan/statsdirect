@@ -153,6 +153,11 @@ namespace StatsDirect.Data
             Data = victim.AsDateVariable.Data;
         }
 
+        public override object DataAsObject(int i)
+        {
+            return Data[i];
+        }
+
         protected override bool HasData
         {
             get

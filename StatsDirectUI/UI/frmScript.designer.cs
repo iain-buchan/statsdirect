@@ -278,7 +278,7 @@ namespace StatsDirect.UI
             this.rtbDoc.Name = "rtbDoc";
             this.rtbDoc.Size = new System.Drawing.Size(657, 221);
             this.rtbDoc.TabIndex = 0;
-            this.rtbDoc.Text = "";
+            this.rtbDoc.Text = string.Empty;
             this.rtbDoc.TextChanged += new System.EventHandler(this.frmScript_TextChanged);
             // 
             // pnlActions
@@ -341,7 +341,7 @@ namespace StatsDirect.UI
             this.rtbOutput.Name = "rtbOutput";
             this.rtbOutput.Size = new System.Drawing.Size(657, 181);
             this.rtbOutput.TabIndex = 1;
-            this.rtbOutput.Text = "";
+            this.rtbOutput.Text = string.Empty;
             // 
             // frmScript
             // 

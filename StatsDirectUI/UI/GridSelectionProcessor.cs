@@ -228,7 +228,7 @@ namespace StatsDirect.UI
                             int cols = 0;
                             int rows = 0;
                             bool startAgain = false;
-                            frame.Name = "";
+                            frame.Name = string.Empty;
                             for (int rpt = 1; rpt <= repeats; rpt++)
                             {
                                 frame.Name += " (";
@@ -308,7 +308,7 @@ namespace StatsDirect.UI
             int maxr = 0;
             int maxreps = 0;
             ColumnData[] cx = null;
-            string xlab = "";
+            string xlab = string.Empty;
             MinMax minMax = null;
 
             ClearSelection();
@@ -608,7 +608,7 @@ namespace StatsDirect.UI
                 else
                 {
                     // Defined minimum length, and we didn't hit it.
-                    string xtra = "";
+                    string xtra = string.Empty;
                     if (mode == DataAcquisitionMode.NumericSkipMissing || mode == DataAcquisitionMode.NumericReplaceMissing)
                     {
                         xtra = "\r\n\r\nThe rows must contain numeric data not text.";
@@ -791,7 +791,7 @@ namespace StatsDirect.UI
                     for (int j = 0; j < rows; j++)
                         if (treatment_gid[j] == treatment_g[i])
                             data[(int)block_gid[j]] = dt[j];
-                    string title = dataVariable.Title + ((treatment_cats > 1) ? "_" + treatmentVariable.Title + "_" + treatment_gcat[i] : "");
+                    string title = dataVariable.Title + ((treatment_cats > 1) ? "_" + treatmentVariable.Title + "_" + treatment_gcat[i] : string.Empty);
                     outputFrame.Variables.Add(new DoubleVariable(data, title));
                 }
                 return outputFrame;
@@ -1310,13 +1310,13 @@ namespace StatsDirect.UI
         public static void SelNumWarn(int min, int max, int totcols, string msg_ti)
         {
             if (min == max)
-                SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + min.ToString() + " column" + (min > 1 ? "s" : "") + " but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + min.ToString() + " column" + (min > 1 ? "s" : string.Empty) + " but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
             else
             {
                 if (totcols < min)
-                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + min.ToString() + " column" + (min > 1 ? "s" : "") + " or more but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + min.ToString() + " column" + (min > 1 ? "s" : string.Empty) + " or more but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
                 else if (totcols > max)
-                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + max.ToString() + " column" + (max > 1 ? "s" : "") + " or fewer but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "you must select " + max.ToString() + " column" + (max > 1 ? "s" : string.Empty) + " or fewer but you selected " + totcols.ToString() + ".", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, msg_ti, true);
             }
         }
 

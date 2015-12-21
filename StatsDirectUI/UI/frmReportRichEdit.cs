@@ -45,7 +45,7 @@ namespace StatsDirect.UI
 
         public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
-            string strExt = System.IO.Path.GetExtension(filename) ?? "";
+            string strExt = System.IO.Path.GetExtension(filename) ?? string.Empty;
             strExt = strExt.ToLower();
             if (".rtf".Equals(strExt))
                 richEditControl1.LoadDocument(filename, DocumentFormat.Rtf);
@@ -508,7 +508,7 @@ namespace StatsDirect.UI
                 return false;
             if (string.IsNullOrEmpty(SaveFileDialog1.FileName))
                 return false;
-            string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName) ?? "";
+            string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName) ?? string.Empty;
             strExt = strExt.ToUpper();
             if (".RTF".Equals(strExt))
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.Rtf);

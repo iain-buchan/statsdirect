@@ -19,11 +19,11 @@ namespace StatsDirect.UI
 
         private void SetupArrays()
         {
-            cboDashStyle.Items.Add(new ComboBoxExItem("", 0));
-            cboDashStyle.Items.Add(new ComboBoxExItem("", 1));
-            cboDashStyle.Items.Add(new ComboBoxExItem("", 2));
-            cboDashStyle.Items.Add(new ComboBoxExItem("", 3));
-            cboDashStyle.Items.Add(new ComboBoxExItem("", 4));
+            cboDashStyle.Items.Add(new ComboBoxExItem(string.Empty, 0));
+            cboDashStyle.Items.Add(new ComboBoxExItem(string.Empty, 1));
+            cboDashStyle.Items.Add(new ComboBoxExItem(string.Empty, 2));
+            cboDashStyle.Items.Add(new ComboBoxExItem(string.Empty, 3));
+            cboDashStyle.Items.Add(new ComboBoxExItem(string.Empty, 4));
         }
 
         public System.Drawing.Drawing2D.DashStyle DashStyle

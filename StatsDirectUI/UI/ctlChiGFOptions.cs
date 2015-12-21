@@ -89,7 +89,7 @@ namespace StatsDirect.UI
                 double ex = Parsing.Cdbl_Txt(txtValue.Text);
                 if (ex <= 0)
                 {
-                    txtValue.Text = "";
+                    txtValue.Text = string.Empty;
                 }
                 else
                 {

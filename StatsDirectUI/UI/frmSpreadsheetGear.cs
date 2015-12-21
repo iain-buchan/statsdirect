@@ -427,7 +427,7 @@ namespace StatsDirect.UI
                         string[] data = variable.Data;
                         for (int i = 0; i < data.Length; i++)
                         {
-                            string value = data[i] ?? "";
+                            string value = data[i] ?? string.Empty;
                             if (isFormulae && value.Length > 0)
                             {
                                 try
@@ -516,7 +516,7 @@ namespace StatsDirect.UI
                 }
                 IRange insertedRange = range[0, 0, frame.MaxRows + offsetForTitles - 1, range.ColumnCount - 1];
                 insertedRange.Select();
-                insertedRange.NumberFormat = "";
+                insertedRange.NumberFormat = string.Empty;
                 insertedRange.Columns.AutoFit();
                 dirty = true;
             }
@@ -738,7 +738,7 @@ namespace StatsDirect.UI
                     GridSelectionProcessor.SelNumWarn(minimumColumns, maximumColumns, sel.TotalColumns, msgTi);
                 string fullSelectionMessage = selectionMessage;
                 if (minimumColumns == maximumColumns)
-                    fullSelectionMessage += " (" + minimumColumns.ToString() + " column" + (minimumColumns > 1 ? "s" : "") + ")";
+                    fullSelectionMessage += " (" + minimumColumns.ToString() + " column" + (minimumColumns > 1 ? "s" : string.Empty) + ")";
                 else
                     fullSelectionMessage += " (Min " + minimumColumns.ToString() + ": Max " + maximumColumns.ToString() + ")";
                 SdApplication.SoleInstance.MainWindow.CanSelectMultipleRows = maximumColumns > 1;
@@ -881,7 +881,7 @@ namespace StatsDirect.UI
             try
             {
                 object val = workbookView.ActiveWorksheet.Cells[row, column].Value;
-                return null == val ? "" : val.ToString();
+                return null == val ? string.Empty : val.ToString();
             }
             finally
             {
@@ -1424,7 +1424,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", "");
+                string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
                 workbookView.GetLock();
                 if (null != cell)
                     workbookView.ActiveWorksheet.Cells[cell].Activate();
@@ -1921,7 +1921,7 @@ namespace StatsDirect.UI
             {
                 if (null == workbookView.ActiveCell.Comment)
                 {
-                    workbookView.ActiveCell.AddComment("");
+                    workbookView.ActiveCell.AddComment(string.Empty);
                 }
                 // By now, the comment is known to exist.
                 workbookView.ActiveCell.Comment.Visible = true;

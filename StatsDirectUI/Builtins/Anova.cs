@@ -567,7 +567,7 @@ namespace StatsDirect.Builtins
                 ntot = ntot + nx;
                 sumtot = sumtot + sum;
             }
-            string tlist = "";
+            string tlist = string.Empty;
             for (C = 0; C <= cols - 1; C++)
             {
                 if (C > 0)
@@ -652,7 +652,7 @@ namespace StatsDirect.Builtins
             double[] mean = new double[frame.VariableCount];
             double sumtot = 0.0;
             int ntot = 0;
-            string tlist = "";
+            string tlist = string.Empty;
             for (int D = 0; D <= frame.VariableCount - 1; D++)
             {
                 DoubleVariable v = frame.Variables[D].AsDoubleVariable;
@@ -866,7 +866,7 @@ namespace StatsDirect.Builtins
             if (skipped != 0)
                 wrn = "   (" + Formatting.WRNCOLON + skipped.ToString() + " out of " + (skipped + nr).ToString() + " rows were skipped due to missing values)";
             else
-                wrn = "";
+                wrn = string.Empty;
 
             double[] mean;
             double sscol;
@@ -885,7 +885,7 @@ namespace StatsDirect.Builtins
             if (fault != 0)
                 throw new Exception("Invalid calculation");
 
-            string tlist = "";
+            string tlist = string.Empty;
             for (int d = 0; d < frame.VariableCount; d++)
             {
                 //  Col(0).AddItem(frame.Variables(D).Title & " (" & Formatting.XRound(mean(D), 4) & ")")
@@ -998,7 +998,7 @@ namespace StatsDirect.Builtins
             double ssrow;
             XTwoWay(y, out mean, nr, nc, nm, out ssrow, out sscol, out ssint, out sstot, out ssres, out dfrow, out dfcol, out dfint, out dftot, out dfres, out fault);
 
-            string tlist = "";
+            string tlist = string.Empty;
             for (int d = 0; d < nc; d++)
             {
                 //  Col(0).AddItem(CDAT1(D).title & " (" & Formatting.XRound(mean(D), 4) & ")")
@@ -1086,7 +1086,7 @@ namespace StatsDirect.Builtins
             double[] sgbar = new double[ivar + 1 ];
             ivar = 0;
             int ctr = 0;
-            string tlist = "";
+            string tlist = string.Empty;
             double[] y = new double[1 + 1 ];
             for (int j = 0; j < frame.VariableCount; j++)
             {
@@ -1210,7 +1210,7 @@ namespace StatsDirect.Builtins
             if (P > 1.0 - P)
                 P = 1.0 - P;
             outputParameters.AddOutput("p", host.pval(P * 2.0));
-            string qx = comparisons.ToString() + " comparison" + ((comparisons == 1) ? "" : "s");
+            string qx = comparisons.ToString() + " comparison" + ((comparisons == 1) ? string.Empty : "s");
             outputParameters.AddOutput("comp", qx);
             outputParameters.AddOutput("bonf", host.RoundU(0.05 / comparisons));
             return outputParameters;

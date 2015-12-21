@@ -1043,7 +1043,7 @@ namespace StatsDirect.Numerics
             if (r == 0.0 || r == N)
                 warn = " [" + StatsDirect.Utilities.Formatting.XRound(100.0 * (cco + (1.0 - cco) / 2.0), 1) + "% one-sided CI]";
             else
-                warn = "";
+                warn = string.Empty;
         }
 
         public static void civ(long df, out double cit, double GAMMA, out double P0)

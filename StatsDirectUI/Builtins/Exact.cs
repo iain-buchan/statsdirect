@@ -187,7 +187,7 @@ namespace StatsDirect.Builtins
                 double ptwo;
                 double zP1;
                 Tables.Fisherp(a, b, c, d, out zP1, out ptwo, out fault);
-                outputParameters.AddOutput("tail_1", "");
+                outputParameters.AddOutput("tail_1", string.Empty);
                 if (fault != 0)
                 {
                     outputParameters.AddOutput("p_1", "err");

@@ -6,15 +6,13 @@ namespace StatsDirect.Expressions
     public class DyadicOperatorDefinition
     {
         public DyadicOperator Operator { get; private set; }
-        public string ClrName { get; private set; }
-        public bool ClrIsPrefix { get; private set; }
+        public string ClrFormat { get; private set; }
         public List<InOutDataTypeDefinition> InOutDataTypeDefinitions { get; private set; }
 
-        public DyadicOperatorDefinition(DyadicOperator op, string clrName, bool clrIsPrefix, IEnumerable<InOutDataTypeDefinition> inOutDataTypeDefinitions)
+        public DyadicOperatorDefinition(DyadicOperator op, string clrFormat, IEnumerable<InOutDataTypeDefinition> inOutDataTypeDefinitions)
         {
             Operator = op;
-            ClrName = clrName;
-            ClrIsPrefix = clrIsPrefix;
+            ClrFormat = clrFormat;
 
             if (null == inOutDataTypeDefinitions)
                 InOutDataTypeDefinitions = new List<InOutDataTypeDefinition>();

@@ -765,7 +765,7 @@ namespace StatsDirect.PJLControls
 				}
 				else
 				{
-					toolTip.SetToolTip( this, "" );
+					toolTip.SetToolTip( this, string.Empty );
 				}
 
 				Update();

@@ -271,7 +271,7 @@ namespace StatsDirect.UI
                 if (!appPath.Equals(helpPath))
                 {
                     SDRegistry.SaveSetting(app, key, "Help", appPath);
-                    SDRegistry.SaveSetting(app, key, "Data", ""); // Unused but required
+                    SDRegistry.SaveSetting(app, key, "Data", string.Empty); // Unused but required
                 }
             }
 

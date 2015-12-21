@@ -82,7 +82,7 @@
             this.rtb.Name = "rtb";
             this.rtb.Size = new System.Drawing.Size(663, 493);
             this.rtb.TabIndex = 5;
-            this.rtb.Text = "";
+            this.rtb.Text = string.Empty;
             // 
             // frmTextPreview
             // 

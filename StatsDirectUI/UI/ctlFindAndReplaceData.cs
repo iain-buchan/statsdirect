@@ -10,8 +10,8 @@ namespace StatsDirect.UI
 {
     public partial class ctlFindAndReplaceData : UserControl, IFillParameterBag
     {
-        private static string FIND_EXPRESSION = "";
-        private static string REPLACE_EXPRESSION = "";
+        private static string FIND_EXPRESSION = string.Empty;
+        private static string REPLACE_EXPRESSION = string.Empty;
 
         private readonly ExtractionOptions options;
 
@@ -28,11 +28,11 @@ namespace StatsDirect.UI
             if (0 == searchExpression.Length)
                 return txtExpression;
             DataType[] oneDouble = new DataType[] { DataType.Double };
-            Calcit finder = new Calcit(searchExpression, oneDouble);
+            Calcit finder = new Calcit(searchExpression, oneDouble, false);
             string replaceExpression = txtReplace.Text.Trim().ToUpper();
             if (0 == replaceExpression.Length)
                 return txtReplace;
-            Calcit replacer = new Calcit(replaceExpression, oneDouble);
+            Calcit replacer = new Calcit(replaceExpression, oneDouble, false);
 
             using (WaitCursor wc = new WaitCursor())
             {

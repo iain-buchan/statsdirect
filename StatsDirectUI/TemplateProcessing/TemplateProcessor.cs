@@ -172,7 +172,7 @@ namespace StatsDirect.Templates
             // If we're redoing a previous operation, we should in theory have the previous ChartOptions.  Go look!
             if (isRedo)
             {
-                string possibleParameterName = STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? "");
+                string possibleParameterName = STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty);
                 FilledParameter fp;
                 if (parameters.TryGetValue(possibleParameterName, out fp))
                 {
@@ -190,7 +190,7 @@ namespace StatsDirect.Templates
             // If we're redoing a previous operation, we should in theory have the previous ScaleParameters.  Go look!
             if (isRedo)
             {
-                string possibleParameterName = STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? "");
+                string possibleParameterName = STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty);
                 FilledParameter fp;
                 if (parameters.TryGetValue(possibleParameterName, out fp))
                 {
@@ -264,8 +264,8 @@ namespace StatsDirect.Templates
 
         private static void SaveChartDefinition(ChartStep step, ParameterBag results, ChartDefinition definition)
         {
-            results.Add(STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? ""), new FilledParameter(true, definition.ChartOptions));
-            results.Add(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? ""), new FilledParameter(true, definition.ScaleParameters));
+            results.Add(STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty), new FilledParameter(true, definition.ChartOptions));
+            results.Add(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty), new FilledParameter(true, definition.ScaleParameters));
         }
 
         public ParameterBag ExecuteInternal(IterationStep step, ParameterBag parms, bool isRedo)

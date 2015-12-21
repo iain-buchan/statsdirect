@@ -90,7 +90,7 @@ namespace StatsDirect.R
 
             // We get a right mix of terminations at this point; we need Windows newlines in order to match the rest of the file format and meet the requirement to be openable in Notepad.
             string repairedScriptBody = scriptBody
-                .Replace("\r", "")
+                .Replace("\r", string.Empty)
                 .Replace("\n", "\r\n");
             rtfScriptBody = (string.Format(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\")) + "\r\n" + repairedScriptBody)
                 .Replace(@"\", @"\\")
@@ -251,7 +251,7 @@ namespace StatsDirect.R
 
             using (TextReader tr = new StreamReader(errorFilePath))
             {
-                return tr.ReadToEnd().Replace("\r", "");
+                return tr.ReadToEnd().Replace("\r", string.Empty);
             }
         }
     }

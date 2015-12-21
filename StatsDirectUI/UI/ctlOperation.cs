@@ -358,7 +358,7 @@ namespace StatsDirect.UI
                 else
                     cb.Checked = false;
             }
-            cb.Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : "";
+            cb.Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : string.Empty;
             MaybeAddHelpTip(cb, parameter);
             tlp.Controls.Add(cb);
             tlp.SetColumnSpan(cb, 2);
@@ -562,7 +562,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : string.Empty
             };
             tlp.Controls.Add(lbl);
             MaybeAddHelpTip(lbl, parameter);
@@ -582,14 +582,14 @@ namespace StatsDirect.UI
             else
             {
                 double? defaultValue = parameter.DefaultValue(processor, context);
-                string defaultValueString = "";
+                string defaultValueString = string.Empty;
                 if (defaultValue.HasValue && (!double.IsNaN(defaultValue.Value)) && defaultValue.Value != Constant.MISSING)
                     defaultValueString = defaultValue.Value.ToString();
                 txt.Text = defaultValueString;
             }
             AddAppropriateEventHandlersTo(txt);
 
-            string suffix = "";
+            string suffix = string.Empty;
             if (parameter.ShowLimits)
             {
                 double minimumValue = parameter.MinimumValue(processor, context);
@@ -1007,7 +1007,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : string.Empty
             };
             tlp.Controls.Add(lbl);
             return null;
@@ -1137,7 +1137,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : string.Empty
             };
             tlp.Controls.Add(lbl);
 
@@ -1163,7 +1163,7 @@ namespace StatsDirect.UI
             }
             AddAppropriateEventHandlersTo(txt);
 
-            string suffix = "";
+            string suffix = string.Empty;
             if (parameter.ShowLimits)
             {
                 int minimumValue = parameter.MinimumValue;
@@ -1267,7 +1267,7 @@ namespace StatsDirect.UI
                             Padding = new Padding(0, 6, 0, 3),
                             AutoSize = true,
                             MaximumSize = new Size(500, 500),
-                            Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+                            Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : string.Empty
                         };
 
                         if (parameter.PromptPrecedesParameter)
@@ -1600,7 +1600,7 @@ namespace StatsDirect.UI
                 ComboBox cbo = new ComboBox { FormattingEnabled = true };
                 for (int i = 0; i < frame.VariableCount; i++)
                 {
-                    string rubric = (null == frame.Variables[i]) ? "" : frame.Variables[i].Title;
+                    string rubric = (null == frame.Variables[i]) ? string.Empty : frame.Variables[i].Title;
                     cbo.Items.Add(rubric);
                 }
                 if (null != initialState)
@@ -1670,7 +1670,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : string.Empty
             };
             tlp.Controls.Add(lbl);
             return null;
@@ -1967,7 +1967,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : ""
+                Text = parameter.HasPrompt ? parameter.Prompt(processor, context) : string.Empty
             };
 
             MaybeAddHelpTip(lbl, parameter);
@@ -2540,7 +2540,7 @@ namespace StatsDirect.UI
                             DataFrame frame = new DataFrame();
                             for (int col = 0; col < usedRange.ColumnCount; col++)
                             {
-                                DoubleVariable v = new DoubleVariable(usedRange.RowCount, "");
+                                DoubleVariable v = new DoubleVariable(usedRange.RowCount, string.Empty);
                                 frame.Variables.Add(v);
                                 for (int row = 0; row < usedRange.RowCount; row++)
                                 {

@@ -489,9 +489,9 @@ namespace StatsDirect.UI
                 string buf = (string)gridCutoffs.Rows[i].Cells[0].Value;
                 if (null == buf)
                     continue;
-                buf = buf.Replace("=", "");
-                buf = buf.Replace("<", "");
-                buf = buf.Replace(">", "");
+                buf = buf.Replace("=", string.Empty);
+                buf = buf.Replace("<", string.Empty);
+                buf = buf.Replace(">", string.Empty);
                 int j = buf.IndexOf(";", StringComparison.Ordinal);
                 if (j >= 0)
                 {

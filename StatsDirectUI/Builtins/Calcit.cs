@@ -3,6 +3,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -12,27 +13,48 @@ namespace StatsDirect.Builtins
     {
         private object instance;
         private MethodInfo methodInfo;
+        private readonly bool compiledForVariants;
+        public DataType OutputType { get; private set; }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="equation"></param>
         /// <param name="passedVariableTypes"></param>
-        /// <param name="assumeVariants"></param>
+        /// <param name="assumeVariants">If true, </param>
         public Calcit(string equation, DataType[] passedVariableTypes, bool assumeVariants)
         {
-            SetEquation(equation, passedVariableTypes);
+            OutputType = SetEquation(equation, passedVariableTypes, assumeVariants, out compiledForVariants);
         }
 
-        private DataType SetEquation(string equation, DataType[] passedVariableTypes)
+        private DataType SetEquation(string equation, DataType[] passedVariableTypes, bool assumeVariants, out bool compiledForVariants)
         {
             const string typeName = "Temp1";
             const string methodName = "DoIt";
-            string cSharpExpression = Converter.ConvertToCSharp(equation, passedVariableTypes);
+            bool allDoubles = passedVariableTypes.Aggregate(true, (okSoFar, dt) => okSoFar && (dt == DataType.Double));
+            compiledForVariants = assumeVariants || !allDoubles;
+            DataType retval;
+            string cSharpExpression = Converter.ConvertToCSharp(equation, passedVariableTypes, compiledForVariants, out retval);
 
             // By now, cSharpExpression will either be safe (every character has been through the parser) or an exception will have been thrown.  Therefore, it's reasonable to throw the expression at the compiler.
-            string cSharpFunction =
-                "using System; using StatsDirect.Expressions; public class " + typeName + " { public object " + methodName + "(double[] x) { return " + cSharpExpression + "; } }";
+            StringBuilder functionBuilder = new StringBuilder();
+            functionBuilder.AppendLine("using System;");
+            functionBuilder.AppendLine("using StatsDirect.Expressions;");
+            functionBuilder.Append("public class ");
+            functionBuilder.AppendLine(typeName);
+            functionBuilder.AppendLine("{");
+            functionBuilder.Append("public object ");
+            functionBuilder.Append(methodName);
+            functionBuilder.Append("(");
+            functionBuilder.Append(compiledForVariants ? "object" : "double");
+            functionBuilder.AppendLine("[] x)");
+            functionBuilder.AppendLine("{");
+            functionBuilder.Append("return ");
+            functionBuilder.Append(cSharpExpression);
+            functionBuilder.AppendLine(";");
+            functionBuilder.AppendLine("}");
+            functionBuilder.AppendLine("}");
+            string cSharpFunction = functionBuilder.ToString();
             CompilerParameters compilerParameters = new CompilerParameters();
             string mainModulePath = Process.GetCurrentProcess().MainModule.FileName;
             string assemblyPath = Path.GetDirectoryName(mainModulePath);
@@ -44,20 +66,20 @@ namespace StatsDirect.Builtins
                 CompilerResults compilerResults = codeProvider.CompileAssemblyFromSource(compilerParameters, cSharpFunction);
                 if (compilerResults.Errors.HasErrors)
                 {
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendLine("Errors in compilation:");
+                    StringBuilder errorBuilder = new StringBuilder();
+                    errorBuilder.AppendLine("Errors in compilation:");
                     foreach (CompilerError error in compilerResults.Errors)
                     {
-                        sb.Append("line ");
-                        sb.Append(error.Line);
-                        sb.Append(": ");
-                        sb.Append(error.IsWarning ? "warning " : "error ");
-                        sb.Append(error.ErrorNumber);
-                        sb.Append(": ");
-                        sb.AppendLine(error.ErrorText);
+                        errorBuilder.Append("line ");
+                        errorBuilder.Append(error.Line);
+                        errorBuilder.Append(": ");
+                        errorBuilder.Append(error.IsWarning ? "warning " : "error ");
+                        errorBuilder.Append(error.ErrorNumber);
+                        errorBuilder.Append(": ");
+                        errorBuilder.AppendLine(error.ErrorText);
                     }
                     compilerResults.TempFiles.Delete();
-                    throw new Exception("Couldn't translate your expression to valid C# code:" + Environment.NewLine + sb);
+                    throw new Exception("Couldn't translate your expression to valid C# code:" + Environment.NewLine + errorBuilder);
                 }
                 // No compile errors - save and prepare to run it!
                 Assembly assembly = compilerResults.CompiledAssembly;
@@ -68,6 +90,7 @@ namespace StatsDirect.Builtins
                 compilerResults.TempFiles.Delete();
                 // By now, compiledScript is non-null or an exception has been thrown
             }
+            return retval;
         }
 
         public double Evaluate(double[] values)
@@ -86,7 +109,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public object EvaluateObject(double[] values)
+        public object EvaluateObject(object[] values)
         {
             try
             {

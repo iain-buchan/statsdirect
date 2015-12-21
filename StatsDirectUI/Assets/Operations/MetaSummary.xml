@@ -106,7 +106,7 @@
 					<parameters>
 						<frame>
 							<name>se_y</name>
-							<prompt>="Select STANDARD ERROR for " + (parameters["use_ratio"].AsBoolean ? "LOG " : "") + parameters["stat_in"].AsString.ToLower()</prompt>
+							<prompt>="Select STANDARD ERROR for " + (parameters["use_ratio"].AsBoolean ? "LOG " : string.Empty) + parameters["stat_in"].AsString.ToLower()</prompt>
 							<mode>NumericSkipMissing</mode>
 							<same-length-as>y</same-length-as>
 							<min-columns>1</min-columns>
