@@ -53,7 +53,8 @@ namespace StatsDirect.UI
 
         private void cmdOK_Click(object sender, EventArgs e)
         {
-            bool shouldClose = SetResults();
+            string errorMessage;
+            bool shouldClose = SetResults(out errorMessage);
             userCancelled = false;
             if (shouldClose)
             {
@@ -62,82 +63,15 @@ namespace StatsDirect.UI
             }
         }
 
-        static int count;
-
-        private bool SetResults()
+        private bool SetResults(out string errorMessage)
         {
-            count++;
-
-            if (count >= 4)
-            {
-                // four wrong attempts with key
-                SdApplication.SoleInstance.MsgboxX("You have entered an invalid licence key four times\n\r\n\rIt is illegal to use this software without a valid licence.\n\r\n\rFor trial use, do not enter a licence key.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect licence unlock attempts", false);
-                return true;
-            }
-            if (txtEmail.Text.Trim().Length < 5)
-            {
-                // no name
-                SdApplication.SoleInstance.MsgboxX("You must enter a valid email address of at least five characters.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect User Email Address", false);
-                return false;
-            }
-            // email/username present
-            DateTime expiry;
-            switch (License.KeyMatch(ui, txtEmail.Text, txtOrganisation.Text, txtKey.Text, out expiry))
-            {
-                case 1:
-                    // key matches name
-                    if (expiry < DateTime.Today)
-                    {
-
-                        SdApplication.SoleInstance.MsgboxX("The licence key used has expired.\n\r\n\rSee www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
-                    }
-                    else
-                    {
-                        string a = txtEmail.Text.Trim();
-                        a = License.XorString(a, License.REG_KEY_KEY);
-                        SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_NAME, License.StrToNum(a));
-                        a = txtOrganisation.Text.Trim();
-                        a = new string(' ', 4) + a + "~~" + txtEmail.Text.Substring(0, 1);
-                        a = License.XorString(a, License.REG_KEY_KEY);
-                        SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_COMPANY, License.StrToNum(a));
-                        a = expiry.ToString();
-                        a = License.XorString(a, License.REG_KEY_KEY);
-                        SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_EXPIRES, License.StrToNum(a));
-                        return true;
-                    }
-                    break;
-                case 2:
-                    // no key/new trial
-                    {
-                        string a = txtEmail.Text.Trim();
-                        a = License.XorString(a, License.REG_KEY_KEY);
-                        SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_NAME, License.StrToNum(a));
-                        a = txtOrganisation.Text.Trim();
-                        a = new string(' ', 4) + a;
-                        a = License.XorString(a, License.REG_KEY_KEY);
-                        SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_COMPANY, License.StrToNum(a));
-                        a = DateTime.Today.AddDays(10).ToString();
-                        a = License.XorString(a, License.REG_KEY_KEY);
-                        SDRegistry.SaveSetting(License.REG_APP_NAME, License.REG_LIC, License.REG_UI_EXPIRES, License.StrToNum(a));
-                        return true;
-                    }
-                case 3:
-                    if (DateTime.ParseExact(ui.Expires, "dd/MM/yyyy", CultureInfo.InvariantCulture) < DateTime.Today)
-                    {
-                        SdApplication.SoleInstance.MsgboxX("Your StatsDirect licence has expired.\n\r\n\rSee www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
-                    }
-                    else
-                    {
-                        SdApplication.SoleInstance.MsgboxX("Your StatsDirect licence expires on " + ui.Expires + ".\n\r\n\rSee http://www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
-                    }
-                    break;
-                default:
-                    // wrong key and/or name, or no key and expired trial
-                    SdApplication.SoleInstance.MsgboxX("You must enter the email address and key exactly as specified in your licence.\n\r\n\rPlease try to copy from your confirmation of purchase email and paste into the relevant boxes here.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect licence key", false);
-                    break;
-            }
-            // If we get here, there was an error of some kind
-            return false;
+            string email = txtEmail.Text.Trim();
+            string organisation = txtOrganisation.Text.Trim();
+            string key = txtKey.Text.Trim();
+            bool retval = License.SetResults(email, organisation, key, ui, out errorMessage);
+            if (null != errorMessage)
+                SdApplication.SoleInstance.MsgboxX(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect licence", false);
+            return retval;
         }
 
         private void cmdHelp_Click(object sender, EventArgs e)
