@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace StatsDirect.UI
 {
@@ -115,7 +116,7 @@ namespace StatsDirect.UI
         {
             UserInfo ui = SdApplication.SoleInstance.UserInfo;
 
-            int d = !DateTime.MinValue.Equals(ui.Expires) ? Math.Abs(DateTime.Parse(ui.Expires).Subtract(DateTime.Now).Days) : 0;
+            int d = !DateTime.MinValue.Equals(ui.Expires) ? Math.Abs(DateTime.ParseExact(ui.Expires, "dd/MM/yyyy", CultureInfo.InvariantCulture).Subtract(DateTime.Now).Days) : 0;
             if (ui.Trial || d < 60)
             {
                 lblEmail.Text = ui.Name + "\r\n" + "YOUR LICENCE EXPIRES IN " + d.ToString() + " DAYS.\r\nTO ORDER, CLICK ON THE ABOVE LINK,\r\nTHEN DOUBLE CLICK HERE TO ENTER A NEW LICENCE KEY.";

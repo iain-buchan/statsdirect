@@ -10,6 +10,7 @@ namespace StatsDirect.Expressions
         public static string ConvertToCSharp(string expr, DataType[] passedVariableTypes)
         {
             // Spaces in the input stream get confused with spaces in thousand separators, so smash spaces if the thousands separator is spaces.
+            // TODO: This also smashes spaces in strings, which we don't want!
             if (" ".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator))
                 expr = expr.Replace(" ", "");
 
@@ -23,9 +24,8 @@ namespace StatsDirect.Expressions
             parser.AddErrorListener(new AccumulateErrors(errorBuilder));
             StatsDirect.Expressions.StatsDirectExpressionParser.RContext retval = parser.r();
             if (parser.NumberOfSyntaxErrors > 0)
-            {
                 throw new Exception("Couldn't parse your expression: " + errorBuilder.ToString());
-            }
+
             // The parser seems to dislike recognising EOF (for some reason - TODO: find out why) so instead test that we're at EOF at the end of the parse
             if (!"<EOF>".Equals(parser.CurrentToken.Text))
                 throw new Exception("Couldn't parse your expression: syntax error near \"" + parser.CurrentToken.Text + "\"");

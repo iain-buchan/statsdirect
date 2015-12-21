@@ -33,8 +33,8 @@ namespace StatsDirect.Calculator
                 if (equation.Length > 0)
                 {
                     Calcit c = new Calcit(equation, new DataType[0]);
-                    double res = c.Evaluate(null);
-                    txtResult.Text = Constant.MISSING == res ? Formatting.ERRR : " " + res.ToString();
+                    object res = c.EvaluateObject(null);
+                    txtResult.Text = (res is double && Constant.MISSING == (double)res) ? Formatting.ERRR : res.ToString();
                 }
                 else
                 {

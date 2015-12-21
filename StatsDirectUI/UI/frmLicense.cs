@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using StatsDirect.Utilities;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace StatsDirect.UI
 {
@@ -121,7 +122,7 @@ namespace StatsDirect.UI
                         return true;
                     }
                 case 3:
-                    if (DateTime.Parse(ui.Expires) < DateTime.Today)
+                    if (DateTime.ParseExact(ui.Expires, "dd/MM/yyyy", CultureInfo.InvariantCulture) < DateTime.Today)
                     {
                         SdApplication.SoleInstance.MsgboxX("Your StatsDirect licence has expired.\n\r\n\rSee www.statsdirect.com for more information.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect Licence", false);
                     }
