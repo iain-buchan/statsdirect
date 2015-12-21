@@ -46,7 +46,7 @@
 
   <!-- Installation conditions: At least Windows XP, no service pack required, no upper limit on OS version-->
   <!-- Verify not an Unknown OS -->
-  <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows XP, 2003 and 2003R2, Vista, 2008 and 2008R2, 7, 2012 and 8.">
+  <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows XP, 2003 and 2003R2, Vista, 2008 and 2008R2, 7, 2012, 8, 8.1, 2012R2 and 10.">
     <![CDATA[Installed OR (VersionNT >= 501)]]>
   </Condition>
   <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
