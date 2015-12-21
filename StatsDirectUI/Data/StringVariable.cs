@@ -7,7 +7,7 @@ namespace StatsDirect.Data
     ///  Represents a single string-based non-classifier variable/factor/column/field.
     ///  </summary>
     [Serializable]
-    public class StringVariable : Variable
+    public sealed class StringVariable : Variable
     {
         ///  <summary>
         ///  Manage the entire data array at one time
@@ -122,7 +122,7 @@ namespace StatsDirect.Data
             return copy;
         }
 
-        protected void CopyAndStripForRedoInto(StringVariable copy, bool ShouldKeepData)
+        private void CopyAndStripForRedoInto(StringVariable copy, bool ShouldKeepData)
         {
             base.CopyAndStripForRedoInto(copy, ShouldKeepData);
             if (Origin == null || ShouldKeepData)

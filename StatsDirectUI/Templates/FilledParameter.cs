@@ -130,7 +130,7 @@ namespace StatsDirect.Templates
         [XmlIgnore]
         public bool IsBoolean
         {
-            get { return data is Boolean; }
+            get { return data is bool; }
         }
 
         [XmlIgnore]
@@ -142,13 +142,13 @@ namespace StatsDirect.Templates
         [XmlIgnore]
         public bool IsDouble
         {
-            get { return data is Double; }
+            get { return data is double; }
         }
 
         [XmlIgnore]
         public bool IsInt32
         {
-            get { return data is Int32; }
+            get { return data is int; }
         }
 
         [XmlIgnore]
@@ -166,7 +166,7 @@ namespace StatsDirect.Templates
         [XmlIgnore]
         public bool IsString
         {
-            get { return data is String; }
+            get { return data is string; }
         }
 
         internal FilledParameter CopyAndStripForRedo(bool shouldKeepData)

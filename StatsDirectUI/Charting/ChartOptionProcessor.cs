@@ -14,66 +14,47 @@ namespace StatsDirect.Charting
         {
             // Chart options
             // TODO: This is very poor placement of this logic.  It's an unpleasant mash of setting options (some of which should be defaults), data preparation and mapping from values in particular operations.  How much of this should be moved out to the XML?
-            ChartOptions options;
             switch (step.ChartType)
             {
                 case ChartType.AgreementPair:
-                    options = PreprocessAgreementOptions(host, step, parameters);
-                    break;
+                    return PreprocessAgreementOptions(host, step, parameters);
                 case ChartType.Bar:
                 case ChartType.StackedBar:
                 case ChartType.StackedBar100Percent:
-                    options = PreprocessBarOptions(host, step, parameters, definition, dataName);
-                    break;
+                    return PreprocessBarOptions(host, step, parameters, definition, dataName);
                 case ChartType.BoxWhisker:
-                    options = PreprocessBoxWhiskerOptions(host, step, definition, dataName);
-                    break;
+                    return PreprocessBoxWhiskerOptions(host, step, definition, dataName);
                 case ChartType.Control:
-                    options = PreprocessControlOptions(host, definition, dataName);
-                    break;
+                    return PreprocessControlOptions(host, definition, dataName);
                 case ChartType.ErrorBar:
-                    options = PreprocessErrorBarOptions(host, parameters, dataName);
-                    break;
+                    return PreprocessErrorBarOptions(host, parameters, dataName);
                 case ChartType.Forest:
-                    options = PreprocessForestOptions(host, parameters, definition, dataName);
-                    break;
+                    return PreprocessForestOptions(host, parameters, definition, dataName);
                 case ChartType.Gini:
-                    options = PreprocessGiniOptions(host, definition, dataName);
-                    break;
+                    return PreprocessGiniOptions(host, definition, dataName);
                 case ChartType.Histogram:
-                    options = PreprocessHistogramOptions(host, step, definition);
-                    break;
+                    return PreprocessHistogramOptions(host, step, definition);
                 case ChartType.Ladder:
-                    options = PreprocessLadderOptions(host, definition, dataName);
-                    break;
+                    return PreprocessLadderOptions(host, definition, dataName);
                 case ChartType.LineXY:
-                    options = PreprocessLineXYOptions(host, definition, dataName);
-                    break;
+                    return PreprocessLineXYOptions(host, definition, dataName);
                 case ChartType.LinearRegression:
-                    options = PreprocessLinearRegressionOptions(host, step, parameters);
-                    break;
+                    return PreprocessLinearRegressionOptions(host, step, parameters);
                 case ChartType.Normal:
-                    options = PreprocessNormalOptions(host, parameters, dataName);
-                    break;
+                    return PreprocessNormalOptions(host, parameters, dataName);
                 case ChartType.Pyramid:
-                    options = PreprocessPyramidOptions(host, parameters, dataName);
-                    break;
+                    return PreprocessPyramidOptions(host, parameters, dataName);
                 case ChartType.ScatterXY:
-                    options = PreprocessScatterXYOptions(host, step, definition, dataName);
-                    break;
+                    return PreprocessScatterXYOptions(host, step, definition, dataName);
                 case ChartType.ROC:
-                    options = PreprocessRocOptions(host, parameters, definition);
-                    break;
+                    return PreprocessRocOptions(host, parameters, definition);
                 case ChartType.Spread:
-                    options = PreprocessSpreadOptions(host, definition, dataName);
-                    break;
+                    return PreprocessSpreadOptions(host, definition, dataName);
                 case ChartType.Survival:
-                    options = PreprocessSurvivalOptions(host, parameters, dataName);
-                    break;
+                    return PreprocessSurvivalOptions(host, parameters, dataName);
                 default:
                     throw new ArgumentOutOfRangeException("step", step, "step.ChartType: Not all types can be plotted yet");
             }
-            return options;
         }
 
         private static SurvivalOptions PreprocessSurvivalOptions(ITemplateHost host, ParameterBag parameters, string dataName)
@@ -106,15 +87,11 @@ namespace StatsDirect.Charting
 
             DataFrame ydatlFrame = null;
             if (parameters.ContainsKey("ydatl") && null != parameters["ydatl"])
-            {
                 ydatlFrame = parameters["ydatl"].AsDataFrame;
-            }
 
             DataFrame ydatuFrame = null;
             if (parameters.ContainsKey("ydatu") && null != parameters["ydatu"])
-            {
                 ydatuFrame = parameters["ydatu"].AsDataFrame;
-            }
 
             for (int i = 0; i < groupCount; i++)
             {
@@ -239,8 +216,7 @@ namespace StatsDirect.Charting
 
         private static ScatterXYOptions PreprocessScatterXYOptions(ITemplateHost host, ChartStep step, ChartDefinition definition, string dataName)
         {
-            ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour,
-                                                             definition.XSeries, false)
+            ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour, definition.XSeries, false)
             {
                 IsAscii = step.IsAscii,
                 ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
@@ -261,23 +237,11 @@ namespace StatsDirect.Charting
         {
             PyramidOptions pOptions = new PyramidOptions(host.Preferences.ShouldUseColour) { ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits };
             if (parameters.ContainsKey("Male"))
-            {
                 pOptions.MaleFrame = parameters["Male"].AsDataFrame;
-            }
             if (parameters.ContainsKey("Female"))
-            {
                 pOptions.FemaleFrame = parameters["Female"].AsDataFrame;
-            }
             if (parameters.ContainsKey("Labels"))
-            {
                 pOptions.LabelFrame = parameters["Labels"].AsDataFrame;
-            }
-            /**
-            if (parameters.ContainsKey("Shading"))
-            {
-                pOptions.Shading = (SDChart.FillStyle)Parsing.Cint_Txt(parameters["Shading"].AsString);
-            }
-             */
             pOptions.Title = null == dataName ? "Population pyramid" : "Population pyramid from " + dataName;
             pOptions.SetOptions();
             return pOptions;
@@ -317,8 +281,7 @@ namespace StatsDirect.Charting
 
         private static ScatterXYOptions PreprocessLineXYOptions(ITemplateHost host, ChartDefinition definition, string dataName)
         {
-            ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour,
-                                                             definition.XSeries, true)
+            ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour, definition.XSeries, true)
             {
                 ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
                 Title =
@@ -371,11 +334,9 @@ namespace StatsDirect.Charting
             {
                 HistogramSeriesOptions hso = new HistogramSeriesOptions
                 {
-                    ChartTitle =
-                        "Distribution of " + t.Title,
+                    ChartTitle = "Distribution of " + t.Title,
                     YAxisTitle = "Counts",
-                    XAxisTitle =
-                        "Mid-points for " + t.Title
+                    XAxisTitle = "Mid-points for " + t.Title
                 };
                 hOptions.HistoSeriesOptions.Add(hso);
             }
@@ -409,15 +370,9 @@ namespace StatsDirect.Charting
                         ? "Forest plot"
                         : "Forest plot from " + dataName,
                 k = parameters["odds"].AsDataFrame.Variables[0].Length,
-                OddsRatios =
-                    parameters["odds"].AsDataFrame.Variables[0].
-                    AsDoubleVariable.Data,
-                OddsRatioLcis =
-                    parameters["lci"].AsDataFrame.Variables[0].AsDoubleVariable
-                    .Data,
-                OddsRatioUcis =
-                    parameters["uci"].AsDataFrame.Variables[0].AsDoubleVariable
-                    .Data
+                OddsRatios = parameters["odds"].AsDataFrame.Variables[0].AsDoubleVariable.Data,
+                OddsRatioLcis = parameters["lci"].AsDataFrame.Variables[0].AsDoubleVariable.Data,
+                OddsRatioUcis = parameters["uci"].AsDataFrame.Variables[0].AsDoubleVariable.Data
             };
             if (parameters.ContainsKey("gn") && null != parameters["gn"])
             {
@@ -427,9 +382,7 @@ namespace StatsDirect.Charting
             {
                 double[] gn = new double[fOptions.k];
                 for (int i = 0; i < fOptions.k; i++)
-                {
                     gn[i] = 10;
-                }
                 fOptions.gn = gn;
             }
             if (parameters.ContainsKey("pg") && null != parameters["pg"])
@@ -443,14 +396,12 @@ namespace StatsDirect.Charting
             {
                 string[] titles = new string[fOptions.k];
                 for (int i = 0; i < fOptions.k; i++)
-                {
                     titles[i] = "stratum " + (i + 1).ToString();
-                }
                 fOptions.Titles = titles;
             }
 
             // Sort out candidate decimal places
-            double absmin = Double.MaxValue;
+            double absmin = double.MaxValue;
             for (int i = 0; i < fOptions.k; i++)
             {
                 if (Math.Abs(fOptions.OddsRatios[i]) < absmin && fOptions.OddsRatios[i] != 0.0)
@@ -674,12 +625,8 @@ namespace StatsDirect.Charting
                 mean = parameters["mean"].AsDouble,
                 ula = parameters["ula"].AsDouble,
                 P0 = parameters["P0"].AsDouble,
-                av =
-                    parameters["av"].AsDataFrame.Variables[0].
-                    AsDoubleVariable.Data,
-                mxd =
-                    parameters["mxd"].AsDataFrame.Variables[0].
-                    AsDoubleVariable.Data
+                av = parameters["av"].AsDataFrame.Variables[0].AsDoubleVariable.Data,
+                mxd = parameters["mxd"].AsDataFrame.Variables[0].AsDoubleVariable.Data
             };
             return aOptions;
         }
@@ -764,6 +711,5 @@ namespace StatsDirect.Charting
             DoubleSeries series = new DoubleSeries { Title = variable.Title, Data = variable.Data };
             return series;
         }
-
     }
 }

@@ -5462,7 +5462,7 @@ namespace StatsDirect.UI
 
                     // flag indicating whether to activate previous or next MDIChild
                     IntPtr direction = new IntPtr(pos == 0 ? 1 : 0);
-                    SendMessage(mdiClient.Handle, WM_MDINEXT, form.Handle, direction);
+                    NativeMethods.SendMessage(mdiClient.Handle, NativeMethods.WM_MDINEXT, form.Handle, direction);
                 }
             }
             catch (Exception)
@@ -5481,12 +5481,6 @@ namespace StatsDirect.UI
             }
             throw new InvalidOperationException("No MDIClient !!!");
         }
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int msg,
-                                    IntPtr wParam, IntPtr lParam);
-
-        public const int WM_MDINEXT = 0x224;
 #endif
 
         private void cmdSelectionHelp_Click(object sender, EventArgs e)

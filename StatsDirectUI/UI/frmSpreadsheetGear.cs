@@ -827,7 +827,7 @@ namespace StatsDirect.UI
                 return Constant.MISSING;
             if (val is double)
                 return (double)val;
-            if (val is Int32)
+            if (val is int)
                 return (int)val;
             if (val is string)
             {
@@ -860,7 +860,7 @@ namespace StatsDirect.UI
                 return (DateTime)val;
             if (val is double)
                 return DateTime.FromOADate((double)val);
-            if (val is Int32)
+            if (val is int)
                 return DateTime.FromOADate((int)val);
             if (val is string)
             {

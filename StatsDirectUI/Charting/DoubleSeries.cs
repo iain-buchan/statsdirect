@@ -48,12 +48,8 @@ namespace StatsDirect.Charting
                 {
                     double s = 0.0;
                     for (int i = Data.GetLowerBound(0); i <= Data.GetUpperBound(0); i++)
-                    {
                         if (Data[i] != Constant.MISSING)
-                        {
                             s += Data[i];
-                        }
-                    }
                     sum = s;
                     hasSum = true;
                 }
@@ -67,7 +63,6 @@ namespace StatsDirect.Charting
             {
                 if (!(hasStdDev))
                 {
-
                     double avg = Sum / Convert.ToDouble(Points);
                     double ep = 0.0; double var = 0.0;
                     for (int C = Data.GetLowerBound(0); C <= Data.GetUpperBound(0); C++)
@@ -89,9 +84,7 @@ namespace StatsDirect.Charting
             get
             {
                 if (!(hasMinMax))
-                {
                     CalcMinMax();
-                }
                 return min;
             }
         }

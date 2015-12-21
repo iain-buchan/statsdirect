@@ -19,7 +19,5 @@ namespace StatsDirect.Templates
             : base(Message)
         {
         }
-
-        public ParameterBag InputParameters { get; set; }
     }
 }

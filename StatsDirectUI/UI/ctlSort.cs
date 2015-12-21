@@ -115,30 +115,6 @@ namespace StatsDirect.UI
 
         private void gridKeys_DefaultValuesNeeded(object sender, DataGridViewRowEventArgs e)
         {
-            /*
-            // Find all the used variables
-            Dictionary<object, bool> knownUsed = new Dictionary<object, bool>();
-            foreach (DataGridViewRow row in e.Row.DataGridView.Rows)
-            {
-                if (!row.IsNewRow)
-                {
-                    object o = row.Cells[1].Value;
-                    if (o is DataRowView)
-                        knownUsed[o] = true;
-                }
-            }
-            // Find the first unused variable
-            object firstUnused = null;
-            foreach (object o in SortBy.Items)
-            {
-                if (!knownUsed.ContainsKey(o))
-                {
-                    firstUnused = o;
-                    break;
-                }
-            }
-             */
-
             // Fill in the row
             e.Row.Cells[0].Value = e.Row.Index + 1;
             e.Row.Cells[1].Value = SortBy.Items[0];
@@ -197,7 +173,7 @@ namespace StatsDirect.UI
         }
     }
 
-    public class DGVComboBoxItemColumn : DataGridViewComboBoxColumn
+    public sealed class DGVComboBoxItemColumn : DataGridViewComboBoxColumn
     {
         public DGVComboBoxItemColumn()
         {
@@ -241,10 +217,8 @@ namespace StatsDirect.UI
         public override object ParseFormattedValue(object formattedValue, DataGridViewCellStyle cellStyle, TypeConverter formattedValueTypeConverter, TypeConverter valueTypeConverter)
         {
             foreach (object item in ListManager.List)
-            {
                 if ((string)DisplayProp.GetValue(item) == (string)formattedValue)
                     return item;
-            }
 
             return base.ParseFormattedValue(formattedValue, cellStyle, formattedValueTypeConverter, valueTypeConverter);
         }

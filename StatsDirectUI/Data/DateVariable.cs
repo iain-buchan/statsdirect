@@ -6,7 +6,7 @@ namespace StatsDirect.Data
     ///  Use ClassiferVariable to represent a classifier variable.
     ///  </summary>
     [Serializable]
-    public class DateVariable : Variable
+    public sealed class DateVariable : Variable
     {
         public DateVariable()
         {
@@ -134,7 +134,7 @@ namespace StatsDirect.Data
             return copy;
         }
 
-        protected void CopyAndStripForRedoInto(DateVariable copy, bool ShouldKeepData)
+        private void CopyAndStripForRedoInto(DateVariable copy, bool ShouldKeepData)
         {
             base.CopyAndStripForRedoInto(copy, ShouldKeepData);
             if (Origin == null || ShouldKeepData)

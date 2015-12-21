@@ -19,7 +19,7 @@ namespace StatsDirect.Templates
             if (null == defaultValue || null == defaultValue.Body)
                 return null;
             object o = processor.Evaluate(defaultValue, parameters);
-            if (o is Boolean)
+            if (o is bool)
                 return (bool)o;
             return (bool?)o;
         }

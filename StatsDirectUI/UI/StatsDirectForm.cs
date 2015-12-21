@@ -8,7 +8,7 @@ namespace StatsDirect.UI
     /// A theoretically abstract superclass of the concrete forms that may be displayed in StatsDirect.
     /// In reality, as the form designer can't cope with abstract superclasses, this is concrete with a whole load of "subclass should have implemented" exceptions.
     /// </summary>
-    public class StatsDirectForm: Form, IForm
+    public /* abstract */ class StatsDirectForm: Form, IForm
     {
         /// <summary>
         /// If true, changes have been made to the form since it was last saved.
@@ -46,13 +46,13 @@ namespace StatsDirect.UI
         /// Request the form to save its contents, over existing storage if it has that or to new storage if not.
         /// </summary>
         /// <returns>true if the content was saved, false if not</returns>
-        internal /* abstract */ virtual bool SaveContents() { throw new NotImplementedException("Subclass should have implemented"); }
+        internal /* abstract */ virtual bool SaveContents() { throw new NotSupportedException(); }
 
         /// <summary>
         /// Request the form to save its contents to new storage.
         /// </summary>
         /// <returns>true if the content was saved, false if not</returns>
-        internal /* abstract */ virtual bool SaveAsContents() { throw new NotImplementedException("Subclass should have implemented"); }
+        internal /* abstract */ virtual bool SaveAsContents() { throw new NotSupportedException(); }
 
         internal bool Dirty
         {
@@ -124,12 +124,12 @@ namespace StatsDirect.UI
 
         public /* abstract */ virtual IList<Pane> AvailablePanes
         {
-            get { throw new NotImplementedException("Subclass should have implemented"); }
+            get { throw new NotSupportedException(); }
         }
 
         public /* abstract */ virtual Pane SelectedPane
         {
-            get { throw new NotImplementedException("Subclass should have implemented"); }
+            get { throw new NotSupportedException(); }
         }
 
         /// <summary>
@@ -151,13 +151,13 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        internal /* abstract */ virtual void EditCopy() { throw new NotImplementedException("Subclass should have implemented"); }
+        internal /* abstract */ virtual void EditCopy() { throw new NotSupportedException(); }
 
-        internal /* abstract */ virtual void EditCut() { throw new NotImplementedException("Subclass should have implemented"); }
+        internal /* abstract */ virtual void EditCut() { throw new NotSupportedException(); }
 
-        internal /* abstract */ virtual void EditPaste() { throw new NotImplementedException("Subclass should have implemented"); }
+        internal /* abstract */ virtual void EditPaste() { throw new NotSupportedException(); }
 
-        internal /* abstract */ virtual void Print() { throw new NotImplementedException("Subclass should have implemented"); }
+        internal /* abstract */ virtual void Print() { throw new NotSupportedException(); }
 
         internal WindowInformation WindowInformation
         {

@@ -63,9 +63,8 @@ namespace StatsDirect.Templates
                 {
                     filledParameters = Execute(step, filledParameters, isRedo);
                 }
-                catch (InvalidDataException ex)
+                catch (InvalidDataException)
                 {
-                    ex.InputParameters = filledParameters;
                     throw;
                 }
                 catch (TemplateOperationCancelledException)

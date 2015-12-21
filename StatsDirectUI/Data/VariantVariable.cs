@@ -7,7 +7,7 @@ namespace StatsDirect.Data
     ///  Represents a single variant variable/factor/column/field.
     ///  </summary>
     [Serializable]
-    public class VariantVariable : Variable
+    public sealed class VariantVariable : Variable
     {
         ///  <summary>
         ///  Manage the entire data array at one time
@@ -124,7 +124,7 @@ namespace StatsDirect.Data
             return copy;
         }
 
-        protected void CopyAndStripForRedoInto(VariantVariable copy, bool shouldKeepData)
+        private void CopyAndStripForRedoInto(VariantVariable copy, bool shouldKeepData)
         {
             base.CopyAndStripForRedoInto(copy, shouldKeepData);
             if (Origin == null || shouldKeepData)
