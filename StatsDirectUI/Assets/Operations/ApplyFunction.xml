@@ -17,7 +17,7 @@
     <script language="VB"><![CDATA[
   Dim data as Data.DataFrame = parameters("data").AsDataFrame
   Dim cols as Integer = data.VariableCount
-  Dim L as String = string.Empty
+  Dim L as String = ""
   For j as Integer = 1 To cols
       L &= "X" & j.ToString() & ": " & data.Variables(j - 1).Title & vbCrLf
   Next
