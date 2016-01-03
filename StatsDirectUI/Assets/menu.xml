@@ -351,7 +351,7 @@
               </sub-items>
             </menu-item>
             <menu-item label="&amp;Kendall Rank Correlation" operation="Kendall" />
-            <menu-item label="&amp;Spearman rank Correlation" operation="Spearman" />
+            <menu-item label="&amp;Spearman Rank Correlation" operation="Spearman" />
             <menu-item label="&amp;Nonparametric Linear Regression" operation="NonparametricLinearRegression" />
             <menu-item label="&amp;Cox (Proportional Hazards) Regression" operation="CoxRegression" />
           </sub-items>
