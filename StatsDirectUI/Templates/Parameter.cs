@@ -12,7 +12,7 @@ namespace StatsDirect.Templates
        XmlInclude(typeof(Double2By2ByKParameter)),
        XmlInclude(typeof(EditGridParameter)),
        XmlInclude(typeof(GridParameter)),
-       XmlInclude(typeof(GridParameter2D)),
+       XmlInclude(typeof(Grid2DParameter)),
        XmlInclude(typeof(GroupedCovarianceParameter)),
        XmlInclude(typeof(IntegerParameter)),
        XmlInclude(typeof(OptionParameter)),
@@ -140,11 +140,8 @@ namespace StatsDirect.Templates
             get { return false; }
         }
 
-        public abstract ParameterType Type
-        {
-            get;
-        }
-
         public abstract InputDuringStep RequiresInputGiven(ParameterBag parameters);
+
+        public abstract void Accept(IParameterVisitor visitor);
     }
 }

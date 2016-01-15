@@ -202,23 +202,10 @@ namespace StatsDirect.Data
             }
         }
 
-        ///  <summary>
-        ///  True if this Variable is a classifier variable; false if it is not
-        ///  </summary>
-        public override bool IsDoubleVariable
-        {
-            get
-            {
-                return true;
-            }
-        }
-
         public override void StealDataFrom(Variable victim)
         {
-            if (!(victim.IsDoubleVariable))
-            {
+            if (!(victim is DoubleVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
-            }
             data = victim.AsDoubleVariable.data;
             hasSummaries = false;
         }
@@ -251,6 +238,11 @@ namespace StatsDirect.Data
             {
                 return data != null;
             }
+        }
+
+        public override void Accept(IVariableVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

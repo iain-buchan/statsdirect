@@ -36,14 +36,14 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "bottom-right-name")]
         public string BottomRightName { get; set; }
 
-        public override ParameterType Type
-        {
-            get { return ParameterType.Double2By2; }
-        }
-
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
+
+        public override void Accept(IParameterVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

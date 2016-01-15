@@ -75,9 +75,9 @@ namespace StatsDirect.Templates
             set { maximumValue = value; }
         }
 
-        public override ParameterType Type
+        public override void Accept(IParameterVisitor visitor)
         {
-            get { return ParameterType.Double; }
+            visitor.Visit(this);
         }
     }
 }

@@ -490,29 +490,24 @@ namespace StatsDirect.Templates
         private void TryToRecallParameterForThisOperation(ParameterBag filledParameters, Parameter parameter)
         {
             IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
-            switch (parameter.Type)
+            if (parameter is OptionsParameter)
             {
-                case ParameterType.Options:
-                    {
-                        if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
-                        {
-                            ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
-                            foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
-                                if (savedParameters.ContainsKey(opt.Name))
-                                    filledParameters.Add(opt.Name, savedParameters[opt.Name]);
-                        }
-                    }
-                    break;
-                default:
-                    {
-                        if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
-                        {
-                            ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
-                            if (savedParameters.ContainsKey(parameter.Name))
-                                filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
-                        }
-                    }
-                    break;
+                if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
+                {
+                    ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
+                    foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
+                        if (savedParameters.ContainsKey(opt.Name))
+                            filledParameters.Add(opt.Name, savedParameters[opt.Name]);
+                }
+            }
+            else
+            {
+                if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
+                {
+                    ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
+                    if (savedParameters.ContainsKey(parameter.Name))
+                        filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
+                }
             }
         }
 
@@ -538,41 +533,36 @@ namespace StatsDirect.Templates
                     {
                         IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
                         ParameterBag savedParameterBag;
-                        switch (parameter.Type)
+                        if (parameter is OptionsParameter)
                         {
-                            case ParameterType.Options:
-                                {
-                                    foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
-                                    {
-                                        // Find the parameter to remember.  If it's not present in the bag, do nothing.
-                                        FilledParameter filledParameterToSave;
-                                        if (!parameterBag.TryGetValue(opt.Name, out filledParameterToSave))
-                                            continue;
+                            foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
+                            {
+                                // Find the parameter to remember.  If it's not present in the bag, do nothing.
+                                FilledParameter filledParameterToSave;
+                                if (!parameterBag.TryGetValue(opt.Name, out filledParameterToSave))
+                                    continue;
 
-                                        if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
-                                        {
-                                            savedParameterBag = new ParameterBag();
-                                            savedParametersPerOperation.Add(parameter.Operation.Name, savedParameterBag);
-                                        }
-                                        savedParameterBag[opt.Name] = filledParameterToSave;
-                                    }
-                                }
-                                break;
-                            default:
+                                if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
                                 {
-                                    // Find the parameter to remember.  If it's not present in the bag, do nothing.
-                                    FilledParameter filledParameterToSave;
-                                    if (!parameterBag.TryGetValue(parameter.Name, out filledParameterToSave))
-                                        return;
-
-                                    if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
-                                    {
-                                        savedParameterBag = new ParameterBag();
-                                        savedParametersPerOperation.Add(parameter.Operation.Name, savedParameterBag);
-                                    }
-                                    savedParameterBag[parameter.Name] = filledParameterToSave;
+                                    savedParameterBag = new ParameterBag();
+                                    savedParametersPerOperation.Add(parameter.Operation.Name, savedParameterBag);
                                 }
-                                break;
+                                savedParameterBag[opt.Name] = filledParameterToSave;
+                            }
+                        }
+                        else
+                        {
+                            // Find the parameter to remember.  If it's not present in the bag, do nothing.
+                            FilledParameter filledParameterToSave;
+                            if (!parameterBag.TryGetValue(parameter.Name, out filledParameterToSave))
+                                return;
+
+                            if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
+                            {
+                                savedParameterBag = new ParameterBag();
+                                savedParametersPerOperation.Add(parameter.Operation.Name, savedParameterBag);
+                            }
+                            savedParameterBag[parameter.Name] = filledParameterToSave;
                         }
                     }
                     break;

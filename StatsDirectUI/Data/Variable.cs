@@ -42,79 +42,6 @@ namespace StatsDirect.Data
         public abstract int Length { get; }
 
         ///  <summary>
-        ///  True if this Variable is a classifier variable; false if it is not
-        ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        [XmlIgnore]
-        public virtual bool IsClassifierVariable
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        ///  <summary>
-        ///  True if this Variable is a date variable; false if it is not
-        ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        [XmlIgnore]
-        public virtual bool IsDateVariable
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        ///  <summary>
-        ///  True if this Variable is a double variable; false if it is not
-        ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        [XmlIgnore]
-        public virtual bool IsDoubleVariable
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        ///  <summary>
-        ///  True if this Variable is a string variable; false if it is not
-        ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        [XmlIgnore]
-        public virtual bool IsStringVariable
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        ///  <summary>
-        ///  True if this Variable is a variant variable; false if it is not
-        ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        [XmlIgnore]
-        public virtual bool IsVariantVariable
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        ///  <summary>
         ///  Ensure the data array is allocated and at least MinimumLength items in length.  Any new elements will be filled with the platform default value.
         ///  </summary>
         ///  <param name="minimumLength">The minimum length of the array.  Note this is a length, not a bound.  The array will have items from 0 to MinimumLength - 1.</param>
@@ -214,5 +141,7 @@ namespace StatsDirect.Data
         /// Polymorphism: return the ith element of this variable's data encapsulated as an object.
         /// </summary>
         public abstract object DataAsObject(int i);
+
+        public abstract void Accept(IVariableVisitor visitor);
     }
 }

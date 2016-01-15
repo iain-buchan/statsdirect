@@ -136,7 +136,7 @@ namespace StatsDirect.UI
 
         internal DataFrame2D FillGridParameter2D(Parameter parameter, ITemplateProcessor processor, SdApplication sDApplication, ParameterBag parameters)
         {
-            GridParameter2D gridParameter = (GridParameter2D)parameter;
+            Grid2DParameter gridParameter = (Grid2DParameter)parameter;
             if (gridParameter.ShouldClearSelectionFirst)
                 ClearSelection();
             while (true)

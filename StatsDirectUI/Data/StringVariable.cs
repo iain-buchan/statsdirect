@@ -134,17 +134,9 @@ namespace StatsDirect.Data
 
         public override void StealDataFrom(Variable victim)
         {
-            if (!victim.IsStringVariable)
+            if (!(victim is StringVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
             Data = victim.AsStringVariable.Data;
-        }
-
-        public override bool IsStringVariable
-        {
-            get
-            {
-                return true;
-            }
         }
 
         protected override bool HasData
@@ -153,6 +145,11 @@ namespace StatsDirect.Data
             {
                 return Data != null;
             }
+        }
+
+        public override void Accept(IVariableVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

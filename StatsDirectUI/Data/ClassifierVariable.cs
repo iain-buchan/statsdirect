@@ -13,14 +13,6 @@ namespace StatsDirect.Data
             Groups = new List<Group>();
         }
 
-        public override bool IsClassifierVariable
-        {
-            get
-            {
-                return true;
-            }
-        }
-
         public override Variable SameSizeForResults()
         {
             Variable newVariable = new DoubleVariable();
@@ -30,7 +22,7 @@ namespace StatsDirect.Data
 
         public override void StealDataFrom(Variable victim)
         {
-            if (!(victim.IsClassifierVariable))
+            if (!(victim is ClassifierVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
             base.StealDataFrom(victim);
             ClassifierVariable cVictim = victim.AsClassifierVariable;
@@ -121,6 +113,11 @@ namespace StatsDirect.Data
                 if (group.Id == id)
                     return group;
             return null;
+        }
+
+        public override void Accept(IVariableVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

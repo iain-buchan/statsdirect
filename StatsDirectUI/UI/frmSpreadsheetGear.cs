@@ -214,7 +214,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                return LockWorkbookAndReturn(()=> workbookView.ActiveWorksheet.Name);
+                return LockWorkbookAndReturn(() => workbookView.ActiveWorksheet.Name);
             }
         }
 
@@ -399,6 +399,103 @@ namespace StatsDirect.UI
             }
         }
 
+        private class VariableInsertionVisitor : IVariableVisitor
+        {
+            public int Column { get; set; }
+            public bool IsFormulae { get; set; }
+            public string MissingIndicator { get; set; }
+            public int OffsetForTitles { get; set; }
+            public IValues Values { get; set; }
+
+            public void Visit(DoubleVariable variable)
+            {
+                double[] data = variable.Data;
+                if (null != data)
+                {
+                    for (int i = 0; i < data.Length; i++)
+                        if (Constant.MISSING == data[i] || double.IsNaN(data[i]))
+                            Values.SetText(i + OffsetForTitles, Column, MissingIndicator);
+                        else
+                            Values.SetNumber(i + OffsetForTitles, Column, data[i]);
+                }
+            }
+
+            public void Visit(VariantVariable variable)
+            {
+                object[] data = variable.Data;
+                if (null != data)
+                {
+                    for (int i = 0; i < data.Length; i++)
+                        if (data[i] is double)
+                        {
+                            double val = (double)data[i];
+                            if (Constant.MISSING == val || double.IsNaN(val))
+                                Values.SetText(i + OffsetForTitles, Column, MissingIndicator);
+                            else
+                                Values.SetNumber(i + OffsetForTitles, Column, val);
+                        }
+                        else if (data[i] is bool)
+                            Values.SetLogical(i + OffsetForTitles, Column, (bool)data[i]);
+                        else if (null == data[i])
+                            Values.Clear(i + OffsetForTitles, Column);
+                        else
+                            Values.SetText(i + OffsetForTitles, Column, data[i].ToString());
+                }
+            }
+
+            public void Visit(StringVariable variable)
+            {
+                string[] data = variable.Data;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    string value = data[i] ?? string.Empty;
+                    if (IsFormulae && value.Length > 0)
+                    {
+                        try
+                        {
+                            Values.SetFormula(i + OffsetForTitles, Column, value);
+                        }
+                        catch (ArgumentException)
+                        {
+                            // Almost certainly trying to set something that's not legal as a formula.  Try it as text instead.
+                            Values.SetText(i + OffsetForTitles, Column, value);
+                        }
+                    }
+                    else
+                    {
+                        Values.SetText(i + OffsetForTitles, Column, value);
+                    }
+                }
+            }
+
+            public void Visit(DateVariable variable)
+            {
+                DateTime[] data = variable.Data;
+                if (null != data)
+                {
+                    for (int i = 0; i < data.Length; i++)
+                        if (DateTime.MinValue == data[i])
+                            Values.SetText(i + OffsetForTitles, Column, MissingIndicator);
+                        else
+                            Values.SetNumber(i + OffsetForTitles, Column, data[i].ToOADate());
+                }
+                // TODO: Set date formatting for range
+            }
+
+            public void Visit(ClassifierVariable variable)
+            {
+                double[] data = variable.Data;
+                if (null != data)
+                {
+                    for (int i = 0; i < data.Length; i++)
+                        Values.SetText(i + OffsetForTitles, Column,
+                                       Constant.MISSING == data[i]
+                                           ? MissingIndicator
+                                           : variable.Groups[(int)data[i]].Label);
+                }
+            }
+        }
+
         private void WriteDataFrameInternal(DataFrame frame, bool isFormulae, string missingIndicator, IRange range, bool shouldMove, int offsetForTitles)
         {
             bool isLocked = false;
@@ -424,101 +521,11 @@ namespace StatsDirect.UI
                 // Now do the inserts.  Frames may contain any types of variables.
                 for (int v = 0; v < frame.VariableCount; v++)
                 {
-                    string title = frame.Variables[v].Title;
+                    Variable variable = frame.Variables[v];
+                    string title = variable.Title;
                     if (null != title)
                         values.SetText(0, firstColumnOfData + v, title);
-                    if (frame.Variables[v].IsStringVariable)
-                    {
-                        StringVariable variable = frame.Variables[v].AsStringVariable;
-                        string[] data = variable.Data;
-                        for (int i = 0; i < data.Length; i++)
-                        {
-                            string value = data[i] ?? string.Empty;
-                            if (isFormulae && value.Length > 0)
-                            {
-                                try
-                                {
-                                    values.SetFormula(i + offsetForTitles, firstColumnOfData + v, value);
-                                }
-                                catch (ArgumentException)
-                                {
-                                    // Almost certainly trying to set something that's not legal as a formula.  Try it as text instead.
-                                    values.SetText(i + offsetForTitles, firstColumnOfData + v, value);
-                                }
-                            }
-                            else
-                            {
-                                values.SetText(i + offsetForTitles, firstColumnOfData + v, value);
-                            }
-                        }
-                    }
-                    else if (frame.Variables[v].IsDoubleVariable)
-                    {
-                        DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
-                        double[] data = variable.Data;
-                        if (null != data)
-                        {
-                            for (int i = 0; i < data.Length; i++)
-                                if (Constant.MISSING == data[i] || double.IsNaN(data[i]))
-                                    values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
-                                else
-                                    values.SetNumber(i + offsetForTitles, firstColumnOfData + v, data[i]);
-                        }
-                    }
-                    else if (frame.Variables[v].IsClassifierVariable)
-                    {
-                        ClassifierVariable variable = frame.Variables[v].AsClassifierVariable;
-                        double[] data = variable.Data;
-                        if (null != data)
-                        {
-                            for (int i = 0; i < data.Length; i++)
-                                values.SetText(i + offsetForTitles, firstColumnOfData + v,
-                                               Constant.MISSING == data[i]
-                                                   ? missingIndicator
-                                                   : variable.Groups[(int)data[i]].Label);
-                        }
-                    }
-                    else if (frame.Variables[v].IsVariantVariable)
-                    {
-                        VariantVariable variable = frame.Variables[v].AsVariantVariable;
-                        object[] data = variable.Data;
-                        if (null != data)
-                        {
-                            for (int i = 0; i < data.Length; i++)
-                                if (data[i] is double)
-                                {
-                                    double val = (double)data[i];
-                                    if (Constant.MISSING == val || double.IsNaN(val))
-                                        values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
-                                    else
-                                        values.SetNumber(i + offsetForTitles, firstColumnOfData + v, val);
-                                }
-                                else if (data[i] is bool)
-                                    values.SetLogical(i + offsetForTitles, firstColumnOfData + v, (bool)data[i]);
-                                else if (null == data[i])
-                                    values.Clear(i + offsetForTitles, firstColumnOfData + v);
-                                else
-                                    values.SetText(i + offsetForTitles, firstColumnOfData + v, data[i].ToString());
-                        }
-                    }
-                    else if (frame.Variables[v].IsDateVariable)
-                    {
-                        DateVariable variable = frame.Variables[v].AsDateVariable;
-                        DateTime[] data = variable.Data;
-                        if (null != data)
-                        {
-                            for (int i = 0; i < data.Length; i++)
-                                if (DateTime.MinValue == data[i])
-                                    values.SetText(i + offsetForTitles, firstColumnOfData + v, missingIndicator);
-                                else
-                                    values.SetNumber(i + offsetForTitles, firstColumnOfData + v, data[i].ToOADate());
-                        }
-                        // TODO: Set date formatting for range
-                    }
-                    else
-                    { 
-                            throw new ArgumentOutOfRangeException("Unknown variable type in frame");
-                    }
+                    variable.Accept(new VariableInsertionVisitor { Column = firstColumnOfData + v, IsFormulae = isFormulae, OffsetForTitles = offsetForTitles, MissingIndicator = missingIndicator, Values = values });
                 }
                 IRange insertedRange = range[0, 0, frame.MaxRows + offsetForTitles - 1, range.ColumnCount - 1];
                 insertedRange.Select();
@@ -608,7 +615,7 @@ namespace StatsDirect.UI
             try
             {
 #endif
-                func();
+            func();
 #if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
@@ -624,7 +631,7 @@ namespace StatsDirect.UI
             try
             {
 #endif
-                func();
+            func();
 #if !WATCH_EXCEPTIONS
             }
             catch (Exception)
@@ -1268,7 +1275,7 @@ namespace StatsDirect.UI
 
         private void InsertSheet()
         {
-            LockWorkbookAnd(()=>workbookView.ActiveWorksheet = workbookView.ActiveWorkbook.Worksheets.AddBefore(workbookView.ActiveWorksheet));
+            LockWorkbookAnd(() => workbookView.ActiveWorksheet = workbookView.ActiveWorkbook.Worksheets.AddBefore(workbookView.ActiveWorksheet));
         }
 
         private void rowToolStripMenuItem_Click(object sender, EventArgs e)

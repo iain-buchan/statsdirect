@@ -126,62 +126,98 @@ namespace StatsDirect.R
             return "\"" + unquoted.Replace("\"", "\"\"") + "\"";
         }
 
+        private class ToRVariableVisitor : IVariableVisitor
+        {
+            public StringBuilder sb { get; set; }
+
+            public void Visit(DoubleVariable variable)
+            {
+                double[] data = variable.Data;
+                sb.Append("c(");
+                bool first = true;
+                foreach (double value in data)
+                {
+                    if (first)
+                        first = false;
+                    else
+                        sb.Append(",");
+                    ToR(sb, value);
+                }
+                sb.Append(")");
+            }
+
+            public void Visit(VariantVariable variable)
+            {
+                object[] data = variable.Data;
+                sb.Append("c(");
+                bool first = true;
+                foreach (object value in data)
+                {
+                    if (first)
+                        first = false;
+                    else
+                        sb.Append(",");
+                    ToR(sb, value);
+                }
+                sb.Append(")");
+            }
+
+            public void Visit(StringVariable variable)
+            {
+                string[] data = variable.Data;
+                sb.Append("c(");
+                bool first = true;
+                foreach (string value in data)
+                {
+                    if (first)
+                        first = false;
+                    else
+                        sb.Append(",");
+                    ToR(sb, value);
+                }
+                sb.Append(")");
+            }
+
+            public void Visit(DateVariable variable)
+            {
+                DateTime[] data = variable.Data;
+                sb.Append("c(");
+                bool first = true;
+                foreach (DateTime value in data)
+                {
+                    if (first)
+                        first = false;
+                    else
+                        sb.Append(",");
+                    ToR(sb, value);
+                }
+                sb.Append(")");
+            }
+
+            public void Visit(ClassifierVariable variable)
+            {
+                double[] data = variable.Data;
+                sb.Append("c(");
+                bool first = true;
+                foreach (double value in data)
+                {
+                    if (first)
+                        first = false;
+                    else
+                        sb.Append(",");
+                    ToR(sb, variable.Groups[(int)value].Label);
+                }
+                sb.Append(")");
+            }
+        }
+
         public static void ToR(StringBuilder sb, Variable variable)
         {
-            if (variable.IsDoubleVariable)
-                ToR(sb, variable.AsDoubleVariable);
-            else if (variable.IsStringVariable)
-                ToR(sb, variable.AsStringVariable);
-            else if (variable.IsVariantVariable)
-                ToR(sb, variable.AsVariantVariable);
-        }
-
-        public static void ToR(StringBuilder sb, DoubleVariable variable)
-        {
-            double[] data = variable.Data;
-            sb.Append("c(");
-            bool first = true;
-            foreach (double value in data)
-            {
-                if (first)
-                    first = false;
-                else
-                    sb.Append(",");
-                ToR(sb, value);
-            }
-            sb.Append(")");
-        }
-
-        public static void ToR(StringBuilder sb, StringVariable variable)
-        {
-            string[] data = variable.Data;
-            sb.Append("c(");
-            bool first = true;
-            foreach (string value in data)
-            {
-                if (first)
-                    first = false;
-                else
-                    sb.Append(",");
-                ToR(sb, value);
-            }
-            sb.Append(")");
+            variable.Accept(new ToRVariableVisitor { sb = sb });
         }
 
         public static void ToR(StringBuilder sb, VariantVariable variable)
         {
-            object[] data = variable.Data;
-            sb.Append("c(");
-            bool first = true;
-            foreach (object value in data)
-            {
-                if (first)
-                    first = false;
-                else
-                    sb.Append(",");
-                ToR(sb, value);
-            }
-            sb.Append(")");
         }
 
         public static void ToR(StringBuilder sb, object value)

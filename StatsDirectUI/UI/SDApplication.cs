@@ -684,62 +684,22 @@ namespace StatsDirect.UI
 
         void ITemplateHost.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
         {
-            switch (parameter.Type)
-            {
-                case ParameterType.Boolean:
-                case ParameterType.ConfidenceInterval:
-                case ParameterType.Date:
-                case ParameterType.Double:
-                case ParameterType.Double2By2:
-                case ParameterType.Double2By2ByK:
-                case ParameterType.EditGrid:
-                case ParameterType.Grid:
-                case ParameterType.Grid2D:
-                case ParameterType.GroupedCovariance:
-                case ParameterType.Integer:
-                case ParameterType.Option:
-                case ParameterType.Options:
-                case ParameterType.PickVariables:
-                case ParameterType.Special:
-                case ParameterType.String:
-                    // Do nothing
-                    break;
-                case ParameterType.PickFromList:
-                    PrepareParameter(processor, (PickFromListParameter)parameter, context);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("parameter", parameter, "parameter.Type: Unexpected parameter type");
-            }
+            if (parameter is PickFromListParameter)
+                PrepareParameter(processor, (PickFromListParameter)parameter, context);
         }
 
         public bool CanCombine(Parameter parameter)
         {
-            switch (parameter.Type)
+            if (parameter is Grid2DParameter)
+                return false;
+            if (parameter is GroupedCovarianceParameter)
+                return false;
+            if (parameter is GridParameter)
             {
-                case ParameterType.Boolean:
-                case ParameterType.ConfidenceInterval:
-                case ParameterType.Date:
-                case ParameterType.Double:
-                case ParameterType.Double2By2:
-                case ParameterType.Double2By2ByK:
-                case ParameterType.EditGrid:
-                case ParameterType.Integer:
-                case ParameterType.Option:
-                case ParameterType.Options:
-                case ParameterType.PickVariables:
-                case ParameterType.PickFromList:
-                case ParameterType.Special:
-                case ParameterType.String:
-                    return true;
-                case ParameterType.Grid2D:
-                case ParameterType.GroupedCovariance:
-                    return false;
-                case ParameterType.Grid:
-                    // Grids that must be entered rather than selected can be combined, as an entry grid will appear at the top.
-                    return !((GridParameter)parameter).CanSelect;
-                default:
-                    throw new ArgumentOutOfRangeException("parameter", parameter, "parameter.Type: Only ConfidenceInterval, Grid, Integer, Option and PickVariables known");
+                // Grids that must be entered rather than selected can be combined, as an entry grid will appear at the top.
+                return !((GridParameter)parameter).CanSelect;
             }
+            return true;
         }
 
         internal void EraseAnyOutstandingParameters()
@@ -773,70 +733,8 @@ namespace StatsDirect.UI
             // We can't combine the parameter and need to acquire it.
             while (true)
             {
-                ParameterBag outputParameters;
-                switch (parameter.Type)
-                {
-                    case ParameterType.Boolean:
-                        outputParameters = FillParameter(processor, (BooleanParameter) parameter, context);
-                        break;
-                    case ParameterType.ConfidenceInterval:
-                        outputParameters = FillParameter(processor, (ConfidenceIntervalParameter) parameter, context);
-                        break;
-                    case ParameterType.Date:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Date should always be filled inline");
-                    case ParameterType.Double:
-                        outputParameters = FillParameter(processor, (DoubleParameter) parameter, context);
-                        break;
-                    case ParameterType.Double2By2:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Double2By2 should always be filled inline");
-                    case ParameterType.Double2By2ByK:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Double2By2ByK should always be filled inline");
-                    case ParameterType.EditGrid:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "EditGrid should always be filled inline");
-                    case ParameterType.Grid:
-                        {
-                            if (null == ActiveGrid || !ActiveGrid.HasWindow)
-                            {
-                                FriendlyError("There are no workbooks open from which to select data. Please create or open a workbook containing your data, then run the operation again.", null, false);
-                                throw new TemplateOperationCancelledException();
-                            }
-                            IGrid grid = (IGrid) ActiveGrid.Window;
-                            outputParameters = new GridSelectionProcessor(grid).FillGridParameter(parameter, processor, this, context);
-                        }
-                        break;
-                    case ParameterType.Grid2D:
-                        {
-                            if (null == ActiveGrid || !ActiveGrid.HasWindow)
-                            {
-                                FriendlyError("There are no workbooks open from which to select data. Please create or open a workbook containing your data, then run the operation again.", null, false);
-                                throw new TemplateOperationCancelledException();
-                            }
-                            IGrid grid = (IGrid)ActiveGrid.Window;
-                            DataFrame2D frame = new GridSelectionProcessor(grid).FillGridParameter2D(parameter, processor, this, context);
-                            outputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(true, frame));
-                        }
-                        break;
-                    case ParameterType.GroupedCovariance:
-                        outputParameters = FillParameter(processor, (GroupedCovarianceParameter) parameter);
-                        break;
-                    case ParameterType.Integer:
-                        outputParameters = FillParameter(processor, (IntegerParameter) parameter, context);
-                        break;
-                    case ParameterType.Option:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Option should always be filled inline");
-                    case ParameterType.Options:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Options should always be filled inline");
-                    case ParameterType.PickFromList:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "PickFromList should always be filled inline");
-                    case ParameterType.PickVariables:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "PickVariables should always be filled inline");
-                    case ParameterType.Special:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Special should always be filled inline");
-                    case ParameterType.String:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "String should always be filled inline");
-                    default:
-                        throw new ArgumentOutOfRangeException("parameter", parameter.Type, "Only ConfidenceInterval, Grid, Integer, Option and PickVariables known");
-                }
+                ImmediateParameterFiller filler = new ImmediateParameterFiller { context = context, processor = processor };
+                parameter.Accept(filler);
 
                 // Validate; if no errors, stop.  If there are errors, show them and go round again.
                 string validationResult = null;
@@ -844,153 +742,21 @@ namespace StatsDirect.UI
                 {
                     foreach (Validator validator in parameter.Validators)
                     {
-                        validationResult = TemplateProcessor.Validate(this, validator.ValidatorName, parameter, outputParameters, parameter.ValidationFailMessage);
+                        validationResult = TemplateProcessor.Validate(this, validator.ValidatorName, parameter, filler.outputParameters, parameter.ValidationFailMessage);
                         if (null != validationResult)
                             break;
                     }
                 }
                 if (null == validationResult)
-                    return outputParameters;
+                    return filler.outputParameters;
 
                 MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            }
-        }
-
-        ParameterBag FillParameter(ITemplateProcessor processor, ConfidenceIntervalParameter Parameter, ParameterBag context)
-        {
-            // Can we get away without asking?
-            if (Parameter.CanDefault && Preferences.CanDefaultConfidenceInterval)
-                return new ParameterBag(Parameter.Name, new FilledParameter(true, Preferences.DefaultConfidenceInterval));
-
-            // Prompt - keep going until the user cancels or gives a valid entry
-            string prompt = Parameter.Prompt(processor, context);
-            if (string.IsNullOrEmpty(prompt))
-                prompt = "Enter confidence interval (%, in the range [0, 100])";
-
-            double result = 0.0;
-            if (Preferences.CanDefaultConfidenceInterval)
-                result = Preferences.DefaultConfidenceInterval;
-            if (Parameter.DefaultValue > 0.0)
-                result = Parameter.DefaultValue;
-
-            while (true)
-            {
-                string response = Prompt(prompt, "StatsDirect", (result * 100.0).ToString());
-                if (string.IsNullOrEmpty(response))
-                    throw new TemplateOperationCancelledException();
-                if (Double.TryParse(response, out result))
-                {
-                    result /= 100.0;
-                    if (result >= 0.0 && result <= 1.0)
-                    {
-                        return new ParameterBag(Parameter.Name, new FilledParameter(true, result));
-                    }
-                }
-                // else go round again
             }
         }
 
         static void PrepareParameter(ITemplateProcessor processor, PickFromListParameter parameter, ParameterBag context)
         {
             // TODO: Move logic out of SetOperation() into here
-        }
-
-        ParameterBag FillParameter(ITemplateProcessor processor, GroupedCovarianceParameter parameter)
-        {
-            IGrid grid = (IGrid)ActiveGrid.Window;
-            Builtins.GroupedCovarianceData data = new GridSelectionProcessor(grid).FillGroupedCovarianceParameter(processor);
-            if (null == data)
-                return null;
-            return new ParameterBag(parameter.Name, new FilledParameter(true, data));
-        }
-
-        ParameterBag FillParameter(ITemplateProcessor processor, IntegerParameter Parameter, ParameterBag context)
-        {
-            // Prompt for the range
-            string suffix = string.Empty;
-            if (Parameter.MinimumValue > Int32.MinValue || Parameter.MaximumValue < Int32.MaxValue)
-            {
-                suffix = " (";
-                if (Parameter.MinimumValue > Int32.MinValue)
-                    suffix += Parameter.MinimumValue.ToString();
-                suffix += " to ";
-                if (Parameter.MaximumValue < Int32.MaxValue)
-                    suffix += Parameter.MaximumValue.ToString();
-                suffix += ")";
-            }
-            while (true)
-            {
-                int? defaultValue = 0;
-                if (Parameter.HasDefaultValue)
-                {
-                    defaultValue = Parameter.DefaultValue(processor, context);
-                }
-                string response = Prompt(Parameter.Prompt(processor, context) + suffix, "StatsDirect", defaultValue.HasValue ? defaultValue.Value.ToString() : string.Empty);
-                if (string.IsNullOrEmpty(response))
-                {
-                    if (null != Parameter.CancelSkipsParameter)
-                    {
-                        return new ParameterBag();
-                    }
-                    throw new TemplateOperationCancelledException();
-                }
-                int result = Parsing.Cint_Txt(response);
-                if (result >= Parameter.MinimumValue && result <= Parameter.MaximumValue)
-                    return new ParameterBag(Parameter.Name, new FilledParameter(true, result));
-                // else go round and prompt again
-            }
-        }
-
-        ParameterBag FillParameter(ITemplateProcessor processor, BooleanParameter Parameter, ParameterBag context)
-        {
-            DialogResult result = MsgboxX(Parameter.Prompt(processor, context), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, "StatsDirect", true);
-            if (DialogResult.Cancel == result)
-            {
-                if (null != Parameter.CancelSkipsParameter)
-                {
-                    return new ParameterBag();
-                }
-                throw new TemplateOperationCancelledException();
-            }
-            return new ParameterBag(Parameter.Name, new FilledParameter(true, DialogResult.Yes == result));
-        }
-
-        ParameterBag FillParameter(ITemplateProcessor processor, DoubleParameter Parameter, ParameterBag context)
-        {
-            double minimumValue = Parameter.MinimumValue(processor, context);
-            double maximumValue = Parameter.MaximumValue(processor, context);
-            // Prompt for the range
-            string suffix = string.Empty;
-            if (minimumValue > double.MinValue || maximumValue < double.MaxValue)
-            {
-                suffix = " (";
-                if (minimumValue > double.MinValue)
-                    suffix += minimumValue.ToString();
-                suffix += " to ";
-                if (maximumValue < double.MaxValue)
-                    suffix += maximumValue.ToString();
-                suffix += ")";
-            }
-            while (true)
-            {
-                string defaultValueString = string.Empty;
-                double? defaultValue = Parameter.DefaultValue(processor, context);
-                if (defaultValue.HasValue && !double.IsNaN(defaultValue.Value))
-                    defaultValueString = defaultValue.Value.ToString();
-                string response = Prompt(Parameter.Prompt(processor, context) + suffix, "StatsDirect", defaultValueString);
-                if (string.IsNullOrEmpty(response))
-                {
-                    if (null != Parameter.CancelSkipsParameter)
-                    {
-                        return new ParameterBag();
-                    }
-                    throw new TemplateOperationCancelledException();
-                }
-                double result = Parsing.Cdbl_Txt(response);
-                if (result >= minimumValue && result <= maximumValue)
-                    return new ParameterBag(Parameter.Name, new FilledParameter(true, result));
-                // else go round and prompt again
-            }
         }
 
         private ParameterBag FillChartOptions(Charting.ChartDefinition ChartDefinition, ParameterBag context)

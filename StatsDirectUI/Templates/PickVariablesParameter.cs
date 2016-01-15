@@ -52,13 +52,14 @@ namespace StatsDirect.Templates
             return (string)processor.Evaluate(LabelAsExpression, parametersIncludingVariableNumber);
         }
 
-        public override ParameterType Type
-        {
-            get { return ParameterType.PickVariables; }
-        }
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return (MustRequest || !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
+
+        public override void Accept(IParameterVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

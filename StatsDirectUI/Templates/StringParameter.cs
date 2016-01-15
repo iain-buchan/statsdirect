@@ -46,9 +46,9 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "maximum-length")]
         public int MaxLength { get; set; }
 
-        public override ParameterType Type
+        public override void Accept(IParameterVisitor visitor)
         {
-            get { return ParameterType.String; }
+            visitor.Visit(this);
         }
     }
 }

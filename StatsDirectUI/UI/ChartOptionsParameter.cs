@@ -5,7 +5,7 @@ namespace StatsDirect.UI
     /// <summary>
     /// A shim to allow chart options to be passed around as Parameters, and hence filled in by the UI
     /// </summary>
-    internal class ChartOptionsParameter : Parameter
+    public class ChartOptionsParameter : Parameter
     {
         private readonly Charting.ChartDefinition chartDefinition;
 
@@ -20,13 +20,14 @@ namespace StatsDirect.UI
             get { return chartDefinition; }
         }
 
-        public override ParameterType Type
-        {
-            get { return ParameterType.Custom; }
-        }
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return InputDuringStep.Always;
+        }
+
+        public override void Accept(IParameterVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

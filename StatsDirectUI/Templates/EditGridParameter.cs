@@ -43,14 +43,14 @@ namespace StatsDirect.Templates
             set { source = value; }
         }
 
-        public override ParameterType Type
-        {
-            get { return ParameterType.EditGrid; }
-        }
-
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
+
+        public override void Accept(IParameterVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

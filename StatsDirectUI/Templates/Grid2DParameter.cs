@@ -11,7 +11,7 @@ namespace StatsDirect.Templates
     }
 
     [Serializable]
-    public sealed class GridParameter2D: Parameter
+    public sealed class Grid2DParameter: Parameter
     {
         private bool columnsAreSameLength;
         private Expression length;
@@ -176,13 +176,14 @@ namespace StatsDirect.Templates
             }
         }
 
-        public override ParameterType Type
-        {
-            get { return ParameterType.Grid2D; }
-        }
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
+
+        public override void Accept(IParameterVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

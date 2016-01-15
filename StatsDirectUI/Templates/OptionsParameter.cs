@@ -65,14 +65,14 @@ namespace StatsDirect.Templates
             get { return options; }
         }
 
-        public override ParameterType Type
-        {
-            get { return ParameterType.Options; }
-        }
-
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
+
+        public override void Accept(IParameterVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

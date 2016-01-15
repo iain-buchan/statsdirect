@@ -34,9 +34,9 @@ namespace StatsDirect.Templates
             set { defaultValue = value; }
         }
 
-        public override ParameterType Type
+        public override void Accept(IParameterVisitor visitor)
         {
-            get { return ParameterType.Date; }
+            visitor.Visit(this);
         }
     }
 }

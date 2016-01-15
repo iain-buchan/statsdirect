@@ -2420,6 +2420,85 @@ namespace StatsDirect.Builtins
             return nextDifferentValue;
         }
 
+        private class VariableObjectClassifier : IVariableVisitor
+        {
+            public int[] differenceArray { get; set; }
+            public int nextDifferentValue { get; set; }
+
+            public void Visit(DoubleVariable variable)
+            {
+                ClassifyObjects(variable.Data);
+            }
+
+            public void Visit(VariantVariable variable)
+            {
+                ClassifyObjects(variable.Data);
+            }
+
+            public void Visit(StringVariable variable)
+            {
+                ClassifyObjects(variable.Data);
+            }
+
+            public void Visit(DateVariable variable)
+            {
+                ClassifyObjects(variable.Data);
+            }
+
+            public void Visit(ClassifierVariable variable)
+            {
+                ClassifyObjects(variable.Data);
+            }
+
+            private void ClassifyObjects<T>(T[] testArray)
+            {
+                HashSet<int> seenDifferences = new HashSet<int>();
+                Dictionary<IntAndSomething<T>, int> differenceMapper = new Dictionary<IntAndSomething<T>, int>();
+                for (int i = 0; i < differenceArray.Length; i++)
+                {
+                    int differenceValue = differenceArray[i];
+                    IntAndSomething<T> probe = new IntAndSomething<T> { i = differenceValue, t = (i < testArray.Length) ? testArray[i] : default(T) };
+                    int target; // Holds the value we'll use
+                    if (differenceMapper.TryGetValue(probe, out target))
+                    {
+                        // We've seen this value before; use the existing mapping
+                    }
+                    else
+                    {
+                        // We've not seen this combination before.  Create a mapping for it and set the value in differenceArray accordingly.
+                        // If this is the first time we've seen this value in differenceArray, re-use it; otherwise, assign a new unique value.
+                        if (!seenDifferences.Contains(differenceValue))
+                        {
+                            seenDifferences.Add(differenceValue);
+                            target = differenceValue;
+                        }
+                        else
+                            target = nextDifferentValue++;
+                        differenceMapper.Add(probe, target);
+                    }
+                    differenceArray[i] = target;
+                }
+            }
+
+            private class IntAndSomething<T>
+            {
+                public int i;
+                public T t;
+
+                public override int GetHashCode()
+                {
+                    return i ^ t.GetHashCode();
+                }
+
+                public override bool Equals(object obj)
+                {
+                    if (!(obj is IntAndSomething<T>))
+                        return false;
+                    IntAndSomething<T> other = (IntAndSomething<T>)obj;
+                    return i == other.i && t.Equals(other.t);
+                }
+            }
+        }
         /// <summary>
         /// Assume differenceArray already holds differences for variables earlier than this one.  Where elements of this variable differ, distinguish new values in differenceArray.
         /// </summary>
@@ -2429,65 +2508,9 @@ namespace StatsDirect.Builtins
         /// <returns></returns>
         private static int ClassifyObjects(int[] differenceArray, Variable variable, int nextDifferentValue)
         {
-            if (variable.IsDoubleVariable) // Includes ClassifierVariable
-                return ClassifyObjects(differenceArray, ((DoubleVariable)variable).Data, nextDifferentValue);
-            if (variable.IsDateVariable)
-                return ClassifyObjects(differenceArray, ((DateVariable)variable).Data, nextDifferentValue);
-            if (variable.IsStringVariable)
-                return ClassifyObjects(differenceArray, ((StringVariable)variable).Data, nextDifferentValue);
-            if (variable.IsVariantVariable)
-                return ClassifyObjects(differenceArray, ((VariantVariable)variable).Data, nextDifferentValue);
-            throw new Exception("Unknown type of data variable in ClassifyObjects");
-        }
-
-        private static int ClassifyObjects<T>(int[] differenceArray, T[] testArray, int nextDifferentValue)
-        {
-            HashSet<int> seenDifferences = new HashSet<int>();
-            Dictionary<IntAndSomething<T>, int> differenceMapper = new Dictionary<IntAndSomething<T>, int>();
-            for (int i = 0; i < differenceArray.Length; i++)
-            {
-                int differenceValue = differenceArray[i];
-                IntAndSomething<T> probe = new IntAndSomething<T> { i = differenceValue, t = (i < testArray.Length) ? testArray[i] : default(T) };
-                int target; // Holds the value we'll use
-                if (differenceMapper.TryGetValue(probe, out target))
-                {
-                    // We've seen this value before; use the existing mapping
-                }
-                else
-                {
-                    // We've not seen this combination before.  Create a mapping for it and set the value in differenceArray accordingly.
-                    // If this is the first time we've seen this value in differenceArray, re-use it; otherwise, assign a new unique value.
-                    if (!seenDifferences.Contains(differenceValue))
-                    {
-                        seenDifferences.Add(differenceValue);
-                        target = differenceValue;
-                    }
-                    else
-                        target = nextDifferentValue++;
-                    differenceMapper.Add(probe, target);
-                }
-                differenceArray[i] = target;
-            }
-            return nextDifferentValue;
-        }
-
-        private class IntAndSomething<T>
-        {
-            public int i;
-            public T t;
-
-            public override int GetHashCode()
-            {
-                return i ^ t.GetHashCode();
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (!(obj is IntAndSomething<T>))
-                    return false;
-                IntAndSomething<T> other = (IntAndSomething<T>)obj;
-                return i == other.i && t.Equals(other.t);
-            }
+            VariableObjectClassifier classifier = new VariableObjectClassifier { differenceArray = differenceArray, nextDifferentValue = nextDifferentValue };
+            variable.Accept(classifier);
+            return classifier.nextDifferentValue;
         }
 
         private class CountAndRowIndex

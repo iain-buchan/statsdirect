@@ -113,20 +113,6 @@ namespace StatsDirect.Data
             }
         }
 
-        ///  <summary>
-        ///  True if this Variable is a date variable; false if it is not
-        ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        public override bool IsDateVariable
-        {
-            get
-            {
-                return true;
-            }
-        }
-
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
             DateVariable copy = new DateVariable();
@@ -146,10 +132,8 @@ namespace StatsDirect.Data
 
         public override void StealDataFrom(Variable victim)
         {
-            if (!(victim.IsDateVariable))
-            {
+            if (!(victim is DateVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
-            }
             Data = victim.AsDateVariable.Data;
         }
 
@@ -164,6 +148,11 @@ namespace StatsDirect.Data
             {
                 return Data != null;
             }
+        }
+
+        public override void Accept(IVariableVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

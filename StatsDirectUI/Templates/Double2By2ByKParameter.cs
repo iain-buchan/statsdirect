@@ -5,13 +5,14 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class Double2By2ByKParameter: Parameter
     {
-        public override ParameterType Type
-        {
-            get { return ParameterType.Double2By2ByK; }
-        }
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return (MustRequest || !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
+
+        public override void Accept(IParameterVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

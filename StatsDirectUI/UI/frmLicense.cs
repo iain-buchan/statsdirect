@@ -53,8 +53,7 @@ namespace StatsDirect.UI
 
         private void cmdOK_Click(object sender, EventArgs e)
         {
-            string errorMessage;
-            bool shouldClose = SetResults(out errorMessage);
+            bool shouldClose = SetResults();
             userCancelled = false;
             if (shouldClose)
             {
@@ -63,12 +62,22 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool SetResults(out string errorMessage)
+        private bool SetResults()
         {
             string email = txtEmail.Text.Trim();
             string organisation = txtOrganisation.Text.Trim();
             string key = txtKey.Text.Trim();
-            bool retval = License.SetResults(email, organisation, key, ui, out errorMessage);
+            string errorMessage;
+            bool retval;
+            try
+            {
+                retval = License.SetResults(email, organisation, key, ui, out errorMessage);
+            }
+            catch (Exception)
+            {
+                errorMessage = "An unexpected error occurred while trying to set the licence. Please check you have entered your email address, organisation and key correctly.";
+                retval = false;
+            }
             if (null != errorMessage)
                 SdApplication.SoleInstance.MsgboxX(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect licence", false);
             return retval;

@@ -5,7 +5,7 @@ namespace StatsDirect.UI
     /// <summary>
     /// A shim to allow fillables to be passed around as Parameters, and hence filled in by the UI.
     /// </summary>
-    internal class FillableParameter : Parameter
+    public class FillableParameter : Parameter
     {
         private readonly IFillable fillable;
 
@@ -20,13 +20,14 @@ namespace StatsDirect.UI
             get { return fillable; }
         }
 
-        public override ParameterType Type
-        {
-            get { return ParameterType.Custom; }
-        }
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+        }
+
+        public override void Accept(IParameterVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

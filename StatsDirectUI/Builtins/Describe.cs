@@ -268,7 +268,7 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             for (int v = 0; v <= data.VariableCount - 1; v++)
             {
-                if (!(data.Variables[v].IsClassifierVariable))
+                if (!(data.Variables[v] is ClassifierVariable))
                     data.Variables[v] = TemplateProcessor.gidx_bins(data.Variables[v].AsDoubleVariable);
             }
 
