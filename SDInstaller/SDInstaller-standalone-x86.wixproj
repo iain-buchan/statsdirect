@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>3.0</ProductVersion>
-    <ProjectGuid>{ecfd2cc0-5b2b-4886-9287-01b813a3a648}</ProjectGuid>
+    <ProjectGuid>{5aa25a40-1e22-48b8-961f-1d37c87473a9}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputName>StatsDirect-x86</OutputName>
     <OutputType>Package</OutputType>
@@ -39,7 +39,7 @@
   <ItemGroup>
     <Compile Include="DllsFragment.wxs" />
     <Compile Include="OperationsFragment.wxs" />
-    <Compile Include="StatsDirect-x86.wxs" />
+    <Compile Include="StatsDirect-standalone-x86.wxs" />
     <Compile Include="TemplateFragment.wxs" />
   </ItemGroup>
   <ItemGroup>
@@ -68,7 +68,7 @@
     <Content Include="Component.wxi" />
     <Content Include="Desktop.wxi" />
     <Content Include="DllsOnly.xslt" />
-    <Content Include="Package.wxi" />
+    <Content Include="Package-standalone.wxi" />
     <Content Include="StartMenu.wxi" />
     <Content Include="Ui.wxi" />
     <Content Include="Feature.wxi" />
@@ -87,6 +87,7 @@
   <Target Name="AfterBuild">
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"
+if $(ConfigurationName) == ReleaseWithSigning copy "$(TargetPath)" "$(SolutionDir)ReleaseBuild"</PostBuildEvent>
   </PropertyGroup>
 </Project>

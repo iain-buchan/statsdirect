@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ON EACH BUILD, INCREMENT THE VERSION NUMBER IN STATSDIRECTUI - and remember this system ignores the fourth number! -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <Product
+    Id="*"
+    Name="StatsDirect"
+    Language="1033"
+    Version="!(bind.FileVersion.statsdirectexe)"
+    Manufacturer="StatsDirect Limited"
+    UpgradeCode="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
+
+    <?include Package-standalone.wxi ?>
+    <?include Ui.wxi ?>
+    <?include StartMenu.wxi ?>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Start menu shortcut location -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="StatsDirect 3"/>
+      </Directory>
+
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLLOCATION" Name="StatsDirect3" FileSource="$(var.StatsDirectUI.TargetDir)">
+          <Component Id="ProductComponent" Guid="CE038078-F78B-42b0-A547-8509996AA427">
+            <File Id="statsdirectexe" KeyPath="yes" Name="StatsDirect.exe" Checksum="yes">
+              <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="32bit" Priority="1" AppBaseDirectory="INSTALLLOCATION"/>
+              <?include Desktop.wxi ?>
+            </File>
+          </Component>
+          <?include Component.wxi ?>
+
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <?include Feature.wxi ?>
+  </Product>
+</Wix>
