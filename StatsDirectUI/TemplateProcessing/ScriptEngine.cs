@@ -126,16 +126,16 @@ namespace StatsDirect.Templates
                     case CHASH:
                     case CHASHLOWER:
                         sourceBuilder.AppendLine("using System;");
-                        sourceBuilder.AppendLine("using System.Linq;");
-                        sourceBuilder.AppendLine("using System.Text;");
                         sourceBuilder.AppendLine("using System.Collections;");
                         sourceBuilder.AppendLine("using System.Collections.Generic;");
-                        sourceBuilder.AppendLine("using StatsDirect.Templates;");
+                        sourceBuilder.AppendLine("using System.Linq;");
+                        sourceBuilder.AppendLine("using System.Text;");
+                        sourceBuilder.AppendLine("using StatsDirect.Builtins;");
                         sourceBuilder.AppendLine("using StatsDirect.Data;");
                         sourceBuilder.AppendLine("using StatsDirect.Numerics;");
-                        sourceBuilder.AppendLine("using StatsDirect.Builtins;");
-                        sourceBuilder.AppendLine("using StatsDirect.Utilities;");
                         sourceBuilder.AppendLine("using StatsDirect.R;");
+                        sourceBuilder.AppendLine("using StatsDirect.Templates;");
+                        sourceBuilder.AppendLine("using StatsDirect.Utilities;");
                         sourceBuilder.AppendLine("namespace StatsDirect.Templates {");
                         sourceBuilder.AppendLine("public class Temp1 {");
                         switch (scriptType)
@@ -176,18 +176,19 @@ namespace StatsDirect.Templates
                         break;
                     case VISUALBASIC:
                     case VISUALBASICLOWER:
+                        sourceBuilder.AppendLine("Imports Microsoft.VisualBasic");
                         sourceBuilder.AppendLine("Imports System");
-                        sourceBuilder.AppendLine("Imports System.Linq");
-                        sourceBuilder.AppendLine("Imports System.Text");
                         sourceBuilder.AppendLine("Imports System.Collections");
                         sourceBuilder.AppendLine("Imports System.Collections.Generic");
-                        sourceBuilder.AppendLine("Imports Microsoft.VisualBasic");
-                        sourceBuilder.AppendLine("Imports StatsDirect.Templates");
-                        sourceBuilder.AppendLine("Imports StatsDirect.Data");
-                        sourceBuilder.AppendLine("Imports StatsDirect.Numerics");
+                        sourceBuilder.AppendLine("Imports System.Linq");
+                        sourceBuilder.AppendLine("Imports System.Text");
                         sourceBuilder.AppendLine("Imports StatsDirect.Builtins");
-                        sourceBuilder.AppendLine("Imports StatsDirect.Utilities");
+                        sourceBuilder.AppendLine("Imports StatsDirect.Data");
+                        sourceBuilder.AppendLine("Imports StatsDirect.Expressions");
+                        sourceBuilder.AppendLine("Imports StatsDirect.Numerics");
                         sourceBuilder.AppendLine("Imports StatsDirect.R");
+                        sourceBuilder.AppendLine("Imports StatsDirect.Templates");
+                        sourceBuilder.AppendLine("Imports StatsDirect.Utilities");
                         sourceBuilder.AppendLine("Namespace StatsDirect.Templates");
                         sourceBuilder.AppendLine("Public Class Temp1");
                         switch (scriptType)
