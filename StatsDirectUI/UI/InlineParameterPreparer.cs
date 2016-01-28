@@ -1322,7 +1322,7 @@ namespace StatsDirect.UI
                 if (Form.IsCalculateButton(next))
                 {
                     // The Calculate button is sometimes visible in place of the OK button, notably when an operation is ready to be executed.  Deal with this by returning, which breaks out of the selection loop and runs the operation.
-                    if (Form.IsSelecting)
+                    if (Form.IsSelecting || Form.IsInputtingData)
                     {
                         Form.NoteEndOfSelection(true);
                         e.Handled = true;

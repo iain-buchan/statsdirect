@@ -1062,10 +1062,10 @@ namespace StatsDirect.UI
 
         private void workbookView_KeyDown(object sender, KeyEventArgs e)
         {
-            if (SdApplication.SoleInstance.IsSelecting && e.KeyCode == Keys.Enter)
+            if (SdApplication.SoleInstance.MainWindow.IsSelecting && e.KeyCode == Keys.Enter)
             {
                 // This changes the state both for selecting and for data input, but is OK because we only get here if we're selecting.
-                SdApplication.SoleInstance.NoteEndOfSelection(true);
+                SdApplication.SoleInstance.MainWindow.NoteEndOfSelection(true);
                 e.Handled = true;
             }
         }
@@ -1961,7 +1961,7 @@ namespace StatsDirect.UI
             if (SdApplication.SoleInstance.SelectingData)
             {
                 // NoteEndOfSelection clears both selectingData and inputtingData.  However, that's safe here, as we only get here if we're SelectingData.
-                SdApplication.SoleInstance.NoteEndOfSelection(true);
+                SdApplication.SoleInstance.MainWindow.NoteEndOfSelection(true);
                 e.Cancel = true;
                 return;
             }

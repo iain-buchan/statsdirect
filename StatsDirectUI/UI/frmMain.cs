@@ -1062,6 +1062,11 @@ namespace StatsDirect.UI
             get { return selectingData; }
         }
 
+        public bool IsInputtingData
+        {
+            get { return inputtingData; }
+        }
+
         private void cmdCancel_Click(object sender, EventArgs e)
         {
             try

@@ -1057,16 +1057,6 @@ namespace StatsDirect.UI
             }
         }
 
-        public void NoteEndOfSelection(bool ok)
-        {
-            mainWindow.NoteEndOfSelection(ok);
-        }
-
-        public bool IsSelecting
-        {
-            get { return mainWindow.IsSelecting; }
-        }
-
         public SDPreferences Preferences
         {
             get { return preferences ?? (preferences = LoadPreferences()); }
