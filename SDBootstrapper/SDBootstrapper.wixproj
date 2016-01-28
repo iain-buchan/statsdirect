@@ -6,7 +6,7 @@
     <ProductVersion>3.7</ProductVersion>
     <ProjectGuid>e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>StatsDirect</OutputName>
+    <OutputName>StatsDirectSetup</OutputName>
     <OutputType>Bundle</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
@@ -18,6 +18,10 @@
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
@@ -84,27 +88,19 @@
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>rem "$(SolutionDir)Key\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"</PostBuildEvent>
-  </PropertyGroup>
-  <!--
-	To modify your build process, add your task inside one of the targets below and uncomment it.
-	Other similar extension points exist, see Wix.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
   <Target Name="SignBundleEngine">
-    <Exec Command="&quot;$(SolutionDir)\Key\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sdsign.pfx&quot; /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /v /d &quot;%(SignBundleEngine.Filename)&quot; &quot;@(SignBundleEngine)&quot;" />
+    <Exec Command="&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sdsign.pfx&quot; /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /d &quot;%(SignBundleEngine.Filename)&quot; &quot;@(SignBundleEngine)&quot;&#xD;&#xA;      &quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /fd sha256 /p ***REMOVED*** /tr http://timestamp.entrust.net/TSS/RFC3161sha2TS /td sha256 /as /d &quot;%(SignBundleEngine.Filename)&quot; &quot;@(SignBundleEngine)&quot;" />
   </Target>
   <Target Name="SignBundle">
-    <Exec Command="&quot;$(SolutionDir)\Key\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sdsign.pfx&quot; /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /v /d &quot;%(SignBundle.Filename)&quot; &quot;@(SignBundle)&quot;" />
+    <Exec Command="rem &quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /d &quot;%(SignBundle.Filename)&quot; &quot;@(SignBundle)&quot;&#xD;&#xA;          &quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /fd sha256 /p ***REMOVED*** /tr http://timestamp.entrust.net/TSS/RFC3161sha2TS /td sha256 /as /d &quot;%(SignBundle.Filename)&quot; &quot;@(SignBundle)&quot;" />
   </Target>
   <Target Name="SignMsi">
-    <Exec Command="&quot;$(SolutionDir)\Key\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sdsign.pfx&quot; /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /v /d &quot;%(SignMsi.Filename)&quot; &quot;@(SignMsi)&quot;" />
+    <Exec Command="&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /d &quot;%(SignMsi.Filename)&quot; &quot;@(SignMsi)&quot;" />
   </Target>
   <Target Name="SignCabs">
-    <Exec Command="&quot;$(SolutionDir)\Key\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sdsign.pfx&quot; /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /v /d &quot;%(SignCabs.Filename)&quot; &quot;@(SignCabs)&quot;" />
+    <Exec Command="&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /p ***REMOVED*** /t http://timestamp.verisign.com/scripts/timstamp.dll /d &quot;%(SignCabs.Filename)&quot; &quot;@(SignCabs)&quot;" />
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning copy "$(TargetPath)" "$(SolutionDir)ReleaseBuild"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
