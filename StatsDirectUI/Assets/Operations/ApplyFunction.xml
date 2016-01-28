@@ -68,7 +68,11 @@ Return outputParameters
         outputFrame.Variables.Add(outputVariable)
 
         'Work through the rows
-        Dim clc As New Calcit(Q)
+        Dim doubles(cols - 1) As StatsDirect.Expressions.DataType
+        For N As Integer = 0 to cols - 1
+            doubles(N) = StatsDirect.Expressions.DataType.Double
+        Next
+        Dim clc As New Calcit(Q, doubles, False)
         Dim x(cols) as Double
         For N as Integer = 0 To rows - 1
             'Put the current Row into the work array
