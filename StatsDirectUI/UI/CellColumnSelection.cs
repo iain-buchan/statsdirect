@@ -94,7 +94,7 @@ namespace StatsDirect.UI
                             {
                                 gridFirstDataRow = candidateFirstGridRow;
                                 titleIsInData = true;
-                                columnTitle = candidateTitle;
+                                columnTitle = SafeTitle(candidateTitle);
                                 return;
                             }
                         }
@@ -113,7 +113,7 @@ namespace StatsDirect.UI
                         {
                             gridFirstDataRow = candidateFirstGridRow;
                             titleIsInData = true;
-                            columnTitle = candidateTitle;
+                            columnTitle = SafeTitle(candidateTitle);
                             return;
                         }
                     }
@@ -133,7 +133,25 @@ namespace StatsDirect.UI
                 skippedRows++;
             }
             dataRows -= skippedRows;
-            columnTitle = candidateTitle;
+            columnTitle = SafeTitle(candidateTitle);
+        }
+
+        /// <summary>
+        /// Current policy: strip control characters, replace whitespace (any) with spaces.
+        /// </summary>
+        /// <param name="candidateTitle"></param>
+        /// <returns></returns>
+        private string SafeTitle(string candidateTitle)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (char ch in candidateTitle)
+            {
+                if (Char.IsWhiteSpace(ch))
+                    sb.Append(' ');
+                else if (!Char.IsControl(ch))
+                    sb.Append(ch);
+            }
+            return sb.ToString();
         }
 
         internal IOrigin GetWorksheetOrigin(DataAcquisitionMode mode, bool titleIsInData, int originGroup)
