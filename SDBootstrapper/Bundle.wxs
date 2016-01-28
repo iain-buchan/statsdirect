@@ -12,6 +12,7 @@
     HelpUrl="http://www.statsdirect.com/Support.aspx"
     UpdateUrl="http://www.statsdirect.com/Update.aspx"
     IconSourceFile="sd3.ico">
+    <bal:Condition Message="User Account Control appears to be disabled on this computer. You need either to enable it or to be an administrator to install StatsDirect.">Privileged</bal:Condition>
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication ThemeFile="Theme.xml"
             LicenseFile="Licence.rtf"
