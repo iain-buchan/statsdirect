@@ -92,6 +92,7 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /t http://timestamp.verisign.com/scripts/timstamp.dll /p ***REMOVED*** "$(TargetPath)"
+rem if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha1 /tr http://timestamp.comodoca.com /td sha256 /p ***REMOVED*** "$(TargetPath)"
 if $(ConfigurationName) == ReleaseWithSigning copy "$(TargetPath)" "$(SolutionDir)ReleaseBuild"</PostBuildEvent>
   </PropertyGroup>
 </Project>
