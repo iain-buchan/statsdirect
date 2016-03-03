@@ -6,7 +6,7 @@
     <ProductVersion>3.0</ProductVersion>
     <ProjectGuid>{d9ac87d9-842b-4c52-9f58-8036c0940daf}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>StatsDirect-x64</OutputName>
+    <OutputName>StatsDirect-x64-separate</OutputName>
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
