@@ -345,7 +345,9 @@
     <Compile Include="UI\ctlUpdateRCheck.Designer.cs">
       <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\CustomCommands.cs" />
     <Compile Include="UI\DialogAndAction.cs" />
+    <Compile Include="UI\HtmlRelatedClasses.cs" />
     <Compile Include="UI\IGetCells.cs" />
     <Compile Include="UI\ImmediateParameterFiller.cs" />
     <Compile Include="UI\InlineParameterPreparer.cs" />
@@ -1743,7 +1745,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

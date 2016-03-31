@@ -11,6 +11,7 @@ using DevExpress.XtraRichEdit.API.Native;
 using DevExpress.XtraRichEdit.Commands;
 using System.Drawing.Imaging;
 using StatsDirect.Utilities;
+using DevExpress.XtraRichEdit.Services;
 
 namespace StatsDirect.UI
 {
@@ -21,6 +22,14 @@ namespace StatsDirect.UI
             InitializeComponent();
             LoadTemplateFile();
             SdApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(MenuStrip1);
+            SetCustomCommandFactory(); // #1202: Paste in table form
+        }
+
+        private void SetCustomCommandFactory()
+        {
+            CustomRichEditCommandFactoryService commandFactory = new CustomRichEditCommandFactoryService(richEditControl1, richEditControl1.GetService<IRichEditCommandFactoryService>());
+            richEditControl1.RemoveService(typeof(IRichEditCommandFactoryService));
+            richEditControl1.AddService(typeof(IRichEditCommandFactoryService), commandFactory);
         }
 
         private string currentFile;
@@ -1007,6 +1016,27 @@ namespace StatsDirect.UI
             // StartSearch merely sets up the search; use FindNext to find the first result.
             while (searchResult.FindNext())
                 FixupTableAt(searchResult.CurrentResult);
+        }
+    }
+
+    public class CustomRichEditCommandFactoryService : IRichEditCommandFactoryService
+    {
+        readonly IRichEditCommandFactoryService service;
+        readonly RichEditControl control;
+
+        public CustomRichEditCommandFactoryService(RichEditControl control, IRichEditCommandFactoryService service)
+        {
+            DevExpress.Utils.Guard.ArgumentNotNull(control, "control");
+            DevExpress.Utils.Guard.ArgumentNotNull(service, "service");
+            this.control = control;
+            this.service = service;
+        }
+
+        public RichEditCommand CreateCommand(RichEditCommandId id)
+        {
+            if (id == RichEditCommandId.CopySelection)
+                return new CustomCopySelectionCommand(control);
+            return service.CreateCommand(id);
         }
     }
 }
