@@ -35,12 +35,12 @@ namespace StatsDirect.UI
         {
             try
             {
-                System.Diagnostics.Process.Start("http://www.statsdirect.com/update.aspx");
+                Process.Start("http://www.statsdirect.com/update.aspx");
             }
             catch (Exception ex)
             {
                 // Almost-silent fail
-                System.Diagnostics.Debug.Print("Couldn't launch process to navigate to web site: " + ex.Message);
+                Debug.Print("Couldn't launch process to navigate to web site: " + ex.Message);
             }
         }
 
@@ -114,7 +114,7 @@ namespace StatsDirect.UI
 
         private void RefreshUserInfo()
         {
-            UserInfo ui = SdApplication.SoleInstance.UserInfo;
+            UserInfo ui = GetBestUserInfo();
 
             int d = !DateTime.MinValue.Equals(ui.Expires) ? Math.Abs(DateTime.ParseExact(ui.Expires, "dd/MM/yyyy", CultureInfo.InvariantCulture).Subtract(DateTime.Now).Days) : 0;
             if (ui.Trial || d < 60)
@@ -132,11 +132,23 @@ namespace StatsDirect.UI
 
         void lblEmail_DoubleClick(object sender, EventArgs e)
         {
-            using (frmLicense f = new frmLicense(SdApplication.SoleInstance.UserInfo, false))
+            UserInfo ui = GetBestUserInfo();
+
+            using (frmLicense f = new frmLicense(ui, false))
             {
                 f.ShowDialog(this);
             }
             RefreshUserInfo();
+        }
+
+        private static UserInfo GetBestUserInfo()
+        {
+            UserInfo ui = License.GetUserInfo(true);
+            bool scrap;
+            bool machineOk = License.Check(ui, out scrap);
+            if (machineOk)
+                return ui;
+            return License.GetUserInfo(false);
         }
 
         public string Platform

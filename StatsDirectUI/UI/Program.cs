@@ -306,21 +306,20 @@ namespace StatsDirect.UI
             }
         }
 
-        static void CheckLicense()
+        private static void CheckLicense()
         {
+            UserInfo machineUi = License.GetUserInfo(true);
+            bool scrap;
+            bool machineOk = License.Check(machineUi, out scrap);
+            if (machineOk)
+                return;
             while (true)
             {
                 UserInfo userUi = License.GetUserInfo(false);
-                UserInfo machineUi = License.GetUserInfo(true);
                 bool userIsPartiallyComplete;
                 bool userOk = License.Check(userUi, out userIsPartiallyComplete);
-                bool machineIsPartiallyComplete;
-                bool machineOk = License.Check(machineUi, out machineIsPartiallyComplete);
-                if (userOk || machineOk)
-                {
-                    SdApplication.SoleInstance.UserInfo = machineOk ? machineUi : userUi;
+                if (userOk)
                     return;
-                }
 
                 // If we get here, neither the user nor the machine license are good.  Get the user to start a trial or enter a good key, or exit SD.
                 // The user has no ability to enter a machine key, so always use the user key as the basis of this.

@@ -333,18 +333,6 @@ namespace StatsDirect.UI
             return candidateNumber;
         }
 
-        internal UserInfo UserInfo
-        {
-            get { return userInfo; }
-            set
-            {
-                // Security check - no cheating!
-                if (null != userInfo)
-                    throw new Exception("Can only assign once to UserInfo");
-                userInfo = value;
-            }
-        }
-
         internal frmMain MainWindow
         {
             get { return mainWindow; }
