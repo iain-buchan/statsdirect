@@ -27,6 +27,8 @@ namespace StatsDirect.UI
 
             if (args.Length > 0 && "-calculator".Equals(args[0]))
                 StartCalculator();
+            else if (args.Length > 0 && "-sanity-check".Equals(args[0]))
+                SanityChecker.Check();
             else
                 StartStatsDirect(args);
         }

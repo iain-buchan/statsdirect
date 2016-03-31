@@ -676,10 +676,11 @@ namespace StatsDirect.UI
             BuiltinRegistry.SoleInstance.AddAll(Builtins.Registry.GetFunctionRegistry());
         }
 
-        IScriptEngine ITemplateHost.GetScriptEngine(string Language)
+        IScriptEngine ITemplateHost.GetScriptEngine(string language)
         {
-            // At present, all languages are handled by the ScriptEngine.  This may never change, but at least this method provides an extension point in case it does.
-            return new ScriptEngine();
+            if (ScriptEngine.CanHandle(language))
+                return new ScriptEngine();
+            return null;
         }
 
         void ITemplateHost.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)

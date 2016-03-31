@@ -78,7 +78,7 @@ Return outputParameters
             'Put the current Row into the work array
             Dim binit as Boolean = False
             For j as Integer = 0 To cols - 1
-                x(j) = (data.Variables(j) as DoubleVariable).Data(N)
+                x(j) = CType(data.Variables(j), DoubleVariable).Data(N)
                 If x(j) = Constant.MISSING Then
                     binit = True
                     Exit For

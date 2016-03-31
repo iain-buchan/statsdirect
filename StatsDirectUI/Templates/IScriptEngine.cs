@@ -35,5 +35,11 @@
         /// </summary>
         /// <returns>Whatever the script returned</returns>
         object Run(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, Parameter parameter, string entryPoint);
+
+        /// <summary>
+        /// Checks that the script could be run - for example, by compiling it.
+        /// </summary>
+        /// <returns>null if the check succeeded, a (hopefully informative) diagnostic message if the check failed</returns>
+        string Check(string scriptLanguage, string code, ScriptType scriptType, string entryPoint);
     }
 }

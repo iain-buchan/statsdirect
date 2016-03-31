@@ -56,7 +56,6 @@ namespace StatsDirect.Templates
         /// <summary>
         /// Load all the menu and user operations
         /// </summary>
-        /// <returns>A collection of the user operations</returns>
         private static void LoadOperations()
         {
             lock (lockObject)

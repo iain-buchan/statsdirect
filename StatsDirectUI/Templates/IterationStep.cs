@@ -115,5 +115,10 @@ namespace StatsDirect.Templates
             foreach (Step s in steps)
                 s.NoteOperation(operation);
         }
+
+        public override void Accept(IStepVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
 }

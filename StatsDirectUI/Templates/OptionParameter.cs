@@ -43,7 +43,6 @@ namespace StatsDirect.Templates
     public sealed class OptionParameter: Parameter
     {
         private readonly IList<OptionOption> options;
-        private Expression defaultValue;
         private int columns = 2;
         private OptionFormatType optionFormatType = OptionFormatType.Radio;
 
@@ -91,11 +90,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValue
-        {
-            get { return defaultValue; }
-            set { defaultValue = value; }
-        }
+        public Expression DefaultValueExpression { get; set; }
 
         [XmlIgnore]
         public IList<OptionOption> Options

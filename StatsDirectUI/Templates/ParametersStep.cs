@@ -114,5 +114,10 @@ namespace StatsDirect.Templates
                 }
             return atLeastOneSometimes ? InputDuringStep.Sometimes : InputDuringStep.Never; 
         }
+
+        public override void Accept(IStepVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
 }

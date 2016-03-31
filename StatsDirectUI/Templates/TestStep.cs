@@ -181,5 +181,10 @@ namespace StatsDirect.Templates
                 s.NoteOperation(operation);
             }
         }
+
+        public override void Accept(IStepVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
 }

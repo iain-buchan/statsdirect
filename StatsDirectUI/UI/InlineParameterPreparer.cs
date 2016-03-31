@@ -886,8 +886,8 @@ namespace StatsDirect.UI
                         }
                         else
                         {
-                            if (null != parameter.DefaultValue)
-                                defaultValue = Processor.Evaluate(parameter.DefaultValue, Context).ToString();
+                            if (null != parameter.DefaultValueExpression)
+                                defaultValue = Processor.Evaluate(parameter.DefaultValueExpression, Context).ToString();
                         }
 
                         ComboBox cbo = new ComboBox { Tag = parameter, MaximumSize = new Size(250, 21) };
@@ -971,8 +971,8 @@ namespace StatsDirect.UI
                         }
                         else
                         {
-                            if (null != parameter.DefaultValue)
-                                defaultValue = Processor.Evaluate(parameter.DefaultValue, Context).ToString();
+                            if (null != parameter.DefaultValueExpression)
+                                defaultValue = Processor.Evaluate(parameter.DefaultValueExpression, Context).ToString();
                         }
 
                         foreach (OptionOption optionOption in parameter.Options)

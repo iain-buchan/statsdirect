@@ -321,6 +321,7 @@
     <Compile Include="Templates\GroupIdentifierMode.cs" />
     <Compile Include="Templates\IDefaultParameter.cs" />
     <Compile Include="Templates\IParameterVisitor.cs" />
+    <Compile Include="Templates\IStepVisitor.cs" />
     <Compile Include="Templates\LabelDirection.cs" />
     <Compile Include="Templates\OptionParameter.cs" />
     <Compile Include="Templates\Precondition.cs" />
@@ -356,6 +357,7 @@
     <Compile Include="UI\OutputType.cs" />
     <Compile Include="UI\PaneAndPosition.cs" />
     <Compile Include="Templates\RelativePosition.cs" />
+    <Compile Include="UI\SanityChecker.cs" />
     <Compile Include="UI\UpdateChecker.cs" />
     <Compile Include="UI\RUpdateChecker.cs" />
     <Compile Include="UI\FillableParameter.cs" />

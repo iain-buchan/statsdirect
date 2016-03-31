@@ -45,5 +45,10 @@ namespace StatsDirect.Templates
         {
             get { return requiresGrid; }
         }
+
+        public override void Accept(IStepVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
 }

@@ -97,5 +97,10 @@ namespace StatsDirect.Templates
         {
             return InputDuringStep.Never;
         }
+
+        public override void Accept(IStepVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
 }

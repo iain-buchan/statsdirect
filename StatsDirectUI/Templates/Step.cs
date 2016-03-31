@@ -180,5 +180,7 @@ namespace StatsDirect.Templates
             foundStep = null;
             return HasInput.NoAndTypeNotFound;
         }
+
+        public abstract void Accept(IStepVisitor visitor);
     }
 }

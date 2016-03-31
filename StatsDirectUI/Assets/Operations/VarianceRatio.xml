@@ -54,7 +54,7 @@
             Dim nx As Integer = 0
             Dim sum As Double = 0.0
             Dim sumsq As Double = 0.0
-            For Each v As Double In (Frame.Variables(D) as DoubleVariable).Data
+            For Each v As Double In CType(Frame.Variables(D), DoubleVariable).Data
                 If v <> Constant.MISSING Then
                     nx = nx + 1
                     sum = sum + v
@@ -65,7 +65,7 @@
             mean(D) = sum / CDbl(tnx(D))
             ss(D) = sumsq - ((sum * sum) / CDbl(tnx(D)))
             Dim sumsqdev As Double = 0.0
-            For Each v As Double In (Frame.Variables(D) as DoubleVariable).Data
+            For Each v As Double In CType(Frame.Variables(D), DoubleVariable).Data
                 If v <> Constant.MISSING Then
                     If Math.Abs(sumsqdev) > 1.0E+300 Then
                         sumsqdev = Constant.MISSING
