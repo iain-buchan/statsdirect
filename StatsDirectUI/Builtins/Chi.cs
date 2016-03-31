@@ -447,7 +447,7 @@ namespace StatsDirect.Builtins
                     tbl[i].Informative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
                 }
                 bool useLogScale = false;
-                new ExactBB().Exact22K(host, k, 1, tbl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                new ExactBB().Exact22K(host, k, 1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
             }
             else
             {

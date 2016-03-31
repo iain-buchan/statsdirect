@@ -211,7 +211,7 @@ namespace StatsDirect.Builtins
             return brentRootReturn;
         }
 */
-        public void Exact22K(ITemplateHost host, int numTables, int dataType, Rec2X2[] tables, double confLevel, ref double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
+        public void Exact22K(ITemplateHost host, int numTables, int dataType, Rec2X2[] tables, double confLevel, out double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
         {
             //   Stratified case-control data, matched case-control data, and
             //   stratified person-time data are all held in a record (Rec2x2). With
@@ -278,7 +278,7 @@ namespace StatsDirect.Builtins
             //  Make sure that exact calculations can be performed
             logScale = useLogScale;
             CheckData(dataType, numTables, tables, out ierr);
-            if (ierr == 1 | ierr == 2)
+            if (ierr == 1 || ierr == 2)
             {
                 ierr = -ierr;
                 polyD = null;
@@ -291,6 +291,7 @@ namespace StatsDirect.Builtins
                 fishP2 = Constant.MISSING;
                 midP1 = Constant.MISSING;
                 midP2 = Constant.MISSING;
+                cMLE = Constant.MISSING;
                 return;
             }
             //  Try on natural scale first then log scale if overflow
@@ -307,8 +308,10 @@ namespace StatsDirect.Builtins
                 fishP2 = Constant.MISSING;
                 midP1 = Constant.MISSING;
                 midP2 = Constant.MISSING;
+                cMLE = Constant.MISSING;
                 return;
             }
+            cMLE = 0;
             if (ierr == 0)
             {
                 CalcCmle(1.0, out cMLE, ref ierr);
@@ -318,9 +321,7 @@ namespace StatsDirect.Builtins
                 logScale = true;
                 CalcPoly(host, dataType, numTables, tables, out ierr);
                 if (ierr == 0)
-                {
                     CalcCmle(1.0, out cMLE, ref ierr);
-                }
             }
             if (ierr == 0)
             {
@@ -1397,7 +1398,7 @@ namespace StatsDirect.Builtins
                     int ierr;
                     double llm;
                     double p1M; double p2M; double p1F; double p2F;
-                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 }
                 else
                 {
@@ -1449,7 +1450,7 @@ namespace StatsDirect.Builtins
                     tabl[1].N0 = b + d;
                     tabl[1].Informative = (a * d != 0) || (b * c != 0);
                     bool useLogScale = false;
-                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1f, out p2f, out p1m, out p2m, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1f, out p2f, out p1m, out p2m, ref useLogScale, out ierr);
                 }
                 if ((a == 0) | (d == 0))
                 {

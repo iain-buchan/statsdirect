@@ -2167,7 +2167,7 @@ namespace StatsDirect.Builtins
                         tbl[i].Informative = (a[i] * pt1[i] != 0.0) | (b[i] * pt2[i] != 0.0);
                     }
                     bool useLogScale = false;
-                    new ExactBB().Exact22K(host, k, 1, tbl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, k, 1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 }
                 else
                 {
@@ -2389,7 +2389,6 @@ namespace StatsDirect.Builtins
             double dsul; double dsll; double dsx2; double dsor; double bd = 0; double qc = 0; double sk;
             double x2; double ul; double ll; double rmh; double cit;
             double isq; double llisq; double ulisq;
-            int i;
             int ierr;
             int realk;
             bool stratlab;
@@ -2411,34 +2410,26 @@ namespace StatsDirect.Builtins
             DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 1];
-            for (i = 1; i <= k; i++)
-            {
+            for (int i = 1; i <= k; i++)
                 sn[i] = snVariable.Data[i - 1];
-            }
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
             DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
             double[] sr = new double[k + 1 ];
-            for (i = 1; i <= k; i++)
-            {
+            for (int i = 1; i <= k; i++)
                 sr[i] = srVariable.Data[i - 1];
-            }
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
             DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
             double[] xn = new double[k + 1 ];
-            for (i = 1; i <= k; i++)
-            {
+            for (int i = 1; i <= k; i++)
                 xn[i] = xnVariable.Data[i - 1];
-            }
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
             DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
             double[] xr = new double[k + 1 ];
-            for (i = 1; i <= k; i++)
-            {
+            for (int i = 1; i <= k; i++)
                 xr[i] = xrVariable.Data[i - 1];
-            }
 
             string[] title = new string[k + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
@@ -2446,7 +2437,7 @@ namespace StatsDirect.Builtins
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
                 StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
-                for (i = 1; i <= k; i++)
+                for (int i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
                     if (buf.Length > 0)
@@ -2466,7 +2457,7 @@ namespace StatsDirect.Builtins
             else
             {
                 stratlab = false;
-                for (i = 1; i <= k; i++)
+                for (int i = 1; i <= k; i++)
                 {
                     title[i] = "stratum " + i.ToString();
                 }
@@ -2484,7 +2475,7 @@ namespace StatsDirect.Builtins
             bool[] cced = new bool[k + 1];
             double[] axll = new double[k + 1];
             double[] axul = new double[k + 1];
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
@@ -2514,7 +2505,7 @@ namespace StatsDirect.Builtins
             if (host.Preferences.MetaExact)
             {
                 ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1];
-                for (i = 1; i <= k; i++)
+                for (int i = 1; i <= k; i++)
                 {
                     tbl[i].Freq = 1;
                     tbl[i].A = o[i, 1];
@@ -2524,7 +2515,7 @@ namespace StatsDirect.Builtins
                     tbl[i].Informative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
                 }
                 bool useLogScale = false;
-                new ExactBB().Exact22K(host, k, 1, tbl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                new ExactBB().Exact22K(host, k, 1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
             }
             else
             {
@@ -2549,7 +2540,7 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
@@ -2565,7 +2556,7 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> orList = new List<ParameterBag>();
             outputParameters.AddOutput("*or", orList);
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 ParameterBag orParameters = new ParameterBag();
                 orList.Add(orParameters);

@@ -263,14 +263,12 @@ namespace StatsDirect.Builtins
                 tabl[1].M1 = b + a;
                 tabl[1].N1 = pt1;
                 tabl[1].N0 = pt2;
-                tabl[1].Informative = (a * pt1 != 0) | (b * pt2 != 0);
+                tabl[1].Informative = (a * pt1 != 0) || (b * pt2 != 0);
                 bool useLogScale = false;
                 int ierr;
-                new ExactBB().Exact22K(host, 1, 3, tabl, gamma, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                new ExactBB().Exact22K(host, 1, 3, tabl, gamma, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 if (ierr != 0)
-                {
                     host.Error(Formatting.ERRCOLON + "Error in calculation", "StatsDirect");
-                }
             }
 
             if (fault != 0)
@@ -889,13 +887,21 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("lr_neg_from", host.RoundU(thetal));
             outputParameters.AddOutput("lr_neg_to", host.RoundU(thetau));
 
+
             // diagnostic odds ratio
             double eor = 0; double ulf; double llf; double ulm; double llm; double p1f; double p2f; double p1m; double p2m;
             int fault;
-            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out fault);
+
+            if (b * c > 0.0 && a * d > 0.0)
+                eor = (a * d) / (b * c);
+            else
+                eor = Constant.MISSING;
             outputParameters.AddOutput("odr", host.RoundU(eor));
-            outputParameters.AddOutput("odr_from", host.RoundU(llf));
-            outputParameters.AddOutput("odr_to", host.RoundU(ulf));
+
+            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out fault);
+            outputParameters.AddOutput("cmle", host.RoundU(eor));
+            outputParameters.AddOutput("cmle_from", host.RoundU(llf));
+            outputParameters.AddOutput("cmle_to", host.RoundU(ulf));
 
             return outputParameters;
         }

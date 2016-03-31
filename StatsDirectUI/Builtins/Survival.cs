@@ -2541,7 +2541,7 @@ namespace StatsDirect.Builtins
                         // exact test
                         bool useLogScale = false;
                         int ierr;
-                        new ExactBB().Exact22K(host, ne, 4, tbl, gamma, ref hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                        new ExactBB().Exact22K(host, ne, 4, tbl, gamma, out hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                         if (ierr != 0)
                         {
                             hr = Constant.MISSING;
