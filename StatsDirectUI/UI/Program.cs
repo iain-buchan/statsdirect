@@ -177,7 +177,17 @@ namespace StatsDirect.UI
             // Copy sample files locally if they don't already exist
             string userStatsDirectFolder = SDConfiguration.MyStatsDirectFolder;
             if (!Directory.Exists(userStatsDirectFolder))
-                Directory.CreateDirectory(userStatsDirectFolder);
+            {
+                try
+                {
+                    Directory.CreateDirectory(userStatsDirectFolder);
+                }
+                catch (Exception ex)
+                {
+                    SdApplication.SoleInstance.FriendlyError("Couldn't create " + userStatsDirectFolder + "; will try again next time you start StatsDirect. The example file (test.xlsx) will not be available.", ex, false);
+                    return;
+                }
+            }
             string myTestXlsx = SDConfiguration.MyTestFilePath;
             if (File.Exists(myTestXlsx))
             {
