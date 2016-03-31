@@ -19,7 +19,7 @@
           <validators>
             <validator>Positive</validator>
           </validators>
-          <length>=parameters["intervals"].AsDataFrame.Variables[0].AsDoubleVariable.Length + 1</length>
+          <length>=(parameters["intervals"].AsDataFrame.Variables[0] as DoubleVariable).Length + 1</length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -28,7 +28,7 @@
         <frame>
           <name>deaths</name>
           <prompt>Select data for DEATHS in age interval</prompt>
-          <length>=parameters["intervals"].AsDataFrame.Variables[0].AsDoubleVariable.Length + 1</length>
+          <length>=(parameters["intervals"].AsDataFrame.Variables[0] as DoubleVariable).Length + 1</length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -51,7 +51,7 @@
           <name>weights</name>
           <prompt>Select data for UTILITY WEIGHT for each interval (skip if not needed)</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
-          <length>=parameters["intervals"].AsDataFrame.Variables[0].AsDoubleVariable.Length + 1</length>
+          <length>=(parameters["intervals"].AsDataFrame.Variables[0] as DoubleVariable).Length + 1</length>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

@@ -226,7 +226,7 @@ namespace StatsDirect.UI
 
         private void EnsureKnowsNonHiddenDataRowCount()
         {
-            if (nonHiddenRowCount < 0)
+            if (nonHiddenDataRowCount < 0)
                 GetDataValues();
         }
 

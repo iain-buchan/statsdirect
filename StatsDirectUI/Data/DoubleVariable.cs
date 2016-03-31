@@ -194,19 +194,11 @@ namespace StatsDirect.Data
             return newVariable;
         }
 
-        public override DoubleVariable AsDoubleVariable
-        {
-            get
-            {
-                return this;
-            }
-        }
-
         public override void StealDataFrom(Variable victim)
         {
             if (!(victim is DoubleVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
-            data = victim.AsDoubleVariable.data;
+            data = (victim as DoubleVariable).data;
             hasSummaries = false;
         }
 

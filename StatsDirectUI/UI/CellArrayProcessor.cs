@@ -738,13 +738,32 @@ namespace StatsDirect.UI
                 CellColumnSelection ccs = cellSelection.ColumnSelections[c];
 
                 object[,] raw = ccs.GetObjects();
-                int nonHiddenRowCount = ccs.NonHiddenRowCount;
-                while (nonHiddenRowCount > 0 && null == raw[nonHiddenRowCount - 1, 0])
-                    --nonHiddenRowCount;
-                object[] cooked = new object[nonHiddenRowCount];
-                for (int i = 0; i < nonHiddenRowCount; i++)
-                    cooked[i] = raw[i, 0];
-                VariantVariable variable = new VariantVariable(cooked, ccs.ColumnTitle);
+                int nonHiddenDataRowCount = ccs.NonHiddenDataRowCount;
+                // Avoid copying titles if they've been identified as titles.
+                int offset = ccs.NonHiddenRowCount - ccs.NonHiddenDataRowCount;
+                while (nonHiddenDataRowCount > 0 && null == raw[nonHiddenDataRowCount - 1 + offset, 0])
+                    --nonHiddenDataRowCount;
+                bool allNumeric = true;
+                for (int i = 0; i < nonHiddenDataRowCount; i++)
+                {
+                    object victim = raw[i + offset, 0];
+                    if (!(null == victim || victim is double))
+                        allNumeric = false;
+                }
+                Variable variable;
+                if (allNumeric)
+                {
+                    double[] cooked = new double[nonHiddenDataRowCount];
+                    Array.Copy(ccs.GetDataValues(), cooked, cooked.Length);
+                    variable = new DoubleVariable(cooked, ccs.ColumnTitle);
+                }
+                else
+                {
+                    object[] cooked = new object[nonHiddenDataRowCount];
+                    for (int i = 0; i < nonHiddenDataRowCount; i++)
+                        cooked[i] = raw[i + offset, 0];
+                    variable = new VariantVariable(cooked, ccs.ColumnTitle);
+                }
                 IOrigin origin = ccs.GetWorksheetOrigin(mode, false, originGroup);
                 variable.Origin = origin;
                 frame.Variables.Add(variable);

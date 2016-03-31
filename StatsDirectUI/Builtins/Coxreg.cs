@@ -143,7 +143,7 @@ namespace StatsDirect.Builtins
 
             int ic = 0;
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
             ic++;
             int irt = ic;
             int rows = timesVariable.Length;
@@ -175,7 +175,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame eventsFrame = parameters["events"].AsDataFrame;
-            DoubleVariable eventsVariable = eventsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable eventsVariable = eventsFrame.Variables[0]as DoubleVariable;
             ic++;
             int icen = ic;
             // create temp variable for copying values 
@@ -229,7 +229,7 @@ namespace StatsDirect.Builtins
                 {
                     for (int r = 1; r <= rows; r++)
                     {
-                        xx[c, r] = predictorsFrame.Variables[c].AsDoubleVariable.Data[r - 1];
+                        xx[c, r] = (predictorsFrame.Variables[c] as DoubleVariable).Data[r - 1];
                     }
                 }
                 // load predictors into the master matrix
@@ -246,7 +246,7 @@ namespace StatsDirect.Builtins
                     for (int r = 1; r <= rows; r++)
                     {
                         ik = ik + 1;
-                        x[ik] = predictorsFrame.Variables[c].AsDoubleVariable.Data[r - 1];
+                        x[ik] = (predictorsFrame.Variables[c] as DoubleVariable).Data[r - 1];
                     }
                 }
                 ic = ic + ncov;
@@ -265,7 +265,7 @@ namespace StatsDirect.Builtins
                 Debug.Assert(null != predictorsFrame);
                 for (int r = 1; r <= rows; r++)
                 {
-                    holdx[r, c] = predictorsFrame.Variables[c - 1].AsDoubleVariable.Data[r - 1];
+                    holdx[r, c] = (predictorsFrame.Variables[c - 1] as DoubleVariable).Data[r - 1];
                 }
             }
 
@@ -278,7 +278,7 @@ namespace StatsDirect.Builtins
                 for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
                 {
                     xd[c] = new ColumnData();
-                    bincov[c + 1] = is_binary(predictorsFrame.Variables[c].AsDoubleVariable, xd[c]);
+                    bincov[c + 1] = is_binary(predictorsFrame.Variables[c] as DoubleVariable, xd[c]);
                     if (bincov[c + 1])
                     {
                         binaries = binaries + 1;
@@ -300,7 +300,7 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("strata") && parameters["strata"] != null)
             {
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                ClassifierVariable strataVariable = strataFrame.Variables[0].AsClassifierVariable;
+                ClassifierVariable strataVariable = strataFrame.Variables[0] as ClassifierVariable;
                 ic = ic + 1;
                 istrat = ic;
                 // create temp variable for copying values 
@@ -2454,7 +2454,7 @@ namespace StatsDirect.Builtins
         {
             bool[] selectedGroups = ((bool[])(parameters["group"].Data));
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
-            StringVariable subgroupsVariable = subgroupsFrame.Variables[0].AsStringVariable;
+            StringVariable subgroupsVariable = subgroupsFrame.Variables[0]as StringVariable;
             for (int i = 0; i <= selectedGroups.Length - 1; i++)
             {
                 if (selectedGroups[i])

@@ -601,7 +601,7 @@ namespace StatsDirect.Builtins
             string tlist = string.Empty;
             for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[d]as DoubleVariable;
                 int nx = 0;
                 double sum = 0;
                 foreach (double val in v.Data)
@@ -626,7 +626,7 @@ namespace StatsDirect.Builtins
             double sstot = 0;
             for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[d]as DoubleVariable;
                 foreach (double val in v.Data)
                     if (val != Constant.MISSING)
                         sstot += (val - gm) * (val - gm);
@@ -676,7 +676,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DataFrame groupFrame = parameters["groups"].AsDataFrame;
-            ClassifierVariable groupVariable = groupFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable groupVariable = groupFrame.Variables[0] as ClassifierVariable;
 
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> aList = new List<ParameterBag>();
@@ -721,9 +721,9 @@ namespace StatsDirect.Builtins
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DataFrame blocksFrame = parameters["blocks"].AsDataFrame;
-            ClassifierVariable blocksVariable = blocksFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable blocksVariable = blocksFrame.Variables[0] as ClassifierVariable;
             DataFrame treatmentsFrame = parameters["treatments"].AsDataFrame;
-            ClassifierVariable treatmentsVariable = treatmentsFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable treatmentsVariable = treatmentsFrame.Variables[0] as ClassifierVariable;
 
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> aList = new List<ParameterBag>();
@@ -749,7 +749,7 @@ namespace StatsDirect.Builtins
                     {
                         int blockIndex = Convert.ToInt32(blocksVariable.Data[vIndex]);
                         int treatmentIndex = Convert.ToInt32(treatmentsVariable.Data[vIndex]);
-                        DoubleVariable treatmentVariable = twoWayFrame.Variables[treatmentIndex].AsDoubleVariable;
+                        DoubleVariable treatmentVariable = twoWayFrame.Variables[treatmentIndex]as DoubleVariable;
                         treatmentVariable.SetData(blockIndex, v.Data[vIndex]);
                     }
                 }
@@ -767,7 +767,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptTwoWay(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
+            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
 
             int nc = frame.VariableCount;
             int nr = 0;
@@ -780,7 +780,7 @@ namespace StatsDirect.Builtins
                 bool skip = false;
                 for (int d = 0; d < frame.VariableCount; d++)
                 {
-                    if (frame.Variables[d].AsDoubleVariable.Data[N] == Constant.MISSING)
+                    if ((frame.Variables[d] as DoubleVariable).Data[N] == Constant.MISSING)
                     {
                         skip = true;
                         skipped++;
@@ -791,7 +791,7 @@ namespace StatsDirect.Builtins
                 {
                     nr++;
                     for (int d = 0; d < frame.VariableCount; d++)
-                        y[1, nr, d + 1] = frame.Variables[d].AsDoubleVariable.Data[N];
+                        y[1, nr, d + 1] = (frame.Variables[d] as DoubleVariable).Data[N];
                 }
             }
             for (int d = 0; d < frame.VariableCount; d++)
@@ -888,7 +888,7 @@ namespace StatsDirect.Builtins
                     Variable candidate = frame.Variables[n - 1][d]; // There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
                     if (candidate != null)
                     {
-                        DoubleVariable v = candidate.AsDoubleVariable;
+                        DoubleVariable v = candidate as DoubleVariable;
                         for (int q = 0; q < nm; q++)
                         {
                             if (v.Data[q] != Constant.MISSING)
@@ -1038,7 +1038,7 @@ namespace StatsDirect.Builtins
                             tlist += ", " + v.Title;
                         ivar += 1;
                         int eobs = 0;
-                        DoubleVariable dv = v.AsDoubleVariable;
+                        DoubleVariable dv = v as DoubleVariable;
                         foreach (double val in dv.Data)
                         {
                             if (val != Constant.MISSING)
@@ -1637,7 +1637,7 @@ namespace StatsDirect.Builtins
 
             for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[d]as DoubleVariable;
                 foreach (double val in v.Data)
                 {
                     if (val != Constant.MISSING)
@@ -1682,7 +1682,7 @@ namespace StatsDirect.Builtins
 
             for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[d]as DoubleVariable;
                 int nx = 0;
                 double sq = 0.0;
                 double sum = 0.0;
@@ -1734,7 +1734,7 @@ namespace StatsDirect.Builtins
 
             for (int d = 0; d < frame.VariableCount; d++)
             {
-                DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[d]as DoubleVariable;
                 double sumMdnDiff = 0.0;
                 double sqMeanDiffTot = 0.0;
                 foreach (double val in v.Data)
@@ -1867,7 +1867,7 @@ namespace StatsDirect.Builtins
         {
             //  Get observations into a temporary vector v - precondition: the number of observations is a square
             DataFrame observationFrame = parameters["observations"].AsDataFrame;
-            DoubleVariable observationVariable = observationFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable observationVariable = observationFrame.Variables[0]as DoubleVariable;
             int nn = observationVariable.Length;
             double[] v = new double[nn + 1];
             double[] vcx = new double[nn + 1];
@@ -1881,7 +1881,7 @@ namespace StatsDirect.Builtins
 
             //  Get column classes
             DataFrame columnFrame = parameters["column"].AsDataFrame;
-            DoubleVariable columnVariable = columnFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable columnVariable = columnFrame.Variables[0]as DoubleVariable;
             for (int i = 1; i <= nn; i++)
             {
                 vcx[i] = columnVariable.Data[i - 1];
@@ -1890,7 +1890,7 @@ namespace StatsDirect.Builtins
 
             // get row classes
             DataFrame rowFrame = parameters["row"].AsDataFrame;
-            DoubleVariable rowVariable = rowFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable rowVariable = rowFrame.Variables[0]as DoubleVariable;
             for (int i = 1; i <= nn; i++)
             {
                 vrx[i] = rowVariable.Data[i - 1];
@@ -1899,7 +1899,7 @@ namespace StatsDirect.Builtins
 
             // get treatment/Latin/random classes
             DataFrame treatmentFrame = parameters["treatment"].AsDataFrame;
-            DoubleVariable treatmentVariable = treatmentFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable treatmentVariable = treatmentFrame.Variables[0]as DoubleVariable;
             for (int i = 1; i <= nn; i++)
             {
                 vlx[i] = treatmentVariable.Data[i - 1];
@@ -2040,18 +2040,18 @@ namespace StatsDirect.Builtins
 
             // Group 1
             DataFrame group1DrugFrame = parameters["group1drug"].AsDataFrame;
-            double[] group1DrugData = group1DrugFrame.Variables[0].AsDoubleVariable.Data;
+            double[] group1DrugData = (group1DrugFrame.Variables[0] as DoubleVariable).Data;
             int rows = group1DrugData.Length;
 
             DataFrame group1PlaceboFrame = parameters["group1placebo"].AsDataFrame;
-            double[] group1PlaceboData = group1PlaceboFrame.Variables[0].AsDoubleVariable.Data;
+            double[] group1PlaceboData = (group1PlaceboFrame.Variables[0] as DoubleVariable).Data;
 
             bool g1bl = parameters.ContainsKey("group1baseline") && parameters["group1baseline"] != null;
             double[] group1BaselineData;
             if (g1bl)
             {
                 DataFrame group1BaselineFrame = parameters["group1baseline"].AsDataFrame;
-                group1BaselineData = group1BaselineFrame.Variables[0].AsDoubleVariable.Data;
+                group1BaselineData = (group1BaselineFrame.Variables[0] as DoubleVariable).Data;
             }
             else
             {
@@ -2073,18 +2073,18 @@ namespace StatsDirect.Builtins
 
             // Group 2
             DataFrame group2DrugFrame = parameters["group2drug"].AsDataFrame;
-            double[] group2DrugData = group2DrugFrame.Variables[0].AsDoubleVariable.Data;
+            double[] group2DrugData = (group2DrugFrame.Variables[0] as DoubleVariable).Data;
             rows = group2DrugData.Length;
 
             DataFrame group2PlaceboFrame = parameters["group2placebo"].AsDataFrame;
-            double[] group2PlaceboData = group2PlaceboFrame.Variables[0].AsDoubleVariable.Data;
+            double[] group2PlaceboData = (group2PlaceboFrame.Variables[0] as DoubleVariable).Data;
 
             bool g2bl = parameters.ContainsKey("group2baseline") && parameters["group2baseline"] != null;
             double[] group2BaselineData;
             if (g2bl)
             {
                 DataFrame group2BaselineFrame = parameters["group2baseline"].AsDataFrame;
-                group2BaselineData = group2BaselineFrame.Variables[0].AsDoubleVariable.Data;
+                group2BaselineData = (group2BaselineFrame.Variables[0] as DoubleVariable).Data;
             }
             else
             {
@@ -2233,7 +2233,7 @@ namespace StatsDirect.Builtins
                 int ntot = 0;
                 for (int d = 0; d < frame.VariableCount; d++)
                 {
-                    DoubleVariable v = frame.Variables[d].AsDoubleVariable;
+                    DoubleVariable v = frame.Variables[d]as DoubleVariable;
                     int nx = 0;
                     double sum = 0;
                     foreach (double val in v.Data)
@@ -2254,7 +2254,7 @@ namespace StatsDirect.Builtins
                 double sstot = 0;
                 for (int D = 0; D <= frame.VariableCount - 1; D++)
                 {
-                    DoubleVariable v = frame.Variables[D].AsDoubleVariable;
+                    DoubleVariable v = frame.Variables[D]as DoubleVariable;
                     foreach (double val in v.Data)
                     {
                         if (val != Constant.MISSING)

@@ -55,7 +55,7 @@
       </parameters>
     <script language="CSharp"><![CDATA[
     bool hasZeroTime = false;
-    foreach (double v in parameters["times"].AsDataFrame.Variables[0].AsDoubleVariable.Data)
+    foreach (double v in (parameters["times"].AsDataFrame.Variables[0] as DoubleVariable).Data)
       if (v == 0)
       {
         hasZeroTime = true;

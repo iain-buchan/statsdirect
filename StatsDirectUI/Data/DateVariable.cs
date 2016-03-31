@@ -105,14 +105,6 @@ namespace StatsDirect.Data
             return newVariable;
         }
 
-        public override DateVariable AsDateVariable
-        {
-            get
-            {
-                return this;
-            }
-        }
-
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
             DateVariable copy = new DateVariable();
@@ -134,7 +126,7 @@ namespace StatsDirect.Data
         {
             if (!(victim is DateVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
-            Data = victim.AsDateVariable.Data;
+            Data = (victim as DateVariable).Data;
         }
 
         public override object DataAsObject(int i)

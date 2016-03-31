@@ -104,14 +104,6 @@ namespace StatsDirect.Data
             return newVariable;
         }
 
-        public override VariantVariable AsVariantVariable
-        {
-            get
-            {
-                return this;
-            }
-        }
-
         public override object DataAsObject(int i)
         {
             return Data[i];
@@ -140,7 +132,7 @@ namespace StatsDirect.Data
             {
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
             }
-            Data = victim.AsVariantVariable.Data;
+            Data = (victim as VariantVariable).Data;
         }
 
         protected override bool HasData

@@ -325,8 +325,8 @@ namespace StatsDirect.Builtins
             bool ierr;
 
             DataFrame datFrame = parameters["dat"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
+            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
             int rows = datFrame.MaxRows;
             if (rows <= 0)
                 throw new InvalidDataException();

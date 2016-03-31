@@ -104,7 +104,7 @@ namespace StatsDirect.Builtins
             DataFrame outputFrame = new DataFrame();
             foreach (Variable inputVariable in dataFrame.Variables)
             {
-                DoubleVariable dataVariable = inputVariable.AsDoubleVariable;
+                DoubleVariable dataVariable = inputVariable as DoubleVariable;
                 DoubleVariable outputVariable = new DoubleVariable(dataVariable.Length, inputVariable.Title + " {" + outputUnits + "}");
                 outputFrame.Variables.Add(outputVariable);
                 double[] data = dataVariable.Data;
@@ -175,7 +175,7 @@ namespace StatsDirect.Builtins
                                   : string.Empty;
             for (int c = 0; c <= totcols - 1; c++)
             {
-                StringVariable v = data.Variables[c].AsStringVariable;
+                StringVariable v = data.Variables[c]as StringVariable;
                 int rx = 0;
                 for (r = 0; r <= totrows - 1; r++)
                 {
@@ -191,7 +191,7 @@ namespace StatsDirect.Builtins
             DataFrame outputFrame = new DataFrame();
             for (int c = 0; c <= totcols - 1; c++)
             {
-                string outputName = data.Variables[c].AsStringVariable.Title;
+                string outputName = (data.Variables[c] as StringVariable).Title;
                 if (outputName.Length > 0)
                 {
                     outputName += " [no gaps]";
@@ -218,7 +218,7 @@ namespace StatsDirect.Builtins
                         {
                             if (ctr > maxctr)
                                 maxctr = ctr;
-                            outputFrame.Variables[c].AsStringVariable.SetData(ctr - 1, hold[r, c]);
+                            (outputFrame.Variables[c] as StringVariable).SetData(ctr - 1, hold[r, c]);
                         }
                     }
                 }
@@ -237,7 +237,7 @@ namespace StatsDirect.Builtins
                             ctr = ctr + 1;
                             if (ctr > maxctr)
                                 maxctr = ctr;
-                            outputFrame.Variables[c].AsStringVariable.SetData(ctr - 1, hold[r, c]);
+                            (outputFrame.Variables[c] as StringVariable).SetData(ctr - 1, hold[r, c]);
                         }
                     }
                     outputFrame.Variables[c].EnsureLength(ctr);
@@ -269,7 +269,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtDummyVariables(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            ClassifierVariable categoryVariable = data.Variables[0].AsClassifierVariable;
+            ClassifierVariable categoryVariable = data.Variables[0] as ClassifierVariable;
             DataFrame outputFrame = ToDummyVariables(host, categoryVariable, false);
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
@@ -382,7 +382,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtLadderPowers(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
             double cons = Constant.MISSING;
             if (parameters.ContainsKey("c"))
             {
@@ -558,6 +558,7 @@ namespace StatsDirect.Builtins
             object[] values = new object[1];
             foreach (Variable inputVariable in inputFrame.Variables)
             {
+                // Use a VariantVariable as we're not sure what the result of the replace will be
                 VariantVariable outputVariable = new VariantVariable(inputVariable.Length, inputVariable.Title);
                 outputFrame.Variables.Add(outputVariable);
                 int outputIndex = 0;
@@ -638,7 +639,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
             double[] inputData = inputVariable.Data;
             double sum = 0;
             int nx = 0;
@@ -731,7 +732,7 @@ namespace StatsDirect.Builtins
             bool ok = true;
             for (int c = 0; c < data.VariableCount; c++)
             {
-                DoubleVariable v = data.Variables[c].AsDoubleVariable;
+                DoubleVariable v = data.Variables[c]as DoubleVariable;
                 ep = v.Title.IndexOf("=", StringComparison.Ordinal);
                 int tp = v.Title.IndexOf("~", StringComparison.Ordinal);
                 if (ep < 0 || tp < 0 || tp > ep)
@@ -768,7 +769,7 @@ namespace StatsDirect.Builtins
             int row = 0;
             for (int c = 0; c <= data.VariableCount - 1; c++)
             {
-                DoubleVariable v = data.Variables[c].AsDoubleVariable;
+                DoubleVariable v = data.Variables[c]as DoubleVariable;
                 ep = v.Title.IndexOf("=", StringComparison.Ordinal) + 1;
                 string outputTitle = v.Title;
                 if (ok)
@@ -791,7 +792,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtDates(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DateVariable inputVariable = data.Variables[0].AsDateVariable;
+            DateVariable inputVariable = data.Variables[0] as DateVariable;
 
             string interval = parameters["interval"].AsString;
             DateTime indate = parameters["indate"].AsDate;
@@ -843,7 +844,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtGroupSplit(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame gidsFrame = parameters["gids"].AsDataFrame;
-            ClassifierVariable gidsVariable = gidsFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable gidsVariable = gidsFrame.Variables[0] as ClassifierVariable;
             int rows = gidsVariable.Length;
             int ng = gidsVariable.GroupCount;
             double[] gid = new double[rows + 1 ];
@@ -877,7 +878,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        x[j, i] = data.Variables[j - 1].AsDoubleVariable.Data[i - 1];
+                        x[j, i] = (data.Variables[j - 1] as DoubleVariable).Data[i - 1];
                     }
                 }
             }
@@ -906,7 +907,7 @@ namespace StatsDirect.Builtins
                     if (gid[r] == g[j])
                     {
                         for (int c = 1; c <= cols; c++)
-                            outputFrame.Variables[lc + c - 1].AsDoubleVariable.SetData(rw, x[c, r]);
+                            (outputFrame.Variables[lc + c - 1] as DoubleVariable).SetData(rw, x[c, r]);
                         rw++;
                     }
                 }
@@ -930,7 +931,7 @@ namespace StatsDirect.Builtins
             else
                 method = 3;
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
+            DoubleVariable dataVariable = data.Variables[0]as DoubleVariable;
             int rows = dataVariable.Length;
             double[] prk = new double[rows + 1 ];
             int nx = 0;
@@ -1031,7 +1032,7 @@ namespace StatsDirect.Builtins
             double mdn = 0;
 
             DataFrame yFrame = parameters["y"].AsDataFrame;
-            DoubleVariable yVariable = yFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable yVariable = yFrame.Variables[0]as DoubleVariable;
             int rows = yVariable.Length;
             string yt = yVariable.Title;
             double[] yy = new double[rows + 1 ];
@@ -1042,7 +1043,7 @@ namespace StatsDirect.Builtins
             if (index != 2)
             {
                 DataFrame xFrame = parameters["x"].AsDataFrame;
-                DoubleVariable xVariable = xFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable xVariable = xFrame.Variables[0]as DoubleVariable;
                 rows2 = xVariable.Length;
                 if (rows2 != rows & index == 3)
                 {
@@ -1428,7 +1429,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtRank(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
             int q = Parsing.Cint_Txt(parameters["tie-correction"].AsString);
             int rows = inputVariable.Length;
             double[] prk = new double[rows + 1 ];
@@ -1480,7 +1481,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add(v);
                 for (int col = 0; col <= cols - 1; col++)
                 {
-                    StringVariable inv = data.Variables[col].AsStringVariable;
+                    StringVariable inv = data.Variables[col]as StringVariable;
                     if (inv.Length > row)
                         v.SetData(col, inv.Data[row]);
                 }
@@ -1526,7 +1527,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtSort(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
+            DoubleVariable dataVariable = data.Variables[0]as DoubleVariable;
             string sort = parameters["sort"].AsString;
             IComparer<double> comp;
             if ("asc".Equals(sort))
@@ -1545,7 +1546,7 @@ namespace StatsDirect.Builtins
             if (hasLink)
             {
                 DataFrame linkData = parameters["linkdata"].AsDataFrame;
-                DoubleVariable linkVariable = linkData.Variables[0].AsDoubleVariable;
+                DoubleVariable linkVariable = linkData.Variables[0]as DoubleVariable;
                 t += " (by " + linkVariable.Title + ")";
                 double[] linkArray = new double[rows];
                 nx = 0;
@@ -1600,7 +1601,7 @@ namespace StatsDirect.Builtins
             for (int row = 0; row < rows; row++)
             {
                 for (int col = 0; col < cols; col++)
-                    x[col] = data.Variables[col].AsDoubleVariable.Data[row];
+                    x[col] = (data.Variables[col] as DoubleVariable).Data[row];
                 sortArray[row] = new SortPair(XSpr(clc.Evaluate(x)), row);
             }
             Array.Sort(sortArray);
@@ -1610,8 +1611,8 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add(new DoubleVariable(rows, "Sort(" + expression + "): " + v.Title));
             for (int col = 0; col < cols; col++)
             {
-                double[] src = data.Variables[col].AsDoubleVariable.Data;
-                double[] target = outputFrame.Variables[col].AsDoubleVariable.Data;
+                double[] src = (data.Variables[col] as DoubleVariable).Data;
+                double[] target = (outputFrame.Variables[col] as DoubleVariable).Data;
                 for (int row = 0; row < rows; row++)
                     target[row] = src[sortArray[row].Row];
             }
@@ -1683,7 +1684,7 @@ namespace StatsDirect.Builtins
         private static ParameterBag ShtTransforms(ParameterBag parameters, int index)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
             double[] inputData = inputVariable.Data;
             int rows = inputData.Length;
 
@@ -1954,7 +1955,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtGroupCategorise(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0].AsDoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
             int rows = inputVariable.Length;
             CategoriseOptions options = new CategoriseOptions
                                             {
@@ -2002,7 +2003,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                DoubleVariable dataVariable = data.Variables[0].AsDoubleVariable;
+                DoubleVariable dataVariable = data.Variables[0]as DoubleVariable;
                 string dtitle = dataVariable.Title;
 
                 DataFrame identifiersFrame = parameters["identifiers"].AsDataFrame;
@@ -2086,7 +2087,7 @@ namespace StatsDirect.Builtins
             {
                 // 0 or 1 responses - one row per covariate pattern
                 DataFrame responsesFrame = parameters["responses"].AsDataFrame;
-                DoubleVariable responsesVariable = responsesFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable responsesVariable = responsesFrame.Variables[0]as DoubleVariable;
                 double[] responseData = responsesVariable.Data;
 
                 int[] differenceArray;
@@ -2149,13 +2150,12 @@ namespace StatsDirect.Builtins
 
                 if (null != covariatesOrNull)
                 {
-                    // Add covariates.  We happen to know these are all VariantVariables.
+                    // Add covariates.
                     foreach (Variable inputCovariant in covariatesOrNull.Variables)
                     {
-                        object[] icData = inputCovariant.AsVariantVariable.Data;
                         VariantVariable outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
                         for (int i = 0; i < nextDifferentValue; i++)
-                            outputCovariant.Data[i] = icData[countMap[differenceValuesInOrder[i]].RowIndex];
+                            outputCovariant.Data[i] = inputCovariant.DataAsObject(countMap[differenceValuesInOrder[i]].RowIndex);
                         outputFrame.Variables.Add(outputCovariant);
                     }
                 }
@@ -2168,7 +2168,7 @@ namespace StatsDirect.Builtins
             {
                 // Categories - one row per combination of category and covariate pattern
                 DataFrame categoriesFrame = parameters["categories"].AsDataFrame;
-                ClassifierVariable categoriesVariable = categoriesFrame.Variables[0].AsClassifierVariable;
+                ClassifierVariable categoriesVariable = categoriesFrame.Variables[0] as ClassifierVariable;
                 int[] differenceArray;
                 int nextDifferentValue = ClassifyObjects(categoriesFrame, out differenceArray);
                 if (null != covariatesOrNull)
@@ -2218,13 +2218,12 @@ namespace StatsDirect.Builtins
 
                 if (null != covariatesOrNull)
                 {
-                    // Add covariates.  We happen to know these are all VariantVariables.
+                    // Add covariates.
                     foreach (Variable inputCovariant in covariatesOrNull.Variables)
                     {
-                        object[] icData = inputCovariant.AsVariantVariable.Data;
                         VariantVariable outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
                         for (int i = 0; i < nextDifferentValue; i++)
-                            outputCovariant.Data[i] = icData[countMap[differenceValuesInOrder[i]].RowIndex];
+                            outputCovariant.Data[i] = inputCovariant.DataAsObject(countMap[differenceValuesInOrder[i]].RowIndex);
                         outputFrame.Variables.Add(outputCovariant);
                     }
                 }
@@ -2249,30 +2248,30 @@ namespace StatsDirect.Builtins
             {
                 case "categories-counts":
                     {
-                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0]as DoubleVariable;
                         yesPerGroup = ToIntArray(countsVariable.Data, out totalOutputRows);
                         noPerGroup = new int[yesPerGroup.Length]; // Initialised to 0
-                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0].AsStringVariable;
+                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0]as StringVariable;
                         covariatesOrNull = null;
                         hasResponses = false;
                     }
                     break;
                 case "categories-counts-covariates":
                     {
-                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0]as DoubleVariable;
                         yesPerGroup = ToIntArray(countsVariable.Data, out totalOutputRows);
                         noPerGroup = new int[yesPerGroup.Length]; // Initialised to 0
-                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0].AsStringVariable;
+                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0]as StringVariable;
                         covariatesOrNull = parameters["covariates"].AsDataFrame;
                         hasResponses = false;
                     }
                     break;
                 case "responders-nonresps-covariates":
                     {
-                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0]as DoubleVariable;
                         int yesses;
                         yesPerGroup = ToIntArray(respondersVariable.Data, out yesses);
-                        DoubleVariable nonrespsVariable = parameters["nonresps"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable nonrespsVariable = parameters["nonresps"].AsDataFrame.Variables[0]as DoubleVariable;
                         int noes;
                         noPerGroup = ToIntArray(nonrespsVariable.Data, out noes);
                         totalOutputRows = yesses + noes;
@@ -2283,10 +2282,10 @@ namespace StatsDirect.Builtins
                     break;
                 case "responders-totals-covariates":
                     {
-                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0]as DoubleVariable;
                         int scrap;
                         yesPerGroup = ToIntArray(respondersVariable.Data, out scrap);
-                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0]as DoubleVariable;
                         int[] totalsPerGroup = ToIntArray(totalsVariable.Data, out totalOutputRows);
                         noPerGroup = new int[yesPerGroup.Length];
                         for (int i = 0; i < yesPerGroup.Length; i++)
@@ -2298,8 +2297,8 @@ namespace StatsDirect.Builtins
                     break;
                 case "resprops-totals-covariates":
                     {
-                        DoubleVariable respropsVariable = parameters["resprops"].AsDataFrame.Variables[0].AsDoubleVariable;
-                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable respropsVariable = parameters["resprops"].AsDataFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0]as DoubleVariable;
                         int[] totalsPerGroup = ToIntArray(totalsVariable.Data, out totalOutputRows);
                         yesPerGroup = new int[totalsVariable.Length];
                         noPerGroup = new int[yesPerGroup.Length];
@@ -2381,7 +2380,7 @@ namespace StatsDirect.Builtins
                 if (hasResponses)
                     outputResponses.Data[nextOutputOffset] = response;
                 for (int covariate = 0; covariate < covariatesCount; covariate++)
-                    outputCovariates[covariate].Data[nextOutputOffset] = covariatesOrNull.Variables[covariate].AsVariantVariable.Data[srcRow];
+                    outputCovariates[covariate].Data[nextOutputOffset] = covariatesOrNull.Variables[covariate].DataAsObject(srcRow);
                 nextOutputOffset++;
             }
             return nextOutputOffset;
@@ -2535,7 +2534,7 @@ namespace StatsDirect.Builtins
             Dictionary<string, int[]> countsByLabelAndVariable = new Dictionary<string, int[]>();
             for (int variableIndex = 0; variableIndex < rawValuesFrame.Variables.Count; variableIndex++)
             {
-                ClassifierVariable cv = rawValuesFrame.Variables[variableIndex].AsClassifierVariable;
+                ClassifierVariable cv = rawValuesFrame.Variables[variableIndex] as ClassifierVariable;
                 foreach (Group group in cv.Groups)
                 {
                     // HACK: There has to be a better way of getting rid of missing values - but there's no CategorySkipMissing selection.

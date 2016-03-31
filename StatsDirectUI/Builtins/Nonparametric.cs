@@ -984,7 +984,7 @@ namespace StatsDirect.Builtins
             for (int j = 0; j < frame.VariableCount; j++)
             {
                 int chuck = 0;
-                DoubleVariable v = frame.Variables[j].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[j]as DoubleVariable;
                 for (int k = 0; k < v.Length; k++)
                 {
                     if (v.Data[k] != Constant.MISSING)
@@ -1013,7 +1013,7 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("scores") && null != parameters["scores"].Data)
             {
                 DataFrame scoreFrame = parameters["scores"].AsDataFrame;
-                DoubleVariable scoreVariable = scoreFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable scoreVariable = scoreFrame.Variables[0]as DoubleVariable;
                 for (int j = 0; j < Math.Min(frame.VariableCount, scoreVariable.Length); j++)
                     score[j] = scoreVariable.Data[j];
             }
@@ -1115,7 +1115,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*var", varList);
             for (int k = 0; k <= frame.VariableCount - 1; k++)
             {
-                DoubleVariable v = frame.Variables[k].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[k]as DoubleVariable;
                 host.StartProgress("Bootstrapping diversity indices for " + v.Title, true);
 
                 int rx = 0;
@@ -1629,8 +1629,8 @@ namespace StatsDirect.Builtins
                 return new ParameterBag();
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
-            DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
+            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
+            DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
             double[] x = new double[v0.Length + v1.Length + 1 ];
             double[] w1 = new double[v0.Length + v1.Length + 1 ];
 
@@ -1863,8 +1863,8 @@ namespace StatsDirect.Builtins
                 throw new Exception("Gamma must be greater than zero");
             }
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
-            DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
+            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
+            DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
             double[] prk = new double[v0.Length + 1 ];
             double[] prk1 = new double[v0.Length + 1 ];
             for (int N = 0; N <= v0.Length - 1; N++)
@@ -1998,13 +1998,13 @@ namespace StatsDirect.Builtins
             double cit = PDF.gauinv(1.0 - (1.0 - GAMMA) / 2.0, out ifault);
 
             DataFrame outcomeFrame = parameters["outcome"].AsDataFrame;
-            DoubleVariable v0 = outcomeFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable v0 = outcomeFrame.Variables[0]as DoubleVariable;
             int rows = v0.Length;
             string ytitle = v0.Title;
 
             // If index <> 2 Then
             DataFrame predictorFrame = parameters["predictor"].AsDataFrame;
-            DoubleVariable v1 = predictorFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable v1 = predictorFrame.Variables[0]as DoubleVariable;
 
             string xtitle = v1.Title;
             // Else
@@ -2225,7 +2225,7 @@ namespace StatsDirect.Builtins
                 throw new Exception("Gamma must be greater than zero");
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
+            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
             double[] x = new double[v0.Length + 1];
             double[] y = new double[v0.Length + 1];
 
@@ -2249,7 +2249,7 @@ namespace StatsDirect.Builtins
             else
             {
                 int cnt = 0;
-                DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
+                DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
                 for (n = 0; n < v0.Length; n++)
                 {
                     if (v0.Data[n] != Constant.MISSING & v1.Data[n] != Constant.MISSING)
@@ -2807,8 +2807,8 @@ namespace StatsDirect.Builtins
 
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
-            DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
+            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
+            DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
 
             double[] d1 = new double[v0.Length + 1 ];
             double[] d2 = new double[v1.Length + 1 ];
@@ -2876,7 +2876,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*variable", variableList);
             for (int k = 0; k < frame.VariableCount; k++)
             {
-                DoubleVariable v = frame.Variables[k].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[k]as DoubleVariable;
                 int rx = 0;
                 foreach (double val in v.Data)
                 {
@@ -2929,8 +2929,8 @@ namespace StatsDirect.Builtins
             double cit = PDF.gauinv(1.0 - (1.0 - GAMMA) / 2.0, out ifault);
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0].AsDoubleVariable;
-            DoubleVariable v1 = frame.Variables[1].AsDoubleVariable;
+            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
+            DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
             int rx = v0.Length;
             double[] x = new double[rx + 1 ];
             double[] y = new double[rx + 1 ];
@@ -3270,7 +3270,7 @@ namespace StatsDirect.Builtins
                 bool skip = false;
                 for (int D = 0; D <= frame.VariableCount - 1; D++)
                 {
-                    if (frame.Variables[D].AsDoubleVariable.Data[j] == Constant.MISSING)
+                    if ((frame.Variables[D] as DoubleVariable).Data[j] == Constant.MISSING)
                     {
                         skip = true;
                     }
@@ -3280,7 +3280,7 @@ namespace StatsDirect.Builtins
                     qty = qty + 1;
                     for (int D = 0; D <= frame.VariableCount - 1; D++)
                     {
-                        double dat = frame.Variables[D].AsDoubleVariable.Data[j];
+                        double dat = (frame.Variables[D] as DoubleVariable).Data[j];
                         x[D + 1, qty] = dat;
                         if ((dat > 0))
                         {
@@ -3476,7 +3476,7 @@ namespace StatsDirect.Builtins
             for (int D = 0; D < frame.VariableCount; D++)
             {
                 int cnt = 0;
-                DoubleVariable v = frame.Variables[D].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[D]as DoubleVariable;
                 foreach (double val in v.Data)
                 {
                     if (val != Constant.MISSING)
@@ -3574,7 +3574,7 @@ namespace StatsDirect.Builtins
             for (int D = 0; D <= frame.VariableCount - 1; D++)
             {
                 int cnt = 0;
-                DoubleVariable v = frame.Variables[D].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[D]as DoubleVariable;
                 foreach (double val in v.Data)
                 {
                     if (val != Constant.MISSING)
@@ -3675,7 +3675,7 @@ namespace StatsDirect.Builtins
                     ri = new double[kn + 1 ];
 
                     int ki = 0;
-                    foreach (double val in frame.Variables[i0].AsDoubleVariable.Data)
+                    foreach (double val in (frame.Variables[i0] as DoubleVariable).Data)
                     {
                         if (val != Constant.MISSING)
                         {
@@ -3685,7 +3685,7 @@ namespace StatsDirect.Builtins
                     }
 
                     int kj = 0;
-                    foreach (double val in frame.Variables[j0].AsDoubleVariable.Data)
+                    foreach (double val in (frame.Variables[j0] as DoubleVariable).Data)
                     {
                         if (val != Constant.MISSING)
                         {
@@ -3752,7 +3752,7 @@ namespace StatsDirect.Builtins
             for (int D = 0; D < frame.VariableCount; D++)
             {
                 int cnt = 0;
-                DoubleVariable varbl = frame.Variables[D].AsDoubleVariable;
+                DoubleVariable varbl = frame.Variables[D]as DoubleVariable;
                 foreach (double val in varbl.Data)
                 {
                     if (val != Constant.MISSING)
@@ -3858,7 +3858,7 @@ namespace StatsDirect.Builtins
             {
                 cnt = 0;
                 double sum = 0;
-                DoubleVariable varbl = frame.Variables[D].AsDoubleVariable;
+                DoubleVariable varbl = frame.Variables[D]as DoubleVariable;
                 foreach (double val in varbl.Data)
                 {
                     if (val != Constant.MISSING)
@@ -3877,7 +3877,7 @@ namespace StatsDirect.Builtins
             int qty = 0;
             for (D = 0; D <= frame.VariableCount - 1; D++)
             {
-                DoubleVariable varbl = frame.Variables[D].AsDoubleVariable;
+                DoubleVariable varbl = frame.Variables[D]as DoubleVariable;
                 foreach (double val in varbl.Data)
                 {
                     if (val != Constant.MISSING)
@@ -4037,7 +4037,7 @@ namespace StatsDirect.Builtins
             int rx = 0;
             for (int k = 0; k <= frame.VariableCount - 1; k++)
             {
-                DoubleVariable v = frame.Variables[k].AsDoubleVariable;
+                DoubleVariable v = frame.Variables[k]as DoubleVariable;
                 host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
                 rx = 0;
                 double vtot = 0.0;

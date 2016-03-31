@@ -25,7 +25,7 @@ namespace StatsDirect.Data
             if (!(victim is ClassifierVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
             base.StealDataFrom(victim);
-            ClassifierVariable cVictim = victim.AsClassifierVariable;
+            ClassifierVariable cVictim = victim as ClassifierVariable;
             Groups = cVictim.Groups;
         }
 
@@ -45,14 +45,6 @@ namespace StatsDirect.Data
             while (Groups.Count < minimumSize)
             {
                 Groups.Add(null);
-            }
-        }
-
-        public override ClassifierVariable AsClassifierVariable
-        {
-            get
-            {
-                return this;
             }
         }
 

@@ -13,9 +13,6 @@ namespace StatsDirect.Data
         ///  <summary>
         ///  The title (name) of the variable
         ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
         [XmlElement("title")]
         public string Title { get; set; }
 
@@ -45,7 +42,6 @@ namespace StatsDirect.Data
         ///  Ensure the data array is allocated and at least MinimumLength items in length.  Any new elements will be filled with the platform default value.
         ///  </summary>
         ///  <param name="minimumLength">The minimum length of the array.  Note this is a length, not a bound.  The array will have items from 0 to MinimumLength - 1.</param>
-        ///  <remarks></remarks>
         public abstract void EnsureLength(int minimumLength);
 
         ///  <summary>
@@ -53,73 +49,24 @@ namespace StatsDirect.Data
         ///  </summary>
         ///  <param name="minimumLength">The minimum length of the array.  Note this is a length, not a bound.  The array will have items from 0 to MinimumLength - 1.</param>
         /// <param name="useMissing"> </param>
-        /// <remarks></remarks>
         public abstract void EnsureLength(int minimumLength, bool useMissing);
 
         ///  <summary>
         ///  Ensure the data has at most MaximumLength rows
         ///  </summary>
         ///  <param name="maximumLength"></param>
-        ///  <remarks></remarks>
         public abstract void TruncateDataToLength(int maximumLength);
 
         ///  <summary>
         ///  Return a new numeric variable of the same length as me.  It is not otherwise initialised.
         ///  </summary>
-        ///  <returns></returns>
         public abstract Variable SameSizeForResults();
-
-        [XmlIgnore]
-        public virtual ClassifierVariable AsClassifierVariable
-        {
-            get
-            {
-                throw new InvalidOperationException("Cannot cast variable to ClassifierVariable");
-            }
-        }
-
-        [XmlIgnore]
-        public virtual DateVariable AsDateVariable
-        {
-            get
-            {
-                throw new InvalidOperationException("Cannot cast variable to DateVariable");
-            }
-        }
-
-        [XmlIgnore]
-        public virtual DoubleVariable AsDoubleVariable
-        {
-            get
-            {
-                throw new InvalidOperationException("Cannot cast variable to DoubleVariable");
-            }
-        }
-
-        [XmlIgnore]
-        public virtual StringVariable AsStringVariable
-        {
-            get
-            {
-                throw new InvalidOperationException("Cannot cast variable to StringVariable");
-            }
-        }
-
-        [XmlIgnore]
-        public virtual VariantVariable AsVariantVariable
-        {
-            get
-            {
-                throw new InvalidOperationException("Cannot cast variable to VariantVariable");
-            }
-        }
 
         public abstract object CopyAndStripForRedo(bool shouldKeepData);
 
         ///  <summary>
         ///  A fast but destructive way of transferring victim's data to this variable.  Victim should not be used after this operation.
         ///  </summary>
-        ///  <param name="victim"></param>
         public abstract void StealDataFrom(Variable victim);
 
         protected virtual void CopyAndStripForRedoInto(Variable copy, bool shouldKeepData)
@@ -132,9 +79,6 @@ namespace StatsDirect.Data
         ///  If true, this variable contains its data (and implicitly doesn't need refilling from its origin)
         ///  If false, this variable contains no data and may need to be refilled.
         ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
         protected abstract bool HasData { get; }
 
         /// <summary>

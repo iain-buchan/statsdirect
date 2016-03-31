@@ -90,7 +90,7 @@ namespace StatsDirect.Builtins
 
             // Store the times data
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
             int rows = timesVariable.Length;
             ColumnData[] cd = new ColumnData[2 + 1 ];
             cd[1] = new ColumnData { Title = timesVariable.Title };
@@ -102,7 +102,7 @@ namespace StatsDirect.Builtins
 
             // Store the death/event data
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
-            DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
             cd[2] = new ColumnData { Title = deathsVariable.Title };
             double[] d = new double[rows + 1 ];
             int extra = 0;
@@ -118,7 +118,7 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("groups") && parameters["groups"] != null)
             {
                 DataFrame groupsFrame = parameters["groups"].AsDataFrame;
-                ClassifierVariable groupsVariable = groupsFrame.Variables[0].AsClassifierVariable;
+                ClassifierVariable groupsVariable = groupsFrame.Variables[0] as ClassifierVariable;
                 glab = new string[groupsVariable.GroupCount + 1 ];
                 for (j = 1; j <= groupsVariable.GroupCount; j++)
                 {
@@ -839,7 +839,7 @@ namespace StatsDirect.Builtins
             double[,] x;
 
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
-            ClassifierVariable gidVariable = gidFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
             if (gidVariable.GroupCount != 2)
             {
                 host.Error("Group identifier must contain two groups and no missing data.", "Wei-Lachin");
@@ -880,8 +880,8 @@ namespace StatsDirect.Builtins
                 int r;
                 for (j = 1; j <= nr; j++)
                 {
-                    DoubleVariable timesVariable = timesFrame.Variables[j - 1].AsDoubleVariable;
-                    DoubleVariable censorVariable = censorFrame.Variables[j - 1].AsDoubleVariable;
+                    DoubleVariable timesVariable = timesFrame.Variables[j - 1]as DoubleVariable;
+                    DoubleVariable censorVariable = censorFrame.Variables[j - 1]as DoubleVariable;
                     for (r = 1; r <= rows; r++)
                     {
                         x[r, j] = timesVariable.Data[r - 1];
@@ -1496,7 +1496,7 @@ namespace StatsDirect.Builtins
             cit = PDF.gauinv(1.0 - p, out iifault);
 
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
-            ClassifierVariable gidVariable = gidFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
             glab = new string[gidVariable.GroupCount + 1 ];
             for (j = 1; j <= gidVariable.GroupCount; j++)
             {
@@ -1550,7 +1550,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
             double[] t = new double[rows + 1];
             for (r = 1; r <= rows; r++)
             {
@@ -1558,7 +1558,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
-            DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
             double[] c = new double[rows + 1];
             for (r = 1; r <= rows; r++)
             {
@@ -1569,7 +1569,7 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("strata") && parameters["strata"] != null)
             {
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                ClassifierVariable strataVariable = strataFrame.Variables[0].AsClassifierVariable;
+                ClassifierVariable strataVariable = strataFrame.Variables[0] as ClassifierVariable;
                 slab = new string[strataVariable.GroupCount + 1];
                 for (j = 1; j <= strataVariable.GroupCount; j++)
                 {
@@ -1707,7 +1707,7 @@ namespace StatsDirect.Builtins
             double cit = PDF.gauinv(1.0 - p0, out ifault);
 
             DataFrame intervalsFrame = parameters["intervals"].AsDataFrame;
-            DoubleVariable intervalsVariable = intervalsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable intervalsVariable = intervalsFrame.Variables[0]as DoubleVariable;
             int rows = intervalsVariable.Length + 1;
             double[] r = new double[rows + 1];
             double[] x = new double[rows + 1];
@@ -1734,12 +1734,12 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame populationFrame = parameters["population"].AsDataFrame;
-            DoubleVariable populationVariable = populationFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable populationVariable = populationFrame.Variables[0]as DoubleVariable;
             for (int i = 1; i <= rows; i++)
                 p[i] = populationVariable.Data[i - 1];
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
-            DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
             bool novariance = false;
             for (int i = 1; i <= rows; i++)
             {
@@ -1751,7 +1751,7 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("fractions") && parameters["fractions"] != null)
             {
                 DataFrame fractionsFrame = parameters["fractions"].AsDataFrame;
-                DoubleVariable fractionsVariable = fractionsFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable fractionsVariable = fractionsFrame.Variables[0]as DoubleVariable;
                 for (int i = 1; i <= rows - 1; i++)
                     a[i] = fractionsVariable.Data[i - 1];
             }
@@ -1768,7 +1768,7 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("weights") && parameters["weights"] != null)
             {
                 DataFrame weightsFrame = parameters["weights"].AsDataFrame;
-                DoubleVariable weightsVariable = weightsFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable weightsVariable = weightsFrame.Variables[0]as DoubleVariable;
                 uti = weightsVariable.Title;
                 util = true;
                 for (int i = 1; i <= rows; i++)
@@ -2080,7 +2080,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptFollowUpLifetableCalculateNatst(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
-            DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
 
             double natst = 0.0;
             foreach (double d in deathsVariable.Data)
@@ -2090,7 +2090,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame withdrawalsFrame = parameters["withdrawals"].AsDataFrame;
-            DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0]as DoubleVariable;
 
             foreach (double w in withdrawalsVariable.Data)
             {
@@ -2111,7 +2111,7 @@ namespace StatsDirect.Builtins
             double cit = PDF.gauinv(1.0 - p);
 
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = timesFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
             int rows = timesVariable.Length;
             ColumnData[] td = new ColumnData[2 + 1];
             double[] t = new double[rows + 1];
@@ -2121,7 +2121,7 @@ namespace StatsDirect.Builtins
                 t[r] = timesVariable.Data[r - 1];
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
-            DoubleVariable deathsVariable = deathsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
             double[] d = new double[rows + 1];
             td[1] = new ColumnData { Title = deathsVariable.Title };
 
@@ -2129,7 +2129,7 @@ namespace StatsDirect.Builtins
                 d[r] = deathsVariable.Data[r - 1];
 
             DataFrame withdrawalsFrame = parameters["withdrawals"].AsDataFrame;
-            DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0]as DoubleVariable;
             double[] w = new double[rows + 1];
             td[2] = new ColumnData { Title = withdrawalsVariable.Title };
 

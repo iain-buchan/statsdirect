@@ -102,14 +102,6 @@ namespace StatsDirect.Data
             return newVariable;
         }
 
-        public override StringVariable AsStringVariable
-        {
-            get
-            {
-                return this;
-            }
-        }
-
         public override object DataAsObject(int i)
         {
             return Data[i];
@@ -136,7 +128,7 @@ namespace StatsDirect.Data
         {
             if (!(victim is StringVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
-            Data = victim.AsStringVariable.Data;
+            Data = (victim as StringVariable).Data;
         }
 
         protected override bool HasData

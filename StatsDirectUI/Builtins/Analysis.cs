@@ -13,9 +13,9 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptRateDirectStd(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
-            DoubleVariable datV2 = datFrame.Variables[2].AsDoubleVariable;
+            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
+            DoubleVariable datV2 = datFrame.Variables[2]as DoubleVariable;
             int rows = datFrame.MaxRows;
             double[] idxy = new double[rows + 1];
             double[] idxn = new double[rows + 1];
@@ -963,7 +963,7 @@ namespace StatsDirect.Builtins
 
             for (int i = 0; i < rows; i++)
                 for (int j = 0; j < cols; j++)
-                    o[i, j] = datFrame.Variables[j].AsDoubleVariable.Data[i];
+                    o[i, j] = (datFrame.Variables[j] as DoubleVariable).Data[i];
 
             switch (wtype)
             {
@@ -971,7 +971,7 @@ namespace StatsDirect.Builtins
                     DataFrame weights = parameters["weights"].AsDataFrame;
                     for (int i = 0; i < weights.VariableCount; i++)
                     {
-                        DoubleVariable v = weights.Variables[i].AsDoubleVariable;
+                        DoubleVariable v = weights.Variables[i] as DoubleVariable;
                         for (int j = 0; j < v.Length; j++)
                         {
                             w[i, j] = v.Data[j];
@@ -1144,8 +1144,8 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptMiscLikely(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
+            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
             int rows = datFrame.MaxRows;
 
             double[] c1 = new double[rows + 1];
@@ -1641,8 +1641,8 @@ namespace StatsDirect.Builtins
             int fault = 0;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
+            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
             int rows = datFrame.MaxRows;
             double[] asm = new double[rows + 1];
             double[] spop = new double[rows + 1];

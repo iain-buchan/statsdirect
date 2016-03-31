@@ -5918,7 +5918,7 @@ namespace StatsDirect.Charting
             PyramidOptions pOptions = ((PyramidOptions)(definition.ChartOptions));
 
             DataFrame maleFrame = pOptions.MaleFrame;
-            DoubleVariable males = maleFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable males = maleFrame.Variables[0]as DoubleVariable;
             double maxmale = males.Max;
 
             double maxfemale;
@@ -5926,7 +5926,7 @@ namespace StatsDirect.Charting
             {
                 //  Separate male and female values
                 DataFrame femaleFrame = pOptions.FemaleFrame;
-                DoubleVariable females = femaleFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable females = femaleFrame.Variables[0]as DoubleVariable;
                 maxfemale = females.Max;
             }
             else
@@ -5963,7 +5963,7 @@ namespace StatsDirect.Charting
             PyramidOptions pOptions = ((PyramidOptions)(definition.ChartOptions));
 
             DataFrame maleFrame = pOptions.MaleFrame;
-            DoubleVariable males = maleFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable males = maleFrame.Variables[0]as DoubleVariable;
             int nmale = males.Length;
             double maxmale = males.Max;
 
@@ -5976,7 +5976,7 @@ namespace StatsDirect.Charting
             {
                 //  Separate male and female values
                 DataFrame femaleFrame = pOptions.FemaleFrame;
-                DoubleVariable females = femaleFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable females = femaleFrame.Variables[0]as DoubleVariable;
                 female = new double[nmale];
                 male = new double[nmale];
                 maxfemale = females.Max;
@@ -6014,7 +6014,7 @@ namespace StatsDirect.Charting
             string[] title = new string[nmale + 1];
             if (pOptions.LabelFrame != null)
             {
-                StringVariable labels = pOptions.LabelFrame.Variables[0].AsStringVariable;
+                StringVariable labels = pOptions.LabelFrame.Variables[0]as StringVariable;
                 int i;
                 for (i = labels.Length - 1; i >= 0; i--)
                 {

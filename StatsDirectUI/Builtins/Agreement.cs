@@ -59,17 +59,17 @@ namespace StatsDirect.Builtins
         private static void GatherUniversalAgreementData(ITemplateHost host, ParameterBag parameters, out int n, out int b, out int c, out double[, ,] data, out bool standard, ref int nobs, ref string title, ref string refIdent)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = dataFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable dataVariable = dataFrame.Variables[0]as DoubleVariable;
             DataFrame ratersFrame = parameters["raters"].AsDataFrame;
-            ClassifierVariable ratersVariable = ratersFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable ratersVariable = ratersFrame.Variables[0] as ClassifierVariable;
             DataFrame objectsFrame = parameters["objects"].AsDataFrame;
-            ClassifierVariable objectsVariable = objectsFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable objectsVariable = objectsFrame.Variables[0] as ClassifierVariable;
             bool hasCategories = parameters.ContainsKey("categories") && parameters["categories"] != null;
             ClassifierVariable categoriesVariable = null;
             if (hasCategories)
             {
                 DataFrame categoriesFrame = parameters["categories"].AsDataFrame;
-                categoriesVariable = categoriesFrame.Variables[0].AsClassifierVariable;
+                categoriesVariable = categoriesFrame.Variables[0] as ClassifierVariable;
             }
 
             n = objectsVariable.GroupCount;

@@ -64,7 +64,7 @@ namespace StatsDirect.Charting
                                                       MarkerIndex = seriesIndex
                                                   };
                 SeriesOptions.Add( sod ); 
-                maxRow = Math.Max( maxRow, v.AsDoubleVariable.Max ); 
+                maxRow = Math.Max( maxRow, (v as DoubleVariable).Max ); 
             } 
             
             //  Work out a reasonable axis value

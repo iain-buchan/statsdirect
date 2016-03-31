@@ -46,7 +46,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame predictorFrame = parameters["predictor"].AsDataFrame;
             int nx = predictorFrame.Variables[0].Length;
-            double[] x = predictorFrame.Variables[0].AsDoubleVariable.Data; //  0-based
+            double[] x = (predictorFrame.Variables[0] as DoubleVariable).Data; //  0-based
 
             DataFrame outcomesFrame = parameters["outcomes"].AsDataFrame;
 
@@ -54,7 +54,7 @@ namespace StatsDirect.Builtins
             double tntot = 0;
             for (int j = 0; j < nx; j++)
             {
-                DoubleVariable v = outcomesFrame.Variables[j].AsDoubleVariable;
+                DoubleVariable v = outcomesFrame.Variables[j]as DoubleVariable;
                 double[] data = v.Data;
                 double ysum = 0;
                 double ysum2 = 0;
@@ -370,7 +370,7 @@ namespace StatsDirect.Builtins
 
             // bool OK = false; 
             DataFrame stratumFrame = parameters["stratum"].AsDataFrame;
-            ClassifierVariable stratumVariable = stratumFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable stratumVariable = stratumFrame.Variables[0] as ClassifierVariable;
             int rows = stratumVariable.Length;
             int[] isi = new int[rows + 1];
             int[] ic = new int[rows + 1];
@@ -391,7 +391,7 @@ namespace StatsDirect.Builtins
                 stratlab[i] = stratumVariable.Groups[i - 1].Label;
 
             DataFrame caseControlFrame = parameters["case-control"].AsDataFrame;
-            DoubleVariable caseControlVariable = caseControlFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable caseControlVariable = caseControlFrame.Variables[0]as DoubleVariable;
             for (int i = 1; i <= rows; i++)
             {
                 //  Pre-validated to 0 or 1
@@ -408,7 +408,7 @@ namespace StatsDirect.Builtins
             ColumnData[] cd = new ColumnData[cols + 1];
             for (int c = 1; c <= cols; c++)
             {
-                DoubleVariable v = predictorsFrame.Variables[c - 1].AsDoubleVariable;
+                DoubleVariable v = predictorsFrame.Variables[c - 1]as DoubleVariable;
                 cd[c] = new ColumnData { Title = v.Title };
 
                 for (int r = 1; r <= rows; r++)

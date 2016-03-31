@@ -97,7 +97,7 @@ namespace StatsDirect.Builtins
                             rawField = rawField.Substring(1, rawField.Length - 2).Replace("\"\"", "\"");
                         if (outputFrame.VariableCount <= col)
                             outputFrame.Variables.Add(new StringVariable());
-                        outputFrame.Variables[col].AsStringVariable.SetData(row, rawField);
+                        (outputFrame.Variables[col] as StringVariable).SetData(row, rawField);
                         lastSplitPosition += splitLength + 1;
                     }
                     if (sr.EndOfStream)
@@ -144,7 +144,7 @@ namespace StatsDirect.Builtins
                         bool first = true;
                         for (int c = 0; c < data.VariableCount; c++)
                         {
-                            StringVariable v = data.Variables[c].AsStringVariable;
+                            StringVariable v = data.Variables[c]as StringVariable;
                             if (first)
                                 first = false;
                             else
@@ -160,7 +160,7 @@ namespace StatsDirect.Builtins
                             first = true;
                             for (int c = 0; c < data.VariableCount; c++)
                             {
-                                StringVariable v = data.Variables[c].AsStringVariable;
+                                StringVariable v = data.Variables[c]as StringVariable;
                                 if (first)
                                     first = false;
                                 else

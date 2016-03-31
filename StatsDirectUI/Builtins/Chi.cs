@@ -236,11 +236,11 @@ namespace StatsDirect.Builtins
             DataFrame datFrame = parameters["data"].AsDataFrame;
             if (datFrame.VariableCount < ((z == Chi2ByNTrend.WithTrend) ? 3 : 2))
                 throw new InvalidDataException("Invalid data: Please fill in the same number of rows in each column without gaps");
-            DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
+            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
             DoubleVariable datV2 = null;
             if (z == Chi2ByNTrend.WithTrend)
-                datV2 = datFrame.Variables[2].AsDoubleVariable;
+                datV2 = datFrame.Variables[2]as DoubleVariable;
             int rows = datFrame.MaxRows;
             double[] f = new double[rows + 1 ];
             double[] g = new double[rows + 1 ];
@@ -383,8 +383,8 @@ namespace StatsDirect.Builtins
             int realk; int i; int ierr;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
+            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
             int rows = datFrame.MaxRows;
 
             if (rows <= 0)
@@ -627,7 +627,7 @@ namespace StatsDirect.Builtins
             {
                 for (int c = 1; c <= cols; c++)
                 {
-                    double a1 = dataFrame.Variables[c - 1].AsDoubleVariable.Data[r - 1];
+                    double a1 = (dataFrame.Variables[c - 1] as DoubleVariable).Data[r - 1];
                     a[r, c] = a1;
                     t += a1;
                 }
@@ -661,8 +661,8 @@ namespace StatsDirect.Builtins
             bool ierr;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
+            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
             int rows = datFrame.MaxRows;
             if (rows <= 0)
             {
@@ -706,12 +706,12 @@ namespace StatsDirect.Builtins
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
             bool hasSpecifiedTrend = datFrame.VariableCount == 3;
-            DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
+            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
             DoubleVariable datV2 = null;
             if (hasSpecifiedTrend)
             {
-                datV2 = datFrame.Variables[2].AsDoubleVariable;
+                datV2 = datFrame.Variables[2]as DoubleVariable;
             }
             int rows = datFrame.MaxRows;
             const int cols = 2;

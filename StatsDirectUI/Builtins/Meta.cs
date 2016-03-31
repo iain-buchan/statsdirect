@@ -33,7 +33,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -42,7 +42,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
             double[] sr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -50,7 +50,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
             double[] xn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -58,7 +58,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
             double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -70,7 +70,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -581,7 +581,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -590,7 +590,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
             double[] sr = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
@@ -598,7 +598,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
             double[] xn = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
@@ -606,7 +606,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
             double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -618,7 +618,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -821,7 +821,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 1 ];
             for (i = 1; i <= k; i++)
@@ -830,7 +830,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
             double[] sr = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
@@ -838,7 +838,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
             double[] xn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -846,7 +846,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
             double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -858,7 +858,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -1085,7 +1085,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame enFrame = parameters["en"].AsDataFrame;
-            DoubleVariable enVariable = enFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable enVariable = enFrame.Variables[0]as DoubleVariable;
             int k = enVariable.Length;
             double[] en = new double[k + 1 ];
             double[] g = new double[k + 1 ];
@@ -1098,7 +1098,7 @@ namespace StatsDirect.Builtins
             if (proc != 2)
             {
                 DataFrame emFrame = parameters["em"].AsDataFrame;
-                DoubleVariable emVariable = emFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable emVariable = emFrame.Variables[0]as DoubleVariable;
                 em = new double[k + 1 ];
                 for (i = 1; i <= k; i++)
                 {
@@ -1106,7 +1106,7 @@ namespace StatsDirect.Builtins
                 }
 
                 DataFrame esFrame = parameters["es"].AsDataFrame;
-                DoubleVariable esVariable = esFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable esVariable = esFrame.Variables[0]as DoubleVariable;
                 es = new double[k + 1 ];
                 for (i = 1; i <= k; i++)
                 {
@@ -1115,7 +1115,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame cnFrame = parameters["cn"].AsDataFrame;
-            DoubleVariable cnVariable = cnFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable cnVariable = cnFrame.Variables[0]as DoubleVariable;
             k = cnVariable.Length;
             double[] cn = new double[k + 1 ];
             for (i = 1; i <= k; i++)
@@ -1127,7 +1127,7 @@ namespace StatsDirect.Builtins
             {
                 gotg = true;
                 DataFrame gFrame = parameters["g"].AsDataFrame;
-                DoubleVariable gVariable = gFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable gVariable = gFrame.Variables[0]as DoubleVariable;
                 k = gVariable.Length;
                 //  ReDim g(k)
                 for (i = 1; i <= k; i++)
@@ -1139,7 +1139,7 @@ namespace StatsDirect.Builtins
             {
                 gotg = false;
                 DataFrame cmFrame = parameters["cm"].AsDataFrame;
-                DoubleVariable cmVariable = cmFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable cmVariable = cmFrame.Variables[0]as DoubleVariable;
                 cm = new double[k + 1 ];
                 for (i = 1; i <= k; i++)
                 {
@@ -1147,7 +1147,7 @@ namespace StatsDirect.Builtins
                 }
 
                 DataFrame csFrame = parameters["cs"].AsDataFrame;
-                DoubleVariable csVariable = csFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable csVariable = csFrame.Variables[0]as DoubleVariable;
                 cs = new double[k + 1 ];
                 for (i = 1; i <= k; i++)
                 {
@@ -1160,7 +1160,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -2066,7 +2066,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame aFrame = parameters["a"].AsDataFrame;
-            DoubleVariable aVariable = aFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable aVariable = aFrame.Variables[0]as DoubleVariable;
             int k = aVariable.Length;
             double[] a = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -2075,7 +2075,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame pt1Frame = parameters["pt1"].AsDataFrame;
-            DoubleVariable pt1Variable = pt1Frame.Variables[0].AsDoubleVariable;
+            DoubleVariable pt1Variable = pt1Frame.Variables[0]as DoubleVariable;
             double[] pt1 = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -2083,7 +2083,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame bFrame = parameters["b"].AsDataFrame;
-            DoubleVariable bVariable = bFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable bVariable = bFrame.Variables[0]as DoubleVariable;
             double[] b = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -2091,7 +2091,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame pt2Frame = parameters["pt2"].AsDataFrame;
-            DoubleVariable pt2Variable = pt2Frame.Variables[0].AsDoubleVariable;
+            DoubleVariable pt2Variable = pt2Frame.Variables[0]as DoubleVariable;
             double[] pt2 = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -2103,7 +2103,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -2408,7 +2408,7 @@ namespace StatsDirect.Builtins
                 cit = PDF.gauinv(0.975, out scrap);
             }
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -2417,7 +2417,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
             double[] sr = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
@@ -2425,7 +2425,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
             double[] xn = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
@@ -2433,7 +2433,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
             double[] xr = new double[k + 1 ];
             for (i = 1; i <= k; i++)
             {
@@ -2445,7 +2445,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -3307,7 +3307,7 @@ namespace StatsDirect.Builtins
             bool useCI = "true".Equals(parameters["use_ci"].AsString.ToLower());
 
             DataFrame yFrame = parameters["y"].AsDataFrame;
-            DoubleVariable yVariable = yFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable yVariable = yFrame.Variables[0]as DoubleVariable;
             int k = yVariable.Length;
             double[] y = new double[k + 2];
             double[] seY = new double[k + 2];
@@ -3328,14 +3328,14 @@ namespace StatsDirect.Builtins
             if (useCI)
             {
                 DataFrame llYFrame = parameters["ll_y"].AsDataFrame;
-                DoubleVariable llYVariable = llYFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable llYVariable = llYFrame.Variables[0]as DoubleVariable;
                 for (i = 1; i <= k; i++)
                 {
                     llY[i] = llYVariable.Data[i - 1];
                 }
 
                 DataFrame ulYFrame = parameters["ul_y"].AsDataFrame;
-                DoubleVariable ulYVariable = ulYFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable ulYVariable = ulYFrame.Variables[0]as DoubleVariable;
                 for (i = 1; i <= k; i++)
                 {
                     ulY[i] = ulYVariable.Data[i - 1];
@@ -3364,7 +3364,7 @@ namespace StatsDirect.Builtins
             {
                 // tmp = use_ratio ? "LOG " : string.Empty; - unused
                 DataFrame seYFrame = parameters["se_y"].AsDataFrame;
-                DoubleVariable seYVariable = seYFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable seYVariable = seYFrame.Variables[0]as DoubleVariable;
                 for (i = 1; i <= k; i++)
                 {
                     seY[i] = seYVariable.Data[i - 1];
@@ -3385,7 +3385,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["studies"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -3615,7 +3615,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame rFrame = parameters["r"].AsDataFrame;
-            DoubleVariable rVariable = rFrame.Variables[0].AsDoubleVariable; //  Ends up in y
+            DoubleVariable rVariable = rFrame.Variables[0]as DoubleVariable; //  Ends up in y
             int k = rVariable.Length;
             double[] y = new double[k + 2 ];
             // double[] n = new double[k + 2 ]; - unused
@@ -3634,7 +3634,7 @@ namespace StatsDirect.Builtins
             pg[k + 1] = -1;
 
             DataFrame nFrame = parameters["n"].AsDataFrame;
-            DoubleVariable nVariable = nFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable nVariable = nFrame.Variables[0]as DoubleVariable;
             double[] seY = new double[k + 2 ];
             double[] llY = new double[k + 2 ];
             double[] ulY = new double[k + 2 ];
@@ -3656,7 +3656,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["studies"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -4124,7 +4124,7 @@ namespace StatsDirect.Builtins
             double fudge = 0.5; // Parsing.Cdbl_Txt(parameters["fudge"].AsString); removed as part of #893
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 2 ];
             double[] y = new double[k + 2 ];
@@ -4140,7 +4140,7 @@ namespace StatsDirect.Builtins
             pg[k + 1] = -1;
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
             double[] sr = new double[k + 1 ];
             bool allRZero = true;
             bool allREqualN = true;
@@ -4163,7 +4163,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0].AsStringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
                 for (int i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();

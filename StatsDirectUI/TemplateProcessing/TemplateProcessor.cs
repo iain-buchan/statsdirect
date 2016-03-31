@@ -214,7 +214,7 @@ namespace StatsDirect.Templates
                 DataFrame frame = parameters[step.XSeriesDataName].AsDataFrame;
                 for (int v = 0; v < frame.VariableCount; v++)
                 {
-                    DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
+                    DoubleVariable variable = frame.Variables[v]as DoubleVariable;
                     definition.AddXSeriesAt(ChartOptionProcessor.VariableToSeries(variable), v);
                 }
                 dataName = frame.Name;
@@ -227,7 +227,7 @@ namespace StatsDirect.Templates
                 DataFrame frame = parameters[step.YSeriesDataName].AsDataFrame;
                 for (int v = 0; v < frame.VariableCount; v++)
                 {
-                    DoubleVariable variable = frame.Variables[v].AsDoubleVariable;
+                    DoubleVariable variable = frame.Variables[v]as DoubleVariable;
                     definition.AddYSeriesAt(ChartOptionProcessor.VariableToSeries(variable), v);
                 }
                 dataName = frame.Name;
@@ -753,7 +753,7 @@ namespace StatsDirect.Templates
 
                         // Otherwise ensure all values are in {-1, 0, 1}
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable variable = dataFrame.Variables[0]as DoubleVariable;
                         foreach (double value in variable.Data)
                         {
                             if (0 != value && -1 != value && 1 != value)
@@ -769,7 +769,7 @@ namespace StatsDirect.Templates
 
                         // Otherwise ensure the number of values is a square number
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable variable = dataFrame.Variables[0]as DoubleVariable;
                         if (Math.Sqrt(variable.Length) != Math.Floor(Math.Sqrt(variable.Length)))
                         {
                             return failedValidationMessage ?? "Number of observations can not be arranged as a square (i.e. integer square root)";
@@ -784,7 +784,7 @@ namespace StatsDirect.Templates
 
                         // Otherwise ensure the number of bins is the square root of the number of values
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        DoubleVariable variable = dataFrame.Variables[0].AsDoubleVariable;
+                        DoubleVariable variable = dataFrame.Variables[0]as DoubleVariable;
                         ClassifierVariable cv = gidx_bins(variable);
                         if (Math.Sqrt(variable.Length) != cv.GroupCount)
                         {
@@ -866,7 +866,7 @@ namespace StatsDirect.Templates
                         {
                             if (variable is DoubleVariable)
                             {
-                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                DoubleVariable doubleVariable = variable as DoubleVariable;
                                 foreach (double value in doubleVariable.Data)
                                 {
                                     if (0.0 != value && 1.0 != value)
@@ -890,7 +890,7 @@ namespace StatsDirect.Templates
                         {
                             if (variable is DoubleVariable)
                             {
-                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                DoubleVariable doubleVariable = variable as DoubleVariable;
                                 foreach (double value in doubleVariable.Data)
                                 {
                                     if (value <= 0)
@@ -919,7 +919,7 @@ namespace StatsDirect.Templates
                             double sum = 0;
                             foreach (Variable variable in dataFrame.Variables)
                             {
-                                double x = variable.AsDoubleVariable.Data[row];
+                                double x = (variable as DoubleVariable).Data[row];
                                 if (!(x == Constant.MISSING || double.IsInfinity(x)))
                                     sum += x;
                             }
@@ -946,7 +946,7 @@ namespace StatsDirect.Templates
                             for (int col = 0; col < dataFrame.Variables.Count - 1; col++)
                             {
                                 Variable variable = dataFrame.Variables[col];
-                                double x = variable.AsDoubleVariable.Data[row];
+                                double x = (variable as DoubleVariable).Data[row];
                                 if (!(x == Constant.MISSING || double.IsInfinity(x)))
                                     sum += x;
                             }
@@ -967,7 +967,7 @@ namespace StatsDirect.Templates
                         {
                             if (variable is DoubleVariable)
                             {
-                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                DoubleVariable doubleVariable = variable as DoubleVariable;
                                 foreach (double value in doubleVariable.Data)
                                 {
                                     if (value < 0)
@@ -991,7 +991,7 @@ namespace StatsDirect.Templates
                         {
                             if (variable is DoubleVariable)
                             {
-                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                DoubleVariable doubleVariable = variable as DoubleVariable;
                                 foreach (double value in doubleVariable.Data)
                                 {
                                     if (value <= 0 || value >= 1)
@@ -1015,7 +1015,7 @@ namespace StatsDirect.Templates
                         {
                             if (variable is DoubleVariable)
                             {
-                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                DoubleVariable doubleVariable = variable as DoubleVariable;
                                 foreach (double value in doubleVariable.Data)
                                     if (value < 0 || value > 1)
                                         return failedValidationMessage ?? "Data must lie between 0 and 1 inclusive";
@@ -1031,7 +1031,7 @@ namespace StatsDirect.Templates
 
                         // Otherwise ensure there are exactly two bins in the classifier variable
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        ClassifierVariable variable = dataFrame.Variables[0].AsClassifierVariable;
+                        ClassifierVariable variable = dataFrame.Variables[0] as ClassifierVariable;
                         if (variable.GroupCount != 2)
                         {
                             return failedValidationMessage ?? "Group identifier must contain two groups and no missing data";
@@ -1050,7 +1050,7 @@ namespace StatsDirect.Templates
                         {
                             if (variable is DoubleVariable)
                             {
-                                DoubleVariable doubleVariable = variable.AsDoubleVariable;
+                                DoubleVariable doubleVariable = variable as DoubleVariable;
                                 foreach (double value in doubleVariable.Data)
                                 {
                                     if (value == Constant.MISSING)
@@ -1066,9 +1066,9 @@ namespace StatsDirect.Templates
                     {
                         // Assumes no missing data, no data < 0
                         DataFrame datFrame = filledParameters["data"].AsDataFrame;
-                        DoubleVariable datV0 = datFrame.Variables[0].AsDoubleVariable;
-                        DoubleVariable datV1 = datFrame.Variables[1].AsDoubleVariable;
-                        DoubleVariable datV2 = datFrame.Variables[2].AsDoubleVariable;
+                        DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
+                        DoubleVariable datV2 = datFrame.Variables[2]as DoubleVariable;
                         int rows = datFrame.MaxRows;
 
                         double refntot = 0.0;

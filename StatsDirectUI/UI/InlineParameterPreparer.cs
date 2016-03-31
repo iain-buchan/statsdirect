@@ -313,7 +313,7 @@ namespace StatsDirect.UI
                 DataFrame frame = Context[parameter.Name].AsDataFrame;
                 for (int col = 0; col < frame.VariableCount; col++)
                 {
-                    DoubleVariable v = frame.Variables[col].AsDoubleVariable;
+                    DoubleVariable v = frame.Variables[col]as DoubleVariable;
                     for (int row = 0; row < v.Length; row++)
                         usedRange.Cells[row, col].Value = v.Data[row];
                 }
@@ -629,10 +629,10 @@ namespace StatsDirect.UI
                         DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
                         if (sourceFrame.VariableCount >= 2 && sourceFrame.Variables[0] is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
                         {
-                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0].AsDoubleVariable);
-                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, sourceFrame.Variables[1].AsDoubleVariable);
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0] as DoubleVariable);
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, sourceFrame.Variables[1] as DoubleVariable);
                             if (has3Columns && sourceFrame.VariableCount >= 3 && sourceFrame.Variables[0] is DoubleVariable)
-                                DumpIntoSsg((IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2].AsDoubleVariable);
+                                DumpIntoSsg((IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2] as DoubleVariable);
                         }
                     }
                     grid.ActiveWorksheet.WindowInfo.SplitColumns = has3Columns ? 3 : 2;
@@ -733,7 +733,7 @@ namespace StatsDirect.UI
                         DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
                         for (int col = 0; col < sourceFrame.VariableCount; col++)
                             if (sourceFrame.Variables[col] is DoubleVariable)
-                                DumpIntoSsg((IValues)grid.ActiveWorksheet, col, sourceFrame.Variables[col].AsDoubleVariable);
+                                DumpIntoSsg((IValues)grid.ActiveWorksheet, col, sourceFrame.Variables[col] as DoubleVariable);
                     }
                     grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
@@ -756,7 +756,7 @@ namespace StatsDirect.UI
                 double minimumC;
                 double suggestedC;
                 DataFrame frame = Context["data"].AsDataFrame;
-                DoubleVariable dv = frame.Variables[0].AsDoubleVariable;
+                DoubleVariable dv = frame.Variables[0]as DoubleVariable;
                 Sheet.XConstant(dv.Length, 0, dv.Data, out minimumC, out suggestedC);
                 Context.AddOutput("a_min", minimumC);
 
@@ -825,9 +825,9 @@ namespace StatsDirect.UI
             DataFrame sourceFrame = Context[parameter.Source].AsDataFrame;
             string[] values;
             if (sourceFrame.Variables[0] is StringVariable)
-                values = sourceFrame.Variables[0].AsStringVariable.Data;
+                values = (sourceFrame.Variables[0] as StringVariable).Data;
             else if (sourceFrame.Variables[0] is ClassifierVariable)
-                values = sourceFrame.Variables[0].AsClassifierVariable.SortedCategoryNames;
+                values = (sourceFrame.Variables[0] as ClassifierVariable).SortedCategoryNames;
             else
                 throw new ArgumentException("A PickFromListParameter can only pick from string or classifier variables");
 
@@ -1053,8 +1053,8 @@ namespace StatsDirect.UI
             ((ISupportInitialize)gridEditGrid).EndInit();
             EditGridParameter egp = parameter;
             DataFrame sourceFrame = Context[egp.Source].AsDataFrame;
-            StringVariable keyVariable = sourceFrame.FindVariable(egp.KeyVariable).AsStringVariable;
-            StringVariable valueVariable = sourceFrame.FindVariable(egp.ValueVariable).AsStringVariable;
+            StringVariable keyVariable = sourceFrame.FindVariable(egp.KeyVariable)as StringVariable;
+            StringVariable valueVariable = sourceFrame.FindVariable(egp.ValueVariable)as StringVariable;
             gridEditGrid.Rows.Clear();
             for (int i = 0; i < keyVariable.Length; i++)
             {
@@ -1150,8 +1150,8 @@ namespace StatsDirect.UI
                 int tableCount = sourceFrame.MinRows / 2;
                 if (sourceFrame.VariableCount == 2 && sourceFrame.Variables is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
                 {
-                    DoubleVariable var1 = sourceFrame.Variables[0].AsDoubleVariable;
-                    DoubleVariable var2 = sourceFrame.Variables[1].AsDoubleVariable;
+                    DoubleVariable var1 = sourceFrame.Variables[0]as DoubleVariable;
+                    DoubleVariable var2 = sourceFrame.Variables[1]as DoubleVariable;
                     txtTL.Text = var1.Data[0].ToString();
                     txtTR.Text = var2.Data[0].ToString();
                     txtBL.Text = var1.Data[1].ToString();

@@ -216,10 +216,6 @@ namespace StatsDirect.R
             variable.Accept(new ToRVariableVisitor { sb = sb });
         }
 
-        public static void ToR(StringBuilder sb, VariantVariable variable)
-        {
-        }
-
         public static void ToR(StringBuilder sb, object value)
         {
             if (null == value)

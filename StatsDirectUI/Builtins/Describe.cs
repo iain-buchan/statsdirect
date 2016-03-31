@@ -110,7 +110,7 @@ namespace StatsDirect.Builtins
 
             int seed = parameters["seed"].AsInt32;
             DataFrame capacitiesFrame = parameters["capacities"].AsDataFrame;
-            DoubleVariable capacitiesVariable = capacitiesFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable capacitiesVariable = capacitiesFrame.Variables[0]as DoubleVariable;
             int groups = capacitiesVariable.Length;
             int[] groupCapacities = new int[groups + 1];
             int capacity = 0;
@@ -125,7 +125,7 @@ namespace StatsDirect.Builtins
             int[,] x = new int[preferences + 1, subjects + 1];
             for (int i = 1; i <= preferences; i++)
             {
-                DoubleVariable preferencesVariable = preferencesFrame.Variables[i - 1].AsDoubleVariable;
+                DoubleVariable preferencesVariable = preferencesFrame.Variables[i - 1]as DoubleVariable;
                 for (int j = 1; j <= subjects; j++)
                 {
                     x[i, j] = (int)preferencesVariable.Data[j - 1];
@@ -269,7 +269,7 @@ namespace StatsDirect.Builtins
             for (int v = 0; v <= data.VariableCount - 1; v++)
             {
                 if (!(data.Variables[v] is ClassifierVariable))
-                    data.Variables[v] = TemplateProcessor.gidx_bins(data.Variables[v].AsDoubleVariable);
+                    data.Variables[v] = TemplateProcessor.gidx_bins(data.Variables[v] as DoubleVariable);
             }
 
             bool shouldSortByValue = "value".Equals(parameters["sortBy"].AsString);
@@ -281,7 +281,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*variable", variableList);
             foreach (Variable v in data.Variables)
             {
-                ClassifierVariable vc = v.AsClassifierVariable;
+                ClassifierVariable vc = v as ClassifierVariable;
                 ParameterBag variableParameters = new ParameterBag();
                 variableList.Add(variableParameters);
                 variableParameters.AddOutput("ti", vc.Title);
@@ -346,7 +346,7 @@ namespace StatsDirect.Builtins
         {
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = data.Variables[0].AsDoubleVariable;
+            DoubleVariable v0 = data.Variables[0]as DoubleVariable;
             Summary sx = new Summary();
             sx.FullSummaryFromX(v0.Data, v0.Length, v0.Title, GAMMA, 5, 95, 1);
             const int flt = 6;
@@ -439,13 +439,13 @@ namespace StatsDirect.Builtins
                 cdx = new ColumnData[cols];
                 for (int i = 0; i < cols; i++)
                 {
-                    DoubleVariable vi = data.Variables[i].AsDoubleVariable;
+                    DoubleVariable vi = data.Variables[i]as DoubleVariable;
                     cdx[i] = new ColumnData { Title = vi.Title, Rows = vi.Length };
                 }
 
                 w = new double[cols, maxrows + 1];
                 DataFrame weightsFrame = parameters["weights"].AsDataFrame;
-                DoubleVariable weightsVariable = weightsFrame.Variables[0].AsDoubleVariable;
+                DoubleVariable weightsVariable = weightsFrame.Variables[0]as DoubleVariable;
                 wti = weightsVariable.Title;
 
                 // Load the data, skipping rows where weights are 0 or missing
@@ -475,7 +475,7 @@ namespace StatsDirect.Builtins
                     for (int col = 0; col < cols; col++)
                     {
                         w[col, targetRow] = weight;
-                        DoubleVariable vi = data.Variables[col].AsDoubleVariable;
+                        DoubleVariable vi = data.Variables[col]as DoubleVariable;
                         double value = Constant.MISSING;
                         if (vi.Length > row)
                             value = vi.Data[row];
@@ -497,7 +497,7 @@ namespace StatsDirect.Builtins
                 cdx = new ColumnData[cols];
                 for (int i = 0; i < cols; i++)
                 {
-                    DoubleVariable vi = data.Variables[i].AsDoubleVariable;
+                    DoubleVariable vi = data.Variables[i]as DoubleVariable;
                     cdx[i] = new ColumnData { Title = vi.Title, Rows = vi.Length };
                     for (int j = 1; j <= vi.Length; j++)
                         x[i, j] = vi.Data[j - 1];
@@ -894,13 +894,13 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptTimeSeriesSummary(ITemplateHost host, ParameterBag parameters)
         {
             // Extract our variables from the input
-            DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0].AsDoubleVariable;
-            DoubleVariable observationsVariable = parameters["observations"].AsDataFrame.Variables[0].AsDoubleVariable;
-            ClassifierVariable subjectIdsVariable = parameters["subjectIds"].AsDataFrame.Variables[0].AsClassifierVariable;
+            DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0]as DoubleVariable;
+            DoubleVariable observationsVariable = parameters["observations"].AsDataFrame.Variables[0]as DoubleVariable;
+            ClassifierVariable subjectIdsVariable = parameters["subjectIds"].AsDataFrame.Variables[0] as ClassifierVariable;
             bool hasGroups = parameters.ContainsKey("groups") && parameters["groups"] != null && parameters["groups"].IsDataFrame;
             ClassifierVariable groupsVariable = null;
             if (hasGroups)
-                groupsVariable = parameters["groups"].AsDataFrame.Variables[0].AsClassifierVariable;
+                groupsVariable = parameters["groups"].AsDataFrame.Variables[0] as ClassifierVariable;
             double ci = parameters["ci"].AsDouble;
             bool addZeroObservationsAtZeroTime = parameters.ContainsKey("addZeroObservationAtZeroTime") && parameters["addZeroObservationAtZeroTime"] != null && parameters["addZeroObservationAtZeroTime"].IsBoolean && parameters["addZeroObservationAtZeroTime"].AsBoolean;
             // Bootstrap variables

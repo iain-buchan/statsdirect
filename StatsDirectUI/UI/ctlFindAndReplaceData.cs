@@ -43,7 +43,7 @@ namespace StatsDirect.UI
                     int rows = source.Length;
                     StringVariable outputVariable = new StringVariable(rows, source.Title);
                     outputFrame.Variables.Add(outputVariable);
-                    double[] sourceData = source.AsDoubleVariable.Data;
+                    double[] sourceData = (source as DoubleVariable).Data;
                     for (int n = 0; n < rows; n++)
                     {
                         if (sourceData[n] != Constant.MISSING)

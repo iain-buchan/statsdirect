@@ -46,7 +46,7 @@ namespace StatsDirect.Builtins
                 int nx = 0;
                 double sum = 0.0;
                 double sumsq = 0.0;
-                foreach (double v in Frame.Variables[D].AsDoubleVariable.Data)
+                foreach (double v in (Frame.Variables[D] as DoubleVariable).Data)
                 {
                     if (v != Constant.MISSING)
                     {
@@ -59,7 +59,7 @@ namespace StatsDirect.Builtins
                 mean[D] = sum / Convert.ToDouble(tnx[D]);
                 ss[D] = sumsq - ((sum * sum) / Convert.ToDouble(tnx[D]));
                 double sumsqdev = 0.0;
-                foreach (double v in Frame.Variables[D].AsDoubleVariable.Data)
+                foreach (double v in (Frame.Variables[D] as DoubleVariable).Data)
                 {
                     if (v != Constant.MISSING)
                     {
@@ -144,7 +144,7 @@ namespace StatsDirect.Builtins
             int[] tnx = new int[2];
 
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable variable = data.Variables[0].AsDoubleVariable;
+            DoubleVariable variable = data.Variables[0]as DoubleVariable;
             if (variable.Data.Length < 8)
             {
                 host.Error("Too few data for this method (minimum 8)", "Reference Range");
@@ -199,7 +199,7 @@ namespace StatsDirect.Builtins
             bool ok = true;
             for (j = 0; j <= data.Variables[k].Length - 1; j++)
             {
-                double v = data.Variables[k].AsDoubleVariable.Data[j];
+                double v = (data.Variables[k] as DoubleVariable).Data[j];
                 if (v != Constant.MISSING)
                 {
                     if (v >= 0.0)
@@ -257,10 +257,10 @@ namespace StatsDirect.Builtins
             int rx = 0;
             for (j = 0; j <= data.Variables[k].Length - 1; j++)
             {
-                if (data.Variables[k].AsDoubleVariable.Data[j] != Constant.MISSING)
+                if ((data.Variables[k] as DoubleVariable).Data[j] != Constant.MISSING)
                 {
                     rx = rx + 1;
-                    r[rx] = data.Variables[k].AsDoubleVariable.Data[j];
+                    r[rx] = (data.Variables[k] as DoubleVariable).Data[j];
                 }
             }
             Array.Sort(r, 1, rx);
@@ -365,7 +365,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*sample", sampleList);
             foreach (Variable varbl in data.Variables)
             {
-                DoubleVariable variable = varbl.AsDoubleVariable;
+                DoubleVariable variable = varbl as DoubleVariable;
                 double[] x = new double[variable.Length + 1 ];
                 int nobs = 0;
                 bool not_int = false;
@@ -497,7 +497,7 @@ namespace StatsDirect.Builtins
             else
             {
                 DataFrame Data = parameters["data"].AsDataFrame;
-                DoubleVariable v0 = Data.Variables[0].AsDoubleVariable;
+                DoubleVariable v0 = Data.Variables[0]as DoubleVariable;
                 double pm = parameters["popmean"].AsDouble;
                 double psd = parameters.ContainsKey("popsd") && parameters["popsd"] != null
                                  ? parameters["popsd"].AsDouble
@@ -597,7 +597,7 @@ namespace StatsDirect.Builtins
 
             foreach (Variable v in frame.Variables)
             {
-                DoubleVariable v0 = v.AsDoubleVariable;
+                DoubleVariable v0 = v as DoubleVariable;
                 double[] data = v0.Data;
                 int n = data.Length;
 
@@ -1355,7 +1355,7 @@ namespace StatsDirect.Builtins
             //  RTF_LoadTemplate("m_paired.rtf")
 
             double[] arr1 = new double[Data.MaxRows + 1 ]; // New array to replace Arr2(0,n)
-            DoubleVariable v0 = Data.Variables[0].AsDoubleVariable;
+            DoubleVariable v0 = Data.Variables[0]as DoubleVariable;
             int nx = 0;
             string txc;
             if (Data.VariableCount == 1)
@@ -1372,7 +1372,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                DoubleVariable v1 = Data.Variables[1].AsDoubleVariable;
+                DoubleVariable v1 = Data.Variables[1]as DoubleVariable;
                 for (N = 0; N <= v0.Length - 1; N++)
                 {
                     if (v0.Data[N] != Constant.MISSING & v1.Data[N] != Constant.MISSING)
@@ -1426,7 +1426,7 @@ namespace StatsDirect.Builtins
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
 
-                DoubleVariable v1 = Data.Variables[1].AsDoubleVariable;
+                DoubleVariable v1 = Data.Variables[1]as DoubleVariable;
                 double[] x = new double[v0.Length + 1 ];
                 double[] y = new double[v1.Length + 1 ];
                 x[0] = Constant.MISSING;

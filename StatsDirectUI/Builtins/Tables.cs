@@ -243,7 +243,7 @@ namespace StatsDirect.Builtins
             {
                 for (int j = 0; j < frame.VariableCount; j++)
                 {
-                    ClassifierVariable v = frame.Variables[j].AsClassifierVariable;
+                    ClassifierVariable v = frame.Variables[j] as ClassifierVariable;
                     //  Find the first missing label
                     int m;
                     for (m = 0; m < v.GroupCount; m++)
@@ -836,7 +836,7 @@ namespace StatsDirect.Builtins
             // do crosstabs if two raters --->
             if (raters == 2)
             {
-                ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
+                ClassifierVariable v0 = frame.Variables[0] as ClassifierVariable;
                 int n = v0.Length;
                 int ycats = 0;
                 double[] y = new double[n];
@@ -858,7 +858,7 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i < n; i++)
                     y[i] = v0.Data[i];
                 SortName(ycats, ycat, 0);
-                ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
+                ClassifierVariable v1 = frame.Variables[1] as ClassifierVariable;
                 int xcats = 0;
                 double[] x = new double[n];
                 Namevar[] xcat = new Namevar[v1.GroupCount];
@@ -913,7 +913,7 @@ namespace StatsDirect.Builtins
                     DataFrame weights = parameters["weights"].AsDataFrame;
                     for (int i = 0; i < weights.VariableCount; i++)
                     {
-                        DoubleVariable v = weights.Variables[i].AsDoubleVariable;
+                        DoubleVariable v = weights.Variables[i]as DoubleVariable;
                         for (int j = 0; j < v.Length; j++)
                         {
                             w[i, j] = v.Data[j];
@@ -1137,7 +1137,7 @@ namespace StatsDirect.Builtins
                 IList<string> categoryList = new List<string>();
                 foreach (Variable v in frame.Variables)
                 {
-                    foreach (Group gr in v.AsClassifierVariable.Groups)
+                    foreach (Group gr in (v as ClassifierVariable).Groups)
                     {
                         string nm = gr.Label;
                         if (!(categoryList.Contains(nm)) && !(Formatting.MISSINGLABEL.Equals(nm)))
@@ -1293,7 +1293,7 @@ namespace StatsDirect.Builtins
                 double[, ,] agreeData = new double[frame.Variables[0].Length + 1, raters + 1, 2];
                 for (int rater = 0; rater < raters; rater++)
                 {
-                    double[] data = frame.Variables[rater].AsClassifierVariable.Data;
+                    double[] data = (frame.Variables[rater] as ClassifierVariable).Data;
                     for (int row = 0; row < data.Length; row++)
                         agreeData[row + 1, rater + 1, 1] = data[row] + 1;
                 }
@@ -1359,7 +1359,7 @@ namespace StatsDirect.Builtins
                 {
                     for (int j = 0; j <= cols - 1; j++)
                     {
-                        double transTemp0 = frame.Variables[j].AsDoubleVariable.Data[i];
+                        double transTemp0 = (frame.Variables[j] as DoubleVariable).Data[i];
                         o[i, j] = ((int)(Math.Floor(transTemp0)));
                     }
                 }
@@ -1372,7 +1372,7 @@ namespace StatsDirect.Builtins
                 {
                     throw new NotImplementedException();
                 }
-                ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
+                ClassifierVariable v0 = frame.Variables[0] as ClassifierVariable;
                 int n = v0.Length;
                 int ycats = 0;
                 double[] y = new double[n];
@@ -1395,7 +1395,7 @@ namespace StatsDirect.Builtins
                     y[i] = v0.Data[i];
                 }
                 SortName(ycats, ycat, 0);
-                ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
+                ClassifierVariable v1 = frame.Variables[1] as ClassifierVariable;
                 int xcats = 0;
                 double[] x = new double[n];
                 Namevar[] xcat = new Namevar[v1.GroupCount];
@@ -1472,7 +1472,7 @@ namespace StatsDirect.Builtins
                 DataFrame weights = parameters["weights"].AsDataFrame;
                 for (int i = 0; i <= weights.VariableCount - 1; i++)
                 {
-                    DoubleVariable v = weights.Variables[i].AsDoubleVariable;
+                    DoubleVariable v = weights.Variables[i]as DoubleVariable;
                     for (int j = 0; j <= v.Length - 1; j++)
                     {
                         w[i, j] = v.Data[j];
@@ -1680,7 +1680,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["responses"].AsDataFrame;
 
-            ClassifierVariable v0 = frame.Variables[0].AsClassifierVariable;
+            ClassifierVariable v0 = frame.Variables[0] as ClassifierVariable;
             int n = v0.Length;
             int ycats = 0;
             double[] y = new double[n];
@@ -1703,7 +1703,7 @@ namespace StatsDirect.Builtins
                 y[i] = v0.Data[i];
             }
             SortName(ycats, ycat, 0);
-            ClassifierVariable v1 = frame.Variables[1].AsClassifierVariable;
+            ClassifierVariable v1 = frame.Variables[1] as ClassifierVariable;
             int xcats = 0;
             double[] x = new double[n];
             Namevar[] xcat = new Namevar[v1.GroupCount];
@@ -1740,9 +1740,9 @@ namespace StatsDirect.Builtins
             double ci = parameters["ci"].AsDouble;
             double x2 = parameters["x2"].AsDouble;
             DataFrame observedFrame = parameters["observed"].AsDataFrame;
-            DoubleVariable observed = observedFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable observed = observedFrame.Variables[0]as DoubleVariable;
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
-            DoubleVariable expected = expectedFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable expected = expectedFrame.Variables[0]as DoubleVariable;
 
             //  Observed data is grouped frequencies.
             double[] observedData = observed.Data;
@@ -1870,13 +1870,13 @@ namespace StatsDirect.Builtins
             const string cgft = "Chi-square goodness of fit test";
 
             DataFrame observedFrame = parameters["observed"].AsDataFrame;
-            DoubleVariable observed = observedFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable observed = observedFrame.Variables[0]as DoubleVariable;
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
-            DoubleVariable expected = expectedFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable expected = expectedFrame.Variables[0]as DoubleVariable;
             StringVariable namesVariable = null;
             if (parameters.ContainsKey("names"))
             {
-                namesVariable = parameters["names"].AsDataFrame.Variables[0].AsStringVariable;
+                namesVariable = parameters["names"].AsDataFrame.Variables[0]as StringVariable;
             }
 
             //  Observed data is grouped frequencies.
@@ -2018,7 +2018,7 @@ namespace StatsDirect.Builtins
 
         //     If isIndividual Then
         //         ' Data is individual observations
-        //         Dim soleVariable As ClassifierVariable = frame.Variables(0).AsClassifierVariable
+        //         Dim soleVariable As ClassifierVariable = (frame.Variables(0)) as ClassifierVariable
         //         Dim soleData() As Double = soleVariable.Data
 
         //         ReDim x(1)
@@ -2050,12 +2050,12 @@ namespace StatsDirect.Builtins
         //         Next
         //     Else
         //         ' Data is grouped frequencies.  We may or may not have group names.
-        //         Dim frequenciesVariable As DoubleVariable = frame.Variables(0).AsDoubleVariable
+        //         Dim frequenciesVariable As DoubleVariable = frame.Variables(0) as DoubleVariable
         //         Dim soleData() As Double = frequenciesVariable.Data
 
         //         Dim namesVariable As StringVariable = Nothing
         //         If parameters.ContainsKey("names") Then
-        //             namesVariable = parameters("names").AsDataFrame.Variables(0).AsStringVariable
+        //             namesVariable = parameters("names").AsDataFrame.Variables(0)as StringVariable
         //         End If
 
         //         nx = frequenciesVariable.Length
@@ -2171,7 +2171,7 @@ namespace StatsDirect.Builtins
 
             //  First classifier
             DataFrame c1Frame = parameters["c1"].AsDataFrame;
-            ClassifierVariable c1Variable = c1Frame.Variables[0].AsClassifierVariable;
+            ClassifierVariable c1Variable = c1Frame.Variables[0] as ClassifierVariable;
             int ycats = c1Variable.GroupCount;
             Namevar[] ycat = new Namevar[ycats + 1 ];
             int cnt = 0;
@@ -2198,7 +2198,7 @@ namespace StatsDirect.Builtins
                 if (strat)
                 {
                     DataFrame c3Frame = parameters["c3"].AsDataFrame;
-                    ClassifierVariable c3Variable = c3Frame.Variables[0].AsClassifierVariable;
+                    ClassifierVariable c3Variable = c3Frame.Variables[0] as ClassifierVariable;
                     cnt = 0;
                     for (int i = 0; i < c3Variable.GroupCount; i++)
                     {
@@ -2213,7 +2213,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddInput("strat", strat);
             for (int c = 0; c < c2Frame.VariableCount; c++)
             {
-                ClassifierVariable c2Variable = c2Frame.Variables[c].AsClassifierVariable;
+                ClassifierVariable c2Variable = c2Frame.Variables[c] as ClassifierVariable;
                 int xcats = c2Variable.GroupCount;
                 Namevar[] xcat = new Namevar[xcats + 1];
                 cnt = 0;
@@ -2269,7 +2269,7 @@ namespace StatsDirect.Builtins
 
             //  First classifier
             DataFrame c1Frame = parameters["c1"].AsDataFrame;
-            ClassifierVariable c1Variable = c1Frame.Variables[0].AsClassifierVariable;
+            ClassifierVariable c1Variable = c1Frame.Variables[0] as ClassifierVariable;
             int n = c1Variable.Length;
             int ycats = c1Variable.GroupCount;
             double[] y = new double[n + 1 ];
@@ -2301,7 +2301,7 @@ namespace StatsDirect.Builtins
                 if (strat)
                 {
                     DataFrame c3Frame = parameters["c3"].AsDataFrame;
-                    ClassifierVariable c3Variable = c3Frame.Variables[0].AsClassifierVariable;
+                    ClassifierVariable c3Variable = c3Frame.Variables[0] as ClassifierVariable;
                     zcats = c3Variable.GroupCount;
                     z = new double[n + 1];
                     zcat = new Namevar[zcats + 1];
@@ -2329,7 +2329,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*columns", columnsList);
             for (int c = 0; c <= c2Frame.VariableCount - 1; c++)
             {
-                ClassifierVariable c2Variable = c2Frame.Variables[c].AsClassifierVariable;
+                ClassifierVariable c2Variable = c2Frame.Variables[c] as ClassifierVariable;
                 int xcats = c2Variable.GroupCount;
                 double[] x = new double[n + 1];
                 Namevar[] xcat = new Namevar[xcats + 1 ];
@@ -7223,13 +7223,13 @@ namespace StatsDirect.Builtins
             double p = (1.0 - cco) / 2.0;
             double cit = PDF.gauinv(1.0 - p);
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0].AsDoubleVariable;
+            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
             int k = snVariable.Length;
             double[,] o = new double[k + 1, 5];
             for (int i = 1; i <= k; i++)
@@ -7264,7 +7264,7 @@ namespace StatsDirect.Builtins
             int maxrows = 0;
             for (i = 0; i <= data.VariableCount - 1; i++)
             {
-                gtot += data.Variables[i].AsDoubleVariable.Sum;
+                gtot += (data.Variables[i] as DoubleVariable).Sum;
                 if (data.Variables[i].Length > maxrows)
                 {
                     maxrows = data.Variables[i].Length;
@@ -7285,7 +7285,7 @@ namespace StatsDirect.Builtins
             }
             for (i = 0; i <= data.VariableCount - 1; i++)
             {
-                DoubleVariable v = data.Variables[i].AsDoubleVariable;
+                DoubleVariable v = data.Variables[i]as DoubleVariable;
                 for (j = 1; j <= v.Length; j++)
                 {
                     xt[j, i] = Convert.ToInt32(v.Data[j - 1]);
@@ -7325,7 +7325,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtTabulate(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame rowsFrame = parameters["rows"].AsDataFrame;
-            ClassifierVariable rowsVariable = rowsFrame.Variables[0].AsClassifierVariable;
+            ClassifierVariable rowsVariable = rowsFrame.Variables[0] as ClassifierVariable;
             int n = rowsVariable.Length;
             int ycats = rowsVariable.GroupCount;
             double[] y = new double[n + 1 ];
@@ -7349,7 +7349,7 @@ namespace StatsDirect.Builtins
             int pos = 0;
             for (int c = 0; c <= columnsFrame.VariableCount - 1; c++)
             {
-                ClassifierVariable cv = columnsFrame.Variables[c].AsClassifierVariable;
+                ClassifierVariable cv = columnsFrame.Variables[c] as ClassifierVariable;
                 int xcats = cv.GroupCount;
                 double[] x = new double[n + 1 ];
                 Namevar[] xcat = new Namevar[xcats + 1 ];
@@ -7394,7 +7394,7 @@ namespace StatsDirect.Builtins
                     StringVariable vv;
                     if (outputFrame.VariableCount > i)
                     {
-                        vv = outputFrame.Variables[i].AsStringVariable;
+                        vv = outputFrame.Variables[i]as StringVariable;
                     }
                     else
                     {
