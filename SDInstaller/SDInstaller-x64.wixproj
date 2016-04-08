@@ -68,6 +68,7 @@
     <Content Include="Component.wxi" />
     <Content Include="Desktop.wxi" />
     <Content Include="DllsOnly.xslt" />
+    <Content Include="OptimiseAfterInstall.wxi" />
     <Content Include="Package.wxi" />
     <Content Include="StartMenu.wxi" />
     <Content Include="Ui.wxi" />

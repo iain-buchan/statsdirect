@@ -66,6 +66,7 @@
   <ItemGroup>
     <Content Include="bannrbmp-sd.bmp" />
     <Content Include="Component.wxi" />
+    <Content Include="OptimiseAfterInstall.wxi" />
     <Content Include="Desktop.wxi" />
     <Content Include="DllsOnly.xslt" />
     <Content Include="Package-standalone.wxi" />

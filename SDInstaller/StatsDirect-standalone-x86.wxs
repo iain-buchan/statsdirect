@@ -35,5 +35,6 @@
     </Directory>
 
     <?include Feature.wxi ?>
+    <?include OptimiseAfterInstall.wxi ?>
   </Product>
 </Wix>

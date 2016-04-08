@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <SetProperty Id="MSCHEDEXEPATH" Before="LaunchConditions" Value="[%windir]\system32\mschedexe.exe" />
+  <CustomAction Id="RunScheduledMaintenance" Property="MSCHEDEXEPATH" ExeCommand="[MSCHEDEXEPATH] start" Execute="deferred" Return="ignore"/>
+<!--  <InstallExecuteSequence>
+    <Custom Action="RunScheduledMaintenance" Before="InstallFinalize">NOT REMOVE="ALL"</Custom>
+  </InstallExecuteSequence> -->
+</Include>
