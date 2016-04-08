@@ -4,6 +4,7 @@ using System.IO;
 using StatsDirect.Calculator;
 using StatsDirect.Utilities;
 using StatsDirect.Configuration;
+using StatsDirect.UI.Properties;
 
 namespace StatsDirect.UI
 {
@@ -49,10 +50,26 @@ namespace StatsDirect.UI
                     if (IpcSender.TryToTellAnotherStatsDirectToOpen(args[1]))
                         return;
 
-            frmMain mainWindow;
-            // As soon as possible, put up a loader
+            // As soon as possible, put up a loader - #1224 on the screen on which frmMain will open.
+            double mainMidY = Settings.Default.MainTop + Settings.Default.MainHeight / 2.0;
+            double mainMidX = Settings.Default.MainLeft + Settings.Default.MainWidth / 2.0;
+            Screen bestSoFar = Screen.PrimaryScreen;
+            double smallestSquaredDistanceSoFar = double.MaxValue;
+            foreach (Screen candidate in Screen.AllScreens)
+            {
+                double screenCentreY = candidate.Bounds.Top + candidate.Bounds.Height / 2.0;
+                double screenCentreX = candidate.Bounds.Left + candidate.Bounds.Width / 2.0;
+                double squaredDistanceBetweenCentres = ((mainMidX - screenCentreX) * (mainMidX - screenCentreX)) + ((mainMidY - screenCentreY) * (mainMidY - screenCentreY));
+                if (squaredDistanceBetweenCentres < smallestSquaredDistanceSoFar || (squaredDistanceBetweenCentres == smallestSquaredDistanceSoFar && candidate.Primary))
+                {
+                    bestSoFar = candidate;
+                    smallestSquaredDistanceSoFar = squaredDistanceBetweenCentres;
+                }
+            }
             using (frmLoading loader = new frmLoading())
             {
+                loader.Top = bestSoFar.Bounds.Top + (bestSoFar.Bounds.Height - loader.Height) / 2;
+                loader.Left = bestSoFar.Bounds.Left + (bestSoFar.Bounds.Width - loader.Width) / 2;
                 loader.Show();
                 Application.DoEvents(); // Force display of the show form
 
@@ -75,8 +92,7 @@ namespace StatsDirect.UI
                 SetupUserInterface();
 
                 // Get ready to show the main window...
-                mainWindow = new frmMain();
-                SdApplication.SoleInstance.MainWindow = mainWindow;
+                SdApplication.SoleInstance.MainWindow = new frmMain();
 
                 // ... and go!
                 loader.Hide();
@@ -85,7 +101,7 @@ namespace StatsDirect.UI
             if (args.Length >= 2)
                 if ("FileOpen".Equals(args[0]) && null != args[1])
                     SdApplication.SoleInstance.MainWindow.OpenFile(args[1], true);
-            Application.Run(mainWindow);
+            Application.Run(SdApplication.SoleInstance.MainWindow);
         }
 
         /// <summary>
