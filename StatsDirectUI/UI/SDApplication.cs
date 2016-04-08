@@ -27,7 +27,6 @@ namespace StatsDirect.UI
 
         private bool closingForUpgrade;
 
-        private frmMain MainWindow;
         private readonly ICollection<WindowInformation> windows = new HashSet<WindowInformation>();
         private WindowInformation activeWindow;
         private WindowInformation activeGrid;
@@ -329,6 +328,9 @@ namespace StatsDirect.UI
             return candidateNumber;
         }
 
+        /// <summary>
+        /// The MDI window in which newly-created children are placed
+        /// </summary>
         internal frmMain MainWindow { get; set; }
 
         internal void AddWindow(WindowInformation info)
@@ -397,12 +399,12 @@ namespace StatsDirect.UI
 
         void ITemplateHost.ShowHelp(int helpContextId)
         {
-            System.Windows.Forms.Help.ShowHelp(SoleInstance.MainWindow, HelpFilePath, System.Windows.Forms.HelpNavigator.TopicId, helpContextId.ToString());
+            Help.ShowHelp(SoleInstance.MainWindow, HelpFilePath, HelpNavigator.TopicId, helpContextId.ToString());
         }
 
         internal void ShowHelp(Form Parent, string Topic)
         {
-            System.Windows.Forms.Help.ShowHelp(Parent, HelpFilePath, System.Windows.Forms.HelpNavigator.TopicId, Topic);
+            Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, Topic);
         }
 
         internal void ShowHelp(Form Parent)
@@ -410,12 +412,12 @@ namespace StatsDirect.UI
             if (null != ActiveHelpUrl)
             {
                 // Show the URL
-                System.Windows.Forms.Help.ShowHelp(Parent, ActiveHelpUrl);
+                Help.ShowHelp(Parent, ActiveHelpUrl);
             }
             else if (0 != ActiveHelpTopic)
             {
                 // Specific help - show it.
-                System.Windows.Forms.Help.ShowHelp(Parent, HelpFilePath, System.Windows.Forms.HelpNavigator.TopicId, ActiveHelpTopic.ToString());
+                Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, ActiveHelpTopic.ToString());
             }
             else
             {
@@ -423,11 +425,11 @@ namespace StatsDirect.UI
                 if (null != SoleInstance && null != SoleInstance.ActiveWindow && SoleInstance.ActiveWindow.HasWindow && (SoleInstance.ActiveWindow.Window is IGrid))
                 {
                     // Grid - show the worksheet help, which is 1040.
-                    System.Windows.Forms.Help.ShowHelp(Parent, HelpFilePath, System.Windows.Forms.HelpNavigator.TopicId, "1040");
+                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, "1040");
                 }
                 else
                 {
-                    System.Windows.Forms.Help.ShowHelp(Parent, HelpFilePath, System.Windows.Forms.HelpNavigator.TableOfContents);
+                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TableOfContents);
                 }
             }
         }
