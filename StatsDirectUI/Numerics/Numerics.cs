@@ -935,7 +935,7 @@ namespace StatsDirect.Numerics
             double ret = fvalp(t * t, 1.0, df);
             if (double.IsNaN(ret))
                 return ret;
-            ret = ret * 0.5;
+            ret *= 0.5;
             if (t < 0.0)
                 ret = 1.0 - ret;
             return ret;

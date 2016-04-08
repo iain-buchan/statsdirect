@@ -1853,49 +1853,49 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptSpearman(ITemplateHost host, ParameterBag parameters)
         {
-            int nx = 0;
-            double srkd2 = 0; double srksq = 0; double srksqa = 0; double srksqb = 0;
-
-
             double GAMMA = parameters["gamma"].AsDouble;
             if (GAMMA <= 0)
-            {
                 throw new Exception("Gamma must be greater than zero");
-            }
+
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
             DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
             double[] prk = new double[v0.Length + 1 ];
             double[] prk1 = new double[v0.Length + 1 ];
-            for (int N = 0; N <= v0.Length - 1; N++)
+            int nx = 0;
+            for (int n = 0; n < v0.Length; n++)
             {
-                if (v0.Data[N] != Constant.MISSING & v1.Data[N] != Constant.MISSING)
+                if (v0.Data[n] != Constant.MISSING && v1.Data[n] != Constant.MISSING)
                 {
-                    nx = nx + 1;
-                    prk[nx] = v0.Data[N];
-                    prk1[nx] = v1.Data[N];
+                    nx++;
+                    prk[nx] = v0.Data[n];
+                    prk1[nx] = v1.Data[n];
                 }
             }
             if (nx < 2)
-            {
                 return new ParameterBag();
-            }
 
             double[] rka = new double[nx + 1 ];
             double[] rkb = new double[nx + 1 ];
 
-            double scrap;
-            ExFortran.Rank(prk, rka, 1, nx, 0, out scrap);
-            ExFortran.Rank(prk1, rkb, 1, nx, 0, out scrap);
+            double xf;
+            ExFortran.Rank(prk, rka, 1, nx, 1, out xf);
+            double xf1;
+            ExFortran.Rank(prk1, rkb, 1, nx, 1, out xf1);
+            bool hasTies = xf != 0.0 || xf1 != 0.0;
 
-            for (int N = 1; N <= nx; N++)
+            double srkd2 = 0;
+            double srksq = 0;
+            double srksqa = 0;
+            double srksqb = 0;
+            for (int n = 1; n <= nx; n++)
             {
-                srkd2 = srkd2 + ((rka[N] - rkb[N]) * (rka[N] - rkb[N]));
-                srksq = srksq + rka[N] * rkb[N];
-                srksqa = srksqa + rka[N] * rka[N];
-                srksqb = srksqb + rkb[N] * rkb[N];
+                srkd2 += ((rka[n] - rkb[n]) * (rka[n] - rkb[n]));
+                srksq += rka[n] * rkb[n];
+                srksqa += rka[n] * rka[n];
+                srksqb += rkb[n] * rkb[n];
             }
-            double corr = Convert.ToDouble(nx) * Math.Pow(((Convert.ToDouble(nx) + 1.0) / 2.0), 2.0);
+            double corr = nx * Math.Pow(((nx + 1.0) / 2.0), 2.0);
             double sr = (srksq - corr) / (Math.Sqrt(srksqa - corr) * Math.Sqrt(srksqb - corr));
             int ifault;
             double cit = PDF.gauinv(GAMMA + ((1 - GAMMA) / 2), out ifault);
@@ -1905,6 +1905,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("sample_2", v1.Title);
             outputParameters.AddOutput("obs", nx.ToString());
             outputParameters.AddOutput("rho", host.RoundU(sr));
+
+            outputParameters.AddOutput("*ties", hasTies ? OneOutputElement() : null);
 
             if (Math.Abs(sr) == 1)
             {
@@ -1933,6 +1935,7 @@ namespace StatsDirect.Builtins
                 // Can not consider probability with very small samples (n < 4)
                 outputParameters.AddOutput("*lown", OneOutputElement());
                 outputParameters.AddOutput("*results", null);
+                outputParameters.AddOutput("ix", Constant.MISSING);
             }
             else
             {
@@ -1941,19 +1944,16 @@ namespace StatsDirect.Builtins
                 ParameterBag resultsParameters = new ParameterBag();
                 resultsList.Add(resultsParameters);
                 outputParameters.AddOutput("*results", resultsList);
-                double nxs = Convert.ToDouble(nnx);
+                double nxs = nnx;
                 double dix = ((1.0 - sr) * (nxs * ((nxs * nxs) - 1.0))) / 6.0;
+                outputParameters.AddOutput("ix", host.RoundU(dix));
                 double qix = nxs * (nxs * nxs - 1.0) / 3.0;
                 int fault;
                 double pl;
-                if (dix >= Convert.ToDouble(int.MaxValue) | qix >= Convert.ToDouble(int.MaxValue))
-                {
+                if (dix >= int.MaxValue || qix >= int.MaxValue)
                     pl = MathDbl.bigprho(Convert.ToInt64(nxs), dix, out fault);
-                }
                 else
-                {
                     pl = ExFortran.prho(Convert.ToInt32(nxs), Convert.ToInt32(dix), out fault);
-                }
                 double P = pl > 1.0 - pl ? 1.0 - pl : pl;
 
                 if (fault != 0)
@@ -1969,11 +1969,20 @@ namespace StatsDirect.Builtins
                     ParameterBag results2Parameters = new ParameterBag();
                     results2List.Add(results2Parameters);
                     resultsParameters.AddOutput("*results", results2List);
-                    results2Parameters.AddOutput("p_u", host.pval(1.0 - pl));
-                    results2Parameters.AddOutput("p_l", host.pval(pl));
-                    results2Parameters.AddOutput("p_2", host.pval(P * 2.0));
+                    if (hasTies)
+                    {
+                        double p2Approximate = PDF.tvalp(Math.Abs(sr) * Math.Sqrt(nx - 2) / Math.Sqrt(1.0 - (sr * sr)), nx - 2);
+                        results2Parameters.AddOutput("p_u", host.pval(Constant.MISSING));
+                        results2Parameters.AddOutput("p_l", host.pval(Constant.MISSING));
+                        results2Parameters.AddOutput("p_2", host.pval(p2Approximate));
+                    }
+                    else
+                    {
+                        results2Parameters.AddOutput("p_u", host.pval(1.0 - pl));
+                        results2Parameters.AddOutput("p_l", host.pval(pl));
+                        results2Parameters.AddOutput("p_2", host.pval(P * 2.0));
+                    }
                 }
-
             }
             return outputParameters;
         }

@@ -320,13 +320,6 @@ namespace StatsDirect.Numerics
         }
 
         ///  <summary>
-        ///  Modified Algorithm AS 89   Appl. Statist. (1975) Vol.24, No. 3, P377.
-        /// 
-        ///  7/7/2002 Dr Iain Buchan (StatsDirect Ltd)
-        ///  translated to FORTRAN 90;
-        ///  increased exact enumeration from 7 to 10 pairs of observations.
-        ///  corrected exact enumeration (values at least as extreme rather than more extreme);
-        /// 
         ///  Returns upper side probability associated with:
         ///  Spearman score statistic ix
         ///  n pairs of obserations
@@ -338,31 +331,31 @@ namespace StatsDirect.Numerics
         ///  <param name="n">Number of pairs of observations</param>
         ///  <param name="ix">Spearman score statistic</param>
         ///  <param name="ifault"></param>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
+        ///  <remarks>
+        ///  Modified Algorithm AS 89   Appl. Statist. (1975) Vol.24, No. 3, P377.
+        /// 
+        ///  7/7/2002 Dr Iain Buchan (StatsDirect Ltd)
+        ///  translated to FORTRAN 90;
+        ///  increased exact enumeration from 7 to 10 pairs of observations.
+        ///  corrected exact enumeration (values at least as extreme rather than more extreme);
+        ///  </remarks>
         public static double prho(int n, int ix, out int ifault)
         {
-            double prhoReturn = 1.0;
             ifault = 1;
-            if ((n <= 1))
-            {
-                return prhoReturn;
-            }
+            if (n <= 1)
+                return 1.0;
+
             ifault = 0;
             if ((ix < 0))
-            {
-                return prhoReturn;
-            }
-            prhoReturn = 0.0;
-            if ((ix > Math.Floor((double)n * (n * n - 1) / 3)))
-            {
-                return prhoReturn;
-            }
+                return 1.0;
+
+            if ((ix > Math.Floor((double)n * (n * n - 1) / 3.0)))
+                return 0.0;
+
             int js = ix;
-            if ((js != 2 * Math.Floor((double)js / 2)))
-            {
-                js = js + 1;
-            }
+            if ((js != 2 * Math.Floor(js / 2.0)))
+                js += 1;
+
             if ((n <= 10))
             {
                 //  Exact evaluation for 10 or fewer pairs of observations
@@ -370,35 +363,27 @@ namespace StatsDirect.Numerics
                 int nfac = 1;
                 for (int i = 1; i <= n; i++)
                 {
-                    nfac = nfac * i;
+                    nfac *= i;
                     l[i] = i;
                 }
-                prhoReturn = 1.0 / Convert.ToDouble(nfac);
-                if ((js == Math.Floor((double)n * (n * n - 1) / 3)))
-                {
-                    return prhoReturn;
-                }
+                if ((js == Math.Floor((double)n * (n * n - 1) / 3.0)))
+                    return 1.0 / Convert.ToDouble(nfac);
+
                 int ifr = 0;
                 for (int m = 1; m <= nfac; m++)
                 {
                     int ise = 0;
                     for (int i = 1; i <= n; i++)
-                    {
-                        ise = ise + (i - l[i]) * (i - l[i]);
-                    }
+                        ise += (i - l[i]) * (i - l[i]);
                     if ((js < ise))
-                    {
                         ifr++;
-                    }
                     int n1 = n;
                     do
                     {
                         int mt = l[1];
                         int nn = n1 - 1;
                         for (int i = 1; i <= nn; i++)
-                        {
                             l[i] = l[i + 1];
-                        }
                         l[n1] = mt;
                         if ((l[n1] != n1 || n1 == 2))
                             break;
@@ -408,7 +393,7 @@ namespace StatsDirect.Numerics
                     }
                     while (true);
                 }
-                prhoReturn = Convert.ToDouble(ifr) / Convert.ToDouble(nfac);
+                return Convert.ToDouble(ifr) / Convert.ToDouble(nfac);
             }
             else
             {
@@ -417,17 +402,13 @@ namespace StatsDirect.Numerics
                 double x = (6.0 * (Convert.ToDouble(js) - 1.0) * b / (1.0 / (b * b) - 1.0) - 1.0) * Math.Sqrt(1.0 / b - 1.0);
                 double y = x * x;
                 double u = x * b * (0.2274 + b * (0.2531 + 0.1745 * b) + y * (-0.0758 + b * (0.1033 + 0.3932 * b) - y * b * (0.0879 + 0.0151 * b - y * (0.0072 - 0.0831 * b + y * b * (0.0131 - 0.00046 * y)))));
-                prhoReturn = u / Math.Exp(y / 2.0) + 1.0 - PDF.alnorm(x);
+                double prhoReturn = u / Math.Exp(y / 2.0) + 1.0 - PDF.alnorm(x);
                 if ((prhoReturn < 0.0))
-                {
-                    prhoReturn = 0.0;
-                }
+                    return 0.0;
                 if ((prhoReturn > 1.0))
-                {
-                    prhoReturn = 1.0;
-                }
+                    return 1.0;
+                return prhoReturn;
             }
-            return prhoReturn;
         }
 
         public static double ksp2(int n1, int n2, ref double d, out int ifault)

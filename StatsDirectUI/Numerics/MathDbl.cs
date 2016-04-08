@@ -34,15 +34,14 @@ namespace StatsDirect.Numerics
         ///  <summary>
         ///  Returns Pearson's product moment correlation coefficient r or rho from a matching pair of vectors.
         ///  </summary>
-        ///  <param name="x">Vector of indepentent observations</param>
-        ///  <param name="y">Matching vector of depentent observations</param>
+        ///  <param name="x">Vector of independent observations</param>
+        ///  <param name="y">Matching vector of dependent observations</param>
         ///  <param name="lowerBound">LowerBound-based input vector of n values</param>
         ///  <param name="n">Number of observations</param>
         /// <param name="noMissing"></param>
         /// <remarks></remarks>
         public static double corr(double[] x, double[] y, int lowerBound, int n, bool noMissing)
         {
-
             // Return a Pearson correlation coefficient
             double sumx = 0.0;
             double sumy = 0.0;
@@ -258,41 +257,30 @@ namespace StatsDirect.Numerics
         ///  <returns></returns>
         public static double bigprho(long N, double dix, out int ifault)
         {
-            double bigprhoReturn = 1.0;
             ifault = 1;
             if (N <= 1)
-            {
-                return bigprhoReturn;
-            }
+                return 1.0;
+
             ifault = 0;
             if (dix <= 0.0)
-            {
-                return bigprhoReturn;
-            }
-            bigprhoReturn = 0.0;
+                return 1.0;
+
             if (dix > Convert.ToDouble(N) * (Convert.ToDouble(N) * Convert.ToDouble(N) - 1.0) / 3.0)
-            {
-                return bigprhoReturn;
-            }
+                return 0.0;
+
             double djs = Math.Floor(dix);
             if (djs != 2.0 * (djs / 2.0))
-            {
-                djs = djs + 1.0;
-            }
+                djs += 1.0;
             double b = 1.0 / Convert.ToDouble(N);
             double x = (6.0 * (djs - 1.0) * b / (1.0 / (b * b) - 1.0) - 1.0) * Math.Sqrt(1.0 / b - 1.0);
             double y = x * x;
             double z = y * b * (0.0879 + 0.0151 * b - y * (0.0072 - 0.0831 * b + y * b * (0.0131 - 0.00046 * y)));
             double u = x * b * (0.2274 + b * (0.2531 + 0.1745 * b) + y * (-0.0758 + b * (0.1033 + 0.3932 * b) - z));
-            bigprhoReturn = u / Math.Exp(y / 2.0) + 1.0 - PDF.alnorm(x);
+            double bigprhoReturn = u / Math.Exp(y / 2.0) + 1.0 - PDF.alnorm(x);
             if (bigprhoReturn < 0.0)
-            {
-                bigprhoReturn = 0.0;
-            }
+                return 0.0;
             if (bigprhoReturn > 1.0)
-            {
-                bigprhoReturn = 1.0;
-            }
+                return 1.0;
             return bigprhoReturn;
         }
 
