@@ -27,10 +27,7 @@ namespace StatsDirect.UI
 
         private bool closingForUpgrade;
 
-        /// <summary>
-        /// The MDI window in which newly-created children are placed
-        /// </summary>
-        private frmMain mainWindow;
+        private frmMain MainWindow;
         private readonly ICollection<WindowInformation> windows = new HashSet<WindowInformation>();
         private WindowInformation activeWindow;
         private WindowInformation activeGrid;
@@ -118,14 +115,14 @@ namespace StatsDirect.UI
         /// <param name="postDisplayAction"></param>
         private void ShowDialogOnUiThread(Form f, Action<Form, DialogResult> postDisplayAction)
         {
-            if (null != mainWindow)
-                if (mainWindow.InvokeRequired)
+            if (null != MainWindow)
+                if (MainWindow.InvokeRequired)
                 {
-                    mainWindow.Invoke(new Action(() => { DialogResult result = f.ShowDialog(mainWindow); if (null != postDisplayAction) postDisplayAction(f, result); f.Dispose(); }));
+                    MainWindow.Invoke(new Action(() => { DialogResult result = f.ShowDialog(MainWindow); if (null != postDisplayAction) postDisplayAction(f, result); f.Dispose(); }));
                 }
                 else
                 {
-                    DialogResult result = f.ShowDialog(mainWindow);
+                    DialogResult result = f.ShowDialog(MainWindow);
                     if (null != postDisplayAction)
                         postDisplayAction(f, result);
                     f.Dispose();
@@ -332,11 +329,7 @@ namespace StatsDirect.UI
             return candidateNumber;
         }
 
-        internal frmMain MainWindow
-        {
-            get { return mainWindow; }
-            set { mainWindow = value; }
-        }
+        internal frmMain MainWindow { get; set; }
 
         internal void AddWindow(WindowInformation info)
         {
@@ -375,9 +368,9 @@ namespace StatsDirect.UI
             WindowInformation info = (WindowInformation)window.Tag;
             if (null != info)
             {
-                if (null != info.TabPage && null != mainWindow)
+                if (null != info.TabPage && null != MainWindow)
                 {
-                    mainWindow.RemoveWindow(window);
+                    MainWindow.RemoveWindow(window);
                 }
                 // Break reference cycles
                 info.Window = null;
@@ -397,8 +390,8 @@ namespace StatsDirect.UI
             {
                 if (info.Window is IGrid)
                     activeGrid = info;
-                mainWindow.EnsureTabSelected(info.TabPage);
-                mainWindow.SetMenuVisibility(info.Window is IGrid);
+                MainWindow.EnsureTabSelected(info.TabPage);
+                MainWindow.SetMenuVisibility(info.Window is IGrid);
             }
         }
 
@@ -577,7 +570,7 @@ namespace StatsDirect.UI
             if (null == selectedPane || null == selectedPane.WindowInformation)
             {
                 // Create a new grid, write at the end of it
-                IGrid grid = (IGrid)mainWindow.CreateGrid();
+                IGrid grid = (IGrid)MainWindow.CreateGrid();
                 writePosition = RelativePosition.LastColumn;
                 // MostRecentlySelectedGrid = new PaneAndBoolean(grid.SelectedPane, writeAtCurrentLocation);
                 return grid;
@@ -697,11 +690,11 @@ namespace StatsDirect.UI
 
         ParameterBag ITemplateHost.FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context)
         {
-            if (null == mainWindow)
+            if (null == MainWindow)
                 throw new Exception("Attempt to fill combined parameters with no main window open");
             if (null == outstandingParameters || outstandingParameters.Count == 0)
                 return new ParameterBag();
-            return mainWindow.FillAndValidateCombinedParameters(this, processor, context, outstandingParameters);
+            return MainWindow.FillAndValidateCombinedParameters(this, processor, context, outstandingParameters);
         }
 
         ParameterBag ITemplateHost.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
@@ -799,15 +792,15 @@ namespace StatsDirect.UI
                     return MsgboxX(text, buttons, icon, caption, SoleInstance.ActiveHelpTopic, defaultButton);
 
                 // Use a Windows message box if our own interface isn't visible; use our own if it is.
-                if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
-                    return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0);
-                return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
+                if (null == MainWindow || !MainWindow.Visible || MainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
+                    return MessageBox.Show(MainWindow, text, caption, buttons, icon, defaultButton, 0);
+                return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
             }
         }
 
         private bool ModalDialogShowing()
         {
-            return null != mainWindow && ModalDialogShowing(mainWindow);
+            return null != MainWindow && ModalDialogShowing(MainWindow);
         }
 
         private static bool ModalDialogShowing(Form f)
@@ -823,9 +816,9 @@ namespace StatsDirect.UI
 
         public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
-            if (null == mainWindow || !mainWindow.Visible || mainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
-                return MessageBox.Show(mainWindow, text, caption, buttons, icon, defaultButton, 0, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
-            return mainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
+            if (null == MainWindow || !MainWindow.Visible || MainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
+                return MessageBox.Show(MainWindow, text, caption, buttons, icon, defaultButton, 0, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
+            return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
         public bool MetaPlotCI
@@ -923,21 +916,21 @@ namespace StatsDirect.UI
 
         public void StartProgress(string operationDescription, bool provideProgress)
         {
-            if (null != mainWindow)
-                mainWindow.StartProgress(operationDescription, provideProgress);
+            if (null != MainWindow)
+                MainWindow.StartProgress(operationDescription, provideProgress);
         }
 
         public bool UpdateProgress(double fractionComplete)
         {
-            if (null == mainWindow)
+            if (null == MainWindow)
                 return false;
-            return mainWindow.UpdateProgress(fractionComplete);
+            return MainWindow.UpdateProgress(fractionComplete);
         }
 
         public void FinishProgress()
         {
-            if (null != mainWindow)
-                mainWindow.FinishProgress();
+            if (null != MainWindow)
+                MainWindow.FinishProgress();
         }
 
         public int PDecimalPlaces
@@ -993,8 +986,8 @@ namespace StatsDirect.UI
 
         private ParameterBag ToggleFilters()
         {
-            if (null != mainWindow)
-                mainWindow.ToggleFilters();
+            if (null != MainWindow)
+                MainWindow.ToggleFilters();
             return new ParameterBag();
         }
 
@@ -1015,7 +1008,7 @@ namespace StatsDirect.UI
             {
                 using (new DefaultCursor())
                 {
-                    options.ShowDialog(mainWindow);
+                    options.ShowDialog(MainWindow);
                 }
                 return options.UserCancelled ? null : new ParameterBag();
             }
@@ -1039,7 +1032,7 @@ namespace StatsDirect.UI
             {
                 using (new DefaultCursor())
                 {
-                    options.ShowDialog(mainWindow);
+                    options.ShowDialog(MainWindow);
                 }
                 return new ParameterBag();
             }
@@ -1227,7 +1220,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                return null != mainWindow && mainWindow.SelectingData;
+                return null != MainWindow && MainWindow.SelectingData;
             }
         }
 
@@ -1235,7 +1228,7 @@ namespace StatsDirect.UI
 
         internal void ShowCurrentHelp()
         {
-            ShowHelp(mainWindow);
+            ShowHelp(MainWindow);
         }
 
         /// <summary>
@@ -1249,7 +1242,7 @@ namespace StatsDirect.UI
         {
             using (frmInputBox ib = new frmInputBox(prompt, caption, defaultValue))
             {
-                ib.ShowDialog(mainWindow);
+                ib.ShowDialog(MainWindow);
                 if (ib.UserCancelled)
                     return null;
                 return ib.Value;
@@ -1288,8 +1281,8 @@ namespace StatsDirect.UI
                 }
             }
             Properties.Settings.Default.RecentFileList = recentFiles;
-            if (null != mainWindow)
-                mainWindow.UpdateFileList();
+            if (null != MainWindow)
+                MainWindow.UpdateFileList();
         }
 
         internal IList<string> RecentFiles
@@ -1332,10 +1325,10 @@ namespace StatsDirect.UI
             ParameterBag parameters = ParameterBag.DeserializeAndRefillForRedo(freezeDriedData, this);
             if (null != parameters)
             {
-                if (null != mainWindow)
+                if (null != MainWindow)
                 {
                     Operation operation = TemplateFactory.Operations[operationName];
-                    mainWindow.DoOperation(operation, parameters, true);
+                    MainWindow.DoOperation(operation, parameters, true);
                 }
             }
         }
@@ -1392,7 +1385,7 @@ namespace StatsDirect.UI
                     break;
                 }
 
-                StatsDirectForm gridWindow = mainWindow.FindOrOpenGrid(workbookPath);
+                StatsDirectForm gridWindow = MainWindow.FindOrOpenGrid(workbookPath);
                 if (null == gridWindow)
                 {
                     FriendlyError("Cannot replay the operation as it took data from the unsaved workbook \"" + workbookPath + "\", which is no longer open.", null, false);
@@ -1443,7 +1436,7 @@ namespace StatsDirect.UI
 
         internal void CloseAndUpdate()
         {
-            if (null == mainWindow)
+            if (null == MainWindow)
             {
                 FetchTheUpgrade();
                 Application.Exit();
@@ -1451,7 +1444,7 @@ namespace StatsDirect.UI
             else
             {
                 closingForUpgrade = true;
-                mainWindow.Close();
+                MainWindow.Close();
             }
         }
 
