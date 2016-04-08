@@ -157,6 +157,7 @@ if (exists("returning.to.statsdirect")) {
 <line></line>
 <line><in>title</in></line>
 <line>Number of Observations: <inx>observations</inx></line>
+<line>Polynomial degree: <inx>degree</inx>, Span: <inx>span</inx></line>
 <line>Equivalent Number of Parameters: <inx>parameters</inx></line>
 <line>Residual Standard Error: <inx>residualse</inx></line>
 </report>
