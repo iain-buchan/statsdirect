@@ -24,12 +24,12 @@ namespace StatsDirect.UI
 
         private Control Extract(ParameterBag outputParameters)
         {
-            string searchExpression = txtExpression.Text.Trim().ToUpper();
+            string searchExpression = txtExpression.Text.Trim();
             if (0 == searchExpression.Length)
                 return txtExpression;
             DataType[] oneDouble = new DataType[] { DataType.Double };
             Calcit finder = new Calcit(searchExpression, oneDouble, false);
-            string replaceExpression = txtReplace.Text.Trim().ToUpper();
+            string replaceExpression = txtReplace.Text.Trim();
             if (0 == replaceExpression.Length)
                 return txtReplace;
             Calcit replacer = new Calcit(replaceExpression, oneDouble, false);

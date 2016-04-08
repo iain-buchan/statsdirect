@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Globalization;
 
 namespace StatsDirect.UI
 {
@@ -148,7 +149,7 @@ namespace StatsDirect.UI
             {
                 extension = extension.Substring(extension.LastIndexOf('.') + 1);
             }
-            extension = extension.ToLower();
+            extension = extension.ToLower(CultureInfo.InvariantCulture);
 
             if ("jpg".Equals(extension) || "jpeg".Equals(extension))
             {

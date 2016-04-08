@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using StatsDirect.Data;
 using StatsDirect.Templates;
 using StatsDirect.UI;
+using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
@@ -134,7 +135,7 @@ namespace StatsDirect.Builtins
                 DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
                 if (DialogResult.OK == result)
                 {
-                    bool useTabDelimiter = saveFileDialog.FileName.Substring(saveFileDialog.FileName.Length - 3).ToLower() == "tab";
+                    bool useTabDelimiter = saveFileDialog.FileName.Substring(saveFileDialog.FileName.Length - 3).ToLower(CultureInfo.InvariantCulture) == "tab";
                     using (StreamWriter sw = File.CreateText(saveFileDialog.FileName))
                     {
                         host.StartProgress("Exporting Worksheet", true);

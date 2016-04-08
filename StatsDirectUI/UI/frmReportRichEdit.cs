@@ -55,7 +55,7 @@ namespace StatsDirect.UI
         public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
             string strExt = System.IO.Path.GetExtension(filename) ?? string.Empty;
-            strExt = strExt.ToLower();
+            strExt = strExt.ToLower(CultureInfo.InvariantCulture);
             if (".rtf".Equals(strExt))
                 richEditControl1.LoadDocument(filename, DocumentFormat.Rtf);
             else if (".htm".Equals(strExt) || ".html".Equals(strExt))
@@ -489,9 +489,8 @@ namespace StatsDirect.UI
                 return SaveAsContents();
             }
             string strExt = System.IO.Path.GetExtension(currentFile);
-            strExt = strExt.ToUpper();
-            richEditControl1.SaveDocument(currentFile,
-                                          ".RTF".Equals(strExt) ? DocumentFormat.Rtf : DocumentFormat.PlainText);
+            strExt = strExt.ToUpper(CultureInfo.InvariantCulture);
+            richEditControl1.SaveDocument(currentFile, ".RTF".Equals(strExt) ? DocumentFormat.Rtf : DocumentFormat.PlainText);
             Text = "Editor: " + currentFile;
             richEditControl1.Modified = false;
             return true;
@@ -518,7 +517,7 @@ namespace StatsDirect.UI
             if (string.IsNullOrEmpty(SaveFileDialog1.FileName))
                 return false;
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName) ?? string.Empty;
-            strExt = strExt.ToUpper();
+            strExt = strExt.ToUpper(CultureInfo.InvariantCulture);
             if (".RTF".Equals(strExt))
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.Rtf);
             else if (".HTM".Equals(strExt) || ".HTML".Equals(strExt))

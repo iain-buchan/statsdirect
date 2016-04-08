@@ -26,6 +26,7 @@ using SpreadsheetGear;
 using Color = System.Drawing.Color;
 using StatsDirect.R;
 using InvalidDataException = StatsDirect.Templates.InvalidDataException;
+using System.Globalization;
 
 namespace StatsDirect.UI
 {
@@ -1232,7 +1233,7 @@ namespace StatsDirect.UI
                 // User wants to open the file - but which file type?
                 string extension = Path.GetExtension(path);
                 if (null != extension)
-                    extension = extension.ToLower();
+                    extension = extension.ToLower(CultureInfo.InvariantCulture);
                 if (".xls".Equals(extension) || ".xlsx".Equals(extension))
                 {
                     CreateGrid(path, isTempFile, null);

@@ -58,7 +58,7 @@ Return outputParameters
       <![CDATA[
         Dim data As DataFrame = parameters("data").AsDataFrame
         Dim cols as Integer = data.VariableCount
-        Dim Q as String = parameters("expression").AsString.ToUpper()
+        Dim Q as String = parameters("expression").AsString
         host.Session("LastFunction") = Q
         Dim rows as Integer = data.MaxRows
         Dim t as String = parameters("new_column_name").AsString

@@ -24,7 +24,6 @@ namespace StatsDirect.UI
         private int sActiveHelpTopic;
         private string activeHelpUrl;
         private static SdApplication soleInstance;
-        private UserInfo userInfo;
 
         private bool closingForUpgrade;
 

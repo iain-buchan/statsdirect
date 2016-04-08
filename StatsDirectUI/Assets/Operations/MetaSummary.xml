@@ -71,7 +71,7 @@
       <parameters>
         <frame>
           <name>y</name>
-          <prompt>="Select SUMMARY STATISTIC (" + parameters["stat_in"].AsString.ToLower() + ")"</prompt>
+          <prompt>="Select SUMMARY STATISTIC (" + parameters["stat_in"].AsString.ToLower(CultureInfo.CurrentCulture) + ")"</prompt>
           <mode>NumericSkipMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -84,7 +84,7 @@
           <parameters>
             <frame>
               <name>ll_y</name>
-              <prompt>="Select LOWER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower()</prompt>
+              <prompt>="Select LOWER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower(CultureInfo.CurrentCulture)</prompt>
               <mode>NumericSkipMissing</mode>
               <same-length-as>y</same-length-as>
               <min-columns>1</min-columns>
@@ -93,7 +93,7 @@
             </frame>
             <frame>
               <name>ul_y</name>
-              <prompt>="Select UPPER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower()</prompt>
+              <prompt>="Select UPPER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower(CultureInfo.CurrentCulture)</prompt>
               <mode>NumericSkipMissing</mode>
               <same-length-as>y</same-length-as>
               <min-columns>1</min-columns>
@@ -106,7 +106,7 @@
 					<parameters>
 						<frame>
 							<name>se_y</name>
-							<prompt>="Select STANDARD ERROR for " + (parameters["use_ratio"].AsBoolean ? "LOG " : string.Empty) + parameters["stat_in"].AsString.ToLower()</prompt>
+							<prompt>="Select STANDARD ERROR for " + (parameters["use_ratio"].AsBoolean ? "LOG " : string.Empty) + parameters["stat_in"].AsString.ToLower(CultureInfo.CurrentCulture)</prompt>
 							<mode>NumericSkipMissing</mode>
 							<same-length-as>y</same-length-as>
 							<min-columns>1</min-columns>

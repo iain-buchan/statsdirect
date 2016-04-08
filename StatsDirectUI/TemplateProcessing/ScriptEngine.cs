@@ -175,6 +175,7 @@ namespace StatsDirect.Templates
                     sourceBuilder.AppendLine("using System;");
                     sourceBuilder.AppendLine("using System.Collections;");
                     sourceBuilder.AppendLine("using System.Collections.Generic;");
+                    sourceBuilder.AppendLine("using System.Globalization;");
                     sourceBuilder.AppendLine("using System.Linq;");
                     sourceBuilder.AppendLine("using System.Text;");
                     sourceBuilder.AppendLine("using StatsDirect.Builtins;");
@@ -227,6 +228,7 @@ namespace StatsDirect.Templates
                     sourceBuilder.AppendLine("Imports System");
                     sourceBuilder.AppendLine("Imports System.Collections");
                     sourceBuilder.AppendLine("Imports System.Collections.Generic");
+                    sourceBuilder.AppendLine("Imports System.Globalization");
                     sourceBuilder.AppendLine("Imports System.Linq");
                     sourceBuilder.AppendLine("Imports System.Text");
                     sourceBuilder.AppendLine("Imports StatsDirect.Builtins");

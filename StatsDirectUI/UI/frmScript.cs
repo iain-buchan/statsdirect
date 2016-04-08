@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
 using StatsDirect.Templates;
+using System.Globalization;
 
 namespace StatsDirect.UI
 {
@@ -106,7 +107,7 @@ namespace StatsDirect.UI
         {
             string strExt = System.IO.Path.GetExtension(filename);
             if (null != strExt)
-                strExt = strExt.ToLower();
+                strExt = strExt.ToLower(CultureInfo.InvariantCulture);
             if (".rtf".Equals(strExt))
                 rtbDoc.LoadFile(filename, RichTextBoxStreamType.RichText);
             else
@@ -141,7 +142,7 @@ namespace StatsDirect.UI
             }
             string strExt = System.IO.Path.GetExtension(currentFile);
             if (null != strExt)
-                strExt = strExt.ToUpper();
+                strExt = strExt.ToUpper(CultureInfo.InvariantCulture);
             if (".RTF".Equals(strExt))
                 rtbDoc.SaveFile(currentFile);
             else
@@ -169,7 +170,7 @@ namespace StatsDirect.UI
                 return;
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName);
             if (null != strExt)
-                strExt = strExt.ToUpper();
+                strExt = strExt.ToUpper(CultureInfo.InvariantCulture);
             if (".RTF".Equals(strExt))
             {
                 rtbDoc.SaveFile(SaveFileDialog1.FileName, RichTextBoxStreamType.RichText);

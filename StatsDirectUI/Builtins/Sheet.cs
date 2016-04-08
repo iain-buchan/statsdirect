@@ -8,6 +8,7 @@ using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using StatsDirect.Expressions;
+using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
@@ -67,7 +68,7 @@ namespace StatsDirect.Builtins
             if (rows > 1000000)
                 rows = 1000000;
             double startval = parameters["startval"].AsDouble;
-            string formula = parameters["formula"].AsString.ToUpper();
+            string formula = parameters["formula"].AsString;
             if (formula.Length < 3)
                 formula = "x+1";
 
@@ -260,7 +261,7 @@ namespace StatsDirect.Builtins
                 // If there is a user number and x is that user number, it's missing.
                 return userNumber != Constant.MISSING && x == userNumber;
             }
-            if (value == null || Formatting.ASTERISK.Equals(value) || "MISSING".Equals(value.ToUpper()) || Formatting.FULLSTOP.Equals(value) || value.Trim().Length == 0)
+            if (value == null || Formatting.ASTERISK.Equals(value) || "MISSING".Equals(value.ToUpper(CultureInfo.InvariantCulture)) || Formatting.FULLSTOP.Equals(value) || value.Trim().Length == 0)
                 return true;
 
             return !string.IsNullOrEmpty(userText) && userText.Equals(value);

@@ -22,7 +22,7 @@ namespace StatsDirect.R
         {
             string[] reservedWords = new string[] { "if", "else", "repeat", "while", "function", "for", "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_" };
             List<string> rw = new List<string>(reservedWords);
-            string lowerName = rawVariableName.ToLower();
+            string lowerName = rawVariableName.ToLower(CultureInfo.InvariantCulture);
             if (rw.Contains(lowerName))
             {
                 sb.Append('.');

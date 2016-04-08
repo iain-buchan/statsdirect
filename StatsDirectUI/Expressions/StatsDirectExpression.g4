@@ -57,7 +57,7 @@ term returns [INode node]
 	;
 	
 function returns [FunctionNode node]
-	: functionName=IDENTIFIER LPAREN argumentlist RPAREN { $node = new FunctionNode { Name = $functionName.text.ToUpper(), Arguments = $argumentlist.arguments }; }
+	: functionName=IDENTIFIER LPAREN argumentlist RPAREN { $node = new FunctionNode { Name = $functionName.text.ToUpper(System.Globalization.CultureInfo.InvariantCulture), Arguments = $argumentlist.arguments }; }
 	;
 	
 argumentlist returns [Arguments arguments]

@@ -7,6 +7,7 @@ using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
@@ -1070,7 +1071,7 @@ namespace StatsDirect.Builtins
                 cit = PDF.gauinv(0.975, out fault);
             }
 
-            string type = parameters["type"].AsString.ToLower();
+            string type = parameters["type"].AsString.ToLower(CultureInfo.InvariantCulture);
             switch (type)
             {
                 case "g":
@@ -3295,7 +3296,7 @@ namespace StatsDirect.Builtins
             string statx = parameters["statx"].AsString;
             bool useRatio = parameters["use_ratio"].AsBoolean;
             string stat = parameters["stat_in"].AsString;
-            bool useCI = "true".Equals(parameters["use_ci"].AsString.ToLower());
+            bool useCI = "true".Equals(parameters["use_ci"].AsString.ToLower(CultureInfo.InvariantCulture));
 
             DataFrame yFrame = parameters["y"].AsDataFrame;
             DoubleVariable yVariable = yFrame.Variables[0]as DoubleVariable;
@@ -3505,12 +3506,12 @@ namespace StatsDirect.Builtins
                 studiesParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
-            outputParameters.AddOutput("stat_fixed", stat.ToLower());
+            outputParameters.AddOutput("stat_fixed", stat.ToLower(CultureInfo.CurrentCulture));
             outputParameters.AddOutput("rmh", host.RoundU(rmh));
             outputParameters.AddOutput("from_fixed", host.RoundU(llrmh));
             outputParameters.AddOutput("to_fixed", host.RoundU(ulrmh));
 
-            outputParameters.AddOutput("task", "test " + stat + " " + statx.ToLower());
+            outputParameters.AddOutput("task", "test " + stat + " " + statx.ToLower(CultureInfo.CurrentCulture));
             outputParameters.AddOutput("z", host.RoundU(zrmh));
             outputParameters.AddOutput("p_fixed", host.pval(MathDbl.zvalp2(zrmh)));
 
@@ -3524,12 +3525,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
             outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
 
-            outputParameters.AddOutput("dsstat", stat.ToLower());
+            outputParameters.AddOutput("dsstat", stat.ToLower(CultureInfo.CurrentCulture));
             outputParameters.AddOutput("dsrr", host.RoundU(dsrr));
             outputParameters.AddOutput("dsll", host.RoundU(dsll));
             outputParameters.AddOutput("dsul", host.RoundU(dsul));
 
-            outputParameters.AddOutput("zstat", "test " + stat + statx.ToLower());
+            outputParameters.AddOutput("zstat", "test " + stat + statx.ToLower(CultureInfo.CurrentCulture));
             outputParameters.AddOutput("dz", host.RoundU(dsz));
             outputParameters.AddOutput("dp", host.pval(MathDbl.zvalp2(dsz)));
 
@@ -3550,7 +3551,7 @@ namespace StatsDirect.Builtins
             {
                 using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotBiasMAAndReturnRtf(host, y, odx, wt, k, stat.ToLower(), llY, ulY, cco, cit, rmh, xform, false);
+                    string rtf = ch.PlotBiasMAAndReturnRtf(host, y, odx, wt, k, stat.ToLower(CultureInfo.CurrentCulture), llY, ulY, cco, cit, rmh, xform, false);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
@@ -3562,7 +3563,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3573,7 +3574,7 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = dsul;
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower() + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
+                string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -3811,7 +3812,7 @@ namespace StatsDirect.Builtins
                 studiesParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
-            outputParameters.AddOutput("stat_fixed", stat.ToLower());
+            outputParameters.AddOutput("stat_fixed", stat.ToLower(CultureInfo.CurrentCulture));
             outputParameters.AddOutput("rmh", host.RoundU(rmh));
             outputParameters.AddOutput("from_fixed", host.RoundU(llrmh));
             outputParameters.AddOutput("to_fixed", host.RoundU(ulrmh));
@@ -3830,7 +3831,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
             outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
 
-            outputParameters.AddOutput("dsstat", stat.ToLower());
+            outputParameters.AddOutput("dsstat", stat.ToLower(CultureInfo.CurrentCulture));
             outputParameters.AddOutput("dsrr", host.RoundU(dsrr));
             outputParameters.AddOutput("dsll", host.RoundU(dsll));
             outputParameters.AddOutput("dsul", host.RoundU(dsul));

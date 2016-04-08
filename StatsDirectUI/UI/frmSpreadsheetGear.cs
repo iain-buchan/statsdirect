@@ -17,6 +17,7 @@ using Color = System.Drawing.Color;
 using SystemColors = System.Drawing.SystemColors;
 using StatsDirect.R;
 using StatsDirect.Templates;
+using System.Globalization;
 
 namespace StatsDirect.UI
 {
@@ -146,7 +147,7 @@ namespace StatsDirect.UI
             Path = saveFileDialog.FileName;
             string extension = System.IO.Path.GetExtension(Path);
             if (!string.IsNullOrEmpty(extension))
-                extension = extension.ToLower();
+                extension = extension.ToLower(CultureInfo.InvariantCulture);
             FileFormat format = ".xlsx".Equals(extension) ? FileFormat.OpenXMLWorkbook : FileFormat.Excel8;
             workbookView.GetLock();
             try
@@ -842,7 +843,7 @@ namespace StatsDirect.UI
                 double dval;
                 if (Double.TryParse(buf, out dval))
                     return dval;
-                string ubuf = buf.ToUpper();
+                string ubuf = buf.ToUpper(CultureInfo.InvariantCulture);
                 if (ubuf == "*" || ubuf == "MISSING" || ubuf == ".")
                     return Constant.MISSING * 10D;
                 // if (ubuf == "#NULL!" || ubuf == "#NUM!")

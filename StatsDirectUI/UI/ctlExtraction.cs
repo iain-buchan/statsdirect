@@ -30,7 +30,7 @@ namespace StatsDirect.UI
             int cols = options.IdentifiersFrame.VariableCount;
             string dtitle = options.Title;
 
-            string expression = txtExpression.Text.Trim().ToUpper();
+            string expression = txtExpression.Text.Trim();
             if (0 == expression.Length)
                 return txtExpression;
   

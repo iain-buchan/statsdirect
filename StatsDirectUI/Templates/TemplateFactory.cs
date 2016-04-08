@@ -1,6 +1,7 @@
 using StatsDirect.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 
@@ -68,7 +69,7 @@ namespace StatsDirect.Templates
                 foreach (FileInfo info in knownOperations)
                 {
                     // Asking a DirectoryInfo for all files of the pattern "*.xml" gets eg. "scatter.xml~" - so we do it the hard way.
-                    if (".xml".Equals(info.Extension.ToLower()))
+                    if (".xml".Equals(info.Extension.ToLower(CultureInfo.InvariantCulture)))
                     {
                         try
                         {
@@ -94,7 +95,7 @@ namespace StatsDirect.Templates
                     foreach (FileInfo info in knownOperations)
                     {
                         // Asking a DirectoryInfo for all files of the pattern "*.xml" gets eg. "scatter.xml~" - so we do it the hard way.
-                        if (".xml".Equals(info.Extension.ToLower()))
+                        if (".xml".Equals(info.Extension.ToLower(CultureInfo.InvariantCulture)))
                         {
                             TextReader fs = info.OpenText();
                             Operation o = (Operation)s.Deserialize(fs);

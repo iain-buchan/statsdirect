@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
@@ -76,7 +77,7 @@ namespace StatsDirect.UI
                     oParam[0] = i;
                     var addIn = oAddins.GetType().InvokeMember("Item", BindingFlags.GetProperty, null, oAddins, oParam);
                     string oAddinName = (string)addIn.GetType().InvokeMember("Fullname", BindingFlags.GetProperty, null, addIn, null);
-                    if (oAddinName.ToLower().Contains("statsdirectexcel"))
+                    if (oAddinName.ToLower(CultureInfo.InvariantCulture).Contains("statsdirectexcel"))
                     {
                         bool oInstalled = (bool)addIn.GetType().InvokeMember("Installed", BindingFlags.GetProperty, null, addIn, null);
                         isInstalled = oInstalled; 
@@ -122,7 +123,7 @@ namespace StatsDirect.UI
                     oParam[0] = i;
                     var addIn = oAddins.GetType().InvokeMember("Item", BindingFlags.GetProperty, null, oAddins, oParam);
                     string addinName = (string) addIn.GetType().InvokeMember("Fullname", BindingFlags.GetProperty, null, addIn , null);
-                    if (addinName.ToLower().Contains("statsdirectexcel"))
+                    if (addinName.ToLower(CultureInfo.InvariantCulture).Contains("statsdirectexcel"))
                     {
                         oParam[0] = "False";
                         addIn.GetType().InvokeMember("Installed", BindingFlags.SetProperty, null, addIn, oParam);

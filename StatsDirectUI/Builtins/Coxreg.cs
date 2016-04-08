@@ -6,6 +6,7 @@ using StatsDirect.Data;
 using StatsDirect.Templates;
 using StatsDirect.Numerics;
 using StatsDirect.Utilities;
+using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
@@ -2656,7 +2657,7 @@ namespace StatsDirect.Builtins
 
             int ncoef = Convert.ToInt32(ARR2[1, 0]);
             IComparer<CoxP> comparer;
-            switch (groupVar.ToLower())
+            switch (groupVar.ToLower(CultureInfo.InvariantCulture))
             {
                 case "none":
                 case "":
@@ -2677,7 +2678,7 @@ namespace StatsDirect.Builtins
                     igroups = 0;
                     for (i = 1; i <= ncoef; i++)
                     {
-                        if ((CDAT1[i].Title).Trim().ToLower().Equals(groupVar.ToLower()))
+                        if ((CDAT1[i].Title).Trim().ToLower(CultureInfo.CurrentCulture).Equals(groupVar.ToLower(CultureInfo.CurrentCulture)))
                         {
                             groupid = i;
                             igroups = CDAT1[i].Groups.Count;
