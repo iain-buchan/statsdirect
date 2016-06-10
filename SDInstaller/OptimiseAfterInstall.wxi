@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
-  <CustomAction Id="RunNgen" Property="NgenPath" ExeCommand="&quot;[NgenPath]&quot; install &quot;[#statsdirectexe]&quot; /queue:1" Execute="commit" Return="ignore"/>
+  <CustomAction Id="RunNgen" Property="NgenPath" ExeCommand="&quot;[NgenPath]&quot; install &quot;[#statsdirectexe]&quot;" Execute="commit" Return="ignore"/>
   <InstallExecuteSequence>
     <Custom Action="RunNgen" Before="InstallFinalize"></Custom>
   </InstallExecuteSequence>
