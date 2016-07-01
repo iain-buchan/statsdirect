@@ -32,17 +32,10 @@ namespace StatsDirect.UI
                 options.ScaleChanged += options_ScaleChanged;
                 List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 // On a new call, series options will exist, but Bins will be set to zero for all.  On a replay, Bins will be set to sane values.  Detect the replay and don't reset the bins on one.
-                if (null != options.HistoSeriesOptions && options.HistoSeriesOptions.Count > 0 && options.HistoSeriesOptions[0].Bins == 0)
+                if (null != options.HistoSeriesOptions && options.HistoSeriesOptions.Count > 0 && options.HistoSeriesOptions[0].BinsDescriptor.Bins == 0)
                 {
-                    if (options.PoolVariablesForBins)
-                    {
-                        options.Reset(true, 0, options.PoolVariablesForBins, 0, series);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < series.Count; i++)
-                            options.Reset(true, 0, options.PoolVariablesForBins, i, series);
-                    }
+                    for (int i = 0; i < series.Count; i++)
+                        options.Reset(true, 0, i, series[i]);
                 }
                 FillFormFromOptions();
             }
@@ -61,21 +54,32 @@ namespace StatsDirect.UI
             options.PoolVariablesForBins = chkPoolVariables.Checked;
 
             HistogramSeriesOptions seriesOptions = options.HistoSeriesOptions[currentSeriesIndex];
-            if (!int.TryParse(txtBins.Text, out seriesOptions.Bins))
+            int bins;
+            if (!int.TryParse(txtBins.Text, out bins))
             {
                 FailAndHighlight(txtBins);
                 optionsAreOk = false;
             }
-            if (!double.TryParse(txtMidpointInterval.Text, out seriesOptions.MidPointInterval))
+            double midpointInterval;
+            if (!double.TryParse(txtMidpointInterval.Text, out midpointInterval))
             {
                 FailAndHighlight(txtMidpointInterval);
                 optionsAreOk = false;
             }
-            if (!double.TryParse(txtMinimumMidpoint.Text, out seriesOptions.MinimumBinMidPoint))
+            double minimumBinMidpoint;
+            if (!double.TryParse(txtMinimumMidpoint.Text, out minimumBinMidpoint))
             {
                 FailAndHighlight(txtMinimumMidpoint);
                 optionsAreOk = false;
             }
+            double minimum = minimumBinMidpoint - (midpointInterval / 2.0);
+            double maximum = minimum + bins * midpointInterval;
+            double[] edges = HistogramBinChooser.Linspace(minimum, maximum, bins);
+            int actualRows;
+            double[] sortedData = HistogramSeriesOptions.ExtractNonMissingDataAndSort(definition.YSeries[currentSeriesIndex], out actualRows);
+            Array.Sort(sortedData, 0, actualRows);
+            int[] counts = HistogramBinChooser.SortedHist(sortedData, edges);
+            seriesOptions.BinsDescriptor = new BinsDescriptor { Edges = edges, Counts = counts };
             options.ShowRelativeFrequencies = chkShowRelativeFrequencies.Checked;
             if (!options.IsAscii)
                 options.OverlayNormalCurve = chkOverlayNormalCurve.Checked;
@@ -107,11 +111,16 @@ namespace StatsDirect.UI
                 cboVariable.SelectedIndex = currentSeriesIndex;
 
                 HistogramSeriesOptions seriesOptions = options.HistoSeriesOptions[currentSeriesIndex];
-                lblDataMaximum.Text = seriesOptions.MaximumValue.ToString();
-                lblDataMinimum.Text = seriesOptions.MinimumValue.ToString();
-                txtBins.Text = seriesOptions.Bins.ToString();
-                txtMidpointInterval.Text = seriesOptions.MidPointInterval.ToString();
-                txtMinimumMidpoint.Text = seriesOptions.MinimumBinMidPoint.ToString();
+                BinsDescriptor descriptor = seriesOptions.BinsDescriptor;
+                double minimumBinMidpoint = (descriptor.Edges[0] + descriptor.Edges[1]) / 2.0;
+                double maximumBinMidpoint = (descriptor.Edges[descriptor.Bins] + descriptor.Edges[descriptor.Bins - 1]) / 2.0;
+                double binMidpointInterval = (maximumBinMidpoint - minimumBinMidpoint) / (descriptor.Bins - 1);
+
+                lblDataMaximum.Text = descriptor.HighestEdge.ToString();
+                lblDataMinimum.Text = descriptor.LowestEdge.ToString();
+                txtBins.Text = descriptor.Bins.ToString();
+                txtMidpointInterval.Text = binMidpointInterval.ToString();
+                txtMinimumMidpoint.Text = minimumBinMidpoint.ToString();
                 chkShowRelativeFrequencies.Checked = options.ShowRelativeFrequencies;
 
                 if (options.IsAscii)
@@ -159,7 +168,7 @@ namespace StatsDirect.UI
             {
                 List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 options.PoolVariablesForBins = chkPoolVariables.Checked;
-                options.Reset(true, 0, chkPoolVariables.Checked, currentSeriesIndex, series);
+                options.Reset(true, 0, currentSeriesIndex, series[currentSeriesIndex]);
                 FillFormFromOptions();
             }
             catch (Exception)
@@ -175,7 +184,7 @@ namespace StatsDirect.UI
                 int bins = Parsing.Cint_Txt(txtBins.Text);
                 options.PoolVariablesForBins = chkPoolVariables.Checked;
                 List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
-                options.Reset(false, bins, chkPoolVariables.Checked, currentSeriesIndex, series);
+                options.Reset(false, bins, currentSeriesIndex, series[currentSeriesIndex]);
                 FillFormFromOptions();
             }
             catch (FormatException)

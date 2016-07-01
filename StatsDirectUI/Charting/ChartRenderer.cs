@@ -4426,57 +4426,40 @@ namespace StatsDirect.Charting
         {
             HistogramOptions histOptions = ((HistogramOptions)(definition.ChartOptions));
             bool ShowRelativeFrequencies = histOptions.ShowRelativeFrequencies;
-            List<Series> SeriesToUse = definition.YSeries;
-
-            //  Ensure the data is sorted
-            GetMinMaxSort(SeriesToUse, out DataMinX, out DataMaxX);
 
             //  We're looking over multiple histograms and getting a merged view
-            DataMinY = 0.0;
-            DataMaxY = 0.0;
+            double minX = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = 0.0;
 
-            for (int iter = 0; iter < SeriesToUse.Count; iter++)
+            for (int i = 0; i < definition.YSeries.Count; i++)
             {
-                DoubleSeries s = SeriesToUse[iter].AsDoubleSeries;
-                HistogramSeriesOptions so = histOptions.HistoSeriesOptions[iter];
-
-                int mp = so.Bins;
-                double zint = so.MidPointInterval;
-                double zmin = so.MinimumBinMidPoint;
-                int[] size = new int[mp];
-                double[] midpt = new double[mp];
+                HistogramSeriesOptions so = histOptions.HistoSeriesOptions[i];
+                if (null == so.BinsDescriptor)
+                    so.Reset(true, 0, definition.YSeries[i]);
 
                 //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
-                axisXMin = zmin;
-                axisXMax = zmin + (zint * (mp - 1));
+                minX = Math.Min(minX, so.BinsDescriptor.LowestEdge);
+                maxX = Math.Max(maxX, so.BinsDescriptor.HighestEdge);
 
                 //  Find the number of values in each bin, and hence the size of the histogram's y axis.
                 //  This works because the bins are always of equal width in the histograms we choose to plot - if they weren't, we'd have to scale by the width
                 double seriesMaxY = 0;
-                int c2 = 0;
-                for (int c = 0; c < mp; c++)
+                int points = 0;
+                for (int bindex = 0; bindex < so.BinsDescriptor.Bins; bindex++)
                 {
-                    double high = zmin + (zint * c) + zint / 2.0;
-                    //  Count the number of samples in this bin
-                    int c1;
-                    for (c1 = c2; c1 < s.Points; c1++)
-                        if (s.Data[c1] > high)
-                            break;
-                    size[c] = c1 - c2;
-                    midpt[c] = zmin + (zint * c);
-                    if (size[c] > seriesMaxY)
-                        seriesMaxY = size[c];
-                    c2 = c1;
+                    points += so.BinsDescriptor.Counts[bindex];
+                    seriesMaxY = Math.Max(seriesMaxY, so.BinsDescriptor.Counts[bindex]);
                 }
                 if (ShowRelativeFrequencies)
-                    seriesMaxY = seriesMaxY / s.Points;
-                if (seriesMaxY > DataMaxY)
-                    DataMaxY = seriesMaxY;
+                    seriesMaxY = seriesMaxY / points;
+                if (seriesMaxY > maxY)
+                    maxY = seriesMaxY;
             }
             ScaleParameters sp = new ScaleParameters
             {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = DataMinX, Max = DataMaxX },
-                Y = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = DataMinY, Max = DataMaxY }
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = minX, Max = maxX },
+                Y = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = 0, Max = maxY }
             };
             return sp;
         }
@@ -4484,7 +4467,6 @@ namespace StatsDirect.Charting
         private ParameterBag PlotHistogram()
         {
             HistogramOptions histOptions = (HistogramOptions)definition.ChartOptions;
-            bool showRelativeFrequencies = histOptions.ShowRelativeFrequencies;
             List<Series> seriesToUse = definition.YSeries;
             MarkerType[] originalMarkerTypes = null;
             //  A space to save drawn ASCII plots until required
@@ -4533,40 +4515,30 @@ namespace StatsDirect.Charting
                     HistogramSeriesOptions so = histOptions.HistoSeriesOptions[seriesIndex];
                     string title = so.ChartTitle;
 
-                    int mp = so.Bins;
-                    double zInt = so.MidPointInterval;
-                    double zMin = so.MinimumBinMidPoint;
-                    int[] size = new int[mp];
-                    double[] midpoints = new double[mp];
-                    string mask = GetAxisMask(zInt, zMin, mp, 1);
+                    BinsDescriptor descriptor = so.BinsDescriptor;
+                    double minimumBinMidpoint = (descriptor.Edges[0] + descriptor.Edges[1]) / 2.0;
+                    double maximumBinMidpoint = (descriptor.Edges[descriptor.Bins] + descriptor.Edges[descriptor.Bins - 1]) / 2.0;
+                    double binMidpointInterval = (maximumBinMidpoint - minimumBinMidpoint) / (descriptor.Bins - 1);
 
                     //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
-                    axisXMin = zMin;
-                    axisXMax = zMin + (zInt * (mp - 1));
+                    DataMinX = Math.Min(DataMinX, descriptor.LowestEdge);
+                    DataMaxX = Math.Max(DataMaxX, descriptor.HighestEdge);
+                    DataMinY = 0;
+                    DataMaxY = double.MinValue;
 
                     //  Find the number of values in each bin, and hence the size of the histogram's y axis.
-                    //  This works because the bins are always of equal width - if they weren't, we'd have to scale by the width
-                    DataMinY = 0.0;
-                    DataMaxY = 0.0;
-                    int c2 = 0;
+                    //  This works because the bins are always of equal width in the histograms we choose to plot - if they weren't, we'd have to scale by the width
                     double seriesMaxY = 0;
-                    for (int c = 0; c < mp; c++)
+                    int points = 0;
+                    for (int bindex = 0; bindex < descriptor.Bins; bindex++)
                     {
-                        double high = zMin + (zInt * c) + zInt / 2.0;
-                        int c1;
-                        for (c1 = c2; c1 < s.Points; c1++)
-                            if (s.Data[c1] > high)
-                                break;
-                        size[c] = c1 - c2;
-                        midpoints[c] = zMin + zInt * c;
-                        if (size[c] > seriesMaxY)
-                            seriesMaxY = size[c];
-                        c2 = c1;
-                        if (showRelativeFrequencies)
-                            seriesMaxY = seriesMaxY / s.Points;
-                        if (seriesMaxY > DataMaxY)
-                            DataMaxY = seriesMaxY;
+                        points += descriptor.Counts[bindex];
+                        seriesMaxY = Math.Max(seriesMaxY, descriptor.Counts[bindex]);
                     }
+                    if (histOptions.ShowRelativeFrequencies)
+                        seriesMaxY = seriesMaxY / points;
+                    if (seriesMaxY > DataMaxY)
+                        DataMaxY = seriesMaxY;
 
                     if (!IsAscii)
                     {
@@ -4583,69 +4555,49 @@ namespace StatsDirect.Charting
                         //  If necessary, extend the Y axis to accommodate the normal curve
                         if (overlayNormalCurve)
                         {
-                            double mxy = PlotNormalCurve(zMin, zInt, mp - 1, s, 1.0, false);
+                            double mxy = PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, 1.0, false);
                             if (mxy > DataMaxY)
                                 DataMaxY = mxy;
                         }
 
-                        divx = xExtCanvas / Math.Max(mp, 1);
-                        double barX = divx;
-                        double centreX = divx / 2.0;
-                        SizeF legendSize = statsDirectCanvas.MeasureString(midpoints[mp - 1].ToString(CultureInfo.InvariantCulture), axisLabelFont);
-                        // If labels occupy more than 75% of the bar width, they are considered "long" and staggered across two lines.
-                        bool labelsAreLong = legendSize.Width > (barX * 0.75);
-
                         // Draw the axes.  This includes drawing the Y scale, but we draw our own X scale.
-                        double xtra = labelsAreLong ? legendSize.Height * 1.5 : 0;
-                        Axis xAxis = new Axis(histOptions.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.LineOnly, xtra, definition.ScaleParameters.X.ScaleType);
                         double scrap;
-                        DrawAxesOrFail(title, xAxis, new Axis(histOptions.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, legendSize.Height, definition.ScaleParameters.Y.ScaleType), false, true, out scrap);
-
-                        // DrawAxesOrFail sets {div,off}x, so we need to reset afterwards to our custom versions.  We don't need to (and indeed shouldn't) reset divy and offy, as the Y scale has been drawn based on the calculated version.
-                        divx = xExtCanvas / Math.Max(mp, 1);
-                        offx = 0;
+                        DrawAxesOrFail(title,
+                            new Axis(histOptions.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType),
+                            new Axis(histOptions.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.Y.ScaleType),
+                            false,
+                            true,
+                            out scrap);
 
                         // Plot each bar
-                        bool labelIsLow = false;
-                        for (int c = 0; c < mp; c++)
+                        for (int c = 0; c < descriptor.Bins; c++)
                         {
-
                             // plot a bar at an absolute position (maxX / 20)
-                            double x1 = xAxisCanvas + divx * c + offx;
-                            double x2 = xAxisCanvas + divx * (c + 1) + offx;
-                            double value = showRelativeFrequencies ? size[c] / (double)s.Points : size[c];
-                            double y1 = yAxisCanvas + (value / axisYMax * yExtCanvas);
+                            double x1 = ToCanvasX(descriptor.Edges[c]);
+                            double x2 = ToCanvasX(descriptor.Edges[c + 1]);
+                            double value = histOptions.ShowRelativeFrequencies ? descriptor.Counts[c] / (double)s.Points : descriptor.Counts[c];
+                            double y1 = ToCanvasY(value);
                             double y2 = yAxisCanvas;
                             statsDirectCanvas.DrawRectangle(s.MarkerDetails.MarkerPen, x1, y1, x2 - x1, y1 - y2);
-
-                            // Now the mid-point label in the centre of the bar
-                            x1 += centreX;
-                            double yoff = axisLabelFont.SizeInPoints * 0.25;
-                            if (labelsAreLong)
-                            {
-                                if (labelIsLow)
-                                    yoff = axisLabelFont.SizeInPoints * 1.5;
-                                labelIsLow = !(labelIsLow);
-                            }
-                            AxisDrawStringC(midpoints[c].ToString(mask), x1, yAxisCanvas - yoff);
                         }
-
 
                         //  ZInt was calculated at Mp*2
                         if (overlayNormalCurve)
                         {
                             double proportionScaler;
-                            if (showRelativeFrequencies)
+                            if (histOptions.ShowRelativeFrequencies)
                                 proportionScaler = 1.0 / s.Points;
                             else
                                 proportionScaler = 1.0;
-                            PlotNormalCurve(zMin, zInt, mp - 1, s, proportionScaler, true);
+                            PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, true);
                         }
                     }
                     else
                     {
+                        string mask = GetAxisMask(binMidpointInterval, minimumBinMidpoint, descriptor.Bins, 1);
+
                         // Plot one ASCII histogram per series.  The cheat is to plot each one, save it, and concatenate at the end!
-                        ASCII_InitPlot(mp + 4);
+                        ASCII_InitPlot(descriptor.Bins + 4);
                         // Draw the scale
 
                         // the ASCII version is plotted sideways
@@ -4658,25 +4610,27 @@ namespace StatsDirect.Charting
 
                         DefaultAxes(0);
                         DrawAxesOrEnlargeCanvas(title, new Axis(null, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.None, 0, definition.ScaleParameters.Y.ScaleType), false, true);
-                        for (int c = 0; c < mp; c++)
+
+                        for (int c = 0; c < descriptor.Bins; c++)
                         {
-                            int L = Convert.ToInt32(size[c] / axisXMax * 60);
+                            int L = Convert.ToInt32(descriptor.Counts[c] / axisXMax * 60);
                             WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, new string('=', L));
-                            if (size[c] > 0 && L == 0)
+                            if (descriptor.Counts[c] > 0 && L == 0)
                                 WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, ":");
 
-                            string buf = midpoints[c].ToString(mask) + "|";
+                            double midpoint = (descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0;
+                            string buf = midpoint.ToString(mask) + "|";
                             L = buf.Length;
                             WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt - L + 5, buf);
 
-                            buf = size[c].ToString(CultureInfo.InvariantCulture);
+                            buf = descriptor.Counts[c].ToString(CultureInfo.InvariantCulture);
                             WriteAsciiYX(c + ASCII_Ytxt, 1, buf);
                         }
 
                         WriteAsciiYX(0, ASCII_XTxt, histOptions.HistoSeriesOptions[seriesIndex].XAxisTitle);
 
-                        WriteAsciiYX(mp + ASCII_Ytxt, 16, "Mid-points");
-                        WriteAsciiYX(mp + ASCII_Ytxt, 1, "Counts");
+                        WriteAsciiYX(descriptor.Bins + ASCII_Ytxt, 16, "Mid-points");
+                        WriteAsciiYX(descriptor.Bins + ASCII_Ytxt, 1, "Counts");
                         shTx[2] = "     " + shTx[2].Substring(0, Math.Min(shTx[2].Length, 85));
                         shTx[1] = "     " + shTx[1].Substring(0, Math.Min(shTx[1].Length, 85));
                         shTx[0] = "     " + shTx[0].Substring(0, Math.Min(shTx[0].Length, 85));
@@ -4899,9 +4853,9 @@ namespace StatsDirect.Charting
         /// <summary>
         /// Returns the maximum value of a normal curve from the specified series and bin values.
         /// </summary>
-        /// <param name="qzmin">The smallest midpoint</param>
-        /// <param name="qzint">The midpoint interval</param>
-        /// <param name="qcount">The number of bins</param>
+        /// <param name="zmin">The smallest midpoint</param>
+        /// <param name="zint">The midpoint interval</param>
+        /// <param name="count">The number of bins</param>
         /// <param name="s">The series whose data is to be used for the calculation</param>
         /// <param name="shouldPlot">Draws if true; merely returns the maximum value if false</param>
         /// <returns>The maximum value of y</returns>

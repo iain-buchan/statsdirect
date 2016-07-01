@@ -227,6 +227,7 @@
     <Compile Include="Charting\ChartRenderer.cs" />
     <Compile Include="Charting\ComparisonValue.cs" />
     <Compile Include="Charting\ControlOptions.cs" />
+    <Compile Include="Charting\HistogramBinChooser.cs" />
     <Compile Include="Charting\MarkerDetails.cs" />
     <Compile Include="Charting\MultiDoublePoint.cs" />
     <Compile Include="Charting\MultiDoubleSeries.cs" />
