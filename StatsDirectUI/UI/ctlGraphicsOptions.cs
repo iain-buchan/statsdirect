@@ -57,24 +57,16 @@ namespace StatsDirect.UI
             rdoSeries[9] = rdoSeries10;
 
             foreach (SelectablePictureBox pb in picMarkerTypes)
-            {
                 pb.SelectedChanged += MarkerType_SelectedChanged;
-            }
 
             foreach (SelectablePictureBox pb in picStyles)
-            {
                 pb.SelectedChanged += Style_SelectedChanged;
-            }
 
             foreach (SelectablePictureBox pb in picWidths)
-            {
                 pb.SelectedChanged += Width_SelectedChanged;
-            }
 
             foreach (RadioButton rdo in rdoSeries)
-            {
                 rdo.CheckedChanged += rdoSeries_CheckedChanged;
-            }
         }
 
         void rdoSeries_CheckedChanged(object sender, EventArgs e)

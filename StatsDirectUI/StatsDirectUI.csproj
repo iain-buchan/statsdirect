@@ -175,6 +175,7 @@
     <Compile Include="Builtins\ChartExplorer.cs" />
     <Compile Include="Builtins\Chi.cs" />
     <Compile Include="Builtins\ConvertUnitsOptions.cs" />
+    <Compile Include="Builtins\GraphicsOptions.cs" />
     <Compile Include="Builtins\SimpleLinearRegressionContext.cs" />
     <Compile Include="Builtins\SubjectSummary.cs" />
     <Compile Include="Builtins\TimeSummary.cs" />
@@ -1747,7 +1748,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

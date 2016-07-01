@@ -3,17 +3,6 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    /// <summary>
-    /// A marker class to be passed through ITemplateHost.Amend
-    /// </summary>
-    public sealed class GraphicsOptions : IFillable
-    {
-        public string FillerToUse
-        {
-            get { return "GraphicsOptions"; }
-        }
-    }
-
     class Options
     {
         public static ParameterBag SetAnalysisOptions(ITemplateHost host, ParameterBag parameters)

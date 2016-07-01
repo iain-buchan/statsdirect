@@ -21,12 +21,12 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  Given a series index (13 for the 14th series, for example) return the marker that should be used for that series.
         ///  </summary>
-        ///  <param name="SeriesNumber"></param>
+        ///  <param name="seriesNumber"></param>
         ///  <returns></returns>
         ///  <remarks>This used to be considerably more complex; Peter has simplified.</remarks>
-        public static int SeriesNumberToMarkerNumber(int SeriesNumber)
+        public static int SeriesNumberToMarkerNumber(int seriesNumber)
         {
-            return SeriesNumber % 10;
+            return seriesNumber % 10;
         }
 
         protected ChartOptions(bool useColour)
