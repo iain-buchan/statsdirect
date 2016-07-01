@@ -586,15 +586,17 @@ namespace StatsDirect.PJLControls
             int x = borderSize.Width;
             int y = borderSize.Height;
 
+            Size scaledColorWellSize = ScaledColorWellSize;
+
             foreach (ColorWellInfo c in colorWells)
             {
-                c.ColorPosition = c.IsCustomWell ? new Rectangle(x, y, colorWellSize.Width * 2, colorWellSize.Height) : new Rectangle(x, y, colorWellSize.Width, colorWellSize.Height);
+                c.ColorPosition = c.IsCustomWell ? new Rectangle(x, y, scaledColorWellSize.Width * 2, scaledColorWellSize.Height) : new Rectangle(x, y, scaledColorWellSize.Width, scaledColorWellSize.Height);
 
-                x += colorWellSize.Width;
+                x += scaledColorWellSize.Width;
 
-                if (x + colorWellSize.Width > ClientRectangle.Width)
+                if (x + scaledColorWellSize.Width > ClientRectangle.Width)
                 {
-                    y += colorWellSize.Height;
+                    y += scaledColorWellSize.Height;
                     x = borderSize.Width;
                 }
             }
@@ -1051,21 +1053,23 @@ namespace StatsDirect.PJLControls
 
         /// <summary>
         /// This method is called internally to set the control's size.<br></br>
-        /// If the Columns property is 0 then the control fixes it's width to the 
+        /// If the Columns property is 0 then the control fixes its width to the 
         /// nearest number of columns that fit into the value returned by GetPreferredWidth.<br></br>
         /// If the Columns property is greater than 0 then the control will display that many columns.
         /// </summary>
         protected void AutoSizePanel()
         {
+            Size scaledColorWellSize = ScaledColorWellSize;
+
             if (preferredColumns <= 0)
             {
                 int preferredWidth = GetPreferredWidth();
 
                 int w = preferredWidth - borderSize.Width * 2;
-                int remw = w % colorWellSize.Width;
-                columns = w / colorWellSize.Width;
+                int remw = w % scaledColorWellSize.Width;
+                columns = w / scaledColorWellSize.Width;
                 rows = colorWells.Length / columns + ((colorWells.Length % columns != 0) ? 1 : 0);
-                int h = rows * colorWellSize.Height + borderSize.Height * 2;
+                int h = rows * scaledColorWellSize.Height + borderSize.Height * 2;
 
                 if (remw != 0 || h != Size.Height)
                 {
@@ -1089,10 +1093,10 @@ namespace StatsDirect.PJLControls
                 }
 
                 columns = preferred;
-                int w = preferred * colorWellSize.Width + borderSize.Width * 2;
+                int w = preferred * scaledColorWellSize.Width + borderSize.Width * 2;
 
                 rows = colorWells.Length / columns + ((colorWells.Length % columns != 0) ? 1 : 0);
-                int h = rows * colorWellSize.Height + borderSize.Height * 2;
+                int h = rows * scaledColorWellSize.Height + borderSize.Height * 2;
 
                 ClientSize = new Size(w, h);
 
@@ -1362,6 +1366,19 @@ namespace StatsDirect.PJLControls
                     FireColorChanged();
 
                     AutoSizePanel();
+                }
+            }
+        }
+
+        private Size ScaledColorWellSize
+        {
+            get
+            {
+                using (Graphics g = CreateGraphics())
+                {
+                    double xScale = g.DpiX / 96.0;
+                    double yScale = g.DpiY / 96.0;
+                    return new Size((int)(colorWellSize.Width * xScale), (int)(colorWellSize.Height * yScale));
                 }
             }
         }
