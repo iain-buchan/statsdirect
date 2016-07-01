@@ -24,7 +24,7 @@
         <Directory Id="INSTALLLOCATION" Name="StatsDirect3" FileSource="$(var.StatsDirectUI.TargetDir)">
           <Component Id="ProductComponent" Guid="CE038078-F78B-42b0-A547-8509996AA427">
             <File Id="statsdirectexe" KeyPath="yes" Name="StatsDirect.exe" Checksum="yes">
-              <!-- <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="64bit" Priority="1" AppBaseDirectory="INSTALLLOCATION"/> -->
+              <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="64bit" Priority="0" AppBaseDirectory="INSTALLLOCATION"/>
               <?include Desktop.wxi ?>
             </File>
           </Component>
@@ -35,7 +35,7 @@
     </Directory>
 
     <?include Feature.wxi ?>
-    <SetProperty Id="NgenPath" Before="LaunchConditions" Value="[%windir]\Microsoft.NET\Framework64\v4.0.30319\ngen.exe" />
-    <?include OptimiseAfterInstall.wxi ?>
+    <!-- <SetProperty Id="NgenPath" Before="LaunchConditions" Value="[%windir]\Microsoft.NET\Framework64\v4.0.30319\ngen.exe" />
+    <?include OptimiseAfterInstall.wxi ?> -->
   </Product>
 </Wix>
