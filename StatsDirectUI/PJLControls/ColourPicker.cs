@@ -471,7 +471,7 @@ namespace StatsDirect.PJLControls
         }
 
         /// <summary>
-        /// Design time support to reset the Color property to it's default value.
+        /// Design time support to reset the Color property to its default value.
         /// </summary>
         public void ResetColor()
         {
@@ -524,7 +524,7 @@ namespace StatsDirect.PJLControls
         }
 
         /// <summary>
-        /// Design time support to reset the ColorWellSize property to it's default value.
+        /// Design time support to reset the ColorWellSize property to its default value.
         /// </summary>
         public void ResetColorWellSize()
         {
@@ -708,7 +708,7 @@ namespace StatsDirect.PJLControls
         }
 
         /// <summary>
-        /// Design time support to reset the CustomColors property to it's default value.
+        /// Design time support to reset the CustomColors property to its default value.
         /// </summary>
         public void ResetCustomColors()
         {
