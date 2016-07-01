@@ -478,7 +478,19 @@ namespace StatsDirect.Charting
 
         public static string SaveStringFromFont(Font f)
         {
-            return f.FontFamily.Name + ";" + (Convert.ToInt32(f.Style)) + ";" + f.SizeInPoints;
+            float emSize;
+            switch (f.Unit)
+            {
+                case GraphicsUnit.Pixel:
+                    emSize = f.Size / PIXELS_PER_POINT;
+                    break;
+                case GraphicsUnit.Point:
+                    emSize = f.Size;
+                    break;
+                default:
+                    throw new Exception("Cannot save font - unknown conversion from unit " + f.Unit.ToString());
+            }
+            return f.FontFamily.Name + ";" + (Convert.ToInt32(f.Style)) + ";" + emSize;
         }
 
         private static void InitFirstFonts()
