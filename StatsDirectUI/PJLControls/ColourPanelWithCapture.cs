@@ -1,4 +1,4 @@
-// ColourPanelFormWithCapture.cs : implementation file
+// ColourPanelWithCapture.cs : implementation file
 //
 // Part of ColorPicker controls.
 //
@@ -28,110 +28,110 @@ using System.Windows.Forms;
 
 namespace StatsDirect.PJLControls
 {
-	internal delegate void ColorPanelClosingEventHandler( object sender, System.EventArgs e );
+    internal delegate void ColorPanelClosingEventHandler(object sender, System.EventArgs e);
 
-	/// <summary>
-	/// This internal class adds mouse capture to the ColorPanel
-	/// so we can close the containing modal dialog 'ColorPanelForm'
-	/// appropriately.
-	/// </summary>
-	internal class ColorPanelWithCapture : ColorPanel
-	{
-		private int parentWidth = 300;
+    /// <summary>
+    /// This internal class adds mouse capture to the ColorPanel
+    /// so we can close the containing modal dialog 'ColorPanelForm'
+    /// appropriately.
+    /// </summary>
+    internal class ColorPanelWithCapture : ColorPanel
+    {
+        private int parentWidth = 300;
 
-		public ColorPanelWithCapture()
-		{
-			// This call is required by the Windows Form Designer.
-			InitializeComponent();
+        public ColorPanelWithCapture()
+        {
+            // This call is required by the Windows Form Designer.
+            InitializeComponent();
 
-			// TODO: Add any initialization after the InitializeComponent call
-		}
+            // TODO: Add any initialization after the InitializeComponent call
+        }
 
-		#region Designer generated code
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
-			// 
-			// ColorPanelWithCapture
-			// 
-			this.Name = "ColorPanelWithCapture";
-		}
-		#endregion
+        #region Designer generated code
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            // 
+            // ColorPanelWithCapture
+            // 
+            this.Name = "ColorPanelWithCapture";
+        }
+        #endregion
 
-		protected override void OnMouseDown(MouseEventArgs e)
-		{
-			base.OnMouseDown(e);
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
 
-			if( Capture )
-			{
-				if( !ClientRectangle.Contains(e.X, e.Y) )
-				{
-					OnClosePanel();
-				}
-			}
-		}
+            if (Capture)
+            {
+                if (!ClientRectangle.Contains(e.X, e.Y))
+                {
+                    OnClosePanel();
+                }
+            }
+        }
 
-		protected override void OnMouseUp(MouseEventArgs e)
-		{
-			base.OnMouseUp(e);
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
 
-			// For some reason OnMouseUp outside of the client area
-			// cancels mouse capture, so we need to take it again
-			Capture = true;
-		}
+            // For some reason OnMouseUp outside of the client area
+            // cancels mouse capture, so we need to take it again
+            Capture = true;
+        }
 
-		protected override void OnKeyDown(KeyEventArgs e)
-		{
-			base.OnKeyDown(e);
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
 
-			if( e.KeyCode == Keys.Escape )
-			{
-				OnClosePanel();
-			}
-		}
+            if (e.KeyCode == Keys.Escape)
+            {
+                OnClosePanel();
+            }
+        }
 
-		[Browsable(true), Category("ColorPanel")]
-		internal event ColorPanelClosingEventHandler PanelClosing;
-		protected virtual void OnClosePanel()
-		{
-			if( null != PanelClosing )
-			{
-				PanelClosing(this, new System.EventArgs());
-			}
-		}		
+        [Browsable(true), Category("ColorPanel")]
+        internal event ColorPanelClosingEventHandler PanelClosing;
+        protected virtual void OnClosePanel()
+        {
+            if (null != PanelClosing)
+            {
+                PanelClosing(this, new System.EventArgs());
+            }
+        }
 
-		internal int ParentWidth
-		{
-			set
-			{
-				parentWidth = value;
-				AutoSizePanel();
-			}
-		}
+        internal int ParentWidth
+        {
+            set
+            {
+                parentWidth = value;
+                AutoSizePanel();
+            }
+        }
 
-		/// <summary>
-		/// Override the base class preferred width to be that of the 
-		/// our parent ColorPicker control.
-		/// </summary>
-		/// <returns></returns>
-		protected override int GetPreferredWidth()
-		{
-			return parentWidth;
-		}
+        /// <summary>
+        /// Override the base class preferred width to be that of the 
+        /// our parent ColorPicker control.
+        /// </summary>
+        /// <returns></returns>
+        protected override int GetPreferredWidth()
+        {
+            return parentWidth;
+        }
 
-		/// <summary>
-		/// Overrides OnGotFocus in order to grab Mouse Capture.
-		/// </summary>
-		/// <param name="e"></param>
-		protected override void OnGotFocus(System.EventArgs e)
-		{
-			base.OnGotFocus(e);
+        /// <summary>
+        /// Overrides OnGotFocus in order to grab Mouse Capture.
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnGotFocus(System.EventArgs e)
+        {
+            base.OnGotFocus(e);
 
-			Capture = true;
-		}
-	}
+            Capture = true;
+        }
+    }
 }
 
