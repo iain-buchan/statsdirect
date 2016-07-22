@@ -49,7 +49,7 @@ namespace StatsDirect.Charting
             else
             {
                 double[] edges = HistogramBinChooser.Linspace(nonMissingData[0], nonMissingData[actualRows - 1], binsFromUser);
-                int[] counts = HistogramBinChooser.SortedHist(nonMissingData, edges);
+                int[] counts = HistogramBinChooser.SortedHist(nonMissingData, 0, actualRows, edges);
                 return new BinsDescriptor { Edges = edges, Counts = counts };
             }
         }
