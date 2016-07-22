@@ -88,18 +88,6 @@
           <option value="who">Use WHO corrections for values more than +/-3 SD from mean</option>
         </options>
       </option>
-      <option>
-        <name>age-correction</name>
-        <prompt>Correction for gestational age</prompt>
-        <must-request>true</must-request>
-        <default-value>none</default-value>
-        <format-type>Dropdown</format-type>
-        <prompt-precedes-parameter>true</prompt-precedes-parameter>
-        <options>
-          <option value="fixed">40 weeks (term)</option>
-          <option value="variable">Supply a column of gestational ages</option>
-        </options>
-      </option>
       <frame>
         <name>data</name>
         <prompt>="Select data for " + parameters["standardisation"].AsString.Split(new char[] { '|' })[0].Replace("-", " ")</prompt>
@@ -114,7 +102,7 @@
       </frame>
       <frame>
         <name>standardise</name>
-        <prompt>="Select data for " + parameters["standardisation"].AsString.Split(new char[] { '|' })[0].Replace("-", " ") + ("age".Equals(parameters["standardisation"].AsString.Split(new char[] { '|' })[1]) ? " (" + parameters["age-unit"].AsString + "s)" : "")</prompt>
+        <prompt>="Select data for " + parameters["standardisation"].AsString.Split(new char[] { '|' })[1].Replace("-", " ") + ("age".Equals(parameters["standardisation"].AsString.Split(new char[] { '|' })[1]) ? " (" + parameters["age-unit"].AsString + "s)" : "")</prompt>
         <mode>NumericReplaceMissing</mode>
         <clear-selection-first>true</clear-selection-first>
         <min-columns>1</min-columns>
@@ -135,13 +123,13 @@
       </frame>
       <frame>
         <name>gestational-age</name>
-        <prompt>Select data for gestaational age (weeks)</prompt>
+        <prompt>Select data for gestational age (weeks)</prompt>
         <mode>NumericReplaceMissing</mode>
         <clear-selection-first>true</clear-selection-first>
         <min-columns>1</min-columns>
         <max-columns>1</max-columns>
         <ask-for-group-id>false</ask-for-group-id>
-        <acquire-if-true>=parameters.ContainsKey("age-correction") &amp;&amp; null != parameters["age-correction"] &amp;&amp; "variable".Equals(parameters["age-correction"].AsString)</acquire-if-true>
+        <cancel-skips-parameter>Skip this variable to assume 40 weeks (term)</cancel-skips-parameter>
       </frame>
       <boolean>
         <name>scrap</name>
