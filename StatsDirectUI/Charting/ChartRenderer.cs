@@ -1803,7 +1803,7 @@ namespace StatsDirect.Charting
             PlotLinearRegressionInternal(title, slope, intercept, fullWidth, xAxisTitle, yAxisTitle);
             if (PERT != 0)
                 PlotSeCiOrPredictionInterval(PERT, slope, intercept, nx, MS, SUMX, SSX, isPredictionInterval);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         private void PlotLinearRegressionInternal(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle)
@@ -1891,13 +1891,13 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotCox2Internal(gn, igroups, xp, yp, cdat1, groupid);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
-        private string EndMetafileAndReturnRtf()
+        private string EndVectorPlotAndReturnRtf()
         {
             EndVectorPlot();
-            return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), (int)imageWidth, (int)imageHeight);
+            return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), imageWidth, imageHeight);
         }
 
         private void PlotCox2Internal(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
@@ -1909,9 +1909,7 @@ namespace StatsDirect.Charting
                 {
                     double w = statsDirectCanvas.MeasureString(s.Title, legendFont).Width + MINIMUM_X_WHITESPACE;
                     if (w > xtra + xAxisCanvas)
-                    {
                         xtra = w - xAxisCanvas;
-                    }
                 }
             }
 
@@ -1958,7 +1956,7 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotCox1Internal(title, z, iobs, stratified, grouped, istrata, igroups, cdat1, groupid, use_marker, use_tic, ARR3, j3, xAxisTitle, yAxisTitle, ref gn);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         private void PlotCox1Internal(string title, CoxP[] z, int iobs, bool stratified, bool grouped, int istrata, int igroups, ColumnData[] cdat1, int groupid, bool use_marker, bool use_tic, double[, ,] ARR3, int j3, string xAxisTitle, string yAxisTitle, ref int[] gn)
@@ -2144,7 +2142,7 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotLinearizedEstimationInternal(title, model, a, b, XAxisTitle, YAxisTitle);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         private void PlotLinearizedEstimationInternal(string title, int model, double a, double b, string XAxisTitle, string YAxisTitle)
@@ -2233,7 +2231,7 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotPolynomialRegressionInternal(title, mode, xtxi, bd, rss, nx, P, gamma, xAxisTitle, yAxisTitle);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         private void PlotPolynomialRegressionInternal(string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P, double gamma, string xAxisTitle, string yAxisTitle)
@@ -2415,7 +2413,7 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotLogitInternal(title, model, t, sw, s1, a, b, xAxisTitle, yAxisTitle);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         ///  <remarks>Jul 09: updated to put log models on a log x axis scale</remarks>
@@ -4772,14 +4770,14 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotXY(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         public string PlotXYZAndReturnRtf(ITemplateHost host, double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY)
         {
             StartVectorPlot();
             PlotXYZ(x, y, z, 1, x.Length - 1, xtxt, ytxt, title, zPlot, minMaxY, MarkerShape.Circle, false, Pens.Black, null);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
 
@@ -5777,7 +5775,7 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             Plot_Normal(y);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         ///  <summary>
@@ -5926,9 +5924,14 @@ namespace StatsDirect.Charting
                                      };
         }
 
+        private enum PyramidMode
+        {
+            Totals,
+            Pairs
+        }
+
         private ParameterBag PlotPyramid()
         {
-
             const int MINIMUM_X_WHITESPACE = 30;
 
             PyramidOptions pOptions = ((PyramidOptions)(definition.ChartOptions));
@@ -5942,7 +5945,7 @@ namespace StatsDirect.Charting
             double[] female;
             double[] male;
             double maxfemale = 0;
-            int mode;
+            PyramidMode mode;
             if (pOptions.FemaleFrame != null)
             {
                 //  Separate male and female values
@@ -5952,7 +5955,7 @@ namespace StatsDirect.Charting
                 male = new double[nmale];
                 maxfemale = females.Max;
 
-                for (int r = 0; r <= nmale - 1; r++)
+                for (int r = 0; r < nmale; r++)
                 {
                     if (females.Data[r] != Constant.MISSING && males.Data[r] != Constant.MISSING)
                     {
@@ -5962,7 +5965,7 @@ namespace StatsDirect.Charting
                     }
                 }
                 nmale = nfemale;
-                mode = 1;
+                mode = PyramidMode.Pairs;
             }
             else
             {
@@ -5973,13 +5976,13 @@ namespace StatsDirect.Charting
                 {
                     if (males.Data[r] != Constant.MISSING)
                     {
-                        female[nfemale] = males.Data[r] / 2;
-                        male[nfemale] = males.Data[r] / 2;
+                        female[nfemale] = males.Data[r] / 2.0;
+                        male[nfemale] = males.Data[r] / 2.0;
                         nfemale += 1;
                     }
                 }
                 nmale = nfemale;
-                mode = 2;
+                mode = PyramidMode.Totals;
             }
 
             string[] title = new string[nmale + 1];
@@ -6005,28 +6008,20 @@ namespace StatsDirect.Charting
 
             double ScaleMax = tmx;
             if (ScaleMax < tmax)
-            {
                 ScaleMax = tmax;
-            }
 
             Brush maleBrush = null;
             if (pOptions.MarkerTypes.Count >= 1)
-            {
                 maleBrush = MarkerTypeToBrush(pOptions.MarkerTypes[0]);
-            }
             Brush femaleBrush = null;
             if (pOptions.MarkerTypes.Count >= 2)
-            {
                 femaleBrush = MarkerTypeToBrush(pOptions.MarkerTypes[1]);
-            }
 
             if (nmale > 10)
             {
                 scaleYAxis = 1 + (nmale - 10) / 20.0;
                 if (scaleYAxis > 5)
-                {
                     scaleYAxis = 5;
-                }
                 imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
             else
@@ -6040,13 +6035,11 @@ namespace StatsDirect.Charting
             SetFontsAndThicknessesFromOptions(pOptions);
 
             double xtra = 0;
-            for (int i = 0; i <= nmale - 1; i++)
+            for (int i = 0; i < nmale; i++)
             {
                 double w = AxisLabelWidth(title[i]) + MINIMUM_X_WHITESPACE;
                 if (w > xtra + xAxisCanvas)
-                {
                     xtra = w - xAxisCanvas - 5;
-                }
             }
 
             xAxisCanvas = xAxisCanvas + xtra;
@@ -6061,7 +6054,7 @@ namespace StatsDirect.Charting
                 if (title[0].Length > 0)
                 {
                     double txh = AxisLabelHeight(title[0]);
-                    for (int i = 0; i <= nmale - 1; i++)
+                    for (int i = 0; i < nmale; i++)
                     {
                         double yc = yAxisCanvas + (nmale - i) * ystep - ystep / 2;
                         statsDirectCanvas.DrawString(title[i], axisLabelFont, Brushes.Black, xAxisCanvas - 15, yc + txh / 2, rightFormat);
@@ -6072,48 +6065,38 @@ namespace StatsDirect.Charting
                 double xc = xAxisCanvas + xstep;
                 using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
                 {
-                    for (int i = 0; i <= nmale - 1; i++)
+                    for (int i = 0; i < nmale; i++)
                     {
                         double yt = yAxisCanvas + (nmale - i) * ystep;
                         double yb = yAxisCanvas + (nmale - i - 1) * ystep;
                         double xl = xAxisCanvas + xstep - (male[i] / ScaleMax) * xstep;
                         double xr = xAxisCanvas + xstep + (female[i] / ScaleMax) * xstep;
-                        if (mode == 1)
+                        if (mode == PyramidMode.Pairs)
                         {
                             //  Male/female
                             if (maleBrush != null)
-                            {
                                 statsDirectCanvas.FillRectangle(maleBrush, xl, yt, xc - xl, yt - yb);
-                            }
                             if (femaleBrush != null)
-                            {
                                 statsDirectCanvas.FillRectangle(femaleBrush, xc, yt, xr - xc, yt - yb);
-                            }
                         }
                         else
                         {
                             //  Just the one
                             if (maleBrush != null)
-                            {
                                 statsDirectCanvas.FillRectangle(maleBrush, xl, yt, xr - xl, yt - yb);
-                            }
                         }
                         statsDirectCanvas.DrawRectangle(blackPen, xl, yt, xr - xl, yt - yb);
                     }
                     if (maleBrush != null)
-                    {
                         maleBrush.Dispose();
-                    }
                     if (femaleBrush != null)
-                    {
                         femaleBrush.Dispose();
-                    }
 
                     using (StringFormat leftFormat = new StringFormat())
                     {
                         leftFormat.Alignment = StringAlignment.Near;
 
-                        if (mode == 1)
+                        if (mode == PyramidMode.Pairs)
                         {
                             statsDirectCanvas.DrawLine(blackPen, xc, yAxisCanvas, xAxisCanvas + xstep, yAxisCanvas + nmale * ystep);
                             statsDirectCanvas.DrawString("male", axisLabelFont, Brushes.Black, (xExtCanvas / 4) + xAxisCanvas, yAxisCanvas - 12, leftFormat);
@@ -6123,8 +6106,6 @@ namespace StatsDirect.Charting
                         statsDirectCanvas.DrawString("Scale maximum = " + ScaleMax, axisLabelFont, Brushes.Black, 40, yAxisCanvas - 40, leftFormat);
 
                         EndVectorPlot();
-                        scaleYAxis = 1;
-                        imageHeight = DEFAULT_METAFILE_HEIGHT;
                         return new ParameterBag();
                     }
                 }
@@ -6186,7 +6167,7 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotXYR(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         private void PlotXYR(double[,] x, double[, ,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam)
@@ -6424,7 +6405,7 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotLAbbe(k, o, rmh);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         ///  <summary>
@@ -8018,7 +7999,7 @@ namespace StatsDirect.Charting
         {
             StartVectorPlot();
             PlotTies(x, y, nx, lla, ula, GAMMA, v0Title, v1Title, mean);
-            return EndMetafileAndReturnRtf();
+            return EndVectorPlotAndReturnRtf();
         }
 
         private void PlotTies(double[] x, double[] y, int nx, double lla, double ula, double GAMMA, string v0Title, string v1Title, double mean)
