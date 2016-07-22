@@ -22,7 +22,7 @@
   <String Id="OptionsBrowseButton">&amp;Browse</String>
   <String Id="OptionsOkButton">&amp;OK</String>
   <String Id="OptionsCancelButton">&amp;Cancel</String>
-  <String Id="ProgressHeader">Setup Progress</String>
+  <String Id="ProgressHeader">Setup and Optimisation Progress</String>
   <String Id="ProgressLabel">Processing:</String>
   <String Id="OverallProgressPackageText">Initializing...</String>
   <String Id="ProgressCancelButton">&amp;Cancel</String>

@@ -35,9 +35,10 @@
     <Image X="0" Y="0" Width="500" Height="63" ImageFile="bannrbmp-sd.png" />
     <Text X="11" Y="11" Width="-11" Height="64" FontId="1" DisablePrefix="yes">#(loc.Title)</Text>
     <Text X="11" Y="80" Width="-11" Height="30" FontId="2" DisablePrefix="yes">#(loc.ProgressHeader)</Text>
-    <Text X="11" Y="121" Width="70" Height="17" FontId="3" DisablePrefix="yes">#(loc.ProgressLabel)</Text>
-    <Text Name="OverallProgressPackageText" X="85" Y="121" Width="-11" Height="17" FontId="3" DisablePrefix="yes">#(loc.OverallProgressPackageText)</Text>
+    <Text X="11" Y="121" Width="150" Height="17" FontId="3" DisablePrefix="yes">Processing and optimising:</Text>
+    <Text Name="OverallProgressPackageText" X="160" Y="121" Width="-11" Height="17" FontId="3" DisablePrefix="yes">#(loc.OverallProgressPackageText)</Text>
     <Progressbar Name="OverallCalculatedProgressbar" X="11" Y="143" Width="-11" Height="15" />
+    <Text Name="OptimisationCommentText" X="11" Y="166" Width="-11" Height="40" FontId="3" DisablePrefix="yes">When installing, the progress bar will pause for a couple of minutes while StatsDirect is optimised for your computer.</Text>
     <Button Name="ProgressCancelButton" X="-11" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0">#(loc.ProgressCancelButton)</Button>
   </Page>
   <Page Name="Modify">
@@ -52,9 +53,6 @@
     <Image X="0" Y="0" Width="500" Height="63" ImageFile="bannrbmp-sd.png" />
     <Text X="11" Y="11" Width="-11" Height="64" FontId="1" DisablePrefix="yes">#(loc.Title)</Text>
     <Text X="11" Y="80" Width="-11" Height="30" FontId="2" DisablePrefix="yes">#(loc.SuccessHeader)</Text>
-    <Text X="11" Y="121" Width="-11" Height="100" FontId="3" DisablePrefix="yes">OPTIMISATION: Windows is now making a copy of StatsDirect that runs faster. This will take five to ten minutes.
-    
-On some computers the process will not start until a system maintenance cycle several days later. You can start system maintenance yourself now via Control Panel_Action Center_Maintenance_Start Maintenance.</Text>
     <Button Name="LaunchButton" X="-91" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0" HideWhenDisabled="yes">#(loc.SuccessLaunchButton)</Button>
     <Text Name="SuccessRestartText" X="-11" Y="-51" Width="400" Height="34" FontId="3" HideWhenDisabled="yes" DisablePrefix="yes">#(loc.SuccessRestartText)</Text>
     <Button Name="SuccessRestartButton" X="-91" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0" HideWhenDisabled="yes">#(loc.SuccessRestartButton)</Button>
