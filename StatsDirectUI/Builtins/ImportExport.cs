@@ -6,6 +6,8 @@ using StatsDirect.Data;
 using StatsDirect.Templates;
 using StatsDirect.UI;
 using System.Globalization;
+using System.Collections.Generic;
+using StatsDirect.CsvParser;
 
 namespace StatsDirect.Builtins
 {
@@ -70,57 +72,93 @@ namespace StatsDirect.Builtins
 
         private static ParameterBag FileImportAscii(string path)
         {
-            StreamReader sr = File.OpenText(path);
-            try
+            // If the file contains Tabs read as tab-delimited; otherwise, read as Excel comma-delimited.
+            bool isTabDelimited = SniffForTabs(path);
+
+            using (StreamReader sr = File.OpenText(path))
             {
-                string currentLine = sr.ReadLine();
-                if (null == currentLine)
-                    return null;
-
-                // If the file contains Tabs read as tab-delimited; otherwise, read as comma-delimited.
-                string delimiter = currentLine.Contains("\t") ? "\t" : ",";
-                if (currentLine.Substring(currentLine.Length - 1) != delimiter)
-                    currentLine += delimiter;
-                DataFrame outputFrame = new DataFrame();
-                int row = 0;
-                do
-                {
-                    int lastSplitPosition = 0;
-                    for (int col = 0; col <= 256; col++)
-                    {
-                        int splitPosition = currentLine.IndexOf(delimiter, lastSplitPosition, StringComparison.Ordinal);
-                        if (splitPosition < 0)
-                            break;
-                        int splitLength = splitPosition - lastSplitPosition;
-                        string rawField = currentLine.Substring(lastSplitPosition, splitLength);
-                        // Trim leading and trailing "..." if both are present
-                        if (rawField.StartsWith(@"""") && rawField.EndsWith(@""""))
-                            rawField = rawField.Substring(1, rawField.Length - 2).Replace("\"\"", "\"");
-                        if (outputFrame.VariableCount <= col)
-                            outputFrame.Variables.Add(new StringVariable());
-                        (outputFrame.Variables[col] as StringVariable).SetData(row, rawField);
-                        lastSplitPosition += splitLength + 1;
-                    }
-                    if (sr.EndOfStream)
-                        break;
-                    currentLine = sr.ReadLine();
-                    if (null == currentLine)
-                        break;
-
-                    if (currentLine.Length > 0 && currentLine.Substring(currentLine.Length - 1) != delimiter)
-                        currentLine += delimiter;
-                    row += 1;
-                } while (true);
+                DataFrame outputFrame = isTabDelimited ? ImportTabSeparated(sr) : ImportCommaSeparated(sr);
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("output", outputFrame);
                 return outputParameters;
             }
-            finally
+        }
+
+        private static bool SniffForTabs(string path)
+        {
+            using (StreamReader sr = File.OpenText(path))
             {
-                sr.Close();
+                string firstLine = sr.ReadLine();
+                if (null == firstLine)
+                    return false;
+
+                return firstLine.Contains("\t");
             }
         }
 
+        private static DataFrame ImportTabSeparated(StreamReader sr)
+        {
+            string currentLine = sr.ReadLine();
+            if (null == currentLine)
+                return null;
+
+            string delimiter = "\t";
+            if (currentLine.Substring(currentLine.Length - 1) != delimiter)
+                currentLine += delimiter;
+            DataFrame outputFrame = new DataFrame();
+            int row = 0;
+            do
+            {
+                int lastSplitPosition = 0;
+                for (int col = 0; col <= 256; col++)
+                {
+                    int splitPosition = currentLine.IndexOf(delimiter, lastSplitPosition, StringComparison.Ordinal);
+                    if (splitPosition < 0)
+                        break;
+                    int splitLength = splitPosition - lastSplitPosition;
+                    string rawField = currentLine.Substring(lastSplitPosition, splitLength);
+                    // Trim leading and trailing "..." if both are present
+                    if (rawField.StartsWith(@"""") && rawField.EndsWith(@""""))
+                        rawField = rawField.Substring(1, rawField.Length - 2).Replace("\"\"", "\"");
+                    if (outputFrame.VariableCount <= col)
+                        outputFrame.Variables.Add(new StringVariable());
+                    (outputFrame.Variables[col] as StringVariable).SetData(row, rawField);
+                    lastSplitPosition += splitLength + 1;
+                }
+                if (sr.EndOfStream)
+                    break;
+                currentLine = sr.ReadLine();
+                if (null == currentLine)
+                    break;
+
+                if (currentLine.Length > 0 && currentLine.Substring(currentLine.Length - 1) != delimiter)
+                    currentLine += delimiter;
+                row += 1;
+            } while (true);
+            return outputFrame;
+        }
+
+        private static DataFrame ImportCommaSeparated(StreamReader sr)
+        {
+            List<List<string>> rows = CsvReader.Read(sr);
+
+            int longestRowCount = 0;
+            foreach (List<string> row in rows)
+                if (row.Count > longestRowCount)
+                    longestRowCount = row.Count;
+
+            DataFrame outputFrame = new DataFrame();
+            for (int colIndex = 0; colIndex < longestRowCount; colIndex++)
+                outputFrame.Variables.Add(new StringVariable(rows.Count, null));
+
+            for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+            {
+                List<string> row = rows[rowIndex];
+                for (int colIndex = 0; colIndex < row.Count; colIndex++)
+                    (outputFrame.Variables[colIndex] as StringVariable).SetData(rowIndex, row[colIndex]);
+            }
+            return outputFrame;
+        }
 
         public static ParameterBag FileExportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
@@ -145,7 +183,7 @@ namespace StatsDirect.Builtins
                         bool first = true;
                         for (int c = 0; c < data.VariableCount; c++)
                         {
-                            StringVariable v = data.Variables[c]as StringVariable;
+                            StringVariable v = data.Variables[c] as StringVariable;
                             if (first)
                                 first = false;
                             else
@@ -161,7 +199,7 @@ namespace StatsDirect.Builtins
                             first = true;
                             for (int c = 0; c < data.VariableCount; c++)
                             {
-                                StringVariable v = data.Variables[c]as StringVariable;
+                                StringVariable v = data.Variables[c] as StringVariable;
                                 if (first)
                                     first = false;
                                 else
