@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
+  <name>Zanthro</name>
+  <friendly-name lang="en-GB">Anthropometric Z-Scores</friendly-name>
+  <help chm-id="1245" />
+  <steps>
+    <parameters>
+      <option>
+        <name>standardisation</name>
+        <prompt>Standardisation</prompt>
+        <must-request>true</must-request>
+        <default-value>weight|age</default-value>
+        <format-type>Dropdown</format-type>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+        <options>
+          <option value="arm-circumference|age|who2007">Arm circumference for age</option>
+          <option value="body-fat|age|uk1990">Body fat for age</option>
+          <option value="BMI|age|cdc2000,uk1990,who2007,whoPreTerm,whoTerm">Body Mass Index (BMI) for age</option>
+          <option value="head-circumference|age|cdc2000,who2007,whoPreTerm,whoTerm">Head circumference for age</option>
+          <option value="standing-height|age|cdc2000,uk1990,who2007,whoPreTerm,whoTerm">Height for age</option>
+          <option value="leg-length|age|uk1990">Leg length for age</option>
+          <option value="length|age|cdc2000,uk1990,who2007,whoPreTerm,whoTerm">Length for age</option>
+          <option value="sitting-height|age,uk1990">Sitting height for age</option>
+          <option value="subscapular-skinfold|age|who2007">Subscapular skinfold for age</option>
+          <option value="triceps-skinfold|age|who2007">Triceps skinfold for age</option>
+          <option value="waist|age|uk1990">Waist for age</option>
+          <option value="weight|age|cdc2000,uk1990,who2007,whoPreTerm,whoTerm">Weight for age</option>
+          <option value="weight|height|cdc2000,who2007">Weight for height</option>
+          <option value="weight|length|cdc2000,who2007">Weight for length</option>
+        </options>
+      </option>
+      <option>
+        <name>standard</name>
+        <prompt>Growth standard</prompt>
+        <must-request>true</must-request>
+        <format-type>Dropdown</format-type>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+        <options>
+          <option value="uk">British 1990</option>
+          <option value="us">US CDC 2000</option>
+          <option value="who">WHO 2007</option>
+          <option value="uk-who-preterm">WHO Preterm</option>
+          <option value="uk-who-term">WHO Term</option>
+        </options>
+      </option>
+      <option>
+        <name>age-unit</name>
+        <prompt>Age units</prompt>
+        <must-request>true</must-request>
+        <acquire-if-true>=parameters.ContainsKey("standardisation") &amp;&amp; null != parameters["standardisation"] &amp;&amp; "age".Equals(parameters["standardisation"].AsString.Split(new char[] { '|' })[1])</acquire-if-true>
+        <default-value>year</default-value>
+        <format-type>Dropdown</format-type>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+        <options>
+          <option value="year">Years</option>
+          <option value="month">Months</option>
+          <option value="week">Weeks</option>
+          <option value="day">Days</option>
+        </options>
+      </option>
+      <option>
+        <name>sex-coding</name>
+        <prompt>Sex categories</prompt>
+        <must-request>true</must-request>
+        <default-value>is-male</default-value>
+        <format-type>Dropdown</format-type>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+        <options>
+          <option value="f0m1">0 (female) / 1 (male)</option>
+          <option value="m0f1">0 (male) / 1 (female)</option>
+          <option value="f1m2">1 (female) / 2 (male)</option>
+          <option value="m1f2">1 (male) / 2 (female)</option>
+          <option value="mf">M / F (case-insensitive)</option>
+          <option value="malefemale">Male / Female (case-insensitive)</option>
+        </options>
+      </option>
+      <option>
+        <name>z-correction</name>
+        <prompt>Corrections and missing data</prompt>
+        <must-request>true</must-request>
+        <default-value>who</default-value>
+        <format-type>Dropdown</format-type>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+        <options>
+          <option value="all">Show all z-values uncorrected, even extreme ones</option>
+          <option value="censor-5sd">Censor values more than +/-5 SD from mean</option>
+          <option value="censor-3sd">Censor values more than +/-3 SD from mean</option>
+          <option value="who">Use WHO corrections for values more than +/-3 SD from mean</option>
+        </options>
+      </option>
+      <option>
+        <name>age-correction</name>
+        <prompt>Correction for gestational age</prompt>
+        <must-request>true</must-request>
+        <default-value>none</default-value>
+        <format-type>Dropdown</format-type>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+        <options>
+          <option value="fixed">40 weeks (term)</option>
+          <option value="variable">Supply a column of gestational ages</option>
+        </options>
+      </option>
+      <frame>
+        <name>data</name>
+        <prompt>="Select data for " + parameters["standardisation"].AsString.Split(new char[] { '|' })[0].Replace("-", " ")</prompt>
+        <mode>NumericReplaceMissing</mode>
+        <clear-selection-first>true</clear-selection-first>
+        <min-columns>1</min-columns>
+        <max-columns>1</max-columns>
+        <ask-for-group-id>false</ask-for-group-id>
+        <validators>
+          <validator>Positive</validator>
+        </validators>
+      </frame>
+      <frame>
+        <name>standardise</name>
+        <prompt>="Select data for " + parameters["standardisation"].AsString.Split(new char[] { '|' })[0].Replace("-", " ") + ("age".Equals(parameters["standardisation"].AsString.Split(new char[] { '|' })[1]) ? " (" + parameters["age-unit"].AsString + "s)" : "")</prompt>
+        <mode>NumericReplaceMissing</mode>
+        <clear-selection-first>true</clear-selection-first>
+        <min-columns>1</min-columns>
+        <max-columns>1</max-columns>
+        <ask-for-group-id>false</ask-for-group-id>
+        <validators>
+          <validator>Positive</validator>
+        </validators>
+      </frame>
+      <frame>
+        <name>sex</name>
+        <prompt>Select data for sex</prompt>
+        <mode>Text</mode>
+        <clear-selection-first>true</clear-selection-first>
+        <min-columns>1</min-columns>
+        <max-columns>1</max-columns>
+        <ask-for-group-id>false</ask-for-group-id>
+      </frame>
+      <frame>
+        <name>gestational-age</name>
+        <prompt>Select data for gestaational age (weeks)</prompt>
+        <mode>NumericReplaceMissing</mode>
+        <clear-selection-first>true</clear-selection-first>
+        <min-columns>1</min-columns>
+        <max-columns>1</max-columns>
+        <ask-for-group-id>false</ask-for-group-id>
+        <acquire-if-true>=parameters.ContainsKey("age-correction") &amp;&amp; null != parameters["age-correction"] &amp;&amp; "variable".Equals(parameters["age-correction"].AsString)</acquire-if-true>
+      </frame>
+      <boolean>
+        <name>scrap</name>
+        <prompt>Here's where we'd do the calculation...</prompt>
+      </boolean>
+    </parameters>
+    <builtin function-name="rptZanthro" />
+    <report type="text/rtf" filename="zanthro.rtf" />
+    <output-frame frame-name="output" />
+  </steps>
+</operation>

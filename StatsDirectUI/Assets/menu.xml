@@ -109,6 +109,7 @@
     <menu-item label="&amp;Analysis">
       <help chm-id="1016" />
       <sub-items>
+        <menu-item label="&amp;Anthropometric Z-Scores" operation="Zanthro" />
         <menu-item label="&amp;Exact Tests on Counts">
           <help chm-id="1107" />
           <sub-items>

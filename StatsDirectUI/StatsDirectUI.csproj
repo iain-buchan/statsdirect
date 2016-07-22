@@ -84,7 +84,7 @@
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>BasicCorrectnessRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
@@ -262,6 +262,13 @@
     <Compile Include="Charting\SurvivalOptions.cs" />
     <Compile Include="Charting\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />
+    <Compile Include="CsvParser\Csv.g4.lexer.cs">
+      <DependentUpon>Csv.g4</DependentUpon>
+    </Compile>
+    <Compile Include="CsvParser\Csv.g4.parser.cs">
+      <DependentUpon>Csv.g4</DependentUpon>
+    </Compile>
+    <Compile Include="CsvParser\CsvReader.cs" />
     <Compile Include="Data\ClassifierVariable.cs" />
     <Compile Include="Data\ColumnData.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
@@ -1099,6 +1106,10 @@
       <Generator>MSBuild:Compile</Generator>
       <CustomToolNamespace>StatsDirect.R</CustomToolNamespace>
     </Antlr4>
+    <Antlr4 Include="CsvParser\Csv.g4">
+      <Generator>MSBuild:Compile</Generator>
+      <CustomToolNamespace>StatsDirect.CsvParser</CustomToolNamespace>
+    </Antlr4>
     <None Include="packages.config" />
     <None Include="UI\Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -1296,6 +1307,7 @@
     </Content>
     <Content Include="Assets\Operations\PCRCovarianceNoFollowOns.xml" />
     <Content Include="Assets\Operations\SortByExpression.xml" />
+    <Content Include="Assets\Operations\Zanthro.xml" />
     <Content Include="Graphics\binoc.ico" />
     <Content Include="Graphics\bold.ico" />
     <Content Include="Graphics\bulleted_list.png" />
@@ -1750,7 +1762,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
