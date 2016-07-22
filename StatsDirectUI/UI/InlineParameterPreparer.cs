@@ -55,10 +55,7 @@ namespace StatsDirect.UI
                     Tag = parameter,
                     Padding = new Padding(0, 6, 0, 3),
                     AutoSize = true,
-                    Text =
-                                        parameter.HasPrompt
-                                            ? parameter.Prompt(Processor, Context)
-                                            : "Confidence (%)"
+                    Text = parameter.Prompt(Processor, Context, "Confidence (%)")
                 };
                 tlp.Controls.Add(lbl);
                 MaybeAddHelpTip(lbl, parameter);
@@ -216,11 +213,7 @@ namespace StatsDirect.UI
                 }
             }
 
-            Label lbl = new Label { Tag = parameter, Padding = new Padding(0, 6, 0, 3), AutoSize = true };
-            if (parameter.HasPrompt)
-                lbl.Text = parameter.Prompt(Processor, Context) + suffix;
-            else
-                lbl.Text = suffix;
+            Label lbl = new Label { Tag = parameter, Padding = new Padding(0, 6, 0, 3), AutoSize = true, Text = parameter.Prompt(Processor, Context, string.Empty) + suffix };
 
             MaybeAddHelpTip(lbl, parameter);
             MaybeAddHelpTip(txt, parameter);
@@ -336,7 +329,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(Processor, Context) : string.Empty
+                Text = parameter.Prompt(Processor, Context, string.Empty)
             };
             tlp.Controls.Add(lbl);
         }
@@ -383,7 +376,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(Processor, Context) + suffix : suffix
+                Text = parameter.Prompt(Processor, Context, string.Empty) + suffix
             };
 
             MaybeAddHelpTip(lbl, parameter);
@@ -405,22 +398,19 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
 
-            if (parameter.HasPrompt)
+            string prompt = parameter.Prompt(Processor, Context);
+            if (!string.IsNullOrEmpty(prompt))
             {
-                string prompt = parameter.Prompt(Processor, Context);
-                if (!string.IsNullOrEmpty(prompt))
+                Label lbl = new Label
                 {
-                    Label lbl = new Label
-                    {
-                        Tag = parameter,
-                        Padding = new Padding(0, 6, 0, 3),
-                        AutoSize = true,
-                        MaximumSize = new Size(500, 500),
-                        Text = prompt
-                    };
-                    tlp.Controls.Add(lbl);
-                    tlp.SetColumnSpan(lbl, 2);
-                }
+                    Tag = parameter,
+                    Padding = new Padding(0, 6, 0, 3),
+                    AutoSize = true,
+                    MaximumSize = new Size(500, 500),
+                    Text = prompt
+                };
+                tlp.Controls.Add(lbl);
+                tlp.SetColumnSpan(lbl, 2);
             }
 
             TableLayoutPanel panelOptions = new TableLayoutPanel
@@ -561,7 +551,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(Processor, Context) : string.Empty
+                Text = parameter.Prompt(Processor, Context, string.Empty)
             };
 
             MaybeAddHelpTip(lbl, parameter);
@@ -866,7 +856,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(Processor, Context) : string.Empty
+                Text = parameter.Prompt(Processor, Context, string.Empty)
             };
             tlp.Controls.Add(lbl);
         }
@@ -914,7 +904,7 @@ namespace StatsDirect.UI
                             Padding = new Padding(0, 6, 0, 3),
                             AutoSize = true,
                             MaximumSize = new Size(500, 500),
-                            Text = parameter.HasPrompt ? parameter.Prompt(Processor, Context) : string.Empty
+                            Text = parameter.Prompt(Processor, Context, string.Empty)
                         };
 
                         if (parameter.PromptPrecedesParameter)
@@ -936,20 +926,17 @@ namespace StatsDirect.UI
                 case OptionFormatType.Radio:
                     {
                         GroupBox groupBox = null;
-                        if (parameter.HasPrompt)
+                        string prompt = parameter.Prompt(Processor, Context);
+                        if (!string.IsNullOrEmpty(prompt))
                         {
-                            string prompt = parameter.Prompt(Processor, Context);
-                            if (!string.IsNullOrEmpty(prompt))
+                            groupBox = new SDGroupBox
                             {
-                                groupBox = new SDGroupBox
-                                {
-                                    Tag = parameter,
-                                    Padding = new Padding(3, 3, 3, 3),
-                                    AutoSize = true,
-                                    Text = prompt
-                                };
-                                // Add later so that autosizing can size the contained controls as well
-                            }
+                                Tag = parameter,
+                                Padding = new Padding(3, 3, 3, 3),
+                                AutoSize = true,
+                                Text = prompt
+                            };
+                            // Add later so that autosizing can size the contained controls as well
                         }
 
                         TableLayoutPanel panelOptions = new TableLayoutPanel
@@ -1067,7 +1054,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(Processor, Context) : string.Empty
+                Text = parameter.Prompt(Processor, Context, string.Empty)
             };
             tlp.Controls.Add(lbl);
         }
@@ -1192,7 +1179,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.HasPrompt ? parameter.Prompt(Processor, Context) : string.Empty
+                Text = parameter.Prompt(Processor, Context, string.Empty)
             };
             tlp.Controls.Add(lbl);
             MaybeAddHelpTip(lbl, parameter);
@@ -1245,8 +1232,9 @@ namespace StatsDirect.UI
             {
                 Padding = new Padding(3, 3, 3, 3),
                 AutoSize = true,
-                Tag = parameter
-            };
+                Tag = parameter,
+                Text = parameter.Prompt(Processor, Context, string.Empty)
+        };
             AddAppropriateEventHandlersTo(cb);
             if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsBoolean)
             {
@@ -1263,7 +1251,6 @@ namespace StatsDirect.UI
                 else
                     cb.Checked = false;
             }
-            cb.Text = parameter.HasPrompt ? parameter.Prompt(Processor, Context) : string.Empty;
             MaybeAddHelpTip(cb, parameter);
             tlp.Controls.Add(cb);
             tlp.SetColumnSpan(cb, 2);

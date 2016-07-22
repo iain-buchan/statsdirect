@@ -2402,7 +2402,7 @@ namespace StatsDirect.UI
                                 // If there's a title, use it as the title of the parameter
                                 return p.Title;
                             }
-                            return p.HasPrompt ? p.Prompt(new TemplateProcessor(SdApplication.SoleInstance), context) : null;
+                            return p.Prompt(new TemplateProcessor(SdApplication.SoleInstance), context);
                         }
                     }
                 }

@@ -35,10 +35,10 @@ namespace StatsDirect.Templates
             return (bool)processor.Evaluate(AcquireIfTrueExpression, parameters);
         }
 
-        public string Prompt(ITemplateProcessor processor, ParameterBag parameters)
+        public string Prompt(ITemplateProcessor processor, ParameterBag parameters, string defaultPrompt = null)
         {
             if (null == PromptExpression || null == PromptExpression.Body)
-                return null;
+                return defaultPrompt;
             return (string)processor.Evaluate(PromptExpression, parameters);
         }
 
