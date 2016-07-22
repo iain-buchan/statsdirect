@@ -343,7 +343,7 @@ namespace StatsDirect.UI
             lastSeenMenuItemTag = ToTagObject((ToolStripItem)sender);
         }
 
-        public SDMenuItem LoadMenuItems(string pathName)
+        public static SDMenuItem LoadMenuItems(string pathName)
         {
             XmlSerializer s = new XmlSerializer(typeof(SDMenuItem));
             using (TextReader r = new StreamReader(pathName))
@@ -352,7 +352,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public SDMenuItem UserMenuItems()
+        public static SDMenuItem UserMenuItems()
         {
             List<SDMenuItem> items = new List<SDMenuItem>();
 
@@ -1359,7 +1359,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool FindStatsDirect2(out string sd2Path)
+        private static bool FindStatsDirect2(out string sd2Path)
         {
             string programFilesFolder = Environment.GetFolderPath(Environment.Is64BitOperatingSystem ? Environment.SpecialFolder.ProgramFilesX86 : Environment.SpecialFolder.ProgramFiles);
             string statsDirectFolder = Path.Combine(programFilesFolder, "StatsDirect");
@@ -2597,7 +2597,7 @@ namespace StatsDirect.UI
         /// <param name="c">The control to be tested</param>
         /// <param name="outputControlsAreUseful"></param>
         /// <returns>true if the control is useful, false if not</returns>
-        internal bool IsUsefulControl(Control c, bool outputControlsAreUseful)
+        internal static bool IsUsefulControl(Control c, bool outputControlsAreUseful)
         {
             if (c is Label
                 || c is TableLayoutPanel
@@ -2905,9 +2905,9 @@ namespace StatsDirect.UI
             }
         }
 
-        public void EnsureBuiltInMenuItemsCanShowHelp(MenuStrip menuStrip)
+        public void EnsureBuiltInMenuItemsCanShowHelp(ToolStrip toolStrip)
         {
-            foreach (ToolStripItem candidate in menuStrip.Items)
+            foreach (ToolStripItem candidate in toolStrip.Items)
             {
                 if (candidate.Tag is string && ((string)(candidate.Tag)).StartsWith("#{") && ((string)(candidate.Tag)).Contains("help="))
                 {
@@ -3537,7 +3537,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// An exception has occurred that we don't want to present to the user.  Silently discard it.  A future implementation might log it for later debug purposes.
         /// </summary>
-        internal void EatException(Exception ex)
+        internal static void EatException(Exception ex)
         {
         }
 
@@ -4187,7 +4187,7 @@ namespace StatsDirect.UI
             StartRGui();
         }
 
-        private void StartRGui()
+        private static void StartRGui()
         {
             try
             {

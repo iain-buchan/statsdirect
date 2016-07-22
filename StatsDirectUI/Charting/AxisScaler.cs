@@ -5,7 +5,7 @@ using StatsDirect.Numerics;
 
 namespace StatsDirect.Charting
 {
-    public class AxisScaler
+    public static class AxisScaler
     {
         ///  <summary>
         ///  Try to get a neat axis division suitable for values between qmin and qmax.

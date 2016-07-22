@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 namespace StatsDirect.Builtins
 {
-    public class Nonparametric
+    public static class Nonparametric
     {
 
         ///  <summary>

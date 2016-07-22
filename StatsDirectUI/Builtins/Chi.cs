@@ -9,7 +9,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public class Chi
+    public static class Chi
     {
         public static ParameterBag RptChi2By2(ITemplateHost host, ParameterBag parameters)
         {

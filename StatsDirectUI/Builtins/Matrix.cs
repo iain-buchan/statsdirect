@@ -4,7 +4,7 @@ using StatsDirect.Numerics;
 
 namespace StatsDirect.Builtins
 {
-    public class Matrix  
+    public static class Matrix  
     { 
         
         ///  <summary>

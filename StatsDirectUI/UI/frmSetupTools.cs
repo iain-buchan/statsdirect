@@ -53,7 +53,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private StringCollection ParseXmlToStringCollection(string rawXml)
+        private static StringCollection ParseXmlToStringCollection(string rawXml)
         {
             XmlDocument doc = new XmlDocument();
             using (StringReader sr = new StringReader(rawXml))

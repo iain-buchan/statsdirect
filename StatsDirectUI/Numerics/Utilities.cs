@@ -1,6 +1,6 @@
 ﻿namespace StatsDirect.Numerics
 {
-    public class Utilities
+    public static class Utilities
     {
         /// <summary>
         /// Returns an array of (potentially re-based) double[] in the same order as inputs, but with rows removed where any of the input values on a row are missing.

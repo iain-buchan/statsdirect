@@ -8,7 +8,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public class Exact
+    public static class Exact
     {
         public static ParameterBag RptExactSign(ITemplateHost host, ParameterBag parameters)
         {

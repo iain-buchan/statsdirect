@@ -230,7 +230,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool ShouldShowScaleTextDirection
+        private static bool ShouldShowScaleTextDirection
         {
             get { return true; }
         }

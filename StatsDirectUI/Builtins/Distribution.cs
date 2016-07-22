@@ -2,7 +2,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Builtins
 {
-    public class Distribution
+    public static class Distribution
     {
         public static ParameterBag DistNormal(ITemplateHost host, ParameterBag parameters)
         {

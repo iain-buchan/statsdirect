@@ -8,7 +8,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public class Anova
+    public static class Anova
     {
         ///  <summary>
         ///  TWO-WAY HIERARCHICAL ANOVA - OK FOR UNEQUAL SUBGROUPS

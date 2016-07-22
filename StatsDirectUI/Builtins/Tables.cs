@@ -8,7 +8,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public class Tables
+    public static class Tables
     {
         private struct Namevar
         {
@@ -318,7 +318,7 @@ namespace StatsDirect.Builtins
             int g = 1;
             for (int i = xcats + ycats - 1 + lowerBound; i >= lowerBound; i--)
             {
-                if (maxcat[i].Ti == string.Empty)
+                if (string.IsNullOrEmpty(maxcat[i].Ti))
                 {
                     g = i + 1;
                     break;

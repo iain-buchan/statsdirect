@@ -77,7 +77,7 @@ namespace StatsDirect.UI
             return true;
         }
 
-        private void DoOrWarn(Action func, string explanation)
+        private static void DoOrWarn(Action func, string explanation)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -93,7 +93,7 @@ namespace StatsDirect.UI
 #endif
         }
 
-        private void DoOrSwallow(Action func)
+        private static void DoOrSwallow(Action func)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -983,7 +983,7 @@ namespace StatsDirect.UI
                 FixupTable(cell.Table);
         }
 
-        private void FixupTable(Table table)
+        private static void FixupTable(Table table)
         {
             table.BeginUpdate();
             try
@@ -1006,8 +1006,6 @@ namespace StatsDirect.UI
         private void FixupNewTables()
         {
             Document doc = richEditControl1.Document;
-            string txt = doc.GetText(doc.Range);
-            string rtf = doc.GetRtfText(doc.Range);
             int startPos = doc.Range.Start.ToInt();
             int length = doc.Range.End.ToInt() - startPos;
             DocumentRange range = doc.CreateRange(startPos, length);

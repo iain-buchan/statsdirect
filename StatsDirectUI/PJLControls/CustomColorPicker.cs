@@ -520,7 +520,7 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void SetCoordBound(ref int coord)
+        private static void SetCoordBound(ref int coord)
         {
             if (coord < 0)
                 coord = 0;

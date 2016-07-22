@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
-    public class ExcelAddInManager
+    public static class ExcelAddInManager
     {
         private const string Sdxla = "StatsDirect3ExcelLink.xla";
 

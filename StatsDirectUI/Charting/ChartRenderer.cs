@@ -4803,7 +4803,7 @@ namespace StatsDirect.Charting
         ///  <value></value>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        public Color grBlack
+        public static Color grBlack
         {
             get
             {
@@ -6131,7 +6131,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        private string MakeTitle(string useIfAvailable, string defaultTitle)
+        private static string MakeTitle(string useIfAvailable, string defaultTitle)
         {
             if (string.IsNullOrWhiteSpace(useIfAvailable))
                 return defaultTitle;
@@ -7712,7 +7712,7 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-        private ScaleParameters GetGiniScaleParameters()
+        private static ScaleParameters GetGiniScaleParameters()
         {
             return new ScaleParameters
             {
@@ -8389,7 +8389,7 @@ namespace StatsDirect.Charting
             title = "Bias assessment plot";
         }
 
-        private double ma_plot_se(double y, double z, int plot_method)
+        private static double ma_plot_se(double y, double z, int plot_method)
         {
 
             switch (plot_method)
@@ -8413,7 +8413,7 @@ namespace StatsDirect.Charting
         ///  <param name="Weight"></param>
         ///  <param name="ti"></param>
         ///  <remarks></remarks>
-        private ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord thisData, double Weight, string ti)
+        private static ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord thisData, double Weight, string ti)
         {
             ROCCutoff payload = new ROCCutoff { SeriesRecord = thisData, Weight = Weight, Title = ti };
             host.Amend(payload, null);
@@ -9101,7 +9101,7 @@ namespace StatsDirect.Charting
             ifault = false;
         }
 
-        private void CreateRatioLogScale(out int tics, ref double[] tic,ref double min, ref double max, out double scalemin, out double scalemax)
+        private static void CreateRatioLogScale(out int tics, ref double[] tic,ref double min, ref double max, out double scalemin, out double scalemax)
         {
            
             double top=max, bot=min;

@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace StatsDirect.Templates
 {
-    public sealed class TemplateFactory
+    public static class TemplateFactory
     {
         private static IDictionary<string, Operation> operations;
         private static IList<Operation> userOperations;

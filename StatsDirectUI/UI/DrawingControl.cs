@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
-    class DrawingControl
+    static class DrawingControl
     {
         private const int WM_SETREDRAW = 11;
 

@@ -162,7 +162,7 @@ namespace StatsDirect.Templates
         /// Compile the script.  Throw an exception if the compile fails.
         /// </summary>
         /// <returns></returns>
-        private CompiledScript CompileDotNet(string scriptLanguage, string code, ScriptType scriptType, string entryPoint)
+        private static CompiledScript CompileDotNet(string scriptLanguage, string code, ScriptType scriptType, string entryPoint)
         {
             // Build up the source in sourceBuilder
             StringBuilder sourceBuilder = new StringBuilder();

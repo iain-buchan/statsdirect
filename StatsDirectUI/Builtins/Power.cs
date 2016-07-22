@@ -3,7 +3,7 @@ using StatsDirect.Numerics;
 using System;
 namespace StatsDirect.Builtins
 {
-    public class Power  
+    public static class Power  
     { 
         ///  <summary>
         ///  power of a test for simple correlation

@@ -1,7 +1,7 @@
 namespace StatsDirect.Numerics
 {
     using System;
-    public class Constant
+    public static class Constant
     {
         //IEEE 754 floating point constants as per float.h in other C
         //compatability with old netlib.org machine constant routine
@@ -48,7 +48,7 @@ namespace StatsDirect.Numerics
     /// <summary>
     /// Core numerical functions for .Net statistical algorithms, Iain Buchan, July 2003.
     /// </summary>
-    public class Base
+    public static class Base
     {
         /// <summary>
         /// Default seed for random number generators.
@@ -256,7 +256,7 @@ namespace StatsDirect.Numerics
     /// <summary>
     /// Basic probability distribution functions
     /// </summary>
-    public class PDF
+    public static class PDF
     {
         /// <summary>
         /// normal deviate Z for a given lower tail area of P; Z is accurate to about 1 part in 10**16.  This version is for the many users who are not interested in ifault.

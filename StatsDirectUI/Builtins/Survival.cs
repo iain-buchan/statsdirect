@@ -8,7 +8,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public class Survival
+    public static class Survival
     {
         private class Trisvar
         {
@@ -19,7 +19,7 @@ namespace StatsDirect.Builtins
 
         private class TrisvarByTmThenGp : IComparer<Trisvar>
         {
-            private int Compare(Trisvar x, Trisvar y)
+            private static int Compare(Trisvar x, Trisvar y)
             {
                 //  First check TM
                 if (x.Tm > y.Tm)
@@ -47,7 +47,7 @@ namespace StatsDirect.Builtins
 
         private class TrisvarByTm : IComparer<Trisvar>
         {
-            private int Compare(Trisvar x, Trisvar y)
+            private static int Compare(Trisvar x, Trisvar y)
             {
                 //  First check TM
                 if (x.Tm > y.Tm)

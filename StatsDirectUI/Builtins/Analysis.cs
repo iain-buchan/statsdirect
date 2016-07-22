@@ -8,7 +8,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public class Analysis
+    public static class Analysis
     {
         public static ParameterBag RptRateDirectStd(ITemplateHost host, ParameterBag parameters)
         {

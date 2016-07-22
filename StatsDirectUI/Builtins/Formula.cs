@@ -6,7 +6,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Builtins
 {
-    public class Formula
+    public static class Formula
     {
         private struct TwoLng : IComparable<TwoLng>
         {

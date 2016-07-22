@@ -7,7 +7,7 @@ using System;
 
 namespace StatsDirect.Builtins
 {
-    public class Agreement
+    public static class Agreement
     {
 
         public static ParameterBag RptUniversalAgreement(ITemplateHost host, ParameterBag parameters)

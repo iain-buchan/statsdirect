@@ -28,7 +28,7 @@ namespace StatsDirect.Expressions
             throw new Exception("Type mismatch: " + Operator.ToString() + " doesn't expect parameters of type " + leftType.ToString() + " and " + rightType.ToString());
         }
 
-        private bool CanBePromotedFromTo(DataType from, DataType to)
+        private static bool CanBePromotedFromTo(DataType from, DataType to)
         {
             // Common case: Identical
             if (from == to)

@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace StatsDirect.UI
 {
-    class IpcSender
+    static class IpcSender
     {
         /// <summary>
         /// If another StatsDirect is open, this tells it to open the specified file and returns true.  If none is open, we have to open the file; return false;

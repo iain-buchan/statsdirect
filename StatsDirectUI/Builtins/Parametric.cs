@@ -8,7 +8,7 @@ using StatsDirect.Charting;
 
 namespace StatsDirect.Builtins
 {
-    public class Parametric
+    public static class Parametric
     {
         private static void univariate(double[] arr1, int nx, out double sum, out double mean, out double var)
         {

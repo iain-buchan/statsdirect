@@ -6,7 +6,7 @@ using StatsDirect.Utilities;
 using System;
 namespace StatsDirect.Builtins
 {
-    public class Random  
+    public static class Random  
     { 
         private const string BADPARA = "The parameters are not acceptable."; 
         

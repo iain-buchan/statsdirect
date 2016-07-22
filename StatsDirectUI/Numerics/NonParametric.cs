@@ -2,7 +2,7 @@ using System;
 
 namespace StatsDirect.Numerics
 {
-    public class NonParametric
+    public static class NonParametric
     {
         ///  <summary>
         ///  

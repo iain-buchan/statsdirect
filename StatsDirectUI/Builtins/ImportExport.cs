@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
-    public class ImportExport
+    public static class ImportExport
     {
         public static ParameterBag FileImportWorksheet(ITemplateHost host, ParameterBag parameters)
         {

@@ -104,7 +104,7 @@ namespace StatsDirect.Expressions
                 return RenderInNewContext(node);
         }
 
-        private bool GetTypePromotionStrings(DataType from, DataType to, out string prePromote, out string postPromote)
+        private static bool GetTypePromotionStrings(DataType from, DataType to, out string prePromote, out string postPromote)
         {
             // Integers can be promoted to doubles
             if (from == DataType.Integer && to == DataType.Double)

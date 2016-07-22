@@ -8,7 +8,7 @@ namespace StatsDirect.UI
     /// <summary>
     /// This class spawns a thread that listens for IPC from other StatsDirect instances and processes the messages on receipt.
     /// </summary>
-    class IpcListener
+    static class IpcListener
     {
         public const string WAIT_SEMAPHORE_NAME = "StatsDirect3IPCWait";
         public const string MEMORY_SEMAPHORE_NAME = "StatsDirect3IPCMemoryAccess";

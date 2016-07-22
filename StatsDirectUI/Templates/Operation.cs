@@ -185,7 +185,7 @@ namespace StatsDirect.Templates
             get { return steps; }
         }
 
-        private string[] ListToStringArray(IList<string> names)
+        private static string[] ListToStringArray(IList<string> names)
         {
             string[] nameArray = new string[names.Count];
             for (int i = 0; i < names.Count; i++)

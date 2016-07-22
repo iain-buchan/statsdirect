@@ -46,7 +46,7 @@ namespace StatsDirect.UI
             }
             try
             {
-                var addresses = Dns.EndGetHostAddresses(ar);
+                Dns.EndGetHostAddresses(ar);
                 UpdateStatus(false, false, false, "Contacting " + DnsDomain + "...");
 
                 webClient = new WebClient();

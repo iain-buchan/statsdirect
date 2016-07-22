@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 namespace StatsDirect.Builtins
 {
-    public class Regress
+    public static class Regress
     {
         ///  <summary>
         ///  The equivalent of the PASS_* variables in SD2, so PASS_X is X in this class

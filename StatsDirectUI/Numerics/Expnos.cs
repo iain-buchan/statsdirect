@@ -2,7 +2,7 @@
 
 namespace StatsDirect.Numerics
 {
-    public class Expnos
+    public static class Expnos
     {
         private static readonly double[] q = { Double.NaN, // 1-based
             -0.2995732273553875e+01, -0.2302585092993988e+01,

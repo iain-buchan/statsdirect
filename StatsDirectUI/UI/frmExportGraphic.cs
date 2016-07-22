@@ -216,7 +216,7 @@ namespace StatsDirect.UI
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        private Image WithWhiteBackground(Image original, int width, int height)
+        private static Image WithWhiteBackground(Image original, int width, int height)
         {
             Bitmap b = new Bitmap(width, height);
             using (Graphics g = Graphics.FromImage(b))

@@ -12,7 +12,7 @@ using System.Text;
 
 namespace StatsDirect.R
 {
-    public class RController
+    public static class RController
     {
         const string RSCRIPT_EXE_NAME = "Rscript.exe";
         const string RSCRIPT_NAME = "script.r";

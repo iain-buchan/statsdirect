@@ -40,7 +40,7 @@ namespace StatsDirect.Builtins
         public double[] ymean;
     }
 
-    public class RegressRpt
+    public static class RegressRpt
     {
         public static ParameterBag RptGroupedLinearity(ITemplateHost host, ParameterBag parameters)
         {

@@ -20,7 +20,7 @@ namespace StatsDirect.Builtins
         /// </summary>
         public bool TreatAsContinuous { get; set; }
 
-        public string FillerToUse
+        public static string FillerToUse
         {
             get
             {

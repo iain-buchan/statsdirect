@@ -8,7 +8,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public class Rates
+    public static class Rates
     {
 
         ///  <summary>

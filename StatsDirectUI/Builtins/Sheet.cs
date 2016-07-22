@@ -12,7 +12,7 @@ using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
-    public class Sheet
+    public static class Sheet
     {
         private struct Catvar : IComparable<Catvar>
         {

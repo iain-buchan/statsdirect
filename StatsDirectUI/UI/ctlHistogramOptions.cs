@@ -87,7 +87,7 @@ namespace StatsDirect.UI
             return optionsAreOk;
         }
 
-        private void FailAndHighlight(TextBox toHighlight)
+        private static void FailAndHighlight(TextBox toHighlight)
         {
             SystemSounds.Exclamation.Play();
             toHighlight.Focus();

@@ -57,7 +57,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private MajorMinorPoint GetVersion3(string latestVersionLine)
+        private static MajorMinorPoint GetVersion3(string latestVersionLine)
         {
             Regex versionSpotter = new Regex("[0-9]+\\.[0-9]+\\.[0-9]+");
             MatchCollection matches = versionSpotter.Matches(latestVersionLine);

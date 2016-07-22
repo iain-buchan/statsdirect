@@ -8,7 +8,7 @@ namespace StatsDirect.UI
     /// Unpleasant win32-based hack for getting metafiles onto the clipboard - the .Net clipboard format for metafiles is broken as at 2011-04.
     /// </summary>
     /// <remarks>From http://support.microsoft.com/kb/323530 </remarks>
-    class ClipboardMetafileHelper
+    static class ClipboardMetafileHelper
     {
         private static class NativeMethods
         {

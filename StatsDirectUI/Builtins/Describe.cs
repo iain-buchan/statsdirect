@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using StatsDirect.Charting;
 namespace StatsDirect.Builtins
 {
-    public class Describe
+    public static class Describe
     {
         private class SortGroupByTitleAscending : IComparer<Group>
         {

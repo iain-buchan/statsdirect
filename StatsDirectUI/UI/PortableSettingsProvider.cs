@@ -195,7 +195,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool IsRoaming(SettingsProperty prop)
+        private static bool IsRoaming(SettingsProperty prop)
         {
             // Determine if the setting is marked as Roaming
             foreach (DictionaryEntry d in prop.Attributes)

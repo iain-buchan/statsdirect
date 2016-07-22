@@ -180,7 +180,7 @@ namespace StatsDirect.Calculator
             cmdDelete.Enabled = true;
         }
 
-        private void HandleException(Exception ex)
+        private static void HandleException(Exception ex)
         {
             SdApplication.SoleInstance.FriendlyError("Couldn't evaluate expression", ex, false);
         }

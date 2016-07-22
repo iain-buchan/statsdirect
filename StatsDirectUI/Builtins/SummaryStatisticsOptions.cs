@@ -6,7 +6,7 @@ namespace StatsDirect.Builtins
     {
         public string Text;
 
-        public string FillerToUse
+        public static string FillerToUse
         {
             get
             {

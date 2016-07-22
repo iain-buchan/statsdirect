@@ -418,7 +418,7 @@ namespace StatsDirect.UI
             FillFormFromAxisScaleParameters(scaleParameters.Y, ctlAxisOptions.Y);
         }
 
-        private void FillFormFromAxisScaleParameters(AxisScaleParameters asp, ctlOneAxisOptions ao)
+        private static void FillFormFromAxisScaleParameters(AxisScaleParameters asp, ctlOneAxisOptions ao)
         {
             ao.AllowedScaleTypes = asp.AllowedScaleTypes;
             ao.ScaleType = asp.ScaleType;

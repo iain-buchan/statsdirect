@@ -184,7 +184,7 @@ namespace StatsDirect.Templates
             return ChartOptionProcessor.PreprocessChartOptions(step, parameters, definition, dataName, host);
         }
 
-        private ScaleParameters MaybeFindScaleParameters(ChartStep step, ParameterBag parameters, bool isRedo)
+        private static ScaleParameters MaybeFindScaleParameters(ChartStep step, ParameterBag parameters, bool isRedo)
         {
             // If we're redoing a previous operation, we should in theory have the previous ScaleParameters.  Go look!
             if (isRedo)

@@ -3,7 +3,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Builtins
 {
-    public class Registry
+    public static class Registry
     {
         /// <summary>
         /// Returns a mapping of function names to their bodies.

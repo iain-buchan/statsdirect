@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace StatsDirect.Configuration
 {
-    public class SDConfiguration
+    public static class SDConfiguration
     {
         private const string STATSDIRECT_FOLDER_NAME = "StatsDirect";
         private const string R_FOLDER_NAME = "R";

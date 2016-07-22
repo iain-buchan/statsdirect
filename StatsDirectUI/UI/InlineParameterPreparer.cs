@@ -1316,7 +1316,7 @@ namespace StatsDirect.UI
                     next = Form.GetNextControl(next, true);
                     if (next == c)
                         break;
-                } while (!Form.IsUsefulControl(next, false));
+                } while (!frmMain.IsUsefulControl(next, false));
 
                 // If we've landed on the Calculate, we should calculate.
                 if (Form.IsCalculateButton(next))
@@ -1512,7 +1512,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                Form.EatException(ex);
+                frmMain.EatException(ex);
             }
         }
 

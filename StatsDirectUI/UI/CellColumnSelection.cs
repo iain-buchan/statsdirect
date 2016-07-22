@@ -141,7 +141,7 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="candidateTitle"></param>
         /// <returns></returns>
-        private string SafeTitle(string candidateTitle)
+        private static string SafeTitle(string candidateTitle)
         {
             StringBuilder sb = new StringBuilder();
             foreach (char ch in candidateTitle)

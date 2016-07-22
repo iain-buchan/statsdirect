@@ -10,11 +10,11 @@ using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
-    public class Coxreg
+    public static class Coxreg
     {
         private class CoxpByStratumTimeThenExb : IComparer<CoxP>
         {
-            private int Compare(CoxP x, CoxP y)
+            private static int Compare(CoxP x, CoxP y)
             {
                 //  First check Stratum
                 if (x.Stratum > y.Stratum)
@@ -48,7 +48,7 @@ namespace StatsDirect.Builtins
 
         private class CoxpByStratumThenTime : IComparer<CoxP>
         {
-            private int Compare(CoxP x, CoxP y)
+            private static int Compare(CoxP x, CoxP y)
             {
                 //  First check stratum
                 if (x.Stratum > y.Stratum)
@@ -76,7 +76,7 @@ namespace StatsDirect.Builtins
 
         private class CoxpByIdThenTm : IComparer<CoxP>
         {
-            private int Compare(CoxP x, CoxP y)
+            private static int Compare(CoxP x, CoxP y)
             {
                 //  First check id
                 if (x.Id > y.Id)
@@ -103,7 +103,7 @@ namespace StatsDirect.Builtins
 
         private class CoxpByIndex : IComparer<CoxP>
         {
-            private int Compare(CoxP x, CoxP y)
+            private static int Compare(CoxP x, CoxP y)
             {
                 return x.Index - y.Index;
             }
@@ -116,7 +116,7 @@ namespace StatsDirect.Builtins
 
         private class CoxpByTm : IComparer<CoxP>
         {
-            private int Compare(CoxP x, CoxP y)
+            private static int Compare(CoxP x, CoxP y)
             {
                 if (x.Time > y.Time)
                     return 1;
