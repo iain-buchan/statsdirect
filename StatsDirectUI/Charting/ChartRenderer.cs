@@ -4521,6 +4521,11 @@ namespace StatsDirect.Charting
                     double binMidpointInterval = (maximumBinMidpoint - minimumBinMidpoint) / (descriptor.Bins - 1);
 
                     //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
+                    if (!histOptions.PoolVariablesForBins)
+                    {
+                        DataMinX = double.MaxValue;
+                        DataMaxX = double.MinValue;
+                    }
                     DataMinX = Math.Min(DataMinX, descriptor.LowestEdge);
                     DataMaxX = Math.Max(DataMaxX, descriptor.HighestEdge);
                     DataMinY = 0;
