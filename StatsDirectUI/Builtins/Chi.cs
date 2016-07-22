@@ -582,11 +582,11 @@ namespace StatsDirect.Builtins
             eggerList.Add(eggerParameters);
             Meta.Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
 
-            List<ParameterBag> horboldList = new List<ParameterBag>();
-            outputParameters.AddOutput("*horbold", horboldList);
-            ParameterBag horboldParameters = new ParameterBag();
-            horboldList.Add(horboldParameters);
-            Meta.ModMetabias(host, horboldParameters, o, k, cco, 1);
+            List<ParameterBag> harbordList = new List<ParameterBag>();
+            outputParameters.AddOutput("*harbord", harbordList);
+            ParameterBag harbordParameters = new ParameterBag();
+            harbordList.Add(harbordParameters);
+            Meta.ModMetabias(host, harbordParameters, o, k, cco, 1);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);

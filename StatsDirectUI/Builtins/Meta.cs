@@ -285,11 +285,11 @@ namespace StatsDirect.Builtins
             eggerList.Add(eggerParameters);
             Metabias(host, eggerParameters, odr, odrl, odru, k, ref cco, Transformation.Log);
 
-            IList<ParameterBag> horboldList = new List<ParameterBag>();
-            outputParameters.AddOutput("*horbold", horboldList);
-            ParameterBag horboldParameters = new ParameterBag();
-            horboldList.Add(horboldParameters);
-            ModMetabias(host, horboldParameters, o, k, cco, 1);
+            IList<ParameterBag> harbordList = new List<ParameterBag>();
+            outputParameters.AddOutput("*harbord", harbordList);
+            ParameterBag harbordParameters = new ParameterBag();
+            harbordList.Add(harbordParameters);
+            ModMetabias(host, harbordParameters, o, k, cco, 1);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -991,11 +991,11 @@ namespace StatsDirect.Builtins
             eggerList.Add(eggerParameters);
             Metabias(host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
 
-            IList<ParameterBag> horboldList = new List<ParameterBag>();
-            outputParameters.AddOutput("*horbold", horboldList);
-            ParameterBag horboldParameters = new ParameterBag();
-            horboldList.Add(horboldParameters);
-            ModMetabias(host, horboldParameters, o, k, cco, 2);
+            IList<ParameterBag> harbordList = new List<ParameterBag>();
+            outputParameters.AddOutput("*harbord", harbordList);
+            ParameterBag harbordParameters = new ParameterBag();
+            harbordList.Add(harbordParameters);
+            ModMetabias(host, harbordParameters, o, k, cco, 2);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2655,11 +2655,11 @@ namespace StatsDirect.Builtins
             eggerList.Add(eggerParameters);
             Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
 
-            IList<ParameterBag> horboldList = new List<ParameterBag>();
-            outputParameters.AddOutput("*horbold", horboldList);
-            ParameterBag horboldParameters = new ParameterBag();
-            horboldList.Add(horboldParameters);
-            ModMetabias(host, horboldParameters, o, k, cco, 1);
+            IList<ParameterBag> harbordList = new List<ParameterBag>();
+            outputParameters.AddOutput("*harbord", harbordList);
+            ParameterBag harbordParameters = new ParameterBag();
+            harbordList.Add(harbordParameters);
+            ModMetabias(host, harbordParameters, o, k, cco, 1);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -4564,7 +4564,7 @@ namespace StatsDirect.Builtins
             }
             p2 = 2.0 * p2;
             outputParameters.AddOutput("a", host.RoundU(bias));
-            outputParameters.AddOutput("pc_horbold", Formatting.XRound(100.0 * ncco, 2));
+            outputParameters.AddOutput("pc_harbord", Formatting.XRound(100.0 * ncco, 2));
             outputParameters.AddOutput("cl", host.RoundU(ll));
             outputParameters.AddOutput("cu", host.RoundU(ul));
             outputParameters.AddOutput("p", host.pval(p2));
