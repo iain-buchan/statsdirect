@@ -6,7 +6,6 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using SpreadsheetGear.Commands;
-using StatsDirect.Builtins;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Utilities;
@@ -31,10 +30,10 @@ namespace StatsDirect.UI
         public frmSpreadsheetGear()
         {
             InitializeComponent();
+            // See http://stackoverflow.com/questions/23637869/spreadsheetgear-for-winforms-paste-from-excel-removes-validation-on-target-cell - Tim Andersen's solution to adding a command manager to a workbook set.
+            new ClipboardManglingCommandManager(workbookView.ActiveWorkbookSet);
             SdApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
-            workbookView.GetLock();
-            try
-            {
+            LockWorkbookAnd(() => {
                 if (null != workbookView.ActiveWorkbook)
                     workbookView.ActiveWorkbook.Close();
                 string fontString = Properties.Settings.Default.DefaultWorkbookFont;
@@ -52,11 +51,7 @@ namespace StatsDirect.UI
                     workbookView.ActiveWorkbookSet.DefaultFontSize = 11;
                 }
                 workbookView.ActiveWorkbook = workbookView.ActiveWorkbookSet.Workbooks.Add();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void frmSpreadsheetGear_FormClosing(object sender, FormClosingEventArgs e)
@@ -101,17 +96,11 @@ namespace StatsDirect.UI
                 return SaveAsContents();
 
             // Known path, overwrite
-            workbookView.GetLock();
-            try
-            {
+            return LockWorkbookAndReturn(() => {
                 workbookView.ActiveWorkbook.Save();
                 dirty = false;
                 return true;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         internal override void ClearBatchMode()
@@ -149,44 +138,29 @@ namespace StatsDirect.UI
             if (!string.IsNullOrEmpty(extension))
                 extension = extension.ToLower(CultureInfo.InvariantCulture);
             FileFormat format = ".xlsx".Equals(extension) ? FileFormat.OpenXMLWorkbook : FileFormat.Excel8;
-            workbookView.GetLock();
-            try
-            {
+            return LockWorkbookAndReturn(() => {
                 workbookView.ActiveWorkbook.SaveAs(path, format);
                 dirty = false;
                 SdApplication.SoleInstance.NoteRecentFile(path, true);
                 return true;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
             if (null != workbookView.ActiveWorkbook)
                 LockWorkbookAnd(() => workbookView.ActiveWorkbook.Close());
-            workbookView.GetLock();
-            IWorkbook wb;
-            try
-            {
-                wb = workbookView.ActiveWorkbookSet.Workbooks.Open(filename);
+            return LockWorkbookAndReturn(() => {
+                IWorkbook wb = workbookView.ActiveWorkbookSet.Workbooks.Open(filename);
                 if (!isTempFile)
                     Path = filename;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
-            if (null != wb)
-                workbookView.ActiveWorkbook = wb;
-            if (isTempFile && null != nameToDisplay)
-                SetUnsavedName(nameToDisplay);
-            return null != wb;
+                if (null != wb)
+                    workbookView.ActiveWorkbook = wb;
+                if (isTempFile && null != nameToDisplay)
+                    SetUnsavedName(nameToDisplay);
+                return null != wb;
+            });
         }
-
-        #region IGrid Members
 
         bool IGrid.Dirty
         {
@@ -200,9 +174,7 @@ namespace StatsDirect.UI
             {
                 object val = workbookView.ActiveWorksheet.Cells[top, left, bottom, right].Value;
                 if (null != val && val.GetType().IsArray)
-                {
                     return (object[,])val;
-                }
                 return new[,] { { val } };
             }
             finally
@@ -602,8 +574,6 @@ namespace StatsDirect.UI
         {
             LockWorkbookAnd(() => workbookView.ActiveCell.Select());
         }
-
-        #endregion
 
         private static Area IRangeToArea(IGrid grid, IRange range)
         {
@@ -2243,6 +2213,25 @@ namespace StatsDirect.UI
             public int OffsetForTitles { get; set; }
             public IRange Range { get; set; }
             public bool ShouldMove { get; set; }
+        }
+    }
+
+    public class ClipboardManglingCommandManager : CommandManager
+    {
+        internal ClipboardManglingCommandManager(IWorkbookSet workbookSet)
+            : base(workbookSet)
+        { }
+
+        // Gets called anytime a Paste command is invoked (Ctrl+V, context menu item, WorkbookView.Paste(), etc)
+        public override Command CreateCommandPaste(IRange range)
+        {
+            MangleClipboardIfNecessary();
+            return base.CreateCommandPaste(range);
+        }
+
+        private void MangleClipboardIfNecessary()
+        {
+            ClipboardChecker.ConvertClipboardWithBiff5ToBiff8(true);
         }
     }
 }
