@@ -81,16 +81,12 @@ namespace StatsDirect.UI
                 double? defaultValue = parameter.DefaultValue(Processor, Context);
 
                 if (defaultValue.HasValue && 0.0 != defaultValue.Value)
-                {
                     cbo.Text = (defaultValue.Value * 100.0).ToString("##0.0");
-                }
                 else
                 {
                     // Don't force a CI if there's already one set on the singleton
                     if (!useSingle || string.IsNullOrEmpty(Form.IntegratedConfidenceIntervalControl.Text))
-                    {
                         cbo.Text = SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval ? (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
-                    }
                 }
             }
         }
@@ -885,20 +881,21 @@ namespace StatsDirect.UI
                                 defaultValue = Processor.Evaluate(parameter.DefaultValueExpression, Context).ToString();
                         }
 
-                        ComboBox cbo = new ComboBox { Tag = parameter, MaximumSize = new Size(250, 21) };
-                        OptionOption defaultOption = parameter.Options[0];
+                        ComboBoxEx cbo = new ComboBoxEx { Tag = parameter, MaximumSize = new Size(250, 21) };
+                        ComboBoxExItem defaultItem = null;
                         foreach (OptionOption optionOption in parameter.Options)
                         {
-                            cbo.Items.Add(optionOption);
+                            ComboBoxExItem cbi = new ComboBoxExItem { Tag = optionOption, Text = optionOption.Label };
+                            cbo.Items.Add(cbi);
                             if (null != defaultValue)
                                 if (optionOption.Value.Equals(defaultValue))
-                                    defaultOption = optionOption;
+                                    defaultItem = cbi;
                         }
                         cbo.SelectedIndex = 0;
                         cbo.DropDownStyle = ComboBoxStyle.DropDownList;
                         AddAppropriateEventHandlersTo(cbo);
-                        if (null != defaultOption)
-                            cbo.SelectedItem = defaultOption;
+                        if (null != defaultItem)
+                            cbo.SelectedItem = defaultItem;
 
                         // There's no way of autosizing a combo... so we do it by hand!
                         AutoSizeCombo(cbo);

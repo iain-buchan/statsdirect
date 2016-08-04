@@ -1,71 +1,114 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
+    /// <summary>
+    /// An extended combo box that displays images as well as / instead of text and is capable of drawing disabled items.
+    /// </summary>
     public partial class ComboBoxEx : ComboBox
     {
-
-        private ImageList imageList;
-        public ImageList ImageList
-        {
-            get { return imageList; }
-            set { imageList = value; }
-        }
+        public ImageList ImageList { get; set; }
 
         public ComboBoxEx()
         {
             DrawMode = DrawMode.OwnerDrawFixed;
         }
 
-        protected override void OnDrawItem(DrawItemEventArgs ea)
+        protected override void OnDrawItem(DrawItemEventArgs e)
         {
-            ea.DrawBackground();
-            ea.DrawFocusRectangle();
+            e.DrawBackground();
 
-            Size imageSize = imageList.ImageSize;
-            Rectangle bounds = ea.Bounds;
+            Size imageSize = null != ImageList ? ImageList.ImageSize : Size.Empty;
+            Rectangle bounds = e.Bounds;
 
-            Brush foreBrush = new SolidBrush(ea.ForeColor);
-            try
+            using (Brush foreBrush = new SolidBrush(e.ForeColor))
             {
-                ComboBoxExItem item = (ComboBoxExItem)Items[ea.Index];
-
-                if (item.ImageIndex != -1)
+                if (Items[e.Index] is ComboBoxExItem)
                 {
-                    imageList.Draw(ea.Graphics, bounds.Left, bounds.Top,
-                    item.ImageIndex);
-                    ea.Graphics.DrawString(item.Text, ea.Font, foreBrush, bounds.Left + imageSize.Width, bounds.Top);
+                    ComboBoxExItem item = (ComboBoxExItem)Items[e.Index];
+
+                    int textOffset = 0;
+                    if (item.ImageIndex != -1)
+                    {
+                        ImageList.Draw(e.Graphics, bounds.Left, bounds.Top, item.ImageIndex);
+                        textOffset = imageSize.Width;
+                    }
+                    if (null != item.Text)
+                    {
+                        if (item.Enabled)
+                        { 
+                            e.Graphics.DrawString(item.Text, e.Font, foreBrush, bounds.Left + textOffset, bounds.Top);
+                        }
+                        else
+                        {
+                            using (Font f = new Font(e.Font, FontStyle.Strikeout))
+                            {
+                                e.Graphics.DrawString(item.Text, f, SystemBrushes.GrayText, bounds.Left + textOffset, bounds.Top);
+                            }
+                        }
+                    }
                 }
                 else
                 {
-                    ea.Graphics.DrawString(item.Text, ea.Font, foreBrush, bounds.Left, bounds.Top);
+                    // Mimic the usual ComboBox behaviour of allowing any item and rendering it to a string for drawing.
+                    e.Graphics.DrawString(e.Index != -1 ? Items[e.Index].ToString() : Text, e.Font, foreBrush, bounds.Left, bounds.Top);
                 }
             }
-            catch
-            {
-                ea.Graphics.DrawString(ea.Index != -1 ? Items[ea.Index].ToString() : Text, ea.Font, foreBrush,
-                                       bounds.Left, bounds.Top);
-            }
-            finally
-            {
-                foreBrush.Dispose();
-            }
 
-            base.OnDrawItem(ea);
+            // e.DrawFocusRectangle();
+
+            // base.OnDrawItem(e);
+        }
+
+        protected override void OnSelectedIndexChanged(EventArgs e)
+        {
+            EnsureEnabledSelection();
+            base.OnSelectedIndexChanged(e);
+        }
+
+        /// <summary>
+        /// If the selected item is disabled, deselect it (combo box) or try to select an enabled one (list box).
+        /// </summary>
+        public void EnsureEnabledSelection()
+        {
+            if (SelectedIndex >= 0 && Items[SelectedIndex] is ComboBoxExItem && !((ComboBoxExItem)Items[SelectedIndex]).Enabled)
+            {
+                if (DropDownStyle == ComboBoxStyle.DropDownList)
+                {
+                    // List box, so we must select something - choose the lowest available item.  If we have no enabled items, choose [0] and accept we've selected a disabled one.
+                    bool found = false;
+                    for (int probe = 0; probe < Items.Count; probe++)
+                    {
+                        if (!(Items[probe] is ComboBoxExItem && (!(((ComboBoxExItem)Items[probe]).Enabled))))
+                        {
+                            SelectedIndex = probe;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        SelectedIndex = 0;
+                }
+                else
+                {
+                    // Combo box - blank the selection
+                    SelectedIndex = -1;
+                }
+            }
         }
     }
 
     class ComboBoxExItem
     {
-        private string _text;
-        public string Text
-        {
-            get { return _text; }
-            set { _text = value; }
-        }
+        public string Text { get; set; }
 
         public int ImageIndex { get; set; }
+
+        public bool Enabled { get; set; } = true;
+
+        public object Tag { get; set; }
 
         public ComboBoxExItem()
             : this(string.Empty)
@@ -79,13 +122,13 @@ namespace StatsDirect.UI
 
         public ComboBoxExItem(string text, int imageIndex)
         {
-            _text = text;
+            Text = text;
             ImageIndex = imageIndex;
         }
 
         public override string ToString()
         {
-            return _text;
+            return Text;
         }
     }
 }

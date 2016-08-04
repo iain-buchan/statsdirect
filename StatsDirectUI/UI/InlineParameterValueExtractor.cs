@@ -391,8 +391,9 @@ namespace StatsDirect.UI
             {
                 case OptionFormatType.Dropdown:
                     {
-                        ComboBox cbo = (ComboBox)Control;
-                        OptionOption selectedOption = (OptionOption)cbo.SelectedItem;
+                        ComboBoxEx cbo = (ComboBoxEx)Control;
+                        ComboBoxExItem selectedItem = (ComboBoxExItem)cbo.SelectedItem;
+                        OptionOption selectedOption = (OptionOption)selectedItem.Tag;
                         OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, selectedOption.Value);
                     }
                     break;

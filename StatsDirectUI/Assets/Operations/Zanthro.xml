@@ -36,11 +36,11 @@
         <format-type>Dropdown</format-type>
         <prompt-precedes-parameter>true</prompt-precedes-parameter>
         <options>
-          <option value="uk">British 1990</option>
-          <option value="us">US CDC 2000</option>
-          <option value="who">WHO 2007</option>
-          <option value="uk-who-preterm">WHO Preterm</option>
-          <option value="uk-who-term">WHO Term</option>
+          <option value="uk1990" available-if='=parameters.ContainsKey("standardisation") &amp;&amp; parameters["standardisation"].AsString.Contains("uk1990")'>British 1990</option>
+          <option value="cdc2000" available-if='=parameters.ContainsKey("standardisation") &amp;&amp; parameters["standardisation"].AsString.Contains("cdc2000")'>US CDC 2000</option>
+          <option value="who2007" available-if='=parameters.ContainsKey("standardisation") &amp;&amp; parameters["standardisation"].AsString.Contains("who2007")'>WHO 2007</option>
+          <option value="whoPreTerm" available-if='=parameters.ContainsKey("standardisation") &amp;&amp; parameters["standardisation"].AsString.Contains("whoPreTerm")'>WHO Preterm</option>
+          <option value="whoTerm" available-if='=parameters.ContainsKey("standardisation") &amp;&amp; parameters["standardisation"].AsString.Contains("whoTerm")'>WHO Term</option>
         </options>
       </option>
       <option>

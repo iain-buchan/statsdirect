@@ -2561,6 +2561,8 @@ namespace StatsDirect.UI
                         if (null != control.Tag)
                         {
                             Parameter parameter = (Parameter)control.Tag;
+
+                            // We may need to turn on/off this control's display completely depending on whether we're acquiring it or not.
                             if (parameter.HasAcquireIfTrue)
                             {
                                 if (null == processor)
@@ -2576,6 +2578,34 @@ namespace StatsDirect.UI
                                     layoutSuspended = true;
                                 }
                                 control.Visible = shouldAcquire;
+                            }
+
+                            // We may need to enable/disable some radio or dropdown options if this is an option parameter
+                            if (parameter is OptionParameter)
+                            {
+                                OptionParameter optionParameter = (OptionParameter)parameter;
+                                if (control is ComboBoxEx)
+                                {
+                                    ComboBoxEx cbo = (ComboBoxEx)control;
+                                    // Options and drop-down entries have a 1:1 correspondence.  Iterate through each setting enabled as necessary.
+                                    for (int i = 0; i < optionParameter.Options.Count; i++)
+                                    {
+                                        OptionOption oo = optionParameter.Options[i];
+                                        if (oo.HasAvailableIf)
+                                        {
+                                            if (null == processor)
+                                                processor = new TemplateProcessor(SdApplication.SoleInstance);
+                                            bool available = oo.AvailableIf(processor, ambientParameters);
+                                            ComboBoxExItem item = (ComboBoxExItem)cbo.Items[i];
+                                            item.Enabled = available;
+                                        }
+                                    }
+                                    cbo.EnsureEnabledSelection();
+                                }
+                                else
+                                {
+                                    // TODO: Implement for radio buttons
+                                }
                             }
                         }
                     }
