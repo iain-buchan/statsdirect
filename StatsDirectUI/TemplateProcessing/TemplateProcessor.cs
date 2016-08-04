@@ -363,9 +363,9 @@ namespace StatsDirect.Templates
                     ParameterBag parmsAndFilledParameters = CombinePreferringLater(parms, filledParameters);
 
                     // If we don't already have the parameter and its lifetime is something other than just this operation, see whether it's already in the session
-                    if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
+                    if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && null != parameter.Name)
                         TryToRecallParameterForThisOperation(filledParameters, parameter);
-                    else if (parameter.Lifetime == ParameterLifetime.SessionForAllOperations && null != parameter.Name && !parmsAndFilledParameters.ContainsKey(parameter.Name))
+                    else if (parameter.Lifetime == ParameterLifetime.SessionForAllOperations && null != parameter.Name)
                         TryToRecallParameterForAllOptions(filledParameters, parameter);
 
                     // Try to combine requests for parameters where possible.  The host can always refuse a request.
@@ -412,10 +412,10 @@ namespace StatsDirect.Templates
                         {
                             if (null != fp.Value && fp.Value.HasData)
                             {
-                                if (null == newFilledParameters)
-                                    newFilledParameters = defaults;
-                                else if (!newFilledParameters.ContainsKey(fp.Key))
-                                    newFilledParameters.Add(fp);
+                                if (null == filledParameters)
+                                    filledParameters = defaults;
+                                else if (!filledParameters.ContainsKey(fp.Key))
+                                    filledParameters.Add(fp);
                             }
                         }
                     }
@@ -423,12 +423,8 @@ namespace StatsDirect.Templates
                     {
                         MaybeRemember(parameter, newFilledParameters);
                         if (null != newFilledParameters)
-                        {
                             foreach (KeyValuePair<string, FilledParameter> pair in newFilledParameters.Pairs)
-                            {
                                 filledParameters.Add(pair.Key, pair.Value);
-                            }
-                        }
                     }
                 }
 
@@ -476,7 +472,7 @@ namespace StatsDirect.Templates
         }
 
         /// <summary>
-        /// Combine bag1 and bag2 into a new bag (returned).  Where bag1 and bag2 contain the same parameter, prefer the one from bag2.
+        /// Combine bag1 and bag2 into a new bag (returned).  Where bag1 and bag2 contain the same parameter, prefer the one from bag2 unless it is a default parameter (in which case prefer bag1).
         /// </summary>
         /// <param name="bag1"></param>
         /// <param name="bag2"></param>
@@ -487,14 +483,19 @@ namespace StatsDirect.Templates
             foreach (KeyValuePair<string, FilledParameter> pair in bag2.Pairs)
                 parmsAndFilledParameters.Add(pair);
 
+            // Add/overwrite with older parameters if (a) there is no matching newer parameter or (b) the newer parameter is a default, in which case we want the real value.
             foreach (KeyValuePair<string, FilledParameter> pair in bag1.Pairs)
-                if (!parmsAndFilledParameters.ContainsKey(pair.Key))
-                    parmsAndFilledParameters.Add(pair);
+                if ((!parmsAndFilledParameters.ContainsKey(pair.Key)) || parmsAndFilledParameters[pair.Key].Direction == FilledParameterDirection.Default)
+                    parmsAndFilledParameters[pair.Key] = pair.Value;
             return parmsAndFilledParameters;
         }
 
         private void TryToRecallParameterForAllOptions(ParameterBag filledParameters, Parameter parameter)
         {
+            // Check the parameter isn't already known to us.  Only known input parameters should be checked here; if it's a default parameter we still choose to recall it.
+            if (filledParameters.ContainsKey(parameter.Name) && filledParameters[parameter.Name].IsInputParameter)
+                return;
+
             ParameterBag savedParameters = host.SessionParametersAcrossOperations;
             if (savedParameters.ContainsKey(parameter.Name))
                 filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
@@ -502,6 +503,10 @@ namespace StatsDirect.Templates
 
         private void TryToRecallParameterForThisOperation(ParameterBag filledParameters, Parameter parameter)
         {
+            // Check the parameter isn't already known to us.  Only known input parameters should be checked here; if it's a default parameter we still choose to recall it.
+            if (filledParameters.ContainsKey(parameter.Name) && filledParameters[parameter.Name].IsInputParameter)
+                return;
+
             IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
             if (parameter is OptionsParameter)
             {

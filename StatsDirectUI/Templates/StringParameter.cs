@@ -39,7 +39,7 @@ namespace StatsDirect.Templates
 
         public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
         {
-            return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, DefaultValue(processor, context)));
+            return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Default, DefaultValue(processor, context)));
         }
     }
 }

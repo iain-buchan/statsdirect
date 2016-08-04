@@ -187,11 +187,17 @@ namespace StatsDirect.Templates
             if (Data is IStripForRedo)
                 ((IStripForRedo)Data).RefillForRedo(refillSource);
         }
+
+        public override string ToString()
+        {
+            return "FP(" + Direction.ToString() + ", " + (null == Data ? "(null)" : Data.ToString()) + ")";
+        }
     }
 
     public enum FilledParameterDirection
     {
         Output = 0,
-        Input = 1
+        Input = 1,
+        Default = 2
     }
 }

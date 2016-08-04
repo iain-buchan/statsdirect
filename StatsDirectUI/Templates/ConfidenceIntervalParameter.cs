@@ -69,7 +69,7 @@ namespace StatsDirect.Templates
         {
             double? defaultValue = DefaultValue(processor, context);
             if (defaultValue.HasValue)
-                return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, defaultValue.Value));
+                return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Default, defaultValue.Value));
             return new ParameterBag();
         }
     }
