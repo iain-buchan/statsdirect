@@ -55,6 +55,11 @@ namespace StatsDirect.Templates
 
         public void AddInput(string key, object value)
         {
+            // If there's a default value that we're overwriting with a proper input value, get rid of the default.
+            FilledParameter candidate;
+            if (TryGetValue(key, out candidate))
+                if (candidate.Direction == FilledParameterDirection.Default)
+                    Remove(key);
             filledParameters.Add(key, new FilledParameter(FilledParameterDirection.Input, value));
         }
 
