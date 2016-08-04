@@ -146,7 +146,6 @@
       </frame>
     </parameters>
     <builtin function-name="rptZanthro" />
-    <report type="text/rtf" filename="zanthro.rtf" />
     <output-frame frame-name="output" />
   </steps>
 </operation>

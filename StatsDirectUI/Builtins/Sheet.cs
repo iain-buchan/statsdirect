@@ -500,11 +500,34 @@ namespace StatsDirect.Builtins
 
         internal static ParameterBag RptZanthro(ITemplateHost host, ParameterBag parameters)
         {
+            const double DEFAULT_GESTATIONAL_AGE_WEEKS = 40.0;
+
             string standardisation = parameters["standardisation"].AsString;
+            string[] standardisationParts = standardisation.Split('|');
+            string dataIs = standardisationParts[0];
+            string standardiseIs = standardisationParts[1];
             string standard = parameters["standard"].AsString;
             string ageUnit = parameters.ContainsKey("age-unit") ? parameters["age-unit"].AsString : null;
             string sexCoding = parameters["sex-coding"].AsString;
-            string zCorrection = parameters["z-correction"].AsString;
+            string zCorrectionString = parameters["z-correction"].AsString;
+            ZanthroZCorrectionMode zCorrectionMode;
+            switch (zCorrectionString)
+            {
+                case "all":
+                    zCorrectionMode = ZanthroZCorrectionMode.All;
+                    break;
+                case "censor-5sd":
+                    zCorrectionMode = ZanthroZCorrectionMode.Censor3Sd;
+                    break;
+                case "censor-3sd":
+                    zCorrectionMode = ZanthroZCorrectionMode.Censor5Sd;
+                    break;
+                case "who":
+                    zCorrectionMode = ZanthroZCorrectionMode.Who;
+                    break;
+                default:
+                    throw new Exception("Unknown z correction '" + zCorrectionString + "'");
+            }
             bool includeCentiles = parameters["include-centiles"].AsBoolean;
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             DoubleVariable dataVariable = dataFrame.Variables[0] as DoubleVariable;
@@ -512,7 +535,7 @@ namespace StatsDirect.Builtins
             DoubleVariable standardiseVariable = standardiseFrame.Variables[0] as DoubleVariable;
             DataFrame sexFrame = parameters["sex"].AsDataFrame;
             StringVariable sexVariable = sexFrame.Variables[0] as StringVariable;
-            bool includeBmi = standardisation.StartsWith("BMI|");
+            bool includeBmi = "BMI".Equals(dataIs);
 
             bool hasGestationalAge = parameters.ContainsKey("gestational-age");
             DoubleVariable gestationalAgeVariable = null;
@@ -617,13 +640,147 @@ namespace StatsDirect.Builtins
                     throw new Exception("Unknown sex coding '" + sexCoding + "'");
             }
 
+            // Data preparation: Where ages aren't in years, standardise to years.
+            double[] correctedStandardise = new double[standardise.Length];
+            if (null == ageUnit)
+                correctedStandardise = standardise;
+            else
+            {
+                switch(ageUnit)
+                {
+                    case "year":
+                        for (int i = 0; i < standardise.Length; i++)
+                            correctedStandardise[i] = standardise[i];
+                        break;
+                    case "month":
+                        for (int i = 0; i < standardise.Length; i++)
+                            correctedStandardise[i] = standardise[i] / 12.0;
+                        break;
+                    case "week":
+                        for (int i = 0; i < standardise.Length; i++)
+                            correctedStandardise[i] = standardise[i] / (365.25 / 7.0);
+                        break;
+                    case null:
+                    case "day":
+                        for (int i = 0; i < standardise.Length; i++)
+                            correctedStandardise[i] = standardise[i] / 365.25;
+                        break;
+                    default:
+                        throw new Exception("Unknown age unit '" + ageUnit + "'");
+                }
+            }
+            // Data preparation: Correct for gestational age where not 40 weeks
+            if (hasGestationalAge)
+            {
+                double maxGestationalAge = double.MinValue;
+                for (int i = 0; i < correctedStandardise.Length; i++)
+                {
+                    double gestationalAgeInWeeks = gestationalAge[i];
+                    if (gestationalAgeInWeeks > maxGestationalAge)
+                        maxGestationalAge = gestationalAgeInWeeks;
+                    correctedStandardise[i] += (gestationalAgeInWeeks - 40.0) * 7.0 / 365.0;
+                }
+                if (maxGestationalAge > 42)
+                    host.Warning("Maximum value in your gestational age variable is " + maxGestationalAge + " weeks", "Anthropometric standardisation");
+            }
+
             // Output arrays
             double[] rawZ = new double[data.Length];
             double[] correctedZ = new double[data.Length];
             double[] centile = includeCentiles? new double[data.Length] : null;
-            int[] bmiCategory = includeBmi ? new int[data.Length] : null;
+            double[] bmiCategory = includeBmi ? new double[data.Length] : null;
 
-            return new ParameterBag();
+            // Run the calculation for each row
+            for (int i = 0; i < data.Length; i++)
+            {
+                // If any input data is missing, set all output data missing and carry on.
+                if (isRowMissing[i])
+                {
+                    rawZ[i] = Constant.MISSING;
+                    correctedZ[i] = Constant.MISSING;
+                    if (includeCentiles)
+                        centile[i] = Constant.MISSING;
+                    if (includeBmi)
+                        bmiCategory[i] = Constant.MISSING;
+                    continue;
+                }
+
+                rawZ[i] = ZanthroCalculateZ(isMale[i] ? maleTables : femaleTables, data[i], standardise[i], hasGestationalAge ? gestationalAge[i] : DEFAULT_GESTATIONAL_AGE_WEEKS);
+                correctedZ[i] = ZanthroCorrectZ(rawZ[i], zCorrectionMode);
+                if (includeCentiles)
+                    centile[i] = PDF.alnorm(rawZ[i]) * 100.0;
+                // TODO: BMI category
+            }
+
+            ParameterBag outputParameters = new ParameterBag();
+            DataFrame outputFrame = new DataFrame();
+            outputFrame.Variables.Add(new DoubleVariable(rawZ, "raw z"));
+            outputFrame.Variables.Add(new DoubleVariable(correctedZ, "corrected z"));
+            if (includeCentiles)
+                outputFrame.Variables.Add(new DoubleVariable(centile, "centiles"));
+            if (includeBmi)
+                outputFrame.Variables.Add(new DoubleVariable(bmiCategory, "BMI category"));
+            outputParameters.AddOutput("output", outputFrame);
+            return outputParameters;
+        }
+
+        private static double ZanthroCorrectZ(double rawZ, ZanthroZCorrectionMode zCorrectionMode)
+        {
+            switch (zCorrectionMode)
+            {
+                case ZanthroZCorrectionMode.All:
+                    return rawZ;
+                // TODO:
+                case ZanthroZCorrectionMode.Censor3Sd:
+                case ZanthroZCorrectionMode.Censor5Sd:
+                case ZanthroZCorrectionMode.Who:
+                    throw new NotImplementedException();
+                default:
+                    throw new Exception("Unknown Z correction mode " + zCorrectionMode.ToString());
+            }
+        }
+
+        private enum ZanthroZCorrectionMode
+        {
+            All = 0,
+            Censor5Sd = 1,
+            Censor3Sd = 2,
+            Who = 3
+        }
+
+        public class LmsTable
+        {
+            public double LowerBound { get { return Values[0]; } }
+            public double UpperBound { get; set; }
+            public double[] Values { get; set; }
+            public double[] Lambdas { get; set; }
+            public double[] Mus { get; set; }
+            public double[] Sigmas { get; set; }
+        }
+
+        private static double ZanthroCalculateZ(ICollection<LmsTable> tables, double data, double standardise, double gestationalAge)
+        {
+            // Find the correct table to use. Tables are passed in order of preference, so simply use the first one that matches.
+            foreach (LmsTable table in tables)
+                if (table.LowerBound <= data && table.UpperBound >= data)
+                    return ZanthroCalculateZ(table, data, standardise, gestationalAge);
+            // If we get here, no table matched.
+            return Constant.MISSING;
+        }
+
+        private static double ZanthroCalculateZ(LmsTable table, double data, double standardise, double gestationalAge)
+        {
+            // t is the corrected xvar - turned into years for any age, TODO: Not sure for ht/wt.
+            double t = 0, xvar_pre = 0, xvar = 0, xvar_nx = 0, xvar_nx2 = 0, y;
+            double lms_pre = pre;
+            double lms = thisOne;
+            double lms_nx = nx;
+            double lms_nx2 = nx2;
+
+            y = (lms_pre * (t - xvar) * (t - xvar_nx) * (t - xvar_nx2)) / ((xvar_pre-xvar)*(xvar_pre-xvar_nx)*(xvar_pre-xvar_nx2))
+                + (lms * (t-xvar_pre)*(t-xvar_nx)*(t-xvar_nx2))/((xvar-xvar_pre)*(xvar-xvar_nx)*(xvar-xvar_nx2))
+                + (lms_nx*(t-xvar_pre)*(t-xvar)*(t-xvar_nx2))/((xvar_nx-xvar_pre)*(xvar_nx-xvar)*(xvar_nx-xvar_nx2))
+                + (lms_nx2*(t-xvar_pre)*(t-xvar)*(t-xvar_nx))/((xvar_nx2-xvar_pre)*(xvar_nx2-xvar)*(xvar_nx2-xvar_nx));
         }
 
         internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
