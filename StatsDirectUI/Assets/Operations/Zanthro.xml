@@ -88,6 +88,13 @@
           <option value="who">Use WHO corrections for values more than +/-3 SD from mean</option>
         </options>
       </option>
+      <boolean>
+        <name>include-centiles</name>
+        <prompt>Include percentiles as well as z-values</prompt>
+        <must-request>true</must-request>
+        <default-value>true</default-value>
+        <prompt-precedes-parameter>true</prompt-precedes-parameter>
+      </boolean>
       <frame>
         <name>data</name>
         <prompt>="Select data for " + parameters["standardisation"].AsString.Split(new char[] { '|' })[0].Replace("-", " ")</prompt>
