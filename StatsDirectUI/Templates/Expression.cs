@@ -28,5 +28,10 @@ namespace StatsDirect.Templates
 
         [XmlAttribute(AttributeName="language")]
         public string Language { get; set; }
+
+        public override string ToString()
+        {
+            return "Expression(" + (null == Body ? "null" : "\"" + Body + "\"") + ")";
+        }
     }
 }
