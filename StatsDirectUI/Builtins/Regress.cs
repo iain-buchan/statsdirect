@@ -238,7 +238,7 @@ namespace StatsDirect.Builtins
                 notcalcParameters.AddOutput("r", host.RoundU(context.R));
             }
 
-            outputParameters.Add("context", new FilledParameter(true, context));
+            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
             return outputParameters;
         }
 
@@ -644,7 +644,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*table", tableList);
             }
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { X = x, H = xc, R2 = xr, V = v, M = irv, P = N, N = nx };
-            outputParameters.Add("context", new FilledParameter(true, context));
+            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
             return outputParameters;
         }
 
@@ -1209,15 +1209,15 @@ namespace StatsDirect.Builtins
                     zParameters.AddOutput("z", z);
                 }
             }
-            outputParameters.Add("context", new FilledParameter(true, context));
+            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
             //  For best subset code
             string[] predictorTitles = new string[P - 2 + 1 ];
             for (i = 2; i <= P; i++)
             {
                 predictorTitles[i - 2] = context.Titles[i];
             }
-            outputParameters["predictorTitles"] = new FilledParameter(true, new DataFrame(new StringVariable(predictorTitles)));
-            outputParameters["candidatePredictors"] = new FilledParameter(true, x_prep_intermr(context));
+            outputParameters["predictorTitles"] = new FilledParameter(FilledParameterDirection.Input, new DataFrame(new StringVariable(predictorTitles)));
+            outputParameters["candidatePredictors"] = new FilledParameter(FilledParameterDirection.Input, x_prep_intermr(context));
             return outputParameters;
         }
 
@@ -1426,7 +1426,7 @@ namespace StatsDirect.Builtins
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 context.R[0] = Constant.MISSING;
-                chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false))));
+                chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ch.PlotXYAndReturnRtf(host, context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false))));
             }
 
             for (i = 1; i <= context.P; i++)
@@ -1442,7 +1442,7 @@ namespace StatsDirect.Builtins
                     }
                     using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
                     {
-                        chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, 0, false))));
+                        chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ch.PlotXYAndReturnRtf(host, r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, 0, false))));
                     }
                 }
             }
@@ -1461,7 +1461,7 @@ namespace StatsDirect.Builtins
             }
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
-                chartList.Add(new ParameterBag("chart", new FilledParameter(false, ch.PlotXYAndReturnRtf(host, context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, 0, false))));
+                chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ch.PlotXYAndReturnRtf(host, context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, 0, false))));
             }
             return outputParameters;
         }
@@ -2430,7 +2430,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("r", host.RoundU(context.R));
             outputParameters.AddOutput("r2", host.RoundU(context.R * context.R));
             outputParameters.AddOutput("ste", host.RoundU(context.SeEst));
-            outputParameters.Add("context", new FilledParameter(true, context));
+            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
             return outputParameters;
         }
 
@@ -3310,7 +3310,7 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("logit", tx);
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext();
-            outputParameters.Add("context", new FilledParameter(true, context));
+            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
             context.SE = se_beta;
             context.B = beta;
             context.T = t;
@@ -3335,7 +3335,7 @@ namespace StatsDirect.Builtins
             context.DEVX = devx;
             context.LLX = llx;
             context.DFX = idfx;
-            outputParameters["candidatePredictors"] = new FilledParameter(true, x_prep_interlr(context));
+            outputParameters["candidatePredictors"] = new FilledParameter(FilledParameterDirection.Input, x_prep_interlr(context));
             return outputParameters;
         }
 
@@ -3754,49 +3754,49 @@ namespace StatsDirect.Builtins
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, xx, yy1, ep, db, db + " vs. " + ep, false, 0, false);
-                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  std delta beta vs. proportion
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, xx, yy2, ep, dbs, dbs + " vs. " + ep, false, 0, false);
-                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta deviance vs. proportion
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, xx, yy3, ep, dd, dd + " vs. " + ep, false, 0, false);
-                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta x2 vs. proportion
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYZAndReturnRtf(host, xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, 0);
-                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta beta vs. hi
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, hi, yy1, lv, db, db + " vs. " + lv, false, 0, false);
-                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta beta std vs. hi
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, hi, yy2, lv, dbs, dbs + " vs. " + lv, false, 0, false);
-                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta deviance vs. hi
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, hi, yy3, lv, dd, dd + " vs. " + lv, false, 0, false);
-                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta x2 vs. hi
             using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, hi, yy4, lv, dx, dx + " vs. " + lv, false, 0, false);
-                chartsList.Add(new ParameterBag("chart", new FilledParameter(false, chart)));
+                chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             return outputParameters;
         }
@@ -5497,7 +5497,7 @@ namespace StatsDirect.Builtins
                 X = x,
                 Y = y
             };
-            outputParameters.Add("context", new FilledParameter(true, context));
+            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
             return outputParameters;
         }
 
@@ -6057,7 +6057,7 @@ namespace StatsDirect.Builtins
             context.Labels[0] = doseVariable.Title;
             context.Labels[1] = subjectsVariable.Title;
             context.Labels[2] = respondersVariable.Title;
-            outputParameters.Add("context", new FilledParameter(true, context));
+            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
             return outputParameters;
         }
 

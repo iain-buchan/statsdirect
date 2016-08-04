@@ -565,7 +565,7 @@ namespace StatsDirect.Builtins
             if (tar <= 0.0)
             {
                 tar = 1.0;
-                parameters["tar"] = new FilledParameter(true, 1.0);
+                parameters["tar"] = new FilledParameter(FilledParameterDirection.Input, 1.0);
             }
             //  RTF_LoadTemplate("prate.rtf")
             ParameterBag outputParameters = new ParameterBag();

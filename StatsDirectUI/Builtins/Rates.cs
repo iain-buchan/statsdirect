@@ -97,7 +97,7 @@ namespace StatsDirect.Builtins
 
             bool stratlab;
             string[] title = new string[rows + 2 + 1 /* VB to C# conversion */ ];
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
@@ -221,7 +221,7 @@ namespace StatsDirect.Builtins
                 refn[i] = refnVariable.Data[i - 1];
                 refntot += refn[i];
             }
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
                 StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
@@ -437,7 +437,7 @@ namespace StatsDirect.Builtins
             {
                 refIdent[i] = refVariable.Data[i - 1];
             }
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;

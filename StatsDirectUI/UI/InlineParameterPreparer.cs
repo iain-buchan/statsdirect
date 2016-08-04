@@ -30,7 +30,7 @@ namespace StatsDirect.UI
         {
             if (parameter.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
             {
-                FilledParameter = new FilledParameter(true, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval);
+                FilledParameter = new FilledParameter(FilledParameterDirection.Input, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval);
                 return;
             }
 
@@ -76,16 +76,21 @@ namespace StatsDirect.UI
             {
                 cbo.Text = (Context[parameter.Name].AsDouble * 100.0).ToString("##0.0");
             }
-            else if (0.0 != parameter.DefaultValue)
-            {
-                cbo.Text = (parameter.DefaultValue * 100.0).ToString("##0.0");
-            }
             else
             {
-                // Don't force a CI if there's already one set on the singleton
-                if (!useSingle || string.IsNullOrEmpty(Form.IntegratedConfidenceIntervalControl.Text))
+                double? defaultValue = parameter.DefaultValue(Processor, Context);
+
+                if (defaultValue.HasValue && 0.0 != defaultValue.Value)
                 {
-                    cbo.Text = SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval ? (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
+                    cbo.Text = (defaultValue.Value * 100.0).ToString("##0.0");
+                }
+                else
+                {
+                    // Don't force a CI if there's already one set on the singleton
+                    if (!useSingle || string.IsNullOrEmpty(Form.IntegratedConfidenceIntervalControl.Text))
+                    {
+                        cbo.Text = SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval ? (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
+                    }
                 }
             }
         }
@@ -1213,7 +1218,7 @@ namespace StatsDirect.UI
                 case ChartOptionType.LinearRegression:
                     // Do nothing - there are no options to fill
                     {
-                        FilledParameter = new FilledParameter(true, parameter.ChartDefinition);
+                        FilledParameter = new FilledParameter(FilledParameterDirection.Input, parameter.ChartDefinition);
                         return;
                     }
                 default:

@@ -29,5 +29,10 @@ namespace StatsDirect.UI
         {
             visitor.Visit(this);
         }
+
+        public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
+        {
+            return new ParameterBag();
+        }
     }
 }

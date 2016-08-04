@@ -4,22 +4,12 @@ namespace StatsDirect.Templates
 {
     public sealed class StringParameter: RangeParameter
     {
-        private Expression defaultValue;
-
-        /*
-        public StringParameter()
-        {
-            // By default, remember value per operation.  Deserialization can override this.
-            // Lifetime = ParameterLifetime.SessionForThisOperation;
-        }
-         */
-
         /// <summary>
         /// The default value for this parameter, or null for no default.
         /// </summary>
         public string DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
-            return processor.Evaluate(defaultValue, parameters).ToString();
+            return processor.Evaluate(DefaultValueExpression, parameters).ToString();
         }
 
         /// <summary>
@@ -27,18 +17,14 @@ namespace StatsDirect.Templates
         /// </summary>
         public bool HasDefaultValue
         {
-            get { return null != defaultValue; }
+            get { return null != DefaultValueExpression; }
         }
 
         /// <summary>
         /// The default value for this parameter, or null for no default.
         /// </summary>
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression
-        {
-            get { return defaultValue; }
-            set { defaultValue = value; }
-        }
+        public Expression DefaultValueExpression { get; set; }
 
         /// <summary>
         /// The maximum length for this parameter, or 0 for no maximum.
@@ -49,6 +35,11 @@ namespace StatsDirect.Templates
         public override void Accept(IParameterVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
+        {
+            return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, DefaultValue(processor, context)));
         }
     }
 }

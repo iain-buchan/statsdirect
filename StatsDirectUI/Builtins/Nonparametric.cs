@@ -3259,10 +3259,10 @@ namespace StatsDirect.Builtins
             }
 
             //  Cache values for possible further calculation
-            outputParameters.Add("w2", new FilledParameter(true, w2));
-            outputParameters.Add("N", new FilledParameter(true, N));
-            outputParameters.Add("A2", new FilledParameter(true, A2));
-            outputParameters.Add("B2", new FilledParameter(true, B2));
+            outputParameters.Add("w2", new FilledParameter(FilledParameterDirection.Input, w2));
+            outputParameters.Add("N", new FilledParameter(FilledParameterDirection.Input, N));
+            outputParameters.Add("A2", new FilledParameter(FilledParameterDirection.Input, A2));
+            outputParameters.Add("B2", new FilledParameter(FilledParameterDirection.Input, B2));
 
             return outputParameters;
         }

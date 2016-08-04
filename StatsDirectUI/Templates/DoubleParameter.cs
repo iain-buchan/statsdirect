@@ -6,21 +6,11 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class DoubleParameter: RangeParameter, IDefaultParameter<double>
     {
-        private Expression defaultValue;
-        private Expression minimumValue;
-        private Expression maximumValue;
-
-        public DoubleParameter()
-        {
-            // By default, remember value per operation.  Deserialization can override this.
-            // Lifetime = ParameterLifetime.SessionForThisOperation;
-        }
-
         public double? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == defaultValue || null == defaultValue.Body)
+            if (null == DefaultValueExpression || null == DefaultValueExpression.Body)
                 return null;
-            object o = processor.Evaluate(defaultValue, parameters);
+            object o = processor.Evaluate(DefaultValueExpression, parameters);
             if (o is int)
                 return (int)o;
             return (double?)o;
@@ -31,14 +21,14 @@ namespace StatsDirect.Templates
         /// </summary>
         public bool HasDefaultValue
         {
-            get { return null != defaultValue; }
+            get { return null != DefaultValueExpression; }
         }
 
         public double MinimumValue(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == minimumValue || null == minimumValue.Body)
+            if (null == MinimumValueExpression || null == MinimumValueExpression.Body)
                 return double.MinValue;
-            object o = processor.Evaluate(minimumValue, parameters);
+            object o = processor.Evaluate(MinimumValueExpression, parameters);
             if (o is int)
                 return (int)o;
             return (double)o;
@@ -46,38 +36,34 @@ namespace StatsDirect.Templates
 
         public double MaximumValue(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == maximumValue || null == maximumValue.Body)
+            if (null == MaximumValueExpression || null == MaximumValueExpression.Body)
                 return double.MaxValue;
-            object o = processor.Evaluate(maximumValue, parameters);
+            object o = processor.Evaluate(MaximumValueExpression, parameters);
             if (o is int)
                 return (int)o;
             return (double)o;
         }
 
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression
-        {
-            get { return defaultValue; }
-            set { defaultValue = value; }
-        }
+        public Expression DefaultValueExpression { get; set; }
 
         [XmlElement(ElementName = "minimum-value")]
-        public Expression MinimumValueExpression
-        {
-            get { return minimumValue; }
-            set { minimumValue = value; }
-        }
+        public Expression MinimumValueExpression { get; set; }
 
         [XmlElement(ElementName = "maximum-value")]
-        public Expression MaximumValueExpression
-        {
-            get { return maximumValue; }
-            set { maximumValue = value; }
-        }
+        public Expression MaximumValueExpression { get; set; }
 
         public override void Accept(IParameterVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
+        {
+            double? defaultValue = DefaultValue(processor, context);
+            if (defaultValue.HasValue)
+                return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, defaultValue.Value));
+            return new ParameterBag();
         }
     }
 }

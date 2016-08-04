@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsDirectUI", "StatsDirectUI\StatsDirectUI.csproj", "{C73E1B83-A745-4592-92A0-40C5658D6D7C}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SDInstaller-standalone-x64", "SDInstaller\SDInstaller-standalone-x64.wixproj", "{046BF937-0395-4A59-A4DF-D29314574F41}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SDInstaller-standalone-x86", "SDInstaller\SDInstaller-standalone-x86.wixproj", "{5AA25A40-1E22-48B8-961F-1D37C87473A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RtfConverter", "RtfConverter\RtfConverter.csproj", "{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -212,16 +214,48 @@ Global
 		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|x64.ActiveCfg = ReleaseWithSigning|x86
 		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|x86.ActiveCfg = ReleaseWithSigning|x86
 		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|x86.Build.0 = ReleaseWithSigning|x86
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Debug|x64.Build.0 = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Debug|x86.Build.0 = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.DebugWatchExceptions|Any CPU.ActiveCfg = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.DebugWatchExceptions|Any CPU.Build.0 = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.DebugWatchExceptions|Mixed Platforms.Build.0 = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.DebugWatchExceptions|x64.ActiveCfg = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.DebugWatchExceptions|x64.Build.0 = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.DebugWatchExceptions|x86.ActiveCfg = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.DebugWatchExceptions|x86.Build.0 = Debug|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Release|x64.ActiveCfg = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Release|x64.Build.0 = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Release|x86.ActiveCfg = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.Release|x86.Build.0 = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.ReleaseWithSigning|Any CPU.ActiveCfg = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.ReleaseWithSigning|Any CPU.Build.0 = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.ReleaseWithSigning|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.ReleaseWithSigning|Mixed Platforms.Build.0 = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.ReleaseWithSigning|x64.ActiveCfg = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.ReleaseWithSigning|x64.Build.0 = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.ReleaseWithSigning|x86.ActiveCfg = Release|Any CPU
+		{24507B78-5414-4B7C-BF4F-43C3C26D1A2A}.ReleaseWithSigning|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_BuildAction = Both
-		BuildVersion_ConfigurationName = ReleaseWithSigning
-		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
-		BuildVersion_UpdateAssemblyVersion = False
 		BuildVersion_UpdateFileVersion = False
+		BuildVersion_UpdateAssemblyVersion = False
+		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
+		BuildVersion_ConfigurationName = ReleaseWithSigning
+		BuildVersion_BuildAction = Both
+		BuildVersion_UseGlobalSettings = False
 	EndGlobalSection
 EndGlobal

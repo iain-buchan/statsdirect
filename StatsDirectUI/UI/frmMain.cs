@@ -1749,7 +1749,7 @@ namespace StatsDirect.UI
                 }
 
                 // Self-referential operations are assumed to be instant and repeatable, so are set up immediately in the interface.  Others are run normally, and only then do they get any follow-on operations.
-                TemplateProcessor templateProcessor = new TemplateProcessor(SdApplication.SoleInstance);
+                ITemplateProcessor templateProcessor = new TemplateProcessor(SdApplication.SoleInstance);
                 ParameterBag outputParameters;
                 SuggestFromOperation(operation, inputParameters, SuggestionTime.BeforeOperation);
                 if (operation.SuggestsSelf)
@@ -1803,7 +1803,7 @@ namespace StatsDirect.UI
 
             // TODO: Do we need to clone the list (or, more likely, the FilledParameter and the list) so that operations that are cancelled don't pollute the list of operations that succeed?
             if (!results.ContainsKey(OPERATION_MEMORY_NAME))
-                results.Add(OPERATION_MEMORY_NAME, new FilledParameter(true, new List<string>()));
+                results.Add(OPERATION_MEMORY_NAME, new FilledParameter(FilledParameterDirection.Input, new List<string>()));
             IList<string> operations = results[OPERATION_MEMORY_NAME].AsStringList;
             string operationName = operation.Name;
             if (!operations.Contains(operationName))
@@ -1986,7 +1986,7 @@ namespace StatsDirect.UI
         /// <param name="processor"></param>
         /// <param name="operation"></param>
         /// <param name="context"></param>
-        private ParameterBag SetInterfaceAndTryToRun(TemplateProcessor processor, Operation operation, ParameterBag context)
+        private ParameterBag SetInterfaceAndTryToRun(ITemplateProcessor processor, Operation operation, ParameterBag context)
         {
             // Iff the operation has some initial parameters that can be batched, we should start it and let it populate those parameters
             bool shouldRun = ShouldRunOperationOnSelection(operation, context);
@@ -2546,7 +2546,7 @@ namespace StatsDirect.UI
         private bool CheckCombinedParameterVisibility(ParameterBag ambientParameters)
         {
             TableLayoutPanel tlp = GetUserInputTable();
-            TemplateProcessor processor = null;
+            ITemplateProcessor processor = null;
             bool layoutSuspended = false;
             bool atLeastOneVisibilityChange = false;
 

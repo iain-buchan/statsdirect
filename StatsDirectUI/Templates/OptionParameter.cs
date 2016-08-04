@@ -48,8 +48,6 @@ namespace StatsDirect.Templates
 
         public OptionParameter()
         {
-            // By default, remember value per operation.  Deserialization can override this.
-            // Lifetime = ParameterLifetime.SessionForThisOperation;
             options = new List<OptionOption>();
         }
 
@@ -92,6 +90,22 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "default-value")]
         public Expression DefaultValueExpression { get; set; }
 
+        public string DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
+        {
+            if (null == DefaultValueExpression || null == DefaultValueExpression.Body)
+                return null;
+            object o = processor.Evaluate(DefaultValueExpression, parameters);
+            return (string)o;
+        }
+
+        /// <summary>
+        /// true iff the parameter defines a default.
+        /// </summary>
+        public bool HasDefaultValue
+        {
+            get { return null != DefaultValueExpression; }
+        }
+
         [XmlIgnore]
         public IList<OptionOption> Options
         {
@@ -105,6 +119,11 @@ namespace StatsDirect.Templates
         public override void Accept(IParameterVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
+        {
+            return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, DefaultValue(processor, context)));
         }
     }
 }

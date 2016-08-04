@@ -143,5 +143,12 @@ namespace StatsDirect.Templates
         public abstract InputDuringStep RequiresInputGiven(ParameterBag parameters);
 
         public abstract void Accept(IParameterVisitor visitor);
+
+        /// <summary>
+        /// If the parameter has any defaults, return them as inputs in a ParameterBag.
+        /// </summary>
+        /// <param name="processor">The processor to use while evaluating any defaults</param>
+        /// <param name="context">Existing variables against which the values could be evaluated.</param>
+        public abstract ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context);
     }
 }

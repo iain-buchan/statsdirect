@@ -5879,7 +5879,7 @@ namespace StatsDirect.Charting
             // Regression results
             SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(x, y);
             context.CalculateLeastSquaresMethod();
-            return new ParameterBag("context", new FilledParameter(false, context));
+            return new ParameterBag("context", new FilledParameter(FilledParameterDirection.Output, context));
         }
 
         private ScaleParameters GetPyramidScaleParameters()

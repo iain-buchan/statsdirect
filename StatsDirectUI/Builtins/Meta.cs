@@ -67,7 +67,7 @@ namespace StatsDirect.Builtins
             }
 
             string[] title = new string[k + 1 ];
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
@@ -615,7 +615,7 @@ namespace StatsDirect.Builtins
             }
 
             string[] title = new string[k + 1 ];
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
@@ -855,7 +855,7 @@ namespace StatsDirect.Builtins
             }
 
             string[] title = new string[k + 1];
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
@@ -1157,7 +1157,7 @@ namespace StatsDirect.Builtins
             }
 
             //  ReDim title(k)
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
@@ -2100,7 +2100,7 @@ namespace StatsDirect.Builtins
             }
 
             string[] title = new string[k + 1];
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
@@ -2433,7 +2433,7 @@ namespace StatsDirect.Builtins
                 xr[i] = xrVariable.Data[i - 1];
 
             string[] title = new string[k + 1];
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
@@ -3373,7 +3373,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            if (parameters.ContainsKey("studies") && parameters["studies"].Data != null)
+            if (parameters.ContainsKey("studies") && parameters["studies"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["studies"].AsDataFrame;
@@ -3644,7 +3644,7 @@ namespace StatsDirect.Builtins
                 ulY[i] = MathDbl.ztor(MathDbl.rtoz(y[i]) + cit * seY[i]);
             }
 
-            if (parameters.ContainsKey("studies") && parameters["studies"].Data != null)
+            if (parameters.ContainsKey("studies") && parameters["studies"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["studies"].AsDataFrame;
@@ -4151,7 +4151,7 @@ namespace StatsDirect.Builtins
             }
 
             string[] title = new string[k + 2 ];
-            if (parameters.ContainsKey("strata") && parameters["strata"].Data != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;

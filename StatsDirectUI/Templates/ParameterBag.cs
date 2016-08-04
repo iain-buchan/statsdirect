@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using System.IO;
 using StatsDirect.Data;
+using System.Collections;
 
 namespace StatsDirect.Templates
 {
@@ -12,6 +13,7 @@ namespace StatsDirect.Templates
     [Serializable]
     [XmlRoot("parameter-bag")]
     public sealed class ParameterBag
+        : IDictionary<string, FilledParameter>
     {
         private IDictionary<string, FilledParameter> filledParameters;
 
@@ -35,7 +37,7 @@ namespace StatsDirect.Templates
 
         public void AddOutput(string key, object value)
         {
-            filledParameters.Add(key, new FilledParameter(false, value));
+            filledParameters.Add(key, new FilledParameter(FilledParameterDirection.Output, value));
         }
 
         public void SetOutput(string key, object value)
@@ -47,13 +49,13 @@ namespace StatsDirect.Templates
             }
             else
             {
-                filledParameters.Add(key, new FilledParameter(false, value));
+                filledParameters.Add(key, new FilledParameter(FilledParameterDirection.Output, value));
             }
         }
 
         public void AddInput(string key, object value)
         {
-            filledParameters.Add(key, new FilledParameter(true, value));
+            filledParameters.Add(key, new FilledParameter(FilledParameterDirection.Input, value));
         }
 
         public bool ContainsKey(string key)
@@ -78,7 +80,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        ICollection<FilledParameter> Values
+        public ICollection<FilledParameter> Values
         {
             get { return filledParameters.Values; }
         }
@@ -151,22 +153,18 @@ namespace StatsDirect.Templates
         }
 
         #region IEnumerable<KeyValuePair<string,FilledParameter>> Members
-        /*
         IEnumerator<KeyValuePair<string, FilledParameter>> IEnumerable<KeyValuePair<string, FilledParameter>>.GetEnumerator()
         {
             return filledParameters.GetEnumerator();
         }
-         */
 
         #endregion
 
         #region IEnumerable Members
-        /*
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return filledParameters.GetEnumerator();
         }
-        */
         #endregion
 
         /// <summary>
@@ -247,29 +245,22 @@ namespace StatsDirect.Templates
         [XmlRoot("parameter")]
         public sealed class ParameterForXml
         {
-            private bool _isInputParameter;
-            private object _data;
-
             [XmlElement("name")]
             public string Name { get; set; }
 
             [XmlIgnore]
             public FilledParameter Value
             {
-                get { return new FilledParameter(_isInputParameter, _data); }
+                get { return new FilledParameter(Direction, Data); }
                 set
                 {
-                    _isInputParameter = value.IsInputParameter;
-                    _data = value.Data;
+                    Direction = value.Direction;
+                    Data = value.Data;
                 }
             }
 
-            [XmlElement("is-input")]
-            public bool IsInputParameter
-            {
-                get { return _isInputParameter; }
-                set { _isInputParameter = value; }
-            }
+            [XmlElement("direction")]
+            public FilledParameterDirection Direction { get; set; }
 
             [XmlElement("boolean", typeof(Boolean))]
             [XmlElement("datetime", typeof(DateTime))]
@@ -278,11 +269,7 @@ namespace StatsDirect.Templates
             [XmlElement("int", typeof(Int32))]
             [XmlElement("string", typeof(String))]
             [XmlElement("string-list", typeof(List<string>))]
-            public object Data
-            {
-                get { return _data; }
-                set { _data = value; }
-            }
+            public object Data { get; set; }
         }
 
         public string SerializeForRedo(bool shouldKeepData)

@@ -6,14 +6,12 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class DateParameter: RangeParameter
     {
-        private Expression defaultValue;
-
         /// <summary>
         /// The default value for this parameter, or null for no default.
         /// </summary>
         public DateTime DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
-            return (DateTime)processor.Evaluate(defaultValue, parameters);
+            return (DateTime)processor.Evaluate(DefaultValueExpression, parameters);
         }
 
         /// <summary>
@@ -21,22 +19,23 @@ namespace StatsDirect.Templates
         /// </summary>
         public bool HasDefaultValue
         {
-            get { return null != defaultValue; }
+            get { return null != DefaultValueExpression; }
         }
 
         /// <summary>
         /// The default value for this parameter, or null for no default.
         /// </summary>
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression
-        {
-            get { return defaultValue; }
-            set { defaultValue = value; }
-        }
+        public Expression DefaultValueExpression { get; set; }
 
         public override void Accept(IParameterVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
+        {
+            return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, DefaultValue(processor, context)));
         }
     }
 }

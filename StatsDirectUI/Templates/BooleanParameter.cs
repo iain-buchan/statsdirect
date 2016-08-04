@@ -48,5 +48,13 @@ namespace StatsDirect.Templates
         {
             visitor.Visit(this);
         }
+
+        public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
+        {
+            bool? defaultValue = DefaultValue(processor, context);
+            if (defaultValue.HasValue)
+                return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, defaultValue.Value));
+            return new ParameterBag();
+        }
     }
 }

@@ -109,14 +109,14 @@ namespace StatsDirect.UI
                         else
                         {
                             targetFrame = new DataFrame();
-                            outputParameters.Add(gridParameter.AppendToFrame, new FilledParameter(true, targetFrame));
+                            outputParameters.Add(gridParameter.AppendToFrame, new FilledParameter(FilledParameterDirection.Input, targetFrame));
                         }
                         foreach (Variable v in frame.Variables)
                             targetFrame.Variables.Add(v);
                         // frame.Variables.Clear(); Removed as this prevents validation - the original frame's variables have to stay intact until after the validation phase.
                         // HACK: As an unpleasant side effect, this means that *both* frames share a pointer to the variable.
                     }
-                    outputParameters.Add(parameter.Name, new FilledParameter(true, frame));
+                    outputParameters.Add(parameter.Name, new FilledParameter(FilledParameterDirection.Input, frame));
                     return outputParameters;
                 }
 

@@ -473,11 +473,11 @@ namespace StatsDirect.Builtins
                 predParameters.AddOutput("z", host.RoundU(ARR3[1, i, 3]));
                 predParameters.AddOutput("p", host.pval(MathDbl.zvalp2(ARR3[1, i, 3])));
             }
-            outputParameters.Add("subgroups", new FilledParameter(true, new DataFrame(new StringVariable(subgroups.ToArray()))));
-            outputParameters.Add("ARR2", new FilledParameter(true, ARR2));
-            outputParameters.Add("ARR3", new FilledParameter(true, ARR3));
-            outputParameters.Add("CDAT1", new FilledParameter(true, CDAT1));
-            outputParameters.Add("holdx", new FilledParameter(true, holdx));
+            outputParameters.Add("subgroups", new FilledParameter(FilledParameterDirection.Input, new DataFrame(new StringVariable(subgroups.ToArray()))));
+            outputParameters.Add("ARR2", new FilledParameter(FilledParameterDirection.Input, ARR2));
+            outputParameters.Add("ARR3", new FilledParameter(FilledParameterDirection.Input, ARR3));
+            outputParameters.Add("CDAT1", new FilledParameter(FilledParameterDirection.Input, CDAT1));
+            outputParameters.Add("holdx", new FilledParameter(FilledParameterDirection.Input, holdx));
             return outputParameters;
         }
 

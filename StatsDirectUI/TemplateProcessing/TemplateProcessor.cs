@@ -1,5 +1,3 @@
-// #define SECURE
-
 using System;
 using System.Collections.Generic;
 using StatsDirect.Charting;
@@ -248,13 +246,13 @@ namespace StatsDirect.Templates
                 if (step.IsAscii)
                 {
                     results = ch.Plot(host);
-                    results.Add(step.ChartName, new FilledParameter(false, ch.GetAsciiRTF()));
+                    results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, ch.GetAsciiRTF()));
                 }
                 else
                 {
                     string rtf;
                     results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
-                    results.Add(step.ChartName, new FilledParameter(false, rtf));
+                    results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, rtf));
                 }
                 SaveChartDefinition(step, results, definition);
             }
@@ -263,8 +261,8 @@ namespace StatsDirect.Templates
 
         private static void SaveChartDefinition(ChartStep step, ParameterBag results, ChartDefinition definition)
         {
-            results.Add(STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty), new FilledParameter(true, definition.ChartOptions));
-            results.Add(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty), new FilledParameter(true, definition.ScaleParameters));
+            results.Add(STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty), new FilledParameter(FilledParameterDirection.Input, definition.ChartOptions));
+            results.Add(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty), new FilledParameter(FilledParameterDirection.Input, definition.ScaleParameters));
         }
 
         public ParameterBag ExecuteInternal(IterationStep step, ParameterBag parms, bool isRedo)
@@ -295,7 +293,7 @@ namespace StatsDirect.Templates
             {
                 if (null != step.LoopVariableName)
                 {
-                    filledParameters[step.LoopVariableName] = new FilledParameter(false, i);
+                    filledParameters[step.LoopVariableName] = new FilledParameter(FilledParameterDirection.Output, i);
                 }
                 foreach (Step s in step.Steps)
                 {
@@ -405,6 +403,21 @@ namespace StatsDirect.Templates
                     if (shouldCombine)
                     {
                         outstandingParameters.Add(parameter);
+
+                        // If the parameter has (a) default value(s), add any that aren't already known (and hence overridden) to the context.
+                        // This is critical when first displaying e.g. a set of controls where one isn't displayed initially due to a default value in another.
+                        // Bug #1244
+                        ParameterBag defaults = parameter.AllDefaults(this, newFilledParameters);
+                        foreach (KeyValuePair<string, FilledParameter> fp in defaults.Pairs)
+                        {
+                            if (null != fp.Value && fp.Value.HasData)
+                            {
+                                if (null == newFilledParameters)
+                                    newFilledParameters = defaults;
+                                else if (!newFilledParameters.ContainsKey(fp.Key))
+                                    newFilledParameters.Add(fp);
+                            }
+                        }
                     }
                     else
                     {
@@ -602,9 +615,9 @@ namespace StatsDirect.Templates
 
             // Log the ID of the report that was actually used
             ParameterBag outputParameters = new ParameterBag();
-            // outputParameters.Add(REPORT_ID_NAME, new FilledParameter(true, reportId));
+            // outputParameters.Add(REPORT_ID_NAME, new FilledParameter(FilledParameterDirection.Input, reportId));
             if (!parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
-                outputParameters.Add(STATSDIRECT_REPORT_PANE, new FilledParameter(true, preferredPane));
+                outputParameters.Add(STATSDIRECT_REPORT_PANE, new FilledParameter(FilledParameterDirection.Input, preferredPane));
             return outputParameters;
         }
 

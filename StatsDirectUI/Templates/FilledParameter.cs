@@ -11,185 +11,187 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class FilledParameter
     {
-        private bool isInputParameter;
-        private object data;
-
         private FilledParameter()
         {
         }
 
-        public FilledParameter(bool isInputParameter, object data)
+        public FilledParameter(FilledParameterDirection direction, object data)
         {
-            this.isInputParameter = isInputParameter;
-            this.data = data;
+            Direction = direction;
+            Data = data;
         }
 
         [XmlIgnore]
         public bool HasData
         {
-            get { return null != data; }
-        }
-
-        [XmlElement("is-input")]
-        public bool IsInputParameter
-        {
-            get { return isInputParameter; }
+            get { return null != Data; }
         }
 
         [XmlIgnore]
-        public object Data
+        public bool IsInputParameter
         {
-            get { return data; }
-            set { data = value; }
+            get { return FilledParameterDirection.Input == Direction; }
         }
+
+        [XmlIgnore]
+        public object Data { get; set; }
+
+        [XmlElement("direction")]
+        public FilledParameterDirection Direction { get; set; }
 
         [XmlIgnore]
         public bool AsBoolean
         {
-            get { return (bool)data; }
+            get { return (bool)Data; }
         }
 
         [XmlIgnore]
         public ChartOptions AsChartOptions
         {
-            get { return (ChartOptions)data; }
+            get { return (ChartOptions)Data; }
         }
 
         [XmlIgnore]
         public DataFrame AsDataFrame
         {
-            get { return (DataFrame)data; }
+            get { return (DataFrame)Data; }
         }
 
         [XmlIgnore]
         public DataFrame2D AsDataFrame2D
         {
-            get { return (DataFrame2D)data; }
+            get { return (DataFrame2D)Data; }
         }
 
         [XmlIgnore]
         public DateTime AsDate
         {
-            get { return (DateTime)data; }
+            get { return (DateTime)Data; }
         }
 
         [XmlIgnore]
         public double AsDouble
         {
-            get { return (double)data; }
+            get { return (double)Data; }
         }
 
         [XmlIgnore]
         public int AsInt32
         {
-            get { return (int)data; }
+            get { return (int)Data; }
         }
 
         [XmlIgnore]
         public Pane AsPane
         {
-            get { return (Pane)data; }
+            get { return (Pane)Data; }
         }
 
         [XmlIgnore]
         public PaneAndPosition AsPaneAndPosition
         {
-            get { return (PaneAndPosition)data; }
+            get { return (PaneAndPosition)Data; }
         }
 
         [XmlIgnore]
         public ParameterBag AsParameterBag
         {
-            get { return (ParameterBag)data; }
+            get { return (ParameterBag)Data; }
         }
 
         [XmlIgnore]
         public IList<ParameterBag> AsParameterBagList
         {
-            get { return (IList<ParameterBag>)data; }
+            get { return (IList<ParameterBag>)Data; }
         }
 
         [XmlIgnore]
         public ScaleParameters AsScaleParameters
         {
-            get { return (ScaleParameters)data; }
+            get { return (ScaleParameters)Data; }
         }
 
         [XmlIgnore]
         public string AsString
         {
-            get { return (string)data; }
+            get { return (string)Data; }
         }
 
         [XmlIgnore]
         public IList<string> AsStringList
         {
-            get { return (IList<string>)data; }
+            get { return (IList<string>)Data; }
         }
 
         [XmlIgnore]
         public bool IsBoolean
         {
-            get { return data is bool; }
+            get { return Data is bool; }
         }
 
         [XmlIgnore]
         public bool IsDataFrame
         {
-            get { return data is DataFrame; }
+            get { return Data is DataFrame; }
         }
 
         [XmlIgnore]
         public bool IsDouble
         {
-            get { return data is double; }
+            get { return Data is double; }
         }
 
         [XmlIgnore]
         public bool IsInt32
         {
-            get { return data is int; }
+            get { return Data is int; }
         }
 
         [XmlIgnore]
         public bool IsParameterBag
         {
-            get { return data is ParameterBag; }
+            get { return Data is ParameterBag; }
         }
 
         [XmlIgnore]
         public bool IsParameterBagList
         {
-            get { return data is IList<ParameterBag>; }
+            get { return Data is IList<ParameterBag>; }
         }
 
         [XmlIgnore]
         public bool IsString
         {
-            get { return data is string; }
+            get { return Data is string; }
         }
 
         internal FilledParameter CopyAndStripForRedo(bool shouldKeepData)
         {
             object copiedData;
-            if (data is IStripForRedo)
+            if (Data is IStripForRedo)
             {
-                copiedData = ((IStripForRedo)data).CopyAndStripForRedo(shouldKeepData);
+                copiedData = ((IStripForRedo)Data).CopyAndStripForRedo(shouldKeepData);
                 if (null == copiedData)
                     return null;
             }
             else
             {
-                copiedData = data;
+                copiedData = Data;
             }
 
-            return new FilledParameter {isInputParameter = isInputParameter, data = copiedData};
+            return new FilledParameter {Direction = Direction, Data = copiedData};
         }
 
         internal void RefillForRedo(IRefillSource refillSource)
         {
-            if (data is IStripForRedo)
-                ((IStripForRedo)data).RefillForRedo(refillSource);
+            if (Data is IStripForRedo)
+                ((IStripForRedo)Data).RefillForRedo(refillSource);
         }
+    }
+
+    public enum FilledParameterDirection
+    {
+        Output = 0,
+        Input = 1
     }
 }

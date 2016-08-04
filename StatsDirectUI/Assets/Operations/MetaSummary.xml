@@ -36,33 +36,33 @@
 				ParameterBag outputParameters = new ParameterBag();
 				if ("oddsRatio".Equals(t))
 				{
-                			outputParameters["use_ratio"] = new FilledParameter(true, true);
-                			outputParameters["stat_in"] = new FilledParameter(true, "Odds Ratio");
-                			outputParameters["statx"] = new FilledParameter(true, "differs from 1");
+                			outputParameters["use_ratio"] = new FilledParameter(FilledParameterDirection.Input, true);
+                			outputParameters["stat_in"] = new FilledParameter(FilledParameterDirection.Input, "Odds Ratio");
+                			outputParameters["statx"] = new FilledParameter(FilledParameterDirection.Input, "differs from 1");
 				}
 				else if ("relativeRisk".Equals(t))
 				{
-                			outputParameters["use_ratio"] = new FilledParameter(true, true);
-                			outputParameters["stat_in"] = new FilledParameter(true, "Relative Risk");
-                			outputParameters["statx"] = new FilledParameter(true, "differs from 1");
+                			outputParameters["use_ratio"] = new FilledParameter(FilledParameterDirection.Input, true);
+                			outputParameters["stat_in"] = new FilledParameter(FilledParameterDirection.Input, "Relative Risk");
+                			outputParameters["statx"] = new FilledParameter(FilledParameterDirection.Input, "differs from 1");
 				}
 				else if ("riskDifference".Equals(t))
 				{
-                			outputParameters["use_ratio"] = new FilledParameter(true, false);
-                			outputParameters["stat_in"] = new FilledParameter(true, "Risk Difference");
-                			outputParameters["statx"] = new FilledParameter(true, "differs from 0");
+                			outputParameters["use_ratio"] = new FilledParameter(FilledParameterDirection.Input, false);
+                			outputParameters["stat_in"] = new FilledParameter(FilledParameterDirection.Input, "Risk Difference");
+                			outputParameters["statx"] = new FilledParameter(FilledParameterDirection.Input, "differs from 0");
 				}
 				else if ("otherRatio".Equals(t))
 				{
-                			outputParameters["use_ratio"] = new FilledParameter(true, true);
-                			outputParameters["stat_in"] = new FilledParameter(true, "* Ratio");
-                			outputParameters["statx"] = new FilledParameter(true, "differs from 1");
+                			outputParameters["use_ratio"] = new FilledParameter(FilledParameterDirection.Input, true);
+                			outputParameters["stat_in"] = new FilledParameter(FilledParameterDirection.Input, "* Ratio");
+                			outputParameters["statx"] = new FilledParameter(FilledParameterDirection.Input, "differs from 1");
 				}
 				else if ("otherDifference".Equals(t))
 				{
-                			outputParameters["use_ratio"] = new FilledParameter(true, false);
-                			outputParameters["stat_in"] = new FilledParameter(true, "* Difference");
-                			outputParameters["statx"] = new FilledParameter(true, "differs from 0");
+                			outputParameters["use_ratio"] = new FilledParameter(FilledParameterDirection.Input, false);
+                			outputParameters["stat_in"] = new FilledParameter(FilledParameterDirection.Input, "* Difference");
+                			outputParameters["statx"] = new FilledParameter(FilledParameterDirection.Input, "differs from 0");
 				}
 				else
 					throw new ArgumentOutOfRangeException();

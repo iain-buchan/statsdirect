@@ -20,7 +20,7 @@ namespace StatsDirect.UI
             // Can we get away without asking?
             if (parameter.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
             {
-                outputParameters = new ParameterBag(parameter.Name, new FilledParameter(true, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval));
+                outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval));
                 return;
             }
 
@@ -32,8 +32,9 @@ namespace StatsDirect.UI
             double result = 0.0;
             if (SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
                 result = SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval;
-            if (parameter.DefaultValue > 0.0)
-                result = parameter.DefaultValue;
+            double? defaultValue = parameter.DefaultValue(processor, context);
+            if (defaultValue.HasValue && defaultValue.Value > 0.0)
+                result = defaultValue.Value;
 
             while (true)
             {
@@ -44,7 +45,7 @@ namespace StatsDirect.UI
                 {
                     result /= 100.0;
                     if (result >= 0.0 && result <= 1.0)
-                        outputParameters = new ParameterBag(parameter.Name, new FilledParameter(true, result));
+                        outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
                 }
                 // else go round again
             }
@@ -90,7 +91,7 @@ namespace StatsDirect.UI
                 double result = Parsing.Cdbl_Txt(response);
                 if (result >= minimumValue && result <= maximumValue)
                 {
-                    outputParameters = new ParameterBag(parameter.Name, new FilledParameter(true, result));
+                    outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
                     break;
                 }
                 // else go round and prompt again
@@ -146,7 +147,7 @@ namespace StatsDirect.UI
                 int result = Parsing.Cint_Txt(response);
                 if (result >= parameter.MinimumValue && result <= parameter.MaximumValue)
                 {
-                    outputParameters = new ParameterBag(parameter.Name, new FilledParameter(true, result));
+                    outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
                     return;
                 }
                 // else go round and prompt again
@@ -188,7 +189,7 @@ namespace StatsDirect.UI
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
             Builtins.GroupedCovarianceData data = new GridSelectionProcessor(grid).FillGroupedCovarianceParameter(processor);
             if (null != data)
-                outputParameters = new ParameterBag(parameter.Name, new FilledParameter(true, data));
+                outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, data));
         }
 
         public void Visit(Grid2DParameter parameter)
@@ -200,7 +201,7 @@ namespace StatsDirect.UI
             }
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
             DataFrame2D frame = new GridSelectionProcessor(grid).FillGridParameter2D(parameter, processor, SdApplication.SoleInstance, context);
-            outputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(true, frame));
+            outputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, frame));
         }
 
         public void Visit(EditGridParameter parameter)
@@ -235,7 +236,7 @@ namespace StatsDirect.UI
                 }
                 throw new TemplateOperationCancelledException();
             }
-            outputParameters = new ParameterBag(parameter.Name, new FilledParameter(true, DialogResult.Yes == result));
+            outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, DialogResult.Yes == result));
         }
     }
 }

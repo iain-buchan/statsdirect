@@ -6,7 +6,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class IntegerParameter: RangeParameter, IDefaultParameter<int>
     {
-        private Expression defaultValue;
         private int minimumValue = Int32.MinValue;
         private int maximumValue = Int32.MaxValue;
 
@@ -21,9 +20,9 @@ namespace StatsDirect.Templates
         /// </summary>
         public int? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == defaultValue || null == defaultValue.Body)
+            if (null == DefaultValueExpression || null == DefaultValueExpression.Body)
                 return null;
-            object o = processor.Evaluate(defaultValue, parameters);
+            object o = processor.Evaluate(DefaultValueExpression, parameters);
             return (int?)o;
         }
 
@@ -32,21 +31,14 @@ namespace StatsDirect.Templates
         /// </summary>
         public bool HasDefaultValue
         {
-            get { return null != defaultValue; }
+            get { return null != DefaultValueExpression; }
         }
 
         /// <summary>
         /// The default value for this parameter, or null for no default.
         /// </summary>
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression
-        {
-            get { return defaultValue; }
-            set
-            {
-                defaultValue = value;
-            }
-        }
+        public Expression DefaultValueExpression { get; set; }
 
         [XmlElement(ElementName = "minimum-value")]
         public int MinimumValue
@@ -65,6 +57,14 @@ namespace StatsDirect.Templates
         public override void Accept(IParameterVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
+        {
+            int? defaultValue = DefaultValue(processor, context);
+            if (defaultValue.HasValue)
+                return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, defaultValue.Value));
+            return new ParameterBag();
         }
     }
 }

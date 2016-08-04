@@ -745,7 +745,7 @@ namespace StatsDirect.UI
         private ParameterBag FillChartOptions(Charting.ChartDefinition ChartDefinition, ParameterBag context)
         {
             ITemplateHost ith = this;
-            TemplateProcessor processor = new TemplateProcessor(ith);
+            ITemplateProcessor processor = new TemplateProcessor(ith);
             ChartOptionsParameter chartOptionsParameter = new ChartOptionsParameter("dummy", ChartDefinition);
             ith.FillParameter(processor, chartOptionsParameter, context, true);
             return ith.FillAndValidateCombinedParameters(processor, context);
@@ -854,7 +854,7 @@ namespace StatsDirect.UI
         private ParameterBag FillSingleParameter(Parameter parameter)
         {
             ITemplateHost host = this;
-            TemplateProcessor processor = new TemplateProcessor(host);
+            ITemplateProcessor processor = new TemplateProcessor(host);
             ParameterBag context = new ParameterBag();
             host.FillParameter(processor, parameter, context, true);
             return host.FillAndValidateCombinedParameters(processor, context);
@@ -996,7 +996,7 @@ namespace StatsDirect.UI
         private ParameterBag AmendUsingControl(IFillable fillable)
         {
             ITemplateHost ith = this;
-            TemplateProcessor processor = new TemplateProcessor(ith);
+            ITemplateProcessor processor = new TemplateProcessor(ith);
             ParameterBag context = new ParameterBag();
             FillableParameter fillableParameter = new FillableParameter("dummy", fillable);
             ith.FillParameter(processor, fillableParameter, context, true);

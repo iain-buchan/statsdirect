@@ -483,15 +483,15 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            outputParameters.Add("ARR2", new FilledParameter(true, arr2));
-            outputParameters.Add("CDAT1", new FilledParameter(true, cdat1));
-            outputParameters.Add("h", new FilledParameter(true, h));
-            outputParameters.Add("s", new FilledParameter(true, s));
-            outputParameters.Add("stime", new FilledParameter(true, stime));
-            outputParameters.Add("dead", new FilledParameter(true, dead));
-            outputParameters.Add("ngroups", new FilledParameter(true, groups));
-            outputParameters.Add("cnx", new FilledParameter(true, cnx));
-            outputParameters.Add("glab", new FilledParameter(true, glab));
+            outputParameters.Add("ARR2", new FilledParameter(FilledParameterDirection.Input, arr2));
+            outputParameters.Add("CDAT1", new FilledParameter(FilledParameterDirection.Input, cdat1));
+            outputParameters.Add("h", new FilledParameter(FilledParameterDirection.Input, h));
+            outputParameters.Add("s", new FilledParameter(FilledParameterDirection.Input, s));
+            outputParameters.Add("stime", new FilledParameter(FilledParameterDirection.Input, stime));
+            outputParameters.Add("dead", new FilledParameter(FilledParameterDirection.Input, dead));
+            outputParameters.Add("ngroups", new FilledParameter(FilledParameterDirection.Input, groups));
+            outputParameters.Add("cnx", new FilledParameter(FilledParameterDirection.Input, cnx));
+            outputParameters.Add("glab", new FilledParameter(FilledParameterDirection.Input, glab));
             if (save)
             {
                 outputParameters.AddOutput("results", resultsFrame);

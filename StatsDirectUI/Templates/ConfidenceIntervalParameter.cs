@@ -16,7 +16,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlElement(ElementName = "default-value")]
-        public double DefaultValue { get; set; }
+        public Expression DefaultValueExpression { get; set; }
 
         [XmlElement(ElementName = "minimum-suggested-value")]
         public double MinimumSuggestedValue { get; set; }
@@ -29,6 +29,24 @@ namespace StatsDirect.Templates
 
         [XmlElement(ElementName = "can-default")]
         public bool CanDefault { get; set; }
+
+        public double? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
+        {
+            if (null == DefaultValueExpression || null == DefaultValueExpression.Body)
+                return null;
+            object o = processor.Evaluate(DefaultValueExpression, parameters);
+            if (o is int)
+                return (int)o;
+            return (double?)o;
+        }
+
+        /// <summary>
+        /// true iff the parameter defines a default.
+        /// </summary>
+        public bool HasDefaultValue
+        {
+            get { return null != DefaultValueExpression; }
+        }
 
         /// <summary>
         /// If true, the CI parameter can use the standard input area below the buttons.
@@ -45,6 +63,14 @@ namespace StatsDirect.Templates
         public override void Accept(IParameterVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
+        {
+            double? defaultValue = DefaultValue(processor, context);
+            if (defaultValue.HasValue)
+                return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Input, defaultValue.Value));
+            return new ParameterBag();
         }
     }
 }

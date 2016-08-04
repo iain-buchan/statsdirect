@@ -24,5 +24,13 @@ namespace StatsDirect.Templates
         /// Returns a unique, monotonically increasing value for this processor that is intended to keep variables acquired at the same point together.
         /// </summary>
         int NextOriginGroup();
+
+        /// <summary>
+        /// Run the operation to completion or error.
+        /// </summary>
+        /// <param name="operation"></param>
+        /// <param name="startingParameters">If non-null, some parameters to be used as defaults.</param>
+        /// <param name="isRedo"> </param>
+        ParameterBag Execute(Operation operation, ParameterBag startingParameters, bool isRedo);
     }
 }
