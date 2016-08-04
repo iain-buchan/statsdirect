@@ -211,6 +211,7 @@ namespace StatsDirect.Builtins
                 new Builtin("rptWeiLachin", Survival.RptWeiLachin),
                 new Builtin("rptWilcoxon", Nonparametric.RptWilcoxon),
                 new Builtin("rptXxi", Regress.RptXxi),
+                new Builtin("rptZanthro", Sheet.RptZanthro),
                 new Builtin("rptZSingle", Parametric.RptZSingle),
                 new Builtin("rptZUnpaired", Parametric.RptZUnpaired),
                 new Builtin("setAnalysisOptions", Options.SetAnalysisOptions, InputDuringStep.Always),

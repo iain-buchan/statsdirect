@@ -114,6 +114,7 @@
         <clear-selection-first>true</clear-selection-first>
         <min-columns>1</min-columns>
         <max-columns>1</max-columns>
+        <same-length-as>data</same-length-as>
         <ask-for-group-id>false</ask-for-group-id>
         <validators>
           <validator>Positive</validator>
@@ -126,6 +127,7 @@
         <clear-selection-first>true</clear-selection-first>
         <min-columns>1</min-columns>
         <max-columns>1</max-columns>
+        <same-length-as>data</same-length-as>
         <ask-for-group-id>false</ask-for-group-id>
       </frame>
       <frame>
@@ -135,13 +137,13 @@
         <clear-selection-first>true</clear-selection-first>
         <min-columns>1</min-columns>
         <max-columns>1</max-columns>
+        <same-length-as>data</same-length-as>
         <ask-for-group-id>false</ask-for-group-id>
         <cancel-skips-parameter>Skip this variable to assume 40 weeks (term)</cancel-skips-parameter>
+        <validators>
+          <validator>Positive</validator>
+        </validators>
       </frame>
-      <boolean>
-        <name>scrap</name>
-        <prompt>Here's where we'd do the calculation...</prompt>
-      </boolean>
     </parameters>
     <builtin function-name="rptZanthro" />
     <report type="text/rtf" filename="zanthro.rtf" />

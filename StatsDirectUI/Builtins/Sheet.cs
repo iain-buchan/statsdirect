@@ -498,6 +498,134 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        internal static ParameterBag RptZanthro(ITemplateHost host, ParameterBag parameters)
+        {
+            string standardisation = parameters["standardisation"].AsString;
+            string standard = parameters["standard"].AsString;
+            string ageUnit = parameters.ContainsKey("age-unit") ? parameters["age-unit"].AsString : null;
+            string sexCoding = parameters["sex-coding"].AsString;
+            string zCorrection = parameters["z-correction"].AsString;
+            bool includeCentiles = parameters["include-centiles"].AsBoolean;
+            DataFrame dataFrame = parameters["data"].AsDataFrame;
+            DoubleVariable dataVariable = dataFrame.Variables[0] as DoubleVariable;
+            DataFrame standardiseFrame = parameters["standardise"].AsDataFrame;
+            DoubleVariable standardiseVariable = standardiseFrame.Variables[0] as DoubleVariable;
+            DataFrame sexFrame = parameters["sex"].AsDataFrame;
+            StringVariable sexVariable = sexFrame.Variables[0] as StringVariable;
+            bool includeBmi = standardisation.StartsWith("BMI|");
+
+            bool hasGestationalAge = parameters.ContainsKey("gestational-age");
+            DoubleVariable gestationalAgeVariable = null;
+            if (hasGestationalAge)
+            {
+                DataFrame gestationalAgeFrame = parameters["gestational-age"].AsDataFrame;
+                gestationalAgeVariable = gestationalAgeFrame.Variables[0] as DoubleVariable;
+            }
+
+            double[] data = dataVariable.Data;
+            double[] standardise = standardiseVariable.Data;
+            string[] codedSex = sexVariable.Data;
+            double[] gestationalAge = gestationalAgeVariable?.Data;
+            bool[] isRowMissing = new bool[data.Length];
+            bool[] isMale = new bool[data.Length];
+
+            // Data preparation: Note missing values so we don't try to calculate the row.  Tight loops on arrays to encourage read-ahead and possible parallelisation by future compilers.
+            for (int i = 0; i < data.Length; i++)
+                isRowMissing[i] |= data[i] == Constant.MISSING;
+            for (int i = 0; i < standardise.Length; i++)
+                isRowMissing[i] |= standardise[i] == Constant.MISSING;
+            if (hasGestationalAge)
+                for (int i = 0; i < gestationalAge.Length; i++)
+                    isRowMissing[i] |= gestationalAge[i] == Constant.MISSING;
+
+            // Data preparation: Code sex to a boolean.  If we can't interpret it, set missing.
+            switch (sexCoding)
+            {
+                case "f0m1":
+                    for (int i = 0; i < codedSex.Length; i++)
+                    {
+                        string value = codedSex[i].Trim();
+                        if ("0".Equals(value))
+                            isMale[i] = false;
+                        else if ("1".Equals(value))
+                            isMale[i] = true;
+                        else
+                            isRowMissing[i] = true;
+                    }
+                    break;
+                case "m0f1":
+                    for (int i = 0; i < codedSex.Length; i++)
+                    {
+                        string value = codedSex[i].Trim();
+                        if ("0".Equals(value))
+                            isMale[i] = true;
+                        else if ("1".Equals(value))
+                            isMale[i] = false;
+                        else
+                            isRowMissing[i] = true;
+                    }
+                    break;
+                case "f1m2":
+                    for (int i = 0; i < codedSex.Length; i++)
+                    {
+                        string value = codedSex[i].Trim();
+                        if ("1".Equals(value))
+                            isMale[i] = false;
+                        else if ("2".Equals(value))
+                            isMale[i] = true;
+                        else
+                            isRowMissing[i] = true;
+                    }
+                    break;
+                case "m1f2":
+                    for (int i = 0; i < codedSex.Length; i++)
+                    {
+                        string value = codedSex[i].Trim();
+                        if ("1".Equals(value))
+                            isMale[i] = true;
+                        else if ("2".Equals(value))
+                            isMale[i] = false;
+                        else
+                            isRowMissing[i] = true;
+                    }
+                    break;
+                case "mf":
+                    for (int i = 0; i < codedSex.Length; i++)
+                    {
+                        string value = codedSex[i].Trim().ToLowerInvariant();
+                        if ("m".Equals(value))
+                            isMale[i] = true;
+                        else if ("f".Equals(value))
+                            isMale[i] = false;
+                        else
+                            isRowMissing[i] = true;
+                    }
+                    break;
+                case "malefemale":
+                    for (int i = 0; i < codedSex.Length; i++)
+                    {
+                        string value = codedSex[i].Trim().ToLowerInvariant();
+                        if ("male".Equals(value))
+                            isMale[i] = true;
+                        else if ("female".Equals(value))
+                            isMale[i] = false;
+                        else
+                            isRowMissing[i] = true;
+                    }
+                    break;
+                default:
+                    throw new Exception("Unknown sex coding '" + sexCoding + "'");
+            }
+
+            // Output arrays
+            double[] rawZ = new double[data.Length];
+            double[] correctedZ = new double[data.Length];
+            double[] centile = includeCentiles? new double[data.Length] : null;
+            int[] bmiCategory = includeBmi ? new int[data.Length] : null;
+
+            return new ParameterBag();
+        }
+
         internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame inputFrame = parameters["data"].AsDataFrame;
