@@ -2554,7 +2554,9 @@ namespace StatsDirect.UI
             {
                 foreach (Control column in tlp.Controls)
                 {
-                    foreach (Control control in column.Controls)
+                    // "Column" is slightly confusing: each "column" in tlp is another TableLayoutPanel that itself has two columns (typically one for labels and another for rubrics).
+                    TableLayoutPanel thisColumn = (TableLayoutPanel)column;
+                    foreach (Control control in thisColumn.Controls)
                     {
                         if (null != control.Tag)
                         {
@@ -2583,9 +2585,9 @@ namespace StatsDirect.UI
             {
                 if (layoutSuspended)
                 {
-                    tlp.ResumeLayout(true);
                     foreach (Control col in tlp.Controls)
-                        col.ResumeLayout();
+                        col.ResumeLayout(false);
+                    tlp.ResumeLayout(true);
                 }
             }
             return atLeastOneVisibilityChange;

@@ -9,7 +9,7 @@
         <name>standardisation</name>
         <prompt>Standardisation</prompt>
         <must-request>true</must-request>
-        <default-value>weight|height|cdc2000,who2007</default-value>
+        <default-value>weight|age|cdc2000,uk1990,who2007,whoPreTerm,whoTerm</default-value>
         <format-type>Dropdown</format-type>
         <prompt-precedes-parameter>true</prompt-precedes-parameter>
         <options>
