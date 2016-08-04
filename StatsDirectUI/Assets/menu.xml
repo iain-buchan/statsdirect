@@ -80,6 +80,7 @@
                 <menu-item label="&amp;Screen Data" operation="ConvertUnitsScreen"/>
               </sub-items>
             </menu-item>
+            <menu-item label="&amp;Anthropometric Standardisation" operation="Zanthro" />
           </sub-items>
         </menu-item>
         <menu-item label="&amp;Organizing">
@@ -109,7 +110,6 @@
     <menu-item label="&amp;Analysis">
       <help chm-id="1016" />
       <sub-items>
-        <menu-item label="&amp;Anthropometric Z-Scores" operation="Zanthro" />
         <menu-item label="&amp;Exact Tests on Counts">
           <help chm-id="1107" />
           <sub-items>
@@ -250,6 +250,7 @@
               </sub-items>
             </menu-item>
             <menu-item label="Screening &amp;Test Errors" operation="MiscFalseResult" />
+            <menu-item label="&amp;Growth charts" operation="Zanthro" />
           </sub-items>
         </menu-item>
         <menu-item label="-" />
