@@ -4,38 +4,6 @@ using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
 {
-    [Serializable]
-    public sealed class OptionOption
-    {
-        private string value;
-        private string label;
-
-        [XmlAttribute(AttributeName = "value")]
-        public string Value
-        {
-            get { return value; }
-            set { this.value = value; }
-        }
-
-        [XmlText]
-        public string Label
-        {
-            get { return label; }
-            set { label = value; }
-        }
-
-        public override string ToString()
-        {
-            return label;
-        }
-    }
-
-    public enum OptionFormatType
-    {
-        Radio = 0,
-        Dropdown = 1
-    };
-
     /// <summary>
     /// A parameter allowing selection of one option from a list.
     /// </summary>
@@ -43,8 +11,6 @@ namespace StatsDirect.Templates
     public sealed class OptionParameter: Parameter
     {
         private readonly IList<OptionOption> options;
-        private int columns = 2;
-        private OptionFormatType optionFormatType = OptionFormatType.Radio;
 
         public OptionParameter()
         {
@@ -55,22 +21,14 @@ namespace StatsDirect.Templates
         /// A hint about the number of columns the UI should use to display options.
         /// </summary>
         /// <value>Defaults to 2</value>
-        [XmlElement(ElementName="columns")]
-        public int Columns
-        {
-            get { return columns; }
-            set { columns = value; }
-        }
+        [XmlElement(ElementName = "columns")]
+        public int Columns { get; set; } = 2;
 
         [XmlElement(ElementName="format-type")]
-        public OptionFormatType OptionFormatType
-        {
-            get { return optionFormatType; }
-            set { optionFormatType = value; }
-        }
+        public OptionFormatType OptionFormatType { get; set; } = OptionFormatType.Radio;
 
-        [XmlArray(ElementName="options"),
-            XmlArrayItem(ElementName = "option")]
+        [XmlArray(ElementName="options")]
+        [XmlArrayItem(ElementName = "option")]
         public OptionOption[] OptionsForXML
         {
             get
@@ -111,6 +69,7 @@ namespace StatsDirect.Templates
         {
             get { return options; }
         }
+
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
             return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
