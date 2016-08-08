@@ -34,9 +34,16 @@ namespace RtfConverter
                     // Render the result
                     CreoleRenderer renderer = new CreoleRenderer();
                     renderer.Process(withSplits, colourTable);
-                    Console.WriteLine(renderer.ToString());
+                    string outputPath = Path.ChangeExtension(path, ".creole");
+                    using (Stream s = File.OpenWrite(outputPath))
+                    {
+                        using (TextWriter tw = new StreamWriter(s))
+                        {
+                            tw.Write(renderer.ToString());
+                        }
+                    }
                 }
-                Console.ReadLine();
+                // Console.ReadLine();
             }
         }
 
