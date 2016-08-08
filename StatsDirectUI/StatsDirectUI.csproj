@@ -1130,7 +1130,6 @@
     <None Include="Assets\Template\agree.rtf" />
     <None Include="Assets\Template\asciigr.rtf" />
     <None Include="Assets\Template\BACKINT.rtf" />
-    <None Include="Assets\Template\bartlett.rtf" />
     <None Include="Assets\Template\blank.rtf" />
     <None Include="Assets\Template\BONFERR.rtf" />
     <None Include="Assets\Template\chartonly.rtf" />
@@ -1153,7 +1152,6 @@
     <None Include="Assets\Template\coxreg.rtf" />
     <None Include="Assets\Template\cox_det.rtf" />
     <None Include="Assets\Template\cox_dev.rtf" />
-    <None Include="Assets\Template\cox_r.rtf" />
     <None Include="Assets\Template\cox_s.rtf" />
     <None Include="Assets\Template\cronbach.rtf" />
     <None Include="Assets\Template\cuzick.rtf" />
@@ -1774,7 +1772,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
