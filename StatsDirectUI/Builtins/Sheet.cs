@@ -500,6 +500,7 @@ namespace StatsDirect.Builtins
 
         internal static ParameterBag RptZanthro(ITemplateHost host, ParameterBag parameters)
         {
+#if HELLHASFROZENOVER
             const double DEFAULT_GESTATIONAL_AGE_WEEKS = 40.0;
 
             string standardisation = parameters["standardisation"].AsString;
@@ -722,6 +723,8 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add(new DoubleVariable(bmiCategory, "BMI category"));
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
+#endif
+            return new Templates.ParameterBag();
         }
 
         private static double ZanthroCorrectZ(double rawZ, ZanthroZCorrectionMode zCorrectionMode)
@@ -770,6 +773,7 @@ namespace StatsDirect.Builtins
 
         private static double ZanthroCalculateZ(LmsTable table, double data, double standardise, double gestationalAge)
         {
+#if HELLHASFROZENOVER
             // t is the corrected xvar - turned into years for any age, TODO: Not sure for ht/wt.
             double t = 0, xvar_pre = 0, xvar = 0, xvar_nx = 0, xvar_nx2 = 0, y;
             double lms_pre = pre;
@@ -781,6 +785,8 @@ namespace StatsDirect.Builtins
                 + (lms * (t-xvar_pre)*(t-xvar_nx)*(t-xvar_nx2))/((xvar-xvar_pre)*(xvar-xvar_nx)*(xvar-xvar_nx2))
                 + (lms_nx*(t-xvar_pre)*(t-xvar)*(t-xvar_nx2))/((xvar_nx-xvar_pre)*(xvar_nx-xvar)*(xvar_nx-xvar_nx2))
                 + (lms_nx2*(t-xvar_pre)*(t-xvar)*(t-xvar_nx))/((xvar_nx2-xvar_pre)*(xvar_nx2-xvar)*(xvar_nx2-xvar_nx));
+#endif
+            return Constant.MISSING;
         }
 
         internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
