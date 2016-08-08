@@ -18,6 +18,6 @@
         </frame>
       </parameters>
 	<builtin function-name="rptZUnpaired" />
-	<report type="text/rtf" filename="z_norm2.rtf" />
+  <report type="application/x-statsdirect-creole" filename="z_norm2.creole" />
 	</steps>
 </operation>
