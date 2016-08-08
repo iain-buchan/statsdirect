@@ -1,0 +1,16 @@
+<report>
+<line><title>Linearized Estimates</title></line>
+<line></line>
+<line>Model : <in>modelDescription</in></line>
+<line>Method: unweighted least squares</line>
+<line>For <in>lab_y</in> vs <in>lab_x</in></line>
+<line></line>
+<line>A = <in>a</in></line>
+<line>B = <in>b</in></line>
+<line></line>
+<line>Correlation coefficient (r) = <in>r</in>    (r&#xb2; = <in>r2</in>)</line>
+<line></line>
+<line>Standard error of estimate  = <in>ste</in></line>
+<line></line>
+<line></line>
+</report>

@@ -1,0 +1,22 @@
+<report>
+<line><title>Latin square test</title></line>
+<line></line>
+<line>Column, row and treatment factors: <in>tlist</in></line>
+<line></line>
+<table>
+<tr><td>Source of Variation</td><th>Sum Squares</th><th>DF</th><th>Mean Square</th></u></tr>
+<tr><td>Rows</td><td><in>row_sum</in></td><td><in>row_f</in></td><td><in>row_mean</in></td></tr>
+<tr><td><ci>Columns</td><td><in>col_sum</in></td><td><in>col_f</in></td><td><in>col_mean</in></ci></td></tr>
+<tr><td>Treatments</td><td><in>treat_sum</in></td><td><in>treat_f</in></td><td><in>treat_mean</in></td></tr>
+<tr><td><ci>Residual</td><td><in>res_sum</in></td><td><in>res_f</in></td><td><in>res_mean</in></ci></td></tr>
+<tr><td><warn>Total</td><td><in>tot_sum</in></td><td><in>tot_f</in></warn></td></tr>
+</table>
+<line></line>
+<line><b>F (rows) </b>= <in>f_row</in>  <pval><in>p_row</in></pval></line>
+<line></line>
+<line><b>F (columns)</b> = <in>f_col</in>  <pval><in>p_col</in></pval></line>
+<line></line>
+<line><b>F (treatments)</b> = <in>f_treat</in>  <pval><in>p_treat</in></pval></line>
+<line></line>
+<line></line>
+</report>

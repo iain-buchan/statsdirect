@@ -1,0 +1,7 @@
+<report>
+<line></line>
+<line><in>residualsVsY</in></line>
+<line><in>residualsVsPredictor</in></line>
+<line><in>residualsNormalPlot</in></line>
+<line></line>
+</report>

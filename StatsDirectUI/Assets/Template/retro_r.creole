@@ -1,0 +1,28 @@
+<report>
+<line><title>Risk analysis (retrospective)</title></line>
+<line></line>
+<table>
+<tr><td></td><td><subtotal>Characteristic factor:</subtotal></td></tr>
+<tr><td><subtotal>Outcome:</subtotal></td><td>Present</td><td>Absent</td></tr>
+<tr><td>Positive</td><td><in>aa</in></td><td><in>bb</in></td></tr>
+<tr><td>Negative</td><td><in>cc</in></td><td><in>dd</in></td></tr>
+</table>
+<line></line>
+<line>Observed odds ratio = <in>odds</in></line>
+<line>Approximate power <in>pwr</in><block name="power"></line>
+<line></line>
+<line><ci>Approximate (Woolf, logit) <in>ci</in>% confidence interval = <in>ci_1</in>  to  <in>ci_2</in> </ci></line>
+<line></block></line>
+<line>Conditional maximum likelihood estimates:</line>
+<line>Conditional estimate of odds ratio = <in>eor</in></line>
+<line><ci>Exact Fisher <in>pc</in>% confidence interval = <in>llf</in>  to  <in>ulf</in></ci></line>
+<line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
+<line><ci>Exact mid-P <in>pc</in>% confidence interval = <in>llm</in>  to  <in>ulm</in></ci></line>
+<line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></line>
+<line><block name="risk"></line>
+<line>Population exposure % = <in>pe</in></line>
+<line>Population attributable risk % = <in>par</in></line>
+<line><ci>Approximate <in>pc</in>% confidence interval = <in>from</in>  to  <in>to</in></ci></line>
+<line></block></line>
+<line></line>
+</report>

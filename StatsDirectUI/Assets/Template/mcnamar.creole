@@ -1,0 +1,24 @@
+<report>
+<line><title>McNemar and exact (Liddell) test for a paired fourfold table</title></line>
+<line></line>
+<line><b>Input table:</b></line>
+<table>
+<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
+<tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
+</table>
+<line></line>
+<line>Uncorrected Chi&#xb2; = <in>chi</in> (1 DF)  <ci><in>chi_p</in></ci></line>
+<line>Yates' continuity corrected Chi&#xb2; = <in>yates_chi</in> (1 DF)  <ci><in>yates_chi_p</in></ci></line>
+<line></line>
+<line><b>After Liddell (1983):</b></line>
+<line>Point estimate of relative risk (R') = <in>risk</in></line>
+<line></line>
+<line>Exact <in>pc</in>% confidence interval = <in>from</in> to <in>to</in></line>
+<line></line>
+<line>F = <in>f</in></line>
+<line><ci>Two sided <in>tail_2</in></ci><block name="r_prime"></line>
+<line></line>
+<line>R' is significantly different from unity</block></line>
+<line></line>
+<line></line>
+</report>

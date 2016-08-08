@@ -1,0 +1,18 @@
+<report>
+<line><title>Bonferroni comparison</title></line>
+<line></line>
+<line>Variable A: <in>var_a</in></line>
+<line>Variable B: <in>var_b</in></line>
+<line>Mean A - Mean B = <in>a-b</in></line>
+<line>Estimated std. error = <in>std_err</in></line>
+<line>Number of groups = <in>groups</in></line>
+<line><in>pc</in>% confidence interval = <in>from</in> to <in>to</in></line>
+<line></line>
+<line>t = <in>t</in></line>
+<line>df = <in>df</in></line>
+<line><in>p</in></line>
+<line></line>
+<line>Bonferroni critical P for <in>comp</in> = <in>bonf</in></line>
+<line></line>
+<line></line>
+</report>

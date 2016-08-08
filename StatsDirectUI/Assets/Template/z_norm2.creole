@@ -1,0 +1,23 @@
+<report>
+<line><title>Normal distribution (z) test - two independent samples</title></line>
+<line></line>
+<table>
+<tr><td><block name="sample">Sample name:</td><td><in>name</in></td></tr>
+<tr><td>Mean = </td><td><in>mean</in></td></tr>
+<tr><td>Variance =</td><td><in>var</in></td></tr>
+<tr><td>Size =</td><td><in>size</in></td></tr>
+</table>
+<line></line>
+<line></block>Combined standard error = <in>error</in></line>
+<line></line>
+<line><ci><in>pc</in>% confidence interval for difference between means = <in>from</in> to <in>to</in></ci></line>
+<line></line>
+<line>Standard normal deviate (z) = <in>z</in></line>
+<line></line>
+<line><pval>One sided <in>p_1</in></pval></line>
+<line><pval>Two sided <in>p_2</in></pval><block name="warn"></line>
+<line></line>
+<line><warn>WARNING: numbers too small for this test consider using a Student t test instead</warn></block></line>
+<line></line>
+<line></line>
+</report>

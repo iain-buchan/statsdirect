@@ -1,0 +1,25 @@
+<report>
+<line>With raw variables:</line>
+<line></line>
+<table>
+<tr><td>Scale reliability alpha =</td><td><in>raw_t</in>  <ci>(<in>pc</in>% lower confidence limit = <in>raw_cl</in>)</ci><u></th></u></tr>
+</table>
+<line></line>
+<table>
+<tr><td>Variable dropped</td><th>Alpha</th><th>Change</u><block name="raw"><subtotal></td></subtotal></tr>
+<tr><td><in>lab</in></td><td><in>a</in></td><td><warn><in>x</in></td><td></warn><in>a-t</in></block></td></tr>
+</table>
+<line></line>
+<line>With standardized variables:</line>
+<line></line>
+<table>
+<tr><td>Scale reliability alpha =</td><td><in>standard_t</in> <ci>(<in>pc</in>% lower confidence limit = <in>standard_cl</in>)</ci><u></th></u></tr>
+</table>
+<line></line>
+<table>
+<tr><td>Variable dropped</td><th>Alpha</th><th>Change</u><block name="standard"><subtotal></td></subtotal></tr>
+<tr><td><in>lab</in></td><td><in>a</in></td><td><warn><in>x</in></td><td></warn><in>a-t</in></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

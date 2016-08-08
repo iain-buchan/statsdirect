@@ -1,0 +1,22 @@
+<report>
+<line><title>Friedman test</title></line>
+<line></line>
+<line>Variables: <in>tlist</in></line>
+<line></line>
+<line>Mean rank: <in>rlist</in></line>
+<line></line>
+<line>Treatment average sum of squares of ranks = <in>a2</in></line>
+<line>Number of blocks = <in>nb</in></line>
+<line>T<sub>1</sub> (chi-square) = <in>t1</in></line>
+<line>df = <in>df</in></line>
+<line></line>
+<line>After Iman & Davenport (1980):</line>
+<line>T<sub>2</sub> (F) =  <in>t2</in></line>
+<line><pval><in>p</in></pval><block name="message"></line>
+<line></line>
+<line><in>msg</in></block><block name="warn"></line>
+<line></line>
+<line><in>warning</in></block></line>
+<line></line>
+<line></line>
+</report>

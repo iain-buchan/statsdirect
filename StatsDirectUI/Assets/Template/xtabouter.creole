@@ -1,0 +1,3 @@
+<report>
+<line><block name="columns"><block name="xtabz">/include "xtabz.rtf"/</block><block name="mantel">/include "mantel.rtf"//include "charts.rtf"/</block><block name="rrmeta">/include "rrmeta.rtf"//include "charts.rtf"/</block><block name="gencmh">/include "gencmh.rtf"/</block><block name="xtab">/include "xtab.rtf"/</block><block name="chirxc">/include "chirxc.rtf"/</block></block></line>
+</report>

@@ -1,0 +1,25 @@
+<report>
+<line><title>Paired t test</title></line>
+<line></line>
+<line>For <in>label</in>:</line>
+<line>Mean of differences = <in>mean</in>  (n = <in>n</in>)</line>
+<line>Standard deviation = <in>sd</in></line>
+<line>Standard error = <in>sem</in></line>
+<line></line>
+<line><ci><in>pc</in>% CI = <in>from</in> to <in>to</in></ci></line>
+<line></line>
+<line>df =  <in>df</in></line>
+<line>t = <in>t</in></line>
+<line></line>
+<line><pval>One sided <in>tail_1</in></pval></line>
+<line><pval>Two sided <in>tail_2</in></pval></line>
+<line></line>
+<line>Power <in>pwr</in></line>
+<line><block name="twosample"></line>
+<line></line>
+<line><title>Two sample analysis of agreement</title></line>
+<line></line>
+<line><in>pc</in>% Limits of agreement = <in>from2</in> to <in>to2</in></line>
+<line></block></line>
+<line></line>
+</report>

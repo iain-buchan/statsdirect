@@ -1,0 +1,13 @@
+<report>
+<line><title>Polynomial regression</title></line>
+<line><block name="warn"></line>
+<line>WARNING: <in>warn</in></line>
+<line></block></line>
+<table>
+<tr><td><block name="row"><block name="col"><in>label</in></td><td>b<in>b</in>= <in>val_b</in></td><td><in>rp</in></td><td>t = <in>t</in></td><td><pval><in>p</in></pval></td></tr>
+</table>
+<line></block></line>
+<line><in>y</in> = <block name="z"><in>z</in></block></block></line>
+<line></line>
+<line></line>
+</report>

@@ -1,0 +1,20 @@
+<report>
+<line><title>Two sample Smirnov test for distribution difference</title></line>
+<line></line>
+<line>X sample: <in>x</in></line>
+<line>Y sample: <in>y</in></line>
+<line></line>
+<line>Two sided test:</line>
+<line>D = <in>d</in></line>
+<line><in>p</in></line>
+<line></line>
+<line>One sided test (suspecting <in>sample_1</in> shifted left of <in>sample_2</in>):</line>
+<line>D = <in>d_l</in></line>
+<line><in>p_l</in></line>
+<line></line>
+<line>One sided test (suspecting <in>sample_1</in> shifted right of <in>sample_2</in>):</line>
+<line>D = <in>d_r</in></line>
+<line><in>p_r</in></line>
+<line></line>
+<line></line>
+</report>

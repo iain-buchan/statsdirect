@@ -1,0 +1,5 @@
+<report>
+<line><pval>Simulated exact <in>p</in> (<in>pc</in>% CI: <in>ll</in> to <in>ul</in>) on <in>k</in> Monte Carlo samples (seed: <in>seed_fmt</in>)</pval></line>
+<line></line>
+<line></line>
+</report>

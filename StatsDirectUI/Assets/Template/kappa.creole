@@ -1,0 +1,43 @@
+<report>
+<line><title>General agreement over all categories (2 raters)</title></line>
+<line></line>
+<line><u>Cohen's kappa (unweighted)</u></line>
+<line>Observed agreement = <in>po</in>%</line>
+<line>Expected agreement = <in>pe</in>%</line>
+<line>Kappa = <in>kappa</in> (se_0 = <in>se</in>, se = <in>seci</in>)</line>
+<line><ci><in>pc</in>% confidence interval = <in>from</in> to <in>to</in></ci></line>
+<line>z (for k = 0) = <in>z</in></line>
+<line><pval><in>p</in></pval></line>
+<line></line>
+<line><u>Cohen's kappa (weighted by <in>methodName</in>)</u></line>
+<line>ratings weighted by:<block name="weights"></line>
+<table>
+<tr><td><block name="tot"><in>tot</in></td><td></block></block></td></tr>
+</table>
+<line>Observed agreement = <in>pow</in>%</line>
+<line>Expected agreement = <in>pew</in>%</line>
+<line>Kappa = <in>kappaw</in> (se_0 = <in>sekw</in>, se = <in>sekwci</in>)</line>
+<line><ci><in>pcw</in>% confidence interval for kappa = <in>fromw</in> to <in>tow</in></ci></line>
+<line>z (for kw = 0) = <in>zw</in></line>
+<line><pval><in>pw</in></pval></line>
+<line></line>
+<line><u>Scott's pi</u></line>
+<line>Observed agreement = <in>pocopy</in>%</line>
+<line>Expected agreement = <in>spe</in>%</line>
+<line>Pi = <in>spi</in><block name="deci"></line>
+<line><ci><in>pc</in>% Donner-Eliasziw confidence interval = <in>lwr</in> to <in>upr</in></ci></block></line>
+<line></line>
+<line><u>Gwet's AC1</u></line>
+<line>Observed agreement = <in>gamapc</in>%</line>
+<line>Chance-independent agreement = <in>pegamapc</in>%</line>
+<line>AC1 = <in>gama</in> (se = <in>segama</in>)</line>
+<line><ci><in>pc</in>% confidence interval = <in>gamacil</in> to <in>gamaciu</in></ci></line>
+<line></line>
+<line><title>Disagreement over any category and asymmetry of disagreement (2 raters)</title></line>
+<line></line>
+<line>Marginal homogeneity (Maxwell) chi-square = <in>x2</in>  df = <in>df</in>  <pval><in>pmaxwell</in></pval></line>
+<line></line>
+<line>Symmetry (generalised McNemar) chi-square = <in>x2m</in>  df = <in>dfmcnemar</in>  <pval><in>pmcnemar</in></pval></line>
+<line></line>
+<line></line>
+</report>

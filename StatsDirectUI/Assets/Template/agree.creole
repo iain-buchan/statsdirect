@@ -1,0 +1,24 @@
+<report>
+<line><title>Agreement</title></line>
+<line></line>
+<line>Variables: <in>tlist</in></line>
+<line><block name="all"></line>
+<line><in>pc</in>% Limits of agreement = <in>from</in> to <in>to</in></line>
+<line></block></line>
+<line>Intra-class correlation coefficient (one way random effects) = <in>icc</in></line>
+<line></line>
+<line>Estimated within-subjects standard deviation = <in>wssd</in></line>
+<line></line>
+<line>For within-subjects sd vs. mean, Kendall's <in>tau</in>  two sided <in>p2</in></line>
+<line></line>
+<line>Repeatability (for alpha = <in>pc</in>) = <in>rep</in></line>
+<line></line>
+<line></line>
+<line><in>repeatability</in></line>
+<line></line>
+<line></line>
+<line><in>agreement</in></line>
+<line></line>
+<line></line>
+<line><in>qq</in></line>
+</report>

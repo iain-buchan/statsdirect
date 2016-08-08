@@ -1,0 +1,24 @@
+<report>
+<line><title>Conditional logistic regression</title></line>
+<line><block name="counts"></line>
+<table>
+<tr><th>Stratum (match group)</th><th>Cases</th><th>Controls</u></td></tr>
+<tr><td><block name="count"><in>st</in></td><td><in>ca</in></td><td><in>ct</in></td></tr>
+</table>
+<line></block></block></line>
+<line>Deviance (-2 log likelihood) = <in>dv</in>   <warn><in>warn</in></warn></line>
+<line>Deviance (likelihood ratio) chi-square = <in>x2</in>  <pval><in>p_dev</in></pval></line>
+<line>Pseudo (McFadden) R-square = <in>r2</in></line>
+<line></line>
+<table>
+<tr><td>Label</td><th>Parameter estimate</th><th>Standard error</u> <block name="est"></td></tr>
+<tr><td><in>lab</in></td><td><in>b</in></td><td><in>se</in></td><td>z = <in>z</in></td><td><pval><in>p</in></pval></block></td></tr>
+</table>
+<line></line>
+<table>
+<tr><th>Label</th><th>Odds ratio</th><th><ci><in>pc</in>% confidence interval</ci></u> <block name="or"></td></tr>
+<tr><td><in>lab</in></td><td><in>or</in></td><td><ci><in>from</in>  to  <in>to</in></ci></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

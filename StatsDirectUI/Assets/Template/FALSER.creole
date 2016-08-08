@@ -1,0 +1,13 @@
+<report>
+<line><title>False result probabilities</title></line>
+<line></line>
+<line>For an overall case rate of <in>population</in> per ten thousand population tested:</line>
+<line></line>
+<line>Test SENSITIVITY = <in>sensitive</in>%</line>
+<line>Probability of a FALSE POSITIVE result = <in>positive</in></line>
+<line></line>
+<line>Test SPECIFICITY = <in>specific</in>%</line>
+<line>Probability of a FALSE NEGATIVE result = <in>negative</in></line>
+<line></line>
+<line></line>
+</report>

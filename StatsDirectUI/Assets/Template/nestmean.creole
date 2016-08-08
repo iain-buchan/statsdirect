@@ -1,0 +1,11 @@
+<report>
+<line>System;<block name="group">Group <in>ggrp</in> mean = <in>gmean</in>  (n = <in>gn</in>)</line>
+<line></block>Grand mean = <in>g_mean</in>  (n = <in>g_n</in>)</line>
+<line></line>
+<table>
+<tr><td><block name="subgroup">Group <in>sggrp</in></td><td>(subgroup <in>sgsub_grp</in>)</td><td><in>sgtitle</in>    mean = <in>sgmean</in></td></tr>
+</table>
+<line></block></line>
+<line></line>
+<line></line>
+</report>

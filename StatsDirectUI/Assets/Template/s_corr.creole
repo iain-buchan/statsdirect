@@ -1,0 +1,11 @@
+<report>
+<line><title>Sample size for Pearson correlation</title></line>
+<line></line>
+<line>Alpha = <in>alpha</in></line>
+<line>Power = <in>power</in></line>
+<line>Correlation coefficient under null hypothesis = <in>r0Fmt</in></line>
+<line>Correlation coefficient under alternative hypothesis = <in>r1Fmt</in></line>
+<line>Estimated minimum sample size = <in>size</in></line>
+<line></line>
+<line></line>
+</report>

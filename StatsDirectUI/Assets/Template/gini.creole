@@ -1,0 +1,24 @@
+<report>
+<line><title>Gini coefficient of inequality</title></line>
+<line><block name="data"></line>
+<line><u><subtotal>Analysis for <in>ti</in></subtotal></u>:</line>
+<line></line>
+<line>Positive non-zero observations = <in>n</in>  <warn><in>msg</in></warn></line>
+<line>Variance coefficient = <in>cv</in></line>
+<line></line>
+<line>Re-samples = <in>boots</in></line>
+<line>Bias = <in>bias</in></line>
+<line>Standard error (bootstrap) = <in>se</in></line>
+<line></line>
+<line>Gini coefficient = <in>gini</in></line>
+<line><ci>Percentile <in>pc</in>% CI = <in>from</in> to <in>to</in></ci></line>
+<line>BCa <in>pc</in>% CI = <in>BCafrom</in> to <in>BCato</in></line>
+<line></line>
+<line>Unbiased estimator of population Gini coefficient = <in>gini-unbiased</in></line>
+<line><ci>Percentile <in>pc</in>% CI = <in>from-unbiased</in> to <in>to-unbiased</in></ci></line>
+<line>BCa <in>pc</in>% CI = <in>BCafrom-unbiased</in> to <in>BCato-unbiased</in></line>
+<line></block></line>
+<line></line>
+<line><in>chart</in></line>
+<line></line>
+</report>

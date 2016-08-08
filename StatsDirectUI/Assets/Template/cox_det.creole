@@ -1,0 +1,15 @@
+<report>
+<line><title>Cox regression - hazard ratios</title></line>
+<line></line>
+<table>
+<tr><th>Parameter</th><th>Hazard Ratio</th><th><ci><in>pc2</in>% CI</ci></u><block name="hazard"></td></tr>
+<tr><td><in>par</in></td><td><in>ec</in></td><td><ci><in>ell</in>  to  <in>eul</in></ci></block></td></tr>
+</table>
+<line></line>
+<table>
+<tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</u><block name="parameter"></td></tr>
+<tr><td><in>par</in></td><td><in>coef</in></td><td><in>se</in></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

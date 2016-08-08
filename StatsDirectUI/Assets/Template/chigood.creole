@@ -1,0 +1,19 @@
+<report>
+<line><title>Chi-square goodness of fit</title></line>
+<line></line>
+<line>Sample: <in>ti</in>:</line>
+<line></line>
+<line><pval>N = <in>n</in></pval></line>
+<line></line>
+<table>
+<tr><td><pval>Count</td><td>Observed frequency</td><td>Expected frequency</td></pval></tr>
+<tr><td><block name="frequencies"><in>x</in></td><td><in>o</in></td><td><in>e</in></td></tr>
+</table>
+<line></block></line>
+<line>Chi-square = <in>chi2</in>   df = <in>df</in></line>
+<line><warn><in>p</in></warn><block name="warn"></line>
+<line></line>
+<line><in>warn</in></block></line>
+<line></line>
+<line></line>
+</report>

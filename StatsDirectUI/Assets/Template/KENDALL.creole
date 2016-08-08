@@ -1,0 +1,33 @@
+<report>
+<line><title>Kendall's rank correlation</title></line>
+<line></line>
+<line><in>sample_1</in> vs. <in>sample_2</in></line>
+<line>Observations per sample = <in>obs</in></line>
+<line>Concordant pairs  =  <in>con</in></line>
+<line>Discordant pairs  =  <in>dis</in></line>
+<line>Tied pairs = <in>tie</in></line>
+<line>Kendall's score = <in>s</in>   (standard error = <in>ses</in>)</line>
+<line>Gamma = <in>gam</in></line>
+<line></line>
+<line>Kendall's <in>tb</in>  = <in>tau</in></line>
+<line><warn>Approximate <in>pc</in>% CI = <in>ll</in> to <in>ul</in></warn></line>
+<line></line>
+<line><u>Approximate tests<in>adj</in></u><pval><block name="smallsample"> </pval></line>
+<line>Sample size too small for reliable inference from z, use exact test</block></line>
+<line>z = <in>kz</in></line>
+<line>Upper side <in>p_u</in>  (H<sub>1</sub>: concordance)</line>
+<line>Lower side <in>p_l</in>  (H<sub>1</sub>: discordance)</line>
+<line>Two sided <in>p_2</in>  (H<sub>1</sub>: dependence)</line>
+<line></line>
+<line>z (continuity corrected) = <in>kzcc</in></line>
+<line>Upper side <in>p_ucc</in>  (H<sub>1</sub>: concordance)</line>
+<line>Lower side <in>p_lcc</in>  (H<sub>1</sub>: discordance)</line>
+<line>Two sided <in>p_2cc</in>  (H<sub>1</sub>: dependence)</line>
+<line></line>
+<line><u>Exact test<in>adjexact</in></u></line>
+<line>Upper side <in>p_uexact</in>  (H<sub>1</sub>: concordance)</line>
+<line>Lower side <in>p_lexact</in>  (H<sub>1</sub>: discordance)</line>
+<line>Two sided <in>p_2exact</in>  (H<sub>1</sub>: dependence)</line>
+<line></line>
+<line></line>
+</report>

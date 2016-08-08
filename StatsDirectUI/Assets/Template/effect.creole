@@ -1,0 +1,33 @@
+<report>
+<line><title>Effect size meta-analysis</title></line>
+<line></line>
+<table>
+<tr><th>Stratum</th><th>J(N-2)</th><th>g<subtotal></th><th></subtotal><ci>Exact <in>pc</in>% CI</ci></th></u></tr>
+<tr><td><block name="exact"><in>st</in></td><td><in>gj</in></td><td><in>g</in></td><td><ci><in>lci</in></td><td><in>uci</in></td><td></ci><subtotal><in>lb</in></subtotal></td></tr>
+</table>
+<line></block></line>
+<line></line>
+<table>
+<tr><th>Stratum</th><th>N (exptl.)</th><th>N (ctrl.)</th><th>d<subtotal></th><th></subtotal><ci>Approximate <in>pc</in>% CI</ci></u><block name="approximate"></td></tr>
+<tr><td><in>st</in></td><td><in>ne</in></td><td><in>nc</in></td><td><in>d</in></td><td><ci><in>lci</in></td><td><in>uci</in></td><td></ci><subtotal><in>lb</in></subtotal></block></td></tr>
+</table>
+<line><block name="poolok"></line>
+<line><u>Fixed effects (Hedges-Olkin)</u></line>
+<line>Pooled effect size d+ = <in>dplus</in> (<ci><in>pc</in>% CI = <in>from</in> to <in>to</in></ci>)</line>
+<line>Z (test d+ differs from 0) = <in>z</in>  <pval><in>p</in></pval></line>
+<line></line>
+<line><u>Non-combinability of studies</u></line>
+<line>Cochran Q = <in>qc</in>  (df = <in>df</in>)  <pval><in>xp</in></pval></line>
+<line>Moment-based estimate of between studies variance = <in>tausq</in></line>
+<line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
+<line></line>
+<line><u>Random effects (DerSimonian-Laird)</u></line>
+<line>Pooled d+ = <in>dsrd</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
+<line>Z (test d+ differs from 0) = <in>dz</in>  <pval><in>dp</in></pval></block></line>
+<line></line>
+<line><u>Bias indicators</u><block name="egger"></line>
+<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
+<line></line>
+<line></line>
+</report>

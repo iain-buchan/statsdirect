@@ -1,0 +1,41 @@
+<report>
+<line><title>Number needed to treat (empirical results using observed counts only)</title></line>
+<line></line>
+<line><ci>Estimates with <in>pc</in>% confidence intervals:</ci></line>
+<line></line>
+<line>Risk of event in controls = <in>ce</in> <ci>(<in>ce_from</in> to <in>ce_to</in>)</ci></line>
+<line>Risk of event in treated = <in>te</in> <ci>(<in>te_from</in> to <in>te_to</in>)</ci></line>
+<line>Relative risk of event = <in>rre</in> <ci>(<in>rre_from</in> to <in>rre_to</in>)</ci></line>
+<line></line>
+<line>Risk of no event in controls = <in>cne</in> <ci>(<in>cne_from</in> to <in>cne_to</in>)</ci></line>
+<line>Risk of no event in treated = <in>tne</in> <ci>(<in>tne_from</in> to <in>tne_to</in>)</ci></line>
+<line>Relative risk of no event = <in>rrne</in> <ci>(<in>rrne_from</in> to <in>rrne_to</in>)</ci></line>
+<line></line>
+<line>Odds ratio of event in treated cf. controls = <in>oor</in> <ci>(<in>oor_from</in> to <in>oor_to</in>)</ci></line>
+<line>Relative risk reduction (controls-treated) = <in>rrr</in> <ci>(<in>rrr_from</in> to <in>rrr_to</in>)</ci></line>
+<line>Risk difference (controls-treated) = <in>rd</in> <ci>(<in>rd_from</in> to <in>rd_to</in>)</ci></line>
+<line></line>
+<line>NNT [risk difference] = <in>treat</in> <ci>(<in>treat_from</in> to <in>treat_to</in>)</ci></line>
+<line><b>NNT [risk difference] (rounded up) = <in>treat_round</in> <ci>(<in>treat_round_from</in> to <in>treat_round_to</in>) </ci></b></line>
+<line><block name="adjusted"></line>
+<line></line>
+<line><u>Number needed to treat (adjusted for baseline/expected risk)</u></line>
+<line></line>
+<line>Expected risk of event without treatment <in>type</in>= <in>brr</in>%</line>
+<line></line>
+<line>Estimates with <in>pc</in>% confidence intervals:</line>
+<line></line>
+<line>NNT [risk difference] = <in>rd_treat</in> <ci>(<in>rd_treat_from</in> to <in>rd_treat_to</in>)</ci></line>
+<line><b>NNT [risk difference] (rounded up) = <in>rd_treat_round</in> <ci>(<in>rd_treat_round_from</in> to <in>rd_treat_round_to</in>)</ci></b></line>
+<line></line>
+<line>NNT [relative risk of event] = <in>rr_treat</in> <ci>(<in>rr_treat_from</in> to <in>rr_treat_to</in>)</ci></line>
+<line><b>NNT [relative risk of event] (rounded up) = <in>rr_treat_round</in> <ci>(<in>rr_treat_round_from</in> to <in>rr_treat_round_to</in>)</ci></b></line>
+<line></line>
+<line>NNT [relative risk of no event] = <in>rrn_treat</in> <ci>(<in>rrn_treat_from</in> to <in>rrn_treat_to</in>)</ci></line>
+<line><b>NNT [relative risk of no event] (rounded up) = <in>rrn_treat_round</in> <ci>(<in>rrn_treat_round_from</in> to <in>rrn_treat_round_to</in>)</ci></b></line>
+<line></line>
+<line>NNT [odds ratio] = <in>or_treat</in> <ci>(<in>or_treat_from</in> to <in>or_treat_to</in>)</ci></line>
+<line><b>NNT [odds ratio] (rounded up) = <in>or_treat_round</in> <ci>(<in>or_treat_round_from</in> to <in>or_treat_round_to</in>)</ci></b></line>
+<line></block></line>
+<line></line>
+</report>

@@ -1,0 +1,8 @@
+<report>
+<line><table>
+<u>Variable</th></u><td><block name="pc"><u>PC<in>pc</in><b></th></u><td></b></block><block name="var"></td></tr>
+<tr><td><ci><in>lab</in></ci></td><td><block name="res"><in>res</in><subtotal></td><td></subtotal></block></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

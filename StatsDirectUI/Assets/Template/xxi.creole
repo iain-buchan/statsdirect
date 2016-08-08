@@ -1,0 +1,7 @@
+<report>
+<line><title>Multiple linear regression - XXi (hat) matrix</title></line>
+<line></line>
+<line><block name="xxi"><in>x</in></line>
+<line></block></line>
+<line></line>
+</report>

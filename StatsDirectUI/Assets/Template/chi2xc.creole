@@ -1,0 +1,20 @@
+<report>
+<line><title>Chi-square test (2 by k)</title></line>
+<line></line>
+<table>
+<tr><td><b></td><td>Successes</td><td>Failures</td><td>Total</td><td>Per cent</td><td>Score</b></td></tr>
+<tr><td><block name="row">Observed</td><td><in>obs_succ</in></td><td><in>obs_fail</in></td><td><in>obs_tot</in></td><td><in>obs_pc</in></td><td><in>score</in></td></tr>
+<tr><td><warn>Expected</td><td><in>exp_succ</in></td><td><in>exp_fail</in></warn></td></tr>
+<tr><td></block><b>Total</td><td><in>tot_succ</in></td><td><in>tot_fail</in></td><td><in>tot_tot</in></td><td><in>tot_pc</in></b><pval><block name="warn"></td></pval></tr>
+</table>
+<line></line>
+<line><pval>Warning: <in>num</in> out of <in>den</in> cells have expected frequency less than 5</block></pval></line>
+<line></line>
+<line>Total Chi&#xb2; = <in>chi</in>  |Chi| = <in>chi_abs</in> (<in>totdf</in> DF)  <in>chi_p</in><block name="z"></line>
+<line></line>
+<line>Chi&#xb2; for linear trend = <in>chi_lin</in>  |Chi| = <in>chi_1df</in> (1 DF)  <in>chi_lin_p</in></line>
+<line></line>
+<line>Remaining Chi&#xb2; (non-linearity) = <in>chi_non</in> (<in>df</in> DF)  <in>chi_non_p</in></block></line>
+<line></line>
+<line></line>
+</report>

@@ -1,0 +1,9 @@
+<report>
+<line><in>type</in> matrix:</line>
+<table>
+<tr><td></td><td><block name="lab1"><u><subtotal><in>lab</in></subtotal><b></th></u><td></b></block><block name="lab2"></td></tr>
+<tr><td><subtotal><in>lab</in></subtotal></td><td><block name="res"><in>res</in><warn></td><td></warn></block></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

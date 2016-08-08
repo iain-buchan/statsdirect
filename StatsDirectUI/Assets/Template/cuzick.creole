@@ -1,0 +1,25 @@
+<report>
+<line><title>Cuzick's trend test</title></line>
+<line></line>
+<line>Groups = <in>groups</in></line>
+<line>Observations = <in>obs</in></line>
+<line>Order: <in>order</in></line>
+<line></line>
+<table>
+<tr><td>Ez =  <in>ez</in></td><td>Var(z) = <in>varz</in></td></tr>
+<tr><td>T = <in>t</in></td><td>ET = <in>et</in></td><td>Var(T) = <in>vart</in></td></tr>
+</table>
+<line>z = <in>z</in></line>
+<line></line>
+<line>One sided <in>p_1</in></line>
+<line>Two sided <in>p_2</in></line>
+<line></line>
+<line><block name="ties">Corrected for ties:</line>
+<line>VarT = <in>varttie</in></line>
+<line>z   = <in>ztie</in></line>
+<line></line>
+<line>One sided <in>p_1tie</in></line>
+<line>Two sided <in>p_2tie</in></block></line>
+<line></line>
+<line></line>
+</report>

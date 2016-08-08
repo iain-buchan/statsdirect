@@ -1,0 +1,7 @@
+<report>
+<line></line>
+<line><block name="chart"><in>chart</in></line>
+<line></line>
+<line></block></line>
+<line></line>
+</report>

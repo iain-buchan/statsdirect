@@ -1,0 +1,12 @@
+<report>
+<line><title>Multiple linear regression - prediction</title></line>
+<line><block name="x"><in>x</in></line>
+<line></block></line>
+<line><in>y</in></line>
+<line></line>
+<line><ci><in>ci_pc</in>% Confidence interval = <in>ci_from</in> to <in>ci_to</in></ci></line>
+<line></line>
+<line><ci><in>pred_pc</in>% Prediction interval = <in>pred_from</in> to <in>pred_to</in></ci></line>
+<line></line>
+<line></line>
+</report>

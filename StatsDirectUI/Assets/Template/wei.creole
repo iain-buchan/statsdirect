@@ -1,0 +1,30 @@
+<report>
+<line><title>Wei-Lachin analysis</title></line>
+<line><block name="outer"></line>
+<line><title><in>title</in></title></line>
+<line></line>
+<line>total cases = <in>tot</in> (by group = <in>grp_1</in> and <in>grp_2</in>)</line>
+<line><block name="repeats"></line>
+<line><u>Repeat time <in>time</in></u></line>
+<table>
+<tr><td>observed failures by group =</td><td><in>fail_1</in> and <in>fail_2</in></td></tr>
+<tr><td>Wei-Lachin t =</td><td><in>t</in></td></tr>
+<tr><td>Wei-Lachin variance =</td><td><in>var</in></td></tr>
+<tr><td>chi-square =</td><td><in>chi</in></td><td><pval><in>p</in></td></pval></tr>
+</table>
+<line></block></line>
+<line><title><in>title_multi</in></title></line>
+<line></line>
+<line><u>Covariance matrix</u>:<block name="covar"></line>
+<line><in>mat</in></block></line>
+<line></line>
+<line><u>Inverse of covariance matrix</u>:<block name="inv_covar"></line>
+<line><in>mat</in></block></line>
+<line></line>
+<line>repeat times = <in>rep</in></line>
+<line>chi-square omnibus statistic = <in>stat</in>  <pval><in>p_omnibus</in></pval></line>
+<line></line>
+<line>stochastic ordering z = <in>z</in>  <pval>one sided <in>p_1</in>,  two sided <in>p_2</in></pval></line>
+<line></block></line>
+<line></line>
+</report>

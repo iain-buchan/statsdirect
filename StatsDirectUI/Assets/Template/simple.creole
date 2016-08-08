@@ -1,0 +1,23 @@
+<report>
+<line><title>Simple linear regression</title></line>
+<line></line>
+<line>Equation: <in>eq_y</in> <in>eq_x</in></line>
+<line></line>
+<line><block name="se">Standard Error of slope = <in>slope_err</in></line>
+<line><ci><in>se_pc</in>% CI for population value of slope = <in>se_from</in> to <in>se_to</in></ci></line>
+<line></line>
+<line>Correlation coefficient (r) = <in>se_r</in> (r&#xb2; = <in>se_r2</in>)</line>
+<line></line>
+<line><block name="ci"><ci><in>ci_pc</in>% CI for r (Fisher's z transformed) = <in>ci_from</in> to <in>ci_to</in></ci></line>
+<line></line>
+<line>t with <in>df</in> DF = <in>tdf</in></line>
+<line><pval>Two sided <in>p</in></pval></line>
+<line>Power <in>pwr</in></line>
+<line></line>
+<line><in>sig</in></line>
+<line></block></block><block name="notcalc"><warn>SE and CI for slope not calculated when r = 1 or -1</warn></line>
+<line>Correlation coefficient (r) = <in>r</in></line>
+<line><warn>CI and t for correlation not calculated when r = 1 or -1</warn></line>
+<line></block></line>
+<line></line>
+</report>

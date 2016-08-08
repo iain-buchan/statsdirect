@@ -1,0 +1,21 @@
+<report>
+<line><title>Single sample t test</title></line>
+<line></line>
+<line>Sample name: <in>name</in></line>
+<line>Sample mean = <in>sam_mean</in></line>
+<line>Population mean = <in>pop_mean</in></line>
+<line>Sample size n = <in>size</in></line>
+<line>Sample sd = <in>sd</in></line>
+<line></line>
+<line><ci><in>pc</in>% confidence interval <in>for</in> = <in>from</in> to <in>to</in></ci></line>
+<line></line>
+<line>df = <in>df</in></line>
+<line>t  = <in>t</in></line>
+<line></line>
+<line><pval>One sided <in>p_1</in></pval></line>
+<line><pval>Two sided <in>p_2</in></pval></line>
+<line></line>
+<line>Power <in>pwr</in></line>
+<line></line>
+<line></line>
+</report>

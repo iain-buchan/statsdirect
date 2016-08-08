@@ -1,0 +1,17 @@
+<report>
+<line><title>Scheff&#xe9; multiple comparisons</title></line>
+<line></line>
+<line>Critical value = <in>critical</in></line>
+<line></line>
+<table>
+<tr><th>Comparison</th><th>Mean difference L <pval>(<in>pc</in>% CI)</pval></th><th>|L/SE(L)|</u><block name="differences"></td></tr>
+<tr><td><in>cf1</in> vs. <in>cf2</in></td><td><in>delta</in>  <pval>(<in>lci</in>  to  <in>uci</in>)</pval></td><td><in>t</in><pval></td><td></pval><in>p</in></block></td></tr>
+</table>
+<line></line>
+<table>
+<tr><th>Variable</th><th>Mean</th><th>Significant contrasts</u><block name="summary"></td></tr>
+<tr><td><in>cf1</in></td><td><in>mean</in></td><td><in>sigs</in></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

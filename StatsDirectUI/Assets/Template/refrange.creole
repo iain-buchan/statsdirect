@@ -1,0 +1,31 @@
+<report>
+<line><title>Reference range/interval</title></line>
+<line></line>
+<table>
+<tr><td>Sample name:</td><td><in>name</in></td></tr>
+<tr><td>Sample mean = </td><td><in>mean</in></td></tr>
+<tr><td>Sample size n =</td><td><in>size</in></td></tr>
+<tr><td>Sample sd =</td><td><in>sd</in></td></tr>
+</table>
+<line></line>
+<line><u>For normal data</u></line>
+<line><in>qrr</in>% reference interval = <in>lrr</in> to <in>urr</in></line>
+<line><ci><in>pc</in>% confidence interval for lower range limit = <in>lx_l</in> to <in>ux_l</in></ci></line>
+<line><ci><in>pc</in>% confidence interval for upper range limit = <in>lx_u</in> to <in>ux_u</in><block name="lognormal"></ci></line>
+<line></line>
+<line><u>For log-normal data</u></line>
+<line><in>qrr</in>% reference interval = <in>lrr_lognormal</in> to <in>urr_lognormal</in></line>
+<line><ci><in>pc</in>% confidence interval for lower range limit = <in>lx_l_lognormal</in> to <in>ux_l_lognormal</in></ci></line>
+<line><ci><in>pc</in>% confidence interval for upper range limit = <in>lx_u_lognormal</in> to <in>ux_u_lognormal</in></block></ci></line>
+<line></line>
+<line><u>For any data</u></line>
+<line>Quantile <in>qx_any</in> = <in>qxv_any</in></line>
+<line><ci>Approximate <in>pc</in>% confidence interval <in>type</in> = <in>from_any</in> to <in>to_any</in></ci></line>
+<line>Exact confidence level = <in>co_any</in></line>
+<line></line>
+<line>Quantile <in>qx</in> = <in>qxv</in></line>
+<line><ci>Approximate <in>pc</in>% confidence interval <in>type</in> = <in>from</in> to <in>to</in></ci></line>
+<line>Exact confidence level = <in>co</in></line>
+<line></line>
+<line></line>
+</report>

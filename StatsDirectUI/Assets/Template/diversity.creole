@@ -1,0 +1,30 @@
+<report>
+<line><title>Diversity</title></line>
+<line><block name="var"></line>
+<line><u><subtotal>Analysis for <in>ti</in></subtotal></u>:</line>
+<line></line>
+<line>Total number of counts = <in>n</in>  <warn><in>msg</in></warn></line>
+<line>Number of classes observed (richness) = <in>s</in></line>
+<line></line>
+<line>Estimated total number of classes = <in>stotal</in></line>
+<line>Standard error (large sample) = <in>se-largeSample</in></line>
+<line><ci>Normal (large sample) <in>pc</in>% CI = <in>from-largeSample</in> to <in>to-largeSample</in></ci></line>
+<line></line>
+<line><b>Simpson D<sub>s</sub> (Hurlburt PIE) = <in>simpson</in>  </b>(dominance <i>l</i> = <in>dom</in>, <i>d<sub>s</sub></i> = <in>ds</in>)</line>
+<line>Standard error (large sample) = <in>se-simpson-largeSample</in></line>
+<line>Standard error (small sample) = <in>ses-simpson</in></line>
+<line><ci>Normal (large sample) <in>pc</in>% CI = <in>from-simpson-largeSample</in> to <in>to-simpson-largeSample</in></ci></line>
+<line>Re-samples = <in>boots</in>, bias = <in>bias-simpson</in>, standard error (bootstrap) = <in>se-simpson-bootstrap</in></line>
+<line><ci>Normal (bootstrap) <in>pc</in>% CI = <in>from-simpson-bootstrap</in> to <in>to-simpson-bootstrap</in></ci></line>
+<line>Centred bootstrap-t <in>pc</in>% CI = <in>from-simpson-bootstrap-t</in> to <in>to-simpson-bootstrap-t</in></line>
+<line></line>
+<line><b>Shannon H' (base e) = <in>shannon</in></b></line>
+<line>Standard error (large sample) = <in>se-shannon-largeSample</in></line>
+<line>Standard error (small sample) = <in>ses-shannon</in></line>
+<line><ci>Normal (large sample) <in>pc</in>% CI = <in>from-shannon-largeSample</in> to <in>to-shannon-largeSample</in></ci></line>
+<line>Re-samples = <in>boots</in>, bias = <in>bias-shannon</in>, standard error (bootstrap) = <in>se-shannon-bootstrap</in></line>
+<line><ci>Normal (bootstrap) <in>pc</in>% CI = <in>from-shannon-bootstrap</in> to <in>to-shannon-bootstrap</in></ci></line>
+<line>Centred bootstrap-t <in>pc</in>% CI = <in>from-shannon-bootstrap-t</in> to <in>to-shannon-bootstrap-t</in></line>
+<line></block></line>
+<line></line>
+</report>

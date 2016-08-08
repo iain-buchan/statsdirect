@@ -1,0 +1,20 @@
+<report>
+<line><title>Sample size for independent cohort study</title></line>
+<line></line>
+<line>Probability of event in control group = <in>pc</in></line>
+<line>Probability of event in experimental group = <in>ps</in></line>
+<line>Controls per case subject = <in>cpc</in></line>
+<line>Alpha = <in>alpha</in></line>
+<line>Power = <in>power</in></line>
+<line></line>
+<line>For uncorrected chi-square test:</line>
+<line>N = <in>case</in> case subjects and <in>controls</in> controls</line>
+<line></line>
+<line><b>For corrected chi-square and Fisher's exact tests:</b></line>
+<line>N = <in>case_corr</in> case subjects and <in>controls_corr</in> controls<block name="assumptions"></line>
+<line></line>
+<line><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.</warn></line>
+<line><warn>However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</warn></block></line>
+<line></line>
+<line></line>
+</report>

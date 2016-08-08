@@ -1,0 +1,23 @@
+<report>
+<line><title>Kruskal-Wallis test</title></line>
+<line></line>
+<line>Variables: <in>tlist</in></line>
+<line></line>
+<line>Groups = <in>grps</in></line>
+<line>df = <in>df</in></line>
+<line>Total observations = <in>tot_obs</in></line>
+<line></line>
+<line><block name="fault">Fault in calculation</line>
+<line></line>
+<line></block>T = <in>t</in></line>
+<line><pval><in>p</in></pval><block name="ties"></line>
+<line></line>
+<line>Adjusted for ties:</line>
+<line></line>
+<line>T = <in>t_ties</in></line>
+<line><pval><in>p_ties</in></pval></block><block name="message"></line>
+<line></line>
+<line><in>msg</in></block></line>
+<line></line>
+<line></line>
+</report>

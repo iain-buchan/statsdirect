@@ -1,0 +1,31 @@
+<report>
+<line><title>Fisher's exact test (expanded)</title></line>
+<line></line>
+<line><b>Input table:</b></line>
+<table>
+<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
+<tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
+</table>
+<line></line>
+<line>Arranged table and totals:</line>
+<table>
+<tr><td><in>tab3_a1</in></td><td><in>tab3_b1</in></td><td><subtotal><in>tab3_c1</in></subtotal></td></tr>
+<tr><td><in>tab3_a2</in></td><td><in>tab3_b2</in></td><td><subtotal><in>tab3_c2</in></subtotal></td></tr>
+<tr><td><subtotal><in>tab3_a3</in></td><td><in>tab3_b3</in></subtotal></td><td><warn><in>tab3_c3</in></warn></td></tr>
+</table>
+<line></line>
+<line>Expectation of A = <in>exp_a</in><block name="header"></line>
+<line></line>
+<table>
+<tr><td>A</td><td>Lower Tail</td><td>Individual P</td><td>Upper Tail</block></td></tr>
+<tr><td><warnabit><block name="row"><in>a</in></td><td><in>lower</in></td><td><in>ind_p</in></td><td><in>upper</in></warnabit></td></tr>
+</table>
+<line><warnabit></block></warnabit></line>
+<line><pval>One sided <in>tail_1</in> P = <in>p_1</in>   (doubled: <in>p_1d</in>)</pval></line>
+<line><pval>Two sided (by summation) P = <in>p_2</in></pval></line>
+<line></line>
+<line>One sided mid-P = <in>mid_p</in></line>
+<line>Two sided mid-P = <in>mid_p_2</in></line>
+<line></line>
+<line></line>
+</report>

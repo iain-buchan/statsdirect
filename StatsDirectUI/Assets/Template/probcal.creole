@@ -1,0 +1,8 @@
+<report>
+<line><table>
+<title>Probability distribution calculations</b><ci></th></u><td></td><td>/h/20200/</td></ci></tr>
+</table>
+<line></line>
+<line><in>gr</in></line>
+<line></line>
+</report>

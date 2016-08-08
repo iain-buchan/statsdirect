@@ -1,0 +1,29 @@
+<report>
+<line><title>Incidence rate comparison</title></line>
+<line></line>
+<table>
+<tr><td></td><td><subtotal>Exposure:</subtotal></td></tr>
+<tr><td><subtotal>Outcome:</subtotal></td><td>Exposed</td><td>Non-exposed</td><td>Total</td></tr>
+<tr><td>Cases</td><td><in>a_out</in></td><td><in>b_out</in></td><td><in>m</in></td></tr>
+<tr><td>Person-time</td><td><in>pt1_out</in></td><td><in>pt2_out</in></td><td><in>pt</in></td></tr>
+</table>
+<line></line>
+<line>Exposed incidence rate = <in>ir1</in></line>
+<line>Non-exposed incidence rate = <in>ir2</in></line>
+<line></line>
+<line>Rate difference = <in>ird</in></line>
+<line><ci>approximate <in>pc</in>% confidence interval = <in>ird_from</in>  to  <in>ird_to</in></ci></line>
+<line></line>
+<line>chi-square = <in>xmh</in>  <pval><in>p</in></pval></line>
+<line></line>
+<line>Rate ratio = <in>irr</in></line>
+<line><ci>exact <in>pc</in>% confidence interval = <in>irr_from</in>  to  <in>irr_to</in> </ci><block name="exact"></line>
+<line></line>
+<line>Conditional maximum likelihood estimate of rate ratio = <in>eor</in></line>
+<line><ci>Exact Fisher <in>pc</in>% confidence interval = <in>llf</in>  to  <in>ulf</in></ci></line>
+<line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
+<line><ci>Exact mid-P <in>pc</in>% confidence interval = <in>llm</in>  to  <in>ulm</in></ci></line>
+<line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></block></line>
+<line></line>
+<line></line>
+</report>

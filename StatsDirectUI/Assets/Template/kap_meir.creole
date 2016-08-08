@@ -1,0 +1,17 @@
+<report>
+<line><title>Kaplan-Meier survival estimates</title></line>
+<line><block name="group"><block name="grp"></line>
+<line><b><in>grp</in></b></block></line>
+<table>
+<tr><th>Time</th><th>At risk</th><th>Dead</th><th>Censored</th><th>S</th><th>SE(S)</th><th>H</th><th>SE(H)</u><block name="est"></td></tr>
+<tr><td><in>time</in></td><td><in>risk</in></td><td><in>dead</in></td><td><in>cen</in></td><td><in>s</in></td><td><in>ses</in></td><td><in>h</in></td><td><in>seh</in></block></td></tr>
+</table>
+<line></line>
+<line>Median survival time = <in>med</in></line>
+<line>Andersen <in>pc</in>% CI for median survival time = <in>all</in> to <in>aul</in></line>
+<line>Brookmeyer-Crowley <in>pc</in>% CI for median survival time = <in>bll</in> to <in>bul</in></line>
+<line></line>
+<line>Mean survival time (<in>pc</in>% CI) <in>lim</in>= <in>mu</in>  (<in>ll</in> to <in>ul</in>)</line>
+<line></block></line>
+<line></line>
+</report>

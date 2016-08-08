@@ -1,0 +1,8 @@
+<report>
+<line><table>
+<u>Row</th></u><td><block name="pc"><u>PCS<in>pc</in><b></th></u><td></b></block><block name="row"></td></tr>
+<tr><td><subtotal><in>row</in></subtotal></td><td><block name="res"><in>res</in><warn></td><td></warn></block></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

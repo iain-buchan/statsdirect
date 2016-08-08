@@ -1,0 +1,22 @@
+<report>
+<line><table>
+<title>Two independent proportions</b></th></u><td></td></tr>
+</table>
+<line>Total 1 = <in>n_1</in>,  response 1 = <in>r_1</in></line>
+<line>Proportion 1 = <in>prop_1</in></line>
+<line>Total 2 = <in>n_2</in>,  response 2 = <in>r_2</in></line>
+<line>Proportion 2 = <in>prop_2</in></line>
+<line></line>
+<line>Proportion difference = <in>prop_diff</in></line>
+<line></line>
+<line><ci>Approximate (Miettinen) <in>ci</in>% confidence interval = <in>from</in> to <in>to</in></ci></line>
+<line><block name="exact2"></line>
+<line><pval>Exact two sided (mid) <in>mp</in></pval></line>
+<line></block></line>
+<line>Standard error of proportion difference = <in>se</in></line>
+<line>Standard normal deviate (z) = <in>z</in></line>
+<line><block name="approx2"><pval>Approximate two sided <in>p_2</in></pval></line>
+<line><pval>Approximate one sided <in>p_1</in></pval></line>
+<line></block></line>
+<line></line>
+</report>

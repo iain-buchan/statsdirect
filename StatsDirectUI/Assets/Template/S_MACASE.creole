@@ -1,0 +1,22 @@
+<report>
+<line><title>Sample size for matched case-control study</title></line>
+<line></line>
+<line>case-control correlation = <in>corr</in></line>
+<line>probability of exposure in controls = <in>pc</in></line>
+<line>odds ratio = <in>odds</in></line>
+<line>controls per case subject = <in>cpc</in></line>
+<line>alpha = <in>alpha</in></line>
+<line>power = <in>power</in><block name="lower"></line>
+<line></line>
+<line><warn>NB. Assuming power from lower tail is negligible.</warn></block><warn><block name="illegal"></warn></line>
+<line>Illegal odds ratio</block></line>
+<line></line>
+<line>Estimated minimum sample size (cases required) = <in>size</in><block name="reduction"></line>
+<line></line>
+<line>Reduction in sample size, relative to paired design,</line>
+<line>when using <in>controls</in> controls per case = <in>reduction</in></block><block name="assumptions"></line>
+<line></line>
+<line><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</warn></block></line>
+<line></line>
+<line></line>
+</report>

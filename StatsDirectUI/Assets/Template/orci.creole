@@ -1,0 +1,21 @@
+<report>
+<line><title>Exact confidence limits for 2 by 2 odds</title></line>
+<line></line>
+<line>Input table:</line>
+<table>
+<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
+<tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
+</table>
+<line></line>
+<line>Observed odds ratio = <in>odds</in></line>
+<line></line>
+<line>Conditional maximum likelihood estimate of odds ratio = <in>eor</in></line>
+<line></line>
+<line>Exact Fisher <in>pc</in>% confidence interval = <in>llf</in>  to  <in>ulf</in></line>
+<line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
+<line></line>
+<line>Exact mid-P <in>pc</in>% confidence interval = <in>llm</in>  to  <in>ulm</in></line>
+<line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></line>
+<line></line>
+<line></line>
+</report>

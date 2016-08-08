@@ -1,0 +1,36 @@
+<report>
+<line><title>Crossover tests</title></line>
+<line></line>
+<table>
+<tr><td></td><th>Period 1</th><th>Period 2</th><th>Difference</u></td></tr>
+<tr><td>Group 1</td><td><in>grp1_p1</in></td><td><in>grp1_p2</in></td><td><in>grp1_diff</in></td></tr>
+<tr><td>Group 2</td><td><in>grp2_p1</in></td><td><in>grp2_p2</in></td><td><in>grp2_diff</in></td></tr>
+</table>
+<line></line>
+<line><ci>Test for <b>relative effectiveness</b> of drug / placebo:</ci></line>
+<table>
+<tr><td>combined diff = <in>relative_diff</in></td><td>SE = <in>relative_se</in></td></tr>
+<tr><td>t = <in>relative_t</in></td><td>DF = <in>relative_df</in></td><td><pval><in>relative_p</in></pval></td></tr>
+</table>
+<line></line>
+<line><ci>Test for <b>treatment effect</b>:</ci></line>
+<table>
+<tr><td>diff 1 - diff 2  = <in>treatment_diff</in></td><td>SE = <in>treatment_se</in></td></tr>
+<tr><td>effect magnitude = <in>treatment_mag</in></td><td><ci><in>treatment_pc</in>% CI = <in>treatment_from</in> to <in>treatment_to</in></ci></td></tr>
+<tr><td>t = <in>treatment_t</in></td><td>DF = <in>treatment_df</in></td><td><pval><in>treatment_p</in></pval></td></tr>
+</table>
+<line></line>
+<line><ci>Test for <b>period effect</b>:</ci></line>
+<table>
+<tr><td>diff 1 + diff 2 = <in>period_diff</in></td><td>SE = <in>period_se</in></td></tr>
+<tr><td>t = <in>period_t</in></td><td>DF = <in>period_df</in></td><td><pval><in>period_p</in></pval></td></tr>
+</table>
+<line></line>
+<line><ci>Test for <b>treatment-period interaction</b>:</ci></line>
+<table>
+<tr><td>sum 1 - sum 2 = <in>tpi_sum</in></td><td>SE = <in>tpi_se</in></td></tr>
+<tr><td>t = <in>tpi_t</in></td><td>DF = <in>tpi_df</in></td><td><pval><in>tpi_p</in></pval></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

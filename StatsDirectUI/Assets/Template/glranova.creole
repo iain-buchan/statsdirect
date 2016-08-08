@@ -1,0 +1,24 @@
+<report>
+<line><title>Analysis of variance from regression</title></line>
+<line></line>
+<table>
+<tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></u></tr>
+<tr><td>Regression</td><td><in>reg_sum</in></td><td><in>reg_df</in></td><td><in>reg_mean</in></td></tr>
+<tr><td>Residual</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></td></tr>
+<tr><td><grandtotal>Total (corrected)</td><td><in>tot_sum</in></td><td><in>tot_df</in></grandtotal></td></tr>
+</table>
+<line></line>
+<line>Root MSE = <in>mse</in></line>
+<line></line>
+<line>F = <in>f</in> <warn><in>p</in></warn></line>
+<line></line>
+<table>
+<tr><td>Multiple correlation coefficient</td><td>(R) = <in>r</in></td></tr>
+<tr><td></td><td>R&#xb2;  = <in>r2</in></td></tr>
+<tr><td></td><td>Ra&#xb2; = <in>ra2</in></td></tr>
+</table>
+<line></line>
+<line>Durbin-Watson test statistic = <in>dw</in></line>
+<line></line>
+<line></line>
+</report>

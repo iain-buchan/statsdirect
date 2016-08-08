@@ -1,0 +1,25 @@
+<report>
+<line><title>Normal distribution (z) test - single sample</title></line>
+<line></line>
+<table>
+<tr><td>Sample name:</td><td><in>name</in></td></tr>
+<tr><td>Sample mean = </td><td><in>mean</in></td></tr>
+<tr><td>Population mean =</td><td><in>pop_mean</in></td></tr>
+<tr><td>Sample size n =</td><td><in>size</in></td></tr>
+<tr><td>Sample sd =</td><td><in>sd</in></td></tr>
+<tr><td>Population sd =</td><td><in>psd</in></td></tr>
+</table>
+<line></line>
+<line><ci><in>pc</in>% confidence interval <in>for</in> = <in>from</in> to <in>to</in></ci></line>
+<line></line>
+<line>Standard normal deviate (z) = <in>z</in></line>
+<line><pval>One sided <in>p_1</in></pval></line>
+<line><pval>Two sided <in>p_2</in></pval></line>
+<line></line>
+<line>For lognormal data:</line>
+<line><subtotal>Geometric mean = <in>gmean</in>  (<in>pc2</in>% confidence interval = <in>lrr</in> to <in>urr</in>)</subtotal><block name="warn"></line>
+<line></line>
+<line><warn>WARNING: numbers too small for this test, consider using a Student t test instead</warn></block></line>
+<line></line>
+<line></line>
+</report>

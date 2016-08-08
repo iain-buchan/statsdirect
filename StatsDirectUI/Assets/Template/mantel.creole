@@ -1,0 +1,46 @@
+<report>
+<line><title>Odds ratio meta-analysis</title></line>
+<line></line>
+<table>
+<tr><th>Stratum</th><th>Table (exposed +ve, control +ve, exposed -ve, control -ve)</u><block name="inputs"></td></tr>
+<tr><td><in>st</in></td><td><in>a</in></td><td><in>b</in></td><td><in>c</in></td><td><in>d</in></td><td><subtotal><in>lb</in></subtotal></block></td></tr>
+</table>
+<line></line>
+<table>
+<tr><th>Stratum</th><th>Odds ratio</th><th><ci><in>pc</in>% CI (<in>method</in>)</ci></u><block name="or"></td></tr>
+<tr><td><in>st</in></td><td><in>or</in></td><td><ci><in>lci</in></td><td><in>uci</in></td><td></ci><subtotal><in>lb</in></subtotal></block></td></tr>
+</table>
+<line></line>
+<table>
+<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th>% Weights (fixed, random)</u><block name="or"></td></tr>
+<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><subtotal><in>lb</in></subtotal></block></td></tr>
+</table>
+<line></line>
+<line><u>Fixed effects (Mantel-Haenszel, <in>meth</in>)</u></line>
+<line>Pooled odds ratio = <in>odds</in> (<ci><in>pc</in>% CI = <in>from</in> to <in>to</in></ci>)</line>
+<line>Chi&#xb2; (test odds ratio differs from 1) = <in>chi_mantel</in>  <pval><in>chi_p</in></pval></line>
+<line><block name="cml"></line>
+<line><u>Fixed effects (conditional maximum likelihood)</u></line>
+<line>Pooled odds ratio = <in>eor</in></line>
+<line><ci>Exact Fisher <in>pc</in>% CI = <in>llf</in> to <in>ulf</in></ci></line>
+<line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
+<line><ci>Exact mid-P <in>pc</in>% CI = <in>llm</in> to <in>ulm</in></ci></line>
+<line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></line>
+<line></block></line>
+<line><u>Non-combinability of studies</u></line>
+<line>Breslow-Day = <in>bd</in>  (df = <in>df</in>)  <pval><in>xp</in></pval></line>
+<line>Cochran Q = <in>qc</in>  (df = <in>df_cochran</in>)  <pval><in>xp_cochran</in></pval></line>
+<line>Moment-based estimate of between studies variance = <in>tausq</in></line>
+<line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
+<line></line>
+<line><u>Random effects (DerSimonian-Laird)</u></line>
+<line>Pooled odds ratio = <in>dsor</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
+<line>Chi&#xb2; (test odds ratio differs from 1) = <in>dsx2</in>  (df = <in>df_ds</in>)  <pval><in>xp_ds</in></pval></line>
+<line></line>
+<line><u>Bias indicators</u><block name="egger"></line>
+<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block><block name="harbord"></pval></line>
+<line>Harbord-Egger: bias = <in>a</in> (<ci><in>pc_harbord</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
+<line></line>
+<line></line>
+</report>

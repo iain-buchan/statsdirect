@@ -1,0 +1,44 @@
+<report>
+<line><title>Incidence rate ratio (IRR) meta-analysis</title></line>
+<line></line>
+<table>
+<tr><th>Stratum</th><th>Table (a, person-time exposed, b, person-time not exposed)</u><block name="inputs"></td></tr>
+<tr><td><in>st</in></td><td><in>a</in></td><td><in>pt1</in></td><td><in>b</in></td><td><in>pt2</in></td><td><in>lb</in></block></td></tr>
+</table>
+<line></line>
+<table>
+<tr><th>Stratum</th><th>IRR</th><th><ci><in>pc</in>% CI (exact)</ci></u><block name="ir"></td></tr>
+<tr><td><in>st</in></td><td><in>irr</in></td><td><ci><in>lci</in></td><td><in>uci</in></ci></td><td><pval><in>lb</in></pval></block></td></tr>
+</table>
+<line></line>
+<table>
+<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th>% Weights (fixed, random)</u><block name="ir"></td></tr>
+<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><pval><in>lb</in></pval></block></td></tr>
+</table>
+<line></line>
+<line><u>Fixed effects (inverse variance)</u></line>
+<line>Pooled IRR = <in>rmh</in> (<ci><in>pc</in>% CI = <in>from</in> to <in>to</in></ci>)</line>
+<line>Z (test IRR differs from 1) = <in>z</in>  <pval><in>p_z</in></pval></line>
+<line><block name="poolok"></line>
+<line>Fixed effects (conditional maximum likelihood)</line>
+<line>Pooled rate ratio = <in>eor</in></line>
+<line><ci>Exact Fisher <in>pc</in>% confidence interval = <in>llf</in> to <in>ulf</in></ci></line>
+<line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
+<line><ci>Exact mid-P <in>pc</in>% confidence interval = <in>llm</in> to <in>ulm</in></ci></line>
+<line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></line>
+<line></block></line>
+<line><u>Non-combinability of studies</u></line>
+<line>Cohran Q = <in>qc</in>  (df = <in>df</in>) <warnabit> </warnabit><pval><in>xp</in></pval></line>
+<line>Moment-based estimate of between studies variance = <in>tausq</in></line>
+<line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
+<line></line>
+<line><u>Random effects (DerSimonian-Laird)</u></line>
+<line>Pooled IRR = <in>dsirr</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
+<line>Z (test IRR differs from 1) = <in>dz</in>  <pval><in>dp</in></pval></line>
+<line></line>
+<line><u>Bias indicators</u><block name="egger"></line>
+<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
+<line></line>
+<line></line>
+</report>

@@ -1,0 +1,13 @@
+<report>
+<line><title>Descriptive statistics</title></line>
+<line></line>
+<table>
+<tr><td><grandtotal>Variables</grandtotal></td><td><block name="titles"><grandtotal><in>title</in></td><td></grandtotal></block></td></tr>
+</table>
+<line><block name="fields"></line>
+<table>
+<tr><td><in>title</in><block name="results"></td><td><in>result</in></block></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>

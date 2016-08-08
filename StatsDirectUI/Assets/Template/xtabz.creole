@@ -1,0 +1,17 @@
+<report>
+<line><title>Crosstabs</title></line>
+<line></line>
+<table>
+<tr><td>Row variable (first classifier):</td><td><b><grandtotal><in>ylab</in></grandtotal><subtotal></td></subtotal></b></tr>
+<tr><td>Column variable (second classifier):</td><td><b><ci><in>xlab</in></ci><subtotal></td></subtotal></b></tr>
+<tr><td>Stratum variable (third classifier):</td><td><b><subtotal><in>zlab</in></subtotal></b><block name="z"></td></tr>
+</table>
+<line></line>
+<line><b><subtotal><in>z</in></subtotal></b></line>
+<table>
+<tr><td></td><td><block name="x"><b><ci><in>x</in></ci></b></td><td></block><block name="y"></td></tr>
+<tr><td><b><grandtotal><in>y</in></grandtotal></b></td><td><block name="tot"><in>tot</in></td><td></block></block></block></td></tr>
+</table>
+<line></line>
+<line></line>
+</report>
