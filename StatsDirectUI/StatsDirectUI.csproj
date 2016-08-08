@@ -1101,6 +1101,7 @@
     <None Include="Assets\Data\test.xlsx" />
     <None Include="Assets\Excel\StatsDirect3ExcelLink.xla" />
     <None Include="Assets\Operations\Operation.xsd" />
+    <None Include="Assets\Template\chartonly.creole" />
     <None Include="Assets\Template\chirxc.creole" />
     <None Include="Assets\Template\fisher.creole" />
     <None Include="Assets\Template\relrisk.creole" />
@@ -1607,7 +1608,9 @@
     <Content Include="Assets\Operations\Gini.xml" />
     <Content Include="Assets\Operations\GroupedCovariance.xml" />
     <Content Include="Assets\Operations\GroupedLinearity.xml" />
-    <Content Include="Assets\Operations\HistogramPlot.xml" />
+    <Content Include="Assets\Operations\HistogramPlot.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\InterpolateXY.xml" />
     <Content Include="Assets\Operations\InterpolateYX.xml" />
     <Content Include="Assets\Operations\KaplanMeier.xml" />

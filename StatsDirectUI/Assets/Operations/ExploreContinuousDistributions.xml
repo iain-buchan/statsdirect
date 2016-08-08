@@ -13,6 +13,6 @@
         </frame>
       </parameters>
 		<builtin function-name="chartExploreContinuousDistributions"/>
-		<report type="text/rtf" filename="chartonly.rtf" />
+    <report type="application/x-statsdirect-creole" filename="chartonly.creole" />
 	</steps>
 </operation>
