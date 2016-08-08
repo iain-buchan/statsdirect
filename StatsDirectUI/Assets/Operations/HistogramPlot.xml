@@ -20,6 +20,6 @@
 			<chart-type>Histogram</chart-type>
 			<box-axes>false</box-axes>
 		</chart>
-		<report type="text/rtf" filename="chartonly.rtf" />
+    <report type="application/x-statsdirect-creole" filename="chartonly.creole" />
 	</steps>
 </operation>
