@@ -1,6 +1,6 @@
 ﻿namespace RtfConverter
 {
-    partial class Combined1Lexer
+    partial class RtfLexer
     {
     }
 }
