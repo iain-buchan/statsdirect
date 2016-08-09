@@ -20,6 +20,7 @@
 			</iftrue>
 		</test>
 		<report type="text/rtf" filename="xxi.rtf" />
+    <report type="application/x-statsdirect-creole" filename="xxi.creole" />
 		<report type="text/rtf" filename="covarmx.rtf" />
 	</steps>
 </operation>

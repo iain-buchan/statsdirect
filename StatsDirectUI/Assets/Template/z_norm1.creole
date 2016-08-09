@@ -20,6 +20,4 @@
 <line><subtotal>Geometric mean = <in>gmean</in>  (<in>pc2</in>% confidence interval = <in>lrr</in> to <in>urr</in>)</subtotal><block name="warn"></line>
 <line></line>
 <line><warn>WARNING: numbers too small for this test, consider using a Student t test instead</warn></block></line>
-<line></line>
-<line></line>
 </report>

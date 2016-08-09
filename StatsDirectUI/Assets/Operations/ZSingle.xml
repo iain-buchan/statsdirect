@@ -28,6 +28,6 @@
         </double>
       </parameters>
 	<builtin function-name="rptZSingle" />
-	<report type="text/rtf" filename="z_norm1.rtf" />
+  <report type="application/x-statsdirect-creole" filename="z_norm1.creole" />
 	</steps>
 </operation>

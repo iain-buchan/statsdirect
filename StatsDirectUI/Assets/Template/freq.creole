@@ -1,14 +1,12 @@
 <report>
 <line><title>Frequencies</title></line>
 <line><block name="variable"></line>
-<line><u>Frequency analysis for <in>ti</in></u>:</line>
+<line><subtitle>Frequency analysis for <in>ti</in></subtitle></line>
 <line></line>
 <line>Total = <in>n</in></line>
 <line></line>
 <table>
 <tr><th>Value</th><th>Frequency</th><th>Relative %</th><th>Cumulative</th><th>Cumulative Relative %</u><block name="bin"></td></tr>
 <tr><td><in>x</in></td><td><in>fx</in></td><td><in>pc</in></td><td><in>cm</in></td><td><in>pc2</in></block></td></tr>
-</table>
-<line></block></line>
-<line></line>
+</block></table>
 </report>
