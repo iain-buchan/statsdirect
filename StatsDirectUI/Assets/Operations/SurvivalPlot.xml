@@ -84,6 +84,6 @@
 			<chart-name>chart</chart-name>
 			<chart-type>Survival</chart-type>
 		</chart>
-		<report type="text/rtf" filename="chartonly.rtf" />
+    <report type="application/x-statsdirect-creole" filename="chartonly.creole" />
 	</steps>
 </operation>

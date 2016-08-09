@@ -10,6 +10,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="plotSeCi" />
-		<report type="text/rtf" filename="chartonly.rtf" />
+    <report type="application/x-statsdirect-creole" filename="chartonly.creole" />
 	</steps>
 </operation>

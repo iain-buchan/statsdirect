@@ -9,7 +9,7 @@
 <line></line>
 <line>Estimated within-subjects standard deviation = <in>wssd</in></line>
 <line></line>
-<line>For within-subjects sd vs. mean, Kendall's <in>tau</in>  two sided <in>p2</in></line>
+<line>For within-subjects sd vs. mean, Kendall's <in>tau</in><pval>  two sided <in>p2</in></pval></line>
 <line></line>
 <line>Repeatability (for alpha = <in>pc</in>) = <in>rep</in></line>
 <line></line>

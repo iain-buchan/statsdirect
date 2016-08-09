@@ -31,6 +31,6 @@
 			<box-axes>false</box-axes>
       <y-series-data>values</y-series-data>
 		</chart>
-		<report type="text/rtf" filename="chartonly.rtf" />
+    <report type="application/x-statsdirect-creole" filename="chartonly.creole" />
 	</steps>
 </operation>

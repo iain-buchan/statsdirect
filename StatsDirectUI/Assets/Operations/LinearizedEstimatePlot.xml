@@ -24,6 +24,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptLinearizedEstimatePlot" />
-		<report type="text/rtf" filename="chartonly.rtf" />
+    <report type="application/x-statsdirect-creole" filename="chartonly.creole" />
 	</steps>
 </operation>
