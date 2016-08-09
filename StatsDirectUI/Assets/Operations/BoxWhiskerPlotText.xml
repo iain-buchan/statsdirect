@@ -20,6 +20,7 @@
 			<box-axes>false</box-axes>
       <ascii>true</ascii>
 		</chart>
-		<report type="text/rtf" filename="chartonly-ascii.rtf" />
+    <report type="text/rtf" filename="chartonly-ascii.rtf" />
+    <report type="application/x-statsdirect-creole" filename="chartonly-ascii.creole" />
 	</steps>
 </operation>
