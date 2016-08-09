@@ -26,7 +26,7 @@ namespace StatsDirect.TemplateProcessing
             Dictionary<string, string> substitutions = new Dictionary<string, string>
             {
                 // Colour table entries: 1=black, 2=white, 3=green/blue, 4=strong blue (CI), 5=green (pval), 6=strong red (warn), 7=dark red, 8=dark blue.
-                { "<report>", @"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 " },
+                { "<report>", @"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}{\f2\fswiss Courier New;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 " },
                 { "</report>", @"\par }" },
                 { "<b>", @"{\b " },
                 { "</b>", @"}" },
@@ -40,6 +40,8 @@ namespace StatsDirect.TemplateProcessing
                 { "</line>", @"\par " },
                 { "<model>", @"{\cf8 " },
                 { "</model>", @"}" },
+                { "<pre>", @"{\f2 " },
+                { "</pre>", @"}" },
                 { "<pval>", @"{\cf5 " },
                 { "</pval>", @"}" },
                 { "<subtitle>", @"{\ul " },
