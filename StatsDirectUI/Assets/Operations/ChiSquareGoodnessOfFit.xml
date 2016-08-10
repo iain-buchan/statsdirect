@@ -37,7 +37,6 @@
         </frame>
       </parameters>
     <builtin function-name="rptChiSquareGoodnessOfFit" />
-  	<report type="text/rtf" filename="chigood.rtf"/>
     <report type="application/x-statsdirect-creole" filename="chigood.creole"/>
 	</steps>
   <suggested-operations>
