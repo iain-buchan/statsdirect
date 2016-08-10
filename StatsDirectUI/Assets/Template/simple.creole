@@ -16,8 +16,6 @@
 <line></line>
 <line><in>sig</in></line>
 <line></block></block><block name="notcalc"><warn>SE and CI for slope not calculated when r = 1 or -1</warn></line>
-<line>Correlation coefficient (r) = <in>r</in></line>
-<line><warn>CI and t for correlation not calculated when r = 1 or -1</warn></line>
-<line></block></line>
-<line></line>
+<line><subtotal>Correlation coefficient (r) = <in>r</in></subtotal></line>
+<line><warn>CI and t for correlation not calculated when r = 1 or -1</warn></block></line>
 </report>

@@ -12,6 +12,4 @@
 <line><ci>Prediction interval:</ci></line>
 <line>S pred = <in>s_pred</in></line>
 <line><ci><in>pcp</in>% prediction interval = <in>fromp</in> to <in>top</in></ci></line>
-<line></line>
-<line></line>
 </report>

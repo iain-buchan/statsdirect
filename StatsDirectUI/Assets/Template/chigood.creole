@@ -3,17 +3,16 @@
 <line></line>
 <line>Sample: <in>ti</in>:</line>
 <line></line>
-<line><pval>N = <in>n</in></pval></line>
+<line><subtotal>N = <in>n</in></subtotal></line>
 <line></line>
 <table>
-<tr><td><pval>Count</td><td>Observed frequency</td><td>Expected frequency</td></pval></tr>
+<tr><td><subtotal>Count</td><td>Observed frequency</td><td>Expected frequency</td></subtotal></tr>
 <tr><td><block name="frequencies"><in>x</in></td><td><in>o</in></td><td><in>e</in></td></tr>
+</block>
 </table>
-<line></block></line>
-<line>Chi-square = <in>chi2</in>   df = <in>df</in></line>
-<line><warn><in>p</in></warn><block name="warn"></line>
 <line></line>
-<line><in>warn</in></block></line>
+<line>Chi-square = <in>chi2</in>  df = <in>df</in></line>
+<line><warn><pval><in>p</in></pval></warn><block name="warn"></line>
 <line></line>
-<line></line>
+<line><warn><in>warn</in></warn></line></block>
 </report>

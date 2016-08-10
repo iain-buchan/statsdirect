@@ -14,6 +14,6 @@
         </double>
       </parameters>
 		<builtin function-name="rptCiMeanY" />
-		<report type="text/rtf" filename="cimeany.rtf" />
+    <report type="application/x-statsdirect-creole" filename="cimeany.creole" />
 	</steps>
 </operation>

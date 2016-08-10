@@ -29,5 +29,6 @@
       </parameters>
 		<builtin function-name="rptPolynomialRegressionBackInterpolation" />
 		<report type="text/rtf" filename="backint.rtf" />
+    <report type="application/x-statsdirect-creole" filename="backint.creole" />
 	</steps>
 </operation>

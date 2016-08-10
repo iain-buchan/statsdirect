@@ -1101,7 +1101,9 @@
     <None Include="Assets\Data\test.xlsx" />
     <None Include="Assets\Excel\StatsDirect3ExcelLink.xla" />
     <None Include="Assets\Operations\Operation.xsd" />
-    <None Include="Assets\Template\chartonly.creole" />
+    <None Include="Assets\Template\chartonly.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\chirxc.creole" />
     <None Include="Assets\Template\fisher.creole" />
     <None Include="Assets\Template\relrisk.creole" />
@@ -1428,7 +1430,9 @@
     <Content Include="Assets\Operations\ClearMissing.xml" />
     <Content Include="Assets\Operations\ApplyFunction.xml" />
     <Content Include="Assets\Operations\Combine.xml" />
-    <Content Include="Assets\Operations\BoxWhiskerPlotText.xml" />
+    <Content Include="Assets\Operations\BoxWhiskerPlotText.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\AnalysisOptions.xml" />
     <Content Include="Assets\Operations\BarPlot.xml" />
     <Content Include="Assets\Operations\CochranQ.xml" />
@@ -1618,7 +1622,9 @@
     <Content Include="Assets\Operations\Kendall.xml" />
     <Content Include="Assets\Operations\Kruskal.xml" />
     <Content Include="Assets\Operations\KruskalWallisMulti.xml" />
-    <Content Include="Assets\Operations\LadderPlot.xml" />
+    <Content Include="Assets\Operations\LadderPlot.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\LatinSquare.xml" />
     <Content Include="Assets\Operations\LinearizedEstimateInterpolation.xml" />
     <Content Include="Assets\Operations\LinearizedEstimatePlot.xml" />
