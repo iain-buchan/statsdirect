@@ -59,7 +59,7 @@
         </boolean>
       </parameters>
 		<builtin function-name="rptCoxRegression" />
-		<report type="text/rtf" filename="coxreg.rtf" />
+    <report type="application/x-statsdirect-creole" filename="coxreg.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>CoxBaselineToReport</suggested-operation>

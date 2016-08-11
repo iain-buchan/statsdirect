@@ -2,14 +2,12 @@
 <line><title>Cox regression - hazard ratios</title></line>
 <line></line>
 <table>
-<tr><th>Parameter</th><th>Hazard Ratio</th><th><ci><in>pc2</in>% CI</ci></u><block name="hazard"></td></tr>
-<tr><td><in>par</in></td><td><in>ec</in></td><td><ci><in>ell</in>  to  <in>eul</in></ci></block></td></tr>
+<tr><th>Parameter</th><th>Hazard Ratio</th><th><ci><in>pc2</in>% CI</ci></u></td></tr>
+<tr><block name="hazard"><td><in>par</in></td><td><in>ec</in></td><td><ci><in>ell</in>  to  <in>eul</in></ci></td></block></tr>
 </table>
 <line></line>
 <table>
-<tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</u><block name="parameter"></td></tr>
-<tr><td><in>par</in></td><td><in>coef</in></td><td><in>se</in></block></td></tr>
+<tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</u></td></tr>
+<tr><block name="parameter"><td><in>par</in></td><td><in>coef</in></td><td><in>se</in></td></block></tr>
 </table>
-<line></line>
-<line></line>
 </report>

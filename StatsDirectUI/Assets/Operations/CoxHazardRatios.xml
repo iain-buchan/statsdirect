@@ -10,6 +10,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="rptCoxHazardRatios" />
-		<report type="text/rtf" filename="cox_det.rtf" />
+    <report type="application/x-statsdirect-creole" filename="cox_det.creole" />
 	</steps>
 </operation>

@@ -22,6 +22,6 @@
         </pick-from-list>
       </parameters>
 		<builtin function-name="rptCoxHazardPlots" />
-		<report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

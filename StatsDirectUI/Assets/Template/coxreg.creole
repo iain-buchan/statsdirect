@@ -7,6 +7,4 @@
 <table>
 <tr><td><in>lab</in></td><td>b<in>i</in>  = <warn><in>b</in></warn></td><td>z = <in>z</in></td><td><pval><in>p</in></pval></block></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>

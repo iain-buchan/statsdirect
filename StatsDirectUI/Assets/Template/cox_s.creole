@@ -5,6 +5,4 @@
 <tr><td>Time</td><th>Survival probability</th><th>Cumulative hazard</th><th>Hazard ratio</u><block name="time"></td></tr>
 <tr><td><in>time</in></td><td><in>sur</in></td><td><in>haz</in></td><td><in>hr</in></block> </td></tr>
 </table>
-<line></line>
-<line></line>
 </report>
