@@ -53,7 +53,9 @@ namespace StatsDirect.Templates
             if (null == DefaultValueExpression || null == DefaultValueExpression.Body)
                 return null;
             object o = processor.Evaluate(DefaultValueExpression, parameters);
-            return (string)o;
+            if (null == o)
+                return null;
+            return o.ToString();
         }
 
         /// <summary>
