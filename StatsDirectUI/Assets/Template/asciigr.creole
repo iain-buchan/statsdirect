@@ -1,5 +1,4 @@
 <report>
 <line><in>ti</in></line>
 <line><in>gr</in></line>
-<line></line>
 </report>

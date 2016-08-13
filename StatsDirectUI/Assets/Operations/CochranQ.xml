@@ -19,10 +19,10 @@
     <test>
       <condition>="Friedman".Equals(parameters["testName"].AsString)</condition>
       <iftrue>
-        <report type="text/rtf" filename="friedman.rtf" />
+        <report type="application/x-statsdirect-creole" filename="friedman.creole" />
       </iftrue>
       <iffalse>
-        <report type="text/rtf" filename="cochranq.rtf" />
+        <report type="application/x-statsdirect-creole" filename="cochranq.creole" />
       </iffalse>
     </test>
 	</steps>

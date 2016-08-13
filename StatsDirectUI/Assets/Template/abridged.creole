@@ -36,7 +36,5 @@
 <line></line>
 <line>Expectation of life at birth = <in>elb</in></line>
 <line><ci><in>pc</in>% CI by Chiang variance estimate = <in>elb_lci</in>  to  <in>elb_uci</in></ci></line>
-<line><in>pc</in>% CI by Monte Carlo (<in>its</in>) simulation = <in>elb_mc_lci</in>  to  <in>elb_mc_uci</in></line>
-<line></line>
-<line></line>
+<line><ci><in>pc</in>% CI by Monte Carlo (<in>its</in>) simulation = <in>elb_mc_lci</in>  to  <in>elb_mc_uci</in></ci></line>
 </report>

@@ -84,6 +84,6 @@
 				<output-frame frame-name="results" />
 			</iftrue>
 		</test>
-		<report type="text/rtf" filename="abridged.rtf" />
+    <report type="application/x-statsdirect-creole" filename="abridged.creole" />
 	</steps>
 </operation>

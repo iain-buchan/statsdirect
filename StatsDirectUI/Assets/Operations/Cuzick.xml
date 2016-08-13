@@ -44,6 +44,6 @@ return outputParameters;
         </frame>
       </parameters>
 		<builtin function-name="rptCuzick" />
-		<report type="text/rtf" filename="cuzick.rtf" />
+    <report type="application/x-statsdirect-creole" filename="cuzick.creole" />
 	</steps>
 </operation>
