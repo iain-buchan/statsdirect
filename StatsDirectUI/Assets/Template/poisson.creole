@@ -1,13 +1,14 @@
 <report>
 <line><title>Poisson confidence interval</title></line>
-<line><block name="sample"></line>
+<line></line>
+<block name="sample">
 <table>
 <tr><td>Sample name:</td><td><in>ti</in>    <warn><in>warn</in></warn></td></tr>
 <tr><td>Size =</td><td><in>n</in></td></tr>
 <tr><td>Mean =</td><td><in>mean</in></td></tr>
 </table>
 <line><ci>Approximate two sided <in>pc2</in>% CI =  <in>lower2</in>  to  <in>upper2</in></ci></line>
-<line><ci>Approximate one sided <in>pc1</in>% CI =  <in>lower1</in>  to  <in>upper1</in></ci></line>
-<line></block></line>
+<line><ci>Approximate one sided <in>pc1</in>% CI =  <in>lower1</in>  to  <in>upper1</in></ci>  </line>
+</block>
 <line></line>
 </report>

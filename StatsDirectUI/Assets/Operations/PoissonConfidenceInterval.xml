@@ -18,6 +18,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="rptPoissonConfidenceInterval" />
-		<report type="text/rtf" filename="poisson.rtf" />
+    <report type="application/x-statsdirect-creole" filename="poisson.creole" />
 	</steps>
 </operation>
