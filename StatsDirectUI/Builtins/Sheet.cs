@@ -758,7 +758,7 @@ namespace StatsDirect.Builtins
 
         private static LmsTable ToLmsTable(DataFrame frame)
         {
-            // Assumption: Columns are sex (ignored), xmrg, 4 x xvar, 4 x l, 4 x m, 4 x s.
+            // Assumption: Columns are xmrg, 4 x xvar, 4 x l, 4 x m, 4 x s.
             // Assumption: l, m, s all have _pre, unnamed, _nx, _nx2 in that order.
             LmsTable table = new LmsTable();
             table.Rows = new LmsTableRow[frame.MinRows];
@@ -779,32 +779,31 @@ namespace StatsDirect.Builtins
             double[] variable14 = (frame.Variables[14] as DoubleVariable).Data;
             double[] variable15 = (frame.Variables[15] as DoubleVariable).Data;
             double[] variable16 = (frame.Variables[16] as DoubleVariable).Data;
-            double[] variable17 = (frame.Variables[17] as DoubleVariable).Data;
             for (int row = 0; row < frame.MinRows; row++)
             {
                 LmsTableRow r = new LmsTableRow();
 
-                r.Xmrg = variable1[row];
+                r.Xmrg = variable0[row];
 
-                r.Xvars.Pre = variable2[row];
-                r.Xvars.Value = variable3[row];
-                r.Xvars.Nx = variable4[row];
-                r.Xvars.Nx2 = variable5[row];
+                r.Xvars.Pre = variable1[row];
+                r.Xvars.Value = variable2[row];
+                r.Xvars.Nx = variable3[row];
+                r.Xvars.Nx2 = variable4[row];
 
-                r.Lambdas.Pre = variable6[row];
-                r.Lambdas.Value = variable7[row];
-                r.Lambdas.Nx = variable8[row];
-                r.Lambdas.Nx2 = variable9[row];
+                r.Lambdas.Pre = variable5[row];
+                r.Lambdas.Value = variable6[row];
+                r.Lambdas.Nx = variable7[row];
+                r.Lambdas.Nx2 = variable8[row];
 
-                r.Mus.Pre = variable10[row];
-                r.Mus.Value = variable11[row];
-                r.Mus.Nx = variable12[row];
-                r.Mus.Nx2 = variable13[row];
+                r.Mus.Pre = variable9[row];
+                r.Mus.Value = variable10[row];
+                r.Mus.Nx = variable11[row];
+                r.Mus.Nx2 = variable12[row];
 
-                r.Sigmas.Pre = variable14[row];
-                r.Sigmas.Value = variable15[row];
-                r.Sigmas.Nx = variable16[row];
-                r.Sigmas.Nx2 = variable17[row];
+                r.Sigmas.Pre = variable13[row];
+                r.Sigmas.Value = variable14[row];
+                r.Sigmas.Nx = variable15[row];
+                r.Sigmas.Nx2 = variable16[row];
 
                 table.Rows[row] = r;
             }
