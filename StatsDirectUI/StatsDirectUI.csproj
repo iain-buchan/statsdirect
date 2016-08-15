@@ -334,6 +334,7 @@
     <Compile Include="R\RVersion.cs" />
     <Compile Include="Templates\AxisScaleParameters.cs" />
     <Compile Include="Templates\Builtin.cs" />
+    <Compile Include="Templates\FrameData.cs" />
     <Compile Include="Templates\GroupIdentifierMode.cs" />
     <Compile Include="Templates\IDefaultParameter.cs" />
     <Compile Include="Templates\IParameterVisitor.cs" />

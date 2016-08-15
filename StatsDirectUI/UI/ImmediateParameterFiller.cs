@@ -105,6 +105,14 @@ namespace StatsDirect.UI
 
         public void Visit(FrameParameter parameter)
         {
+            // If the parameter already holds static data, we don't need to request that from the user.
+            if (null != parameter.Data)
+            {
+                outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Output, parameter.Data.Frame));
+                return;
+            }
+
+            // If we get here, it doesn't hold data
             if (null == SdApplication.SoleInstance.ActiveGrid || !SdApplication.SoleInstance.ActiveGrid.HasWindow)
             {
                 SdApplication.SoleInstance.FriendlyError("There are no workbooks open from which to select data. Please create or open a workbook containing your data, then run the operation again.", null, false);

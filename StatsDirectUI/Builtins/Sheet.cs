@@ -176,7 +176,7 @@ namespace StatsDirect.Builtins
                                   : string.Empty;
             for (int c = 0; c <= totcols - 1; c++)
             {
-                StringVariable v = data.Variables[c]as StringVariable;
+                StringVariable v = data.Variables[c] as StringVariable;
                 int rx = 0;
                 for (r = 0; r <= totrows - 1; r++)
                 {
@@ -383,7 +383,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtLadderPowers(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0] as DoubleVariable;
             double cons = Constant.MISSING;
             if (parameters.ContainsKey("c"))
             {
@@ -500,7 +500,6 @@ namespace StatsDirect.Builtins
 
         internal static ParameterBag RptZanthro(ITemplateHost host, ParameterBag parameters)
         {
-#if HELLHASFROZENOVER
             const double DEFAULT_GESTATIONAL_AGE_WEEKS = 40.0;
 
             string standardisation = parameters["standardisation"].AsString;
@@ -518,10 +517,10 @@ namespace StatsDirect.Builtins
                     zCorrectionMode = ZanthroZCorrectionMode.All;
                     break;
                 case "censor-5sd":
-                    zCorrectionMode = ZanthroZCorrectionMode.Censor3Sd;
+                    zCorrectionMode = ZanthroZCorrectionMode.Censor5Sd;
                     break;
                 case "censor-3sd":
-                    zCorrectionMode = ZanthroZCorrectionMode.Censor5Sd;
+                    zCorrectionMode = ZanthroZCorrectionMode.Censor3Sd;
                     break;
                 case "who":
                     zCorrectionMode = ZanthroZCorrectionMode.Who;
@@ -530,10 +529,10 @@ namespace StatsDirect.Builtins
                     throw new Exception("Unknown z correction '" + zCorrectionString + "'");
             }
             bool includeCentiles = parameters["include-centiles"].AsBoolean;
-            DataFrame dataFrame = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = dataFrame.Variables[0] as DoubleVariable;
-            DataFrame standardiseFrame = parameters["standardise"].AsDataFrame;
-            DoubleVariable standardiseVariable = standardiseFrame.Variables[0] as DoubleVariable;
+            DataFrame measureFrame = parameters["measure"].AsDataFrame;
+            DoubleVariable measureVariable = measureFrame.Variables[0] as DoubleVariable;
+            DataFrame xvarFrame = parameters["xvar"].AsDataFrame;
+            DoubleVariable xvarVariable = xvarFrame.Variables[0] as DoubleVariable;
             DataFrame sexFrame = parameters["sex"].AsDataFrame;
             StringVariable sexVariable = sexFrame.Variables[0] as StringVariable;
             bool includeBmi = "BMI".Equals(dataIs);
@@ -546,18 +545,18 @@ namespace StatsDirect.Builtins
                 gestationalAgeVariable = gestationalAgeFrame.Variables[0] as DoubleVariable;
             }
 
-            double[] data = dataVariable.Data;
-            double[] standardise = standardiseVariable.Data;
+            double[] measure = measureVariable.Data;
+            double[] xvar = xvarVariable.Data;
             string[] codedSex = sexVariable.Data;
             double[] gestationalAge = gestationalAgeVariable?.Data;
-            bool[] isRowMissing = new bool[data.Length];
-            bool[] isMale = new bool[data.Length];
+            bool[] isRowMissing = new bool[measure.Length];
+            bool[] isMale = new bool[measure.Length];
 
             // Data preparation: Note missing values so we don't try to calculate the row.  Tight loops on arrays to encourage read-ahead and possible parallelisation by future compilers.
-            for (int i = 0; i < data.Length; i++)
-                isRowMissing[i] |= data[i] == Constant.MISSING;
-            for (int i = 0; i < standardise.Length; i++)
-                isRowMissing[i] |= standardise[i] == Constant.MISSING;
+            for (int i = 0; i < measure.Length; i++)
+                isRowMissing[i] |= measure[i] == Constant.MISSING;
+            for (int i = 0; i < xvar.Length; i++)
+                isRowMissing[i] |= xvar[i] == Constant.MISSING;
             if (hasGestationalAge)
                 for (int i = 0; i < gestationalAge.Length; i++)
                     isRowMissing[i] |= gestationalAge[i] == Constant.MISSING;
@@ -642,29 +641,45 @@ namespace StatsDirect.Builtins
             }
 
             // Data preparation: Where ages aren't in years, standardise to years.
-            double[] correctedStandardise = new double[standardise.Length];
+            double[] t = new double[xvar.Length];
+            double[] tday = new double[xvar.Length];
             if (null == ageUnit)
-                correctedStandardise = standardise;
+            {
+                t = xvar;
+                for (int i = 0; i < xvar.Length; i++)
+                    tday[i] = xvar[i] * 10000;
+            }
             else
             {
-                switch(ageUnit)
+                switch (ageUnit)
                 {
                     case "year":
-                        for (int i = 0; i < standardise.Length; i++)
-                            correctedStandardise[i] = standardise[i];
+                        for (int i = 0; i < xvar.Length; i++)
+                        {
+                            t[i] = xvar[i];
+                            tday[i] = xvar[i] * 365.25 * 10000;
+                        }
                         break;
                     case "month":
-                        for (int i = 0; i < standardise.Length; i++)
-                            correctedStandardise[i] = standardise[i] / 12.0;
+                        for (int i = 0; i < xvar.Length; i++)
+                        {
+                            t[i] = xvar[i] / 12.0;
+                            tday[i] = xvar[i] * (365.25 / 12.0) * 10000;
+                        }
                         break;
                     case "week":
-                        for (int i = 0; i < standardise.Length; i++)
-                            correctedStandardise[i] = standardise[i] / (365.25 / 7.0);
+                        for (int i = 0; i < xvar.Length; i++)
+                        {
+                            t[i] = xvar[i] / (365.25 / 7.0);
+                            tday[i] = xvar[i] * 7.0 * 10000;
+                        }
                         break;
-                    case null:
                     case "day":
-                        for (int i = 0; i < standardise.Length; i++)
-                            correctedStandardise[i] = standardise[i] / 365.25;
+                        for (int i = 0; i < xvar.Length; i++)
+                        {
+                            t[i] = xvar[i] / 365.25;
+                            tday[i] = xvar[i] * 10000;
+                        }
                         break;
                     default:
                         throw new Exception("Unknown age unit '" + ageUnit + "'");
@@ -674,30 +689,46 @@ namespace StatsDirect.Builtins
             if (hasGestationalAge)
             {
                 double maxGestationalAge = double.MinValue;
-                for (int i = 0; i < correctedStandardise.Length; i++)
+                for (int i = 0; i < t.Length; i++)
                 {
                     double gestationalAgeInWeeks = gestationalAge[i];
                     if (gestationalAgeInWeeks > maxGestationalAge)
                         maxGestationalAge = gestationalAgeInWeeks;
-                    correctedStandardise[i] += (gestationalAgeInWeeks - 40.0) * 7.0 / 365.0;
+                    t[i] += (gestationalAgeInWeeks - DEFAULT_GESTATIONAL_AGE_WEEKS) * 7.0 / 365.0;
                 }
                 if (maxGestationalAge > 42)
                     host.Warning("Maximum value in your gestational age variable is " + maxGestationalAge + " weeks", "Anthropometric standardisation");
             }
 
+            // Work out which tables to use
+            List<LmsTable> maleTables = new List<LmsTable>();
+            List<LmsTable> femaleTables = new List<LmsTable>();
+
+            string parameterName = dataIs + "-" + standardiseIs + "-" + standard;
+            foreach (KeyValuePair<string, FilledParameter> pair in parameters)
+            {
+                if (pair.Key.StartsWith(parameterName))
+                {
+                    if (pair.Key.Contains("-female"))
+                        femaleTables.Add(ToLmsTable(pair.Value.AsDataFrame));
+                    else
+                        maleTables.Add(ToLmsTable(pair.Value.AsDataFrame));
+                }
+            }
+
             // Output arrays
-            double[] rawZ = new double[data.Length];
-            double[] correctedZ = new double[data.Length];
-            double[] centile = includeCentiles? new double[data.Length] : null;
-            double[] bmiCategory = includeBmi ? new double[data.Length] : null;
+            double[] uncorrectedZ = new double[measure.Length];
+            double[] correctedZ = new double[measure.Length];
+            double[] centile = includeCentiles ? new double[measure.Length] : null;
+            double[] bmiCategory = includeBmi ? new double[measure.Length] : null;
 
             // Run the calculation for each row
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 0; i < measure.Length; i++)
             {
                 // If any input data is missing, set all output data missing and carry on.
                 if (isRowMissing[i])
                 {
-                    rawZ[i] = Constant.MISSING;
+                    uncorrectedZ[i] = Constant.MISSING;
                     correctedZ[i] = Constant.MISSING;
                     if (includeCentiles)
                         centile[i] = Constant.MISSING;
@@ -706,37 +737,95 @@ namespace StatsDirect.Builtins
                     continue;
                 }
 
-                rawZ[i] = ZanthroCalculateZ(isMale[i] ? maleTables : femaleTables, data[i], standardise[i], hasGestationalAge ? gestationalAge[i] : DEFAULT_GESTATIONAL_AGE_WEEKS);
-                correctedZ[i] = ZanthroCorrectZ(rawZ[i], zCorrectionMode);
+                uncorrectedZ[i] = ZanthroCalculateUncorrectedZ(isMale[i] ? maleTables : femaleTables, measure[i], t[i], tday[i]);
+                correctedZ[i] = ZanthroCorrectZ(uncorrectedZ[i], zCorrectionMode);
                 if (includeCentiles)
-                    centile[i] = PDF.alnorm(rawZ[i]) * 100.0;
+                    centile[i] = (Constant.MISSING == correctedZ[i]) ? Constant.MISSING : PDF.alnorm(correctedZ[i]) * 100.0;
                 // TODO: BMI category
             }
 
             ParameterBag outputParameters = new ParameterBag();
             DataFrame outputFrame = new DataFrame();
-            outputFrame.Variables.Add(new DoubleVariable(rawZ, "raw z"));
-            outputFrame.Variables.Add(new DoubleVariable(correctedZ, "corrected z"));
+            outputFrame.Variables.Add(new DoubleVariable(uncorrectedZ, "raw z (debug)"));
+            outputFrame.Variables.Add(new DoubleVariable(correctedZ, "z score"));
             if (includeCentiles)
-                outputFrame.Variables.Add(new DoubleVariable(centile, "centiles"));
+                outputFrame.Variables.Add(new DoubleVariable(centile, "Percentile"));
             if (includeBmi)
                 outputFrame.Variables.Add(new DoubleVariable(bmiCategory, "BMI category"));
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
-#endif
-            return new Templates.ParameterBag();
+        }
+
+        private static LmsTable ToLmsTable(DataFrame frame)
+        {
+            // Assumption: Columns are sex (ignored), xmrg, 4 x xvar, 4 x l, 4 x m, 4 x s.
+            // Assumption: l, m, s all have _pre, unnamed, _nx, _nx2 in that order.
+            LmsTable table = new LmsTable();
+            table.Rows = new LmsTableRow[frame.MinRows];
+            double[] variable0 = (frame.Variables[0] as DoubleVariable).Data;
+            double[] variable1 = (frame.Variables[1] as DoubleVariable).Data;
+            double[] variable2 = (frame.Variables[2] as DoubleVariable).Data;
+            double[] variable3 = (frame.Variables[3] as DoubleVariable).Data;
+            double[] variable4 = (frame.Variables[4] as DoubleVariable).Data;
+            double[] variable5 = (frame.Variables[5] as DoubleVariable).Data;
+            double[] variable6 = (frame.Variables[6] as DoubleVariable).Data;
+            double[] variable7 = (frame.Variables[7] as DoubleVariable).Data;
+            double[] variable8 = (frame.Variables[8] as DoubleVariable).Data;
+            double[] variable9 = (frame.Variables[9] as DoubleVariable).Data;
+            double[] variable10 = (frame.Variables[10] as DoubleVariable).Data;
+            double[] variable11 = (frame.Variables[11] as DoubleVariable).Data;
+            double[] variable12 = (frame.Variables[12] as DoubleVariable).Data;
+            double[] variable13 = (frame.Variables[13] as DoubleVariable).Data;
+            double[] variable14 = (frame.Variables[14] as DoubleVariable).Data;
+            double[] variable15 = (frame.Variables[15] as DoubleVariable).Data;
+            double[] variable16 = (frame.Variables[16] as DoubleVariable).Data;
+            double[] variable17 = (frame.Variables[17] as DoubleVariable).Data;
+            for (int row = 0; row < frame.MinRows; row++)
+            {
+                LmsTableRow r = new LmsTableRow();
+
+                r.Xmrg = variable1[row];
+
+                r.Xvars.Pre = variable2[row];
+                r.Xvars.Value = variable3[row];
+                r.Xvars.Nx = variable4[row];
+                r.Xvars.Nx2 = variable5[row];
+
+                r.Lambdas.Pre = variable6[row];
+                r.Lambdas.Value = variable7[row];
+                r.Lambdas.Nx = variable8[row];
+                r.Lambdas.Nx2 = variable9[row];
+
+                r.Mus.Pre = variable10[row];
+                r.Mus.Value = variable11[row];
+                r.Mus.Nx = variable12[row];
+                r.Mus.Nx2 = variable13[row];
+
+                r.Sigmas.Pre = variable14[row];
+                r.Sigmas.Value = variable15[row];
+                r.Sigmas.Nx = variable16[row];
+                r.Sigmas.Nx2 = variable17[row];
+
+                table.Rows[row] = r;
+            }
+            return table;
         }
 
         private static double ZanthroCorrectZ(double rawZ, ZanthroZCorrectionMode zCorrectionMode)
         {
+            if (Constant.MISSING == rawZ)
+                return rawZ;
+
             switch (zCorrectionMode)
             {
                 case ZanthroZCorrectionMode.All:
                     return rawZ;
-                // TODO:
                 case ZanthroZCorrectionMode.Censor3Sd:
+                    return Math.Abs(rawZ) > 3.0 ? Constant.MISSING : rawZ;
                 case ZanthroZCorrectionMode.Censor5Sd:
+                    return Math.Abs(rawZ) > 5.0 ? Constant.MISSING : rawZ;
                 case ZanthroZCorrectionMode.Who:
+                    // TODO:
                     throw new NotImplementedException();
                 default:
                     throw new Exception("Unknown Z correction mode " + zCorrectionMode.ToString());
@@ -753,40 +842,78 @@ namespace StatsDirect.Builtins
 
         public class LmsTable
         {
-            public double LowerBound { get { return Values[0]; } }
-            public double UpperBound { get; set; }
-            public double[] Values { get; set; }
-            public double[] Lambdas { get; set; }
-            public double[] Mus { get; set; }
-            public double[] Sigmas { get; set; }
+            public double XmrgLowerBound { get { return Rows[0].Xmrg; } }
+            public double XmrgUpperBound { get { return Rows[Rows.Length - 1].Xmrg; } }
+            public LmsTableRow[] Rows { get; set; }
         }
 
-        private static double ZanthroCalculateZ(ICollection<LmsTable> tables, double data, double standardise, double gestationalAge)
+        public class LmsTableRow
+        {
+            public double Xmrg;
+            public LmsQuad Xvars;
+            public LmsQuad Lambdas;
+            public LmsQuad Mus;
+            public LmsQuad Sigmas;
+        }
+
+        public struct LmsQuad
+        {
+            public double Pre;
+            public double Value;
+            public double Nx;
+            public double Nx2;
+        }
+
+        private static double ZanthroCalculateUncorrectedZ(ICollection<LmsTable> tables, double measure, double t, double tday)
         {
             // Find the correct table to use. Tables are passed in order of preference, so simply use the first one that matches.
             foreach (LmsTable table in tables)
-                if (table.LowerBound <= data && table.UpperBound >= data)
-                    return ZanthroCalculateZ(table, data, standardise, gestationalAge);
+                if (table.XmrgLowerBound <= tday && table.XmrgUpperBound >= tday)
+                    return ZanthroCalculateUncorrectedZ(table, measure, t, tday);
             // If we get here, no table matched.
             return Constant.MISSING;
         }
 
-        private static double ZanthroCalculateZ(LmsTable table, double data, double standardise, double gestationalAge)
+        private static double ZanthroCalculateUncorrectedZ(LmsTable table, double measure, double t, double tday)
         {
-#if HELLHASFROZENOVER
-            // t is the corrected xvar - turned into years for any age, TODO: Not sure for ht/wt.
-            double t = 0, xvar_pre = 0, xvar = 0, xvar_nx = 0, xvar_nx2 = 0, y;
-            double lms_pre = pre;
-            double lms = thisOne;
-            double lms_nx = nx;
-            double lms_nx2 = nx2;
+            // We already know the value is within the bounds of this table; it's just a case of finding which row.
+            // Use a row if the value being considered is at least the row's xmrg and less than the next row's xmrg.
+            for (int i = 0; i < table.Rows.Length; i++)
+            {
+                LmsTableRow candidate = table.Rows[i];
+                if (candidate.Xmrg <= tday && (i == table.Rows.Length - 1 || table.Rows[i + 1].Xmrg >= tday))
+                    return ZanthroCalculateUncorrectedZ(table.Rows[i], measure, t);
+            }
+            // If we get here, no row matched despite the table having rows that must match.  Assume the final row.
+            return ZanthroCalculateUncorrectedZ(table.Rows[table.Rows.Length - 1], measure, t);
+        }
 
-            y = (lms_pre * (t - xvar) * (t - xvar_nx) * (t - xvar_nx2)) / ((xvar_pre-xvar)*(xvar_pre-xvar_nx)*(xvar_pre-xvar_nx2))
-                + (lms * (t-xvar_pre)*(t-xvar_nx)*(t-xvar_nx2))/((xvar-xvar_pre)*(xvar-xvar_nx)*(xvar-xvar_nx2))
-                + (lms_nx*(t-xvar_pre)*(t-xvar)*(t-xvar_nx2))/((xvar_nx-xvar_pre)*(xvar_nx-xvar)*(xvar_nx-xvar_nx2))
-                + (lms_nx2*(t-xvar_pre)*(t-xvar)*(t-xvar_nx))/((xvar_nx2-xvar_pre)*(xvar_nx2-xvar)*(xvar_nx2-xvar_nx));
-#endif
-            return Constant.MISSING;
+        private static double ZanthroCalculateUncorrectedZ(LmsTableRow tableRow, double measure, double t)
+        {
+            // t is the corrected xvar - turned into years for any age, TODO: Not sure for ht/wt.
+            double lambda = Interpolate(t, tableRow.Xvars, tableRow.Lambdas);
+            double mu = Interpolate(t, tableRow.Xvars, tableRow.Mus);
+            double sigma = Interpolate(t, tableRow.Xvars, tableRow.Sigmas);
+
+            double z = (Math.Pow(measure / mu, lambda) - 1) / (lambda * sigma);
+            return z;
+        }
+
+        private static double Interpolate(double t, LmsQuad xvar, LmsQuad lms)
+        {
+            // If we have all values, cubic interpolation is appropriate.
+            if (xvar.Pre != Constant.MISSING && xvar.Value != Constant.MISSING && xvar.Nx != Constant.MISSING && xvar.Nx2 != Constant.MISSING
+                && lms.Pre != Constant.MISSING && lms.Value != Constant.MISSING && lms.Nx != Constant.MISSING && lms.Nx2 != Constant.MISSING)
+                return CubicInterpolate(t, xvar, lms);
+            throw new NotImplementedException();
+        }
+
+        private static double CubicInterpolate(double t, LmsQuad xvar, LmsQuad lms)
+        {
+            return (lms.Pre * (t - xvar.Value) * (t - xvar.Nx) * (t - xvar.Nx2)) / ((xvar.Pre - xvar.Value) * (xvar.Pre - xvar.Nx) * (xvar.Pre - xvar.Nx2))
+                + (lms.Value * (t - xvar.Pre) * (t - xvar.Nx) * (t - xvar.Nx2)) / ((xvar.Value - xvar.Pre) * (xvar.Value - xvar.Nx) * (xvar.Value - xvar.Nx2))
+                + (lms.Nx * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx2)) / ((xvar.Nx - xvar.Pre) * (xvar.Nx - xvar.Value) * (xvar.Nx - xvar.Nx2))
+                + (lms.Nx2 * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx)) / ((xvar.Nx2 - xvar.Pre) * (xvar.Nx2 - xvar.Value) * (xvar.Nx2 - xvar.Nx));
         }
 
         internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
@@ -931,7 +1058,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0] as DoubleVariable;
             double[] inputData = inputVariable.Data;
             double sum = 0;
             int nx = 0;
@@ -1024,7 +1151,7 @@ namespace StatsDirect.Builtins
             bool ok = true;
             for (int c = 0; c < data.VariableCount; c++)
             {
-                DoubleVariable v = data.Variables[c]as DoubleVariable;
+                DoubleVariable v = data.Variables[c] as DoubleVariable;
                 ep = v.Title.IndexOf("=", StringComparison.Ordinal);
                 int tp = v.Title.IndexOf("~", StringComparison.Ordinal);
                 if (ep < 0 || tp < 0 || tp > ep)
@@ -1061,7 +1188,7 @@ namespace StatsDirect.Builtins
             int row = 0;
             for (int c = 0; c <= data.VariableCount - 1; c++)
             {
-                DoubleVariable v = data.Variables[c]as DoubleVariable;
+                DoubleVariable v = data.Variables[c] as DoubleVariable;
                 ep = v.Title.IndexOf("=", StringComparison.Ordinal) + 1;
                 string outputTitle = v.Title;
                 if (ok)
@@ -1080,7 +1207,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-        
+
         public static ParameterBag ShtDates(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
@@ -1132,16 +1259,16 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-        
+
         public static ParameterBag ShtGroupSplit(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame gidsFrame = parameters["gids"].AsDataFrame;
             ClassifierVariable gidsVariable = gidsFrame.Variables[0] as ClassifierVariable;
             int rows = gidsVariable.Length;
             int ng = gidsVariable.GroupCount;
-            double[] gid = new double[rows + 1 ];
-            string[] glabel = new string[ng + 1 ];
-            double[] g = new double[ng + 1 ];
+            double[] gid = new double[rows + 1];
+            string[] glabel = new string[ng + 1];
+            double[] g = new double[ng + 1];
             for (int c = 1; c <= ng; c++)
             {
                 if (gidsVariable.Title == "Group ID")
@@ -1211,7 +1338,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-        
+
         public static ParameterBag ShtNormal(ITemplateHost host, ParameterBag parameters)
         {
             string lab = parameters["method"].AsString;
@@ -1223,9 +1350,9 @@ namespace StatsDirect.Builtins
             else
                 method = 3;
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = data.Variables[0]as DoubleVariable;
+            DoubleVariable dataVariable = data.Variables[0] as DoubleVariable;
             int rows = dataVariable.Length;
-            double[] prk = new double[rows + 1 ];
+            double[] prk = new double[rows + 1];
             int nx = 0;
             for (int n = 0; n < rows; n++)
             {
@@ -1235,7 +1362,7 @@ namespace StatsDirect.Builtins
                     prk[nx] = dataVariable.Data[n];
                 }
             }
-            double[] r = new double[nx + 1 ];
+            double[] r = new double[nx + 1];
             double xf;
             ExFortran.Rank(prk, r, 1, nx, 0, out xf);
             if (method == 3)
@@ -1295,17 +1422,17 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-        
+
         public static ParameterBag ShtPairDifferences(ITemplateHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 1);
         }
-        
+
         public static ParameterBag ShtPairMeans(ITemplateHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 2);
         }
-        
+
         public static ParameterBag ShtPairSlopes(ITemplateHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 3);
@@ -1324,10 +1451,10 @@ namespace StatsDirect.Builtins
             double mdn = 0;
 
             DataFrame yFrame = parameters["y"].AsDataFrame;
-            DoubleVariable yVariable = yFrame.Variables[0]as DoubleVariable;
+            DoubleVariable yVariable = yFrame.Variables[0] as DoubleVariable;
             int rows = yVariable.Length;
             string yt = yVariable.Title;
-            double[] yy = new double[rows + 1 ];
+            double[] yy = new double[rows + 1];
             for (i = 1; i <= rows; i++)
             {
                 yy[i] = yVariable.Data[i - 1];
@@ -1335,7 +1462,7 @@ namespace StatsDirect.Builtins
             if (index != 2)
             {
                 DataFrame xFrame = parameters["x"].AsDataFrame;
-                DoubleVariable xVariable = xFrame.Variables[0]as DoubleVariable;
+                DoubleVariable xVariable = xFrame.Variables[0] as DoubleVariable;
                 rows2 = xVariable.Length;
                 if (rows2 != rows & index == 3)
                 {
@@ -1344,7 +1471,7 @@ namespace StatsDirect.Builtins
                     return null;
                 }
                 xt = xVariable.Title;
-                xx = new double[rows2 + 1 ];
+                xx = new double[rows2 + 1];
                 for (i = 1; i <= rows2; i++)
                 {
                     xx[i] = xVariable.Data[i - 1];
@@ -1354,7 +1481,7 @@ namespace StatsDirect.Builtins
             if (index == 2)
             {
                 // means
-                x = new double[rows + 1 ];
+                x = new double[rows + 1];
                 ctr = 0;
                 for (i = 1; i <= rows; i++)
                 {
@@ -1369,8 +1496,8 @@ namespace StatsDirect.Builtins
             else if (index == 3)
             {
                 // slopes
-                x = new double[rows + 1 ];
-                y = new double[rows + 1 ];
+                x = new double[rows + 1];
+                y = new double[rows + 1];
                 ctr = 0;
                 for (i = 1; i <= rows; i++)
                 {
@@ -1387,8 +1514,8 @@ namespace StatsDirect.Builtins
             else
             {
                 // differences
-                x = new double[rows + 1 ];
-                y = new double[rows2 + 1 ];
+                x = new double[rows + 1];
+                y = new double[rows2 + 1];
                 ctr = 0;
                 for (i = 1; i <= rows2; i++)
                 {
@@ -1499,7 +1626,7 @@ namespace StatsDirect.Builtins
                         int fault;
                         double pu;
                         MathDbl.taufromp(p, out pu, out ix, ref nx, out fault);
-                        double[] pws = new double[cnt + 1 ];
+                        double[] pws = new double[cnt + 1];
                         if (fault == 0)
                         {
                             cnt = 0;
@@ -1721,10 +1848,10 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtRank(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0] as DoubleVariable;
             int q = Parsing.Cint_Txt(parameters["tie-correction"].AsString);
             int rows = inputVariable.Length;
-            double[] prk = new double[rows + 1 ];
+            double[] prk = new double[rows + 1];
             int nx = 0;
             foreach (double value in inputVariable.Data)
             {
@@ -1734,7 +1861,7 @@ namespace StatsDirect.Builtins
                     prk[nx] = value;
                 }
             }
-            double[] r = new double[nx + 1 ];
+            double[] r = new double[nx + 1];
             double tie;
             ExFortran.Rank(prk, r, 1, nx, q, out tie);
             string title = "Rank: " + inputVariable.Title + ((q < 2) ? string.Empty : " [tie correction = " + tie.ToString() + "]");
@@ -1773,7 +1900,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add(v);
                 for (int col = 0; col <= cols - 1; col++)
                 {
-                    StringVariable inv = data.Variables[col]as StringVariable;
+                    StringVariable inv = data.Variables[col] as StringVariable;
                     if (inv.Length > row)
                         v.SetData(col, inv.Data[row]);
                 }
@@ -1819,7 +1946,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtSort(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = data.Variables[0]as DoubleVariable;
+            DoubleVariable dataVariable = data.Variables[0] as DoubleVariable;
             string sort = parameters["sort"].AsString;
             IComparer<double> comp;
             if ("asc".Equals(sort))
@@ -1838,7 +1965,7 @@ namespace StatsDirect.Builtins
             if (hasLink)
             {
                 DataFrame linkData = parameters["linkdata"].AsDataFrame;
-                DoubleVariable linkVariable = linkData.Variables[0]as DoubleVariable;
+                DoubleVariable linkVariable = linkData.Variables[0] as DoubleVariable;
                 t += " (by " + linkVariable.Title + ")";
                 double[] linkArray = new double[rows];
                 nx = 0;
@@ -1976,7 +2103,7 @@ namespace StatsDirect.Builtins
         private static ParameterBag ShtTransforms(ParameterBag parameters, int index)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0] as DoubleVariable;
             double[] inputData = inputVariable.Data;
             int rows = inputData.Length;
 
@@ -2247,14 +2374,14 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtGroupCategorise(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable inputVariable = data.Variables[0]as DoubleVariable;
+            DoubleVariable inputVariable = data.Variables[0] as DoubleVariable;
             int rows = inputVariable.Length;
             CategoriseOptions options = new CategoriseOptions
-                                            {
-                                                Title = "Categorised: " + inputVariable.Title,
-                                                PassX = new double[rows],
-                                                Data = inputVariable
-                                            };
+            {
+                Title = "Categorised: " + inputVariable.Title,
+                PassX = new double[rows],
+                Data = inputVariable
+            };
             if (null == host.Amend(options, parameters))
             {
                 throw new TemplateOperationCancelledException();
@@ -2295,7 +2422,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                DoubleVariable dataVariable = data.Variables[0]as DoubleVariable;
+                DoubleVariable dataVariable = data.Variables[0] as DoubleVariable;
                 string dtitle = dataVariable.Title;
 
                 DataFrame identifiersFrame = parameters["identifiers"].AsDataFrame;
@@ -2379,7 +2506,7 @@ namespace StatsDirect.Builtins
             {
                 // 0 or 1 responses - one row per covariate pattern
                 DataFrame responsesFrame = parameters["responses"].AsDataFrame;
-                DoubleVariable responsesVariable = responsesFrame.Variables[0]as DoubleVariable;
+                DoubleVariable responsesVariable = responsesFrame.Variables[0] as DoubleVariable;
                 double[] responseData = responsesVariable.Data;
 
                 int[] differenceArray;
@@ -2540,30 +2667,30 @@ namespace StatsDirect.Builtins
             {
                 case "categories-counts":
                     {
-                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0] as DoubleVariable;
                         yesPerGroup = ToIntArray(countsVariable.Data, out totalOutputRows);
                         noPerGroup = new int[yesPerGroup.Length]; // Initialised to 0
-                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0]as StringVariable;
+                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0] as StringVariable;
                         covariatesOrNull = null;
                         hasResponses = false;
                     }
                     break;
                 case "categories-counts-covariates":
                     {
-                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable countsVariable = parameters["counts"].AsDataFrame.Variables[0] as DoubleVariable;
                         yesPerGroup = ToIntArray(countsVariable.Data, out totalOutputRows);
                         noPerGroup = new int[yesPerGroup.Length]; // Initialised to 0
-                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0]as StringVariable;
+                        labelsOrNull = parameters["categories"].AsDataFrame.Variables[0] as StringVariable;
                         covariatesOrNull = parameters["covariates"].AsDataFrame;
                         hasResponses = false;
                     }
                     break;
                 case "responders-nonresps-covariates":
                     {
-                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0] as DoubleVariable;
                         int yesses;
                         yesPerGroup = ToIntArray(respondersVariable.Data, out yesses);
-                        DoubleVariable nonrespsVariable = parameters["nonresps"].AsDataFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable nonrespsVariable = parameters["nonresps"].AsDataFrame.Variables[0] as DoubleVariable;
                         int noes;
                         noPerGroup = ToIntArray(nonrespsVariable.Data, out noes);
                         totalOutputRows = yesses + noes;
@@ -2574,10 +2701,10 @@ namespace StatsDirect.Builtins
                     break;
                 case "responders-totals-covariates":
                     {
-                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0] as DoubleVariable;
                         int scrap;
                         yesPerGroup = ToIntArray(respondersVariable.Data, out scrap);
-                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0] as DoubleVariable;
                         int[] totalsPerGroup = ToIntArray(totalsVariable.Data, out totalOutputRows);
                         noPerGroup = new int[yesPerGroup.Length];
                         for (int i = 0; i < yesPerGroup.Length; i++)
@@ -2589,8 +2716,8 @@ namespace StatsDirect.Builtins
                     break;
                 case "resprops-totals-covariates":
                     {
-                        DoubleVariable respropsVariable = parameters["resprops"].AsDataFrame.Variables[0]as DoubleVariable;
-                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0]as DoubleVariable;
+                        DoubleVariable respropsVariable = parameters["resprops"].AsDataFrame.Variables[0] as DoubleVariable;
+                        DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0] as DoubleVariable;
                         int[] totalsPerGroup = ToIntArray(totalsVariable.Data, out totalOutputRows);
                         yesPerGroup = new int[totalsVariable.Length];
                         noPerGroup = new int[yesPerGroup.Length];
