@@ -25,7 +25,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptMiscDiagnostic" />
-	  <report type="text/rtf" filename="diagnost.rtf" />
+    <report type="application/x-statsdirect-creole" filename="diagnost.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscDiagnostic</suggested-operation>

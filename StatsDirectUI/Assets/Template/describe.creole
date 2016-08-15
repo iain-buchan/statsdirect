@@ -2,12 +2,10 @@
 <line><title>Descriptive statistics</title></line>
 <line></line>
 <table>
-<tr><td><grandtotal>Variables</grandtotal></td><td><block name="titles"><grandtotal><in>title</in></td><td></grandtotal></block></td></tr>
+<tr><td><grandtotal>Variables</grandtotal></td><td><block name="titles"><grandtotal><in>title</in></grandtotal></block></td><td></td></tr>
 </table>
-<line><block name="fields"></line>
+<line></line>
 <table>
-<tr><td><in>title</in><block name="results"></td><td><in>result</in></block></block></td></tr>
+<tr><td><block name="fields"><in>title</in></block></td><td> <block name="results"><in>result</in></block></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>
