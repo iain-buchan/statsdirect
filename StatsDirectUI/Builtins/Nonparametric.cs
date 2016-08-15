@@ -3783,7 +3783,7 @@ namespace StatsDirect.Builtins
             x_kwt(x, lx, L, frame.VariableCount, out h, ref ha, ref t, ref w1, out ifault);
             //  End copy from rpt_kruskal
 
-            // Conover-Inman method
+            // Conover-Iman method
             P = confidence;
             if (P == 0)
             {

@@ -8,7 +8,7 @@
 </table>
 <line></line>
 <line></line>
-<line>Kruskal-Wallis: all pairwise comparisons (Conover-Inman)</line>
+<line>Kruskal-Wallis: all pairwise comparisons (Conover-Iman)</line>
 <line>Critical t (<in>df</in> df) = <in>t</in></line>
 <line><pval><block name="conover"></pval></line>
 <table>
