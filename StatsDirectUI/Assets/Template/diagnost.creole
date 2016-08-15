@@ -1,20 +1,17 @@
 <report>
 <line><title>Diagnostic test analysis</title></line>
 <line></line>
-<table>
-<tr><td></td><td>Disease / feature</td></tr>
+<table><tr><td><b>Disease / feature</b></td></tr>
 <tr><td><b>Test:</b></td><td>Present</td><td>Absent</td><td>Totals</td></tr>
 <tr><td>Positive</td><td><in>aa</in></td><td><in>bb</in></td><td><in>ab</in></td></tr>
 <tr><td>Negative</td><td><in>cc</in></td><td><in>dd</in></td><td><in>cd</in></td></tr>
-</table>
-<line></line>
-<table>
+<tr></tr>
 <tr><td>Totals</td><td><in>ac</in></td><td><in>bd</in></td><td><in>tot</in></td></tr>
 </table>
 <line></line>
 <line><ci>Including <in>pc</in>% confidence intervals:</ci></line>
 <line></line>
-<line>Prevalence (pre-test likelihood of disease)</line>
+<line><b>Prevalence</b> (pre-test likelihood of disease)</line>
 <line><in>prevalence</in> <ci>(<in>prevalence_from</in> to <in>prevalence_to</in>)</ci>, <in>prevalence_pc</in>% <ci>(<in>prevalence_from_pc</in>% to <in>prevalence_to_pc</in>%)</ci></line>
 <line></line>
 <line><b>Predictive value of +ve test </b>(post-test likelihood of disease)</line>
@@ -37,8 +34,6 @@
 <line>LR (negative test) = <in>lr_neg</in>  <ci>(<in>lr_neg_from</in> to <in>lr_neg_to</in>)</ci></line>
 <line></line>
 <line><b>Diagnostic Odds Ratio</b></line>
-<line>Observed odds ratio = <in>odr</in></line>
-<line>Conditional maximum likelihood estimate = <in>cmle</in>  <ci>(<in>cmle_from</in> to <in>cmle_to</in>)</ci></line>
-<line></line>
-<line></line>
+<line><b>Observed odds ratio = <in>odr</in></b></line>
+<line><b>Conditional maximum likelihood estimate = <in>cmle</in>  <ci>(<in>cmle_from</in> to <in>cmle_to</in>)</ci></b></line>
 </report>

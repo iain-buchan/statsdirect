@@ -24,6 +24,6 @@
         </integer>
       </parameters>
 		<builtin function-name="rptDiversity" />
-		<report type="text/rtf" filename="diversity.rtf" />
+    <report type="application/x-statsdirect-creole" filename="diversity.creole" />
 	</steps>
 </operation>
