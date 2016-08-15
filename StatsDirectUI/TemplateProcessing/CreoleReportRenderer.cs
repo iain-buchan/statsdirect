@@ -75,6 +75,10 @@ namespace StatsDirect.TemplateProcessing
             };
 
             string afterSubstitutions = substitutedTemplate.Trim();
+
+            // Before doing anything else, replace any {...} in the creole with \{...\}.  Do it now because we're about to put a whole load of {...} into the substituted RTF and won't be able to tell the difference later.
+            afterSubstitutions = afterSubstitutions.Replace(@"{", @"\{").Replace(@"}", @"\}");
+
             foreach (KeyValuePair<string, string> pair in substitutions)
                 afterSubstitutions = afterSubstitutions.Replace(pair.Key, pair.Value);
             // RTF tables need a certain amount of fixup: they need a \cellx0 for each cell in the row.
