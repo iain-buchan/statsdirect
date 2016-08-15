@@ -535,7 +535,7 @@ namespace StatsDirect.Builtins
             DoubleVariable xvarVariable = xvarFrame.Variables[0] as DoubleVariable;
             DataFrame sexFrame = parameters["sex"].AsDataFrame;
             StringVariable sexVariable = sexFrame.Variables[0] as StringVariable;
-            bool includeBmi = "BMI".Equals(dataIs);
+            bool includeBmi = false; // "BMI".Equals(dataIs);
 
             bool hasGestationalAge = parameters.ContainsKey("gestational-age");
             DoubleVariable gestationalAgeVariable = null;
