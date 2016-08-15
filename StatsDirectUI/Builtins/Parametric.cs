@@ -353,13 +353,10 @@ namespace StatsDirect.Builtins
         {
             DataFrame data = parameters["data"].AsDataFrame;
             double percent2 = parameters["gamma"].AsDouble * 100.0;
-            if (percent2 <= 0.0 | percent2 >= 100.0)
-            {
+            if (percent2 <= 0.0 || percent2 >= 100.0)
                 percent2 = 95.0;
-            }
             double percent1 = 100.0 - 2.0 * (100.0 - percent2);
 
-            //  RTF_LoadTemplate("poisson.rtf")
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> sampleList = new List<ParameterBag>();
             outputParameters.AddOutput("*sample", sampleList);
@@ -374,24 +371,22 @@ namespace StatsDirect.Builtins
                 {
                     if (v != Constant.MISSING)
                     {
-                        nobs = nobs + 1;
+                        nobs++;
                         x[nobs] = v;
                         if (x[nobs] != Math.Floor(v))
-                        {
                             not_int = true;
-                        }
                         if (x[nobs] < 0)
-                        {
                             non_neg = true;
-                        }
                     }
                 }
                 ParameterBag sampleParameters = new ParameterBag();
                 sampleList.Add(sampleParameters);
                 sampleParameters.AddOutput("ti", variable.Title);
                 string wrn = non_neg
-                                 ? "(error - negative values used)"
-                                 : (not_int ? "(warning - source data not integers)" : string.Empty);
+                    ? "(error - negative values used)"
+                    : (not_int
+                        ? "(warning - source data not integers)"
+                        : string.Empty);
                 sampleParameters.AddOutput("warn", wrn);
                 sampleParameters.AddOutput("n", nobs.ToString());
 
@@ -421,7 +416,6 @@ namespace StatsDirect.Builtins
             }
             return outputParameters;
         }
-
 
         public static ParameterBag RptZSingle(ITemplateHost host, ParameterBag parameters)
         {
