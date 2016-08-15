@@ -741,13 +741,16 @@ namespace StatsDirect.Builtins
                 correctedZ[i] = ZanthroCorrectZ(uncorrectedZ[i], zCorrectionMode);
                 if (includeCentiles)
                     centile[i] = (Constant.MISSING == correctedZ[i]) ? Constant.MISSING : PDF.alnorm(correctedZ[i]) * 100.0;
-                // TODO: BMI category
+                if (includeBmi)
+                {
+                    // TODO:
+                }
             }
 
             ParameterBag outputParameters = new ParameterBag();
             DataFrame outputFrame = new DataFrame();
             outputFrame.Variables.Add(new DoubleVariable(uncorrectedZ, "raw z (debug)"));
-            outputFrame.Variables.Add(new DoubleVariable(correctedZ, "z score"));
+            outputFrame.Variables.Add(new DoubleVariable(correctedZ, "z " + dataIs));
             if (includeCentiles)
                 outputFrame.Variables.Add(new DoubleVariable(centile, "Percentile"));
             if (includeBmi)
