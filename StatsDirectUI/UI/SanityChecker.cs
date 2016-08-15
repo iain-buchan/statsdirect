@@ -125,7 +125,7 @@ namespace StatsDirect.UI
                 CheckCommon(parameter);
             }
 
-            public void Visit(GridParameter parameter)
+            public void Visit(FrameParameter parameter)
             {
                 CheckCommon(parameter);
                 CheckAllDynamicContentCompiles(parameter.LengthExpression, ".LengthExpression");
@@ -177,7 +177,7 @@ namespace StatsDirect.UI
                 CheckCommon(parameter);
             }
 
-            public void Visit(Grid2DParameter parameter)
+            public void Visit(Frame2DParameter parameter)
             {
                 CheckCommon(parameter);
                 CheckAllDynamicContentCompiles(parameter.SubPromptExpression, ".SubPromptExpression");

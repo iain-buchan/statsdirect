@@ -289,7 +289,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// If this is called, we know we're acquiring "screen" data in the dialog area rather than data from a loaded worksheet.
         /// </summary>
-        public void Visit(GridParameter parameter)
+        public void Visit(FrameParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
             WorkbookView grid = new WorkbookView
@@ -1004,7 +1004,7 @@ namespace StatsDirect.UI
             throw new Exception("Grouped covariance parameters cannot be combined");
         }
 
-        public void Visit(Grid2DParameter parameter)
+        public void Visit(Frame2DParameter parameter)
         {
             throw new Exception("Grid 2D parameters cannot be combined");
         }

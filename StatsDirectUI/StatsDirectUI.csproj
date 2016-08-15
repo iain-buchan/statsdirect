@@ -432,8 +432,8 @@
     <Compile Include="Templates\EditGridParameter.cs" />
     <Compile Include="Templates\Expression.cs" />
     <Compile Include="Templates\FilledParameter.cs" />
-    <Compile Include="Templates\Grid2DParameter.cs" />
-    <Compile Include="Templates\GridParameter.cs" />
+    <Compile Include="Templates\Frame2DParameter.cs" />
+    <Compile Include="Templates\FrameParameter.cs" />
     <Compile Include="Templates\GroupedCovarianceParameter.cs" />
     <Compile Include="Templates\HelpContext.cs" />
     <Compile Include="Templates\HelpTip.cs" />

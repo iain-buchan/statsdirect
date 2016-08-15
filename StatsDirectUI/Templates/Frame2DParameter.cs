@@ -1,35 +1,43 @@
 using System;
 using System.Xml.Serialization;
 
-using StatsDirect.Utilities;
-using System.Collections.Generic;
-
 namespace StatsDirect.Templates
 {
+    public enum DataAcquisitionMode2D
+    {
+        NotSet = 0,
+        GroupThenBlock,
+        BlockThenGroup
+    }
+
     [Serializable]
-    public sealed class GridParameter: Parameter
+    public sealed class Frame2DParameter: Parameter
     {
         private bool columnsAreSameLength;
-        private List<string> sameLengthAsParameter;
         private Expression length;
         private Expression minimumColumns;
         private Expression maximumColumns;
-        private DataAcquisitionMode dataAcquisitionMode;
+        private DataAcquisitionMode2D dataAcquisitionMode;
         private bool shouldClearSelectionFirst;
         private bool shouldAskForGroupId;
-        private GroupIdentifierMode groupIdentifierMode;
-        private string appendToFrame;
-        private bool canSelect = true;
+        private bool shouldSquare;
+        private Expression subPrompt;
 
-        /// <summary>
-        /// If true, the grid can be selected from existing data (default).
-        /// If false, the grid must be entered interactively.
-        /// </summary>
-        [XmlElement(ElementName="can-select")]
-        public bool CanSelect
+        public string SubPrompt(ITemplateProcessor processor, ParameterBag parameters)
         {
-            get { return canSelect; }
-            set { canSelect = value; }
+            if (null == subPrompt)
+                return null;
+            return (string)processor.Evaluate(subPrompt, parameters);
+        }
+
+        [XmlElement(ElementName = "sub-prompt")]
+        public Expression SubPromptExpression
+        {
+            get { return subPrompt; }
+            set
+            {
+                subPrompt = value;
+            }
         }
 
         /// <summary>
@@ -47,33 +55,10 @@ namespace StatsDirect.Templates
         /// The mode in which the data should be loaded into the frame
         /// </summary>
         [XmlElement(ElementName = "mode")]
-        public DataAcquisitionMode DataAcquisitionMode
+        public DataAcquisitionMode2D DataAcquisitionMode
         {
             get { return dataAcquisitionMode; }
             set { dataAcquisitionMode = value; }
-        }
-
-        /// <summary>
-        /// If non-null and non-blank, all columns selected must be of the same length as the first column in the specified parameter.
-        /// If null or blank, columns are not restricted.
-        /// If multiple names are specified, they are checked in order and the first variable that is found by name is used for the length test.
-        /// </summary>
-        [XmlElement(ElementName = "same-length-as")]
-        public List<string> SameLengthAsParameter
-        {
-            get { return sameLengthAsParameter; }
-            set { sameLengthAsParameter = value; }
-        }
-
-        /// <summary>
-        /// If non-null and non-blank, variables are appended to the existing frame with this name.
-        /// If null or blank, variables are added to a new frame.
-        /// </summary>
-        [XmlElement(ElementName = "append-to-frame")]
-        public string AppendToFrame
-        {
-            get { return appendToFrame; }
-            set { appendToFrame = value; }
         }
 
         /// <summary>
@@ -111,8 +96,6 @@ namespace StatsDirect.Templates
         /// </summary>
         public int MinimumColumns(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == minimumColumns)
-                return 1;
             return (int)processor.Evaluate(minimumColumns, parameters);
         }
 
@@ -136,8 +119,6 @@ namespace StatsDirect.Templates
         /// </summary>
         public int MaximumColumns(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == maximumColumns)
-                return int.MaxValue;
             return (int)processor.Evaluate(maximumColumns, parameters);
         }
 
@@ -166,8 +147,8 @@ namespace StatsDirect.Templates
         }
 
         /// <summary>
-        /// If true, UIs should allow selection by group ID (if they permit this).
-        /// If false, UIs should only allow selection by value.
+        /// If true, UIs should clear the user's selection before trying to obtain this parameter.
+        /// If false, pre-existing selections should be honoured.
         /// </summary>
         [XmlElement(ElementName = "ask-for-group-id")]
         public bool ShouldAskForGroupId
@@ -177,20 +158,21 @@ namespace StatsDirect.Templates
         }
 
         /// <summary>
-        /// If ShouldAskForGroupId is true, how should groups be selected?
+        /// If true, UIs should square up the number of sub-variables and each variable's length before returning.
+        /// If false, jagged sub-variables and lengths are allowed.
         /// </summary>
-        [XmlElement(ElementName = "group-id-mode")]
-        public GroupIdentifierMode GroupIdentifierMode
+        [XmlElement(ElementName = "should-square")]
+        public bool ShouldSquare
         {
-            get { return groupIdentifierMode; }
-            set { groupIdentifierMode = value; }
+            get { return shouldSquare; }
+            set { shouldSquare = value; }
         }
 
         public override bool RequiresGrid
         {
             get
             {
-                return canSelect;
+                return true;
             }
         }
 

@@ -103,7 +103,7 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        public void Visit(GridParameter parameter)
+        public void Visit(FrameParameter parameter)
         {
             if (null == SdApplication.SoleInstance.ActiveGrid || !SdApplication.SoleInstance.ActiveGrid.HasWindow)
             {
@@ -111,7 +111,7 @@ namespace StatsDirect.UI
                 throw new TemplateOperationCancelledException();
             }
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
-            outputParameters = new GridSelectionProcessor(grid).FillGridParameter(parameter, processor, SdApplication.SoleInstance, context);
+            outputParameters = new GridSelectionProcessor(grid).FillFrameParameter(parameter, processor, SdApplication.SoleInstance, context);
         }
 
         public void Visit(IntegerParameter parameter)
@@ -192,7 +192,7 @@ namespace StatsDirect.UI
                 outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, data));
         }
 
-        public void Visit(Grid2DParameter parameter)
+        public void Visit(Frame2DParameter parameter)
         {
             if (null == SdApplication.SoleInstance.ActiveGrid || !SdApplication.SoleInstance.ActiveGrid.HasWindow)
             {
@@ -200,7 +200,7 @@ namespace StatsDirect.UI
                 throw new TemplateOperationCancelledException();
             }
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
-            DataFrame2D frame = new GridSelectionProcessor(grid).FillGridParameter2D(parameter, processor, SdApplication.SoleInstance, context);
+            DataFrame2D frame = new GridSelectionProcessor(grid).FillFrameParameter2D(parameter, processor, SdApplication.SoleInstance, context);
             outputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, frame));
         }
 

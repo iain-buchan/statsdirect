@@ -21,10 +21,10 @@ namespace StatsDirect.UI
             grid = g;
         }
 
-        internal ParameterBag FillGridParameter(Parameter parameter, ITemplateProcessor processor, ITemplateHost host, ParameterBag parameters)
+        internal ParameterBag FillFrameParameter(Parameter parameter, ITemplateProcessor processor, ITemplateHost host, ParameterBag parameters)
         {
-            GridParameter gridParameter = (GridParameter)parameter;
-            if (gridParameter.ShouldClearSelectionFirst)
+            FrameParameter frameParameter = (FrameParameter)parameter;
+            if (frameParameter.ShouldClearSelectionFirst)
                 ClearSelection();
 
             while (true)
@@ -32,14 +32,14 @@ namespace StatsDirect.UI
                 bool userCancelled;
                 bool wasPivoted;
                 DataFrame frame;
-                if (gridParameter.ColumnsAreSameLength || gridParameter.HasLength || (null != gridParameter.SameLengthAsParameter && gridParameter.SameLengthAsParameter.Count > 0))
+                if (frameParameter.ColumnsAreSameLength || frameParameter.HasLength || (null != frameParameter.SameLengthAsParameter && frameParameter.SameLengthAsParameter.Count > 0))
                 {
                     int requiredLength = 0;
-                    if (gridParameter.HasLength)
-                        requiredLength = gridParameter.Length(processor, parameters);
-                    else if (null != gridParameter.SameLengthAsParameter && gridParameter.SameLengthAsParameter.Count > 0)
+                    if (frameParameter.HasLength)
+                        requiredLength = frameParameter.Length(processor, parameters);
+                    else if (null != frameParameter.SameLengthAsParameter && frameParameter.SameLengthAsParameter.Count > 0)
                     {
-                        foreach (string candidateName in gridParameter.SameLengthAsParameter)
+                        foreach (string candidateName in frameParameter.SameLengthAsParameter)
                         {
                             if (parameters.ContainsKey(candidateName) && null != parameters[candidateName])
                             {
@@ -54,13 +54,13 @@ namespace StatsDirect.UI
                         }
                     }
                     frame = GetCellEqual(requiredLength,
-                        gridParameter.DataAcquisitionMode,
-                        gridParameter.GroupIdentifierMode,
-                        gridParameter.MinimumColumns(processor, parameters),
-                        gridParameter.MaximumColumns(processor, parameters),
-                        gridParameter.Prompt(processor, parameters),
-                        gridParameter.CancelSkipsParameter,
-                        gridParameter.ShouldAskForGroupId,
+                        frameParameter.DataAcquisitionMode,
+                        frameParameter.GroupIdentifierMode,
+                        frameParameter.MinimumColumns(processor, parameters),
+                        frameParameter.MaximumColumns(processor, parameters),
+                        frameParameter.Prompt(processor, parameters),
+                        frameParameter.CancelSkipsParameter,
+                        frameParameter.ShouldAskForGroupId,
                         DataAcquisitionWidth.RespectPivotSetting,
                         false,
                         out userCancelled,
@@ -69,17 +69,17 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    int minimumColumns = gridParameter.MinimumColumns(processor, parameters);
-                    int maximumColumns = gridParameter.MaximumColumns(processor, parameters);
-                    string selectionMessage = gridParameter.Prompt(processor, parameters);
+                    int minimumColumns = frameParameter.MinimumColumns(processor, parameters);
+                    int maximumColumns = frameParameter.MaximumColumns(processor, parameters);
+                    string selectionMessage = frameParameter.Prompt(processor, parameters);
                     while (true)
                     {
-                        if (gridParameter.ShouldAskForGroupId && SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
+                        if (frameParameter.ShouldAskForGroupId && SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                         {
-                            switch (gridParameter.GroupIdentifierMode)
+                            switch (frameParameter.GroupIdentifierMode)
                             {
                                 case GroupIdentifierMode.GroupIdentifier:
-                                    frame = Gidx1(gridParameter.DataAcquisitionMode, minimumColumns, maximumColumns, out userCancelled, out wasPivoted, processor.NextOriginGroup());
+                                    frame = Gidx1(frameParameter.DataAcquisitionMode, minimumColumns, maximumColumns, out userCancelled, out wasPivoted, processor.NextOriginGroup());
                                     break;
                                 case GroupIdentifierMode.TreatmentAndBlock:
                                     frame = Gidx2(minimumColumns, maximumColumns, out userCancelled, out wasPivoted, processor.NextOriginGroup());
@@ -90,7 +90,7 @@ namespace StatsDirect.UI
                         }
                         else
                         {
-                            frame = grid.GetCellArray(0, gridParameter.DataAcquisitionMode, minimumColumns, maximumColumns, selectionMessage, gridParameter.CancelSkipsParameter, gridParameter.ShouldAskForGroupId, false, out userCancelled, out wasPivoted, processor.NextOriginGroup());
+                            frame = grid.GetCellArray(0, frameParameter.DataAcquisitionMode, minimumColumns, maximumColumns, selectionMessage, frameParameter.CancelSkipsParameter, frameParameter.ShouldAskForGroupId, false, out userCancelled, out wasPivoted, processor.NextOriginGroup());
                         }
                         if (!wasPivoted)
                             break;
@@ -99,17 +99,17 @@ namespace StatsDirect.UI
                 if (null != frame)
                 {
                     ParameterBag outputParameters = new ParameterBag();
-                    if (!string.IsNullOrEmpty(gridParameter.AppendToFrame))
+                    if (!string.IsNullOrEmpty(frameParameter.AppendToFrame))
                     {
                         DataFrame targetFrame;
-                        if (parameters.ContainsKey(gridParameter.AppendToFrame))
+                        if (parameters.ContainsKey(frameParameter.AppendToFrame))
                         {
-                            targetFrame = parameters[gridParameter.AppendToFrame].AsDataFrame;
+                            targetFrame = parameters[frameParameter.AppendToFrame].AsDataFrame;
                         }
                         else
                         {
                             targetFrame = new DataFrame();
-                            outputParameters.Add(gridParameter.AppendToFrame, new FilledParameter(FilledParameterDirection.Input, targetFrame));
+                            outputParameters.Add(frameParameter.AppendToFrame, new FilledParameter(FilledParameterDirection.Input, targetFrame));
                         }
                         foreach (Variable v in frame.Variables)
                             targetFrame.Variables.Add(v);
@@ -123,7 +123,7 @@ namespace StatsDirect.UI
                 // No frame was returned, either because the user cancelled or because of an error.  Distinguish the two cases!
                 if (userCancelled)
                 {
-                    if (null != gridParameter.CancelSkipsParameter)
+                    if (null != frameParameter.CancelSkipsParameter)
                         return null;
                     throw new TemplateOperationCancelledException();
                 }
@@ -134,10 +134,10 @@ namespace StatsDirect.UI
             }
         }
 
-        internal DataFrame2D FillGridParameter2D(Parameter parameter, ITemplateProcessor processor, SdApplication sDApplication, ParameterBag parameters)
+        internal DataFrame2D FillFrameParameter2D(Parameter parameter, ITemplateProcessor processor, SdApplication sDApplication, ParameterBag parameters)
         {
-            Grid2DParameter gridParameter = (Grid2DParameter)parameter;
-            if (gridParameter.ShouldClearSelectionFirst)
+            Frame2DParameter frame2dParameter = (Frame2DParameter)parameter;
+            if (frame2dParameter.ShouldClearSelectionFirst)
                 ClearSelection();
             while (true)
             {
@@ -146,11 +146,11 @@ namespace StatsDirect.UI
                 {
                     bool userCancelled;
                     bool wasPivoted;
-                    DataFrame2D frame = Gidx3(gridParameter.MinimumColumns(processor, parameters),
-                        gridParameter.MaximumColumns(processor, parameters),
+                    DataFrame2D frame = Gidx3(frame2dParameter.MinimumColumns(processor, parameters),
+                        frame2dParameter.MaximumColumns(processor, parameters),
                         0,
-                        gridParameter.SubPrompt(processor, parameters),
-                        gridParameter.DataAcquisitionMode,
+                        frame2dParameter.SubPrompt(processor, parameters),
+                        frame2dParameter.DataAcquisitionMode,
                         out userCancelled,
                         out wasPivoted,
                         originGroup);
@@ -160,13 +160,13 @@ namespace StatsDirect.UI
                         continue;
                     return frame;
                 }
-                switch (gridParameter.DataAcquisitionMode)
+                switch (frame2dParameter.DataAcquisitionMode)
                 {
                     case DataAcquisitionMode2D.GroupThenBlock:
                         {
                             DataFrame2D frame = new DataFrame2D();
                             bool userCancelled;
-                            int groups = SdApplication.SoleInstance.GetInteger("Number of groups", gridParameter.Operation.ToString(), 1, out userCancelled);
+                            int groups = SdApplication.SoleInstance.GetInteger("Number of groups", frame2dParameter.Operation.ToString(), 1, out userCancelled);
                             if (userCancelled || groups < 1 || groups > 10)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
@@ -199,7 +199,7 @@ namespace StatsDirect.UI
                             }
                             if (ok)
                             {
-                                if (gridParameter.ShouldSquare)
+                                if (frame2dParameter.ShouldSquare)
                                 {
                                     // Good to return.  Square up the data before we do.
                                     int maxRows = frame.MaxRows;
@@ -216,7 +216,7 @@ namespace StatsDirect.UI
                         {
                             DataFrame2D frame = new DataFrame2D();
                             bool userCancelled;
-                            int repeats = SdApplication.SoleInstance.GetInteger("Number of repeats", gridParameter.Operation.ToString(), 2, out userCancelled);
+                            int repeats = SdApplication.SoleInstance.GetInteger("Number of repeats", frame2dParameter.Operation.ToString(), 2, out userCancelled);
                             if (userCancelled || repeats <= 1)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
@@ -238,7 +238,7 @@ namespace StatsDirect.UI
                                 // No frame was returned, either because the user cancelled or because of an error.  Distinguish the two cases!
                                 if (userCancelled)
                                 {
-                                    if (null != gridParameter.CancelSkipsParameter)
+                                    if (null != frame2dParameter.CancelSkipsParameter)
                                         return null;
                                     throw new TemplateOperationCancelledException();
                                 }
@@ -270,7 +270,7 @@ namespace StatsDirect.UI
                                 {
                                     if (repeatFrame.MinRows != rows || repeatFrame.VariableCount != cols)
                                     {
-                                        SdApplication.SoleInstance.MsgboxX("You must have the same number of subjects and treatments for each repeat, mark missing data with an asterisk if they are at the end of a column", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, gridParameter.Operation.ToString(), true);
+                                        SdApplication.SoleInstance.MsgboxX("You must have the same number of subjects and treatments for each repeat, mark missing data with an asterisk if they are at the end of a column", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, frame2dParameter.Operation.ToString(), true);
                                         rpt--; // Try again
                                         ok = false;
                                     }
@@ -296,7 +296,7 @@ namespace StatsDirect.UI
                         }
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("parameter", gridParameter.DataAcquisitionMode, "Only GroupThenBlock and BlockThenGroup are known");
+                        throw new ArgumentOutOfRangeException("parameter", frame2dParameter.DataAcquisitionMode, "Only GroupThenBlock and BlockThenGroup are known");
                 }
             }
         }

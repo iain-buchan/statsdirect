@@ -11,8 +11,8 @@
         void Visit(DoubleParameter parameter);
         void Visit(EditGridParameter parameter);
         void Visit(UI.FillableParameter parameter);
-        void Visit(Grid2DParameter parameter);
-        void Visit(GridParameter parameter);
+        void Visit(Frame2DParameter parameter);
+        void Visit(FrameParameter parameter);
         void Visit(GroupedCovarianceParameter parameter);
         void Visit(IntegerParameter parameter);
         void Visit(OptionParameter parameter);

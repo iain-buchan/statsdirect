@@ -673,14 +673,14 @@ namespace StatsDirect.UI
 
         public bool CanCombine(Parameter parameter)
         {
-            if (parameter is Grid2DParameter)
+            if (parameter is Frame2DParameter)
                 return false;
             if (parameter is GroupedCovarianceParameter)
                 return false;
-            if (parameter is GridParameter)
+            if (parameter is FrameParameter)
             {
                 // Grids that must be entered rather than selected can be combined, as an entry grid will appear at the top.
-                return !((GridParameter)parameter).CanSelect;
+                return !((FrameParameter)parameter).CanSelect;
             }
             return true;
         }

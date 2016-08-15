@@ -173,7 +173,7 @@ namespace StatsDirect.UI
                 throw new ArgumentOutOfRangeException("control", "Couldn't request a custom parameter to fill itself in");
         }
 
-        public void Visit(GridParameter parameter)
+        public void Visit(FrameParameter parameter)
         {
             WorkbookView grid = (WorkbookView)Control;
             IWorksheet sheet = grid.ActiveWorksheet;
@@ -427,7 +427,7 @@ namespace StatsDirect.UI
             throw new Exception("Unknown parameter type when parsing results");
         }
 
-        public void Visit(Grid2DParameter parameter)
+        public void Visit(Frame2DParameter parameter)
         {
             throw new Exception("Unknown parameter type when parsing results");
         }
