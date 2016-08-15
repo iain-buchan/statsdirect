@@ -1101,11 +1101,108 @@
     <None Include="Assets\Data\test.xlsx" />
     <None Include="Assets\Excel\StatsDirect3ExcelLink.xla" />
     <None Include="Assets\Operations\Operation.xsd" />
+    <None Include="Assets\Template\abridged.creole" />
+    <None Include="Assets\Template\agree.creole" />
+    <None Include="Assets\Template\asciigr.creole" />
+    <None Include="Assets\Template\BACKINT.creole" />
+    <None Include="Assets\Template\blank.creole" />
+    <None Include="Assets\Template\BONFERR.creole" />
+    <None Include="Assets\Template\chartonly-ascii.creole" />
     <None Include="Assets\Template\chartonly.creole">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Assets\Template\charts.creole" />
+    <None Include="Assets\Template\chi2xc.creole" />
+    <None Include="Assets\Template\chigood.creole" />
     <None Include="Assets\Template\chirxc.creole" />
+    <None Include="Assets\Template\chiTwoByKSimulatedExactP.creole" />
+    <None Include="Assets\Template\cimeany.creole" />
+    <None Include="Assets\Template\clogit.creole" />
+    <None Include="Assets\Template\cochranq.creole" />
+    <None Include="Assets\Template\covarmx.creole" />
+    <None Include="Assets\Template\coxreg.creole" />
+    <None Include="Assets\Template\cox_det.creole" />
+    <None Include="Assets\Template\cox_dev.creole" />
+    <None Include="Assets\Template\cox_s.creole" />
+    <None Include="Assets\Template\cronbach.creole" />
+    <None Include="Assets\Template\cuzick.creole" />
+    <None Include="Assets\Template\describe.creole" />
+    <None Include="Assets\Template\diagnost.creole" />
+    <None Include="Assets\Template\diversity.creole" />
+    <None Include="Assets\Template\dstdr.creole" />
+    <None Include="Assets\Template\dunnett.creole" />
+    <None Include="Assets\Template\effect.creole" />
+    <None Include="Assets\Template\effectwm.creole" />
+    <None Include="Assets\Template\FALSER.creole" />
     <None Include="Assets\Template\fisher.creole" />
+    <None Include="Assets\Template\fisherx.creole" />
+    <None Include="Assets\Template\freq.creole" />
+    <None Include="Assets\Template\friedman.creole" />
+    <None Include="Assets\Template\frmulti.creole" />
+    <None Include="Assets\Template\gencmh.creole" />
+    <None Include="Assets\Template\genmeta.creole" />
+    <None Include="Assets\Template\gini.creole" />
+    <None Include="Assets\Template\glranova.creole" />
+    <None Include="Assets\Template\groupedoneway.creole" />
+    <None Include="Assets\Template\groupedtwoway.creole" />
+    <None Include="Assets\Template\grpcov.creole" />
+    <None Include="Assets\Template\grprep.creole" />
+    <None Include="Assets\Template\incid.creole" />
+    <None Include="Assets\Template\interlin.creole" />
+    <None Include="Assets\Template\INTERP.creole" />
+    <None Include="Assets\Template\interpmr.creole" />
+    <None Include="Assets\Template\INTPROBX.creole" />
+    <None Include="Assets\Template\INTPROBY.creole" />
+    <None Include="Assets\Template\irdmeta.creole" />
+    <None Include="Assets\Template\irrmeta.creole" />
+    <None Include="Assets\Template\kappa.creole" />
+    <None Include="Assets\Template\kappa2.creole" />
+    <None Include="Assets\Template\kappam.creole" />
+    <None Include="Assets\Template\kappaSimulatedExactP.creole" />
+    <None Include="Assets\Template\kap_meir.creole" />
+    <None Include="Assets\Template\KENDALL.creole" />
+    <None Include="Assets\Template\kruskal.creole" />
+    <None Include="Assets\Template\kwmulti.creole" />
+    <None Include="Assets\Template\latin.creole" />
+    <None Include="Assets\Template\lifetab.creole" />
+    <None Include="Assets\Template\likely.creole" />
+    <None Include="Assets\Template\LINISED.creole" />
+    <None Include="Assets\Template\logrank.creole" />
+    <None Include="Assets\Template\MANNWHIT.creole" />
+    <None Include="Assets\Template\mantel.creole" />
+    <None Include="Assets\Template\mcnamar.creole" />
+    <None Include="Assets\Template\metaCorrelation.creole" />
+    <None Include="Assets\Template\multi.creole" />
+    <None Include="Assets\Template\M_PAIRED.creole" />
+    <None Include="Assets\Template\M_SINGLE.creole" />
+    <None Include="Assets\Template\M_UNPAIR.creole" />
+    <None Include="Assets\Template\nestmean.creole" />
+    <None Include="Assets\Template\nkeuls.creole" />
+    <None Include="Assets\Template\normality.creole" />
+    <None Include="Assets\Template\nplinreg.creole" />
+    <None Include="Assets\Template\oneway.creole" />
+    <None Include="Assets\Template\orci.creole" />
+    <None Include="Assets\Template\pardet.creole" />
+    <None Include="Assets\Template\peto.creole" />
+    <None Include="Assets\Template\pinterp.creole" />
+    <None Include="Assets\Template\poisson.creole" />
+    <None Include="Assets\Template\poly.creole" />
+    <None Include="Assets\Template\POLY_AUC.creole" />
+    <None Include="Assets\Template\prate.creole" />
+    <None Include="Assets\Template\prcoeff.creole" />
+    <None Include="Assets\Template\prefer.creole" />
+    <None Include="Assets\Template\PRINC.creole" />
+    <None Include="Assets\Template\prmatrix.creole" />
+    <None Include="Assets\Template\probcal.creole" />
+    <None Include="Assets\Template\probit.creole" />
+    <None Include="Assets\Template\probmore.creole" />
+    <None Include="Assets\Template\propmeta.creole" />
+    <None Include="Assets\Template\prscores.creole" />
+    <None Include="Assets\Template\p_pair.creole" />
+    <None Include="Assets\Template\p_unpair.creole" />
+    <None Include="Assets\Template\quantile.creole" />
+    <None Include="Assets\Template\rdmeta.creole" />
+    <None Include="Assets\Template\refrange.creole" />
     <None Include="Assets\Template\relrisk.creole" />
     <None Include="Assets\Template\odds.creole" />
     <Antlr4 Include="Expressions\StatsDirectExpression.g4">
@@ -1123,6 +1220,54 @@
       <Generator>MSBuild:Compile</Generator>
       <CustomToolNamespace>StatsDirect.CsvParser</CustomToolNamespace>
     </Antlr4>
+    <None Include="Assets\Template\residm.creole" />
+    <None Include="Assets\Template\residuals.creole" />
+    <None Include="Assets\Template\retro_r.creole" />
+    <None Include="Assets\Template\roc.creole" />
+    <None Include="Assets\Template\rrmeta.creole" />
+    <None Include="Assets\Template\r_block.creole" />
+    <None Include="Assets\Template\R_PAIR.creole" />
+    <None Include="Assets\Template\R_UNPAIR.creole" />
+    <None Include="Assets\Template\R_XY.creole" />
+    <None Include="Assets\Template\scheffe.creole" />
+    <None Include="Assets\Template\sign.creole" />
+    <None Include="Assets\Template\SIMANAL.creole" />
+    <None Include="Assets\Template\simple.creole" />
+    <None Include="Assets\Template\simulatedExactP.creole" />
+    <None Include="Assets\Template\smirnov.creole" />
+    <None Include="Assets\Template\spearman.creole" />
+    <None Include="Assets\Template\sqrank.creole" />
+    <None Include="Assets\Template\sqrank2.creole" />
+    <None Include="Assets\Template\stdmort.creole" />
+    <None Include="Assets\Template\stdrr.creole" />
+    <None Include="Assets\Template\subset.creole" />
+    <None Include="Assets\Template\sum.creole" />
+    <None Include="Assets\Template\s_corr.creole" />
+    <None Include="Assets\Template\S_INCASE.creole" />
+    <None Include="Assets\Template\S_IND.creole" />
+    <None Include="Assets\Template\S_MACASE.creole" />
+    <None Include="Assets\Template\S_MAPROP.creole" />
+    <None Include="Assets\Template\S_SURVEY.creole" />
+    <None Include="Assets\Template\s_survival.creole" />
+    <None Include="Assets\Template\S_T.creole" />
+    <None Include="Assets\Template\treat.creole" />
+    <None Include="Assets\Template\tukey.creole" />
+    <None Include="Assets\Template\twomulti.creole" />
+    <None Include="Assets\Template\TWONEST.creole" />
+    <None Include="Assets\Template\twoway.creole" />
+    <None Include="Assets\Template\universalAgreement.creole" />
+    <None Include="Assets\Template\universal_r_compare.creole" />
+    <None Include="Assets\Template\VARIANCE.creole" />
+    <None Include="Assets\Template\wei.creole" />
+    <None Include="Assets\Template\WILCO.creole" />
+    <None Include="Assets\Template\woolf.creole" />
+    <None Include="Assets\Template\xover.creole" />
+    <None Include="Assets\Template\xtab.creole" />
+    <None Include="Assets\Template\xtabouter.creole" />
+    <None Include="Assets\Template\xtabz.creole" />
+    <None Include="Assets\Template\xxi.creole" />
+    <None Include="Assets\Template\z_norm1.creole" />
+    <None Include="Assets\Template\z_norm2.creole" />
     <None Include="packages.config" />
     <None Include="UI\Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -1783,7 +1928,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
