@@ -18,6 +18,4 @@
 </table>
 <line></line>
 <line>Sample size = <in>nt</in></line>
-<line></line>
-<line></line>
 </report>

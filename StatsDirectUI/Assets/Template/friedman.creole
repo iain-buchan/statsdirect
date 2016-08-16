@@ -17,6 +17,4 @@
 <line><in>msg</in></block><block name="warn"></line>
 <line></line>
 <line><in>warning</in></block></line>
-<line></line>
-<line></line>
 </report>

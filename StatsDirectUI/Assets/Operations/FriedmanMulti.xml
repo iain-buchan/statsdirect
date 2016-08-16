@@ -20,6 +20,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptFrMultiple" />
-		<report type="text/rtf" filename="frmulti.rtf" />
+    <report type="application/x-statsdirect-creole" filename="frmulti.creole" />
 	</steps>
 </operation>

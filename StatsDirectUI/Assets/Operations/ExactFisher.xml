@@ -21,7 +21,7 @@
         </double-2-by-2>
       </parameters>
   	<builtin function-name="rptExactFisher" />
-	  <report type="text/rtf" filename="fisher.rtf" />
+    <report type="application/x-statsdirect-creole" filename="fisher.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactFisher</suggested-operation>

@@ -6,6 +6,4 @@
 <tr><td><in>compare</in></td><td><ci><in>diff</in></ci></td></tr>
 <tr><td>(<in>val</in>)</td><td><pval><in>p</in></pval></block></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>
