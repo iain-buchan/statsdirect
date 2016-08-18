@@ -2,25 +2,27 @@
 <line><title>Grouped linear regression</title></line>
 <line></line>
 <table>
-<tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th></u></tr>
+<tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th><th></th></tr>
 <tr><td>Common slope</td><td><in>com_ssq</in></td><td><in>com_df</in></td><td><in>com_msq</in></td><td><in>com_vr</in></td><td><pval><in>com_p</in></pval></td></tr>
-<tr><td>Between slopes</td><td><in>bet_ssq</in></td><td><in>bet_df</in></td><td><in>bet_msq</in></td><td><in>bet_vr</in><grandtotal></td><td></grandtotal><pval><in>bet_p</in></pval></td></tr>
-<tr><td>Separate residuals</td><td><in>res_ssq</in></td><td><in>res_df</in></td><td><in>res_msq</in></td></tr>
-<tr><td>Within groups</td><td><in>grp_ssq</in></td><td><in>grp_df</in></td></tr>
+<tr><td>Between slopes</td><td><in>bet_ssq</in></td><td><in>bet_df</in></td><td><in>bet_msq</in></td><td><in>bet_vr</in></td><td><pval><in>bet_p</in></pval></td></tr>
+<tr><td>Separate residuals</td><td><in>res_ssq</in></td><td><in>res_df</in></td><td><in>res_msq</in></td><td></td><td></td></tr>
+<tr><td>Within groups</td><td><in>grp_ssq</in></td><td><in>grp_df</in></td><td></td><td></td><td></td></tr>
 </table>
 <line></line>
 <line>Common slope is <b><in>com</in></b>significant</line>
 <line>Difference between slopes is <b><in>diff</in></b>significant</line>
 <line></line>
-<line><i><b>Slope comparisons:</b></i><block name="slope"></line>
+<line><i><b>Slope comparisons:</b></i></line>
+<block name="slope">
 <line><i>slope</i> <in>lab1</in> vs.<i> slope</i> <in>lab2</in> = <in>res1</in> <i>vs.</i> <in>res2</in></line>
 <line>Difference<ci> (<in>pc</in>% CI) = </ci><in>dif</in>  <ci>(<in>from</in> to <in>to</in>)</ci></line>
-<line>t = <in>t</in> <pval><in>p</in></pval></block></line>
+<line>t = <in>t</in> <pval><in>p</in></pval></line>
+</block>
 <line></line>
 <line><i><b>Covariance analysis</b></i></line>
 <line><b>Uncorrected:</b></line>
 <table>
-<tr><th>Source of variation</th><th>YY</th><th>xY</th><th>xx</th><th>DF</th></u></tr>
+<tr><th>Source of variation</th><th>YY</th><th>xY</th><th>xx</th><th>DF</th></tr>
 <tr><td>Between groups</td><td><in>uc_bet_yy</in></td><td><in>uc_bet_xy</in></td><td><in>uc_bet_xx</in></td><td><in>uc_bet_df</in></td></tr>
 <tr><td>Within</td><td><in>uc_with_yy</in></td><td><in>uc_with_xy</in></td><td><in>uc_with_xx</in></td><td><in>uc_with_df</in></td></tr>
 <tr><td>Total</td><td><in>uc_tot_yy</in></td><td><in>uc_tot_xy</in></td><td><in>uc_tot_xx</in></td><td><in>uc_tot_df</in></td></tr>
@@ -28,25 +30,31 @@
 <line></line>
 <line><b>Corrected:</b></line>
 <table>
-<tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th></u></tr>
+<tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th></tr>
 <tr><td>Between groups</td><td><in>cr_bet_ssq</in></td><td><in>cr_bet_df</in></td><td><in>cr_bet_msq</in></td><td><in>cr_bet_vr</in></td></tr>
 <tr><td>Within</td><td><in>cr_with_ssq</in></td><td><in>cr_with_df</in></td><td><in>cr_with_msq</in></td></tr>
 <tr><td>Total</td><td><in>cr_tot_ssq</in></td><td><in>cr_tot_df</in></td></tr>
 </table>
 <line><pval><in>p</in></pval></line>
 <line></line>
-<line><b>Corrected Y means &#xb1; SE for baseline mean predictor of <in>x_mean</in>:</b><block name="cmy"></line>
+<line><b>Corrected Y means + or - SE for baseline mean predictor of <in>x_mean</in>:</b></line>
 <table>
-<tr><td>Y' = <in>y</in></td><td>&#xb1; <in>res</in></block></td></tr>
+<block name="cmy">
+<tr><td>Y' = <in>y</in></td><td>+ or - <in>res</in></td></tr>
+</block>
 </table>
 <line></line>
-<line><b>Line separations (common slope = <in>slope</in>):</b><subtotal><block name="notParallel"></subtotal></line>
-<line>Lines not parallel</block><block name="sep"></line>
+<line><b>Line separations (common slope = <in>slope</in>):</b><subtotal></subtotal></line>
+<block name="notParallel">
+<line>Lines not parallel</line>
+</block>
+<block name="sep">
 <line><i>line</i> <in>lab1</in> vs.<i> line</i> <in>lab2</in> vertical separation = <in>sep</in></line>
 <line><ci><in>pc</in>% CI = <in>fromSep</in> to <in>toSep</in></ci></line>
 <table>
-<tr><td>t = <in>t</in></td><td>(<in>df</in> df)</td><td><pval><in>pSep</in></pval></block></td></tr>
+<tr><td>t = <in>t</in></td><td>(<in>df</in> df)</td><td><pval><in>pSep</in></pval></td></tr>
 </table>
+</block>
 <line></line>
 <line><in>chart</in></line>
 <line></line>

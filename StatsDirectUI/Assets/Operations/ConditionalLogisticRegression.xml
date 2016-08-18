@@ -62,6 +62,6 @@
         </option>
       </parameters>
 		<builtin function-name="rptConditionalLogisticRegression" />
-		<report type="text/rtf" filename="clogit.rtf" />
+    <report type="application/x-statsdirect-creole" filename="clogit.creole" />
 	</steps>
 </operation>

@@ -10,6 +10,6 @@
         </grouped-covariance>
       </parameters>
 		<builtin function-name="rptGroupedCovariance" />
-		<report type="text/rtf" filename="grpcov.rtf" />
+    <report type="application/x-statsdirect-creole" filename="grpcov.creole" />
 	</steps>
 </operation>

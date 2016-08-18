@@ -6,13 +6,15 @@
 <table>
 <tr><th>Index events</th><th>Index PT</th><th>Index rate</th><th>Reference size</th><th>Weight</u></td></tr>
 <tr><td><block name="inputs"><in>idxy</in></td><td><in>idxn</in></td><td><in>idxr</in></td><td><in>refn</in></td><td><in>refw</in></td></tr>
+</block>
 </table>
-<line></block></line>
+<line></line>
 <table>
-<tr><th>Index rate</th><th><ci>Exact <in>pc</in>% confidence interval</ci></u></td></tr>
+<tr><th>Index rate</th><th><ci>Exact <in>pc</in>% confidence interval</ci></th><th></th></tr>
 <tr><td><block name="cis"><in>idxr</in></td><td><ci><in>from</in>  to  <in>to</in></ci></td><td><in>label</in></td></tr>
+</block>
 </table>
-<line></block></line>
+<line></line>
 <line>Total events = <in>events</in></line>
 <line>Adjusted events = <in>stde</in></line>
 <line></line>
@@ -26,7 +28,5 @@
 <line>Small rates (Poisson model)</line>
 <line>Approximate standard error of R = <in>ser_small</in></line>
 <line><ci>Approximate <in>pc</in>% confidence interval = <in>from_small</in> to <in>to_small</in></ci></line>
-<line>Improved approximate (Dobson) <in>pc</in>% confidence interval = <in>from_dobson</in> to <in>to_dobson</in></line>
-<line></line>
-<line></line>
+<line><ci>Improved approximate (Dobson) <in>pc</in>% confidence interval = <in>from_dobson</in> to <in>to_dobson</in></ci></line>
 </report>

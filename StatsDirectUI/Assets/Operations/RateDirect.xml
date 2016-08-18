@@ -63,7 +63,6 @@
         </option>
       </parameters>
 		<builtin function-name="rptRateDirect" />
-		<report type="text/rtf" filename="dstdr.rtf" />
     <report type="application/x-statsdirect-creole" filename="dstdr.creole" />
 	</steps>
 </operation>

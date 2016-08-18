@@ -24,6 +24,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptGroupedOneWay" />
-		<report type="text/rtf" filename="groupedoneway.rtf" />
+    <report type="application/x-statsdirect-creole" filename="groupedoneway.creole" />
 	</steps>
 </operation>
