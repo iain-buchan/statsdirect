@@ -1170,7 +1170,9 @@
     <None Include="Assets\Template\LINISED.creole" />
     <None Include="Assets\Template\logrank.creole" />
     <None Include="Assets\Template\MANNWHIT.creole" />
-    <None Include="Assets\Template\mantel.creole" />
+    <None Include="Assets\Template\mantel.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\mcnamar.creole" />
     <None Include="Assets\Template\metaCorrelation.creole" />
     <None Include="Assets\Template\multi.creole" />
@@ -1600,7 +1602,9 @@
     <Content Include="Assets\Operations\LogisticRegressionFitToWorksheet.xml" />
     <Content Include="Assets\Operations\PoissonRegressionFitToWorksheet.xml" />
     <Content Include="Assets\Operations\PolynomialRegressionChangeDegree.xml" />
-    <Content Include="Assets\Operations\GroupedTwoWay.xml" />
+    <Content Include="Assets\Operations\GroupedTwoWay.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\GroupedOneWay.xml" />
     <Content Include="Assets\Operations\StackedBar100PercentPlot.xml" />
     <Content Include="Assets\Operations\StackedBarPlot.xml" />
@@ -1698,7 +1702,9 @@
     <Content Include="Assets\Operations\MiscDiagnostic.xml" />
     <Content Include="Assets\Operations\MiscRetroRisk.xml" />
     <Content Include="Assets\Operations\MiscRelRisk.xml" />
-    <Content Include="Assets\Operations\MantelHaenszelScreen.xml" />
+    <Content Include="Assets\Operations\MantelHaenszelScreen.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\MiscFalseResult.xml" />
     <Content Include="Assets\Operations\ExactMcNamarChi.xml" />
     <Content Include="Assets\Operations\ExactChiRbyCScreen.xml">
@@ -1738,7 +1744,9 @@
     </Content>
     <Content Include="Assets\Operations\TransformECDF.xml" />
     <Content Include="Assets\Operations\ZSingle.xml" />
-    <Content Include="Assets\Operations\ZUnpaired.xml" />
+    <Content Include="Assets\Operations\ZUnpaired.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\CoxBaselineToReport.xml" />
     <Content Include="Assets\Operations\CoxHazardPlots.xml" />
     <Content Include="Assets\Operations\CoxHazardRatios.xml" />
@@ -1793,7 +1801,9 @@
     <Content Include="Assets\Operations\Logit.xml" />
     <Content Include="Assets\Operations\LogRank.xml" />
     <Content Include="Assets\Operations\MannWhitney.xml" />
-    <Content Include="Assets\Operations\Mantel.xml" />
+    <Content Include="Assets\Operations\Mantel.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\MetaIncidenceRateDifference.xml" />
     <Content Include="Assets\Operations\MetaIncidenceRateRatio.xml" />
     <Content Include="Assets\Operations\MetaSummary.xml">
@@ -1824,7 +1834,9 @@
     <Content Include="Assets\Operations\PlotResidualsSimple.xml" />
     <Content Include="Assets\Operations\PlotSeCi.xml" />
     <Content Include="Assets\Operations\PlotSimpleLinearRegression.xml" />
-    <Content Include="Assets\Operations\PoissonConfidenceInterval.xml" />
+    <Content Include="Assets\Operations\PoissonConfidenceInterval.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\PoissonRegression.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1929,7 +1941,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

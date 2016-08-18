@@ -33,8 +33,8 @@
         </boolean>
       </parameters>
   	<builtin function-name="rptChiMantel" />
-	  <report type="text/rtf" filename="mantel.rtf" />
-    <report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="mantel.creole" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
   </steps>
   <suggested-operations>
     <suggested-operation>MantelHaenszelScreen</suggested-operation>

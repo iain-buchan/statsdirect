@@ -34,5 +34,6 @@
       </parameters>
 		<builtin function-name="rptGroupedTwoWay" />
 		<report type="text/rtf" filename="groupedtwoway.rtf" />
+    <report type="application/x-statsdirect-creole" filename="groupedtwoway.creole" />
 	</steps>
 </operation>
