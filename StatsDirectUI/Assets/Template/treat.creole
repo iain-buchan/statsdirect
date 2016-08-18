@@ -17,13 +17,14 @@
 <line></line>
 <line>NNT [risk difference] = <in>treat</in> <ci>(<in>treat_from</in> to <in>treat_to</in>)</ci></line>
 <line><b>NNT [risk difference] (rounded up) = <in>treat_round</in> <ci>(<in>treat_round_from</in> to <in>treat_round_to</in>) </ci></b></line>
-<line><block name="adjusted"></line>
 <line></line>
-<line><u>Number needed to treat (adjusted for baseline/expected risk)</u></line>
+<block name="adjusted">
+<line></line>
+<line><title>Needed to treat (adjusted for baseline/expected risk)</title></line>
 <line></line>
 <line>Expected risk of event without treatment <in>type</in>= <in>brr</in>%</line>
 <line></line>
-<line>Estimates with <in>pc</in>% confidence intervals:</line>
+<line><ci>Estimates with <in>pc</in>% confidence intervals:</ci></line>
 <line></line>
 <line>NNT [risk difference] = <in>rd_treat</in> <ci>(<in>rd_treat_from</in> to <in>rd_treat_to</in>)</ci></line>
 <line><b>NNT [risk difference] (rounded up) = <in>rd_treat_round</in> <ci>(<in>rd_treat_round_from</in> to <in>rd_treat_round_to</in>)</ci></b></line>
@@ -36,6 +37,7 @@
 <line></line>
 <line>NNT [odds ratio] = <in>or_treat</in> <ci>(<in>or_treat_from</in> to <in>or_treat_to</in>)</ci></line>
 <line><b>NNT [odds ratio] (rounded up) = <in>or_treat_round</in> <ci>(<in>or_treat_round_from</in> to <in>or_treat_round_to</in>)</ci></b></line>
-<line></block></line>
+<line></line>
+</block>
 <line></line>
 </report>

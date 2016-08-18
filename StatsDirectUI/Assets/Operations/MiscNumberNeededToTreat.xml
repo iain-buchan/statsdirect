@@ -41,7 +41,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptMiscNumberNeededToTreat" />
-	  <report type="text/rtf" filename="treat.rtf" />
+    <report type="application/x-statsdirect-creole" filename="treat.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscNumberNeededToTreat</suggested-operation>
