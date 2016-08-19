@@ -1,17 +1,15 @@
 <report>
-<line>System;<title>Simple regression - analysis</title></line>
+<line><title>Simple regression - analysis</title></line>
 <line></line>
 <table>
 <tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</u></td></tr>
 <tr><td>Regression</td><td><in>reg_sum</in></td><td><in>reg_df</in></td><td><in>reg_mean</in></td></tr>
-<tr><td><subtotal>Residual</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></subtotal></td></tr>
-<tr><td><pval>Total, corrected</td><td><in>tot_sum</in></td><td><in>tot_df</in></pval></td></tr>
+<tr><td><ci>Residual</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></ci></td></tr>
+<tr><td><subtotal>Total, corrected</td><td><in>tot_sum</in></td><td><in>tot_df</in></subtotal></td><td></td></tr>
 </table>
 <line></line>
-<line>F = <in>f</in> <in>p</in></line>
+<line>F = <in>f</in> <pval><in>p</in></pval></line>
 <line></line>
 <line>R square = <in>r</in></line>
 <line>Root MSE = <in>mse</in></line>
-<line></line>
-<line></line>
 </report>

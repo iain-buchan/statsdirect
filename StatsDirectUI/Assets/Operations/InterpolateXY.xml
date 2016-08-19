@@ -15,6 +15,6 @@
         </double>
       </parameters>
 		<builtin function-name="rptInterpolateXY" />
-		<report type="text/rtf" filename="interp.rtf" />
+    <report type="application/x-statsdirect-creole" filename="interp.creole" />
 	</steps>
 </operation>

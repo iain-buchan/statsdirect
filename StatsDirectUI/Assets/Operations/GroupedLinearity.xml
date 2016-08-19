@@ -24,6 +24,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptGroupedLinearity" />
-		<report type="text/rtf" filename="grprep.rtf" />
+    <report type="application/x-statsdirect-creole" filename="grprep.creole" />
 	</steps>
 </operation>

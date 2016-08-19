@@ -31,7 +31,7 @@
         </boolean>
       </parameters>
   	<builtin function-name="rptRateCompareTwo" />
-	  <report type="text/rtf" filename="incid.rtf" />
+    <report type="application/x-statsdirect-creole" filename="incid.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RateCompareTwo</suggested-operation>

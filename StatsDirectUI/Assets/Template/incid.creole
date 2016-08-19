@@ -2,7 +2,7 @@
 <line><title>Incidence rate comparison</title></line>
 <line></line>
 <table>
-<tr><td></td><td><subtotal>Exposure:</subtotal></td></tr>
+<tr><td></td><td><subtotal>Exposure:</subtotal></td><td></td><td></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Exposed</td><td>Non-exposed</td><td>Total</td></tr>
 <tr><td>Cases</td><td><in>a_out</in></td><td><in>b_out</in></td><td><in>m</in></td></tr>
 <tr><td>Person-time</td><td><in>pt1_out</in></td><td><in>pt2_out</in></td><td><in>pt</in></td></tr>
@@ -24,6 +24,4 @@
 <line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
 <line><ci>Exact mid-P <in>pc</in>% confidence interval = <in>llm</in>  to  <in>ulm</in></ci></line>
 <line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></block></line>
-<line></line>
-<line></line>
 </report>

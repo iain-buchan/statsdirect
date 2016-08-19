@@ -29,6 +29,6 @@
         </double>
       </parameters>
 		<builtin function-name="rptLinearizedEstimateInterpolation" />
-		<report type="text/rtf" filename="interlin.rtf" />
+    <report type="application/x-statsdirect-creole" filename="interlin.creole" />
 	</steps>
 </operation>

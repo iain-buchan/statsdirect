@@ -2,15 +2,13 @@
 <line><title>Linearity with replicates of Y</title></line>
 <line></line>
 <table>
-<tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th></u></tr>
-<tr><td>Due to regression</td><td><in>reg_ssq</in></td><td><in>reg_df</in></td><td><in>reg_msq</in></td><td><in>reg_vr</in></td><td><in>reg_p</in></td></tr>
-<tr><td>Deviation of x means</td><td><in>dev_ssq</in></td><td><in>dev_df</in></td><td><in>dev_msq</in></td><td><in>dev_vr</in><pval></td><td></pval><in>dev_p</in></td></tr>
-<tr><td>Within x residual</td><td><in>res_ssq</in></td><td><in>res_df</in></td><td><in>res_msq</in></td></tr>
-<tr><td>Total</td><td><in>tot_ssq</in></td><td><in>tot_df</in></td></tr>
+<tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th><th></th></tr>
+<tr><td>Due to regression</td><td><in>reg_ssq</in></td><td><in>reg_df</in></td><td><in>reg_msq</in></td><td><in>reg_vr</in></td><td><pval><in>reg_p</in></pval></td></tr>
+<tr><td>Deviation of x means</td><td><in>dev_ssq</in></td><td><in>dev_df</in></td><td><in>dev_msq</in></td><td><in>dev_vr</in></td><td><pval><in>dev_p</in></pval></td></tr>
+<tr><td>Within x residual</td><td><in>res_ssq</in></td><td><in>res_df</in></td><td><in>res_msq</in></td><td></td><td></td></tr>
+<tr><td>Total</td><td><in>tot_ssq</in></td><td><in>tot_df</in></td><td></td><td></td><td></td></tr>
 </table>
 <line></line>
 <line>Regression slope is <b><in>reg</in></b>significant</line>
 <line>Assumption of linearity <b><in>lin</in></b>supported</line>
-<line></line>
-<line></line>
 </report>

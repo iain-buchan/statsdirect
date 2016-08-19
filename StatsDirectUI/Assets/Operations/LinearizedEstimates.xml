@@ -35,7 +35,7 @@
         </option>
       </parameters>
 		<builtin function-name="rptLinearizedEstimates" />
-		<report type="text/rtf" filename="linised.rtf" />
+    <report type="application/x-statsdirect-creole" filename="linised.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>LinearizedEstimatesWithModel</suggested-operation>

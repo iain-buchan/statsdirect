@@ -30,6 +30,6 @@
         -->
       </parameters>
 		<builtin function-name="rptRanv" />
-		<report type="text/rtf" filename="simanal.rtf" />
+    <report type="application/x-statsdirect-creole" filename="simanal.creole" />
 	</steps>
 </operation>
