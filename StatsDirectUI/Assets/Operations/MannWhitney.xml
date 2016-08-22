@@ -18,6 +18,6 @@
         </frame>
       </parameters>
 	<builtin function-name="rptMannWhitney" />
-	<report type="text/rtf" filename="mannwhit.rtf" />
+  <report type="application/x-statsdirect-creole" filename="mannwhit.creole" />
 	</steps>
 </operation>

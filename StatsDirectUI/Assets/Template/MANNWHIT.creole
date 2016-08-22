@@ -6,15 +6,17 @@
 <line>U = <in>u</in>      U' = <in>u_prime</in></line>
 <line></line>
 <line><in>stats</in></line>
-<line>Lower side <in>p_l</in> (H<sub>1</sub>: x tends to be less than y)</line>
-<line>Upper side <in>p_u</in> (H<sub>1</sub>: x tends to be greater than y)</line>
-<line>Two sided <in>p_2</in> (H<sub>1</sub>: x tends to be distributed differently to y)</line>
+<line><pval>Lower side <in>p_l</in></pval> (H<sub>1</sub>: x tends to be less than y)</line>
+<line><pval>Upper side <in>p_u</in></pval> (H<sub>1</sub>: x tends to be greater than y)</line>
+<line><pval>Two sided <in>p_2</in></pval> (H<sub>1</sub>: x tends to be distributed differently to y)</line>
 <line></line>
-<line>Theta (U'/mn) = <in>theta</in> <warn>(<in>pc0</in>% CI: <in>tll</in> to <in>tul</in>)</warn></line>
-<line><block name="noconf"></line>
-<line>confidence interval not calculated if n1 or n2 < 4</block><warn><block name="conf"></warn></line>
-<line><in>pc</in>% confidence interval for difference between medians or means:</line>
-<line>Median difference = <in>median</in> <warn>(CI: <in>from</in> to <in>to</in>)</warn></block></line>
+<line>Theta (U'/mn) = <in>theta</in> <ci>(<in>pc0</in>% CI: <in>tll</in> to <in>tul</in>)</ci></line>
 <line></line>
-<line></line>
+<block name="noconf">
+<line>confidence interval not calculated if n1 or n2 </line>
+</block>
+<block name="conf">
+<line><ci><in>pc</in>% confidence interval for difference between medians or means:</ci></line>
+<line>Median difference = <in>median</in> <ci>(CI: <in>from</in> to <in>to</in>)</ci></line>
+</block>
 </report>
