@@ -25,7 +25,7 @@
         </boolean>
       </parameters>
 		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />
-		<report type="text/rtf" filename="princ.rtf" />
+    <report type="application/x-statsdirect-creole" filename="princ.creole" />
   </steps>
   <suggested-operations>
     <suggested-operation>Cronbach</suggested-operation>

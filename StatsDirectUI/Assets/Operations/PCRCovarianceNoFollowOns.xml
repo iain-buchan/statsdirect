@@ -25,9 +25,9 @@
         </boolean>
       </parameters>
 		<builtin function-name="rptPrincipalComponentsRegressionCovariance" />
-		<report type="text/rtf" filename="princ.rtf" />
+    <report type="application/x-statsdirect-creole" filename="princ.creole" />
     <!-- Defect ID #217: Do Cronbach immediately after PCR and disable other follow-on functions -->
     <builtin function-name="rptCronbach" />
-    <report type="text/rtf" filename="cronbach.rtf" />
+    <report type="application/x-statsdirect-creole" filename="cronbach.creole" />
   </steps>
 </operation>
