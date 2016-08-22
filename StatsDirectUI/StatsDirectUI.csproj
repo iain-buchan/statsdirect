@@ -1164,7 +1164,9 @@
     <None Include="Assets\Template\KENDALL.creole" />
     <None Include="Assets\Template\kruskal.creole" />
     <None Include="Assets\Template\kwmulti.creole" />
-    <None Include="Assets\Template\latin.creole" />
+    <None Include="Assets\Template\latin.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\lifetab.creole" />
     <None Include="Assets\Template\likely.creole" />
     <None Include="Assets\Template\LINISED.creole" />
@@ -1184,7 +1186,9 @@
     <None Include="Assets\Template\normality.creole" />
     <None Include="Assets\Template\nplinreg.creole" />
     <None Include="Assets\Template\oneway.creole" />
-    <None Include="Assets\Template\orci.creole" />
+    <None Include="Assets\Template\orci.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\pardet.creole" />
     <None Include="Assets\Template\peto.creole" />
     <None Include="Assets\Template\pinterp.creole" />
@@ -1235,7 +1239,9 @@
     <None Include="Assets\Template\scheffe.creole" />
     <None Include="Assets\Template\sign.creole" />
     <None Include="Assets\Template\SIMANAL.creole" />
-    <None Include="Assets\Template\simple.creole" />
+    <None Include="Assets\Template\simple.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\simulatedExactP.creole" />
     <None Include="Assets\Template\smirnov.creole" />
     <None Include="Assets\Template\spearman.creole" />
@@ -1253,7 +1259,9 @@
     <None Include="Assets\Template\S_SURVEY.creole" />
     <None Include="Assets\Template\s_survival.creole" />
     <None Include="Assets\Template\S_T.creole" />
-    <None Include="Assets\Template\treat.creole" />
+    <None Include="Assets\Template\treat.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\tukey.creole" />
     <None Include="Assets\Template\twomulti.creole" />
     <None Include="Assets\Template\TWONEST.creole" />
@@ -1698,7 +1706,9 @@
     <Content Include="Assets\Operations\PropPairs.xml" />
     <Content Include="Assets\Operations\PropSingle.xml" />
     <Content Include="Assets\Operations\MiscLikely.xml" />
-    <Content Include="Assets\Operations\MiscNumberNeededToTreat.xml" />
+    <Content Include="Assets\Operations\MiscNumberNeededToTreat.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\MiscDiagnostic.xml" />
     <Content Include="Assets\Operations\MiscRetroRisk.xml" />
     <Content Include="Assets\Operations\MiscRelRisk.xml" />
@@ -1714,7 +1724,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Assets\Operations\RatePoissonCI.xml" />
-    <Content Include="Assets\Operations\ExactORCML.xml" />
+    <Content Include="Assets\Operations\ExactORCML.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\ExactMcNamar.xml" />
     <Content Include="Assets\Operations\ExactFisherRbyC.xml" />
     <Content Include="Assets\Operations\ExactFisherX.xml" />
@@ -1781,7 +1793,9 @@
     <Content Include="Assets\Operations\LadderPlot.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\Operations\LatinSquare.xml" />
+    <Content Include="Assets\Operations\LatinSquare.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\LinearizedEstimateInterpolation.xml" />
     <Content Include="Assets\Operations\LinearizedEstimatePlot.xml" />
     <Content Include="Assets\Operations\LinearizedEstimates.xml" />
@@ -1874,7 +1888,9 @@
     <Content Include="Assets\Operations\ROCPlot.xml" />
     <Content Include="Assets\Operations\ScatterPlot.xml" />
     <Content Include="Assets\Operations\Scheffe.xml" />
-    <Content Include="Assets\Operations\SimpleLinearRegression.xml" />
+    <Content Include="Assets\Operations\SimpleLinearRegression.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\SimpleLinearRegressionCI.xml" />
     <Content Include="Assets\Operations\Smirnov.xml" />
     <Content Include="Assets\Operations\Spearman.xml" />
@@ -1941,7 +1957,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

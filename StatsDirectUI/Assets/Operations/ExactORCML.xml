@@ -26,6 +26,7 @@
       </parameters>
   	<builtin function-name="rptExactORCML" />
 	  <report type="text/rtf" filename="orci.rtf" />
+    <report type="application/x-statsdirect-creole" filename="orci.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactORCML</suggested-operation>
