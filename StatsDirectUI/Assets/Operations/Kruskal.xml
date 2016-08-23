@@ -15,7 +15,7 @@
         </frame>
       </parameters>
 		<builtin function-name="rptKruskal" />
-		<report type="text/rtf" filename="kruskal.rtf" />
+    <report type="application/x-statsdirect-creole" filename="kruskal.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>KruskalWallisMulti</suggested-operation>

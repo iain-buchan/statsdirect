@@ -10,6 +10,4 @@
 <tr><td></td><td><block name="x"><b><ci><in>x</in></ci></b></td><td></block><block name="y"></td></tr>
 <tr><td><b><grandtotal><in>y</in></grandtotal></b></td><td><block name="tot"><in>tot</in></td><td></block></block></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>

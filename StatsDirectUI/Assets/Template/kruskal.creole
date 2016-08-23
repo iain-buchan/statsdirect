@@ -18,6 +18,4 @@
 <line><pval><in>p_ties</in></pval></block><block name="message"></line>
 <line></line>
 <line><in>msg</in></block></line>
-<line></line>
-<line></line>
 </report>

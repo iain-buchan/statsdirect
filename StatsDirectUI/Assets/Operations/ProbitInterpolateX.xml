@@ -14,6 +14,6 @@
         </double>
       </parameters>
 		<builtin function-name="rptProbitInterpolateX" />
-		<report type="text/rtf" filename="intprobx.rtf" />
+    <report type="application/x-statsdirect-creole" filename="intprobx.creole" />
 	</steps>
 </operation>

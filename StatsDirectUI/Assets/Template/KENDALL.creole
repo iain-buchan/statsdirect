@@ -10,24 +10,24 @@
 <line>Gamma = <in>gam</in></line>
 <line></line>
 <line>Kendall's <in>tb</in>  = <in>tau</in></line>
-<line><warn>Approximate <in>pc</in>% CI = <in>ll</in> to <in>ul</in></warn></line>
+<line><ci>Approximate <in>pc</in>% CI = <in>ll</in> to <in>ul</in></ci></line>
 <line></line>
-<line><u>Approximate tests<in>adj</in></u><pval><block name="smallsample"> </pval></line>
-<line>Sample size too small for reliable inference from z, use exact test</block></line>
+<line><u>Approximate tests<in>adj</in></u></line>
+<block name="smallsample">
+<line><warn>Sample size too small for reliable inference from z, use exact test</warn></line>
+</block>
 <line>z = <in>kz</in></line>
-<line>Upper side <in>p_u</in>  (H<sub>1</sub>: concordance)</line>
-<line>Lower side <in>p_l</in>  (H<sub>1</sub>: discordance)</line>
-<line>Two sided <in>p_2</in>  (H<sub>1</sub>: dependence)</line>
+<line><pval>Upper side <in>p_u</in></pval>  (H<sub>1</sub>: concordance)</line>
+<line><pval>Lower side <in>p_l</in></pval>  (H<sub>1</sub>: discordance)</line>
+<line><pval>Two sided <in>p_2</in></pval>  (H<sub>1</sub>: dependence)</line>
 <line></line>
 <line>z (continuity corrected) = <in>kzcc</in></line>
-<line>Upper side <in>p_ucc</in>  (H<sub>1</sub>: concordance)</line>
-<line>Lower side <in>p_lcc</in>  (H<sub>1</sub>: discordance)</line>
-<line>Two sided <in>p_2cc</in>  (H<sub>1</sub>: dependence)</line>
+<line><pval>Upper side <in>p_ucc</in></pval>  (H<sub>1</sub>: concordance)</line>
+<line><pval>Lower side <in>p_lcc</in></pval>  (H<sub>1</sub>: discordance)</line>
+<line><pval>Two sided <in>p_2cc</in></pval>  (H<sub>1</sub>: dependence)</line>
 <line></line>
 <line><u>Exact test<in>adjexact</in></u></line>
-<line>Upper side <in>p_uexact</in>  (H<sub>1</sub>: concordance)</line>
-<line>Lower side <in>p_lexact</in>  (H<sub>1</sub>: discordance)</line>
-<line>Two sided <in>p_2exact</in>  (H<sub>1</sub>: dependence)</line>
-<line></line>
-<line></line>
+<line><pval>Upper side <in>p_uexact</in></pval>  (H<sub>1</sub>: concordance)</line>
+<line><pval>Lower side <in>p_lexact</in></pval>  (H<sub>1</sub>: discordance)</line>
+<line><pval>Two sided <in>p_2exact</in></pval>  (H<sub>1</sub>: dependence)</line>
 </report>

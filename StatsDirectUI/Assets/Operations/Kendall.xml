@@ -19,6 +19,6 @@
         </frame>
       </parameters>
 	<builtin function-name="rptKendall" />
-	<report type="text/rtf" filename="kendall.rtf" />
+  <report type="application/x-statsdirect-creole" filename="kendall.creole" />
 	</steps>
 </operation>

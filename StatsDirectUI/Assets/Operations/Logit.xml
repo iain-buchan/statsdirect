@@ -65,7 +65,7 @@
         </double>
       </parameters>
 		<builtin function-name="rptLogit" />
-		<report type="text/rtf" filename="probit.rtf" />
+    <report type="application/x-statsdirect-creole" filename="probit.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ProbitPlot</suggested-operation>

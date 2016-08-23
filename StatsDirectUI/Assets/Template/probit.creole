@@ -4,15 +4,13 @@
 <line>slope = <in>b</in></line>
 <line></line>
 <line>Median * Dose = <in>mxd</in></line>
-<line><warn>Confidence interval <in>het</in> = <in>from</in> to <in>to</in></warn></line>
+<line><ci>Confidence interval <in>het</in> = <in>from</in> to <in>to</in></ci></line>
 <line></line>
 <line>* Dose for centile <in>centile</in> = <in>doseq</in></line>
-<line><warn>Confidence interval <in>het_cent</in> = <in>from_cent</in> to <in>to_cent</in></warn></line>
+<line><ci>Confidence interval <in>het_cent</in> = <in>from_cent</in> to <in>to_cent</in></ci></line>
 <line></line>
-<line>Chi&#xb2; (heterogeneity of deviations from model) = <in>dev</in>  (<in>df</in> df)  <in>p</in></line>
+<line>Chi<sub>2</sub> (heterogeneity of deviations from model) = <in>dev</in>  (<in>df</in> df)  <pval><in>p</in></pval></line>
 <line></line>
-<line>t for slope = <in>t_slope</in> (<in>df</in> df_slope)  <in>p_slope</in><block name="warn"></line>
+<line>t for slope = <in>t_slope</in> (<in>df</in> df_slope)  <pval><in>p_slope</in></pval><block name="warn"></line>
 <line><pval>WARNING: slope not significant</pval></block></line>
-<line></line>
-<line></line>
 </report>

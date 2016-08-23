@@ -4,6 +4,4 @@
 <line>z = <in>z</in></line>
 <line><ci>Two tailed <in>p2</in></ci></line>
 <line><ci>One tailed <in>p1</in></ci></line>
-<line></line>
-<line></line>
 </report>

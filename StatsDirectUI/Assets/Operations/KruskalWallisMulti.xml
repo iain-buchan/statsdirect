@@ -19,6 +19,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptKwMultiple" />
-		<report type="text/rtf" filename="kwmulti.rtf" />
+    <report type="application/x-statsdirect-creole" filename="kwmulti.creole" />
 	</steps>
 </operation>

@@ -17,5 +17,4 @@
 <line><u>Universal (Berry-Mielke) R</u></line>
 <line>Weighted (linear) kappa = <in>kw</in></line>
 <line><pval><in>pw</in></pval></line>
-<line></line>
 </report>

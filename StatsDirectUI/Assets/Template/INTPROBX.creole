@@ -1,8 +1,7 @@
 <report>
-<line>System;<title>Probit analysis - interpolation</title></line>
+<line><title>Probit analysis - interpolation</title></line>
 <line></line>
 <line>Value for X (<in>x_lab</in>) = <in>x</in></line>
 <line>Proportional response = <in>resp</in></line>
 <line><in>mort</in></line>
-<line></line>
 </report>

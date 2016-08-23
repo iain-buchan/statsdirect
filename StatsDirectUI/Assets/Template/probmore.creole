@@ -17,6 +17,4 @@
 <tr><th>Index</th><th>Subjects</th><th>Responses</th><th>Expected</th><th>Deviation</u><block name="obs"></td></tr>
 <tr><td><in>obs</in></td><td><in>sub</in></td><td><in>res</in></td><td><in>exp</in></td><td><in>dev</in></block></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>
