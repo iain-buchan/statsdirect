@@ -2,7 +2,8 @@
 <line><title>ROC Curve Analysis</title></line>
 <line><in>chart</in></line>
 <line></line>
-<line><block name="datasets">Data set: <in>ti</in></line>
+<block name="datasets">
+<line>Data set: <in>ti</in></line>
 <line></line>
 <line>Area under ROC curve by extended trapezoidal rule = <in>auc</in></line>
 <line></line>
@@ -12,13 +13,13 @@
 <line>Optimum cut-off point selected = <in>cut</in></line>
 <line></line>
 <table>
-<tr><td><ci>Table at cut-off:</td><td>a</td><td>b</ci></td></tr>
-<tr><td><ci></td><td><in>a</in></td><td><in>b</in></ci></td></tr>
+<tr><td><ci>Table at cut-off:</ci><td>a</td><td>b</td></td></tr>
+<tr><td><ci></ci><td><in>a</in></td><td><in>b</in></td></td></tr>
 </table>
 <line></line>
 <table>
 <tr><td></td><td>c</td><td>d</td></tr>
-<tr><td><ci></td><td><in>c</in></td><td><in>d</in></ci></td></tr>
+<tr><td><ci></ci><td><in>c</in></td><td><in>d</in></td></td></tr>
 </table>
 <line></line>
 <line></line>
@@ -33,7 +34,5 @@
 <line></line>
 <line>sensitivity (<in>senspc</in>% CI) = <in>sens</in>  (<in>sensll</in> to <in>sensul</in>)</line>
 <line><ci>specificity (<in>specpc</in>% CI) = <in>spec</in>  (<in>specll</in> to <in>specul</in>)</ci></line>
-<line></line>
-<line></block> </line>
-<line></line>
+</block>
 </report>

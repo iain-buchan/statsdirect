@@ -34,7 +34,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptMiscRetroRisk" />
-	  <report type="text/rtf" filename="retro_r.rtf" />
+    <report type="application/x-statsdirect-creole" filename="retro_r.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>MiscRetroRisk</suggested-operation>

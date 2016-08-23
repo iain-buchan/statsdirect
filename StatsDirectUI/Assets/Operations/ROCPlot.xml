@@ -47,5 +47,6 @@
 			<chart-type>ROC</chart-type>
 		</chart>
 		<report type="text/rtf" filename="roc.rtf" />
+    <report type="application/x-statsdirect-creole" filename="roc.creole" />
 	</steps>
 </operation>
