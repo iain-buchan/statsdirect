@@ -1125,7 +1125,9 @@
     <None Include="Assets\Template\cox_det.creole" />
     <None Include="Assets\Template\cox_dev.creole" />
     <None Include="Assets\Template\cox_s.creole" />
-    <None Include="Assets\Template\cronbach.creole" />
+    <None Include="Assets\Template\cronbach.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\cuzick.creole" />
     <None Include="Assets\Template\describe.creole" />
     <None Include="Assets\Template\diagnost.creole" />
@@ -1171,7 +1173,9 @@
     <None Include="Assets\Template\likely.creole" />
     <None Include="Assets\Template\LINISED.creole" />
     <None Include="Assets\Template\logrank.creole" />
-    <None Include="Assets\Template\MANNWHIT.creole" />
+    <None Include="Assets\Template\MANNWHIT.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\mantel.creole">
       <SubType>Designer</SubType>
     </None>
@@ -1198,7 +1202,9 @@
     <None Include="Assets\Template\prate.creole" />
     <None Include="Assets\Template\prcoeff.creole" />
     <None Include="Assets\Template\prefer.creole" />
-    <None Include="Assets\Template\PRINC.creole" />
+    <None Include="Assets\Template\PRINC.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\prmatrix.creole" />
     <None Include="Assets\Template\probcal.creole" />
     <None Include="Assets\Template\probit.creole" />
@@ -1472,7 +1478,9 @@
     <Content Include="Assets\Operations\UnivariateSummaryToWorksheetOnly.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\Operations\PCRCovarianceNoFollowOns.xml" />
+    <Content Include="Assets\Operations\PCRCovarianceNoFollowOns.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\SortByExpression.xml" />
     <Content Include="Assets\Operations\Zanthro.xml">
       <SubType>Designer</SubType>
@@ -1814,7 +1822,9 @@
     <Content Include="Assets\Operations\LogisticRegressionPrediction.xml" />
     <Content Include="Assets\Operations\Logit.xml" />
     <Content Include="Assets\Operations\LogRank.xml" />
-    <Content Include="Assets\Operations\MannWhitney.xml" />
+    <Content Include="Assets\Operations\MannWhitney.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\Mantel.xml">
       <SubType>Designer</SubType>
     </Content>

@@ -15,6 +15,6 @@
         </frame>
       </parameters>
 	  <builtin function-name="rptNormality" />
-	  <report type="text/rtf" filename="normality.rtf" />
+    <report type="application/x-statsdirect-creole" filename="normality.creole" />
   </steps>
 </operation>
