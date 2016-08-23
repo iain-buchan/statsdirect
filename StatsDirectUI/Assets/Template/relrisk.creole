@@ -2,8 +2,8 @@
 <line><title>Risk analysis (prospective)</title></line>
 <line></line>
 <table>
-<tr><td></td><th>Characteristic factor:</th><th></th></tr>
-<tr><th>Outcome:</th><td>Present</td><td>Absent</td></tr>
+<tr><td></td><td><subtitle>Characteristic factor:</subtitle></td><td></td></tr>
+<tr><td><subtitle>Outcome:</subtitle></td><td>Present</td><td>Absent</td></tr>
 <tr><td>Positive</td><td><in>a_out</in></td><td><in>b_out</in></td></tr>
 <tr><td>Negative</td><td><in>c_out</in></td><td><in>d_out</in></td></tr>
 </table>
