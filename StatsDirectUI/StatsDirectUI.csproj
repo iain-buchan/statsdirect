@@ -1247,7 +1247,9 @@
     <None Include="Assets\Template\R_UNPAIR.creole" />
     <None Include="Assets\Template\R_XY.creole" />
     <None Include="Assets\Template\scheffe.creole" />
-    <None Include="Assets\Template\sign.creole" />
+    <None Include="Assets\Template\sign.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\SIMANAL.creole" />
     <None Include="Assets\Template\simple.creole">
       <SubType>Designer</SubType>
@@ -1977,7 +1979,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

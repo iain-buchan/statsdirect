@@ -31,6 +31,6 @@
         </double>
       </parameters>
 		<builtin function-name="rptQuantile" />
-		<report type="text/rtf" filename="quantile.rtf" />
+    <report type="application/x-statsdirect-creole" filename="quantile.creole" />
 	</steps>
 </operation>
