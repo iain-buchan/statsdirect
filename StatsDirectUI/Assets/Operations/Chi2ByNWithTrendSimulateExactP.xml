@@ -35,5 +35,6 @@
       </parameters>
 		<builtin function-name="rptChi2byNWithTrendSimulateExactP" />
     <report type="text/rtf" filename="chiTwoByKSimulatedExactP.rtf" />
+    <report type="application/x-statsdirect-creole" filename="chiTwoByKSimulatedExactP.creole" />
   </steps>
 </operation>

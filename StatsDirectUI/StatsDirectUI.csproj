@@ -1215,8 +1215,12 @@
     <None Include="Assets\Template\p_unpair.creole" />
     <None Include="Assets\Template\quantile.creole" />
     <None Include="Assets\Template\rdmeta.creole" />
-    <None Include="Assets\Template\refrange.creole" />
-    <None Include="Assets\Template\relrisk.creole" />
+    <None Include="Assets\Template\refrange.creole">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Assets\Template\relrisk.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\odds.creole" />
     <Antlr4 Include="Expressions\StatsDirectExpression.g4">
       <Generator>MSBuild:Compile</Generator>
@@ -1721,7 +1725,9 @@
     <Content Include="Assets\Operations\MiscRetroRisk.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\Operations\MiscRelRisk.xml" />
+    <Content Include="Assets\Operations\MiscRelRisk.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\MantelHaenszelScreen.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1891,7 +1897,9 @@
     <Content Include="Assets\Operations\PyramidPlot.xml" />
     <Content Include="Assets\Operations\Quantile.xml" />
     <Content Include="Assets\Operations\Ranv.xml" />
-    <Content Include="Assets\Operations\ReferenceRange.xml" />
+    <Content Include="Assets\Operations\ReferenceRange.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\RelativeRiskMeta.xml" />
     <Content Include="Assets\Operations\ReplicateTwoWay.xml">
       <SubType>Designer</SubType>
@@ -1969,7 +1977,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

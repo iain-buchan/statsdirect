@@ -9,6 +9,7 @@
       <condition>=parameters.ContainsKey("gr")</condition>
       <iftrue>
         <report type="text/rtf" filename="probcal.rtf" />
+        <report type="application/x-statsdirect-creole" filename="probcal.creole" />
       </iftrue>
     </test>
 	</steps>

@@ -26,6 +26,4 @@
 <line>Quantile <in>qx</in> = <in>qxv</in></line>
 <line><ci>Approximate <in>pc</in>% confidence interval <in>type</in> = <in>from</in> to <in>to</in></ci></line>
 <line>Exact confidence level = <in>co</in></line>
-<line></line>
-<line></line>
 </report>

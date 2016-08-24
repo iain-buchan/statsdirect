@@ -36,6 +36,6 @@
         </boolean>
       </parameters>
 		<builtin function-name="rptReferenceRange" />
-		<report type="text/rtf" filename="refrange.rtf" />
+    <report type="application/x-statsdirect-creole" filename="refrange.creole" />
 	</steps>
 </operation>
