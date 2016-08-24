@@ -16,6 +16,4 @@
 <line><pval>Two sided <in>p_2</in></pval></line>
 <line></line>
 <line>Power <in>pwr</in></line>
-<line></line>
-<line></line>
 </report>

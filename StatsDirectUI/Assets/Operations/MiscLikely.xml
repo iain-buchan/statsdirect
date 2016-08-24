@@ -20,7 +20,6 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptMiscLikely" />
-	  <report type="text/rtf" filename="likely.rtf" />
     <report type="application/x-statsdirect-creole" filename="likely.creole" />
 	</steps>
   <suggested-operations>

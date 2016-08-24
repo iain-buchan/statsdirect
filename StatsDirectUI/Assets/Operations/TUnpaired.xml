@@ -19,6 +19,6 @@
         </frame>
       </parameters>
 	<builtin function-name="rptTUnpaired" />
-	<report type="text/rtf" filename="m_unpair.rtf" />
+  <report type="application/x-statsdirect-creole" filename="m_unpair.creole" />
 	</steps>
 </operation>

@@ -42,7 +42,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptTUnpairedSummary" />
-	  <report type="text/rtf" filename="m_unpair.rtf" />
+    <report type="application/x-statsdirect-creole" filename="m_unpair.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>TUnpairedSummary</suggested-operation>

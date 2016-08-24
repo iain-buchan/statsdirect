@@ -32,7 +32,7 @@
         </confidence-interval>
       </parameters>
 	<builtin function-name="rptTSingleSummary" />
-	<report type="text/rtf" filename="m_single.rtf" />
+  <report type="application/x-statsdirect-creole" filename="m_single.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>TSingleSummary</suggested-operation>

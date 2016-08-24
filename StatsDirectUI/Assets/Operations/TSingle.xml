@@ -26,6 +26,6 @@
         </double>
       </parameters>
 	<builtin function-name="rptTSingle" />
-	<report type="text/rtf" filename="m_single.rtf" />
+  <report type="application/x-statsdirect-creole" filename="m_single.creole" />
 	</steps>
 </operation>

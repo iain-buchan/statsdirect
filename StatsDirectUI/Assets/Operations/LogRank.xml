@@ -63,6 +63,6 @@
         </boolean>
       </parameters>
 		<builtin function-name="rptLogRank" />
-		<report type="text/rtf" filename="logrank.rtf" />
+    <report type="application/x-statsdirect-creole" filename="logrank.creole" />
 	</steps>
 </operation>

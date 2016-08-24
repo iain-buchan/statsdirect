@@ -47,5 +47,6 @@
       </parameters>
     <builtin function-name="rptFollowUpLifetable" />
 		<report type="text/rtf" filename="lifetab.rtf" />
+    <report type="application/x-statsdirect-creole" filename="lifetab.creole" />
 	</steps>
 </operation>

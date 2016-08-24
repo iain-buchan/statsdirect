@@ -29,6 +29,4 @@
 <line><u>Comparison of variances</u></line>
 <line><in>say1</in></line>
 <line><in>say2</in></line>
-<line></line>
-<line></line>
 </report>

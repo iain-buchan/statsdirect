@@ -25,7 +25,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptExactMcNamar" />
-	  <report type="text/rtf" filename="mcnamar.rtf" />
+    <report type="application/x-statsdirect-creole" filename="mcnamar.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactMcNamarChi</suggested-operation>
