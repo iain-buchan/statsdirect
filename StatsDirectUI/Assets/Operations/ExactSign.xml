@@ -23,7 +23,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptExactSign" />
-	  <report type="text/rtf" filename="sign.rtf" />
+    <report type="application/x-statsdirect-creole" filename="sign.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactSign</suggested-operation>

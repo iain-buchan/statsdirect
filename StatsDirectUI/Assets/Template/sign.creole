@@ -18,6 +18,4 @@
 <tr><td><ci>Proportion =</td><td><in>prop</in></ci></td></tr>
 <tr><td><ci>Upper Limit =</td><td><in>upper</in></ci></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>

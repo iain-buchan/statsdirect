@@ -28,5 +28,6 @@
       </parameters>
 		<builtin function-name="plotResidualsSimple" />
 		<report type="text/rtf" filename="residuals.rtf" />
+    <report type="application/x-statsdirect-creole" filename="residuals.creole" />
 	</steps>
 </operation>

@@ -51,6 +51,7 @@
       </parameters>
   	<builtin function-name="rptSizeMatchCase" />
 	  <report type="text/rtf" filename="s_macase.rtf" />
+    <report type="application/x-statsdirect-creole" filename="s_macase.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeMatchCase</suggested-operation>
