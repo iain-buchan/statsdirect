@@ -60,6 +60,6 @@
 			</steps>
 		</iteration>
 		<builtin function-name="rptWeiLachin" />
-		<report type="text/rtf" filename="wei.rtf" />
+    <report type="application/x-statsdirect-creole" filename="wei.creole" />
 	</steps>
 </operation>

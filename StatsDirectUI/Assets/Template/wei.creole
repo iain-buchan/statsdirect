@@ -25,6 +25,5 @@
 <line>chi-square omnibus statistic = <in>stat</in>  <pval><in>p_omnibus</in></pval></line>
 <line></line>
 <line>stochastic ordering z = <in>z</in>  <pval>one sided <in>p_1</in>,  two sided <in>p_2</in></pval></line>
-<line></block></line>
-<line></line>
+</block>
 </report>

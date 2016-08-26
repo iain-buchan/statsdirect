@@ -1213,7 +1213,9 @@
     <None Include="Assets\Template\prscores.creole" />
     <None Include="Assets\Template\p_pair.creole" />
     <None Include="Assets\Template\p_unpair.creole" />
-    <None Include="Assets\Template\quantile.creole" />
+    <None Include="Assets\Template\quantile.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\rdmeta.creole" />
     <None Include="Assets\Template\refrange.creole">
       <SubType>Designer</SubType>
@@ -1758,7 +1760,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Assets\Operations\Crosstabs.xml" />
-    <Content Include="Assets\Operations\UniversalRCompare.xml" />
+    <Content Include="Assets\Operations\UniversalRCompare.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\WeightedUnivariateSummary.xml" />
     <Content Include="Assets\Operations\UnivariateSummary.xml" />
     <Content Include="Assets\Operations\QuickSummary.xml" />
@@ -1897,7 +1901,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Assets\Operations\PyramidPlot.xml" />
-    <Content Include="Assets\Operations\Quantile.xml" />
+    <Content Include="Assets\Operations\Quantile.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\Ranv.xml" />
     <Content Include="Assets\Operations\ReferenceRange.xml">
       <SubType>Designer</SubType>
