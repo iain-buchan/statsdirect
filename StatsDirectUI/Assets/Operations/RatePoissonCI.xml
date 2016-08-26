@@ -23,7 +23,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptRatePoissonCI" />
-	  <report type="text/rtf" filename="prate.rtf" />
+    <report type="application/x-statsdirect-creole" filename="prate.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RatePoissonCI</suggested-operation>

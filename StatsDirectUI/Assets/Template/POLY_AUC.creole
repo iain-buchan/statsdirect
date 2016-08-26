@@ -4,6 +4,4 @@
 <line>AUC (polynomial function) = <in>poly_auc</in></line>
 <line></line>
 <line>AUC (by trapezoidal rule) = <in>trap_auc</in></line>
-<line></line>
-<line></line>
 </report>

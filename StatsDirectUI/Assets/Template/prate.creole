@@ -6,6 +6,4 @@
 <line></line>
 <line>Poisson (e.g. incidence) rate estimate = <in>rate</in></line>
 <line><ci>Exact <in>pc</in>% confidence interval = <in>from</in>  to  <in>to</in> </ci></line>
-<line></line>
-<line></line>
 </report>

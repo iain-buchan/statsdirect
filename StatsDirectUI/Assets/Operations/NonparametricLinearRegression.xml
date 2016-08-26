@@ -37,6 +37,6 @@
 		<box-axes>false</box-axes>
 		<chart-title>non-parametric linear regression plot</chart-title>
 	</chart>
-	<report type="text/rtf" filename="nplinreg.rtf" />
+  <report type="application/x-statsdirect-creole" filename="nplinreg.creole" />
 	</steps>
 </operation>

@@ -23,6 +23,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptAreaUnderCurve" />
-		<report type="text/rtf" filename="poly_auc.rtf" />
+    <report type="application/x-statsdirect-creole" filename="poly_auc.creole" />
 	</steps>
 </operation>

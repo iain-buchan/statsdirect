@@ -6,18 +6,16 @@
 <line>Proportion 2 = <in>prop_2</in></line>
 <line>Proportion difference = <in>prop_diff</in></line>
 <line></line>
-<line><block name="exact">Exact two sided <in>cum_2</in></line>
-<line>Exact one sided <in>cum_1</in></line>
+<line><block name="exact"><pval>Exact two sided <in>cum_2</in></pval></line>
+<line><pval>Exact one sided <in>cum_1</in></pval></line>
 <line></line>
-<line>Exact two sided mid <in>cum_2_mid</in></line>
-<line>Exact one sided mid <in>cum_1_mid</in></line>
-<line></block><block name="approx"><pval>Numbers too large for exact test</pval></line>
+<line><pval>Exact two sided mid <in>cum_2_mid</in></pval></line>
+<line><pval>Exact one sided mid <in>cum_1_mid</in></pval></line>
+<line></block><block name="approx"><warn>Numbers too large for exact test</warn></line>
 <line>Standard normal deviate z = <in>z</in></line>
 <line>Approximate two sided <in>p_2</in></line>
 <line>Approximate one sided <in>p_1</in></line>
 <line></block></line>
-<line><subtotal><in>qcl</in> <in>pc</in>% confidence interval for the proportion difference:</subtotal></line>
-<line><subtotal><in>lower</in> to <in>upper</in></subtotal></line>
-<line></line>
-<line></line>
+<line><ci><in>qcl</in> <in>pc</in>% confidence interval for the proportion difference:</ci></line>
+<line><ci><in>lower</in> to <in>upper</in></ci></line>
 </report>

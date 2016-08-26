@@ -31,6 +31,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="rptPolynomialRegressionInterpolation" />
-		<report type="text/rtf" filename="pinterp.rtf" />
+    <report type="application/x-statsdirect-creole" filename="pinterp.creole" />
 	</steps>
 </operation>
