@@ -30,7 +30,7 @@
         </integer>
       </parameters>
   	<builtin function-name="rptRandomBlock" />
-	  <report type="text/rtf" filename="r_block.rtf" />
+    <report type="application/x-statsdirect-creole" filename="r_block.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>RandomBlock</suggested-operation>

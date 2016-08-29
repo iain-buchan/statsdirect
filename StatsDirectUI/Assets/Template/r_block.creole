@@ -13,6 +13,4 @@
 <tr><th>Subject</th><th>Treatment</u><block name="subjects"></td></tr>
 <tr><td><in>id</in></td><td><in>rx</in></block></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>

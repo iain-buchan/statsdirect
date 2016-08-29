@@ -34,7 +34,6 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptMiscRelRisk" />
-	  <report type="text/rtf" filename="relrisk.rtf" />
     <report type="application/x-statsdirect-creole" filename="relrisk.creole" />
 	</steps>
   <suggested-operations>
