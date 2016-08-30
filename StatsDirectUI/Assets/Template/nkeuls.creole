@@ -2,8 +2,10 @@
 <line><title>Newman-Keuls multiple comparisons</title></line>
 <line></line>
 <table>
-<tr><th>Comparison</th><th>Mean difference L</th><th>Separation</th><th>|L/SE(L)|</u><block name="differences"></td></tr>
-<tr><td><in>cf1</in> vs. <in>cf2</in></td><td><in>delta</in></td><td><in>gps</in></td><td><in>t</in><pval></td><td></pval><in>p</in></block></td></tr>
+<tr><th>Comparison</th><th>Mean difference L</th><th>Separation</th><th>|L/SE(L)|</th><th></th></tr>
+<block name="differences">
+<tr><td><in>cf1</in> vs. <in>cf2</in></td><td><in>delta</in></td><td><in>gps</in></td><td><in>t</in></td><td><pval><in>p</in></pval></td></tr>
+</block>
 </table>
 <line></line>
 <table>

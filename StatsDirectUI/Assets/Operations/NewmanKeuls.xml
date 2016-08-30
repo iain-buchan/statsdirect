@@ -20,6 +20,6 @@
     </confidence-interval>
 		</parameters>
 		<builtin function-name="rptNewmanKeuls" />
-		<report type="text/rtf" filename="nkeuls.rtf" />
+    <report type="application/x-statsdirect-creole" filename="nkeuls.creole" />
 	</steps>
 </operation>
