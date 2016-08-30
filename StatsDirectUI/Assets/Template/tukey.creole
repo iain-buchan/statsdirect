@@ -5,14 +5,12 @@
 <line>Pooled standard deviation = <in>psd</in></line>
 <line></line>
 <table>
-<tr><th>Comparison</th><th>Mean difference L (<in>pc</in>% CI)</th><th>|L/SE(L)|</u><block name="differences"></td></tr>
-<tr><td><in>cf1</in> vs. <in>cf2</in></td><td><in>delta</in>  (<in>lci</in>  to  <in>uci</in>)</td><td><in>t</in></td><td><ci><in>p</in></ci></block></td></tr>
+<tr><th>Comparison</th><th>Mean difference L <ci>(<in>pc</in>% CI)</ci></th><th>|L/SE(L)|</th><th></th><block name="differences"></tr>
+<tr><td><in>cf1</in> vs. <in>cf2</in></td><td><in>delta</in><ci>(<in>lci</in>  to  <in>uci</in>)</ci></td><td><in>t</in></td><td><pval><in>p</in></pval></td></block></tr>
 </table>
 <line></line>
 <table>
 <tr><th>Variable</th><th>Mean</th><th>Significant contrasts</u><block name="summary"></td></tr>
 <tr><td><in>cf1</in></td><td><in>mean</in></td><td><in>sigs</in></block></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>

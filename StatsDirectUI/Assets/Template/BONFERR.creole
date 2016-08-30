@@ -10,9 +10,7 @@
 <line></line>
 <line>t = <in>t</in></line>
 <line>df = <in>df</in></line>
-<line><in>p</in></line>
+<line><pval><in>p</in></pval></line>
 <line></line>
 <line>Bonferroni critical P for <in>comp</in> = <in>bonf</in></line>
-<line></line>
-<line></line>
 </report>

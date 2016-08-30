@@ -20,6 +20,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="rptScheffe" />
-		<report type="text/rtf" filename="scheffe.rtf" />
+    <report type="application/x-statsdirect-creole" filename="scheffe.creole" />
 	</steps>
 </operation>

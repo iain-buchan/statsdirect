@@ -59,6 +59,6 @@
         </double>
       </parameters>
 		<builtin function-name="rptRateSMR" />
-		<report type="text/rtf" filename="stdmort.rtf" />
+    <report type="application/x-statsdirect-creole" filename="stdmort.creole" />
 	</steps>
 </operation>

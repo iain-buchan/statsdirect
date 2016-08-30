@@ -20,6 +20,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="rptTukey" />
-		<report type="text/rtf" filename="tukey.rtf" />
+    <report type="application/x-statsdirect-creole" filename="tukey.creole" />
 	</steps>
 </operation>

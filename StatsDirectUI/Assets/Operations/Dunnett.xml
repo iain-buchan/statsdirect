@@ -29,6 +29,6 @@
         </pick-variables>
       </parameters>
 		<builtin function-name="rptDunnett" />
-		<report type="text/rtf" filename="dunnett.rtf" />
+    <report type="application/x-statsdirect-creole" filename="dunnett.creole" />
 	</steps>
 </operation>

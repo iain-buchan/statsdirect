@@ -2,9 +2,9 @@
 <line><title>Indirectly Standardized Rates and SMR</title></line>
 <line></line>
 <table>
-<tr><th>Reference rate</th><th>Observed person-time</th><th>Expected deaths</u></td></tr>
+<tr><th>Reference rate</th><th>Observed person-time</th><th>Expected deaths</th><th></th></tr>
 <tr><td><block name="groups"><in>group</in></td><td><in>observed</in></td><td><in>expected</in></td><td><in>lb</in></td></tr>
-<tr><td></block></td><td></td><td>Total = <in>total</in></td></tr>
+<tr><td></block></td><td></td><td>Total = <in>total</in></td><td></td></tr>
 </table>
 <line></line>
 <line>Standardized Mortality Ratio (SMR) = <in>ratio</in></line>
@@ -13,6 +13,4 @@
 <line></line>
 <line><pval>Probability of observing <in>qty</in> or more deaths by chance <in>p_hi</in></pval></line>
 <line><pval>Probability of observing <in>qty</in> or fewer deaths by chance <in>p_lo</in></pval></line>
-<line></line>
-<line></line>
 </report>
