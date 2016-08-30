@@ -12,7 +12,10 @@ namespace StatsDirect.TemplateProcessing
 
         public override string Render(ITemplateHost host, ParameterBag substitutions)
         {
-            string templateWithInclusions = ResolveTemplates(Template, new List<string>());
+            // Before doing anything else, replace any {...} in the creole with \{...\}.  Do it now because we're about to put a whole load of {...} into the substituted RTF and won't be able to tell the difference later.
+            string protectedTemplate = Template.Replace(@"{", @"\{").Replace(@"}", @"\}");
+
+            string templateWithInclusions = ResolveTemplates(protectedTemplate, new List<string>());
             string templateWithPossibleDeadBlocks = SubstituteInternal(host, templateWithInclusions, substitutions);
             string substitutedTemplate = RemoveBlocks(templateWithPossibleDeadBlocks);
             return Prettify(substitutedTemplate);
@@ -77,9 +80,6 @@ namespace StatsDirect.TemplateProcessing
             };
 
             string afterSubstitutions = substitutedTemplate.Trim();
-
-            // Before doing anything else, replace any {...} in the creole with \{...\}.  Do it now because we're about to put a whole load of {...} into the substituted RTF and won't be able to tell the difference later.
-            afterSubstitutions = afterSubstitutions.Replace(@"{", @"\{").Replace(@"}", @"\}");
 
             foreach (KeyValuePair<string, string> pair in substitutions)
                 afterSubstitutions = afterSubstitutions.Replace(pair.Key, pair.Value);
