@@ -1,7 +1,4 @@
 <report>
 <line></line>
-<block name="chart">
-<line><in>chart</in></line>
-<line></line>
-</block>
+<line><block name="chart"><in>chart</in></block></line>
 </report>
