@@ -32,7 +32,7 @@
       </iftrue>
     </test>
 	  <builtin function-name="rptTPaired" />
-	  <report type="text/rtf" filename="m_paired.rtf" />
-    <report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="m_paired.creole" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
   </steps>
 </operation>

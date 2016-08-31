@@ -26,6 +26,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="rptPolynomialRegressionPlot" />
-		<report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

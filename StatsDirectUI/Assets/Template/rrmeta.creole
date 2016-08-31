@@ -2,37 +2,41 @@
 <line><title>Relative risk meta-analysis</title></line>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Table (exposed +ve, control +ve, exposed -ve, control -ve)</u><block name="inputs"></td></tr>
-<tr><td><in>st</in></td><td><in>a</in></td><td><in>b</in></td><td><in>c</in></td><td><in>d</in></td><td><subtotal><in>lb</in></subtotal></block></td></tr>
+<tr><th>Stratum</th><thfirst>Table (exposed +ve, control +ve, exposed -ve, control -ve)</thfirst><thspan/><thspan/><thspan/><th></th></tr>
+<block name="inputs">
+<tr><td><in>st</in></td><td><in>a</in></td><td><in>b</in></td><td><in>c</in></td><td><in>d</in></td><td><subtotal><in>lb</in></subtotal></td></tr>
+</block>
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Relative risk</th><th><ci><in>pc</in>% CI (<in>method</in>)</ci></u><block name="risks"></td></tr>
-<tr><td><in>st</in></td><td><in>rr</in></td><td><ci><in>lci</in></td><td><in>uci</in></td><td></ci><warnabit><in>lb</in></warnabit></block></td></tr>
+<tr><th>Stratum</th><th>Relative risk</th><thfirst><ci><in>pc</in>% CI (<in>method</in>)</ci></thfirst><thspan/><th></th></tr>
+<block name="risks">
+<tr><td><in>st</in></td><td><in>rr</in></td><td><ci><in>lci</in></ci></td><td><ci><in>uci</in></ci></td><td><warnabit><in>lb</in></warnabit></td></tr>
+</block>
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th>% Weights (fixed, random)</u><block name="risks"></td></tr>
-<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><warnabit><in>lb</in></warnabit></block></td></tr>
+<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
+<block name="risks">
+<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><warnabit><in>lb</in></warnabit></td></tr>
+</block>
 </table>
 <line></line>
 <line><u>Fixed effects (Mantel-Haenszel, Rothman-Boice)</u></line>
 <line>Pooled relative risk = <in>rr</in> (<ci><in>pc</in>% CI = <in>from</in> to <in>to</in></ci>)</line>
-<line>Chi&#xb2; (test relative risk differs from 1) = <in>x2</in>  (df = <in>df</in>)  <pval><in>xp</in></pval></line>
+<line>Chi<sub>2</sub> (test relative risk differs from 1) = <in>x2</in>  (df = <in>df</in>)  <pval><in>xp</in></pval></line>
 <line></line>
 <line><u>Non-combinability of studies</u></line>
 <line>Cochran Q = <in>qc</in>  (df = <in>df_cochran</in>)  <pval><in>xp_cochran</in></pval></line>
 <line>Moment-based estimate of between studies variance = <in>tausq</in></line>
-<line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
+<line>I<sub>2</sub> (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
 <line></line>
 <line><u>Random effects (DerSimonian-Laird)</u></line>
 <line>Pooled relative risk = <in>dsrr</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
-<line>Chi&#xb2; (test relative risk differs from 1) = <in>dsx2</in>  (df = <in>df_ds</in>)  <pval><in>xp_ds</in></pval></line>
+<line>Chi<sub>2</sub> (test relative risk differs from 1) = <in>dsx2</in>  (df = <in>df_ds</in>)  <pval><in>xp_ds</in></pval></line>
 <line></line>
 <line><u>Bias indicators</u><block name="egger"></line>
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
 <line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block><block name="harbord"></pval></line>
 <line>Harbord-Egger: bias = <in>a</in> (<ci><in>pc_harbord</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
-<line></line>
-<line></line>
 </report>

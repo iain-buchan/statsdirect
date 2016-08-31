@@ -55,7 +55,7 @@
         </frame>
       </parameters>
 		<builtin function-name="rptMetaIncidenceRateRatio" />
-		<report type="text/rtf" filename="irrmeta.rtf" />
-		<report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="irrmeta.creole" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

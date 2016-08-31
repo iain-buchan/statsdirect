@@ -5,6 +5,6 @@
   <help chm-id="1277" />
   <steps>
 		<builtin function-name="plotMultipleLinearRegressionResiduals" />
-		<report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

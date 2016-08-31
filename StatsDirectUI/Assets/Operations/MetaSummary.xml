@@ -129,9 +129,7 @@
 				</frame>
 			</parameters>
 		<builtin function-name="rptMetaSummary" />
-		<report type="text/rtf" filename="genmeta.rtf" />
     <report type="application/x-statsdirect-creole" filename="genmeta.creole" />
-		<report type="text/rtf" filename="charts.rtf" />
     <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

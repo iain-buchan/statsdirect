@@ -2,23 +2,31 @@
 <line><title>Peto odds ratio meta-analysis</title></line>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Table (exposed +ve, control +ve, exposed -ve, control -ve)</u><block name="inputs"></td></tr>
-<tr><td><in>st</in></td><td><in>a</in></td><td><in>b</in></td><td><in>c</in></td><td><in>d</in></td><td><subtotal><in>lb</in></subtotal></block></td></tr>
+<tr><th>Stratum</th><thfirst>Table (exposed +ve, control +ve, exposed -ve, control -ve)</thfirst><thspan/><thspan/><thspan/><th></th></tr>
+<block name="inputs">
+<tr><td><in>st</in></td><td><in>a</in></td><td><in>b</in></td><td><in>c</in></td><td><in>d</in></td><td><subtotal><in>lb</in></subtotal></td></tr>
+</block>
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>O-E</th><th>Odds ratio</th><th><ci><in>pc</in>% CI</ci></th></u><td><block name="odds"></td></tr>
-<tr><td><in>st</in></td><td><in>oe</in></td><td><in>or</in></td><td><ci><in>lci</in></td><td><in>uci</in></td><td></ci><subtotal><in>lb</in></subtotal></block></td></tr>
+<tr><th>Stratum</th><th>O-E</th><th>Odds ratio</th><thfirst><ci><in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
+<block name="odds">
+<tr><td><in>st</in></td><td><in>oe</in></td><td><in>or</in></td><td><ci><in>lci</in></td><td><in>uci</in></td><td></ci><subtotal><in>lb</in></subtotal></td></tr>
+</block>
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th>% Weights</u><block name="odds"></td></tr>
-<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in> </td><td><subtotal><in>lb</in></subtotal></block></td></tr>
+<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th>% Weights</th><th></th></tr>
+<block name="odds">
+<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in> </td><td><subtotal><in>lb</in></subtotal></td></tr>
+</block>
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>V</th><th>z</th><th><pval>P(two sided)</pval></u><block name="z"></td></tr>
-<tr><td><in>st</in></td><td><in>v</in></td><td><in>z</in></td><td><pval><in>p</in></pval><ci></td><td></ci><subtotal><in>lb</in></subtotal></block></td></tr>
+<tr><th>Stratum</th><th>V</th><th>z</th><th><pval>P(two sided)</pval></th><th></th></tr>
+<block name="z">
+<tr><td><in>st</in></td><td><in>v</in></td><td><in>z</in></td><td><pval><in>p</in></pval></td><td><subtotal><in>lb</in></subtotal></td></tr>
+</block>
 </table>
 <line></line>
 <line>Pooled odds ratio = <in>por</in> (<ci><in>pc</in>% CI = <in>from</in> to <in>to</in></ci>)</line>
@@ -26,12 +34,10 @@
 <line></line>
 <line><u>Non-combinability of studies</u></line>
 <line>Cochran Q = <in>qc</in>  (df = <in>df</in>)  <pval><in>xp</in></pval></line>
-<line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
+<line>I<sub>2</sub> (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
 <line></line>
 <line><u>Bias indicators</u><block name="egger"></line>
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
 <line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block><block name="harbord"></pval></line>
 <line>Harbord-Egger: bias = <in>a</in> (<ci><in>pc_harbord</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
-<line></line>
-<line></line>
 </report>

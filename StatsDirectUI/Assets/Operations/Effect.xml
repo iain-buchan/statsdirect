@@ -117,12 +117,12 @@
 		<test>
 			<condition>="m".Equals(parameters["type"].AsString)</condition>
 			<iftrue>
-				<report type="text/rtf" filename="effectwm.rtf" />
+        <report type="application/x-statsdirect-creole" filename="effectwm.creole" />
 			</iftrue>
 			<iffalse>
-				<report type="text/rtf" filename="effect.rtf" />
+        <report type="application/x-statsdirect-creole" filename="effect.creole" />
 			</iffalse>
 		</test>
-		<report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

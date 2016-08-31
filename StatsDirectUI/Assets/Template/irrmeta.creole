@@ -2,18 +2,24 @@
 <line><title>Incidence rate ratio (IRR) meta-analysis</title></line>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Table (a, person-time exposed, b, person-time not exposed)</u><block name="inputs"></td></tr>
-<tr><td><in>st</in></td><td><in>a</in></td><td><in>pt1</in></td><td><in>b</in></td><td><in>pt2</in></td><td><in>lb</in></block></td></tr>
+<tr><th>Stratum</th><thfirst>Table (a, person-time exposed, b, person-time not exposed)</thfirst><thspan/><thspan/><thspan/><th></th></tr>
+<block name="inputs">
+<tr><td><in>st</in></td><td><in>a</in></td><td><in>pt1</in></td><td><in>b</in></td><td><in>pt2</in></td><td><in>lb</in></td></tr>
+</block>
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>IRR</th><th><ci><in>pc</in>% CI (exact)</ci></u><block name="ir"></td></tr>
-<tr><td><in>st</in></td><td><in>irr</in></td><td><ci><in>lci</in></td><td><in>uci</in></ci></td><td><pval><in>lb</in></pval></block></td></tr>
+<tr><th>Stratum</th><th>IRR</th><thfirst><ci><in>pc</in>% CI (exact)</ci></thfirst><thspan/><th></th></tr>
+<block name="ir">
+<tr><td><in>st</in></td><td><in>irr</in></td><td><ci><in>lci</in></td><td><in>uci</in></ci></td><td><pval><in>lb</in></pval></td></tr>
+</block>
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th>% Weights (fixed, random)</u><block name="ir"></td></tr>
-<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><pval><in>lb</in></pval></block></td></tr>
+<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
+<block name="ir">
+<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><pval><in>lb</in></pval></td></tr>
+</block>
 </table>
 <line></line>
 <line><u>Fixed effects (inverse variance)</u></line>
@@ -30,7 +36,7 @@
 <line><u>Non-combinability of studies</u></line>
 <line>Cohran Q = <in>qc</in>  (df = <in>df</in>) <warnabit> </warnabit><pval><in>xp</in></pval></line>
 <line>Moment-based estimate of between studies variance = <in>tausq</in></line>
-<line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
+<line>I<sub>2</sub> (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
 <line></line>
 <line><u>Random effects (DerSimonian-Laird)</u></line>
 <line>Pooled IRR = <in>dsirr</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
@@ -39,6 +45,4 @@
 <line><u>Bias indicators</u><block name="egger"></line>
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
 <line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
-<line></line>
-<line></line>
 </report>

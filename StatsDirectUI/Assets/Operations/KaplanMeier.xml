@@ -56,10 +56,8 @@
 				<output-frame frame-name="results" />
 			</iftrue>
 		</test>
-		<report type="text/rtf" filename="kap_meir.rtf" />
     <report type="application/x-statsdirect-creole" filename="kap_meir.creole" />
 		<builtin function-name="rptKaplanMeierPlots" />
-		<report type="text/rtf" filename="charts.rtf" />
     <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

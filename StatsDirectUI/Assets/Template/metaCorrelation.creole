@@ -2,13 +2,17 @@
 <line><title>Correlation meta-analysis</title></line>
 <line></line>
 <table>
-<tr><td><u>Study</th><th>Size</th><th><in>stat</in><ci></th><th>Approximate <in>pc</in>% CI</u><block name="studies"></td></ci></tr>
-<tr><td><in>st</in></td><td><in>n</in></td><td><in>y</in></td><td><ci><in>from</in></td><td><in>to</in></td><td></ci><subtotal><in>lb</in></subtotal></block></td></tr>
+<tr><th>Study</th><th>Size</th><th><in>stat</in></th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
+<block name="studies">
+<tr><td><in>st</in></td><td><in>n</in></td><td><in>y</in></td><td><ci><in>from</in></ci></td><td><ci><in>to</in></ci></td><td><subtotal><in>lb</in></subtotal></td></tr>
+</block>
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th>% Weights (fixed, random, size)</u><block name="studies"></td></tr>
-<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><in>nwt</in></td><td><subtotal><in>lb</in></subtotal></block></td></tr>
+<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random, size)</thfirst><thspan/><thspan/><th></th></tr>
+<block name="studies">
+<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><in>nwt</in></td><td><subtotal><in>lb</in></subtotal></td></tr>
+</block>
 </table>
 <line></line>
 <line><u>Hedges-Olkin fixed effects</u></line>
@@ -43,6 +47,4 @@
 <tr><td>2.</td><td>Percent of observed variance accounted for by sampling error (should be at least 75%): <in>percvar</in></td></tr>
 <tr><td>3.</td><td>Chi-square test of heterogeneity: <in>het_x2</in> <pval><in>het_p</in></pval></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>

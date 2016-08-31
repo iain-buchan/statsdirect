@@ -55,7 +55,7 @@
         </frame>
       </parameters>
 		<builtin function-name="rptPetoMeta" />
-		<report type="text/rtf" filename="peto.rtf" />
-		<report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="peto.creole" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

@@ -64,7 +64,7 @@
         </option>
       </parameters>
 		<builtin function-name="rptProportionMeta" />
-		<report type="text/rtf" filename="propmeta.rtf" />
-		<report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="propmeta.creole" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

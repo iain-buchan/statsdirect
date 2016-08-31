@@ -37,7 +37,7 @@
         </frame>
       </parameters>
 		<builtin function-name="rptMetaCorrelation" />
-		<report type="text/rtf" filename="metaCorrelation.rtf" />
-		<report type="text/rtf" filename="charts.rtf" />
+    <report type="application/x-statsdirect-creole" filename="metaCorrelation.creole" />
+    <report type="application/x-statsdirect-creole" filename="charts.creole" />
 	</steps>
 </operation>

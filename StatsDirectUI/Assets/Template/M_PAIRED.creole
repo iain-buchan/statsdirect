@@ -20,6 +20,5 @@
 <line><title>Two sample analysis of agreement</title></line>
 <line></line>
 <line><in>pc</in>% Limits of agreement = <in>from2</in> to <in>to2</in></line>
-<line></block></line>
-<line></line>
+</block>
 </report>
