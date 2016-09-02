@@ -536,7 +536,7 @@ namespace StatsDirect.Builtins
             DoubleVariable xvarVariable = xvarFrame.Variables[0] as DoubleVariable;
             DataFrame sexFrame = parameters["sex"].AsDataFrame;
             StringVariable sexVariable = sexFrame.Variables[0] as StringVariable;
-            bool includeBmi = false; // "BMI".Equals(dataIs);
+            bool includeBmi = "BMI".Equals(dataIs);
 
             bool hasGestationalAge = parameters.ContainsKey("gestational-age");
             DoubleVariable gestationalAgeVariable = null;
@@ -715,23 +715,26 @@ namespace StatsDirect.Builtins
                         maleTableNames.Add(pair.Key);
                 }
             }
+
             // Tables are named by ascending order of the standard, but zanthro always uses data from the older row where two rows would match.  Duplicate this by putting "older" tables (higher names) higher up our preference list.
             maleTableNames = maleTableNames.OrderByDescending(name => name).ToList();
             femaleTableNames = femaleTableNames.OrderByDescending(name => name).ToList();
 
             List<LmsTable> maleTables = new List<LmsTable>(maleTableNames.Count);
             List<LmsTable> femaleTables = new List<LmsTable>(femaleTableNames.Count);
-
             foreach (string name in maleTableNames)
                 maleTables.Add(ToLmsTable(parameters[name].AsDataFrame));
             foreach (string name in femaleTableNames)
                 femaleTables.Add(ToLmsTable(parameters[name].AsDataFrame));
 
+            BmiCategoryTable maleBmiCategories = includeBmi ? ToBmiCategoryTable(parameters["bmicat-male"].AsDataFrame) : null;
+            BmiCategoryTable femaleBmiCategories = includeBmi ? ToBmiCategoryTable(parameters["bmicat-female"].AsDataFrame) : null;
+
             // Output arrays
             double[] uncorrectedZ = new double[measure.Length];
             double[] correctedZ = new double[measure.Length];
             double[] centile = includeCentiles ? new double[measure.Length] : null;
-            double[] bmiCategory = includeBmi ? new double[measure.Length] : null;
+            string[] bmiCategory = includeBmi ? new string[measure.Length] : null;
 
             // Run the calculation for each row
             for (int i = 0; i < measure.Length; i++)
@@ -744,7 +747,7 @@ namespace StatsDirect.Builtins
                     if (includeCentiles)
                         centile[i] = Constant.MISSING;
                     if (includeBmi)
-                        bmiCategory[i] = Constant.MISSING;
+                        bmiCategory[i] = Formatting.MISSINGLABEL;
                     continue;
                 }
 
@@ -755,20 +758,48 @@ namespace StatsDirect.Builtins
                     centile[i] = (Constant.MISSING == correctedZ[i]) ? Constant.MISSING : PDF.alnorm(correctedZ[i]) * 100.0;
                 if (includeBmi)
                 {
-                    // TODO:
+                    bmiCategory[i] = ZanthroCalculateBmiCategory(isMale[i] ? maleBmiCategories : femaleBmiCategories, measure[i], t[i]);
                 }
             }
 
             ParameterBag outputParameters = new ParameterBag();
             DataFrame outputFrame = new DataFrame();
-            outputFrame.Variables.Add(new DoubleVariable(uncorrectedZ, "raw z (debug)"));
             outputFrame.Variables.Add(new DoubleVariable(correctedZ, "z " + dataIs));
             if (includeCentiles)
                 outputFrame.Variables.Add(new DoubleVariable(centile, "Percentile"));
             if (includeBmi)
-                outputFrame.Variables.Add(new DoubleVariable(bmiCategory, "BMI category"));
+                outputFrame.Variables.Add(new StringVariable(bmiCategory, "BMI category"));
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
+        }
+
+        private static string ZanthroCalculateBmiCategory(BmiCategoryTable table, double bmi, double age)
+        {
+            // Use a row if the value being considered is at least the row's age and less than the next row's age.
+            // The -1 is deliberate here; the last row of the table isn't usable, it merely provides an upper age.
+            for (int i = 0; i < table.Rows.Length - 1; i++)
+            {
+                BmiCategoryTableRow candidate = table.Rows[i];
+                if (candidate.Age <= age && table.Rows[i + 1].Age >= age)
+                    return ZanthroCalculateBmiCategory(table.Rows[i], bmi, age);
+            }
+            // If we get here, no row matched
+            return Formatting.MISSINGLABEL;
+        }
+
+        private static string ZanthroCalculateBmiCategory(BmiCategoryTableRow tableRow, double bmi, double age)
+        {
+            if (bmi < Interpolate(age, tableRow.Q16))
+                return "Grade 3 thinness";
+            if (bmi < Interpolate(age, tableRow.Q17))
+                return "Grade 2 thinness";
+            if (bmi < Interpolate(age, tableRow.Q18_5))
+                return "Grade 1 thinness";
+            if (bmi < Interpolate(age, tableRow.Q25))
+                return "Normal wt";
+            if (bmi < Interpolate(age, tableRow.Q30))
+                return "Overweight";
+            return "Obese";
         }
 
         private static LmsTable ToLmsTable(DataFrame frame)
@@ -819,6 +850,69 @@ namespace StatsDirect.Builtins
                 r.Sigmas.Value = variable14[row];
                 r.Sigmas.Nx = variable15[row];
                 r.Sigmas.Nx2 = variable16[row];
+
+                table.Rows[row] = r;
+            }
+            return table;
+        }
+
+        private static BmiCategoryTable ToBmiCategoryTable(DataFrame frame)
+        {
+            // Assumption: Columns are age, 4 x 16, 4 x 17, 4 x 18.5, 4 x 25, 4 x 30.
+            // Assumption: The quads all have _pre, unnamed, _nx, _nx2 in that order.
+            BmiCategoryTable table = new BmiCategoryTable();
+            table.Rows = new BmiCategoryTableRow[frame.MinRows];
+            double[] variable0 = (frame.Variables[0] as DoubleVariable).Data;
+            double[] variable1 = (frame.Variables[1] as DoubleVariable).Data;
+            double[] variable2 = (frame.Variables[2] as DoubleVariable).Data;
+            double[] variable3 = (frame.Variables[3] as DoubleVariable).Data;
+            double[] variable4 = (frame.Variables[4] as DoubleVariable).Data;
+            double[] variable5 = (frame.Variables[5] as DoubleVariable).Data;
+            double[] variable6 = (frame.Variables[6] as DoubleVariable).Data;
+            double[] variable7 = (frame.Variables[7] as DoubleVariable).Data;
+            double[] variable8 = (frame.Variables[8] as DoubleVariable).Data;
+            double[] variable9 = (frame.Variables[9] as DoubleVariable).Data;
+            double[] variable10 = (frame.Variables[10] as DoubleVariable).Data;
+            double[] variable11 = (frame.Variables[11] as DoubleVariable).Data;
+            double[] variable12 = (frame.Variables[12] as DoubleVariable).Data;
+            double[] variable13 = (frame.Variables[13] as DoubleVariable).Data;
+            double[] variable14 = (frame.Variables[14] as DoubleVariable).Data;
+            double[] variable15 = (frame.Variables[15] as DoubleVariable).Data;
+            double[] variable16 = (frame.Variables[16] as DoubleVariable).Data;
+            double[] variable17 = (frame.Variables[17] as DoubleVariable).Data;
+            double[] variable18 = (frame.Variables[18] as DoubleVariable).Data;
+            double[] variable19 = (frame.Variables[19] as DoubleVariable).Data;
+            double[] variable20 = (frame.Variables[20] as DoubleVariable).Data;
+            for (int row = 0; row < frame.MinRows; row++)
+            {
+                BmiCategoryTableRow r = new BmiCategoryTableRow();
+
+                r.Age = variable0[row];
+
+                r.Q16.Pre = variable1[row];
+                r.Q16.Value = variable2[row];
+                r.Q16.Nx = variable3[row];
+                r.Q16.Nx2 = variable4[row];
+
+                r.Q17.Pre = variable5[row];
+                r.Q17.Value = variable6[row];
+                r.Q17.Nx = variable7[row];
+                r.Q17.Nx2 = variable8[row];
+
+                r.Q18_5.Pre = variable9[row];
+                r.Q18_5.Value = variable10[row];
+                r.Q18_5.Nx = variable11[row];
+                r.Q18_5.Nx2 = variable12[row];
+
+                r.Q25.Pre = variable13[row];
+                r.Q25.Value = variable14[row];
+                r.Q25.Nx = variable15[row];
+                r.Q25.Nx2 = variable16[row];
+
+                r.Q30.Pre = variable17[row];
+                r.Q30.Value = variable18[row];
+                r.Q30.Nx = variable19[row];
+                r.Q30.Nx2 = variable20[row];
 
                 table.Rows[row] = r;
             }
@@ -885,13 +979,28 @@ namespace StatsDirect.Builtins
         public class LmsTableRow
         {
             public double Xmrg;
-            public LmsQuad Xvars;
-            public LmsQuad Lambdas;
-            public LmsQuad Mus;
-            public LmsQuad Sigmas;
+            public InterpolationQuad Xvars;
+            public InterpolationQuad Lambdas;
+            public InterpolationQuad Mus;
+            public InterpolationQuad Sigmas;
         }
 
-        public struct LmsQuad
+        public class BmiCategoryTable
+        {
+            public BmiCategoryTableRow[] Rows { get; set; }
+        }
+
+        public class BmiCategoryTableRow
+        {
+            public double Age;
+            public InterpolationQuad Q16;
+            public InterpolationQuad Q17;
+            public InterpolationQuad Q18_5;
+            public InterpolationQuad Q25;
+            public InterpolationQuad Q30;
+        }
+
+        public struct InterpolationQuad
         {
             public double Pre;
             public double Value;
@@ -935,7 +1044,46 @@ namespace StatsDirect.Builtins
             return z;
         }
 
-        private static double Interpolate(double t, LmsQuad xvar, LmsQuad lms)
+        private static double Interpolate(double age, InterpolationQuad quad)
+        {
+            // If we have all values, cubic interpolation is appropriate.
+            if (quad.Pre != Constant.MISSING && quad.Value != Constant.MISSING && quad.Nx != Constant.MISSING && quad.Nx2 != Constant.MISSING)
+                return CubicInterpolate(age, quad);
+            // If we have current and next, linear interpolation is appropriate.
+            if (quad.Value != Constant.MISSING && quad.Nx != Constant.MISSING)
+                return LinearInterpolate(age, quad);
+            // If we're missing even these, there's not a lot we can do.
+            throw new NotImplementedException("The table you're aiming to use has an error for value " + age + ": there's not enough data for a cubic or linear interpolation.");
+        }
+
+        private static double LinearInterpolate(double age, InterpolationQuad quad)
+        {
+            const double ROW_AGE_SPAN = 0.5; // years
+            double ageInWholeYears = Math.Floor(age);
+            double halfYearAge = ageInWholeYears + ((age - ageInWholeYears >= 0.5) ? 0.5 : 0);
+
+            double agefrac = (age - halfYearAge) / ROW_AGE_SPAN;
+            return quad.Value + agefrac * (quad.Nx - quad.Value);
+        }
+
+        private static double CubicInterpolate(double age, InterpolationQuad quad)
+        {
+            const double ROW_AGE_SPAN = 0.5; // years
+
+            double ageInWholeYears = Math.Floor(age);
+            double halfYearAge = ageInWholeYears + ((age - ageInWholeYears >= 0.5) ? 0.5 : 0);
+
+            double agefrac = (age - halfYearAge) / ROW_AGE_SPAN;
+            double agefrac2 = agefrac * agefrac;
+
+            double a0 = (0.0 - quad.Pre) / 6.0 + quad.Value / 2.0 - quad.Nx / 2.0 + quad.Nx2 / 6.0;
+            double a1 = quad.Pre / 2.0 - quad.Value + quad.Nx / 2.0;
+            double a2 = (0.0 - quad.Pre) / 3.0 - quad.Value / 2.0 + quad.Nx - quad.Nx2 / 6.0;
+            double a3 = quad.Value;
+            return a0 * agefrac * agefrac2 + a1 * agefrac2 + a2 * agefrac + a3;
+        }
+
+        private static double Interpolate(double t, InterpolationQuad xvar, InterpolationQuad lms)
         {
             // If we have all values, cubic interpolation is appropriate.
             if (xvar.Pre != Constant.MISSING && xvar.Value != Constant.MISSING && xvar.Nx != Constant.MISSING && xvar.Nx2 != Constant.MISSING
@@ -949,7 +1097,7 @@ namespace StatsDirect.Builtins
             throw new NotImplementedException("The table you're aiming to use has an error for value " + t + ": there's not enough data for a cubic or linear interpolation.");
         }
 
-        private static double CubicInterpolate(double t, LmsQuad xvar, LmsQuad lms)
+        private static double CubicInterpolate(double t, InterpolationQuad xvar, InterpolationQuad lms)
         {
             return (lms.Pre * (t - xvar.Value) * (t - xvar.Nx) * (t - xvar.Nx2)) / ((xvar.Pre - xvar.Value) * (xvar.Pre - xvar.Nx) * (xvar.Pre - xvar.Nx2))
                 + (lms.Value * (t - xvar.Pre) * (t - xvar.Nx) * (t - xvar.Nx2)) / ((xvar.Value - xvar.Pre) * (xvar.Value - xvar.Nx) * (xvar.Value - xvar.Nx2))
@@ -957,7 +1105,7 @@ namespace StatsDirect.Builtins
                 + (lms.Nx2 * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx)) / ((xvar.Nx2 - xvar.Pre) * (xvar.Nx2 - xvar.Value) * (xvar.Nx2 - xvar.Nx));
         }
 
-        private static double LinearInterpolate(double t, LmsQuad xvar, LmsQuad lms)
+        private static double LinearInterpolate(double t, InterpolationQuad xvar, InterpolationQuad lms)
         {
             double xvarfrac = (t - xvar.Value) / (xvar.Nx - xvar.Value);
             return lms.Value + xvarfrac * (lms.Nx - lms.Value);
@@ -1222,7 +1370,7 @@ namespace StatsDirect.Builtins
                 lastgpti = gpti;
             }
             // <---
-            if (!(ok))
+            if (!ok)
             {
                 datti = "Data";
                 gpti = "Group ID";
