@@ -9,6 +9,7 @@ using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using StatsDirect.Expressions;
 using System.Globalization;
+using System.Linq;
 
 namespace StatsDirect.Builtins
 {
@@ -701,20 +702,30 @@ namespace StatsDirect.Builtins
             }
 
             // Work out which tables to use
-            List<LmsTable> maleTables = new List<LmsTable>();
-            List<LmsTable> femaleTables = new List<LmsTable>();
-
+            List<string> maleTableNames = new List<string>();
+            List<string> femaleTableNames = new List<string>();
             string parameterName = dataIs + "-" + standardiseIs + "-" + standard;
             foreach (KeyValuePair<string, FilledParameter> pair in parameters)
             {
                 if (pair.Key.StartsWith(parameterName))
                 {
                     if (pair.Key.Contains("-female"))
-                        femaleTables.Add(ToLmsTable(pair.Value.AsDataFrame));
+                        femaleTableNames.Add(pair.Key);
                     else
-                        maleTables.Add(ToLmsTable(pair.Value.AsDataFrame));
+                        maleTableNames.Add(pair.Key);
                 }
             }
+            // Tables are named by ascending order of the standard, but zanthro always uses data from the older row where two rows would match.  Duplicate this by putting "older" tables (higher names) higher up our preference list.
+            maleTableNames = maleTableNames.OrderByDescending(name => name).ToList();
+            femaleTableNames = femaleTableNames.OrderByDescending(name => name).ToList();
+
+            List<LmsTable> maleTables = new List<LmsTable>(maleTableNames.Count);
+            List<LmsTable> femaleTables = new List<LmsTable>(femaleTableNames.Count);
+
+            foreach (string name in maleTableNames)
+                maleTables.Add(ToLmsTable(parameters[name].AsDataFrame));
+            foreach (string name in femaleTableNames)
+                femaleTables.Add(ToLmsTable(parameters[name].AsDataFrame));
 
             // Output arrays
             double[] uncorrectedZ = new double[measure.Length];
