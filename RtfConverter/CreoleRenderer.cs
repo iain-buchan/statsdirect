@@ -74,9 +74,6 @@ namespace RtfConverter
                 else
                 {
                     throw new Exception("Unknown RTF");
-                    // sb.Append("<rtf raw=\"");
-                    // sb.Append(victim.ToString());
-                    // sb.Append("\"/>");
                 }
             }
             suppressNextText = victim.SuppressFollowingText;

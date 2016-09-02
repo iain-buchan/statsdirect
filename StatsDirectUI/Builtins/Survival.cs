@@ -242,11 +242,9 @@ namespace StatsDirect.Builtins
                 }
                 gnx[lap] = j2;
                 if (j2 > nmax)
-                {
                     nmax = j2;
-                }
             }
-            //  RTF_LoadTemplate("kap_meir.rtf") Then
+
             double[,] stime = new double[nmax + 1, groups + 1];
             int[,] dead = new int[nmax + 1, groups + 1];
             double[,] h = new double[nmax + 1, groups + 1];
@@ -943,7 +941,7 @@ namespace StatsDirect.Builtins
                 host.Error("Must have at least one repeat", "Wei-Lachin");
                 throw new TemplateOperationCancelledException();
             }
-            //  RTF_LoadTemplate("wei.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> outerList = new List<ParameterBag>();
             outputParameters.AddOutput("*outer", outerList);
@@ -2295,7 +2293,7 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
 
             int wtMethod = Parsing.Cint_Txt(parameters["wt_method"].AsString);
-            //  RTF_LoadTemplate("logrank.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> outerList = new List<ParameterBag>();
             outputParameters.AddOutput("*outer", outerList);

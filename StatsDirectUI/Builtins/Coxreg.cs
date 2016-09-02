@@ -2587,7 +2587,6 @@ namespace StatsDirect.Builtins
             if (!(plot))
             {
                 // write to report in time-sorted order
-                //  RTF_LoadTemplate("cox_s.rtf")
                 watch_time = Constant.MISSING;
                 IList<ParameterBag> timeList = new List<ParameterBag>();
                 outputParameters.AddOutput("*time", timeList);
@@ -3009,7 +3008,6 @@ namespace StatsDirect.Builtins
             double[, ,] ARR3 = ((double[, ,])(parameters["ARR3"].Data));
             ColumnData[] CDAT1 = ((ColumnData[])(parameters["CDAT1"].Data));
 
-            //  RTF_LoadTemplate("cox_det.rtf") Then
             double GAMMA = parameters["gamma"].AsDouble;
             double cit;
             double P0;
@@ -3046,7 +3044,6 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptCoxModelAnalysis(ITemplateHost host, ParameterBag parameters)
         {
             double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
-            //  RTF_LoadTemplate("cox_dev.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("ll0", host.RoundU(ARR2[3, 0]));
             outputParameters.AddOutput("ll", host.RoundU(ARR2[2, 0]));

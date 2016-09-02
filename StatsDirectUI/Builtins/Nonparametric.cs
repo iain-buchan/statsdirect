@@ -1079,14 +1079,6 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("*ties", null);
             }
-
-            //  There appears to have been the tail end of another block for small sample sizes.
-            // If N < 10 Then
-            // RTF_UseBlock()
-            // Else
-            // RTF_DeleteBlock()
-            // End If
-
             return outputParameters;
         }
 
@@ -1593,9 +1585,6 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("to-simpson-bootstrap", host.RoundU(nbcu));
                 varParameters.AddOutput("from-simpson-bootstrap-t", host.RoundU(blt));
                 varParameters.AddOutput("to-simpson-bootstrap-t", host.RoundU(but));
-                // RTF_InsertField "pc", xround(gamma * 100, 2)
-                // RTF_InsertField "from", roundu(bcal)
-                // RTF_InsertField "to", roundu(bcau)
 
                 varParameters.AddOutput("shannon", host.RoundU(shannon));
                 varParameters.AddOutput("se-shannon-largeSample", host.RoundU(Base.SafeSqrt(shanvar)));
@@ -1608,10 +1597,6 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("to-shannon-bootstrap", host.RoundU(nbcux));
                 varParameters.AddOutput("from-shannon-bootstrap-t", host.RoundU(bltx));
                 varParameters.AddOutput("to-shannon-bootstrap-t", host.RoundU(butx));
-                // RTF_InsertField "pc", xround(gamma * 100, 2)
-                // RTF_InsertField "from", roundu(bcalx)
-                // RTF_InsertField "to", roundu(bcaux)
-
             }
 
             return outputParameters;

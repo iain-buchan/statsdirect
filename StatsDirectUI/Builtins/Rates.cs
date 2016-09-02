@@ -124,7 +124,6 @@ namespace StatsDirect.Builtins
 
             double dead = parameters["dead"].AsDouble;
 
-            //  RTF_LoadTemplate("stdmort.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> groupsList = new List<ParameterBag>();
             outputParameters.AddOutput("*groups", groupsList);
@@ -245,16 +244,12 @@ namespace StatsDirect.Builtins
             else
             {
                 for (i = 1; i <= rows; i++)
-                {
                     title[i] = "stratum " + i.ToString();
-                }
             }
             double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
             if (refntot <= 0.0 || ntot <= 0.0)
-            {
                 throw new Templates.InvalidDataException();
-            }
-            //  RTF_LoadTemplate("dstdr.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             for (j = 1; j <= rows; j++)
             {
@@ -723,7 +718,6 @@ namespace StatsDirect.Builtins
                 srru_bino = Constant.MISSING;
             }
 
-            //  RTF_LoadTemplate("stdrr.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> strataList = new List<ParameterBag>();
             outputParameters.AddOutput("*strata", strataList);

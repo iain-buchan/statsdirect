@@ -547,8 +547,6 @@ namespace StatsDirect.Builtins
             int ifault = 0;
             double[,] u; double[] w; double cum = 0; double dsum = 0;
 
-
-            //  RTF_LoadTemplate("princ.rtf")
             N = frame.VariableCount;
             nx = frame.Variables[0].Length;
             x = new double[N + 1, nx + 1];
@@ -1363,7 +1361,6 @@ namespace StatsDirect.Builtins
             double P0; double cit;
             double cl; double pl;
 
-            //  RTF_LoadTemplate("interpmr.rtf")
             double[] newx = new double[context.P + 1 ];
             bool lsqmean = true;
             if (context.DoC)
@@ -1670,7 +1667,6 @@ namespace StatsDirect.Builtins
             bool shouldSaveStudentisedResidual = parameters["saveStudentised"].AsBoolean;
             bool shouldSaveJackknifeResidual = parameters["saveJackknife"].AsBoolean;
 
-            //  RTF_LoadTemplate("residm.rtf")
             // Check if we need to save the data
             double alpha = 1.0 - ci;
             double hicrit = Math.Min((3 * Convert.ToDouble(context.P)) / Convert.ToDouble(context.N), 0.99);
@@ -1827,7 +1823,6 @@ namespace StatsDirect.Builtins
             int forced = 0; int C; int kept = 0; int[] keep = null;
             double maxf = 0; double maxr2 = 0;
 
-            //  RTF_LoadTemplate("subset.rtf")
             double rmsorig = (context.SSY - context.SSREG) / Convert.ToDouble((context.N - 1) - (context.P - 1));
             double mincp = ((context.SSY - context.SSREG) / rmsorig) - Convert.ToDouble(context.N - 2 * (context.P + 1));
             int iq = 0;
@@ -2114,11 +2109,9 @@ namespace StatsDirect.Builtins
             double[,] r = context.R2;
             double totvar = 0; double alpha; double cl;
             double cco = parameters["ci"].AsDouble;
-            if (cco <= 0.0 | cco >= 1.0)
-            {
+            if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
-            }
-            //  RTF_LoadTemplate("cronbach.rtf")
+
             double[] qv = new double[k + 1 ];
             for (int i = 1; i <= N; i++)
             {
@@ -2291,7 +2284,6 @@ namespace StatsDirect.Builtins
             double[,] v = context.V;
             double[] av = null; double[] sd = null;
 
-            //  RTF_LoadTemplate("prscores.rtf")
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> pcList = new List<ParameterBag>();
             outputParameters.AddOutput("*pc", pcList);
@@ -2687,7 +2679,7 @@ namespace StatsDirect.Builtins
             DoubleVariable vY = fY.Variables[0]as DoubleVariable;
             DataFrame fX = parameters["x"].AsDataFrame;
             DoubleVariable vX = fX.Variables[0]as DoubleVariable;
-            //  RTF_LoadTemplate("poly_auc.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             double auc = 0;
             outputParameters.AddOutput("poly_auc",
@@ -3867,7 +3859,7 @@ namespace StatsDirect.Builtins
                 }
                 ll = x_loglik_p(Weight, N, wt, y, fvl);
             }
-            //  RTF_LoadTemplate("pr_det.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             if (DoC)
             {
@@ -5520,7 +5512,6 @@ namespace StatsDirect.Builtins
 
             double ww;
 
-            //  RTF_LoadTemplate("pr_fit.rtf") = True
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> predictorsList = new List<ParameterBag>();
             outputParameters.AddOutput("*predictors", predictorsList);
@@ -6707,7 +6698,7 @@ namespace StatsDirect.Builtins
             {
                 throw new TemplateOperationCancelledException();
             }
-            //  RTF_LoadTemplate("intprobx.rtf") Then
+
             ParameterBag outputParameters = new ParameterBag();
             if (xval == 0.0)
             {
@@ -6759,7 +6750,7 @@ namespace StatsDirect.Builtins
             {
                 throw new TemplateOperationCancelledException();
             }
-            // RTF_LoadTemplate("intproby.rtf") Then
+
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("resp", host.RoundU(yval));
             outputParameters.AddOutput("mort", C2 > 0 ? "Not considering natural mortality." : string.Empty);

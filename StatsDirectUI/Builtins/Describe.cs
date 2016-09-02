@@ -224,7 +224,7 @@ namespace StatsDirect.Builtins
                         break;
                 }
             }
-            //  RTF_LoadTemplate("prefer.rtf") Then
+
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("groups", groups.ToString());
             outputParameters.AddOutput("capacity", capacity.ToString());
@@ -275,7 +275,6 @@ namespace StatsDirect.Builtins
             bool shouldSortByValue = "value".Equals(parameters["sortBy"].AsString);
             bool shouldSortAscending = "asc".Equals(parameters["sortOrder"].AsString);
 
-            //  RTF_LoadTemplate("freq.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> variableList = new List<ParameterBag>();
             outputParameters.AddOutput("*variable", variableList);
@@ -553,7 +552,6 @@ namespace StatsDirect.Builtins
             }
 
             // Fill the report
-            //  RTF_LoadTemplate("describe.rtf") Then
             // Insert the result into the report
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> titlesList = new List<ParameterBag>();

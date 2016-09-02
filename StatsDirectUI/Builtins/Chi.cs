@@ -174,7 +174,6 @@ namespace StatsDirect.Builtins
             }
             else if (isCohort)
             {
-                //  RTF_LoadTemplate("relrisk.rtf")
                 relRiskList.Add(Analysis.RptMiscRelRisk(host, parameters));
             }
 
@@ -184,14 +183,12 @@ namespace StatsDirect.Builtins
             {
                 if (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20)
                 {
-                    //  RTF_LoadTemplate("fisher.rtf")
                     fisherList.Add(Exact.RptExactFisher(host, parameters));
                 }
                 else
                 {
                     if (doFisher)
                     {
-                        //  RTF_LoadTemplate("fisher.rtf")
                         fisherList.Add(Exact.RptExactFisher(host, parameters));
                     }
                 }
@@ -247,7 +244,6 @@ namespace StatsDirect.Builtins
             double[] h = new double[rows + 1 ];
             double[] s = new double[rows + 1 ];
 
-            //  RTF_LoadTemplate("chi2xc.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
             for (int r = 1; r <= rows; r++)
             {
@@ -466,7 +462,6 @@ namespace StatsDirect.Builtins
                 p2M = Constant.MISSING;
             }
 
-            //  RTF_LoadTemplate("mantel.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);

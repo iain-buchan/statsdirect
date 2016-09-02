@@ -182,7 +182,6 @@ namespace StatsDirect.Builtins
             //  sort the id numbers within blocks
             Array.Sort(x, 1, ctr);
 
-            //  RTF_LoadTemplate("r_block.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("seed_out", seed.ToString());
             outputParameters.AddOutput("n_out", N.ToString());
@@ -269,7 +268,6 @@ namespace StatsDirect.Builtins
             }
             while (true);
 
-            //  RTF_LoadTemplate("s_corr.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("alpha", host.RoundU(a));
             outputParameters.AddOutput("power", host.RoundU(P));
@@ -335,7 +333,6 @@ namespace StatsDirect.Builtins
                     N = -1.0;
                 }
 
-                //  RTF_LoadTemplate("s_survival.rtf")
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("ctFmt", host.RoundU(ct));
                 outputParameters.AddOutput("hrFmt", host.RoundU(hr));
@@ -484,7 +481,7 @@ namespace StatsDirect.Builtins
             MersenneTwister mt = new MersenneTwister(Seed);
             int pairs = parameters["pairs"].AsInt32;
             bool balance = pairs >= 1 && (Math.Floor(pairs / 2.0) == pairs / 2.0) && parameters["balance"].AsBoolean;
-            //  RTF_LoadTemplate("r_pair.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             if (balance)
                 outputParameters.AddOutput("seed", Seed.ToString() + ",  balanced allocation");
@@ -568,7 +565,6 @@ namespace StatsDirect.Builtins
                 Array.Sort(arand, 1, halfHigh);
                 Array.Sort(brand, 1, halfHigh);
 
-                //  RTF_LoadTemplate("r_unpair.rtf")
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("seed", seed.ToString());
                 List<ParameterBag> allocationsList = new List<ParameterBag>();
@@ -617,7 +613,7 @@ namespace StatsDirect.Builtins
                         rand[nrp] = tmp;
                     }
                 }
-                //  RTF_LoadTemplate("r_xy.rtf")
+
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("seed", seed.ToString());
                 List<ParameterBag> allocationsList = new List<ParameterBag>();
@@ -687,7 +683,7 @@ namespace StatsDirect.Builtins
                 {
                     N = -1.0;
                 }
-                //  RTF_LoadTemplate("s_incase.rtf")
+
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("pc", host.RoundU(P0));
                 outputParameters.AddOutput("ps", host.RoundU(P1));
@@ -775,7 +771,7 @@ namespace StatsDirect.Builtins
                 {
                     N = -1.0;
                 }
-                //  RTF_LoadTemplate("s_ind.rtf")
+
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("pc", host.RoundU(P0));
                 outputParameters.AddOutput("ps", host.RoundU(P1));
@@ -824,7 +820,7 @@ namespace StatsDirect.Builtins
             double ps = parameters["ps"].AsDouble;
             double M = parameters["m"].AsDouble;
             ssize(ref alpha, ref BETA, ref ph, ref P0, ref M, ref ps, ref N, ref FM, ref sigmar, out fault);
-            //  RTF_LoadTemplate("s_macase.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("corr", host.RoundU(ph));
             outputParameters.AddOutput("pc", host.RoundU(P0));
@@ -904,7 +900,6 @@ namespace StatsDirect.Builtins
             }
             if (P1 != P0 & ph > -1.0 & ph < 1.0)
             {
-                //  RTF_LoadTemplate("s_maprop.rtf")
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("pc", host.RoundU(P0));
                 outputParameters.AddOutput("ps", host.RoundU(P1));
@@ -1093,7 +1088,6 @@ namespace StatsDirect.Builtins
             }
             if (flt == 0 || flt == 2)
             {
-                //  RTF_LoadTemplate("s_t.rtf")
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("tt", "a paired or single sample");
                 x_tres(host, outputParameters, false, a, b, P, M, N, D, sd);
@@ -1131,7 +1125,7 @@ namespace StatsDirect.Builtins
                 }
                 double sn = xza * xza * P * (1.0 - P) / (xd * xd);
                 sn = sn / (1.0 + sn / ps);
-                //  If RTF_LoadTemplate("s_survey.rtf")
+
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("estimate", host.RoundU(ps));
                 outputParameters.AddOutput("rate", host.RoundU(P * 100));
@@ -1188,7 +1182,6 @@ namespace StatsDirect.Builtins
             }
             if (fault == 0 | fault == 2)
             {
-                //  RTF_LoadTemplate("s_t.rtf")
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("tt", "an unpaired two sample");
                 x_tres(host, outputParameters, true, a, b, P, M, N, D, sd);
@@ -1204,8 +1197,6 @@ namespace StatsDirect.Builtins
 
         private static ParameterBag x_disclaim(double ll, double ul, double N)
         {
-
-            //  RTF_UseBlock()
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("cases", N.ToString());
             outputParameters.AddOutput("no_less", ll.ToString());

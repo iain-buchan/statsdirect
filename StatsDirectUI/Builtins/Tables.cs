@@ -2396,7 +2396,7 @@ namespace StatsDirect.Builtins
                     }
                     y = null;
                     z = null;
-                    //  RTF_LoadTemplate("xtabz.rtf")
+
                     List<ParameterBag> xtabzList = new List<ParameterBag>();
                     columnsParameters.AddOutput("*xtabz", xtabzList);
                     ParameterBag xtabzParameters = new ParameterBag();
@@ -2490,7 +2490,7 @@ namespace StatsDirect.Builtins
                             tot += xt[i, j];
                         }
                     }
-                    //  RTF_LoadTemplate("xtab.rtf")
+
                     List<ParameterBag> xtabList = new List<ParameterBag>();
                     columnsParameters.AddOutput("*xtab", xtabList);
                     ParameterBag xtabParameters = new ParameterBag();
@@ -2525,7 +2525,6 @@ namespace StatsDirect.Builtins
                     columnsParameters.AddOutput("*chirxc", chirxcList);
                     if (tot > 0.0)
                     {
-                        //  RTF_LoadTemplate("chirxc.rtf") Then
                         double[,] w;
                         MathDbl.transpose_cr_rc(xt, out w);
                         bool doExact = parameters["doExact"].AsBoolean;
@@ -2646,7 +2645,7 @@ namespace StatsDirect.Builtins
                 ender = i < irows ? ", " : string.Empty;
                 rscores = rscores + colScore[i].ToString() + ender;
             }
-            //  RTF_LoadTemplate("gencmh.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("ylab", ylab);
             outputParameters.AddOutput("xlab", xlab);
@@ -2718,11 +2717,8 @@ namespace StatsDirect.Builtins
 
             Meta.RelativeRiskMA(host, k, out realk, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
             if (ierr == -1)
-            {
                 throw new InvalidDataException();
-            }
 
-            //  RTF_LoadTemplate("rrmeta.rtf")
             ParameterBag outputParameters = new ParameterBag();
 
             List<ParameterBag> inputsList = new List<ParameterBag>();
@@ -3078,7 +3074,6 @@ namespace StatsDirect.Builtins
             double setaub = 1.0 / (drx * dcx) * Math.Sqrt(vt);
             double setaubi = 2.0 * Math.Sqrt(vgi / (drx * dcx));
 
-            //  RTF_LoadTemplate("chirxc.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> rowsList = new List<ParameterBag>();
             outputParameters.AddOutput("*rows", rowsList);
@@ -3589,7 +3584,6 @@ namespace StatsDirect.Builtins
                 p2M = Constant.MISSING;
             }
 
-            // RTF_LoadTemplate("mantel.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -7006,7 +7000,7 @@ namespace StatsDirect.Builtins
             double s1X = 0; double s1 = 0; double t1 = 0; double t1X = 0; double w1 = 0; double w1X = 0; double n1 = 0; double n1X = 0;
 
             ierr = true;
-            //  RTF_LoadTemplate("woolf.rtf") Then
+
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> tableList = new List<ParameterBag>();
             outputParameters.AddOutput("*table", tableList);
@@ -7247,7 +7241,7 @@ namespace StatsDirect.Builtins
                 if (xr < 0 || xn < 0 || xn < xr)
                     throw new InvalidDataException();
             }
-            //  RTF_LoadTemplate("woolf.rtf")
+
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
             bool ierr;
             return Woolf(host, o, k, showIntermediates, cit, cco, out ierr);

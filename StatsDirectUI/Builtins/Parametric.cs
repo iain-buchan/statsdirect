@@ -96,7 +96,6 @@ namespace StatsDirect.Builtins
             double[] sem = new double[1 + 1 /* VB to C# conversion */ ];
             int[] tnx = new int[1 + 1 /* VB to C# conversion */ ];
             DataFrame data = parameters["data"].AsDataFrame;
-            // RTF_LoadTemplate("variance.rtf")
             para(data, mean, ss, var, sd, sem, tnx);
             if (Math.Abs(var[0]) > Math.Abs(var[1]))
             {
@@ -163,7 +162,6 @@ namespace StatsDirect.Builtins
                 host.Error("Coverage not possible.", "Reference Range");
                 throw new TemplateOperationCancelledException();
             }
-            //  RTF_LoadTemplate("refrange.rtf")
             MathDbl.civ(0, out z, GAMMA, out P0);
             para(data, mean, ss, var, sd, sem, tnx);
             double xbar = mean[0];
@@ -446,7 +444,6 @@ namespace StatsDirect.Builtins
             if (mode == 2)
             {
                 DataFrame Data = parameters["data"].AsDataFrame;
-                //  RTF_LoadTemplate("z_norm2.rtf")
                 MathDbl.civ(0, out cit, GAMMA, out P0);
                 para(Data, mean, ss, var, sd, sem, tnx);
                 ParameterBag outputParameters = new ParameterBag();
@@ -496,7 +493,6 @@ namespace StatsDirect.Builtins
                 double psd = parameters.ContainsKey("popsd") && parameters["popsd"] != null
                                  ? parameters["popsd"].AsDouble
                                  : Constant.MISSING;
-                //  RTF_LoadTemplate("z_norm1.rtf")
                 MathDbl.civ(0, out cit, GAMMA, out P0);
                 para(Data, mean, ss, var, sd, sem, tnx);
                 ParameterBag outputParameters = new ParameterBag();
@@ -1062,7 +1058,6 @@ namespace StatsDirect.Builtins
             }
             double var1 = sd1 * sd1;
             double var2 = sd2 * sd2;
-            //  RTF_LoadTemplate("m_unpair.rtf")
             double P0; double cit;
             MathDbl.civ(degf, out cit, GAMMA, out P0);
             double xm1 = um1;
@@ -1158,10 +1153,8 @@ namespace StatsDirect.Builtins
 
             int degf = nx - 1;
             if (nx < 2 || sd == 0)
-            {
                 throw new Exception("Insufficient data (must be at least two members in the sample with non-zero standard deviation)");
-            }
-            //  RTF_LoadTemplate("m_single.rtf")
+
             double se = sd / Math.Sqrt(nx);
             MathDbl.civ(degf, out cit, GAMMA, out P0);
             ParameterBag outputParameters = new ParameterBag();
@@ -1205,7 +1198,6 @@ namespace StatsDirect.Builtins
             int[] tnx = new int[1 + 1 /* VB to C# conversion */];
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
-            //  RTF_LoadTemplate("m_unpair.rtf")
             para(data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] + tnx[1] - 2;
             MathDbl.civ(degf, out cit, GAMMA, out P0);
@@ -1304,7 +1296,6 @@ namespace StatsDirect.Builtins
             double mu0 = parameters["population-mean"].AsDouble;
             double GAMMA = parameters["gamma"].AsDouble;
 
-            //  RTF_LoadTemplate("m_single.rtf")
             para(Data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] - 1;
             double P0; double cit;
@@ -1346,7 +1337,6 @@ namespace StatsDirect.Builtins
             DataFrame Data = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
             bool DoAgree = Data.VariableCount > 1 && parameters.ContainsKey("doAgreement") && parameters["doAgreement"].AsBoolean;
-            //  RTF_LoadTemplate("m_paired.rtf")
 
             double[] arr1 = new double[Data.MaxRows + 1 ]; // New array to replace Arr2(0,n)
             DoubleVariable v0 = Data.Variables[0]as DoubleVariable;

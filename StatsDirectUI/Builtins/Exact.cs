@@ -96,7 +96,6 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptExactFisher(ITemplateHost host, ParameterBag parameters)
         {
             int fault = 0;
-            //  RTF_LoadTemplate("fisher.rtf") Then
             int a = Convert.ToInt32(parameters["a"].AsDouble);
             int b = Convert.ToInt32(parameters["b"].AsDouble);
             int c = Convert.ToInt32(parameters["c"].AsDouble);
@@ -117,7 +116,6 @@ namespace StatsDirect.Builtins
             int c = Convert.ToInt32(parameters["c"].AsDouble);
             int d = Convert.ToInt32(parameters["d"].AsDouble);
 
-            //  RTF_LoadTemplate("fisherx.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tab_a1", a.ToString());
             outputParameters.AddOutput("tab_b1", b.ToString());
@@ -372,11 +370,8 @@ namespace StatsDirect.Builtins
             double bd = parameters["d"].AsDouble;
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0.0 || gamma >= 1.0)
-            {
                 gamma = 0.95;
-            }
 
-            //  RTF_LoadTemplate("mcnamar.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tab_a1", Convert.ToInt64(ba).ToString());
             outputParameters.AddOutput("tab_b1", Convert.ToInt64(bb).ToString());
@@ -488,31 +483,12 @@ namespace StatsDirect.Builtins
             double c = parameters["c"].AsDouble;
             double d = parameters["d"].AsDouble;
 
-            //  RTF_LoadTemplate("orci.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tab_a1", a.ToString());
             outputParameters.AddOutput("tab_b1", b.ToString());
             outputParameters.AddOutput("tab_a2", c.ToString());
             outputParameters.AddOutput("tab_b2", d.ToString());
 
-            //ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
-            //tabl[1].Freq = 1;
-            //tabl[1].A = table[1];
-            //tabl[1].M1 = table[1] + table[2];
-            //tabl[1].N1 = table[1] + table[3];
-            //tabl[1].N0 = table[2] + table[4];
-            //tabl[1].Informative = (table[1] * table[4] != 0) | (table[2] * table[3] != 0);
-            //bool useLogScale = false;
-            //new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
-
-            //if (table[2] * table[3] > 0)
-            //{
-            //    obsOr = (table[1] * table[4]) / (table[2] * table[3]);
-            //}
-            //else
-            //{
-            //    obsOr = double.PositiveInfinity;
-            //}
             int ierr;
             double p2m;
             double p1m;
@@ -526,19 +502,6 @@ namespace StatsDirect.Builtins
             ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out ierr);
             double odr = ExactBB.OddsRatio(a, b, c, d);
             outputParameters.AddOutput("odds", host.RoundU(odr));
-
-            //if (ierr != 0)
-            //{
-            //    eor = Constant.MISSING;
-            //    llf = Constant.MISSING;
-            //    ulf = Constant.MISSING;
-            //    p1f = Constant.MISSING;
-            //    p2f = Constant.MISSING;
-            //    llm = Constant.MISSING;
-            //    ulm = Constant.MISSING;
-            //    p1m = Constant.MISSING;
-            //    p2m = Constant.MISSING;
-            //}
 
             outputParameters.AddOutput("eor", host.RoundU(eor));
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
@@ -567,7 +530,7 @@ namespace StatsDirect.Builtins
                 tar = 1.0;
                 parameters["tar"] = new FilledParameter(FilledParameterDirection.Input, 1.0);
             }
-            //  RTF_LoadTemplate("prate.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("events", host.RoundU(revents));
             outputParameters.AddOutput("time", host.RoundU(tar));

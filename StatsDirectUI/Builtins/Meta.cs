@@ -198,7 +198,6 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            // RTF_LoadTemplate("peto.rtf")
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -678,7 +677,6 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException();
             }
 
-            //  RTF_LoadTemplate("rdmeta.rtf")
             ParameterBag outputParameters = new ParameterBag();
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
@@ -920,7 +918,6 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException("relriskma() returned an error");
             }
 
-            //  RTF_LoadTemplate("rrmeta.rtf")
             ParameterBag outputParameters = new ParameterBag();
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
@@ -1317,7 +1314,6 @@ namespace StatsDirect.Builtins
                     dsul = dsd + cit / Math.Sqrt(sumwt);
                 }
 
-                //  RTF_LoadTemplate("effect.rtf")
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
 
@@ -1502,7 +1498,6 @@ namespace StatsDirect.Builtins
                     dsul = dsd + cit / Math.Sqrt(sumwt);
                 }
 
-                //  RTF_LoadTemplate("effectwm.rtf")
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
                 IList<ParameterBag> approximateList = new List<ParameterBag>();
@@ -2535,7 +2530,6 @@ namespace StatsDirect.Builtins
                 p2M = Constant.MISSING;
             }
 
-            //  RTF_LoadTemplate("mantel.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
 
@@ -3484,7 +3478,6 @@ namespace StatsDirect.Builtins
                 Utilities.Utilities.Swap(ref dsll, ref dsul);
             }
 
-            //  RTF_LoadTemplate("genmeta.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("stat", stat);
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
@@ -4261,7 +4254,6 @@ namespace StatsDirect.Builtins
                 o[i, 3] = rmh;
             }
 
-            //  RTF_LoadTemplate("propmeta.rtf")
             ParameterBag outputParameters = new ParameterBag();
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();

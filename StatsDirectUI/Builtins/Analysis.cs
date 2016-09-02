@@ -74,7 +74,6 @@ namespace StatsDirect.Builtins
             poisVar = poisVar / (refntot * refntot);
             binoVar = binoVar / (refntot * refntot);
 
-            //  RTF_LoadTemplate("dstdr.rtf")
             ParameterBag outputParameters = new ParameterBag();
             if (nunit == 1.0)
             {
@@ -276,7 +275,7 @@ namespace StatsDirect.Builtins
                 // TODO: Error
                 return null;
             }
-            //  RTF_LoadTemplate("incid.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("a_out", a.ToString());
             outputParameters.AddOutput("b_out", b.ToString());
@@ -520,7 +519,6 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new ParameterBag();
-            //  RTF_LoadTemplate("retro_r.rtf")
             outputParameters.AddOutput("aa", a.ToString());
             outputParameters.AddOutput("bb", b.ToString());
             outputParameters.AddOutput("cc", c.ToString());
@@ -638,7 +636,6 @@ namespace StatsDirect.Builtins
             if (n <= 0.0)
                 throw new InvalidDataException();
 
-            //  RTF_LoadTemplate("diagnost.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("aa", a.ToString());
             outputParameters.AddOutput("bb", b.ToString());
@@ -922,7 +919,6 @@ namespace StatsDirect.Builtins
 
             double pd = 1.0 / parameters["pd"].AsDouble;
 
-            //  RTF_LoadTemplate("falser.rtf")
             ParameterBag outputParameters = new ParameterBag();
 
             outputParameters.AddOutput("population", (pd * 10000).ToString());
@@ -1026,7 +1022,6 @@ namespace StatsDirect.Builtins
             if (ierror)
                 return null;
 
-            //  RTF_LoadTemplate("kappa.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("po", Formatting.XRound(po * 100, 2));
             outputParameters.AddOutput("pe", Formatting.XRound(pe * 100, 2));
@@ -1180,7 +1175,6 @@ namespace StatsDirect.Builtins
             int fault;
             zc = PDF.gauinv(zc, out fault);
 
-            //  RTF_LoadTemplate("likely.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("pc", (100 * zl).ToString());
 
@@ -1274,7 +1268,6 @@ namespace StatsDirect.Builtins
             }
             double pt = xt / nt;
 
-            //  RTF_LoadTemplate("treat.rtf")
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("pc", Formatting.XRound(100.0 * zl, 2));
 
@@ -1602,7 +1595,6 @@ namespace StatsDirect.Builtins
 
             if (fault == 0)
             {
-                //  RTF_LoadTemplate("relrisk.rtf") Then
                 ParameterBag outputParameters = new ParameterBag();
                 double ul;
                 double ll;
@@ -1673,7 +1665,6 @@ namespace StatsDirect.Builtins
             if (etot <= 0)
                 throw new InvalidDataException();
 
-            //  RTF_LoadTemplate("stdmort.rtf")
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> groupsList = new List<ParameterBag>();
             outputParameters.AddOutput("*groups", groupsList);
@@ -1770,7 +1761,6 @@ namespace StatsDirect.Builtins
             double p2 = (r + t) / n;
             double p3 = (s - t) / n;
 
-            //  RTF_LoadTemplate("p_pair.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("n_out", Formatting.XRound(n, 1));
             outputParameters.AddOutput("r_out", Formatting.XRound(r, 1));
@@ -2059,7 +2049,7 @@ namespace StatsDirect.Builtins
             double p1 = r1 / n1;
             double p2 = r2 / n2;
             double p = (r1 + r2) / (n1 + n2);
-            //  RTF_LoadTemplate("p_unpair.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("n_1", Formatting.XRound(n1, 1));
             outputParameters.AddOutput("r_1", Formatting.XRound(r1, 1));

@@ -192,7 +192,7 @@ namespace StatsDirect.Builtins
             mx0 = host.GetDouble("Enter basline mean for predictors (default is the overall mean of predictor values)", "Covariance Analysis", mx0, out cancelled);
             if (cancelled)
                 throw new TemplateOperationCancelledException();
-            //  RTF_LoadTemplate("grpcov.rtf")
+
             ParameterBag outputParameters = new ParameterBag();
             double comssq = grandcpr * grandcpr / grandsqx;
             double btwnssq = grandbit - comssq;
@@ -487,7 +487,6 @@ namespace StatsDirect.Builtins
                     break;
             }
 
-            // RTF_LoadTemplate("clogit.rtf") Then
             ParameterBag outputParameters = new ParameterBag();
             if (show_counts)
             {
