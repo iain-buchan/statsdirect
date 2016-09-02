@@ -54,7 +54,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptLatin" />
-    <report type="text/rtf" filename="latin.rtf" />
     <report type="application/x-statsdirect-creole" filename="latin.creole" />
 	</steps>
 </operation>

@@ -19,7 +19,6 @@
         </frame>
       </parameters>
 	<builtin function-name="rptWilcoxon" />
-	<report type="text/rtf" filename="wilco.rtf" />
   <report type="application/x-statsdirect-creole" filename="wilco.creole" />
 	</steps>
 </operation>

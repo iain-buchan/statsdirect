@@ -2,7 +2,7 @@
 <line><title>Likelihood ratios</title></line>
 <line></line>
 <table>
-<tr><th>Result</th><th>+ Feature</th><th><b>-</b> Feature</th><th>Likelihood Ratio</th></u><td> <u><ci><in>pc</in>% CI (Koopman)</ci></u></td></tr>
+<tr><th>Result</th><th>+ Feature</th><th>- Feature</th><th>Likelihood Ratio</th><th><ci><in>pc</in>% CI (Koopman)</ci></th></tr>
 <block name="row">
 <tr><td><in>result</in></td><td><in>+feature</in></td><td><in>-feature</in></td><td><in>likely</in></td><td><ci><in>from</in> to <in>to</in></ci></td></tr>
 </block>

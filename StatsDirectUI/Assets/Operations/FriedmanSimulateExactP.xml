@@ -39,6 +39,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptFriedmanSimulateExactP" />
-    <report type="text/rtf" filename="simulatedExactP.rtf" />
+    <report type="application/x-statsdirect-creole" filename="simulatedExactP.creole" />
   </steps>
 </operation>

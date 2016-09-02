@@ -65,7 +65,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptCrossover" />
-		<report type="text/rtf" filename="xover.rtf" />
     <report type="application/x-statsdirect-creole" filename="xover.creole" />
 	</steps>
 </operation>

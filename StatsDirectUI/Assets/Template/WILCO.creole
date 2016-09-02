@@ -6,14 +6,16 @@
 <line><in>sum</in></line>
 <line></line>
 <line><in>stats</in></line>
-<line><ci>Lower side <in>p_l</in></ci>  (H<sub>1</sub>: differences tend to be less than zero)</line>
-<line><ci>Upper side <in>p_u</in></ci>  (H<sub>1</sub>: differences tend to be greater than zero)</line>
-<line><ci>Two sided <in>p_2</in></ci>  (H<sub>1</sub>: differences tend not to be zero)</line>
-<line><warnabit><block name="noconf"></warnabit></line>
-<line>confidence interval not calculated if n<4</line>
-<line></block><block name="conf"></line>
-<line><in>pc</in></line>
-<line>Median difference = <in>med_diff</in> (<in>from</in> to <in>to</in>)</block></line>
+<line><pval>Lower side <in>p_l</in></pval>  (H<sub>1</sub>: differences tend to be less than zero)</line>
+<line><pval>Upper side <in>p_u</in></pval>  (H<sub>1</sub>: differences tend to be greater than zero)</line>
+<line><pval>Two sided <in>p_2</in></pval>  (H<sub>1</sub>: differences tend not to be zero)</line>
+<block name="noconf">
 <line></line>
+<line>confidence interval not calculated if n < 4</line>
+</block>
+<block name="conf">
 <line></line>
+<line><ci><in>pc</in></ci></line>
+<line>Median difference = <in>med_diff</in> (<ci><in>from</in> to <in>to</in></ci>)</line>
+</block>
 </report>

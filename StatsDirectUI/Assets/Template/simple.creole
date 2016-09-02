@@ -3,12 +3,14 @@
 <line></line>
 <line><b>Equation: </b><in>eq_y</in> <in>eq_x</in></line>
 <line></line>
-<line><block name="se">Standard Error of slope = <in>slope_err</in></line>
+<block name="se">
+<line>Standard Error of slope = <in>slope_err</in></line>
 <line><ci><in>se_pc</in>% CI for population value of slope = <in>se_from</in> to <in>se_to</in></ci></line>
 <line></line>
 <line>Correlation coefficient (r) = <in>se_r</in> (r<sub>2</sub> = <in>se_r2</in>)</line>
 <line></line>
-<line><block name="ci"><ci><in>ci_pc</in>% CI for r (Fisher's z transformed) = <in>ci_from</in> to <in>ci_to</in></ci></line>
+<block name="ci">
+<line><ci><in>ci_pc</in>% CI for r (Fisher's z transformed) = <in>ci_from</in> to <in>ci_to</in></ci></line>
 <line></line>
 <line>t with <in>df</in> DF = <in>tdf</in></line>
 <line><pval>Two sided <in>p</in></pval></line>

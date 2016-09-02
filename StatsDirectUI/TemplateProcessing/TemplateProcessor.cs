@@ -407,7 +407,8 @@ namespace StatsDirect.Templates
                         // If the parameter has (a) default value(s), add any that aren't already known (and hence overridden) to the context.
                         // This is critical when first displaying e.g. a set of controls where one isn't displayed initially due to a default value in another.
                         // Bug #1244
-                        ParameterBag defaults = parameter.AllDefaults(this, newFilledParameters);
+                        ParameterBag oldAndNewFilledParameters = CombinePreferringLater(parmsAndFilledParameters, newFilledParameters);
+                        ParameterBag defaults = parameter.AllDefaults(this, oldAndNewFilledParameters);
                         foreach (KeyValuePair<string, FilledParameter> fp in defaults.Pairs)
                         {
                             if (null != fp.Value && fp.Value.HasData)
@@ -479,15 +480,20 @@ namespace StatsDirect.Templates
         /// <returns></returns>
         private static ParameterBag CombinePreferringLater(ParameterBag bag1, ParameterBag bag2)
         {
-            ParameterBag parmsAndFilledParameters = new ParameterBag();
-            foreach (KeyValuePair<string, FilledParameter> pair in bag2.Pairs)
-                parmsAndFilledParameters.Add(pair);
+            ParameterBag combinedParameters = new ParameterBag();
+            if (null != bag2)
+                foreach (KeyValuePair<string, FilledParameter> pair in bag2.Pairs)
+                    combinedParameters.Add(pair);
 
             // Add/overwrite with older parameters if (a) there is no matching newer parameter or (b) the newer parameter is a default, in which case we want the real value.
-            foreach (KeyValuePair<string, FilledParameter> pair in bag1.Pairs)
-                if ((!parmsAndFilledParameters.ContainsKey(pair.Key)) || parmsAndFilledParameters[pair.Key].Direction == FilledParameterDirection.Default)
-                    parmsAndFilledParameters[pair.Key] = pair.Value;
-            return parmsAndFilledParameters;
+            if (null != bag1)
+            {
+                foreach (KeyValuePair<string, FilledParameter> pair in bag1.Pairs)
+                    if ((!combinedParameters.ContainsKey(pair.Key)) || combinedParameters[pair.Key].Direction == FilledParameterDirection.Default)
+                        combinedParameters[pair.Key] = pair.Value;
+            }
+
+            return combinedParameters;
         }
 
         private void TryToRecallParameterForAllOptions(ParameterBag filledParameters, Parameter parameter)

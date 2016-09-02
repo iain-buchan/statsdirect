@@ -39,8 +39,8 @@
         </option>
       </parameters>
 		<builtin function-name="rptPolynomialRegression" />
-		<report type="text/rtf" filename="poly.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="poly.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>PolynomialRegressionChangeDegree</suggested-operation>
     <suggested-operation>MultipleLinearRegressionAnova</suggested-operation>

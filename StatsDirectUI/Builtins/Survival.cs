@@ -2082,19 +2082,15 @@ namespace StatsDirect.Builtins
 
             double natst = 0.0;
             foreach (double d in deathsVariable.Data)
-            {
                 if (d != Constant.MISSING)
                     natst += d;
-            }
 
             DataFrame withdrawalsFrame = parameters["withdrawals"].AsDataFrame;
             DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0]as DoubleVariable;
 
             foreach (double w in withdrawalsVariable.Data)
-            {
                 if (w != Constant.MISSING)
                     natst += w;
-            }
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("natst-min", natst);

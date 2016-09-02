@@ -58,8 +58,8 @@
 		<test>
 			<condition>=parameters["isPoly"].AsBoolean</condition>
 			<iftrue>
-				<report type="text/rtf" filename="poly.rtf" />
-			</iftrue>
+        <report type="application/x-statsdirect-creole" filename="poly.creole" />
+      </iftrue>
 			<iffalse>
 				<report type="text/rtf" filename="multi.rtf" />
 			</iffalse>

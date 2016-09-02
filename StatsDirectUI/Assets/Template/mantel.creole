@@ -16,8 +16,8 @@
 </table>
 <line></line>
 <table>
-<block name="or">
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><thspan/></tr>
+<block name="or">
 <tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><subtotal><in>lb</in></subtotal></td></tr>
 </block>
 </table>

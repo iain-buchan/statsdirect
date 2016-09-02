@@ -28,7 +28,6 @@
       </parameters>
 		<builtin function-name="rptSimpleLinearRegression" />
     <report type="application/x-statsdirect-creole" filename="simple.creole" />
-    <report type="application/x-statsdirect-creole" filename="simple.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>InterpolateXY</suggested-operation>

@@ -7,7 +7,7 @@
 </table>
 <line></line>
 <table>
-<tr><th>Stratum</th><th>Standardized Effect</th><th>Standard Error</th><th>% Weights (fixed, random)</th></tr>
+<tr><th>Stratum</th><th>Standardized Effect</th><th>Standard Error</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
 <block name="studies"><tr><td><in>st</in></td><td><in>standardized_effect</in></td><td><in>se</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>

@@ -57,7 +57,6 @@
       </parameters>
 	<builtin function-name="rptUniversalRCompare" />
   <report type="application/x-statsdirect-creole" filename="universal_r_compare.creole" />
-	<report type="text/rtf" filename="universal_r_compare.rtf" />
 	</steps>
   <suggested-operations>
     <suggested-operation>UniversalRCompare</suggested-operation>
