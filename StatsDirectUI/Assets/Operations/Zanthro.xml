@@ -13125,7 +13125,7 @@ xmrg,xvar_pre,xvar,xvar_nx,xvar_nx2,l_pre,l,l_nx,l_nx2,m_pre,m,m_nx,m_nx2,s_pre,
         <same-length-as>data</same-length-as>
         <ask-for-group-id>false</ask-for-group-id>
         <validators>
-          <validator>Positive</validator>
+          <validator>NonNegative</validator>
         </validators>
       </frame>
       <frame>

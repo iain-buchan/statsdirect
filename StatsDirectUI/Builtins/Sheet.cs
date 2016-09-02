@@ -930,7 +930,12 @@ namespace StatsDirect.Builtins
             if (xvar.Pre != Constant.MISSING && xvar.Value != Constant.MISSING && xvar.Nx != Constant.MISSING && xvar.Nx2 != Constant.MISSING
                 && lms.Pre != Constant.MISSING && lms.Value != Constant.MISSING && lms.Nx != Constant.MISSING && lms.Nx2 != Constant.MISSING)
                 return CubicInterpolate(t, xvar, lms);
-            throw new NotImplementedException();
+            // If we have current and next, linear interpolation is appropriate.
+            if (xvar.Value != Constant.MISSING && xvar.Nx != Constant.MISSING
+                && lms.Value != Constant.MISSING && lms.Nx != Constant.MISSING)
+                return LinearInterpolate(t, xvar, lms);
+            // If we're missing even these, there's not a lot we can do.
+            throw new NotImplementedException("The table you're aiming to use has an error for value " + t + ": there's not enough data for a cubic or linear interpolation.");
         }
 
         private static double CubicInterpolate(double t, LmsQuad xvar, LmsQuad lms)
@@ -939,6 +944,12 @@ namespace StatsDirect.Builtins
                 + (lms.Value * (t - xvar.Pre) * (t - xvar.Nx) * (t - xvar.Nx2)) / ((xvar.Value - xvar.Pre) * (xvar.Value - xvar.Nx) * (xvar.Value - xvar.Nx2))
                 + (lms.Nx * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx2)) / ((xvar.Nx - xvar.Pre) * (xvar.Nx - xvar.Value) * (xvar.Nx - xvar.Nx2))
                 + (lms.Nx2 * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx)) / ((xvar.Nx2 - xvar.Pre) * (xvar.Nx2 - xvar.Value) * (xvar.Nx2 - xvar.Nx));
+        }
+
+        private static double LinearInterpolate(double t, LmsQuad xvar, LmsQuad lms)
+        {
+            double xvarfrac = (t - xvar.Value) / (xvar.Nx - xvar.Value);
+            return lms.Value + xvarfrac * (lms.Nx - lms.Value);
         }
 
         internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
