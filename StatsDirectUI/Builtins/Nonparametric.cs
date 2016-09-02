@@ -1089,7 +1089,6 @@ namespace StatsDirect.Builtins
             double bias = 0; double biasx = 0;
             double thetase = 0; double thetasex = 0;
 
-            // RTF_LoadTemplate("diversity.rtf")
             DataFrame frame = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
             int boots = parameters["boots"].AsInt32;
