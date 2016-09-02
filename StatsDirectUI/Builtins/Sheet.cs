@@ -737,8 +737,9 @@ namespace StatsDirect.Builtins
                     continue;
                 }
 
-                uncorrectedZ[i] = ZanthroCalculateUncorrectedZ(isMale[i] ? maleTables : femaleTables, measure[i], t[i], tday[i]);
-                correctedZ[i] = ZanthroCorrectZ(uncorrectedZ[i], zCorrectionMode);
+                double lambda, mu, sigma;
+                uncorrectedZ[i] = ZanthroCalculateUncorrectedZ(isMale[i] ? maleTables : femaleTables, measure[i], t[i], tday[i], out lambda, out mu, out sigma);
+                correctedZ[i] = ZanthroCorrectZ(uncorrectedZ[i], zCorrectionMode, measure [i], lambda, mu, sigma);
                 if (includeCentiles)
                     centile[i] = (Constant.MISSING == correctedZ[i]) ? Constant.MISSING : PDF.alnorm(correctedZ[i]) * 100.0;
                 if (includeBmi)
@@ -813,7 +814,7 @@ namespace StatsDirect.Builtins
             return table;
         }
 
-        private static double ZanthroCorrectZ(double rawZ, ZanthroZCorrectionMode zCorrectionMode)
+        private static double ZanthroCorrectZ(double rawZ, ZanthroZCorrectionMode zCorrectionMode, double y, double lambda, double mu, double sigma)
         {
             if (Constant.MISSING == rawZ)
                 return rawZ;
@@ -827,11 +828,32 @@ namespace StatsDirect.Builtins
                 case ZanthroZCorrectionMode.Censor5Sd:
                     return Math.Abs(rawZ) > 5.0 ? Constant.MISSING : rawZ;
                 case ZanthroZCorrectionMode.Who:
-                    // TODO:
-                    throw new NotImplementedException();
+                    // For -3 <= z <= 3, use the uncorrected score
+                    if (Math.Abs(rawZ) <= 3)
+                        return rawZ;
+                    // Otherwise, it's at one extreme or the other.
+                    if (rawZ > 0)
+                    {
+                        double sd3pos = WhoCutoff(3, lambda, mu, sigma);
+                        double sd2pos = WhoCutoff(2, lambda, mu, sigma);
+                        double sd23pos = sd3pos - sd2pos;
+                        return 3 + ((y - sd3pos) / sd23pos);
+                    }
+                    else
+                    {
+                        double sd3neg = WhoCutoff(-3, lambda, mu, sigma);
+                        double sd2neg = WhoCutoff(-2, lambda, mu, sigma);
+                        double sd23neg = sd2neg - sd3neg;
+                        return -3 + ((y - sd3neg) / sd23neg);
+                    }
                 default:
                     throw new Exception("Unknown Z correction mode " + zCorrectionMode.ToString());
             }
+        }
+
+        private static double WhoCutoff(double z, double lambda, double mu, double sigma)
+        {
+            return mu * Math.Pow(1 + lambda * sigma * z, 1.0 / lambda);
         }
 
         private enum ZanthroZCorrectionMode
@@ -866,17 +888,18 @@ namespace StatsDirect.Builtins
             public double Nx2;
         }
 
-        private static double ZanthroCalculateUncorrectedZ(ICollection<LmsTable> tables, double measure, double t, double tday)
+        private static double ZanthroCalculateUncorrectedZ(ICollection<LmsTable> tables, double measure, double t, double tday, out double lambda, out double mu, out double sigma)
         {
             // Find the correct table to use. Tables are passed in order of preference, so simply use the first one that matches.
             foreach (LmsTable table in tables)
                 if (table.XmrgLowerBound <= tday && table.XmrgUpperBound >= tday)
-                    return ZanthroCalculateUncorrectedZ(table, measure, t, tday);
+                    return ZanthroCalculateUncorrectedZ(table, measure, t, tday, out lambda, out mu, out sigma);
             // If we get here, no table matched.
+            lambda = mu = sigma = Constant.MISSING;
             return Constant.MISSING;
         }
 
-        private static double ZanthroCalculateUncorrectedZ(LmsTable table, double measure, double t, double tday)
+        private static double ZanthroCalculateUncorrectedZ(LmsTable table, double measure, double t, double tday, out double lambda, out double mu, out double sigma)
         {
             // We already know the value is within the bounds of this table; it's just a case of finding which row.
             // Use a row if the value being considered is at least the row's xmrg and less than the next row's xmrg.
@@ -884,18 +907,18 @@ namespace StatsDirect.Builtins
             {
                 LmsTableRow candidate = table.Rows[i];
                 if (candidate.Xmrg <= tday && (i == table.Rows.Length - 1 || table.Rows[i + 1].Xmrg >= tday))
-                    return ZanthroCalculateUncorrectedZ(table.Rows[i], measure, t);
+                    return ZanthroCalculateUncorrectedZ(table.Rows[i], measure, t, out lambda, out mu, out sigma);
             }
             // If we get here, no row matched despite the table having rows that must match.  Assume the final row.
-            return ZanthroCalculateUncorrectedZ(table.Rows[table.Rows.Length - 1], measure, t);
+            return ZanthroCalculateUncorrectedZ(table.Rows[table.Rows.Length - 1], measure, t, out lambda, out mu, out sigma);
         }
 
-        private static double ZanthroCalculateUncorrectedZ(LmsTableRow tableRow, double measure, double t)
+        private static double ZanthroCalculateUncorrectedZ(LmsTableRow tableRow, double measure, double t, out double lambda, out double mu, out double sigma)
         {
             // t is the corrected xvar - turned into years for any age, TODO: Not sure for ht/wt.
-            double lambda = Interpolate(t, tableRow.Xvars, tableRow.Lambdas);
-            double mu = Interpolate(t, tableRow.Xvars, tableRow.Mus);
-            double sigma = Interpolate(t, tableRow.Xvars, tableRow.Sigmas);
+            lambda = Interpolate(t, tableRow.Xvars, tableRow.Lambdas);
+            mu = Interpolate(t, tableRow.Xvars, tableRow.Mus);
+            sigma = Interpolate(t, tableRow.Xvars, tableRow.Sigmas);
 
             double z = (Math.Pow(measure / mu, lambda) - 1) / (lambda * sigma);
             return z;
