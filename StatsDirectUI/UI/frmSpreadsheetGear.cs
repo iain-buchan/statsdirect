@@ -1075,7 +1075,10 @@ namespace StatsDirect.UI
                 IRange cell = worksheet.Range[rowIndex, columnIndex];
                 if (cell.Font.Bold || (cell.Font.Underline != UnderlineStyle.None))
                     return true;
-                string v = cell.Value.ToString();
+                object oV = cell.Value;
+                if (null == oV)
+                    return false;
+                string v = oV.ToString();
                 return v.StartsWith("\"") || v.StartsWith("'");
             }
             finally

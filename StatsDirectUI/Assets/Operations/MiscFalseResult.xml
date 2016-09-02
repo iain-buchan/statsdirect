@@ -27,8 +27,8 @@
         </double>
       </parameters>
   	<builtin function-name="rptMiscFalseResult" />
-	  <report type="text/rtf" filename="falser.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="falser.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>MiscFalseResult</suggested-operation>
   </suggested-operations>

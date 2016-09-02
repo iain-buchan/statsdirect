@@ -91,7 +91,7 @@
         </special>
       </parameters>
     <builtin function-name="rptWeightedUnivariateSummary" />
-    <report type="text/rtf" filename="describe.rtf" />
+    <report type="application/x-statsdirect-creole" filename="describe.creole" />
     <test>
       <condition>=parameters.ContainsKey("output")</condition>
       <iftrue>

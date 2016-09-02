@@ -3,18 +3,18 @@
 <line></line>
 <table>
 <block name="rows">
-<tr><td>Observed</td><block name="obs"><td><in>obs</in></td></block><td>{\cf3 <block name="rtot"><b><in>rtot</in></b></block>}</td><td>{\cf4 <block name="score"><in>score</in></block>}</td></tr>
-<block name="exps"><tr><td>{\cf5 Expected}</td><block name="exp"><td>{\cf5 <in>exp</in>}</td></block><td></td><td></td></tr></block>
-<block name="chis"><tr><td>DChi\'b2</td><block name="chi"><td><in>chi</in></td></block><td></td><td></td></tr></block>
+<tr><td>Observed</td><block name="obs"><td><in>obs</in></td></block><td><subtotal><block name="rtot"><in>rtot</in></block></subtotal></td><td><block name="score"><score><in>score</in></score></block></td></tr>
+<block name="exps"><tr><td><model>Expected</model></td><block name="exp"><td><model><in>exp</in></model></td></block><td></td><td></td></tr></block>
+<block name="chis"><tr><td>DChi&#xb2;</td><block name="chi"><td><in>chi</in></td></block><td></td><td></td></tr></block>
 <block name="pcrs">
 <tr><td>% of row</td><block name="pcr"><td><in>pcr</in></td></block><td></td><td></td></tr>
 <tr><td>% of col</td><block name="pcc"><td><in>pcc</in></td></block><td></td></tr>
 </block>
-<tr></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
 </block>
-<tr><td>{\cf3<b>Total</b>}</td><block name="tot"><td>{\cf3 <b><in>tot</in></b>}</td></block><td></td></tr>
+<tr><td><subtotal><b>Total</b></subtotal></td><block name="tot"><td><subtotal><b><in>tot</in></b></subtotal></td></block><td></td></tr>
 <block name="pcgs"><tr><td>% of n</td><block name="pcg"><td><in>pcg</in></td></block><td></td><td></td></tr></block>
-<block name="scores"><tr><td>{\cf4 Score}</td><block name="score"><td>{\cf4 <in>score</in>}</td></block><td></td><td></td></tr></block>
+<block name="scores"><tr><td></td><block name="score"><td><score><in>score</in></score></td></block><td></td><td></td></tr></block>
 </table>
 <line></line>
 <line>TOTAL number of cells = <in>tot</in></line>
@@ -36,13 +36,13 @@
 <line></line>
 <line><subtitle>LINEAR TREND</subtitle></line>
 <line>Sample correlation (r) = <in>r</in></line>
-<line>Chi-square for linear trend (M\'b2) = <in>chit</in></line>
+<line>Chi-square for linear trend (M&#xb2;) = <in>chit</in></line>
 <line>DF = 1  <pval><in>pt</in></pval></line>
 <line></line>
 <line><subtitle>NOMINAL ASSOCIATION</subtitle></line>
 <line>Phi = <in>phi</in></line>
 <line>Pearson's contingency = <in>pearson</in></line>
-<line>Cram\'e9r's <i>V</i> = <in>cramer</in></line>
+<line>Cram&#xe9;r's <i>V</i> = <in>cramer</in></line>
 <line></line>
 <line><subtitle>ORDINAL</subtitle></line>
 <line>Goodman-Kruskal gamma = <in>gamma</in></line>

@@ -6,7 +6,7 @@
 </table>
 <line></line>
 <table>
-<tr><thfirst>Variable dropped</thfirst><th>Alpha</th><th></th><th>Change</th><subtotal></subtotal></tr>
+<tr><th>Variable dropped</th><th>Alpha</th><th></th><th>Change</th><subtotal></subtotal></tr>
 <block name="raw">
 <tr><td><subtotal><in>lab</in></subtotal></td><td></td><td><in>a</in></td><td><in>x</in></td><td><in>a-t</in></td></tr>
 </block>
@@ -19,7 +19,7 @@
 </table>
 <line></line>
 <table>
-<tr><thfirst>Variable dropped</thfirst><th>Alpha</th><th></th><th>Change</th></tr>
+<tr><th>Variable dropped</th><th>Alpha</th><th></th><th>Change</th></tr>
 <block name="standard">
 <tr><td><subtotal><in>lab</in></subtotal></td><td></td><td><in>a</in></td><td><in>x</in></td><td><in>a-t</in></td></tr>
 </block>

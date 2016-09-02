@@ -100,8 +100,8 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptChiRbyC" />
-	  <report type="text/rtf" filename="chirxc.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="chirxc.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>ExactFisherRbyC</suggested-operation>
   </suggested-operations>

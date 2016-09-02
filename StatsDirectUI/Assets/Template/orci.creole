@@ -1,12 +1,9 @@
 <report>
 <line><title>Exact confidence limits for 2 by 2 odds</title></line>
 <line></line>
+<line>Input table:</line>
 <table>
-<th><b>Input table:</b></th>
-</table>
-<table>
-<tr><th></th><th></th></tr>
-<tr><td><in>tab_a1</in></td><td></td><td><in>tab_b1</in></td></tr>
+<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
 <tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
 </table>
 <line></line>

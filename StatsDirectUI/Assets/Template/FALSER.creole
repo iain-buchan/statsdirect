@@ -4,10 +4,8 @@
 <line>For an overall case rate of <in>population</in> per ten thousand population tested:</line>
 <line></line>
 <line>Test SENSITIVITY = <in>sensitive</in>%</line>
-<line>Probability of a FALSE POSITIVE result = <in>positive</in></line>
+<line>Probability of a FALSE POSITIVE result = <pval><in>positive</in></pval></line>
 <line></line>
 <line>Test SPECIFICITY = <in>specific</in>%</line>
-<line>Probability of a FALSE NEGATIVE result = <in>negative</in></line>
-<line></line>
-<line></line>
+<line>Probability of a FALSE NEGATIVE result = <pval><in>negative</in></pval></line>
 </report>

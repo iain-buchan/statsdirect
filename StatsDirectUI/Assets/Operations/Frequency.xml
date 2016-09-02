@@ -37,7 +37,6 @@
         </option>
       </parameters>
 		<builtin function-name="rptFrequency" />
-		<report type="text/rtf" filename="freq.rtf" />
     <report type="application/x-statsdirect-creole" filename="freq.creole" />
 	</steps>
 </operation>

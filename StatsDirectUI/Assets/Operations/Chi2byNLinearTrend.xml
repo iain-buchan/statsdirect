@@ -51,13 +51,12 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptChi2byNLinearTrend" />
-	  <report type="text/rtf" filename="chi2xc.rtf" />
     <report type="application/x-statsdirect-creole" filename="chi2xc.creole" />
     <test>
       <condition>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</condition>
       <iftrue>
         <builtin function-name="rptChi2byNWithTrendSimulateExactP" />
-        <report type="text/rtf" filename="chiTwoByKSimulatedExactP.rtf" />
+        <report type="application/x-statsdirect-creole" filename="chiTwoByKSimulatedExactP.creole" />
       </iftrue>
     </test>
   </steps>

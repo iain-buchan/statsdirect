@@ -324,16 +324,16 @@ namespace StatsDirect.Builtins
                     binParameters.AddOutput("fx", xn.ToString());
                     if (bin[i].Label != Formatting.MISSINGLABEL)
                     {
-                        binParameters.AddOutput("%", host.RoundU(100.0 * Convert.ToDouble(xn) / Convert.ToDouble(xtot)));
+                        binParameters.AddOutput("pc", host.RoundU(100.0 * Convert.ToDouble(xn) / Convert.ToDouble(xtot)));
                         cm = cm + xn;
                         binParameters.AddOutput("cm", cm.ToString());
-                        binParameters.AddOutput("%2", host.RoundU(100.0 * Convert.ToDouble(cm) / Convert.ToDouble(xtot)));
+                        binParameters.AddOutput("pc2", host.RoundU(100.0 * Convert.ToDouble(cm) / Convert.ToDouble(xtot)));
                     }
                     else
                     {
-                        binParameters.AddOutput("%", "na");
+                        binParameters.AddOutput("pc", "na");
                         binParameters.AddOutput("cm", "na");
-                        binParameters.AddOutput("%2", "na");
+                        binParameters.AddOutput("pc2", "na");
                     }
                 }
             }

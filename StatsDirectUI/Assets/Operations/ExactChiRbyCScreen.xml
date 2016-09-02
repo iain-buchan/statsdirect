@@ -103,7 +103,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptChiRbyC" />
-	  <report type="application/x-statsdirect-creole" filename="chirxc.creole" />
+    <report type="application/x-statsdirect-creole" filename="chirxc.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>ExactChiRbyCScreen</suggested-operation>

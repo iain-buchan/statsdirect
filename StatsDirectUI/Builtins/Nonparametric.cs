@@ -4015,9 +4015,8 @@ namespace StatsDirect.Builtins
             int boots = parameters["boots"].AsInt32;
             int boots_divisor = Math.Max(1, boots / 1000);
             if (GAMMA <= 0)
-            {
                 throw new TemplateOperationCancelledException();
-            }
+
             MathDbl.civ(0, out cit, GAMMA, out P0);
 
             MersenneTwister rng = new MersenneTwister(); //  Seeds itself
@@ -4038,12 +4037,12 @@ namespace StatsDirect.Builtins
                 {
                     if (val != Constant.MISSING & val > 0.0)
                     {
-                        rx = rx + 1;
+                        rx++;
                         r[rx] = val;
-                        vtot = vtot + val;
+                        vtot += vtot;
                     }
                 }
-                double vmean = vtot / Convert.ToDouble(rx);
+                double vmean = vtot / rx;
                 Array.Sort(r, 1, rx);
 
                 double sumx = 0;

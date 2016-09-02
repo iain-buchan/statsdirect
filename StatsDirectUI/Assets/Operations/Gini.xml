@@ -39,5 +39,6 @@
 			</iftrue>
 		</test>
 		<report type="text/rtf" filename="gini.rtf" />
-	</steps>
+    <!-- <report type="application/x-statsdirect-creole" filename="gini.creole" /> -->
+  </steps>
 </operation>

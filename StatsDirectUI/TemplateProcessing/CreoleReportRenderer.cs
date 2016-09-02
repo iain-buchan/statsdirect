@@ -47,6 +47,8 @@ namespace StatsDirect.TemplateProcessing
                 { "</pre>", @"}" },
                 { "<pval>", @"{\cf5 " },
                 { "</pval>", @"}" },
+                { "<score>", @"{\cf3 " },
+                { "</score>", @"}" },
                 { "<sub>", @"{\sub " },
                 { "</sub>", @"}" },
                 { "<subtitle>", @"{\ul " },
@@ -76,7 +78,9 @@ namespace StatsDirect.TemplateProcessing
                 { "<warn>", @"{\cf6 " },
                 { "</warn>", @"}" },
                 { "<warnabit>", @"{\cf9 " },
-                { "</warnabit>", @"}" }
+                { "</warnabit>", @"}" },
+                { "&#xb2;", @"\'b2" },
+                { "&#xe9;", @"\'e9" }
             };
 
             string afterSubstitutions = substitutedTemplate.Trim();

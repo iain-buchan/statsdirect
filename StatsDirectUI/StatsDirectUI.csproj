@@ -1299,85 +1299,28 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="Assets\STATSDIRECT.chm" />
-    <None Include="Assets\Template\abridged.rtf" />
-    <None Include="Assets\Template\agree.rtf" />
-    <None Include="Assets\Template\asciigr.rtf" />
     <None Include="Assets\Template\BACKINT.rtf" />
     <None Include="Assets\Template\blank.rtf" />
-    <None Include="Assets\Template\BONFERR.rtf" />
-    <None Include="Assets\Template\chartonly.rtf" />
     <None Include="Assets\Template\charts.rtf" />
-    <None Include="Assets\Template\chi2xc.rtf" />
-    <None Include="Assets\Template\chigood.rtf" />
     <None Include="Assets\Template\chirxc.rtf" />
-    <None Include="Assets\Template\cimeany.rtf" />
-    <None Include="Assets\Template\clogit.rtf" />
-    <None Include="Assets\Template\chartonly-ascii.rtf" />
-    <None Include="Assets\Template\cochranq.rtf" />
-    <None Include="Assets\Template\chiTwoByKSimulatedExactP.rtf" />
     <None Include="Assets\Template\universal_r_compare.rtf" />
-    <None Include="Assets\Template\metaCorrelation.rtf" />
     <None Include="Assets\Template\universalAgreement.rtf" />
     <None Include="Assets\Template\kappaSimulatedExactP.rtf" />
     <None Include="Assets\Template\simulatedExactP.rtf" />
     <None Include="Assets\Template\xtabouter.rtf" />
     <None Include="Assets\Template\covarmx.rtf" />
-    <None Include="Assets\Template\coxreg.rtf" />
-    <None Include="Assets\Template\cox_det.rtf" />
-    <None Include="Assets\Template\cox_dev.rtf" />
-    <None Include="Assets\Template\cox_s.rtf" />
-    <None Include="Assets\Template\cronbach.rtf" />
-    <None Include="Assets\Template\cuzick.rtf" />
-    <None Include="Assets\Template\describe.rtf" />
-    <None Include="Assets\Template\diagnost.rtf" />
-    <None Include="Assets\Template\diversity.rtf" />
-    <None Include="Assets\Template\dstdr.rtf" />
-    <None Include="Assets\Template\dunnett.rtf" />
-    <None Include="Assets\Template\effect.rtf" />
-    <None Include="Assets\Template\effectwm.rtf" />
-    <None Include="Assets\Template\FALSER.rtf" />
-    <None Include="Assets\Template\fisher.rtf" />
-    <None Include="Assets\Template\fisherx.rtf" />
-    <None Include="Assets\Template\freq.rtf" />
-    <None Include="Assets\Template\friedman.rtf" />
-    <None Include="Assets\Template\frmulti.rtf" />
     <None Include="Assets\Template\gencmh.rtf" />
-    <None Include="Assets\Template\genmeta.rtf" />
     <None Include="Assets\Template\gini.rtf" />
     <None Include="Assets\Template\glranova.rtf" />
-    <None Include="Assets\Template\grpcov.rtf" />
-    <None Include="Assets\Template\grprep.rtf" />
-    <None Include="Assets\Template\incid.rtf" />
-    <None Include="Assets\Template\interlin.rtf" />
-    <None Include="Assets\Template\INTERP.rtf" />
     <None Include="Assets\Template\interpmr.rtf" />
-    <None Include="Assets\Template\INTPROBX.rtf" />
-    <None Include="Assets\Template\INTPROBY.rtf" />
-    <None Include="Assets\Template\irdmeta.rtf" />
-    <None Include="Assets\Template\irrmeta.rtf" />
     <None Include="Assets\Template\kappa.rtf" />
     <None Include="Assets\Template\kappa2.rtf" />
     <None Include="Assets\Template\kappam.rtf" />
-    <None Include="Assets\Template\kap_meir.rtf" />
-    <None Include="Assets\Template\KENDALL.rtf" />
-    <None Include="Assets\Template\kruskal.rtf" />
-    <None Include="Assets\Template\kwmulti.rtf" />
     <None Include="Assets\Template\latin.rtf" />
     <None Include="Assets\Template\lifetab.rtf" />
-    <None Include="Assets\Template\likely.rtf" />
-    <None Include="Assets\Template\LINISED.rtf" />
-    <None Include="Assets\Template\logrank.rtf" />
-    <None Include="Assets\Template\MANNWHIT.rtf" />
     <None Include="Assets\Template\mantel.rtf" />
-    <None Include="Assets\Template\mcnamar.rtf" />
     <None Include="Assets\Template\multi.rtf" />
-    <None Include="Assets\Template\M_PAIRED.rtf" />
-    <None Include="Assets\Template\M_SINGLE.rtf" />
-    <None Include="Assets\Template\M_UNPAIR.rtf" />
     <None Include="Assets\Template\nestmean.rtf" />
-    <None Include="Assets\Template\nkeuls.rtf" />
-    <None Include="Assets\Template\nplinreg.rtf" />
-    <None Include="Assets\Template\odds.rtf" />
     <None Include="Assets\Template\oneway.rtf" />
     <None Include="Assets\Template\orci.rtf" />
     <None Include="Assets\Template\pardet.rtf" />
@@ -1412,7 +1355,6 @@
     <None Include="Assets\Template\R_UNPAIR.rtf" />
     <None Include="Assets\Template\R_XY.rtf" />
     <None Include="Assets\Template\scheffe.rtf" />
-    <None Include="Assets\Template\normality.rtf" />
     <None Include="Assets\Template\sign.rtf" />
     <None Include="Assets\Template\SIMANAL.rtf" />
     <None Include="Assets\Template\simple.rtf" />
@@ -1611,7 +1553,6 @@
     <Content Include="Assets\Operations\BarPlot.xml" />
     <Content Include="Assets\Operations\CochranQ.xml" />
     <Content Include="Assets\Operations\ChiGFSimulateExactP.xml" />
-    <Content Include="Assets\Operations\Chi2ByNWithTrendSimulateExactP.xml" />
     <Content Include="Assets\Operations\UniversalAgreementSimulateExactP.xml" />
     <Content Include="Assets\Operations\TransformZECDF.xml" />
     <Content Include="Assets\Operations\TransformZSD.xml" />
@@ -1938,8 +1879,6 @@
     <Content Include="Assets\Operations\Wilcoxon.xml" />
     <Content Include="Assets\Operations\Xxi.xml" />
     <None Include="Properties\app.manifest" />
-    <None Include="Assets\Template\groupedtwoway.rtf" />
-    <None Include="Assets\Template\groupedoneway.rtf" />
     <Content Include="UI\sd3.ico" />
     <Content Include="UI\SD7.ICO" />
     <Content Include="Assets\UserOperations\com.statsdirect.RTest.xml" />
@@ -1985,7 +1924,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -20,6 +20,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptCronbach" />
-		<report type="text/rtf" filename="cronbach.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="cronbach.creole" />
+  </steps>
 </operation>
