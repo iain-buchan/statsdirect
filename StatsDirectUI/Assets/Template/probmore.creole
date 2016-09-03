@@ -9,12 +9,14 @@
 <line></line>
 <line>Variance of B = <in>var_b</in></line>
 <line>Standard error of B <in>het</in> = <in>seb</in></line>
-<line><block name="natural"></line>
+<block name="natural">
+<line></line>
 <line>Estimated natural response rate (C) = <in>c</in></line>
-<line>Standard error of B <in>het_c</in> = <in>seb_c</in></block></line>
+<line>Standard error of B <in>het_c</in> = <in>seb_c</in></line>
+</block>
 <line></line>
 <table>
-<tr><th>Index</th><th>Subjects</th><th>Responses</th><th>Expected</th><th>Deviation</u><block name="obs"></td></tr>
-<tr><td><in>obs</in></td><td><in>sub</in></td><td><in>res</in></td><td><in>exp</in></td><td><in>dev</in></block></td></tr>
+<tr><th>Index</th><th>Subjects</th><th>Responses</th><th>Expected</th><th>Deviation</th></tr>
+<block name="obs"><tr><td><in>obs</in></td><td><in>sub</in></td><td><in>res</in></td><td><in>exp</in></td><td><in>dev</in></td></tr></block>
 </table>
 </report>

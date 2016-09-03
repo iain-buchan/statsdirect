@@ -1,6 +1,7 @@
 <report>
 <line><title>Frequencies</title></line>
-<block name="variable"><line></line>
+<block name="variable">
+<line></line>
 <line><subtitle>Frequency analysis for <in>ti</in></subtitle></line>
 <line></line>
 <line>Total = <in>n</in></line>

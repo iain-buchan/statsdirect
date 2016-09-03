@@ -10,11 +10,15 @@
 <line>T<sub>1</sub> (chi-square) = <in>t1</in></line>
 <line>df = <in>df</in></line>
 <line></line>
-<line>After Iman & Davenport (1980):</line>
+<line>After Iman &amp; Davenport (1980):</line>
 <line>T<sub>2</sub> (F) =  <in>t2</in></line>
-<line><pval><in>p</in></pval><block name="message"></line>
+<line><pval><in>p</in></pval></line>
+<block name="message">
 <line></line>
-<line><in>msg</in></block><block name="warn"></line>
+<line><in>msg</in></line>
+</block>
+<block name="warn">
 <line></line>
-<line><in>warning</in></block></line>
+<line><in>warning</in></line>
+</block>
 </report>

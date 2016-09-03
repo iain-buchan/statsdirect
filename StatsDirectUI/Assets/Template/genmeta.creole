@@ -23,9 +23,9 @@
 <line><subtitle>Random effects (DerSimonian-Laird)</subtitle></line>
 <line>Pooled <in>dsstat</in> = <in>dsrr</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
 <line>Z (test <in>stat</in>) = <in>dz</in>  <pval><in>dp</in></pval></line>
+<block name="bias">
 <line></line>
 <line><subtitle>Bias indicators</subtitle></line>
-<block name="bias">
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
 <line>Egger: bias = <in>a</in> (<ci><in>pc</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
 </block>

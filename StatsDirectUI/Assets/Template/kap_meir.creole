@@ -1,10 +1,14 @@
 <report>
 <line><title>Kaplan-Meier survival estimates</title></line>
-<line><block name="group"><block name="grp"></line>
-<line><subtotal><b><in>grp</in></b></subtotal></block></line>
+<line></line>
+<block name="group">
+<block name="grp">
+<line><subtotal><b><in>grp</in></b></subtotal></line>
+<line></line>
+</block>
 <table>
-<tr><th>Time</th><th>At risk</th><th>Dead</th><th>Censored</th><th>S</th><th>SE(S)</th><th>H</th><th>SE(H)</u><block name="est"></td></tr>
-<tr><td><in>time</in></td><td><in>risk</in></td><td><in>dead</in></td><td><in>cen</in></td><td><in>s</in></td><td><in>ses</in></td><td><in>h</in></td><td><in>seh</in></block></td></tr>
+<tr><th>Time</th><th>At risk</th><th>Dead</th><th>Censored</th><th>S</th><th>SE(S)</th><th>H</th><th>SE(H)</th></tr>
+<block name="est"><tr><td><in>time</in></td><td><in>risk</in></td><td><in>dead</in></td><td><in>cen</in></td><td><in>s</in></td><td><in>ses</in></td><td><in>h</in></td><td><in>seh</in></td></tr></block>
 </table>
 <line></line>
 <line>Median survival time = <in>med</in></line>

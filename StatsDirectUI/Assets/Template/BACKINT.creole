@@ -1,6 +1,4 @@
 <report>
 <line>For Y = <in>y</in></line>
 <line>Predicted X = <in>x</in></line>
-<line></line>
-<line></line>
 </report>

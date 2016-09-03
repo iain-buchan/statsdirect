@@ -10,5 +10,4 @@
 <line><ci>Approximate two sided <in>pc2</in>% CI =  <in>lower2</in>  to  <in>upper2</in></ci></line>
 <line><ci>Approximate one sided <in>pc1</in>% CI =  <in>lower1</in>  to  <in>upper1</in></ci>  </line>
 </block>
-<line></line>
 </report>

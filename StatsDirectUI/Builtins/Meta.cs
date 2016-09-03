@@ -3611,9 +3611,7 @@ namespace StatsDirect.Builtins
                 y[i] = rVariable.Data[i - 1];
                 pg[i] = 0;
                 if (y[i] < -1.0 || y[i] > 1.0)
-                {
                     throw new Exception("r(" + i + ") must be between -1 and 1");
-                }
             }
             // pooled indicator for last element - needed by plot_cp
             pg[k + 1] = -1;

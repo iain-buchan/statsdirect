@@ -10,9 +10,9 @@
 <line><pval><in>p</in></pval></line>
 <line></line>
 <line><u>Cohen's kappa (weighted by <in>methodName</in>)</u></line>
-<line>ratings weighted by:<block name="weights"></line>
+<line>ratings weighted by:</line>
 <table>
-<tr><td><block name="tot"><in>tot</in></td><td></block></block></td></tr>
+<block name="weights"><tr><block name="tot"><td><in>tot</in></td></block></tr></block>
 </table>
 <line>Observed agreement = <in>pow</in>%</line>
 <line>Expected agreement = <in>pew</in>%</line>
@@ -24,8 +24,8 @@
 <line><u>Scott's pi</u></line>
 <line>Observed agreement = <in>pocopy</in>%</line>
 <line>Expected agreement = <in>spe</in>%</line>
-<line>Pi = <in>spi</in><block name="deci"></line>
-<line><ci><in>pc</in>% Donner-Eliasziw confidence interval = <in>lwr</in> to <in>upr</in></ci></block></line>
+<line>Pi = <in>spi</in></line>
+<block name="deci"><line><ci><in>pc</in>% Donner-Eliasziw confidence interval = <in>lwr</in> to <in>upr</in></ci></line></block>
 <line></line>
 <line><u>Gwet's AC1</u></line>
 <line>Observed agreement = <in>gamapc</in>%</line>

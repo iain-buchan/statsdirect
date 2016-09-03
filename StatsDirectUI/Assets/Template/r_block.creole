@@ -10,7 +10,7 @@
 </table>
 <line></line>
 <table>
-<tr><th>Subject</th><th>Treatment</u><block name="subjects"></td></tr>
-<tr><td><in>id</in></td><td><in>rx</in></block></td></tr>
+<tr><th>Subject</th><th>Treatment</th></tr>
+<block name="subjects"><tr><td><in>id</in></td><td><in>rx</in></td></tr></block>
 </table>
 </report>

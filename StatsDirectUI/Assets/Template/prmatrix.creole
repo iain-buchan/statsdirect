@@ -1,9 +1,7 @@
 <report>
 <line><in>type</in> matrix:</line>
 <table>
-<tr><td></td><td><block name="lab1"><u><subtotal><in>lab</in></subtotal><b></th></u><td></b></block><block name="lab2"></td></tr>
-<tr><td><subtotal><in>lab</in></subtotal></td><td><block name="res"><in>res</in><warn></td><td></warn></block></block></td></tr>
+<tr><th></th><block name="lab1"><th><subtotal><in>lab</in></subtotal></th></block></tr>
+<block name="lab2"><tr><td><subtotal><in>lab</in></subtotal></td><block name="res"><td><in>res</in></td></block></tr></block>
 </table>
-<line></line>
-<line></line>
 </report>

@@ -2,34 +2,36 @@
 <line><title>Abridged life table</title></line>
 <line></line>
 <table>
-<tr><th>Interval</th><th>Population</th><th>Deaths</th><th>Death rate</u><block name="inputs"></td></tr>
-<tr><td><in>int</in></td><td><in>pop</in></td><td><in>dead</in></td><td><in>rate</in> </block></td></tr>
+<tr><th>Interval</th><th>Population</th><th>Deaths</th><th>Death rate</th></tr>
+<block name="inputs"><tr><td><in>int</in></td><td><in>pop</in></td><td><in>dead</in></td><td><in>rate</in></td></tr></block>
 </table>
 <line></line>
 <table>
-<tr><th>Interval</th><th>Probability of dying [q<sub>x</sub>]</th><th>SE of q<sub>x</sub></th><th><ci><in>pc</in>% CI for q<sub>x</sub></ci></u><block name="pdying"></td></tr>
-<tr><td><in>int</in></td><td><in>q</in></td><td><in>se</in></td><td><ci><in>lci</in>  to  <in>uci</in></ci></block></td></tr>
+<tr><th>Interval</th><th>Probability of dying [q<sub>x</sub>]</th><th>SE of q<sub>x</sub></th><th><ci><in>pc</in>% CI for q<sub>x</sub></ci></th></tr>
+<block name="pdying"><tr><td><in>int</in></td><td><in>q</in></td><td><in>se</in></td><td><ci><in>lci</in>  to  <in>uci</in></ci></td></tr></block>
 </table>
 <line></line>
 <table>
-<tr><th>Interval</th><th>Living at start [l<sub>x</sub>]</th><th>Dying [d<sub>x</sub>]</th><th>Fraction of last interval of life [a<sub>x</sub>]</u><block name="living"></td></tr>
-<tr><td><in>int</in></td><td><in>l</in></td><td><in>d</in></td><td><in>a</in></block></td></tr>
+<tr><th>Interval</th><th>Living at start [l<sub>x</sub>]</th><th>Dying [d<sub>x</sub>]</th><th>Fraction of last interval of life [a<sub>x</sub>]</th></tr>
+<block name="living"><tr><td><in>int</in></td><td><in>l</in></td><td><in>d</in></td><td><in>a</in></td></tr></block>
 </table>
 <line></line>
 <table>
-<tr><th>Interval</th><th>Years in interval [L<sub>x</sub>]</th><th>Years beyond start of interval [T<sub>x</sub>]</u><block name="years"></td></tr>
-<tr><td><in>int</in></td><td><in>L</in></td><td><in>T</in></block></td></tr>
+<tr><th>Interval</th><th>Years in interval [L<sub>x</sub>]</th><th>Years beyond start of interval [T<sub>x</sub>]</th></tr>
+<block name="years"><tr><td><in>int</in></td><td><in>L</in></td><td><in>T</in></td></tr></block>
 </table>
 <line></line>
 <table>
-<tr><th>Interval</th><th>Expectation of life [e<sub>x</sub>]</th><th>SE of e<sub>x</sub></th><th><ci><in>pc</in>% CI for e<sub>x</sub></ci></u><block name="expectation"></td></tr>
-<tr><td><in>int</in></td><td><in>e</in></td><td><in>se</in></td><td><ci><in>lci</in>  to  <in>uci</in></ci></block><block name="util"></td></tr>
+<tr><th>Interval</th><th>Expectation of life [e<sub>x</sub>]</th><th>SE of e<sub>x</sub></th><th><ci><in>pc</in>% CI for e<sub>x</sub></ci></th></tr>
+<block name="expectation"><tr><td><in>int</in></td><td><in>e</in></td><td><in>se</in></td><td><ci><in>lci</in>  to  <in>uci</in></ci></td></tr></block>
 </table>
+<block name="util">
 <line></line>
 <table>
-<tr><th>Interval</th><th>Adjusted (<in>uti</in>) expectation of life [e<sub>x</sub>]</u><block name="adjusted"></td></tr>
-<tr><td><in>int</in></td><td><in>eh</in></block></block></td></tr>
+<tr><th>Interval</th><th>Adjusted (<in>uti</in>) expectation of life [e<sub>x</sub>]</th></tr>
+<block name="adjusted"><tr><td><in>int</in></td><td><in>eh</in></td></tr></block>
 </table>
+</block>
 <line></line>
 <line>Median expectation of life (age at which half of original cohort survives) = <in>med</in></line>
 <line><ci><in>pc</in>% CI by Monte Carlo (<in>its</in>) simulation = <in>med_lci</in>  to  <in>med_uci</in></ci></line>

@@ -17,12 +17,8 @@
 <line>Expectation of A = <in>exp_a</in></line>
 <line></line>
 <table>
-<block name="header">
-<tr><td><warnabit>A</warnabit></td><td><warnabit>Lower Tail</warnabit></td><td><warnabit>Individual P</warnabit></td><td><warnabit>Upper Tail</warnabit></td></tr>
-</block>
-<block name="row">
-<tr><td><warnabit><in>a</in></warnabit></td><td><warnabit><in>lower</in></warnabit></td><td><warnabit><in>ind_p</in></warnabit></td><td><warnabit><in>upper</in></warnabit></td></tr>
-</block>
+<block name="header"><tr><td><warnabit>A</warnabit></td><td><warnabit>Lower Tail</warnabit></td><td><warnabit>Individual P</warnabit></td><td><warnabit>Upper Tail</warnabit></td></tr></block>
+<block name="row"><tr><td><warnabit><in>a</in></warnabit></td><td><warnabit><in>lower</in></warnabit></td><td><warnabit><in>ind_p</in></warnabit></td><td><warnabit><in>upper</in></warnabit></td></tr></block>
 </table>
 <line></line>
 <line><pval>One sided <in>tail_1</in> P = <in>p_1</in>   (doubled: <in>p_1d</in>)</pval></line>

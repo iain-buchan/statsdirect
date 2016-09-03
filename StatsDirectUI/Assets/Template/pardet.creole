@@ -2,19 +2,17 @@
 <line><title>Multiple linear regression - collinearity and parameter detail</title></line>
 <line></line>
 <table>
-<tr><td><b></td><th></b>Coefficient</th><th>Standard Error</th><th><ci><in>pc</in>% Confidence Interval</ci></u><block name="v"></td></tr>
-<tr><td><in>label</in></td><td><in>coef</in></td><td><in>err</in></td><td><ci><in>from</in>  to  <in>to</in></ci></block></td></tr>
+<tr><th></th><th>Coefficient</th><th>Standard Error</th><th><ci><in>pc</in>% Confidence Interval</ci></th></tr>
+<block name="v"><tr><td><in>label</in></td><td><in>coef</in></td><td><in>err</in></td><td><ci><in>from</in>  to  <in>to</in></ci></td></tr></block>
 </table>
 <line></line>
 <line></line>
 <table>
-<tr><td><b></td><th></b>Variance Inflation Factor (VIF)</th></u><td></td><th>Tolerance (1/VIF)</u><block name="vif"></td></tr>
-<tr><td><in>label</in></td><td><in>vif</in></td><td><warn><in>x</in></warn></td><td><in>rvif</in></block></td></tr>
+<tr><th></th><th>Variance Inflation Factor (VIF)</th><th></th><th>Tolerance (1/VIF)</th></tr>
+<block name="vif"><tr><td><in>label</in></td><td><in>vif</in></td><td><warn><in>x</in></warn></td><td><in>rvif</in></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><td>mean VIF</td><td><in>meanv</in></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>

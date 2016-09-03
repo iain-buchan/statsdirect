@@ -79,6 +79,9 @@ namespace StatsDirect.TemplateProcessing
                 { "</warn>", @"}" },
                 { "<warnabit>", @"{\cf9 " },
                 { "</warnabit>", @"}" },
+                { "&amp;", @"&" },
+                { "&gt;", @">" },
+                { "&lt;", @"<" },
                 { "&#xb2;", @"\'b2" },
                 { "&#xe9;", @"\'e9" }
             };

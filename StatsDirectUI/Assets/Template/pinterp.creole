@@ -1,7 +1,8 @@
 <report>
 <line><title>Polynomial regression - Interpolation</title></line>
-<line><block name="table"><in>lab</in> = <in>res</in></line>
-<line></block></line>
+<line></line>
+<block name="table"><line><in>lab</in> = <in>res</in></line></block>
+<line></line>
 <line><in>y_lab</in> = <in>y_res</in></line>
 <line></line>
 <line><ci><in>pc</in>% Confidence interval = <in>from_conf</in> to <in>to_conf</in></ci></line>

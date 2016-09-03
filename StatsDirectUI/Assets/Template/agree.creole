@@ -2,9 +2,11 @@
 <line><title>Agreement</title></line>
 <line></line>
 <line>Variables: <in>tlist</in></line>
-<line><block name="all"></line>
+<block name="all">
+<line></line>
 <line><in>pc</in>% Limits of agreement = <in>from</in> to <in>to</in></line>
-<line></block></line>
+</block>
+<line></line>
 <line>Intra-class correlation coefficient (one way random effects) = <in>icc</in></line>
 <line></line>
 <line>Estimated within-subjects standard deviation = <in>wssd</in></line>

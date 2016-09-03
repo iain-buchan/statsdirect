@@ -1,7 +1,8 @@
 <report>
 <line><title>Diversity</title></line>
-<line><block name="var"></line>
-<line><u><subtotal>Analysis for <in>ti</in></subtotal></u>:</line>
+<block name="var">
+<line></line>
+<line><subtitle>Analysis for <in>ti</in>:</subtitle></line>
 <line></line>
 <line>Total number of counts = <in>n</in>  <warn><in>msg</in></warn></line>
 <line>Number of classes observed (richness) = <in>s</in></line>
@@ -24,5 +25,6 @@
 <line><ci>Normal (large sample) <in>pc</in>% CI = <in>from-shannon-largeSample</in> to <in>to-shannon-largeSample</in></ci></line>
 <line>Re-samples = <in>boots</in>, bias = <in>bias-shannon</in>, standard error (bootstrap) = <in>se-shannon-bootstrap</in></line>
 <line><ci>Normal (bootstrap) <in>pc</in>% CI = <in>from-shannon-bootstrap</in> to <in>to-shannon-bootstrap</in></ci></line>
-<line><ci>Centred bootstrap-t <in>pc</in>% CI = <in>from-shannon-bootstrap-t</in> to <in>to-shannon-bootstrap-t</in></ci></block></line> 
+<line><ci>Centred bootstrap-t <in>pc</in>% CI = <in>from-shannon-bootstrap-t</in> to <in>to-shannon-bootstrap-t</in></ci></line>
+</block>
 </report>

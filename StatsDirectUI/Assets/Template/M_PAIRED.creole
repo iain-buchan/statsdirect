@@ -15,7 +15,8 @@
 <line><pval>Two sided <in>tail_2</in></pval></line>
 <line></line>
 <line>Power <in>pwr</in></line>
-<line><block name="twosample"></line>
+<block name="twosample">
+<line></line>
 <line></line>
 <line><title>Two sample analysis of agreement</title></line>
 <line></line>

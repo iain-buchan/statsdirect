@@ -8,12 +8,15 @@
 <line>Proportion difference = <in>prop_diff</in></line>
 <line></line>
 <line><ci>Approximate (Miettinen) <in>ci</in>% confidence interval = <in>from</in> to <in>to</in></ci></line>
-<line><block name="exact2"></line>
+<block name="exact2">
+<line></line>
 <line><pval>Exact two sided (mid) <in>mp</in></pval></line>
-<line></block></line>
+</block>
+<line></line>
 <line>Standard error of proportion difference = <in>se</in></line>
 <line>Standard normal deviate (z) = <in>z</in></line>
-<line><block name="approx2"><pval>Approximate two sided <in>p_2</in></pval></line>
+<block name="approx2">
+<line><pval>Approximate two sided <in>p_2</in></pval></line>
 <line><pval>Approximate one sided <in>p_1</in></pval></line>
 </block>
 </report>

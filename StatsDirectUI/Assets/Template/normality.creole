@@ -1,6 +1,7 @@
 <report>
 <line><title>Normality</title></line>
-<line><block name="variable"></line>
+<block name="variable">
+<line></line>
 <table>
 <tr><td>Sample name</td><td><in>sample</in></td></tr>
 <tr><td>Sample size</td><td><in>n</in></td></tr>
@@ -24,5 +25,5 @@
 <line></line>
 <line><in>chart</in></line>
 <line></line>
-<line></block> </line>
+</block>
 </report>

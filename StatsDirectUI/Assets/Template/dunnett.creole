@@ -7,8 +7,7 @@
 <line>Control  <subtotal>(n)</subtotal> = <in>control</in>  <subtotal>(<in>cn</in>)</subtotal></line>
 <line></line>
 <table>
-<tr><th>Comparison  <subtotal>(n)</subtotal></th><th>Mean difference <ci>(<in>pc</in>% CI)</ci></th><th></th><block name="differences"></tr>
-<tr><td><in>level</in>  <subtotal>(<in>cn</in>)</subtotal></td><td><in>delta</in><ci>(<in>lci</in>  to  <in>uci</in>)</ci></td><td><pval><in>p</in></pval></td></tr>
-</block>
+<tr><th>Comparison  <subtotal>(n)</subtotal></th><th>Mean difference <ci>(<in>pc</in>% CI)</ci></th><th></th></tr>
+<block name="differences"><tr><td><in>level</in>  <subtotal>(<in>cn</in>)</subtotal></td><td><in>delta</in><ci>(<in>lci</in>  to  <in>uci</in>)</ci></td><td><pval><in>p</in></pval></td></tr></block>
 </table>
 </report>

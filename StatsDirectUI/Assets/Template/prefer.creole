@@ -9,10 +9,7 @@
 <line>Randomized with seed: <in>seed</in></line>
 <line></line>
 <table>
-<tr><td><subtotal>Subject</td><td>Group</subtotal></td></tr>
-<tr><td><block name="groups"><in>sub</in></td><td><in>grp</in></td></tr>
+<tr><th>Subject</th><th>Group</th></tr>
+<block name="groups"><tr><td><in>sub</in></td><td><in>grp</in></td></tr></block>
 </table>
-<line></block></line>
-<line></line>
-<line></line>
 </report>

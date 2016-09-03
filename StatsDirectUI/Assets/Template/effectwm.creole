@@ -7,21 +7,25 @@
 <tr><td><in>st</in></td><td><in>ne</in></td><td><in>nc</in></td><td><in>d</in></td><td><ci><in>lci</in></ci></td><td><ci><in>uci</in></ci></td><td><subtotal><in>lb</in></subtotal></td></tr>
 </block>
 </table>
-<line><block name="poolok"></line>
-<line><u>Fixed effects (Mulrow-Oxman)</u></line>
+<block name="poolok">
+<line></line>
+<line><subtitle>Fixed effects (Mulrow-Oxman)</subtitle></line>
 <line>Pooled effect size wmd+ = <in>dplus</in> (<ci><in>pc</in>% CI = <in>from</in> to <in>to</in></ci>)</line>
 <line>Z (test wmd+ differs from 0) = <in>z</in>  <pval><in>p</in></pval></line>
 <line></line>
-<line><u>Non-combinability of studies</u></line>
+<line><subtitle>Non-combinability of studies</subtitle></line>
 <line>Cohran Q = <in>qc</in>  (df = <in>df</in>)  <pval><in>xp</in></pval></line>
 <line>Moment-based estimate of between studies variance = <in>tausq</in></line>
 <line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
 <line></line>
-<line><u>Random effects (DerSimonian-Laird)</u></line>
+<line><subtitle>Random effects (DerSimonian-Laird)</subtitle></line>
 <line>Pooled wmd+ = <in>dsrd</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
-<line>Z (test wmd+ differs from 0) = <in>dz</in>  <pval><in>zp</in></pval></block></line>
+<line>Z (test wmd+ differs from 0) = <in>dz</in>  <pval><in>zp</in></pval></line>
+</block>
+<block name="egger">
 <line></line>
-<line><u>Bias indicators</u><block name="egger"></line>
+<line><subtitle>Bias indicators</subtitle></line>
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+</block>
 </report>

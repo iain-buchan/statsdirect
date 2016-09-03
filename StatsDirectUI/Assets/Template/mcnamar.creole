@@ -16,7 +16,9 @@
 <line><ci>Exact <in>pc</in>% confidence interval = <in>from</in> to <in>to</in></ci></line>
 <line></line>
 <line>F = <in>f</in></line>
-<line><pval>Two sided <in>tail_2</in></pval><block name="r_prime"></line>
+<line><pval>Two sided <in>tail_2</in></pval></line>
+<block name="r_prime">
 <line></line>
-<line><warn>R' is significantly different from unity</warn></block></line>
+<line><warn>R' is significantly different from unity</warn></line>
+</block>
 </report>

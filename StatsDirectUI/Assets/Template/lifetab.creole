@@ -10,6 +10,4 @@
 <tr><th>Interval</th><th>P(survival)</th><th>Survivors (l<sub>x</sub>%)</th><th>SD of l<sub>x</sub>%</th><th><ci><in>pc</in>% CI for l<sub>x</sub>%</ci></th></tr>
 <block name="survival"><tr><td><in>int</in></td><td><in>p</in></td><td><in>lx</in></td><td><in>var</in></td><td><ci><in>lci</in>  to  <in>uci</in></ci></td></tr></block>
 </table>
-<line></line>
-<line></line>
 </report>

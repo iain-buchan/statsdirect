@@ -4,15 +4,13 @@
 <line>Rates are expressed per <in>units</in> of person time:</line>
 <line></line>
 <table>
-<tr><th>Index events</th><th>Index PT</th><th>Index rate</th><th>Reference size</th><th>Weight</u></td></tr>
-<tr><td><block name="inputs"><in>idxy</in></td><td><in>idxn</in></td><td><in>idxr</in></td><td><in>refn</in></td><td><in>refw</in></td></tr>
-</block>
+<tr><th>Index events</th><th>Index PT</th><th>Index rate</th><th>Reference size</th><th>Weight</th></tr>
+<block name="inputs"><tr><td><in>idxy</in></td><td><in>idxn</in></td><td><in>idxr</in></td><td><in>refn</in></td><td><in>refw</in></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Index rate</th><th><ci>Exact <in>pc</in>% confidence interval</ci></th><th></th></tr>
-<tr><td><block name="cis"><in>idxr</in></td><td><ci><in>from</in>  to  <in>to</in></ci></td><td><in>label</in></td></tr>
-</block>
+<block name="cis"><tr><td><in>idxr</in></td><td><ci><in>from</in>  to  <in>to</in></ci></td><td><in>label</in></td></tr></block>
 </table>
 <line></line>
 <line>Total events = <in>events</in></line>

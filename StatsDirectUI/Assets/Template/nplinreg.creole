@@ -3,10 +3,13 @@
 <line></line>
 <line><in>ytitle</in> vs. <in>xtitle</in></line>
 <line>Observations per sample = <in>obs</in></line>
-<line><block name="cannotcalculate"></line>
-<line>Can not calculate regression</block><block name="results"></line>
-<line>Median slope (<ci><in>pc</in>% CI</ci>) = <in>mdn</in>  (<ci><in>from</in> to <in>to</in></ci>)</line>
-<line>Y-intercept = <in>intercept</in></block></line>
+<block name="cannotcalculate">
+<line></line>
+<line>Can not calculate regression</line>
+</block>
+<block name="results"><line>Median slope (<ci><in>pc</in>% CI</ci>) = <in>mdn</in>  (<ci><in>from</in> to <in>to</in></ci>)</line>
+<line>Y-intercept = <in>intercept</in></line>
+</block>
 <line></line>
 <line>Kendall's rank correlation coefficient <in>taulab</in> =  <in>tau</in></line>
 <line><pval>Two sided (on continuity corrected z) <in>p_2</in></pval>  (H<sub>1</sub>: any correlation)</line>

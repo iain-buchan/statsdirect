@@ -5,23 +5,17 @@
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Responding</th><th>Total</th><th></th></tr>
-<block name="inputs">
-<tr><td><in>st</in></td><td><in>r</in></td><td><in>n</in></td><td><subtotal><in>lb</in></subtotal></td></tr>
-</block>
+<block name="inputs"><tr><td><in>st</in></td><td><in>r</in></td><td><in>n</in></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Proportion</th><thfirst><ci><in>pc</in>% CI (exact)</ci></thfirst><thspan/><th></th></tr>
-<block name="proportions">
-<tr><td><in>st</in></td><td><in>p</in></td><td><ci><in>from_y</in></ci></td><td><ci><in>to_y</in></ci></td><td><subtotal><in>lb</in></subtotal></td></tr>
-</block>
+<block name="proportions"><tr><td><in>st</in></td><td><in>p</in></td><td><ci><in>from_y</in></ci></td><td><ci><in>to_y</in></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
-<block name="proportions">
-<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><subtotal><in>lb</in></subtotal></td></tr>
-</block>
+<block name="proportions"><tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <line><u>Fixed effects (inverse variance)</u></line>
@@ -35,8 +29,12 @@
 <line><u>Random effects (DerSimonian-Laird)</u></line>
 <line>Pooled proportion = <in>dspr</in> (<ci><in>pc</in>% CI = <in>from_ds</in> to <in>to_ds</in></ci>)</line>
 <line></line>
-<line><u>Bias indicators</u><block name="egger"></line>
+<line><u>Bias indicators</u></line>
+<block name="egger">
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block><block name="harbord"></pval></line>
-<line>Harbord: bias = <in>a</in> (<ci><in>pc_harbord</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+</block>
+<block name="harbord">
+<line>Harbord: bias = <in>a</in> (<ci><in>pc_harbord</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+</block>
 </report>

@@ -1,6 +1,5 @@
 <report>
-<line><table>
-<in>v1</in><b></td><td></b><in>v2</in></td></tr>
+<table>
+<tr><td><in>v1</in></td><td><in>v2</in></td></tr>
 </table>
-<line></line>
 </report>

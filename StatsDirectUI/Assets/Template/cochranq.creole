@@ -7,8 +7,12 @@
 <line>Q = <in>t1</in></line>
 <line>df = <in>df</in></line>
 <line><pval><in>p</in></pval></line>
+<block name="message">
 <line></line>
-<line><block name="message"><in>msg</in></block></line>
+<line><in>msg</in></line>
+</block>
+<block name="warn">
 <line></line>
-<line><block name="warn"><in>warning</in></block></line>
+<line><in>warning</in></line>
+</block>
 </report>

@@ -9,9 +9,7 @@
 </table>
 <line></line>
 <table>
-<tr><th>Variable</th><th>Mean</th><th>Significant contrasts</u><block name="summary"></td></tr>
-<tr><td><in>cf1</in></td><td><in>mean</in></td><td><in>sigs</in></block></td></tr>
+<tr><th>Variable</th><th>Mean</th><th>Significant contrasts</th></tr>
+<block name="summary"><tr><td><in>cf1</in></td><td><in>mean</in></td><td><in>sigs</in></td></tr></block>
 </table>
-<line></line>
-<line></line>
 </report>

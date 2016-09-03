@@ -13,11 +13,13 @@
 <line></line>
 <line><pval>One sided <in>p_1</in></pval></line>
 <line><pval>Two sided <in>p_2</in></pval></line>
+<block name="ties">
 <line></line>
-<line><block name="ties">Corrected for ties:</line>
+<line>Corrected for ties:</line>
 <line>VarT = <in>varttie</in></line>
 <line>z   = <in>ztie</in></line>
 <line></line>
 <line><pval>One sided <in>p_1tie</in></pval></line>
-<line><pval>Two sided <in>p_2tie</in></block></pval></line>
+<line><pval>Two sided <in>p_2tie</in></pval></line>
+</block>
 </report>

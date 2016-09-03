@@ -6,16 +6,21 @@
 <line>Groups = <in>grps</in></line>
 <line>df = <in>df</in></line>
 <line>Total observations = <in>tot_obs</in></line>
+<block name="fault">
 <line></line>
-<line><block name="fault">Fault in calculation</line>
+<line>Fault in calculation</line>
+</block>
 <line></line>
-<line></block>T = <in>t</in></line>
-<line><pval><in>p</in></pval><block name="ties"></line>
+<line>T = <in>t</in></line>
+<line><pval><in>p</in></pval></line>
+<block name="ties">
 <line></line>
 <line>Adjusted for ties:</line>
 <line></line>
 <line>T = <in>t_ties</in></line>
-<line><pval><in>p_ties</in></pval></block><block name="message"></line>
-<line></line>
-<line><in>msg</in></block></line>
+<line><pval><in>p_ties</in></pval></line>
+</block>
+<block name="message"><line></line>
+<line><in>msg</in></line>
+</block>
 </report>

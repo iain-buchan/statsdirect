@@ -4,8 +4,8 @@
 <line>Cohen's kappa (Landis-Koch extension):</line>
 <line></line>
 <table>
-<tr><td><u>Response</th><th>Kappa</th><th>se</th><th>z(for k=0)</th><th>Probability</u><block name="cats"></td></tr>
-<tr><td><in>resp</in></td><td><in>k</in></td><td><in>se</in></td><td><in>z</in></td><td><pval><in>p</in></pval></block></td></tr>
+<tr><th>Response</th><th>Kappa</th><th>se</th><th>z(for k=0)</th><th>Probability</th></tr>
+<block name="cats"><tr><td><in>resp</in></td><td><in>k</in></td><td><in>se</in></td><td><in>z</in></td><td><pval><in>p</in></pval></td></tr></block>
 </table>
 <line></line>
 <line><u>Combined (Fleiss-Nee-Landis test)</u></line>

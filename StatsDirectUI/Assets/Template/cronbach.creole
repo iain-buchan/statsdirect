@@ -7,9 +7,7 @@
 <line></line>
 <table>
 <tr><th>Variable dropped</th><th>Alpha</th><th></th><th>Change</th><subtotal></subtotal></tr>
-<block name="raw">
-<tr><td><subtotal><in>lab</in></subtotal></td><td></td><td><in>a</in></td><td><in>x</in></td><td><in>a-t</in></td></tr>
-</block>
+<block name="raw"><tr><td><subtotal><in>lab</in></subtotal></td><td></td><td><in>a</in></td><td><in>x</in></td><td><in>a-t</in></td></tr></block>
 </table>
 <line></line>
 <line>With standardized variables:</line>
@@ -20,10 +18,6 @@
 <line></line>
 <table>
 <tr><th>Variable dropped</th><th>Alpha</th><th></th><th>Change</th></tr>
-<block name="standard">
-<tr><td><subtotal><in>lab</in></subtotal></td><td></td><td><in>a</in></td><td><in>x</in></td><td><in>a-t</in></td></tr>
-</block>
+<block name="standard"><tr><td><subtotal><in>lab</in></subtotal></td><td></td><td><in>a</in></td><td><in>x</in></td><td><in>a-t</in></td></tr></block>
 </table>
-<line></line>
-<line></line>
 </report>

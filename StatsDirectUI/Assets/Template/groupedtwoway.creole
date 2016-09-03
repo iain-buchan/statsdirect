@@ -1,5 +1,6 @@
 <report>
-<line><block name="a"><title>Two way randomized block analysis of variance for <in>variableName</in></title></line>
+<block name="a">
+<line><title>Two way randomized block analysis of variance for <in>variableName</in></title></line>
 <line></line>
 <line>Treatments: <in>tlist</in></line>
 <line></line>
@@ -15,6 +16,6 @@
 <line></line>
 <line>F (VR between treatments) = <in>grp_vr</in>  <pval><in>grp_p</in></pval></line>
 <line></line>
-<line></block></line>
 <line></line>
+</block>
 </report>

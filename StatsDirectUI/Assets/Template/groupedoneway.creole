@@ -1,5 +1,6 @@
 <report>
-<line><block name="a"><title>One way analysis of variance for <in>variableName</in></title></line>
+<block name="a">
+<line><title>One way analysis of variance for <in>variableName</in></title></line>
 <line></line>
 <line>Variables: <in>tlist</in></line>
 <line></line>
@@ -13,6 +14,5 @@
 <line>F (variance ratio) = <in>f</in>  <warnabit><in>p</in></warnabit></line>
 <line></line>
 <line></line>
-<line></block></line>
-<line></line>
+</block>
 </report>
