@@ -3,23 +3,17 @@
 <line></line>
 <table>
 <tr><th>Stratum</th><thfirst>Table (exposed +ve, control +ve, exposed -ve, control -ve)</thfirst><thspan/><thspan/><thspan/><thspan/></tr>
-<block name="inputs">
-<tr><td><in>st</in></td><td><in>a</in></td><td><in>b</in></td><td><in>c</in></td><td><in>d</in></td><td><subtotal><in>lb</in></subtotal></td></tr>
-</block>
+<block name="inputs"><tr><td><in>st</in></td><td><in>a</in></td><td><in>b</in></td><td><in>c</in></td><td><in>d</in></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Odds ratio</th><thfirst><ci><in>pc</in>% CI (<in>method</in>)</ci></thfirst><thspan/><thspan/></tr>
-<block name="or">
-<tr><td><in>st</in></td><td><in>or</in></td><td><ci><in>lci</in></ci></td><td><ci><in>uci</in></ci></td><td><ci><subtotal><in>lb</in></subtotal></ci></td></tr>
-</block>
+<block name="or"><tr><td><in>st</in></td><td><in>or</in></td><td><ci><in>lci</in></ci></td><td><ci><in>uci</in></ci></td><td><ci><subtotal><in>lb</in></subtotal></ci></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><thspan/></tr>
-<block name="or">
-<tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><subtotal><in>lb</in></subtotal></td></tr>
-</block>
+<block name="or"><tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <line><u>Fixed effects (Mantel-Haenszel, <in>meth</in>)</u></line>

@@ -4,7 +4,7 @@
 <line>Variables:<in>tlist</in></line>
 <line></line>
 <table>
-<tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></u></tr>
+<tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
 <tr><td>Between Groups</td><td><in>grp_sum</in></td><td><in>grp_df</in></td><td><in>grp_mean</in></td></tr>
 <tr><td>Between Subgroups within Groups</td><td><in>sub_sum</in></td><td><in>sub_df</in></td><td><in>sub_mean</in></td></tr>
 <tr><td>Residual</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></td></tr>
@@ -16,6 +16,4 @@
 <line>F (using group/subgroup msqr) = <in>f_2</in>  <in>p_2</in></line>
 <line></line>
 <line>F (VR between subgroups within groups) = <in>f_3</in>  <in>p_3</in></line>
-<line></line>
-<line></line>
 </report>

@@ -2,7 +2,7 @@
 <line><title>Analysis of variance from regression</title></line>
 <line></line>
 <table>
-<tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></u></tr>
+<tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
 <tr><td>Regression</td><td><in>reg_sum</in></td><td><in>reg_df</in></td><td><in>reg_mean</in></td></tr>
 <tr><td>Residual</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></td></tr>
 <tr><td><grandtotal>Total (corrected)</grandtotal></td><td><grandtotal><in>tot_sum</in></grandtotal></td><td><grandtotal><in>tot_df</in></grandtotal></td></tr>

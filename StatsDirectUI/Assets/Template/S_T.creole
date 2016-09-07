@@ -5,14 +5,14 @@
 <line>Power = <in>power</in></line>
 <line>Difference <in>mean</in> = <in>delta</in></line>
 <line>Standard deviation = <in>sd</in></line>
-<line><block name="controls">Controls per experimental subject <in>con_per</in></line>
-<line></block></line>
-<line>Estimated minimum sample size = <in>size</in> <block name="pairs">pairs</block><block name="subjects">experimental subjects and <in>con_tot</in> controls.</block></line>
+<block name="controls"><line>Controls per experimental subject <in>con_per</in></line></block>
 <line></line>
-<line>Degrees of freedom = <in>df</in><block name="assumptions"></line>
+<line>Estimated minimum sample size = <in>size</in> <block name="pairs">pairs</block><block name="subjects"> experimental subjects and <in>con_tot</in> controls.</block></line>
+<line></line>
+<line>Degrees of freedom = <in>df</in></line>
+<block name="assumptions">
 <line></line>
 <line>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.</line>
-<line>However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</block></line>
-<line></line>
-<line></line>
+<line>However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</line>
+</block>
 </report>

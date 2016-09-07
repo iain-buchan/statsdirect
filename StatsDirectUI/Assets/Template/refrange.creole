@@ -11,12 +11,14 @@
 <line><u>For normal data</u></line>
 <line><in>qrr</in>% reference interval = <in>lrr</in> to <in>urr</in></line>
 <line><ci><in>pc</in>% confidence interval for lower range limit = <in>lx_l</in> to <in>ux_l</in></ci></line>
-<line><ci><in>pc</in>% confidence interval for upper range limit = <in>lx_u</in> to <in>ux_u</in><block name="lognormal"></ci></line>
+<line><ci><in>pc</in>% confidence interval for upper range limit = <in>lx_u</in> to <in>ux_u</in></ci></line>
+<block name="lognormal">
 <line></line>
 <line><u>For log-normal data</u></line>
 <line><in>qrr</in>% reference interval = <in>lrr_lognormal</in> to <in>urr_lognormal</in></line>
 <line><ci><in>pc</in>% confidence interval for lower range limit = <in>lx_l_lognormal</in> to <in>ux_l_lognormal</in></ci></line>
-<line><ci><in>pc</in>% confidence interval for upper range limit = <in>lx_u_lognormal</in> to <in>ux_u_lognormal</in></block></ci></line>
+<line><ci><in>pc</in>% confidence interval for upper range limit = <in>lx_u_lognormal</in> to <in>ux_u_lognormal</in></ci></line>
+</block>
 <line></line>
 <line><u>For any data</u></line>
 <line>Quantile <in>qx_any</in> = <in>qxv_any</in></line>

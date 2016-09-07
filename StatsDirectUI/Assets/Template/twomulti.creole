@@ -4,21 +4,21 @@
 <line>Variables:<in>tlist</in></line>
 <line></line>
 <table>
-<tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></u></tr>
+<tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
 <tr><td>Blocks (rows)</td><td><in>sub_sum</in></td><td><in>sub_df</in></td><td><in>sub_mean</in></td></tr>
 <tr><td>Treatments (columns)</td><td><in>grp_sum</in></td><td><in>grp_df</in></td><td><in>grp_mean</in></td></tr>
 <tr><td>Interaction</td><td><in>int_sum</in></td><td><in>int_df</in></td><td><in>int_mean</in></td></tr>
 <tr><td>Residual (error)</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></td></tr>
-<tr><td>Corrected total</td><td><in>tot_sum</in></td><td><in>tot_df</in></td></tr>
+<tr><td>Corrected total</td><td><in>tot_sum</in></td><td><in>tot_df</in></td><td></td></tr>
 </table>
 <line></line>
 <line>F (VR blocks) = <in>sub_vr</in>  <in>sub_p</in></line>
 <line></line>
 <line>F (VR treatments) = <in>grp_vr</in>  <in>grp_p</in></line>
 <line></line>
-<line>F (VR interaction) = <in>int_vr</in>  <in>int_p</in><block name="warn"></line>
+<line>F (VR interaction) = <in>int_vr</in>  <in>int_p</in></line>
+<block name="warn">
 <line></line>
-<line><in>warn</in></block></line>
-<line></line>
-<line></line>
+<line><in>warn</in></line>
+</block>
 </report>

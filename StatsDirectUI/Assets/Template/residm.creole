@@ -2,26 +2,24 @@
 <line><title>Multiple linear regression - influential data</title></line>
 <line></line>
 <table>
-<tr><th>Index</th><th>Y</th><th>Fitted Y</th><th>Std. Dev. Y fit</th><th>Residual</u><block name="yfit"></td></tr>
-<tr><td><in>index</in></td><td><in>y</in></td><td><in>fit_y</in></td><td><in>std_err</in></td><td><in>res</in></block></td></tr>
+<tr><th>Index</th><th>Y</th><th>Fitted Y</th><th>Std. Dev. Y fit</th><th>Residual</th></tr>
+<block name="yfit"><tr><td><in>index</in></td><td><in>y</in></td><td><in>fit_y</in></td><td><in>std_err</in></td><td><in>res</in></td></tr></block>
 </table>
 <line></line>
 <table>
-<tr><th>Index</th><th>Studentized</th><th>Leverage</th><th>Cook's Distance</u><block name="studentised"></td></tr>
-<tr><td><in>index</in></td><td><b><in>index*</in></td><td></b><in>stu</in></td><td><b><in>stu*</in></td><td></b><in>hi</in></td><td><b><in>hi*</in></td><td></b><in>cook</in></block></td></tr>
+<tr><thfirst>Index</thfirst><thspan/><thfirst>Studentized</thfirst><thspan/><thfirst>Leverage</thfirst><thspan/><th>Cook's Distance</th></tr>
+<block name="studentised"><tr><td><in>index</in></td><td><b><in>index*</in></b></td><td><in>stu</in></td><td><b><in>stu*</in></b></td><td><in>hi</in></td><td><b><in>hi*</in></b></td><td><in>cook</in></td></tr></block>
 </table>
 <line></line>
 <table>
-<tr><th>Index</th><th>Jackknife</th><th>DFIT</u><block name="jackknife"></td></tr>
-<tr><td><in>index</in></td><td><b><in>index*</in></td><td></b><warn><in>jack</in></warn></td><td><in>jack*</in><b></td><td></b><in>dfit</in></block></td></tr>
+<tr><thfirst>Index</thfirst><threst/><thfirst>Jackknife</thfirst><threst/><th>DFIT</th></tr>
+<block name="jackknife"><tr><td><in>index</in></td><td><b><in>index*</in></b></td><td><warn><in>jack</in></warn></td><td><in>jack*</in></td><td><in>dfit</in></td></tr></block>
 </table>
 <line></line>
 <line><u>Critical levels for unusual observations (marked *)</u></line>
 <line>Leverage > <in>zhi</in>  [min(3p/n,.99)]</line>
-<line>Cook's Distance > <in>zcook</in>  [f(a,p,n-p]</line>
+<line>Cook's Distance > <in>zcook</in>  [f(a,p,n-p)]</line>
 <line>Studentized residual > &#xb1; <in>zstu</in>  [t(a,n-p)]</line>
 <line>Jackknife residual > &#xb1; <in>zjack</in>  [t(a,n-p-1)]</line>
 <line>DFIT > &#xb1; <in>zdfit</in>  [(2*sqr(p/n)]</line>
-<line></line>
-<line></line>
 </report>

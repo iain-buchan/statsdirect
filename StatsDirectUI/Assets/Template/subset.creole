@@ -2,12 +2,10 @@
 <line><title>Multiple regression - best sub-set</title></line>
 <line></line>
 <table>
-<tr><td>Selected variables:</td><td><block name="selected"><in>label</in></td></tr>
-<tr><td></td><td></block></td></tr>
+<tr><th>Selected variables:</th></tr>
+<block name="selected"><tr><td><in>label</in></td></tr></block>
 </table>
 <line>F = <in>f</in></line>
 <line>R&#xb2; = <in>r2</in></line>
 <line>Mallows' Cp = <in>cp</in></line>
-<line></line>
-<line></line>
 </report>

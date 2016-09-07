@@ -1,13 +1,16 @@
 <report>
 <line><title>Squared ranks approximate equality of variance test</title></line>
 <line></line>
-<line>Chi-square = <in>x2</in>  df = <in>df</in>   <pval><in>p</in></pval><block name="pairwise"></line>
-<line></line>
+<line>Chi-square = <in>x2</in>  df = <in>df</in>   <pval><in>p</in></pval></line>
+<block name="pairwise"><line></line>
 <line>Pair-wise comparisons:</line>
-<line>Critical t (<in>df</in> df) = <in>t</in><block name="pair"></line>
+<line>Critical t (<in>df</in> df) = <in>t</in></line>
+<block name="pair">
 <line></line>
 <table>
 <tr><td><in>compare</in></td><td><in>dif</in></td></tr>
-<tr><td>(<in>val</in>)</td><td><in>p_pair</in></block></block></td></tr>
+<tr><td>(<in>val</in>)</td><td><in>p_pair</in></td></tr>
 </table>
+</block>
+</block>
 </report>

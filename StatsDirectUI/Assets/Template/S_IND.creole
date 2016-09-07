@@ -11,10 +11,10 @@
 <line>N = <in>case</in> case subjects and <in>controls</in> controls</line>
 <line></line>
 <line><b>For corrected chi-square and Fisher's exact tests:</b></line>
-<line>N = <in>case_corr</in> case subjects and <in>controls_corr</in> controls<block name="assumptions"></line>
+<line>N = <in>case_corr</in> case subjects and <in>controls_corr</in> controls</line>
+<block name="assumptions">
 <line></line>
 <line><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.</warn></line>
-<line><warn>However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</warn></block></line>
-<line></line>
-<line></line>
+<line><warn>However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</warn></line>
+</block>
 </report>

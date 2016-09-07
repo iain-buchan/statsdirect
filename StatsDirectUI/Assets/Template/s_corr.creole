@@ -6,6 +6,4 @@
 <line>Correlation coefficient under null hypothesis = <in>r0Fmt</in></line>
 <line>Correlation coefficient under alternative hypothesis = <in>r1Fmt</in></line>
 <line>Estimated minimum sample size = <in>size</in></line>
-<line></line>
-<line></line>
 </report>

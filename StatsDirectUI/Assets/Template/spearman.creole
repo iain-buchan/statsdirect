@@ -6,16 +6,23 @@
 <line>Spearman's score = <in>ix</in></line>
 <line></line>
 <line>Spearman's rank correlation coefficient (Rho) =  <in>rho</in></line>
-<line><block name="noci"></line>
-<line><warnabit>CI not calculated when rho is 1 or -1.</warnabit></block><block name="ci"></line>
-<line><ci><in>pc</in>% CI for rho (Fisher's Z transformed) = <in>from</in> to <in>to</in></ci></block><block name="lown"></line>
 <line></line>
-<line><warnabit>Can not consider probability with very small samples (n < 4)</warnabit></block><block name="results"><block name="nop"></line>
-<line><warnabit>P not calculable</warnabit></block><block name="results"></line>
+<block name="noci"><line><warnabit>CI not calculated when rho is 1 or -1.</warnabit></line></block>
+<block name="ci"><line><ci><in>pc</in>% CI for rho (Fisher's Z transformed) = <in>from</in> to <in>to</in></ci></line></block>
+<block name="lown">
+<line></line>
+<line><warnabit>Can not consider probability with very small samples (n &lt; 4)</warnabit></line></block>
+<block name="results">
+<block name="nop"><line><warnabit>P not calculable</warnabit></line></block>
+<block name="results">
 <line></line>
 <line><pval>Upper side <in>p_u</in></pval>  (H<sub>1</sub>: positive correlation)</line>
 <line><pval>Lower side <in>p_l</in></pval>  (H<sub>1</sub>: negative correlation)</line>
-<line><pval>Two sided <in>p_2</in></pval>  (H<sub>1</sub>: any correlation)</block></block><block name="ties"></line>
+<line><pval>Two sided <in>p_2</in></pval>  (H<sub>1</sub>: any correlation)</line>
+</block>
+</block>
+<block name="ties">
 <line></line>
-<line><warnabit>Ties present: exact P not used</warnabit></block></line>
+<line><warnabit>Ties present: exact P not used</warnabit></line>
+</block>
 </report>

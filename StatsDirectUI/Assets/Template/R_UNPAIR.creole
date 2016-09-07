@@ -4,8 +4,6 @@
 <line>Randomized with seed: <in>seed</in></line>
 <line></line>
 <table>
-<block name="allocations"><tr><td><subtotal>Intervention</subtotal></td><td><subtotal></subtotal><in>case</in></td><td></subtotal>Control</td><td><in>control</in></block></td></tr>
+<block name="allocations"><tr><td><subtotal>Intervention</subtotal></td><td><subtotal><in>case</in></subtotal></td><td>Control</td><td><in>control</in></td></tr></block>
 </table>
-<line></line>
-<line></line>
 </report>

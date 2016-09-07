@@ -19,8 +19,6 @@
 <line></line>
 <table>
 <tr><td>Agreement coefficient R:</td><td><in>R</in></td></tr>
-<tr><td><pval>Significance:</td><td><in>p</in></pval></td></tr>
+<tr><td><pval>Significance:</pval></td><td><pval><in>p</in></pval></td></tr>
 </table>
-<line></line>
-<line></line>
 </report>

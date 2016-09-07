@@ -3,8 +3,8 @@
 <line></line>
 <table>
 <tr><th>Reference rate</th><th>Observed person-time</th><th>Expected deaths</th><th></th></tr>
-<tr><td><block name="groups"><in>group</in></td><td><in>observed</in></td><td><in>expected</in></td><td><in>lb</in></td></tr>
-<tr><td></block></td><td></td><td>Total = <in>total</in></td><td></td></tr>
+<block name="groups"><tr><td><in>group</in></td><td><in>observed</in></td><td><in>expected</in></td><td><in>lb</in></td></tr></block>
+<tr><td></td><td></td><td>Total = <in>total</in></td><td></td></tr>
 </table>
 <line></line>
 <line>Standardized Mortality Ratio (SMR) = <in>ratio</in></line>

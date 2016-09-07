@@ -2,16 +2,16 @@
 <line><title>Crosstabs</title></line>
 <line></line>
 <table>
-<tr><td>Row variable (first classifier):</td><td><b><grandtotal><in>ylab</in></grandtotal><subtotal></td></subtotal></b></tr>
-<tr><td>Column variable (second classifier):</td><td><b><ci><in>xlab</in></ci><subtotal></td></subtotal></b></tr>
-<tr><td>Stratum variable (third classifier):</td><td><b><subtotal><in>zlab</in></subtotal></b><block name="z"></td></tr>
+<tr><td>Row variable (first classifier):</td><td><b><grandtotal><in>ylab</in></grandtotal></b></td></tr>
+<tr><td>Column variable (second classifier):</td><td><b><ci><in>xlab</in></ci></b></td></tr>
+<tr><td>Stratum variable (third classifier):</td><td><b><subtotal><in>zlab</in></subtotal></b></td></tr>
 </table>
+<block name="z">
 <line></line>
 <line><b><subtotal><in>z</in></subtotal></b></line>
 <table>
-<tr><td></td><td><block name="x"><b><ci><in>x</in></ci></b></td><td></block><block name="y"></td></tr>
-<tr><td><b><grandtotal><in>y</in></grandtotal></b></td><td><block name="tot"><in>tot</in></td><td></block></block></block></td></tr>
+<tr><td></td><block name="x"><td><b><ci><in>x</in></ci></b></td></block></tr>
+<block name="y"><tr><td><b><grandtotal><in>y</in></grandtotal></b></td><block name="tot"><td><in>tot</in></td></block></tr></block>
 </table>
-<line></line>
-<line></line>
+</block>
 </report>

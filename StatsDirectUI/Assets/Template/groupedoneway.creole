@@ -5,7 +5,7 @@
 <line>Variables: <in>tlist</in></line>
 <line></line>
 <table>
-<tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></u></tr>
+<tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
 <tr><td>Between Groups</td><td><in>b_sum</in></td><td><in>b_df</in></td><td><in>b_mean</in></td></tr>
 <tr><td>Within Groups</td><td><in>w_sum</in></td><td><in>w_df</in></td><td><in>w_mean</in></td></tr>
 <tr><td>Corrected Total</td><td><in>t_sum</in></td><td><in>t_df</in></td></tr>

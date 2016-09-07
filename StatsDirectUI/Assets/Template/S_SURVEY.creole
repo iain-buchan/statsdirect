@@ -9,6 +9,4 @@
 </table>
 <line></line>
 <line>Estimated minimum sample size = <in>size</in></line>
-<line></line>
-<line></line>
 </report>

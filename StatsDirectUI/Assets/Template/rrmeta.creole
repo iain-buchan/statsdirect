@@ -35,8 +35,12 @@
 <line>Pooled relative risk = <in>dsrr</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
 <line>Chi<sub>2</sub> (test relative risk differs from 1) = <in>dsx2</in>  (df = <in>df_ds</in>)  <pval><in>xp_ds</in></pval></line>
 <line></line>
-<line><u>Bias indicators</u><block name="egger"></line>
+<line><u>Bias indicators</u></line>
+<block name="egger">
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block><block name="harbord"></pval></line>
-<line>Harbord-Egger: bias = <in>a</in> (<ci><in>pc_harbord</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></block></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+</block>
+<block name="harbord">
+<line>Harbord-Egger: bias = <in>a</in> (<ci><in>pc_harbord</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+</block>
 </report>

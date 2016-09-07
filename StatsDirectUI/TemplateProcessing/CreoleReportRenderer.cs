@@ -82,6 +82,7 @@ namespace StatsDirect.TemplateProcessing
                 { "&amp;", @"&" },
                 { "&gt;", @">" },
                 { "&lt;", @"<" },
+                { "&#xb1;", @"\'b1" },
                 { "&#xb2;", @"\'b2" },
                 { "&#xe9;", @"\'e9" }
             };
