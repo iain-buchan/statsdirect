@@ -11,7 +11,7 @@
 <table>
 <tr><td><in>tab3_a1</in></td><td><in>tab3_b1</in></td><td><subtotal><in>tab3_c1</in></subtotal></td></tr>
 <tr><td><in>tab3_a2</in></td><td><in>tab3_b2</in></td><td><subtotal><in>tab3_c2</in></subtotal></td></tr>
-<tr><subtotal><td><in>tab3_a3</in></td><td><in>tab3_b3</in></td></subtotal><td><warn><in>tab3_c3</in></warn></td></tr>
+<tr><subtotal><td><in>tab3_a3</in></td><td><in>tab3_b3</in></td></subtotal><td><grandtotal><in>tab3_c3</in></grandtotal></td></tr>
 </table>
 <line></line>
 <line>Expectation of A = <in>exp_a</in></line>

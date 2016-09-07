@@ -7,7 +7,6 @@
 		<builtin function-name="rptPoissonRegressionModel" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
-{\colortbl ;\red0\green0\blue0;\red0\green127\blue0;\red0\green128\blue0;}
 <line><title>Poisson regression - model analysis</title></line>
 <line></line>
 <line>Accuracy = <in>acc</in></line>
@@ -19,7 +18,7 @@
 <line></line>
 <line>Deviance with no covariates = <in>devx</in></line>
 <line>Deviance (likelihood ratio, G&#xb2;) = <in>x2dev</in>   df = <in>x2df</in>   <pval><in>x2p</in></pval></line>
-<line>\cf1Pseudo (McFadden) R-square = <in>r2</in></line>
+<line>Pseudo (McFadden) R-square = <in>r2</in></line>
 <line>Pseudo (likelihood ratio index) R-square = <in>r2i</in></line>
 <line></line>
 <line>Pearson goodness of fit = <in>x2_pearson</in>   df = <in>idf</in>   <pval><in>p_pearson</in></pval></line>
