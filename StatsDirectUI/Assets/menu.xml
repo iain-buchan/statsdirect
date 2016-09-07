@@ -250,7 +250,7 @@
               </sub-items>
             </menu-item>
             <menu-item label="Screening &amp;Test Errors" operation="MiscFalseResult" />
-            <menu-item label="&amp;Growth charts" operation="Zanthro" />
+            <menu-item label="&amp;Growth Charts" operation="Zanthro" />
           </sub-items>
         </menu-item>
         <menu-item label="-" />
