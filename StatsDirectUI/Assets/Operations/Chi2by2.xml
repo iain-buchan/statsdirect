@@ -61,12 +61,12 @@
 <tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
 </table>
 <line></line>
-<line>Uncorrected Chi\'b2 = <in>chi</in>  <pval><in>chi_p</in></pval></line>
-<line>Yates-corrected Chi\'b2 = <in>yates_chi</in>  <pval><in>yates_chi_p</in></pval></line>
+<line>Uncorrected Chi&#xb2; = <in>chi</in>  <pval><in>chi_p</in></pval></line>
+<line>Yates-corrected Chi&#xb2; = <in>yates_chi</in>  <pval><in>yates_chi_p</in></pval></line>
 <line></line>
 <line>Measures of association:</line>
 <line>Pearson's contingency = <in>pearson</in></line>
-<line>Cram\'e9r's <i>V</i> (signed) = <in>vs</in></line>
+<line>Cram&#xe9;r's <i>V</i> (signed) = <in>vs</in></line>
 <block name="warn">
 <line></line>
 <line><warn><in>wrn</in> too small for chi-square, please use Fisher's exact test instead</warn></line>

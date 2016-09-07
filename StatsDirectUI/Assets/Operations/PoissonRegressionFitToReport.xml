@@ -25,7 +25,7 @@
 </table>
 <line></line>
 <table>
-<tr><th>Index</th><th>Pearson Chi\'b2</th><th>Leverage</th><th>Std Pearson Residual</th></tr>
+<tr><th>Index</th><th>Pearson Chi&#xb2;</th><th>Leverage</th><th>Std Pearson Residual</th></tr>
 <block name="pearson"><tr><td><in>idx</in></td><td><in>res</in></td><td><in>lev</in></td><td><in>sres</in></td></tr></block>
 </table>
 <line></line>
