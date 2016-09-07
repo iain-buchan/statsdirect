@@ -11,7 +11,7 @@
 <line><pval>Two sided <in>p_2</in></pval>  (H<sub>1</sub>: differences tend not to be zero)</line>
 <block name="noconf">
 <line></line>
-<line>confidence interval not calculated if n < 4</line>
+<line>confidence interval not calculated if n &lt; 4</line>
 </block>
 <block name="conf">
 <line></line>
