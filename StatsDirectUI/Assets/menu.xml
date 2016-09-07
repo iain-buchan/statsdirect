@@ -80,7 +80,7 @@
                 <menu-item label="&amp;Screen Data" operation="ConvertUnitsScreen"/>
               </sub-items>
             </menu-item>
-            <menu-item label="&amp;Anthropometric Standardisation" operation="Zanthro" />
+            <menu-item label="&amp;Anthropometric Standardization" operation="Zanthro" />
           </sub-items>
         </menu-item>
         <menu-item label="&amp;Organizing">
