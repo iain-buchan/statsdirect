@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace StatsDirect.Charting
+﻿namespace StatsDirect.Charting
 {
     /// <summary>
     /// Histogram Binwidth Optimisation Method
@@ -21,16 +16,16 @@ namespace StatsDirect.Charting
     public static class HistogramBinChooser
     {
         /// <summary>
-        /// Uses a cost function to estimate the optimal number of bins into which to place values sortedX[lowerBound] to sortedX[lowerBound + length - 1] to give an informative histogram.
+        /// Uses a cost function to estimate the optimal number of bins into which to place values sortedX[0] to sortedX[length - 1] to give an informative histogram.
         /// </summary>
         /// <returns>Edges for the most informative histogram according to the cost function.  Bin counts have also had to be calculated in order to estimate the cost function, so in order to save recalculation this returns the counts as well.</returns>
-        public static BinsDescriptor ChooseBins(double[] sortedX, int lowerBound, int length)
+        public static BinsDescriptor ChooseBins(double[] sortedX, int length)
         {
             const int N_MIN = 4;   // Minimum number of bins (integer), N_MIN must be more than 1 (N_MIN > 1).
-            const int N_MAX = 50;  // Maximum number of bins (integer)
+            const int N_MAX = 20;  // Maximum number of bins (integer)
 
-            double xMin = sortedX[lowerBound];
-            double xMax = sortedX[lowerBound + length - 1];
+            double xMin = sortedX[0];
+            double xMax = sortedX[length - 1];
 
             double minCost = double.MaxValue;
             double[] bestCandidate = null;
@@ -38,7 +33,7 @@ namespace StatsDirect.Charting
             for (int candidate = N_MIN; candidate <= N_MAX; candidate++)
             {
                 double[] edges = Linspace(xMin, xMax, candidate + 1); //  Bin edges
-                int[] ki = SortedHist(sortedX, lowerBound, length, edges); //  Count # of events in bins
+                int[] ki = SortedHist(sortedX, length, edges); //  Count # of events in bins
                 double k = Mean(ki); // Mean of event count
                 double v = Variance(ki, k, candidate); // Variance of event count
                 double d = (xMax - xMin) / candidate;
@@ -55,18 +50,18 @@ namespace StatsDirect.Charting
         }
 
         /// <summary>
-        /// Returns an array of bin counts, placing values from sortedX[lowerBound] to sortedX[lowerBound + length - 1] into bins defined by edges.
+        /// Returns an array of bin counts, placing values from sortedX[0] to sortedX[length - 1] into bins defined by edges.
         /// </summary>
         /// <param name="sortedX">Array of values to be counted into bins. PRECONDITION: This array must be sorted low to high by value.</param>
         /// <param name="edges">Bin edges.  The ith element in the returned array will correspond to values [edges[i], edges[i+1]).</param>
-        public static int[] SortedHist(double[] sortedX, int lowerBound, int length, double[] edges)
+        public static int[] SortedHist(double[] sortedX, int length, double[] edges)
         {
             int bins = edges.Length - 1;
             int[] binCounts = new int[bins];
             int bin = 0;
             double nextEdge = edges[bin + 1];
-            int firstIndexAboveBoundary = lowerBound;
-            for (int i = lowerBound; i < lowerBound + length; i++)
+            int firstIndexAboveBoundary = 0;
+            for (int i = 0; i < length; i++)
             {
                 while (sortedX[i] >= nextEdge)
                 {
@@ -74,7 +69,7 @@ namespace StatsDirect.Charting
                     firstIndexAboveBoundary = i;
                     if (bin >= bins)
                     {
-                        binCounts[bin - 1] += lowerBound + length - firstIndexAboveBoundary;
+                        binCounts[bin - 1] += length - firstIndexAboveBoundary;
                         return binCounts;
                     }
                     nextEdge = edges[bin + 1];

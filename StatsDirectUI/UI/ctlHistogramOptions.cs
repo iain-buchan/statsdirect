@@ -78,7 +78,7 @@ namespace StatsDirect.UI
             int actualRows;
             double[] sortedData = HistogramSeriesOptions.ExtractNonMissingDataAndSort(definition.YSeries[currentSeriesIndex], out actualRows);
             Array.Sort(sortedData, 0, actualRows);
-            int[] counts = HistogramBinChooser.SortedHist(sortedData, 0, actualRows, edges);
+            int[] counts = HistogramBinChooser.SortedHist(sortedData, actualRows, edges);
             seriesOptions.BinsDescriptor = new BinsDescriptor { Edges = edges, Counts = counts };
             options.ShowRelativeFrequencies = chkShowRelativeFrequencies.Checked;
             if (!options.IsAscii)

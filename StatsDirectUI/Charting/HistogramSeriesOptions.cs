@@ -45,11 +45,11 @@ namespace StatsDirect.Charting
             double[] nonMissingData = ExtractNonMissingDataAndSort(series, out actualRows);
 
             if (calculateBinCount || binsFromUser <= 1)
-                return HistogramBinChooser.ChooseBins(nonMissingData, 0, actualRows);
+                return HistogramBinChooser.ChooseBins(nonMissingData, actualRows);
             else
             {
                 double[] edges = HistogramBinChooser.Linspace(nonMissingData[0], nonMissingData[actualRows - 1], binsFromUser);
-                int[] counts = HistogramBinChooser.SortedHist(nonMissingData, 0, actualRows, edges);
+                int[] counts = HistogramBinChooser.SortedHist(nonMissingData, actualRows, edges);
                 return new BinsDescriptor { Edges = edges, Counts = counts };
             }
         }
