@@ -281,7 +281,7 @@ namespace StatsDirect.UI
             string appPath = Path.GetDirectoryName(Application.ExecutablePath);
             if (null == appPath)
                 return null;
-            string path = Path.Combine(Path.Combine(appPath, "Data"), Properties.Settings.Default.DefaultRecentlyUsedFile);
+            string path = Path.Combine(Path.Combine(appPath, "Data"), Settings.Default.DefaultRecentlyUsedFile);
             if (!File.Exists(path))
                 return null;
             return path;
@@ -298,10 +298,7 @@ namespace StatsDirect.UI
             {
                 // Save if changed or nonexistent
                 if (!appPath.Equals(helpPath))
-                {
                     SDRegistry.SaveSetting(app, key, "Help", appPath);
-                    SDRegistry.SaveSetting(app, key, "Data", string.Empty); // Unused but required
-                }
             }
 
             // If this is the first run with Excel in place, ask the user if they want to enable SD Excel integration

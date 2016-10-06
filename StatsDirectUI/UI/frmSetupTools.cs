@@ -90,6 +90,8 @@ namespace StatsDirect.UI
             Properties.Settings.Default.ToolsPrograms = paths;
             Properties.Settings.Default.Save();
 
+            // Get rid of any old add-in that might still be hanging around
+            ExcelAddInManager.UninstallOldAddIn();
             if (addInWasEnabledAtLoad && rdoExcelOff.Checked)
                 ExcelAddInManager.UninstallAddIn();
             else if (rdoExcelOn.Checked && !addInWasEnabledAtLoad)
