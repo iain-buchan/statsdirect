@@ -89,6 +89,7 @@ namespace StatsDirect.UI
                         cbo.Text = SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval ? (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
                 }
             }
+            AutoSizeCombo(cbo);
         }
 
         public void Visit(Double2By2Parameter parameter)
