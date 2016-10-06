@@ -20,7 +20,7 @@ namespace StatsDirect.Charting
         /// <param name="calculateBinCount">If true, force a full calculation of the number of bins.  If false, use the user-entered number of bins as a hint.</param>
         /// <param name="binsFromUser">The user-entered number of bins</param>
         /// <param name="series"> </param>
-        public void Reset(bool calculateBinCount, int binsFromUser, Series series)
+        public void Reset(bool calculateBinCount, int binsFromUser, Series series, BinChoiceMethod binChoiceMethod)
         {
             //  Work out the values
             double min;
@@ -28,7 +28,7 @@ namespace StatsDirect.Charting
             DoubleSeries s = series.AsDoubleSeries;
             min = s.Min;
             max = s.Max;
-            BinsDescriptor descriptor = Calculate(s, binsFromUser, calculateBinCount);
+            BinsDescriptor descriptor = Calculate(s, binsFromUser, calculateBinCount, binChoiceMethod);
             BinsDescriptor = descriptor;
         }
 
@@ -39,13 +39,13 @@ namespace StatsDirect.Charting
         ///  <param name="binsFromUser">A user-entered bin count.</param>
         ///  <param name="calculateBinCount">If false, use the user-entered bin count.  If true, calculate from scratch.</param>
         /// <remarks></remarks>
-        public BinsDescriptor Calculate(Series series, int binsFromUser, bool calculateBinCount)
+        public BinsDescriptor Calculate(Series series, int binsFromUser, bool calculateBinCount, BinChoiceMethod binChoiceMethod)
         {
             int actualRows;
             double[] nonMissingData = ExtractNonMissingDataAndSort(series, out actualRows);
 
             if (calculateBinCount || binsFromUser <= 1)
-                return HistogramBinChooser.ChooseBins(nonMissingData, actualRows);
+                return HistogramBinChooser.ChooseBins(nonMissingData, actualRows, binChoiceMethod);
             else
             {
                 double[] edges = HistogramBinChooser.Linspace(nonMissingData[0], nonMissingData[actualRows - 1], binsFromUser);

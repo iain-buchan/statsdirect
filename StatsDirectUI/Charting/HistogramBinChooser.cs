@@ -1,25 +1,95 @@
-﻿namespace StatsDirect.Charting
+﻿using StatsDirect.Numerics;
+using System;
+
+namespace StatsDirect.Charting
 {
-    /// <summary>
-    /// Histogram Binwidth Optimisation Method
-    ///
-    /// Shimazaki and Shinomoto, Neural Comput 19 1503-1527, 2007 
-    /// 2006 Author Hideaki Shimazaki, Matlab
-    /// Department of Physics, Kyoto University
-    /// shimazaki at ton.scphys.kyoto-u.ac.jp
-    /// Please feel free to use/modify this program.
-    ///
-    /// Version in python adapted Érbet Almeida Costa
-    ///
-    // /Bugfix by Takuma Torii 2.24.2013
-    /// </summary>
     public static class HistogramBinChooser
     {
+        public static BinsDescriptor ChooseBins(double[] sortedX, int length, BinChoiceMethod binChoiceMethod)
+        {
+            switch (binChoiceMethod)
+            {
+                case BinChoiceMethod.Doane:
+                    return ChooseBinsDoane(sortedX, length);
+                case BinChoiceMethod.FreedmanDaconis:
+                    return ChooseBinsFreedmanDaconis(sortedX, length);
+                case BinChoiceMethod.Shimazaki:
+                    return ChooseBinsShimazaki(sortedX, length);
+                case BinChoiceMethod.Stata:
+                    return MkBinsDescriptor(sortedX, length, (int)Math.Min(Math.Sqrt(length), 10 * Math.Log(length) / Math.Log(10)));
+                case BinChoiceMethod.Sturges:
+                    return MkBinsDescriptor(sortedX, length, 1 + (int)Math.Ceiling(Log2(length)));
+                case BinChoiceMethod.NotSet:
+                default:
+                    throw new ArgumentOutOfRangeException("Unknown bin choice method when choosing bins", binChoiceMethod, "binChoiceMethod");
+            }
+        }
+
+        private static double Log2(double x)
+        {
+            return Math.Log(x) / Math.Log(2);
+        }
+
+        private static BinsDescriptor ChooseBinsFreedmanDaconis(double[] sortedX, int length)
+        {
+            Summary sx = new Summary();
+            sx.FullSummaryFromX(sortedX, length, null, 0.95, 5, 95, 1);
+
+            // Note that this calculates the bin width, not the number of bins
+            double h = 2 * sx.InterquartileRange / Math.Pow(length, 1.0 / 3.0);
+
+            // Turn that width into a number of bins, +/- 0.5
+            double xMin = sortedX[0];
+            double xMax = sortedX[length - 1];
+            double idealBinCount = (xMax - xMin) / h;
+            return MkBinsDescriptor(sortedX, length, (int)Math.Round(idealBinCount));
+        }
+
+        private static BinsDescriptor ChooseBinsDoane(double[] sortedX, int length)
+        {
+            Summary sx = new Summary();
+            sx.FullSummaryFromX(sortedX, length, null, 0.95, 5, 95, 1);
+
+            double sigmaG1 = Math.Sqrt(6.0 * (length - 2.0) / ((length + 1.0) * (length + 3.0)));
+            double skewTerm = Math.Abs(sx.Skewness / sigmaG1);
+            double k = 1 + Log2(length) + Log2(1 + skewTerm);
+            return MkBinsDescriptor(sortedX, length, (int)Math.Round(k));
+        }
+
+        /// <summary>
+        /// Create a descriptor of edges and counts given the original array+length, and the desired number of bins.
+        /// </summary>
+        /// <param name="sortedX"></param>
+        /// <param name="length"></param>
+        /// <param name="binCount"></param>
+        /// <returns></returns>
+        private static BinsDescriptor MkBinsDescriptor(double[] sortedX, int length, int binCount)
+        {
+            double xMin = sortedX[0];
+            double xMax = sortedX[length - 1];
+            double[] edges = Linspace(xMin, xMax, binCount); //  Bin edges
+            int[] counts = SortedHist(sortedX, length, edges); //  Count # of events in bins
+            return new BinsDescriptor { Edges = edges, Counts = counts };
+        }
+
         /// <summary>
         /// Uses a cost function to estimate the optimal number of bins into which to place values sortedX[0] to sortedX[length - 1] to give an informative histogram.
         /// </summary>
         /// <returns>Edges for the most informative histogram according to the cost function.  Bin counts have also had to be calculated in order to estimate the cost function, so in order to save recalculation this returns the counts as well.</returns>
-        public static BinsDescriptor ChooseBins(double[] sortedX, int length)
+        /// <remarks>
+        /// Histogram Binwidth Optimisation Method
+        ///
+        /// Shimazaki and Shinomoto, Neural Comput 19 1503-1527, 2007 
+        /// 2006 Author Hideaki Shimazaki, Matlab
+        /// Department of Physics, Kyoto University
+        /// shimazaki at ton.scphys.kyoto-u.ac.jp
+        /// Please feel free to use/modify this program.
+        ///
+        /// Version in python adapted Érbet Almeida Costa
+        ///
+        // /Bugfix by Takuma Torii 2.24.2013
+        /// </remarks>
+        private static BinsDescriptor ChooseBinsShimazaki(double[] sortedX, int length)
         {
             const int N_MIN = 4;   // Minimum number of bins (integer), N_MIN must be more than 1 (N_MIN > 1).
             const int N_MAX = 20;  // Maximum number of bins (integer)
@@ -136,4 +206,13 @@
         public double HighestEdge { get { return Edges[Edges.Length - 1]; } }
     }
 
+    public enum BinChoiceMethod
+    {
+        NotSet = 0,
+        Doane = 1,
+        FreedmanDaconis = 2,
+        Stata = 3,
+        Sturges = 4,
+        Shimazaki = 5
+    }
 }

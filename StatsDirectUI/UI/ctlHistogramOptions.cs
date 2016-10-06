@@ -43,8 +43,7 @@ namespace StatsDirect.UI
 
         void options_ScaleChanged(object sender, EventArgs e)
         {
-            if (null != ScaleChanged)
-                ScaleChanged(this, e);
+            ScaleChanged?.Invoke(this, e);
         }
 
         public bool FillOptionsFromForm()
@@ -52,6 +51,7 @@ namespace StatsDirect.UI
             bool optionsAreOk = true;
 
             options.PoolVariablesForBins = chkPoolVariables.Checked;
+            options.BinChoiceMethod = ToBinChoiceMethod((string)cboBinChoiceMethod.SelectedItem);
 
             HistogramSeriesOptions seriesOptions = options.HistoSeriesOptions[currentSeriesIndex];
             int bins;
@@ -97,6 +97,7 @@ namespace StatsDirect.UI
         {
             try
             {
+                cboBinChoiceMethod.SelectedItem = ToDisplayString(options.BinChoiceMethod);
                 List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 fillingForm = true;
                 if (0 == cboVariable.Items.Count)
@@ -167,6 +168,7 @@ namespace StatsDirect.UI
             try
             {
                 List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+                options.BinChoiceMethod = ToBinChoiceMethod((string)cboBinChoiceMethod.SelectedItem);
                 options.PoolVariablesForBins = chkPoolVariables.Checked;
                 options.Reset(true, 0, currentSeriesIndex, series[currentSeriesIndex]);
                 FillFormFromOptions();
@@ -260,8 +262,36 @@ namespace StatsDirect.UI
                         hso.YAxisTitle = "Counts";
                 }
             }
-            if (null != ScaleChanged)
-                ScaleChanged(this, EventArgs.Empty);
+            ScaleChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private static string ToDisplayString(BinChoiceMethod binChoiceMethod)
+        {
+            switch (binChoiceMethod)
+            {
+                case BinChoiceMethod.FreedmanDaconis:
+                    return "Freedman-Daconis";
+                case BinChoiceMethod.Shimazaki:
+                    return "Shimazaki-Shinomoto";
+                case BinChoiceMethod.NotSet:
+                case BinChoiceMethod.Doane:
+                case BinChoiceMethod.Stata:
+                case BinChoiceMethod.Sturges:
+                default:
+                    return binChoiceMethod.ToString();
+            }
+        }
+
+        private static BinChoiceMethod ToBinChoiceMethod(string displayString)
+        {
+            BinChoiceMethod binChoiceMethod;
+            if (Enum.TryParse(displayString, out binChoiceMethod))
+                return binChoiceMethod;
+            if ("Shimazaki-Shinomoto".Equals(displayString))
+                return BinChoiceMethod.Shimazaki;
+            if ("Freedman-Daconis".Equals(displayString))
+                return BinChoiceMethod.FreedmanDaconis;
+            return BinChoiceMethod.NotSet;
         }
     }
 }

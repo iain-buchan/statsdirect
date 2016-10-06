@@ -4434,7 +4434,7 @@ namespace StatsDirect.Charting
             {
                 HistogramSeriesOptions so = histOptions.HistoSeriesOptions[i];
                 if (null == so.BinsDescriptor)
-                    so.Reset(true, 0, definition.YSeries[i]);
+                    so.Reset(true, 0, definition.YSeries[i], histOptions.BinChoiceMethod);
 
                 //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
                 minX = Math.Min(minX, so.BinsDescriptor.LowestEdge);

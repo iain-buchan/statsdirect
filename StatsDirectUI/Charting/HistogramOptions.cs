@@ -20,9 +20,12 @@ namespace StatsDirect.Charting
         ///  </summary>
         public bool PoolVariablesForBins { get; set; }
 
+        public BinChoiceMethod BinChoiceMethod { get; set; }
+
         public HistogramOptions(bool useColour)
             : base(useColour)
         {
+            BinChoiceMethod = BinChoiceMethod.Doane;
         }
 
         /// <summary>
@@ -35,7 +38,7 @@ namespace StatsDirect.Charting
         /// <param name="series"> </param>
         public void Reset(bool calculateBinCount, int binsFromUser, int seriesIndex, Series series)
         {
-            HistoSeriesOptions[seriesIndex].Reset(calculateBinCount, binsFromUser, series);
+            HistoSeriesOptions[seriesIndex].Reset(calculateBinCount, binsFromUser, series, BinChoiceMethod);
 
             // Warn listeners that we've just changed our scale.
             ScaleChanged?.Invoke(this, EventArgs.Empty);
