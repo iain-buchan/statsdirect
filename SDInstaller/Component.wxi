@@ -19,8 +19,8 @@
 
   <!-- Excel add-in -->
   <Directory Id="Excel" Name="Excel">
-    <Component Id="StatsDirect3ExcelLink.xla">
-      <File Id="StatsDirect3ExcelLink.xla" KeyPath="yes" Name="StatsDirect3ExcelLink.xla" Checksum="yes" />
+    <Component Id="StatsDirect3ExcelLink.xlam">
+      <File Id="StatsDirect3ExcelLink.xlam" KeyPath="yes" Name="StatsDirect3ExcelLink.xlam" Checksum="yes" />
     </Component>
   </Directory>
 

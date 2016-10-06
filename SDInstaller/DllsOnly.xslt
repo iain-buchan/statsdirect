@@ -14,7 +14,7 @@ xmlns:wix="http://schemas.microsoft.com/wix/2006/wi">
   <xsl:key name="service-search" match="wix:Component[contains(wix:File/@Source, '.exe')]" use="@Id" />
   <xsl:key name="service-search" match="wix:Component[contains(wix:File/@Source, '.pdb')]" use="@Id" />
   <xsl:key name="service-search" match="wix:Component[contains(wix:File/@Source, '.rtf')]" use="@Id" />
-  <xsl:key name="service-search" match="wix:Component[contains(wix:File/@Source, '.xla')]" use="@Id" />
+  <xsl:key name="service-search" match="wix:Component[contains(wix:File/@Source, '.xlam')]" use="@Id" />
   <xsl:key name="service-search" match="wix:Component[contains(wix:File/@Source, '.xls')]" use="@Id" />
   <xsl:key name="service-search" match="wix:Component[contains(wix:File/@Source, '.xlsx')]" use="@Id" />
   <xsl:key name="service-search" match="wix:Component[contains(wix:File/@Source, '.xml')]" use="@Id" />
