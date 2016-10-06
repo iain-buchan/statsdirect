@@ -18,7 +18,7 @@
     <ComponentRef Id="test.xlsx" />
 
     <!-- Excel add-in -->
-    <ComponentRef Id="StatsDirect3ExcelLink.xla" />
+    <ComponentRef Id="StatsDirect3ExcelLink.xlam" />
 
     <!-- Operations -->
     <ComponentGroupRef Id="Operations" />
