@@ -20,6 +20,5 @@
       </parameters>
 	<builtin function-name="rptSpearman" />
   <report type="application/x-statsdirect-creole" filename="spearman.creole" />
-  <report type="application/x-statsdirect-creole" filename="spearman.creole" />
 	</steps>
 </operation>
