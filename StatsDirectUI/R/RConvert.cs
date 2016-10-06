@@ -84,7 +84,7 @@ namespace StatsDirect.R
                 ToR(sb, variable);
                 sb.AppendLine();
                 variableNames.Add(variableName);
-                columnNames.Add(RQuote(variable.Title));
+                columnNames.Add(variable.Title);
             }
 
             switch (frameTypePreference)
@@ -97,7 +97,7 @@ namespace StatsDirect.R
                     sb.Append("colnames(");
                     ToRName(sb, frameName);
                     sb.Append(") <- c(");
-                    sb.Append(string.Join(", ", columnNames.ToArray()));
+                    sb.Append(string.Join(", ", columnNames.Select(RQuote).ToArray()));
                     sb.Append(")");
                     break;
                 case FrameType.Long:
@@ -107,9 +107,9 @@ namespace StatsDirect.R
                     sb.Append(string.Join(", ", variableNames.ToArray()));
                     sb.AppendLine("),");
                     sb.Append("\tgroups=factor(rep(c(");
-                    sb.Append(String.Join(", ", variableNames.Select(RQuote).ToArray()));
+                    sb.Append(string.Join(", ", columnNames.Select(RQuote).ToArray()));
                     sb.Append("), times=c(");
-                    sb.Append(String.Join(", ", variableNames.Select(variableName => "length(" + variableName + ")").ToArray()));
+                    sb.Append(string.Join(", ", variableNames.Select(variableName => "length(" + variableName + ")").ToArray()));
                     sb.AppendLine(")))");
                     sb.AppendLine("\t)");
                     break;
