@@ -12,6 +12,8 @@ using DevExpress.XtraRichEdit.Commands;
 using System.Drawing.Imaging;
 using StatsDirect.Utilities;
 using DevExpress.XtraRichEdit.Services;
+using System.Reflection;
+using System.ComponentModel;
 
 namespace StatsDirect.UI
 {
@@ -766,11 +768,47 @@ namespace StatsDirect.UI
         {
             DoOrSwallow(() =>
                 {
+                    DevExpress.Utils.Menu.DXMenuItemCollection coll = e.Menu.Items;
+                    foreach (DevExpress.Utils.Menu.DXMenuItem candidate in e.Menu.Items)
+                        if ("Copy".Equals(candidate.Caption))
+                            ClearEventAndSet(candidate, "Click", new EventHandler(ContextMenuCopy));
                     if (IsSelectionReplayable)
                         e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Replay Operation", ReplayOperation));
                     if (IsImageSelected)
                         e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Export Graphic", ExportGraphic));
                 });
+        }
+
+        private void ContextMenuCopy(object sender, EventArgs e)
+        {
+            DoOrSwallow(EditCopy);
+        }
+
+        private void ClearEventAndSet(object item, string eventName, Delegate handler)
+        {
+            FieldInfo fieldInfo = GetEventField(item.GetType(), eventName);
+            if (null == fieldInfo)
+                return;
+            fieldInfo.SetValue(item, handler);
+        }
+
+        private static FieldInfo GetEventField(Type type, string eventName)
+        {
+            FieldInfo fieldInfo = null;
+            while (type != null)
+            {
+                /* Find events defined as field */
+                fieldInfo = type.GetField(eventName, BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic);
+                if (fieldInfo != null && (fieldInfo.FieldType == typeof(MulticastDelegate) || fieldInfo.FieldType.IsSubclassOf(typeof(MulticastDelegate))))
+                    break;
+
+                /* Find events defined as property { add; remove; } */
+                fieldInfo = type.GetField("EVENT_" + eventName.ToUpper(), BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic);
+                if (fieldInfo != null)
+                    break;
+                type = type.BaseType;
+            }
+            return fieldInfo;
         }
 
         private void ExportGraphic(object sender, EventArgs e)
