@@ -61,8 +61,8 @@
         <report type="application/x-statsdirect-creole" filename="poly.creole" />
       </iftrue>
 			<iffalse>
-				<report type="text/rtf" filename="multi.rtf" />
-			</iffalse>
+        <report type="application/x-statsdirect-creole" filename="multi.creole" />
+      </iffalse>
 		</test>
 	</steps>
   <suggested-operations>

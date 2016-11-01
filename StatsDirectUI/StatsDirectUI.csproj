@@ -1307,7 +1307,6 @@
     <None Include="Assets\Template\universalAgreement.rtf" />
     <None Include="Assets\Template\kappaSimulatedExactP.rtf" />
     <None Include="Assets\Template\xtabouter.rtf" />
-    <None Include="Assets\Template\covarmx.rtf" />
     <None Include="Assets\Template\gencmh.rtf" />
     <None Include="Assets\Template\gini.rtf" />
     <None Include="Assets\Template\glranova.rtf" />
@@ -1317,7 +1316,6 @@
     <None Include="Assets\Template\kappam.rtf" />
     <None Include="Assets\Template\latin.rtf" />
     <None Include="Assets\Template\mantel.rtf" />
-    <None Include="Assets\Template\multi.rtf" />
     <None Include="Assets\Template\nestmean.rtf" />
     <None Include="Assets\Template\oneway.rtf" />
     <None Include="Assets\Template\pardet.rtf" />
@@ -1341,7 +1339,6 @@
     <None Include="Assets\Template\woolf.rtf" />
     <None Include="Assets\Template\xtab.rtf" />
     <None Include="Assets\Template\xtabz.rtf" />
-    <None Include="Assets\Template\xxi.rtf" />
     <Compile Include="UI\Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>

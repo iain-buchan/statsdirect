@@ -8,16 +8,16 @@
 			<parameters>
 				<pick-from-list>
 					<name>selectedPredictors</name>
-					<allow-multiple>true</allow-multiple>
-					<prompt>Select predictors that must be kept</prompt>
-					<source>predictorTitles</source>
-					<must-request>true</must-request>
+          <prompt>Select predictors that must be kept</prompt>
+          <must-request>true</must-request>
+          <allow-multiple>true</allow-multiple>
+          <source>predictorTitles</source>
 				</pick-from-list>
 				<option>
 					<name>selector</name>
 					<prompt>Selection method</prompt>
-          <default-value>minimumMallows</default-value>
 					<must-request>true</must-request>
+          <default-value>minimumMallows</default-value>
 					<options>
 						<option value="minimumMallows">Minimum Mallows' CP</option>
 						<option value="maximumF">Maximum overall F</option>
@@ -29,8 +29,8 @@
 		<test>
 			<condition>=parameters.ContainsKey("subsetApplied") &amp;&amp; parameters["subsetApplied"].AsBoolean</condition>
 			<iftrue>
-				<report type="text/rtf" filename="multi.rtf" />
-			</iftrue>
+        <report type="application/x-statsdirect-creole" filename="multi.creole" />
+      </iftrue>
 		</test>
 	</steps>
 </operation>
