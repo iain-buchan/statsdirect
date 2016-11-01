@@ -366,7 +366,7 @@ namespace StatsDirect.Templates
                     if (parameter.Lifetime == ParameterLifetime.SessionForThisOperation && null != parameter.Name)
                         TryToRecallParameterForThisOperation(filledParameters, parameter);
                     else if (parameter.Lifetime == ParameterLifetime.SessionForAllOperations && null != parameter.Name)
-                        TryToRecallParameterForAllOptions(filledParameters, parameter);
+                        TryToRecallParameterForAllOperations(filledParameters, parameter);
 
                     // Try to combine requests for parameters where possible.  The host can always refuse a request.
                     bool shouldCombine = host.CanCombine(parameter);
@@ -496,20 +496,18 @@ namespace StatsDirect.Templates
             return combinedParameters;
         }
 
-        private void TryToRecallParameterForAllOptions(ParameterBag filledParameters, Parameter parameter)
+        private void TryToRecallParameterForAllOperations(ParameterBag filledParameters, Parameter parameter)
         {
-            // Check the parameter isn't already known to us.  Only known input parameters should be checked here; if it's a default parameter we still choose to recall it.
+            // Check the parameter isn't already known to us.  Only known input parameters should be checked here; if it's a default parameter we still choose to recall and overwrite it.
             if (filledParameters.ContainsKey(parameter.Name) && filledParameters[parameter.Name].IsInputParameter)
                 return;
 
-            ParameterBag savedParameters = host.SessionParametersAcrossOperations;
-            if (savedParameters.ContainsKey(parameter.Name))
-                filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
+            TryToRecallSavedParameterFromBag(host.SessionParametersAcrossOperations, filledParameters, parameter.Name);
         }
 
         private void TryToRecallParameterForThisOperation(ParameterBag filledParameters, Parameter parameter)
         {
-            // Check the parameter isn't already known to us.  Only known input parameters should be checked here; if it's a default parameter we still choose to recall it.
+            // Check the parameter isn't already known to us.  Only known input parameters should be checked here; if it's a default parameter we still choose to recall and overwrite it.
             if (filledParameters.ContainsKey(parameter.Name) && filledParameters[parameter.Name].IsInputParameter)
                 return;
 
@@ -520,8 +518,7 @@ namespace StatsDirect.Templates
                 {
                     ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
                     foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
-                        if (savedParameters.ContainsKey(opt.Name))
-                            filledParameters.Add(opt.Name, savedParameters[opt.Name]);
+                        TryToRecallSavedParameterFromBag(savedParameters, filledParameters, opt.Name);
                 }
             }
             else
@@ -529,9 +526,19 @@ namespace StatsDirect.Templates
                 if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
                 {
                     ParameterBag savedParameters = savedParametersPerOperation[parameter.Operation.Name];
-                    if (savedParameters.ContainsKey(parameter.Name))
-                        filledParameters.Add(parameter.Name, savedParameters[parameter.Name]);
+                    TryToRecallSavedParameterFromBag(savedParameters, filledParameters, parameter.Name);
                 }
+            }
+        }
+
+        private void TryToRecallSavedParameterFromBag(ParameterBag savedParameters, ParameterBag filledParameters, string name)
+        {
+            FilledParameter savedParameter;
+            if (savedParameters.TryGetValue(name, out savedParameter))
+            {
+                // #1289: In rare cases, operations overwrite input parameters with outputs and the outputs get saved to session.ser. To allow us to use old (arguably corrupt) session files rather than insist everyone deletes them, filter out problematic values.
+                if (savedParameter.IsInputParameter)
+                    filledParameters.Add(name, savedParameter);
             }
         }
 
