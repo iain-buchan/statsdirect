@@ -2490,10 +2490,9 @@ namespace StatsDirect.Builtins
         private static double XWilcoxonSignedRankLowerTailProbability(int[] rank, int score, int n)
         {
 
-            int iwork = n * (n / 2) + (n / 2) + 1;
+            int iwork = n * (n / 2) + (n / 2) + 100;
             double[] prob = new double[iwork + 1];
-            int i;
-            for (i = 1; i <= score + 1; i++)
+            for (int i = 1; i <= score + 1; i++)
                 prob[i] = 1.0;
 
             score = Math.Abs(score);
@@ -2507,15 +2506,15 @@ namespace StatsDirect.Builtins
                     prob[score + 1] = prob[score + 1] / (Math.Pow(2, (n - j + 1)));
                     break;
                 }
-                upper = upper + shift;
+                upper += shift;
                 int limit = upper + 1;
                 if (upper > score)
                     limit = score + 1;
                 for (int k = limit; k >= 1; k--)
                 {
-                    prob[k] = 0.5 * prob[k];
+                    prob[k] *= 0.5;
                     if (shift <= k - 1)
-                        prob[k] = prob[k] + 0.5 * prob[k - shift];
+                        prob[k] += 0.5 * prob[k - shift];
                 }
             }
             double p = prob[score + 1];
