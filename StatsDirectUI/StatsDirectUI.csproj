@@ -1326,7 +1326,6 @@
     <None Include="Assets\Template\prmatrix.rtf" />
     <None Include="Assets\Template\prscores.rtf" />
     <None Include="Assets\Template\residm.rtf" />
-    <None Include="Assets\Template\roc.rtf" />
     <None Include="Assets\Template\rrmeta.rtf" />
     <None Include="Assets\Template\R_PAIR.rtf" />
     <None Include="Assets\Template\R_UNPAIR.rtf" />
@@ -1881,7 +1880,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
