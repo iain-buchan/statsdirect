@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
-	<name>VarianceRatio</name>
-	<friendly-name lang="en-GB">F (Variance ratio) test</friendly-name>
+  <name>VarianceRatio</name>
+  <friendly-name lang="en-GB">F (Variance ratio) test</friendly-name>
   <help chm-id="1236" />
-	<steps>
-      <parameters>
-        <frame>
-          <name>data</name>
-          <prompt>Select DATA</prompt>
-          <mode>NumericReplaceMissing</mode>
-          <min-columns>2</min-columns>
-          <max-columns>2</max-columns>
-          <ask-for-group-id>true</ask-for-group-id>
-        </frame>
-      </parameters>
-    <script language="VB" entry-point="rptVarianceRatio"><![CDATA[
+  <steps>
+    <parameters>
+      <frame>
+        <name>data</name>
+        <prompt>Select DATA</prompt>
+        <mode>NumericReplaceMissing</mode>
+        <min-columns>2</min-columns>
+        <max-columns>2</max-columns>
+        <ask-for-group-id>true</ask-for-group-id>
+      </frame>
+    </parameters>
+    <script language="VB" entry-point="rptVarianceRatio">
+      <![CDATA[
     Public Function rptVarianceRatio(ByVal host As ITemplateHost, ByVal parameters As ParameterBag) As ParameterBag
         Dim P As Double, f As Double
         Dim bot As Integer, top As Integer
@@ -83,8 +84,10 @@
         Next
     End Sub
 
-      ]]></script>
-    <report type="application/x-statsdirect-creole"><![CDATA[<report>
+      ]]>
+    </script>
+    <report type="application/x-statsdirect-creole">
+      <![CDATA[<report>
 <line><title>Variance ratio/F test</title></line>
 <line></line>
 <table>
@@ -97,6 +100,7 @@
 <line></line>
 <line><pval>Upper side <in>p_1</in></pval></line>
 <line><pval>Two sided <in>p_2</in></pval></line>
-</report>]]></report>
-	</steps>
+</report>]]>
+    </report>
+  </steps>
 </operation>
