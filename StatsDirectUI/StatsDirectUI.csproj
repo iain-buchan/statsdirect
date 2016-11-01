@@ -1308,7 +1308,6 @@
     <None Include="Assets\Template\kappaSimulatedExactP.rtf" />
     <None Include="Assets\Template\xtabouter.rtf" />
     <None Include="Assets\Template\gencmh.rtf" />
-    <None Include="Assets\Template\interpmr.rtf" />
     <None Include="Assets\Template\kappa.rtf" />
     <None Include="Assets\Template\kappa2.rtf" />
     <None Include="Assets\Template\kappam.rtf" />

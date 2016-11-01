@@ -124,6 +124,7 @@
       <xs:element minOccurs="1" maxOccurs="1" name="string" nillable="true" type="sdop:StringParameter" />
     </xs:choice>
   </xs:complexType>
+
   <xs:complexType name="Parameter" abstract="true">
     <xs:choice maxOccurs="unbounded">
       <xs:element minOccurs="1" maxOccurs="1" name="acquire-if-true" type="xs:string" />
@@ -395,11 +396,11 @@
   <xs:simpleType name="DataAcquisitionMode">
     <xs:restriction base="xs:string">
       <xs:enumeration value="NotSet" />
-      <xs:enumeration value="NumericSkipMissing" />
-      <xs:enumeration value="NumericReplaceMissing" />
-      <xs:enumeration value="MODE3" />
-      <xs:enumeration value="CategoryReplaceMissing" />
       <xs:enumeration value="CategoryCombineAllColumns" />
+      <xs:enumeration value="CategoryReplaceMissing" />
+      <xs:enumeration value="NumericCodingTextToDummies" />
+      <xs:enumeration value="NumericReplaceMissing" />
+      <xs:enumeration value="NumericSkipMissing" />
       <xs:enumeration value="Text" />
     </xs:restriction>
   </xs:simpleType>
