@@ -8,13 +8,13 @@
 			<parameters>
 				<edit-grid>
 					<name>candidatePredictors</name>
-					<key-variable>Name</key-variable>
+          <must-request>true</must-request>
+          <key-variable>Name</key-variable>
 					<value-variable>Value</value-variable>
 					<source>candidatePredictors</source>
-					<must-request>true</must-request>
 				</edit-grid>
 			</parameters>
 		<builtin function-name="rptMultipleLinearRegressionPrediction" />
-		<report type="text/rtf" filename="interpmr.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="interpmr.creole" />
+  </steps>
 </operation>

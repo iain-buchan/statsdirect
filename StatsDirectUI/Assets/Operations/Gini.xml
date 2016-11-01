@@ -38,7 +38,6 @@
 				</chart>
 			</iftrue>
 		</test>
-		<report type="text/rtf" filename="gini.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="gini.creole" /> -->
+    <report type="application/x-statsdirect-creole" filename="gini.creole" />
   </steps>
 </operation>

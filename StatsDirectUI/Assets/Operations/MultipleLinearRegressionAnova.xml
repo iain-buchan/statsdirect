@@ -12,6 +12,6 @@
         </confidence-interval>
 			</parameters>
 		<builtin function-name="rptMultipleLinearRegressionAnova" />
-		<report type="text/rtf" filename="glranova.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="glranova.creole" />
+  </steps>
 </operation>

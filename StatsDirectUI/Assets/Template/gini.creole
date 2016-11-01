@@ -13,11 +13,11 @@
 <line></line>
 <line>Gini coefficient = <in>gini</in></line>
 <line><ci>Percentile <in>pc</in>% CI = <in>from</in> to <in>to</in></ci></line>
-<line>BCa <in>pc</in>% CI = <in>BCafrom</in> to <in>BCato</in></line>
+<line><ci>BCa <in>pc</in>% CI = <in>BCafrom</in> to <in>BCato</in></ci></line>
 <line></line>
 <line>Unbiased estimator of population Gini coefficient = <in>gini-unbiased</in></line>
 <line><ci>Percentile <in>pc</in>% CI = <in>from-unbiased</in> to <in>to-unbiased</in></ci></line>
-<line>BCa <in>pc</in>% CI = <in>BCafrom-unbiased</in> to <in>BCato-unbiased</in></line>
+<line><ci>BCa <in>pc</in>% CI = <in>BCafrom-unbiased</in> to <in>BCato-unbiased</in></ci></line>
 </block>
 <line></line>
 <line><in>chart</in></line>
