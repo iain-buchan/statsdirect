@@ -19,9 +19,7 @@
 				<output-frame frame-name="data" />
 			</iftrue>
 		</test>
-		<report type="text/rtf" filename="xxi.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="xxi.creole" /> -->
-    <report type="text/rtf" filename="covarmx.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="covarmx.creole" /> -->
+    <report type="application/x-statsdirect-creole" filename="xxi.creole" />
+    <report type="application/x-statsdirect-creole" filename="covarmx.creole" />
 	</steps>
 </operation>

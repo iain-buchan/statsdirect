@@ -1327,9 +1327,6 @@
     <None Include="Assets\Template\prscores.rtf" />
     <None Include="Assets\Template\residm.rtf" />
     <None Include="Assets\Template\rrmeta.rtf" />
-    <None Include="Assets\Template\R_PAIR.rtf" />
-    <None Include="Assets\Template\R_UNPAIR.rtf" />
-    <None Include="Assets\Template\R_XY.rtf" />
     <None Include="Assets\Template\subset.rtf" />
     <None Include="Assets\Template\s_corr.rtf" />
     <None Include="Assets\Template\S_INCASE.rtf" />

@@ -1576,6 +1576,39 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        /// <summary>
+        /// Renders a 2D array ary[dim1, dim2] into a FilledParameter of list of bags of lists of bags as required by the report renderer.  In the output, dim1 varies faster (inner dimension) and dim2 more slowly (outer dimension).
+        /// </summary>
+        /// <typeparam name="ArrayType">The type of the array to be rendered</typeparam>
+        /// <typeparam name="RenderedType">The type returned by the renderer - allows use of many different renderers</typeparam>
+        /// <param name="ary"></param>
+        /// <param name="outerLowerBound"></param>
+        /// <param name="outerLength"></param>
+        /// <param name="innerLowerBound"></param>
+        /// <param name="innerLength"></param>
+        /// <param name="majorName"></param>
+        /// <param name="minorName"></param>
+        /// <param name="renderer"></param>
+        /// <returns></returns>
+        public static List<ParameterBag> ToOutputParameter<ArrayType, RenderedType>(ArrayType[,] ary, int outerLowerBound, int outerLength, int innerLowerBound, int innerLength, string innerName, string valueName, Func<ArrayType, RenderedType> renderer)
+        {
+            List<ParameterBag> outerList = new List<ParameterBag>();
+            for (int i = outerLowerBound; i < outerLowerBound + outerLength; i++)
+            {
+                ParameterBag outerParameters = new ParameterBag();
+                outerList.Add(outerParameters);
+                List<ParameterBag> innerList = new List<ParameterBag>();
+                outerParameters.AddOutput(innerName, innerList);
+                for (int j = innerLowerBound; j < innerLowerBound + innerLength; j++)
+                {
+                    ParameterBag innerParameters = new ParameterBag();
+                    innerList.Add(innerParameters);
+                    innerParameters.AddOutput(valueName, renderer(ary[j, i]));
+                }
+            }
+            return outerList;
+        }
+
         public static ParameterBag RptXxi(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1583,7 +1616,7 @@ namespace StatsDirect.Builtins
             double rdf = Convert.ToDouble(context.N - context.P);
             double rss = context.SSY - context.SSREG;
             double rms = rss / rdf;
-            //  If msgbox_x("Save matrices to a workbook as well as report?", vbYesNo + vbQuestion + vbDefaultButton2 + vbMsgBoxHelpButton, "Linear Regression", App.helpfile, ACTIVE_HELP_ID, Me) = vbYes Then
+
             DataFrame frame = new DataFrame();
             IList<Variable> pendedVariables = new List<Variable>();
             for (int i = 1; i <= context.P; i++)
@@ -1606,58 +1639,16 @@ namespace StatsDirect.Builtins
             frame.Variables.Add(new DoubleVariable());
             //  Add all the cv variables
             foreach (Variable v in pendedVariables)
-            {
                 frame.Variables.Add(v);
-            }
+
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("data", frame);
 
-            IList<ParameterBag> xxiList = new List<ParameterBag>();
-            outputParameters.AddOutput("*xxi", xxiList);
-            for (int i = 1; i <= context.P; i++)
-            {
-                string rw = string.Empty;
-                ParameterBag xxiParameters;
-                for (int j = 1; j <= context.P; j++)
-                {
-                    rw = rw + host.RoundU(context.H[j, i]) + "\t";
-                    if (j % 4 == 0 & j < context.P)
-                    {
-                        xxiParameters = new ParameterBag();
-                        xxiList.Add(xxiParameters);
-                        xxiParameters.AddOutput("x", rw);
-                        rw = string.Empty;
-                    }
-                }
-                xxiParameters = new ParameterBag();
-                xxiList.Add(xxiParameters);
-                xxiParameters.AddOutput("x", rw);
-            }
+            outputParameters.AddOutput("*xxi", ToOutputParameter(context.H, 1, context.P, 1, context.P, "*col", "x", (v) => host.RoundU(v)));
+            outputParameters.AddOutput("*covar", ToOutputParameter(context.H, 1, context.P, 1, context.P, "*col", "x", (v) => host.RoundU(rms * v)));
 
-            IList<ParameterBag> covarList = new List<ParameterBag>();
-            outputParameters.AddOutput("*covar", covarList);
-            for (int i = 1; i <= context.P; i++)
-            {
-                string rw = string.Empty;
-                ParameterBag covarParameters;
-                for (int j = 1; j <= context.P; j++)
-                {
-                    rw += host.RoundU(rms * context.H[j, i]) + "\t";
-                    if (j % 4 == 0 & j < context.P)
-                    {
-                        covarParameters = new ParameterBag();
-                        covarList.Add(covarParameters);
-                        covarParameters.AddOutput("x", rw);
-                        rw = string.Empty;
-                    }
-                }
-                covarParameters = new ParameterBag();
-                covarList.Add(covarParameters);
-                covarParameters.AddOutput("x", rw);
-            }
             return outputParameters;
         }
-
 
         public static ParameterBag RptMultipleLinearRegressionResiduals(ITemplateHost host, ParameterBag parameters)
         {
