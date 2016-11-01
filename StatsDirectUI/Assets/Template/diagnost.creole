@@ -1,12 +1,12 @@
 <report>
 <line><title>Diagnostic test analysis</title></line>
 <line></line>
-<table><tr><td><b>Disease / feature</b></td></tr>
-<tr><td><b>Test:</b></td><td>Present</td><td>Absent</td><td>Totals</td></tr>
-<tr><td>Positive</td><td><in>aa</in></td><td><in>bb</in></td><td><in>ab</in></td></tr>
-<tr><td>Negative</td><td><in>cc</in></td><td><in>dd</in></td><td><in>cd</in></td></tr>
-<tr></tr>
-<tr><td>Totals</td><td><in>ac</in></td><td><in>bd</in></td><td><in>tot</in></td></tr>
+<table>
+<tr><td></td><thfirst>Disease / feature</thfirst><thspan/><thspan/></tr>
+<tr><th>Test:</th><td>Present</td><td>Absent</td><td>Totals</td></tr>
+<tr><td>Positive</td><td><in>aa</in></td><td><in>bb</in></td><td><subtotal><in>ab</in></subtotal></td></tr>
+<tr><td>Negative</td><td><in>cc</in></td><td><in>dd</in></td><td><subtotal><in>cd</in></subtotal></td></tr>
+<tr><td>Totals</td><td><subtotal><in>ac</in></subtotal></td><td><subtotal><in>bd</in></subtotal></td><td><grandtotal><in>tot</in></grandtotal></td></tr>
 </table>
 <line></line>
 <line><ci>Including <in>pc</in>% confidence intervals:</ci></line>
