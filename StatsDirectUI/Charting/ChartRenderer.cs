@@ -5303,7 +5303,7 @@ namespace StatsDirect.Charting
             ComparisonValue showopt = rOptions.Showopts;
             ParameterBag results = new ParameterBag();
             IList<ParameterBag> allResults = new List<ParameterBag>();
-            results.AddOutput("*", allResults);
+            results.AddOutput("*datasets", allResults);
             for (int cs = 0; cs < definition.XSeries.Count; cs++)
             {
                 ROCSeriesRecord thisData = seriesData[cs];
@@ -5323,7 +5323,7 @@ namespace StatsDirect.Charting
                 int d;
                 double cutoff;
                 double sens;
-                if (!(hideopt))
+                if (!hideopt)
                 {
                     // work out cutoff for max(weight*sens+spec)
                     double maxss = 0.0;
@@ -5424,7 +5424,7 @@ namespace StatsDirect.Charting
 
                 thisData.auc = MathDbl.trapezoid_xy_roc(rx, ry, 0, stps);
 
-                if (!(hideopt))
+                if (!hideopt)
                 {
                     ParameterBag thisResults = new ParameterBag();
                     allResults.Add(thisResults);
@@ -5432,21 +5432,15 @@ namespace StatsDirect.Charting
                     // Hanley JA, mcNeil BJ, Radiology 143:29-36
                     //  Note that mwx and mwr are 1-based
                     double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1];
-                    double[] mwr = new double[thisData.pdata.Length + thisData.adata.Length + 1];
-                    for (int j = 0; j < thisData.pdata.Length; j++)
-                    {
-                        mwx[j + 1] = thisData.pdata[j];
-                    }
-                    for (int j = 0; j < thisData.adata.Length; j++)
-                    {
-                        mwx[thisData.pdata.Length + j + 1] = thisData.adata[j];
-                    }
+                    Array.Copy(thisData.pdata, 0, mwx, 1, thisData.pdata.Length);
+                    Array.Copy(thisData.adata, 0, mwx, 1 + thisData.pdata.Length, thisData.adata.Length);
                     bool fault;
-                    double u = 0;
-                    double transTemp69 = 0;
-                    double transTemp70 = 0;
-                    double transTemp71 = 0;
-                    NonParametric.x_mwut(mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, mwr, ref u, ref transTemp69, ref transTemp70, ref transTemp71, out fault);
+                    double u;
+                    double zScrap;
+                    double xfScrap;
+                    double r1Scrap;
+                    double[] mwrScrap;
+                    NonParametric.MannWhitneyUTest(mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, out mwrScrap, out u, out zScrap, out xfScrap, out r1Scrap, out fault);
                     double theta;
                     double ll;
                     double ul;
@@ -5485,14 +5479,10 @@ namespace StatsDirect.Charting
                     thisResults.AddOutput("se", host.RoundU(sew));
                     thisResults.AddOutput("pc", Formatting.XRound(100.0 * (1.0 - P0), 2));
                     if (ll < 0.0)
-                    {
                         ll = 0.0;
-                    }
                     thisResults.AddOutput("ll", host.RoundU(ll));
                     if (ul > 1.0)
-                    {
                         ul = 1.0;
-                    }
                     thisResults.AddOutput("ul", host.RoundU(ul));
                     thisResults.AddOutput("cut", host.RoundU(thisData.cutoff));
                     thisResults.AddOutput("a", thisData.a.ToString(CultureInfo.InvariantCulture));

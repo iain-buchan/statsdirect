@@ -5,12 +5,12 @@ namespace StatsDirect.Numerics
     public partial class ExFortran
     {
         ///  <summary>
-        ///  Ranks the input values in a, returning the ranks in r.  r need not be initialised; it will be blanked.
+        ///  Ranks the input values in a, returning the ranks in r.  r need not be initialised.
         ///  </summary>
         ///  <param name="a">LowerBound-based input vector of n values</param>
         ///  <param name="r">LowerBound-based output vector of length n. smallest value is ranked 1, largest is ranked n. ties are assigned average of tied ranks</param>
         ///  <param name="lowerBound">The lower bound of the array being passed in, typically 0 or 1.</param>
-        ///  <param name="n">number of values passed in (so upper bound is n + LowerBound - 1)</param>
+        ///  <param name="n">number of values passed in (so upper bound is n + lowerBound - 1)</param>
         ///  <param name="qt">input code for calculation of correction factor:
         ///           qt = 1: xf=sum((ntie^3-ntie)/12.0)
         ///           qt = 2: xf=sum(ntie*(ntie-1.0)/2.0)
@@ -105,114 +105,6 @@ namespace StatsDirect.Numerics
             }
         }
 
-
-        ///  <summary>
-        ///  this routine calculates the lower tail probability p for
-        ///  the wilcoxon-mann-whiney statistic u for sample sizes
-        ///  n1 and n2 for the case of ties in the pooled sample.
-        ///  see procedure wmw_dist in
-        ///  neumann, n. - some procedures for calculating the distributions of elementary nonparametric statistics. stat. software newsletter, vol. 14, no 3., 1988
-        ///  </summary>
-        ///  <param name="n1"></param>
-        ///  <param name="n2"></param>
-        ///  <param name="iwrk">A 1-based array of integers</param>
-        ///  <param name="iv"></param>
-        ///  <param name="p"></param>
-        ///  <param name="ifault">0 if no errors, set to non-zero if there was an error</param>
-        ///  <remarks></remarks>
-        public static void wmwpx(int n1, int n2, ref int[] iwrk, int iv, ref double p, out int ifault)
-        {
-            int dummy;
-            int i; int ir1;
-            int m; int m1; int m2; int mwmax; int n;
-            int i1 = 0;
-            bool change;
-            ifault = 0;
-            int nn = Math.Min(n1, n2);
-            int nsum = n1 + n2;
-            int nwrk = nn + nn * (nn + 1) * nsum - ((int)(Math.Floor((double)(nn * (nn + 1) * (2 * nn + 1)) / 3))) + 1;
-            double[] wrk = new double[nwrk + 1];
-            if (i1 != 0)
-            {
-                ifault = 10;
-                return;
-            }
-            if (n1 < n2)
-            {
-                m1 = n1;
-                m2 = n2;
-                change = false;
-            }
-            else
-            {
-                m1 = n2;
-                m2 = n1;
-                change = true;
-            }
-            int l1 = nsum;
-            int l2 = nsum + m1 + 1;
-            int low = 0;
-            int high = 0;
-            int space = 0;
-            iwrk[l1 + 1] = 0;
-            iwrk[l2 + 1] = 0;
-            for (m = 1; m <= m1; m++)
-            {
-                iwrk[l1 + m + 1] = 0;
-                iwrk[l2 + m + 1] = space + 1;
-                low = low + iwrk[m];
-                high = high + iwrk[nsum + 1 - m];
-                dummy = high - low + 1;
-                space = space + dummy;
-            }
-            if ((change))
-            {
-                mwmax = nsum * (nsum + 1) - low;
-            }
-            else
-            {
-                mwmax = high;
-            }
-            if (iv == mwmax - n1 * (n1 + 1))
-            {
-                p = 1.0;
-                return;
-            }
-            for (i = 0; i <= space; i++)
-            {
-                wrk[i + 1] = 1.0;
-            }
-            for (n = 1; n <= nsum; n++)
-            {
-                dummy = Math.Min(n, m1);
-                for (m = dummy; m >= 1; m--)
-                {
-                    int shift = iwrk[n] - iwrk[m];
-                    iwrk[l1 + m + 1] = iwrk[l1 + m] + shift;
-                    double lambda = Convert.ToDouble(m) / Convert.ToDouble(n);
-                    int j;
-                    for (j = 0; j <= iwrk[l1 + m + 1]; j++)
-                    {
-                        int k = iwrk[l2 + m + 1] + j;
-                        wrk[k + 1] = (1.0 - lambda) * wrk[k + 1];
-                        if (shift <= j)
-                        {
-                            wrk[k + 1] = wrk[k + 1] + lambda * wrk[iwrk[l2 + m] + j - shift + 1];
-                        }
-                    }
-                }
-            }
-            if (!(change))
-            {
-                ir1 = low - m1 * (m1 + 1);
-                p = wrk[iwrk[l2 + m1 + 1] + iv - ir1 + 1];
-            }
-            else
-            {
-                ir1 = (nsum * (nsum + 1) - high) - m2 * (m2 + 1);
-                p = 1.0 - wrk[iwrk[l2 + m1 + 1] + iwrk[l1 + m1 + 1] - iv + ir1];
-            }
-        }
 
         public static int findnext(out int occ, int c, int[] x, int lenx, int[] y, int leny)
         {

@@ -13,24 +13,22 @@
 <line>Optimum cut-off point selected = <in>cut</in></line>
 <line></line>
 <table>
-<tr><td><ci>Table at cut-off:</ci><td>a</td><td>b</td></td></tr>
-<tr><td><ci></ci><td><in>a</in></td><td><in>b</in></td></td></tr>
-</table>
-<line></line>
-<table>
+<tr><td><ci>Table at cut-off:</ci></td><td>a</td><td>b</td></tr>
+<tr><td></td><td><in>a</in></td><td><in>b</in></td></tr>
+<tr><td></td><td></td><td></td></tr>
 <tr><td></td><td>c</td><td>d</td></tr>
-<tr><td><ci></ci><td><in>c</in></td><td><in>d</in></td></td></tr>
+<tr><td></td><td><in>c</in></td><td><in>d</in></td></tr>
 </table>
 <line></line>
 <line></line>
 <line><b>Predictive value of +ve test </b>(post-test likelihood of disease)</line>
-<line><in>likely</in> <ci>(<in>likely_from</in> to <in>likely_to</in>)</ci>, <in>likely_pc</in>% <ci>(<in>likely_from_pc</in>% to <in>likely_to_pc</in>%)</ci>,  \change = <in>likely_change</in>%\</line>
+<line><in>likely</in> <ci>(<in>likely_from</in> to <in>likely_to</in>)</ci>, <in>likely_pc</in>% <ci>(<in>likely_from_pc</in>% to <in>likely_to_pc</in>%)</ci>,  {change = <in>likely_change</in>%}</line>
 <line></line>
 <line><b>Predictive values of -ve test</b></line>
 <line>(post-test likelihood of no disease)</line>
-<line><in>likely_negative</in> <ci>(<in>likely_negative_from</in> to <in>likely_negative_to</in>)</ci>, <in>likely_negative_pc</in>% <ci>(<in>likely_negative_from_pc</in>% to <in>likely_negative_to_pc</in>%)</ci>,  \change = <in>likely_negative_change</in>%\</line>
+<line><in>likely_negative</in> <ci>(<in>likely_negative_from</in> to <in>likely_negative_to</in>)</ci>, <in>likely_negative_pc</in>% <ci>(<in>likely_negative_from_pc</in>% to <in>likely_negative_to_pc</in>%)</ci>,  {change = <in>likely_negative_change</in>%}</line>
 <line>(post-test disease likelihood despite -ve test)</line>
-<line><in>likely_despite</in> <ci>(<in>likely_despite_from</in> to <in>likely_despite_to</in>)</ci>, <in>likely_despite_pc</in>% <ci>(<in>likely_despite_from_pc</in>% to <in>likely_despite_to_pc</in>%)</ci>, \change = <in>likely_despite_change</in>%\</line>
+<line><in>likely_despite</in> <ci>(<in>likely_despite_from</in> to <in>likely_despite_to</in>)</ci>, <in>likely_despite_pc</in>% <ci>(<in>likely_despite_from_pc</in>% to <in>likely_despite_to_pc</in>%)</ci>, {change = <in>likely_despite_change</in>%}</line>
 <line></line>
 <line>sensitivity (<in>senspc</in>% CI) = <in>sens</in>  (<in>sensll</in> to <in>sensul</in>)</line>
 <line><ci>specificity (<in>specpc</in>% CI) = <in>spec</in>  (<in>specll</in> to <in>specul</in>)</ci></line>

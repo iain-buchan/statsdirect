@@ -760,44 +760,37 @@ namespace StatsDirect.Builtins
             return fault ? Constant.MISSING : P;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="n1"></param>
+        /// <param name="n2"></param>
+        /// <param name="ranks">1-based array of ranks, with ties represented as x.5 values</param>
+        /// <param name="u">Mann-Whitney U statistic</param>
+        /// <returns></returns>
         private static double XMwupTi(int n1, int n2, double[] ranks, double u)
         {
-            double P = 0;
-            bool fault; int ifault = 0;
+            if (n1 < 1 || n2 < 1)
+                return Constant.MISSING;
+            if (u < 0)
+                return Constant.MISSING;
 
-            int[] iwrk = new int[2 * (n1 + n2 + 1) + 1 ]; //  1-based
-            if (n1 < 1 | n2 < 1)
+            int nsum = n1 + n2;
+            int[] iRanks = new int[2 * (n1 + n2 + 1) + 1]; //  1-based
+            for (int i = 1; i <= nsum; i++)
+                iRanks[i] = Convert.ToInt32(2 * ranks[i]);
+            Array.Sort(iRanks, 1, nsum);
+            int nm = 2 * n1 * n2;
+            int iv = Convert.ToInt32(2.0 * u);
+            if (2 * iv <= nm)
             {
-                fault = true;
-            }
-            else if (u < 0)
-            {
-                fault = true;
+                return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n1, n2, iRanks, iv);
             }
             else
             {
-                fault = false;
-                int nsum = n1 + n2;
-                int i;
-                for (i = 1; i <= nsum; i++)
-                {
-                    iwrk[i] = Convert.ToInt32(2 * ranks[i]);
-                }
-                Array.Sort(iwrk, 1, nsum);
-                int nm = 2 * n1 * n2;
-                int iv = Convert.ToInt32(2.0 * u);
-                if (2 * iv <= nm)
-                {
-                    ExFortran.wmwpx(n1, n2, ref iwrk, iv, ref P, out ifault);
-                }
-                else
-                {
-                    iv = nm - iv;
-                    ExFortran.wmwpx(n2, n1, ref iwrk, iv, ref P, out ifault);
-                }
+                iv = nm - iv;
+                return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n2, n1, iRanks, iv);
             }
-            return fault || ifault != 0 ? Constant.MISSING : P;
         }
 
 
@@ -1604,10 +1597,6 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptMannWhitney(ITemplateHost host, ParameterBag parameters)
         {
-            double lev = 0;
-            double r1 = 0; double xf = 0; double z = 0; double u = 0;
-            int cnt = 0; int n; int k = 0;
-
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0)
                 return new ParameterBag();
@@ -1616,31 +1605,32 @@ namespace StatsDirect.Builtins
             DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
             DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
             double[] x = new double[v0.Length + v1.Length + 1 ];
-            double[] w1 = new double[v0.Length + v1.Length + 1 ];
 
-            for (n = 0; n <= v0.Length - 1; n++)
+            int n = 0;
+            for (int i = 0; i < v0.Length; i++)
             {
-                if (v0.Data[n] != Constant.MISSING)
+                if (v0.Data[i] != Constant.MISSING)
                 {
-                    cnt = cnt + 1;
-                    x[cnt] = v0.Data[n];
+                    n++;
+                    x[n] = v0.Data[i];
                 }
             }
-            int n1 = cnt;
+            int n1 = n;
 
-            for (n = 0; n <= v1.Length - 1; n++)
+            for (int i = 0; i < v1.Length; i++)
             {
-                if (v1.Data[n] != Constant.MISSING)
+                if (v1.Data[i] != Constant.MISSING)
                 {
-                    cnt = cnt + 1;
-                    x[cnt] = v1.Data[n];
+                    n++;
+                    x[n] = v1.Data[i];
                 }
             }
-            int n2 = cnt - n1;
-            n = cnt;
+            int n2 = n - n1;
 
             bool fault;
-            NonParametric.x_mwut(x, n, n1, n2, w1, ref u, ref z, ref xf, ref r1, out fault);
+            double r1; double xf; double z; double u;
+            double[] ranks;
+            NonParametric.MannWhitneyUTest(x, n, n1, n2, out ranks, out u, out z, out xf, out r1, out fault);
             double uprime = n1 * n2 - u;
 
             ParameterBag outputParameters = new ParameterBag();
@@ -1660,8 +1650,8 @@ namespace StatsDirect.Builtins
             if (!(fault))
             {
                 string adj = xf > 0 ? " (adjusted for ties)" : string.Empty;
-                double n1d = Convert.ToDouble(n1);
-                double nd = Convert.ToDouble(n);
+                double n1d = n1;
+                double nd = n;
                 double dimlim = n1d + n1d * (n1d + 1.0) * nd - (n1d * (n1d + 1.0) * (2.0 * n1d + 1.0)) / 3.0 + 1.0;
                 double P;
                 double pl;
@@ -1680,7 +1670,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
-                    pl = xf == 0 ? XMwupNt(n1, n2, u) : XMwupTi(n1, n2, w1, u);
+                    pl = xf == 0 ? XMwupNt(n1, n2, u) : XMwupTi(n1, n2, ranks, u);
                     P = pl > 1.0 - pl ? 1.0 - pl : pl;
                     outputParameters.AddOutput("p_l", host.pval(pl));
                     outputParameters.AddOutput("p_u", host.pval(1.0 - pl));
@@ -1694,7 +1684,7 @@ namespace StatsDirect.Builtins
 
                 if (n1 < 4 || n2 < 4)
                 {
-                    //  "CI not calculated if n1 or n2 < 4"
+                    // CI not calculated if n1 or n2 < 4
                     IList<ParameterBag> noconfList = new List<ParameterBag>();
                     noconfList.Add(new ParameterBag());
                     outputParameters.AddOutput("*noconf", noconfList);
@@ -1704,6 +1694,8 @@ namespace StatsDirect.Builtins
                 {
                     IList<ParameterBag> confList = new List<ParameterBag>();
                     bool approx;
+                    double lev = 0;
+                    int k = 0;
                     x_invu(n2, n1, gamma, ref lev, ref k, out approx);
                     ParameterBag confParameters = x_mwcon(host, ref x, k, n1, n2);
                     confParameters.AddOutput("pc", Formatting.XRound((1 - lev * 2) * 100, 1));
