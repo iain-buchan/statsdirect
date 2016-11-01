@@ -23,8 +23,8 @@
         </integer>
       </parameters>
   	<builtin function-name="rptRandomXY" />
-	  <report type="text/rtf" filename="r_xy.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="r_xy.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>RandomXY</suggested-operation>
   </suggested-operations>

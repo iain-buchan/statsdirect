@@ -23,8 +23,8 @@
         </boolean>
       </parameters>
   	<builtin function-name="rptRandomPairs" />
-	  <report type="text/rtf" filename="r_pair.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="r_pair.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>RandomPairs</suggested-operation>
   </suggested-operations>

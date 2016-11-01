@@ -18,8 +18,8 @@
         </integer>
       </parameters>
   	<builtin function-name="rptRandomUnPaired" />
-	  <report type="text/rtf" filename="r_unpair.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="r_unpair.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>RandomUnPaired</suggested-operation>
   </suggested-operations>
