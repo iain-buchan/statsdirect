@@ -14,8 +14,7 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
       </parameters>
-    <script language="VB" entry-point="rptVarianceRatio">
-      <![CDATA[
+    <script language="VB" entry-point="rptVarianceRatio"><![CDATA[
     Public Function rptVarianceRatio(ByVal host As ITemplateHost, ByVal parameters As ParameterBag) As ParameterBag
         Dim P As Double, f As Double
         Dim bot As Integer, top As Integer
@@ -85,8 +84,7 @@
     End Sub
 
       ]]></script>
-    <report type="application/x-statsdirect-creole">
-  <![CDATA[<report>
+    <report type="application/x-statsdirect-creole"><![CDATA[<report>
 <line><title>Variance ratio/F test</title></line>
 <line></line>
 <table>
@@ -99,7 +97,6 @@
 <line></line>
 <line><pval>Upper side <in>p_1</in></pval></line>
 <line><pval>Two sided <in>p_2</in></pval></line>
-</report>]]>
-    </report>
+</report>]]></report>
 	</steps>
 </operation>
