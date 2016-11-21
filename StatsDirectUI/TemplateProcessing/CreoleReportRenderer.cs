@@ -269,6 +269,7 @@ namespace StatsDirect.TemplateProcessing
                         }
                         template = template.Replace("<in>" + pair.Key + "</in>", value);
                         template = template.Replace("<inx>" + pair.Key + "</inx>", valueU);
+                        template = template.Replace("<inu>" + pair.Key + "</inu>", valueU);
                         template = template.Replace("<inp>" + pair.Key + "</inp>", valueP);
                     }
                 }
