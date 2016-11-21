@@ -33,8 +33,8 @@ namespace StatsDirect.Builtins
                 r = n - r;
 
             double f = Math.Pow(0.5, n);
-            outputParameters.AddOutput("sample", n.ToString());
-            outputParameters.AddOutput("sample_1", acr.ToString());
+            outputParameters.AddOutput("sample", n);
+            outputParameters.AddOutput("sample_1", acr);
             if (f > 0.0)
             {
                 double p = f;
@@ -54,8 +54,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*exact", exactList);
                 ParameterBag exactParameters = new ParameterBag();
                 exactList.Add(exactParameters);
-                exactParameters.AddOutput("prob_2", host.pval(p2));
-                exactParameters.AddOutput("prob_1", host.pval(p));
+                exactParameters.AddOutput("prob_2", p2);
+                exactParameters.AddOutput("prob_1", p);
                 outputParameters.AddOutput("*large", null);
             }
             else
@@ -73,7 +73,7 @@ namespace StatsDirect.Builtins
             else
                 x9 = d / Math.Sqrt(n / 4.0);
 
-            outputParameters.AddOutput("z", host.RoundU(x9));
+            outputParameters.AddOutput("z", x9);
             outputParameters.AddOutput("p_2", host.zvalp2(x9));
             outputParameters.AddOutput("p_1", host.zvalp1(x9));
 
@@ -85,8 +85,8 @@ namespace StatsDirect.Builtins
             double pil;
             MathDbl.binci(r, n, out pil, out piu, cco, out warn);
 
-            outputParameters.AddOutput("lower", host.RoundU(pil));
-            outputParameters.AddOutput("prop", host.RoundU(r / n));
+            outputParameters.AddOutput("lower", pil);
+            outputParameters.AddOutput("prop", r / n);
             outputParameters.AddOutput("upper", host.RoundU(piu) + warn);
 
             return outputParameters;
