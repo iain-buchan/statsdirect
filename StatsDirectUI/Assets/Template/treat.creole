@@ -3,17 +3,17 @@
 <line></line>
 <line><ci>Estimates with <in>pc</in>% confidence intervals:</ci></line>
 <line></line>
-<line>Risk of event in controls = <in>ce</in> <ci>(<in>ce_from</in> to <in>ce_to</in>)</ci></line>
-<line>Risk of event in treated = <in>te</in> <ci>(<in>te_from</in> to <in>te_to</in>)</ci></line>
-<line>Relative risk of event = <in>rre</in> <ci>(<in>rre_from</in> to <in>rre_to</in>)</ci></line>
+<line>Risk of event in controls = <in>ce</in> <ci>(<inu>ce_from</inu> to <in>ce_to</in>)</ci></line>
+<line>Risk of event in treated = <in>te</in> <ci>(<inu>te_from</inu> to <in>te_to</in>)</ci></line>
+<line>Relative risk of event = <inu>rre</inu> <ci>(<inu>rre_from</inu> to <inu>rre_to</inu>)</ci></line>
 <line></line>
-<line>Risk of no event in controls = <in>cne</in> <ci>(<in>cne_from</in> to <in>cne_to</in>)</ci></line>
-<line>Risk of no event in treated = <in>tne</in> <ci>(<in>tne_from</in> to <in>tne_to</in>)</ci></line>
-<line>Relative risk of no event = <in>rrne</in> <ci>(<in>rrne_from</in> to <in>rrne_to</in>)</ci></line>
+<line>Risk of no event in controls = <in>cne</in> <ci>(<inu>cne_from</inu> to <in>cne_to</in>)</ci></line>
+<line>Risk of no event in treated = <in>tne</in> <ci>(<inu>tne_from</inu> to <in>tne_to</in>)</ci></line>
+<line>Relative risk of no event = <inu>rrne</inu> <ci>(<inu>rrne_from</inu> to <inu>rrne_to</inu>)</ci></line>
 <line></line>
-<line>Odds ratio of event in treated cf. controls = <in>oor</in> <ci>(<in>oor_from</in> to <in>oor_to</in>)</ci></line>
-<line>Relative risk reduction (controls-treated) = <in>rrr</in> <ci>(<in>rrr_from</in> to <in>rrr_to</in>)</ci></line>
-<line>Risk difference (controls-treated) = <in>rd</in> <ci>(<in>rd_from</in> to <in>rd_to</in>)</ci></line>
+<line>Odds ratio of event in treated cf. controls = <inu>oor</inu> <ci>(<inu>oor_from</inu> to <inu>oor_to</inu>)</ci></line>
+<line>Relative risk reduction (controls-treated) = <inu>rrr</inu> <ci>(<inu>rrr_from</inu> to <inu>rrr_to</inu>)</ci></line>
+<line>Risk difference (controls-treated) = <inu>rd</inu> <ci>(<inu>rd_from</inu> to <inu>rd_to</inu>)</ci></line>
 <line></line>
 <line>NNT [risk difference] = <in>treat</in> <ci>(<in>treat_from</in> to <in>treat_to</in>)</ci></line>
 <line><b>NNT [risk difference] (rounded up) = <in>treat_round</in> <ci>(<in>treat_round_from</in> to <in>treat_round_to</in>) </ci></b></line>

@@ -7,5 +7,6 @@
   <steps>
 		<builtin function-name="rptMultipleLinearRegressionParameterDetail" />
 		<report type="text/rtf" filename="pardet.rtf" />
+    <report type="application/x-statsdirect-creole" filename="pardet.creole" />
 	</steps>
 </operation>

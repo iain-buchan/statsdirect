@@ -53,8 +53,9 @@
 				</iftrue>
 			</test>
 			<builtin function-name="rptKappa" />
-			<report type="text/rtf" filename="xtab.rtf"/>
+      <report type="application/x-statsdirect-creole" filename="xtab.creole"/>
 			<report type="text/rtf" filename="kappa.rtf" />
+      <report type="application/x-statsdirect-creole" filename="kappa.creole"/>
 		</iftrue>
 		<iffalse>
       <!-- More than two raters -->
@@ -62,10 +63,10 @@
 			<test>
 				<condition>=2 == parameters["categories"].AsInt32</condition>
 				<iftrue>
-					<report type="text/rtf" filename="kappa2.rtf" />
+          <report type="application/x-statsdirect-creole" filename="kappa2.creole"/>
 				</iftrue>
 				<iffalse>
-					<report type="text/rtf" filename="kappam.rtf" />
+          <report type="application/x-statsdirect-creole" filename="kappam.creole"/>
 				</iffalse>
 			</test>
 		</iffalse>

@@ -49,5 +49,6 @@
 			</iftrue>
 		</test>
 		<report type="text/rtf" filename="residm.rtf" />
+    <report type="application/x-statsdirect-creole" filename="residm.creole" />
 	</steps>
 </operation>

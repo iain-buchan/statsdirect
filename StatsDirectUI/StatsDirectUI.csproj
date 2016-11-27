@@ -1114,13 +1114,17 @@
     <None Include="Assets\Template\chartonly.creole">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Assets\Template\charts.creole" />
+    <None Include="Assets\Template\charts.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\chi2xc.creole" />
     <None Include="Assets\Template\chigood.creole" />
     <None Include="Assets\Template\chirxc.creole" />
     <None Include="Assets\Template\chiTwoByKSimulatedExactP.creole" />
     <None Include="Assets\Template\cimeany.creole" />
-    <None Include="Assets\Template\clogit.creole" />
+    <None Include="Assets\Template\clogit.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\cochranq.creole" />
     <None Include="Assets\Template\covarmx.creole" />
     <None Include="Assets\Template\coxreg.creole" />
@@ -1131,7 +1135,9 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Assets\Template\cuzick.creole" />
-    <None Include="Assets\Template\describe.creole" />
+    <None Include="Assets\Template\describe.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\diagnost.creole" />
     <None Include="Assets\Template\diversity.creole" />
     <None Include="Assets\Template\dstdr.creole" />
@@ -1145,7 +1151,9 @@
     <None Include="Assets\Template\friedman.creole" />
     <None Include="Assets\Template\frmulti.creole" />
     <None Include="Assets\Template\gencmh.creole" />
-    <None Include="Assets\Template\genmeta.creole" />
+    <None Include="Assets\Template\genmeta.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\gini.creole" />
     <None Include="Assets\Template\glranova.creole" />
     <None Include="Assets\Template\groupedoneway.creole" />
@@ -1483,7 +1491,9 @@
     <Content Include="Assets\Operations\CochranePlot.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\Operations\ConditionalLogisticRegression.xml" />
+    <Content Include="Assets\Operations\ConditionalLogisticRegression.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\ControlPlot.xml" />
     <Content Include="Assets\Operations\ChiWoolfScreen.xml" />
     <Content Include="Assets\Operations\ChiWoolfWorksheet.xml" />
@@ -1498,7 +1508,9 @@
     </Content>
     <Content Include="Assets\Operations\AnalysisOptions.xml" />
     <Content Include="Assets\Operations\BarPlot.xml" />
-    <Content Include="Assets\Operations\CochranQ.xml" />
+    <Content Include="Assets\Operations\CochranQ.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\ChiGFSimulateExactP.xml" />
     <Content Include="Assets\Operations\UniversalAgreementSimulateExactP.xml" />
     <Content Include="Assets\Operations\TransformZECDF.xml" />
@@ -1603,7 +1615,9 @@
     <Content Include="Assets\Operations\RandomPairs.xml" />
     <Content Include="Assets\Operations\RandomXY.xml" />
     <Content Include="Assets\Operations\RateSmrScreen.xml" />
-    <Content Include="Assets\Operations\RateDirectScreen.xml" />
+    <Content Include="Assets\Operations\RateDirectScreen.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\RateCompareTwo.xml" />
     <Content Include="Assets\Operations\KappaScreen.xml" />
     <Content Include="Assets\Operations\PropUnPaired.xml" />
@@ -1684,7 +1698,9 @@
     </Content>
     <Content Include="Assets\Operations\Effect.xml" />
     <Content Include="Assets\Operations\EqualityOfVariance.xml" />
-    <Content Include="Assets\Operations\FollowUpLifeTable.xml" />
+    <Content Include="Assets\Operations\FollowUpLifeTable.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\Friedman.xml" />
     <Content Include="Assets\Operations\FriedmanMulti.xml" />
     <Content Include="Assets\Operations\Gini.xml" />

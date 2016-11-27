@@ -117,10 +117,10 @@ namespace StatsDirect.Builtins
             int d = Convert.ToInt32(parameters["d"].AsDouble);
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("tab_a1", a.ToString());
-            outputParameters.AddOutput("tab_b1", b.ToString());
-            outputParameters.AddOutput("tab_a2", c.ToString());
-            outputParameters.AddOutput("tab_b2", d.ToString());
+            outputParameters.AddOutput("tab_a1", a);
+            outputParameters.AddOutput("tab_b1", b);
+            outputParameters.AddOutput("tab_a2", c);
+            outputParameters.AddOutput("tab_b2", d);
 
             if (a > d)
             {
@@ -146,15 +146,15 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException();
             }
 
-            outputParameters.AddOutput("tab3_a1", a.ToString());
-            outputParameters.AddOutput("tab3_b1", b.ToString());
-            outputParameters.AddOutput("tab3_c1", p.ToString());
-            outputParameters.AddOutput("tab3_a2", c.ToString());
-            outputParameters.AddOutput("tab3_b2", d.ToString());
-            outputParameters.AddOutput("tab3_c2", q.ToString());
-            outputParameters.AddOutput("tab3_a3", r.ToString());
-            outputParameters.AddOutput("tab3_b3", s.ToString());
-            outputParameters.AddOutput("tab3_c3", n.ToString());
+            outputParameters.AddOutput("tab3_a1", a);
+            outputParameters.AddOutput("tab3_b1", b);
+            outputParameters.AddOutput("tab3_c1", p);
+            outputParameters.AddOutput("tab3_a2", c);
+            outputParameters.AddOutput("tab3_b2", d);
+            outputParameters.AddOutput("tab3_c2", q);
+            outputParameters.AddOutput("tab3_a3", r);
+            outputParameters.AddOutput("tab3_b3", s);
+            outputParameters.AddOutput("tab3_c3", n);
 
             double b0 = 1.0;
             double n1 = n;
@@ -174,7 +174,7 @@ namespace StatsDirect.Builtins
 
             double e1 = Convert.ToDouble(p) * Convert.ToDouble(r) / Convert.ToDouble(n);
 
-            outputParameters.AddOutput("exp_a", e1.ToString());
+            outputParameters.AddOutput("exp_a", e1);
 
             List<ParameterBag> headerList = new List<ParameterBag>();
             outputParameters.AddOutput("*header", headerList);
@@ -194,9 +194,9 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    outputParameters.AddOutput("p_1", host.RoundU(zP1));
-                    outputParameters.AddOutput("p_1d", host.RoundU(zP1 * 2.0));
-                    outputParameters.AddOutput("p_2", host.RoundU(ptwo));
+                    outputParameters.AddOutput("p_1", zP1);
+                    outputParameters.AddOutput("p_1d", zP1 * 2.0);
+                    outputParameters.AddOutput("p_2", ptwo);
                 }
                 const string x = "not possible, use Monte Carlo";
                 outputParameters.AddOutput("mid_p", x);
@@ -221,7 +221,7 @@ namespace StatsDirect.Builtins
                 headerList.Add(new ParameterBag());
                 ParameterBag rowParameters = new ParameterBag();
                 rowList.Add(rowParameters);
-                rowParameters.AddOutput("a", a1.ToString());
+                rowParameters.AddOutput("a", a1);
                 rowParameters.AddOutput("lower", Formatting.pr15(g));
                 rowParameters.AddOutput("ind_p", Formatting.pr15(h));
                 rowParameters.AddOutput("upper", Formatting.pr15(f));
@@ -254,7 +254,7 @@ namespace StatsDirect.Builtins
                 {
                     rowParameters = new ParameterBag();
                     rowList.Add(rowParameters);
-                    rowParameters.AddOutput("a", (j - 1).ToString());
+                    rowParameters.AddOutput("a", (j - 1));
                     rowParameters.AddOutput("lower", Formatting.pr15(f1[j]));
                     rowParameters.AddOutput("ind_p", Formatting.pr15(h1[j]));
                     rowParameters.AddOutput("upper", Formatting.pr15(g1[j]));
@@ -279,8 +279,8 @@ namespace StatsDirect.Builtins
                     if (g2 > 1.0)
                         g2 = 1.0;
                     outputParameters.AddOutput("tail_1", "(upper tail)");
-                    outputParameters.AddOutput("p_1", host.RoundU(g));
-                    outputParameters.AddOutput("p_1d", host.RoundU(g2));
+                    outputParameters.AddOutput("p_1", g);
+                    outputParameters.AddOutput("p_1d", g2);
                     midP = g - h1[a1] / 2.0;
 
                 }
@@ -299,8 +299,8 @@ namespace StatsDirect.Builtins
                         f2 = 1.0;
 
                     outputParameters.AddOutput("tail_1", "(lower tail)");
-                    outputParameters.AddOutput("p_1", host.RoundU(f));
-                    outputParameters.AddOutput("p_1d", host.RoundU(f2));
+                    outputParameters.AddOutput("p_1", f);
+                    outputParameters.AddOutput("p_1d", f2);
                     midP = f - h1[a1] / 2.0;
 
                 }
@@ -309,9 +309,9 @@ namespace StatsDirect.Builtins
                 if (z > 1.0)
                     z = 1.0;
 
-                outputParameters.AddOutput("p_2", host.RoundU(z));
-                outputParameters.AddOutput("mid_p", host.RoundU(midP));
-                outputParameters.AddOutput("mid_p_2", host.RoundU(Math.Min(midP * 2.0, 1.0)));
+                outputParameters.AddOutput("p_2", z);
+                outputParameters.AddOutput("mid_p", midP);
+                outputParameters.AddOutput("mid_p_2", Math.Min(midP * 2.0, 1.0));
 
             }
             return outputParameters;
@@ -373,24 +373,24 @@ namespace StatsDirect.Builtins
                 gamma = 0.95;
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("tab_a1", Convert.ToInt64(ba).ToString());
-            outputParameters.AddOutput("tab_b1", Convert.ToInt64(bb).ToString());
-            outputParameters.AddOutput("tab_a2", Convert.ToInt64(bc).ToString());
-            outputParameters.AddOutput("tab_b2", Convert.ToInt64(bd).ToString());
+            outputParameters.AddOutput("tab_a1", Convert.ToInt64(ba));
+            outputParameters.AddOutput("tab_b1", Convert.ToInt64(bb));
+            outputParameters.AddOutput("tab_a2", Convert.ToInt64(bc));
+            outputParameters.AddOutput("tab_b2", Convert.ToInt64(bd));
 
             if (bb + bc <= 0.0)
             {
                 throw new InvalidDataException();
             }
             double x2 = ((Math.Abs(bb - bc)) * (Math.Abs(bb - bc))) / (bb + bc);
-            outputParameters.AddOutput("chi", host.RoundU(x2));
-            outputParameters.AddOutput("chi_p", host.pval(PDF.chivalp(x2, 1.0)));
+            outputParameters.AddOutput("chi", x2);
+            outputParameters.AddOutput("chi_p", PDF.chivalp(x2, 1.0));
 
             x2 = Math.Abs(bb - bc) - 1.0;
             double n = bb + bc;
             x2 = x2 * x2 / n;
-            outputParameters.AddOutput("yates_chi", host.RoundU(x2));
-            outputParameters.AddOutput("yates_chi_p", host.pval(PDF.chivalp(x2, 1.0)));
+            outputParameters.AddOutput("yates_chi", x2);
+            outputParameters.AddOutput("yates_chi_p", PDF.chivalp(x2, 1.0));
 
             string rr = bc > 0.0 ? host.RoundU(bb / bc) : Formatting.INFRES;
             outputParameters.AddOutput("risk", rr);
@@ -444,7 +444,7 @@ namespace StatsDirect.Builtins
                     Utilities.Utilities.Swap(ref ll, ref ul);
                 }
             }
-            outputParameters.AddOutput("pc", (gamma * 100).ToString());
+            outputParameters.AddOutput("pc", (gamma * 100));
             string llx = ll == Constant.MISSING ? Formatting.INFRESNEG : host.RoundU(ll);
             outputParameters.AddOutput("from", llx);
             string ulx = ul == Constant.MISSING ? Formatting.INFRES : host.RoundU(ul);
@@ -457,8 +457,8 @@ namespace StatsDirect.Builtins
                 p = 1.0;
             }
 
-            outputParameters.AddOutput("f", host.RoundU(f));
-            outputParameters.AddOutput("tail_2", host.pval(p));
+            outputParameters.AddOutput("f", f);
+            outputParameters.AddOutput("tail_2", p);
             List<ParameterBag> rPrimeList = new List<ParameterBag>();
             outputParameters.AddOutput("*r_prime", rPrimeList);
             if (p < 0.05)
@@ -484,10 +484,10 @@ namespace StatsDirect.Builtins
             double d = parameters["d"].AsDouble;
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("tab_a1", a.ToString());
-            outputParameters.AddOutput("tab_b1", b.ToString());
-            outputParameters.AddOutput("tab_a2", c.ToString());
-            outputParameters.AddOutput("tab_b2", d.ToString());
+            outputParameters.AddOutput("tab_a1", a);
+            outputParameters.AddOutput("tab_b1", b);
+            outputParameters.AddOutput("tab_a2", c);
+            outputParameters.AddOutput("tab_b2", d);
 
             int ierr;
             double p2m;
@@ -501,18 +501,18 @@ namespace StatsDirect.Builtins
             double eor = 0;
             ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out ierr);
             double odr = ExactBB.OddsRatio(a, b, c, d);
-            outputParameters.AddOutput("odds", host.RoundU(odr));
+            outputParameters.AddOutput("odds", odr);
 
-            outputParameters.AddOutput("eor", host.RoundU(eor));
+            outputParameters.AddOutput("eor", eor);
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
-            outputParameters.AddOutput("llf", host.RoundU(llf));
-            outputParameters.AddOutput("ulf", host.RoundU(ulf));
-            outputParameters.AddOutput("p1f", host.pval(p1f));
-            outputParameters.AddOutput("p2f", host.pval(p2f));
-            outputParameters.AddOutput("llm", host.RoundU(llm));
-            outputParameters.AddOutput("ulm", host.RoundU(ulm));
-            outputParameters.AddOutput("p1m", host.pval(p1m));
-            outputParameters.AddOutput("p2m", host.pval(p2m));
+            outputParameters.AddOutput("llf", llf);
+            outputParameters.AddOutput("ulf", ulf);
+            outputParameters.AddOutput("p1f", p1f);
+            outputParameters.AddOutput("p2f", p2f);
+            outputParameters.AddOutput("llm", llm);
+            outputParameters.AddOutput("ulm", ulm);
+            outputParameters.AddOutput("p1m", p1m);
+            outputParameters.AddOutput("p2m", p2m);
             return outputParameters;
         }
 
@@ -532,17 +532,17 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("events", host.RoundU(revents));
-            outputParameters.AddOutput("time", host.RoundU(tar));
-            outputParameters.AddOutput("rate", host.RoundU(revents / tar));
+            outputParameters.AddOutput("events", revents);
+            outputParameters.AddOutput("time", tar);
+            outputParameters.AddOutput("rate", revents / tar);
 
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
 
             double xu;
             double xl;
             Rates.poisson_ci(alpha, revents, tar, out xl, out xu);
-            outputParameters.AddOutput("from", host.RoundU(xl));
-            outputParameters.AddOutput("to", host.RoundU(xu));
+            outputParameters.AddOutput("from", xl);
+            outputParameters.AddOutput("to", xu);
             return outputParameters;
         }
     }

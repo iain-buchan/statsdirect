@@ -3,10 +3,10 @@
 <line></line>
 <table>
 <tr><th></th><th>Group 1</th><th>Group 2</th><th>Difference</th></tr>
-<tr><td>R:</td><td><in>r1</in> </td><td> <in>r2</in></td><td><in>dr</in></td></tr>
-<tr><td>Delta:</td><td><in>mu1</in> </td><td> <in>mu2</in></td><td><in>dm</in></td></tr>
-<tr><td>Variance:</td><td><in>var1</in> </td><td> <in>var2</in></td><td><in>vard</in></td></tr>
-<tr><td>Skewness:</td><td><in>gam1</in> </td><td> <in>gam2</in></td><td><in>gamd</in></td></tr>
-<tr><td>Significance:</td><td><pval><in>p1</in></pval></td><td><pval><in>p2</in></pval></td><td><pval><in>pd</in></pval></td></tr>
+<tr><td>R:</td><td><inu>r1</inu> </td><td> <inu>r2</inu></td><td><inu>dr</inu></td></tr>
+<tr><td>Delta:</td><td><inu>mu1</inu> </td><td> <inu>mu2</inu></td><td><inu>dm</inu></td></tr>
+<tr><td>Variance:</td><td><inu>var1</inu> </td><td> <inu>var2</inu></td><td><inu>vard</inu></td></tr>
+<tr><td>Skewness:</td><td><inu>gam1</inu> </td><td> <inu>gam2</inu></td><td><inu>gamd</inu></td></tr>
+<tr><td>Significance:</td><td><pval><inp>p1</inp></pval></td><td><pval><inp>p2</inp></pval></td><td><pval><inp>pd</inp></pval></td></tr>
 </table>
 </report>

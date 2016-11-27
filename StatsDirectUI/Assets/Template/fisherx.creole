@@ -21,9 +21,9 @@
 <block name="row"><tr><td><warnabit><in>a</in></warnabit></td><td><warnabit><in>lower</in></warnabit></td><td><warnabit><in>ind_p</in></warnabit></td><td><warnabit><in>upper</in></warnabit></td></tr></block>
 </table>
 <line></line>
-<line><pval>One sided <in>tail_1</in> P = <in>p_1</in>   (doubled: <in>p_1d</in>)</pval></line>
-<line><pval>Two sided (by summation) P = <in>p_2</in></pval></line>
+<line><pval>One sided <in>tail_1</in> P = <inu>p_1</inu>   (doubled: <inu>p_1d</inu>)</pval></line>
+<line><pval>Two sided (by summation) P = <inu>p_2</inu></pval></line>
 <line></line>
-<line><pval>One sided mid-P = <in>mid_p</in></pval></line>
-<line><pval>Two sided mid-P = <in>mid_p_2</in></pval></line>
+<line><pval>One sided mid-P = <inu>mid_p</inu></pval></line>
+<line><pval>Two sided mid-P = <inu>mid_p_2</inu></pval></line>
 </report>

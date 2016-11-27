@@ -15,7 +15,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptEqualityOfVariance" />
-    <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <line><title>Approximate equality of variance tests and adjusted ANOVA</title></line>
 <line></line>

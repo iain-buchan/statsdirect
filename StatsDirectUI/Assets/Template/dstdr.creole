@@ -5,26 +5,26 @@
 <line></line>
 <table>
 <tr><th>Index events</th><th>Index PT</th><th>Index rate</th><th>Reference size</th><th>Weight</th></tr>
-<block name="inputs"><tr><td><in>idxy</in></td><td><in>idxn</in></td><td><in>idxr</in></td><td><in>refn</in></td><td><in>refw</in></td></tr></block>
+<block name="inputs"><tr><td><inu>idxy</inu></td><td><inu>idxn</inu></td><td><inu>idxr</inu></td><td><inu>refn</inu></td><td><inu>refw</inu></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Index rate</th><th><ci>Exact <in>pc</in>% confidence interval</ci></th><th></th></tr>
-<block name="cis"><tr><td><in>idxr</in></td><td><ci><in>from</in>  to  <in>to</in></ci></td><td><in>label</in></td></tr></block>
+<block name="cis"><tr><td><inu>idxr</inu></td><td><ci><inu>from</inu>  to  <inu>to</inu></ci></td><td><in>label</in></td></tr></block>
 </table>
 <line></line>
-<line>Total events = <in>events</in></line>
-<line>Adjusted events = <in>stde</in></line>
+<line>Total events = <inu>events</inu></line>
+<line>Adjusted events = <inu>stde</inu></line>
 <line></line>
-<line>Crude rate = <in>crude</in></line>
-<line>Adjusted rate R = <in>stdr</in></line>
+<line>Crude rate = <inu>crude</inu></line>
+<line>Adjusted rate R = <inu>stdr</inu></line>
 <line></line>
 <line><u>Any rates (binomial model)</u></line>
-<line>Approximate standard error of R = <in>ser_any</in></line>
-<line><ci>Approximate <in>pc</in>% confidence interval = <in>from_any</in> to <in>to_any</in></ci></line>
+<line>Approximate standard error of R = <inu>ser_any</inu></line>
+<line><ci>Approximate <in>pc</in>% confidence interval = <inu>from_any</inu> to <inu>to_any</inu></ci></line>
 <line></line>
 <line>Small rates (Poisson model)</line>
-<line>Approximate standard error of R = <in>ser_small</in></line>
-<line><ci>Approximate <in>pc</in>% confidence interval = <in>from_small</in> to <in>to_small</in></ci></line>
-<line><ci>Improved approximate (Dobson) <in>pc</in>% confidence interval = <in>from_dobson</in> to <in>to_dobson</in></ci></line>
+<line>Approximate standard error of R = <inu>ser_small</inu></line>
+<line><ci>Approximate <in>pc</in>% confidence interval = <inu>from_small</inu> to <inu>to_small</inu></ci></line>
+<line><ci>Improved approximate (Dobson) <in>pc</in>% confidence interval = <inu>from_dobson</inu> to <inu>to_dobson</inu></ci></line>
 </report>

@@ -8,16 +8,16 @@
 <tr><td>Negative</td><td><in>c_out</in></td><td><in>d_out</in></td></tr>
 </table>
 <line></line>
-<line>Risk ratio (relative risk in incidence study) = <in>ratio</in></line>
-<line><ci>Approximate (Koopman) <in>pc</in>% confidence interval = <in>koopman_from</in> to <in>koopman_to</in></ci></line>
+<line>Risk ratio (relative risk in incidence study) = <inu>ratio</inu></line>
+<line><ci>Approximate (Koopman) <in>pc</in>% confidence interval = <inu>koopman_from</inu> to <inu>koopman_to</inu></ci></line>
 <line>Approximate power <in>pwr</in></line>
 <line></line>
-<line>Risk difference = <in>dif</in></line>
-<line><ci>Approximate (Miettinen) <in>pc</in>% confidence interval = <in>miettinen_from</in> to <in>miettinen_to</in></ci></line>
+<line>Risk difference = <inu>dif</inu></line>
+<line><ci>Approximate (Miettinen) <in>pc</in>% confidence interval = <inu>miettinen_from</inu> to <inu>miettinen_to</inu></ci></line>
 <block name="exposure">
 <line></line>
-<line>Population exposure % = <in>pe</in></line>
-<line>Population attributable risk % = <in>par</in></line>
-<line><ci>Approximate (Walter) <in>pc</in>% confidence interval = <in>walter_from</in> to <in>walter_to</in></ci></line>
+<line>Population exposure % = <inu>pe</inu></line>
+<line>Population attributable risk % = <inu>par</inu></line>
+<line><ci>Approximate (Walter) <in>pc</in>% confidence interval = <inu>walter_from</inu> to <inu>walter_to</inu></ci></line>
 </block>
 </report>

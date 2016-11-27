@@ -7,16 +7,16 @@
 <tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
 </table>
 <line></line>
-<line>Uncorrected Chi<sub>2</sub> = <in>chi</in> (1 DF)  <pval><in>chi_p</in></pval></line>
-<line>Yates' continuity corrected Chi<sub>2</sub> = <in>yates_chi</in> (1 DF)  <pval><in>yates_chi_p</in></pval></line>
+<line>Uncorrected Chi<sub>2</sub> = <inu>chi</inu> (1 DF)  <pval><inp>chi_p</inp></pval></line>
+<line>Yates' continuity corrected Chi<sub>2</sub> = <inu>yates_chi</inu> (1 DF)  <pval><inp>yates_chi_p</inp></pval></line>
 <line></line>
 <line><b>After Liddell (1983):</b></line>
 <line>Point estimate of relative risk (R') = <in>risk</in></line>
 <line></line>
 <line><ci>Exact <in>pc</in>% confidence interval = <in>from</in> to <in>to</in></ci></line>
 <line></line>
-<line>F = <in>f</in></line>
-<line><pval>Two sided <in>tail_2</in></pval></line>
+<line>F = <inu>f</inu></line>
+<line><pval>Two sided <inp>tail_2</inp></pval></line>
 <block name="r_prime">
 <line></line>
 <line><warn>R' is significantly different from unity</warn></line>

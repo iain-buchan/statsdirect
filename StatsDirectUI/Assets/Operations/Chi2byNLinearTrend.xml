@@ -57,6 +57,7 @@
       <iftrue>
         <builtin function-name="rptChi2byNWithTrendSimulateExactP" />
         <report type="application/x-statsdirect-creole" filename="chiTwoByKSimulatedExactP.creole" />
+        <report type="application/x-statsdirect-creole" filename="chiTwoByKSimulatedExactP.creole" />
       </iftrue>
     </test>
   </steps>

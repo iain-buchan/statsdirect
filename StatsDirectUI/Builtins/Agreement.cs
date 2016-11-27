@@ -247,21 +247,21 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
 
-            outputParameters.AddOutput("r1", host.RoundU(r1));
-            outputParameters.AddOutput("r2", host.RoundU(r2));
-            outputParameters.AddOutput("mu1", host.RoundU(mu1));
-            outputParameters.AddOutput("mu2", host.RoundU(mu2));
-            outputParameters.AddOutput("var1", host.RoundU(var1));
-            outputParameters.AddOutput("var2", host.RoundU(var2));
-            outputParameters.AddOutput("gam1", host.RoundU(gam1));
-            outputParameters.AddOutput("gam2", host.RoundU(gam2));
-            outputParameters.AddOutput("dr", host.RoundU(dr));
-            outputParameters.AddOutput("dm", host.RoundU(dm));
-            outputParameters.AddOutput("vard", host.RoundU(vard));
-            outputParameters.AddOutput("gamd", host.RoundU(gamd));
-            outputParameters.AddOutput("p1", host.pval(p1));
-            outputParameters.AddOutput("p2", host.pval(p2));
-            outputParameters.AddOutput("pd", host.pval(pd * 2.0));
+            outputParameters.AddOutput("r1", r1);
+            outputParameters.AddOutput("r2", r2);
+            outputParameters.AddOutput("mu1", mu1);
+            outputParameters.AddOutput("mu2", mu2);
+            outputParameters.AddOutput("var1", var1);
+            outputParameters.AddOutput("var2", var2);
+            outputParameters.AddOutput("gam1", gam1);
+            outputParameters.AddOutput("gam2", gam2);
+            outputParameters.AddOutput("dr", dr);
+            outputParameters.AddOutput("dm", dm);
+            outputParameters.AddOutput("vard", vard);
+            outputParameters.AddOutput("gamd", gamd);
+            outputParameters.AddOutput("p1", p1);
+            outputParameters.AddOutput("p2", p2);
+            outputParameters.AddOutput("pd", pd * 2.0);
             return outputParameters;
         }
 
@@ -785,13 +785,13 @@ namespace StatsDirect.Builtins
             Rmrbp(host, 1.0, n, b, c, 0, 0, 0, data, 0, seed, iterations, out ir, out mpd);
             ParameterBag outputParameters = new ParameterBag();
             double p = Convert.ToDouble(ir) / Convert.ToDouble(mpd);
-            outputParameters.AddOutput("p", host.pval(p));
+            outputParameters.AddOutput("p", p);
             //  CI
             double ll; double ul;
             string warn;
             MathDbl.binci(Convert.ToDouble(ir), Convert.ToDouble(mpd), out ll, out ul, ci, out warn);
             outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
-            outputParameters.AddOutput("ll", host.RoundU(ll));
+            outputParameters.AddOutput("ll", ll);
             outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
             outputParameters.AddOutput("k", mpd.ToString("N0"));
             outputParameters.AddOutput("seed_fmt", seed.ToString());

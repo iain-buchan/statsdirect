@@ -8,22 +8,22 @@
 <tr><td>Person-time</td><td><in>pt1_out</in></td><td><in>pt2_out</in></td><td><in>pt</in></td></tr>
 </table>
 <line></line>
-<line>Exposed incidence rate = <in>ir1</in></line>
-<line>Non-exposed incidence rate = <in>ir2</in></line>
+<line>Exposed incidence rate = <inu>ir1</inu></line>
+<line>Non-exposed incidence rate = <inu>ir2</inu></line>
 <line></line>
-<line>Rate difference = <in>ird</in></line>
-<line><ci>approximate <in>pc</in>% confidence interval = <in>ird_from</in>  to  <in>ird_to</in></ci></line>
+<line>Rate difference = <inu>ird</inu></line>
+<line><ci>approximate <in>pc</in>% confidence interval = <inu>ird_from</inu>  to  <inu>ird_to</inu></ci></line>
 <line></line>
-<line>chi-square = <in>xmh</in>  <pval><in>p</in></pval></line>
+<line>chi-square = <inu>xmh</inu>  <pval><inp>p</inp></pval></line>
 <line></line>
 <line>Rate ratio = <in>irr</in></line>
 <block name="exact">
 <line><ci>exact <in>pc</in>% confidence interval = <in>irr_from</in>  to  <in>irr_to</in> </ci></line>
 <line></line>
-<line>Conditional maximum likelihood estimate of rate ratio = <in>eor</in></line>
-<line><ci>Exact Fisher <in>pc</in>% confidence interval = <in>llf</in>  to  <in>ulf</in></ci></line>
-<line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
-<line><ci>Exact mid-P <in>pc</in>% confidence interval = <in>llm</in>  to  <in>ulm</in></ci></line>
-<line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></line>
+<line>Conditional maximum likelihood estimate of rate ratio = <inu>eor</inu></line>
+<line><ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu>  to  <inu>ulf</inu></ci></line>
+<line><pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval></line>
+<line><ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu>  to  <inu>ulm</inu></ci></line>
+<line><pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></line>
 </block>
 </report>

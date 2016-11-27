@@ -55,5 +55,6 @@
       </parameters>
 		<builtin function-name="rptLatin" />
     <report type="application/x-statsdirect-creole" filename="latin.creole" />
+    <report type="application/x-statsdirect-creole" filename="latin.creole" />
 	</steps>
 </operation>

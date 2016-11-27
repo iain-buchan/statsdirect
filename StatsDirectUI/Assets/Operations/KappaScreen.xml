@@ -85,11 +85,13 @@
     </test>
     <builtin function-name="rptKappaScreen" />
 		<report type="text/rtf" filename="kappa.rtf" />
+    <report type="application/x-statsdirect-creole" filename="kappa.creole"/>
     <test>
       <condition>=parameters.ContainsKey("doExactP") &amp;&amp; parameters["doExactP"].AsBoolean</condition>
       <iftrue>
         <builtin function-name="rptKappaSimulateExactP" />
         <report type="text/rtf" filename="kappaSimulatedExactP.rtf" />
+        <report type="application/x-statsdirect-creole" filename="kappaSimulatedExactP.creole"/>
       </iftrue>
     </test>
 	</steps>
