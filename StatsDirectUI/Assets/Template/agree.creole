@@ -4,16 +4,16 @@
 <line>Variables: <in>tlist</in></line>
 <block name="all">
 <line></line>
-<line><in>pc</in>% Limits of agreement = <in>from</in> to <in>to</in></line>
+<line><in>pc</in>% Limits of agreement = <inu>from</inu> to <inu>to</inu></line>
 </block>
 <line></line>
-<line>Intra-class correlation coefficient (one way random effects) = <in>icc</in></line>
+<line>Intra-class correlation coefficient (one way random effects) = <inu>icc</inu></line>
 <line></line>
-<line>Estimated within-subjects standard deviation = <in>wssd</in></line>
+<line>Estimated within-subjects standard deviation = <inu>wssd</inu></line>
 <line></line>
 <line>For within-subjects sd vs. mean, Kendall's <in>tau</in><pval>  two sided <in>p2</in></pval></line>
 <line></line>
-<line>Repeatability (for alpha = <in>pc</in>) = <in>rep</in></line>
+<line>Repeatability (for alpha = <in>pc</in>) = <inu>rep</inu></line>
 <line></line>
 <line></line>
 <line><in>repeatability</in></line>

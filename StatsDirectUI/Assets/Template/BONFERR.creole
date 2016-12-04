@@ -3,14 +3,14 @@
 <line></line>
 <line>Variable A: <in>var_a</in></line>
 <line>Variable B: <in>var_b</in></line>
-<line>Mean A - Mean B = <in>a-b</in></line>
-<line>Estimated std. error = <in>std_err</in></line>
+<line>Mean A - Mean B = <inu>a-b</inu></line>
+<line>Estimated std. error = <inu>std_err</inu></line>
 <line>Number of groups = <in>groups</in></line>
-<line><in>pc</in>% confidence interval = <in>from</in> to <in>to</in></line>
+<line><in>pc</in>% confidence interval = <inu>from</inu> to <inu>to</inu></line>
 <line></line>
-<line>t = <in>t</in></line>
+<line>t = <inu>t</inu></line>
 <line>df = <in>df</in></line>
-<line><pval><in>p</in></pval></line>
+<line><pval><inp>p</inp></pval></line>
 <line></line>
-<line>Bonferroni critical P for <in>comp</in> = <in>bonf</in></line>
+<line>Bonferroni critical P for <in>comp</in> = <inu>bonf</inu></line>
 </report>

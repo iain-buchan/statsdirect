@@ -1146,7 +1146,9 @@
     <None Include="Assets\Template\effectwm.creole" />
     <None Include="Assets\Template\FALSER.creole" />
     <None Include="Assets\Template\fisher.creole" />
-    <None Include="Assets\Template\fisherx.creole" />
+    <None Include="Assets\Template\fisherx.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\freq.creole" />
     <None Include="Assets\Template\friedman.creole" />
     <None Include="Assets\Template\frmulti.creole" />
@@ -1651,7 +1653,9 @@
     </Content>
     <Content Include="Assets\Operations\ExactMcNamar.xml" />
     <Content Include="Assets\Operations\ExactFisherRbyC.xml" />
-    <Content Include="Assets\Operations\ExactFisherX.xml" />
+    <Content Include="Assets\Operations\ExactFisherX.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\Chi2by2.xml" />
     <Content Include="Assets\Operations\Stdrr.xml" />
     <Content Include="Assets\Operations\RateDirect.xml">
@@ -1887,7 +1891,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

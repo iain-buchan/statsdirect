@@ -547,18 +547,18 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag blockParameters = new ParameterBag();
                 blockParameters.AddOutput("pc", Formatting.XRound(100 * (1 - P0), 2));
-                blockParameters.AddOutput("from", host.RoundU(lla));
-                blockParameters.AddOutput("to", host.RoundU(ula));
+                blockParameters.AddOutput("from", lla);
+                blockParameters.AddOutput("to", ula);
                 IList<ParameterBag> allResults = new List<ParameterBag>();
                 allResults.Add(blockParameters);
                 outputParameters.AddOutput("*", allResults);
             }
-            outputParameters.AddOutput("icc", host.RoundU(icc));
-            outputParameters.AddOutput("wssd", host.RoundU(wssd));
+            outputParameters.AddOutput("icc", icc);
+            outputParameters.AddOutput("wssd", wssd);
             outputParameters.AddOutput("tau", tau);
             outputParameters.AddOutput("p2", P2);
             outputParameters.AddOutput("pc", Formatting.XRound(1 - GAMMA, 3));
-            outputParameters.AddOutput("rep", host.RoundU(rep));
+            outputParameters.AddOutput("rep", rep);
 
             //  Add our derived arrays to the output so that charts can be plotted from them
             outputParameters.AddOutput("av", new DataFrame(new DoubleVariable(av)));
@@ -645,20 +645,20 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tlist", tlist);
-            outputParameters.AddOutput("b_sum", host.RoundU(ssgroup));
-            outputParameters.AddOutput("b_df", dfgroup.ToString());
-            outputParameters.AddOutput("b_mean", host.RoundU(msgroup));
+            outputParameters.AddOutput("b_sum", ssgroup);
+            outputParameters.AddOutput("b_df", dfgroup);
+            outputParameters.AddOutput("b_mean", msgroup);
 
-            outputParameters.AddOutput("w_sum", host.RoundU(sserror));
-            outputParameters.AddOutput("w_df", dferr.ToString());
-            outputParameters.AddOutput("w_mean", host.RoundU(mserr));
+            outputParameters.AddOutput("w_sum", sserror);
+            outputParameters.AddOutput("w_df", dferr);
+            outputParameters.AddOutput("w_mean", mserr);
 
-            outputParameters.AddOutput("t_sum", host.RoundU(sstot));
-            outputParameters.AddOutput("t_df", dftot.ToString());
+            outputParameters.AddOutput("t_sum", sstot);
+            outputParameters.AddOutput("t_df", dftot);
 
-            outputParameters.AddOutput("f", host.RoundU(msgroup / mserr));
+            outputParameters.AddOutput("f", msgroup / mserr);
             double P = PDF.fvalp(msgroup / mserr, Convert.ToDouble(dfgroup), Convert.ToDouble(dferr));
-            outputParameters.AddOutput("p", host.pval(P));
+            outputParameters.AddOutput("p", P);
 
             //  For other operations
             outputParameters.Add("dfres", new FilledParameter(FilledParameterDirection.Input, dferr));
@@ -799,7 +799,7 @@ namespace StatsDirect.Builtins
 
             string wrn;
             if (skipped != 0)
-                wrn = "   (" + Formatting.WRNCOLON + skipped.ToString() + " out of " + (skipped + nr).ToString() + " rows were skipped due to missing values)";
+                wrn = "   (" + Formatting.WRNCOLON + skipped + " out of " + (skipped + nr) + " rows were skipped due to missing values)";
             else
                 wrn = string.Empty;
 
@@ -838,22 +838,22 @@ namespace StatsDirect.Builtins
                 tlist = tlist + "\r\n" + wrn;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tlist", tlist);
-            outputParameters.AddOutput("sub_sum", host.RoundU(ssrow));
-            outputParameters.AddOutput("sub_df", dfrow.ToString());
-            outputParameters.AddOutput("sub_mean", host.RoundU(msrow));
-            outputParameters.AddOutput("grp_sum", host.RoundU(sscol));
-            outputParameters.AddOutput("grp_df", dfcol.ToString());
-            outputParameters.AddOutput("grp_mean", host.RoundU(mscol));
-            outputParameters.AddOutput("res_sum", host.RoundU(ssres));
-            outputParameters.AddOutput("res_df", dfres.ToString());
-            outputParameters.AddOutput("res_mean", host.RoundU(msres));
-            outputParameters.AddOutput("tot_sum", host.RoundU(sstot));
-            outputParameters.AddOutput("tot_df", dftot.ToString());
-            outputParameters.AddOutput("sub_vr", host.RoundU(msrow / msres));
-            outputParameters.AddOutput("sub_p", host.pval(PDF.fvalp(msrow / msres, Convert.ToDouble(dfrow), Convert.ToDouble(dfres))));
-            outputParameters.AddOutput("grp_vr", host.RoundU(mscol / msres));
+            outputParameters.AddOutput("sub_sum", ssrow);
+            outputParameters.AddOutput("sub_df", dfrow);
+            outputParameters.AddOutput("sub_mean", msrow);
+            outputParameters.AddOutput("grp_sum", sscol);
+            outputParameters.AddOutput("grp_df", dfcol);
+            outputParameters.AddOutput("grp_mean", mscol);
+            outputParameters.AddOutput("res_sum", ssres);
+            outputParameters.AddOutput("res_df", dfres);
+            outputParameters.AddOutput("res_mean", msres);
+            outputParameters.AddOutput("tot_sum", sstot);
+            outputParameters.AddOutput("tot_df", dftot);
+            outputParameters.AddOutput("sub_vr", msrow / msres);
+            outputParameters.AddOutput("sub_p", PDF.fvalp(msrow / msres, Convert.ToDouble(dfrow), Convert.ToDouble(dfres)));
+            outputParameters.AddOutput("grp_vr", mscol / msres);
             double P = PDF.fvalp(mscol / msres, Convert.ToDouble(dfcol), Convert.ToDouble(dfres));
-            outputParameters.AddOutput("grp_p", host.pval(P));
+            outputParameters.AddOutput("grp_p", P);
 
             //  Add our calculated values for potential later consumption by other functions
             outputParameters.Add("dfres", new FilledParameter(FilledParameterDirection.Input, dfres));
@@ -955,34 +955,34 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tlist", frame.Name);
 
-            outputParameters.AddOutput("sub_sum", host.RoundU(ssrow));
-            outputParameters.AddOutput("sub_df", dfrow.ToString());
-            outputParameters.AddOutput("sub_mean", host.RoundU(msrow));
+            outputParameters.AddOutput("sub_sum", ssrow);
+            outputParameters.AddOutput("sub_df", dfrow);
+            outputParameters.AddOutput("sub_mean", msrow);
 
-            outputParameters.AddOutput("grp_sum", host.RoundU(sscol));
-            outputParameters.AddOutput("grp_df", dfcol.ToString());
-            outputParameters.AddOutput("grp_mean", host.RoundU(mscol));
+            outputParameters.AddOutput("grp_sum", sscol);
+            outputParameters.AddOutput("grp_df", dfcol);
+            outputParameters.AddOutput("grp_mean", mscol);
 
-            outputParameters.AddOutput("int_sum", host.RoundU(ssint));
-            outputParameters.AddOutput("int_df", dfint.ToString());
-            outputParameters.AddOutput("int_mean", host.RoundU(msint));
+            outputParameters.AddOutput("int_sum", ssint);
+            outputParameters.AddOutput("int_df", dfint);
+            outputParameters.AddOutput("int_mean", msint);
 
-            outputParameters.AddOutput("res_sum", host.RoundU(ssres));
-            outputParameters.AddOutput("res_df", dfres.ToString());
-            outputParameters.AddOutput("res_mean", host.RoundU(msres));
+            outputParameters.AddOutput("res_sum", ssres);
+            outputParameters.AddOutput("res_df", dfres);
+            outputParameters.AddOutput("res_mean", msres);
 
-            outputParameters.AddOutput("tot_sum", host.RoundU(sstot));
-            outputParameters.AddOutput("tot_df", dftot.ToString());
+            outputParameters.AddOutput("tot_sum", sstot);
+            outputParameters.AddOutput("tot_df", dftot);
 
-            outputParameters.AddOutput("sub_vr", host.RoundU(msrow / msres));
-            outputParameters.AddOutput("sub_p", host.pval(PDF.fvalp(msrow / msres, Convert.ToDouble(dfrow), Convert.ToDouble(dfres))));
+            outputParameters.AddOutput("sub_vr", msrow / msres);
+            outputParameters.AddOutput("sub_p", PDF.fvalp(msrow / msres, Convert.ToDouble(dfrow), Convert.ToDouble(dfres)));
 
-            outputParameters.AddOutput("grp_vr", host.RoundU(mscol / msres));
+            outputParameters.AddOutput("grp_vr", mscol / msres);
             double P = PDF.fvalp(mscol / msres, Convert.ToDouble(dfcol), Convert.ToDouble(dfres));
-            outputParameters.AddOutput("grp_p", host.pval(P));
+            outputParameters.AddOutput("grp_p", P);
 
-            outputParameters.AddOutput("int_vr", host.RoundU(msint / msres));
-            outputParameters.AddOutput("int_p", host.pval(PDF.fvalp(msint / msres, Convert.ToDouble(dfint), Convert.ToDouble(dfres))));
+            outputParameters.AddOutput("int_vr", msint / msres);
+            outputParameters.AddOutput("int_p", PDF.fvalp(msint / msres, Convert.ToDouble(dfint), Convert.ToDouble(dfres)));
 
             if (absconders != 0)
             {
@@ -1073,30 +1073,30 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("tlist", tlist);
 
-                outputParameters.AddOutput("grp_sum", host.RoundU(ss[1]));
-                outputParameters.AddOutput("grp_df", idf[1].ToString());
-                outputParameters.AddOutput("grp_mean", host.RoundU(ss[1] / Convert.ToDouble(idf[1])));
+                outputParameters.AddOutput("grp_sum", ss[1]);
+                outputParameters.AddOutput("grp_df", idf[1]);
+                outputParameters.AddOutput("grp_mean", ss[1] / Convert.ToDouble(idf[1]));
 
-                outputParameters.AddOutput("sub_sum", host.RoundU(ss[2]));
-                outputParameters.AddOutput("sub_df", idf[2].ToString());
-                outputParameters.AddOutput("sub_mean", host.RoundU(ss[2] / Convert.ToDouble(idf[2])));
+                outputParameters.AddOutput("sub_sum", ss[2]);
+                outputParameters.AddOutput("sub_df", idf[2]);
+                outputParameters.AddOutput("sub_mean", ss[2] / Convert.ToDouble(idf[2]));
 
-                outputParameters.AddOutput("res_sum", host.RoundU(ss[3]));
-                outputParameters.AddOutput("res_df", idf[3].ToString());
-                outputParameters.AddOutput("res_mean", host.RoundU(ss[3] / Convert.ToDouble(idf[3])));
+                outputParameters.AddOutput("res_sum", ss[3]);
+                outputParameters.AddOutput("res_df", idf[3]);
+                outputParameters.AddOutput("res_mean", ss[3] / Convert.ToDouble(idf[3]));
 
-                outputParameters.AddOutput("tot_sum", host.RoundU(ss[4]));
-                outputParameters.AddOutput("tot_df", idf[4].ToString());
+                outputParameters.AddOutput("tot_sum", ss[4]);
+                outputParameters.AddOutput("tot_df", idf[4]);
 
-                outputParameters.AddOutput("f_1", host.RoundU(f[1]));
-                outputParameters.AddOutput("p_1", host.pval(fp[1]));
+                outputParameters.AddOutput("f_1", f[1]);
+                outputParameters.AddOutput("p_1", fp[1]);
 
                 double xx = (ss[1] / Convert.ToDouble(idf[1]) / (ss[2] / Convert.ToDouble(idf[2])));
-                outputParameters.AddOutput("f_2", host.RoundU(xx));
-                outputParameters.AddOutput("p_2", host.pval(PDF.fvalp(xx, Convert.ToDouble(idf[1]), Convert.ToDouble(idf[2]))));
+                outputParameters.AddOutput("f_2", xx);
+                outputParameters.AddOutput("p_2", PDF.fvalp(xx, Convert.ToDouble(idf[1]), Convert.ToDouble(idf[2])));
 
-                outputParameters.AddOutput("f_3", host.RoundU(f[2]));
-                outputParameters.AddOutput("p_3", host.pval(fp[2]));
+                outputParameters.AddOutput("f_3", f[2]);
+                outputParameters.AddOutput("p_3", fp[2]);
             }
 
             //  Add our calculated values for potential later consumption by other functions
@@ -1133,21 +1133,21 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("var_a", frame.Variables[z_va].Title);
             outputParameters.AddOutput("var_b", frame.Variables[z_vb].Title);
-            outputParameters.AddOutput("a-b", host.RoundU(means));
-            outputParameters.AddOutput("std_err", host.RoundU(se));
-            outputParameters.AddOutput("groups", frame.VariableCount.ToString());
+            outputParameters.AddOutput("a-b", means);
+            outputParameters.AddOutput("std_err", se);
+            outputParameters.AddOutput("groups", frame.VariableCount);
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1 - P0), 1));
-            outputParameters.AddOutput("from", host.RoundU(means - (cit * se)));
-            outputParameters.AddOutput("to", host.RoundU(means + (cit * se)));
-            outputParameters.AddOutput("t", host.RoundU(tav));
-            outputParameters.AddOutput("df", carrier.Dferr.ToString());
+            outputParameters.AddOutput("from", means - (cit * se));
+            outputParameters.AddOutput("to", means + (cit * se));
+            outputParameters.AddOutput("t", tav);
+            outputParameters.AddOutput("df", carrier.Dferr);
             double P = PDF.tvalp(Math.Abs(tav), Convert.ToDouble(carrier.Dferr));
             if (P > 1.0 - P)
                 P = 1.0 - P;
-            outputParameters.AddOutput("p", host.pval(P * 2.0));
-            string qx = comparisons.ToString() + " comparison" + ((comparisons == 1) ? string.Empty : "s");
+            outputParameters.AddOutput("p", P * 2.0);
+            string qx = comparisons + " comparison" + ((comparisons == 1) ? string.Empty : "s");
             outputParameters.AddOutput("comp", qx);
-            outputParameters.AddOutput("bonf", host.RoundU(0.05 / comparisons));
+            outputParameters.AddOutput("bonf", 0.05 / comparisons);
             return outputParameters;
         }
 
@@ -1200,10 +1200,10 @@ namespace StatsDirect.Builtins
 
             string lab = nSame ? "Tukey" : "Tukey-Kramer";
             outputParameters.AddOutput("method", lab);
-            outputParameters.AddOutput("q", host.RoundU(q));
-            outputParameters.AddOutput("d", host.RoundU(d));
-            outputParameters.AddOutput("psd", host.RoundU(pse));
-            outputParameters.AddOutput("cn", tnx[0].ToString());
+            outputParameters.AddOutput("q", q);
+            outputParameters.AddOutput("d", d);
+            outputParameters.AddOutput("psd", pse);
+            outputParameters.AddOutput("cn", tnx[0]);
             outputParameters.AddOutput("pc", Formatting.XRound(100 * cc, 1));
 
             int ctr = 0;
@@ -1257,10 +1257,10 @@ namespace StatsDirect.Builtins
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("cf1", hold[i].Lab1);
                 differencesParameters.AddOutput("cf2", hold[i].Lab2);
-                differencesParameters.AddOutput("delta", host.RoundU(hold[i].Delta));
-                differencesParameters.AddOutput("lci", host.RoundU(hold[i].Ll));
-                differencesParameters.AddOutput("uci", host.RoundU(hold[i].Ul));
-                differencesParameters.AddOutput("t", host.RoundU(hold[i].Absdelta));
+                differencesParameters.AddOutput("delta", hold[i].Delta);
+                differencesParameters.AddOutput("lci", hold[i].Ll);
+                differencesParameters.AddOutput("uci", hold[i].Ul);
+                differencesParameters.AddOutput("t", hold[i].Absdelta);
                 string pp = host.pval(hold[i].P);
                 if (!(halted) && hold[i].P >= dalpha)
                 {
@@ -1347,10 +1347,10 @@ namespace StatsDirect.Builtins
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("cf1", hold[i].Lab1);
                 differencesParameters.AddOutput("cf2", hold[i].Lab2);
-                differencesParameters.AddOutput("delta", host.RoundU(hold[i].Delta));
-                differencesParameters.AddOutput("lci", host.RoundU(hold[i].Ll));
-                differencesParameters.AddOutput("uci", host.RoundU(hold[i].Ul));
-                differencesParameters.AddOutput("t", host.RoundU(hold[i].Absdelta));
+                differencesParameters.AddOutput("delta", hold[i].Delta);
+                differencesParameters.AddOutput("lci", hold[i].Ll);
+                differencesParameters.AddOutput("uci", hold[i].Ul);
+                differencesParameters.AddOutput("t", hold[i].Absdelta);
                 string PP = host.pval(hold[i].P);
                 if (!(halted) & hold[i].P >= palpha)
                 {
@@ -1507,9 +1507,9 @@ namespace StatsDirect.Builtins
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("cf1", hold[i].Lab1);
                 differencesParameters.AddOutput("cf2", hold[i].Lab2);
-                differencesParameters.AddOutput("delta", host.RoundU(hold[i].Delta));
-                differencesParameters.AddOutput("gps", hold[i].Gps.ToString());
-                differencesParameters.AddOutput("t", host.RoundU(hold[i].Q));
+                differencesParameters.AddOutput("delta", hold[i].Delta);
+                differencesParameters.AddOutput("gps", hold[i].Gps);
+                differencesParameters.AddOutput("t", hold[i].Q);
                 string PP = host.pval(hold[i].P);
                 if (!(halted) & hold[i].P >= palpha)
                 {
@@ -1576,10 +1576,10 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("d", host.RoundU(d));
-            outputParameters.AddOutput("psd", host.RoundU(pse));
+            outputParameters.AddOutput("d", d);
+            outputParameters.AddOutput("psd", pse);
             outputParameters.AddOutput("control", frame.Variables[ic].Title);
-            outputParameters.AddOutput("cn", tnx[ic].ToString());
+            outputParameters.AddOutput("cn", tnx[ic]);
             outputParameters.AddOutput("pc", Formatting.XRound(100.0 * cc, 1));
 
             ctr = 0;
@@ -1616,11 +1616,11 @@ namespace StatsDirect.Builtins
                 ParameterBag differencesParameters = new ParameterBag();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("level", hold[i].Lab1);
-                differencesParameters.AddOutput("cn", hold[i].Gps.ToString());
-                differencesParameters.AddOutput("delta", host.RoundU(hold[i].Delta));
-                differencesParameters.AddOutput("lci", host.RoundU(hold[i].Ll));
-                differencesParameters.AddOutput("uci", host.RoundU(hold[i].Ul));
-                differencesParameters.AddOutput("p", host.pval(hold[i].P));
+                differencesParameters.AddOutput("cn", hold[i].Gps);
+                differencesParameters.AddOutput("delta", hold[i].Delta);
+                differencesParameters.AddOutput("lci", hold[i].Ll);
+                differencesParameters.AddOutput("uci", hold[i].Ul);
+                differencesParameters.AddOutput("p", hold[i].P);
             }
             outputParameters.AddOutput("*differences", differencesList);
             return outputParameters;
@@ -1832,12 +1832,12 @@ namespace StatsDirect.Builtins
                 for (int j = 1; j <= frame.VariableCount; j++)
                 {
                     ParameterBag groupParameters = new ParameterBag();
-                    groupParameters.AddOutput("ggrp", j.ToString());
-                    groupParameters.AddOutput("gmean", host.RoundU(gbar[j]));
+                    groupParameters.AddOutput("ggrp", j);
+                    groupParameters.AddOutput("gmean", gbar[j]);
                     groupParameters.AddOutput("gn", Formatting.XRound(Convert.ToDouble(ngp[j]), 0));
                     groupList.Add(groupParameters);
                 }
-                outputParameters.AddOutput("g_mean", host.RoundU(gm));
+                outputParameters.AddOutput("g_mean", gm);
                 outputParameters.AddOutput("g_n", Formatting.XRound(Convert.ToDouble(ctr), 0));
 
                 IList<ParameterBag> subGroupList = new List<ParameterBag>();
@@ -1849,10 +1849,10 @@ namespace StatsDirect.Builtins
                     {
                         ParameterBag subGroupParameters = new ParameterBag();
                         ii += 1;
-                        subGroupParameters.AddOutput("sggrp", (j + 1).ToString());
-                        subGroupParameters.AddOutput("sgsub_grp", (i + 1).ToString());
+                        subGroupParameters.AddOutput("sggrp", (j + 1));
+                        subGroupParameters.AddOutput("sgsub_grp", (i + 1));
                         subGroupParameters.AddOutput("sgtitle", frame.Variables[j][i].Title);
-                        subGroupParameters.AddOutput("sgmean", host.RoundU(sgbar[ii]));
+                        subGroupParameters.AddOutput("sgmean", sgbar[ii]);
                         subGroupList.Add(subGroupParameters);
                     }
                 }
@@ -2001,26 +2001,26 @@ namespace StatsDirect.Builtins
             double ftr = vtr / vres;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tlist", tlist);
-            outputParameters.AddOutput("row_sum", host.RoundU(ssqr));
-            outputParameters.AddOutput("row_f", ndf.ToString());
-            outputParameters.AddOutput("row_mean", host.RoundU(vr));
-            outputParameters.AddOutput("col_sum", host.RoundU(ssqc));
-            outputParameters.AddOutput("col_f", ndf.ToString());
-            outputParameters.AddOutput("col_mean", host.RoundU(vc));
-            outputParameters.AddOutput("treat_sum", host.RoundU(ssqtr));
-            outputParameters.AddOutput("treat_f", ndf.ToString());
-            outputParameters.AddOutput("treat_mean", host.RoundU(vtr));
-            outputParameters.AddOutput("res_sum", host.RoundU(ssqres));
-            outputParameters.AddOutput("res_f", ndfres.ToString());
-            outputParameters.AddOutput("res_mean", host.RoundU(vres));
-            outputParameters.AddOutput("tot_sum", host.RoundU(ssqtot));
-            outputParameters.AddOutput("tot_f", ndftot.ToString());
-            outputParameters.AddOutput("f_row", host.RoundU(fr));
-            outputParameters.AddOutput("p_row", host.pval(PDF.fvalp(fr, df, dfres)));
-            outputParameters.AddOutput("f_col", host.RoundU(fc));
-            outputParameters.AddOutput("p_col", host.pval(PDF.fvalp(fc, df, dfres)));
-            outputParameters.AddOutput("f_treat", host.RoundU(ftr));
-            outputParameters.AddOutput("p_treat", host.pval(PDF.fvalp(ftr, df, dfres)));
+            outputParameters.AddOutput("row_sum", ssqr);
+            outputParameters.AddOutput("row_f", ndf);
+            outputParameters.AddOutput("row_mean", vr);
+            outputParameters.AddOutput("col_sum", ssqc);
+            outputParameters.AddOutput("col_f", ndf);
+            outputParameters.AddOutput("col_mean", vc);
+            outputParameters.AddOutput("treat_sum", ssqtr);
+            outputParameters.AddOutput("treat_f", ndf);
+            outputParameters.AddOutput("treat_mean", vtr);
+            outputParameters.AddOutput("res_sum", ssqres);
+            outputParameters.AddOutput("res_f", ndfres);
+            outputParameters.AddOutput("res_mean", vres);
+            outputParameters.AddOutput("tot_sum", ssqtot);
+            outputParameters.AddOutput("tot_f", ndftot);
+            outputParameters.AddOutput("f_row", fr);
+            outputParameters.AddOutput("p_row", PDF.fvalp(fr, df, dfres));
+            outputParameters.AddOutput("f_col", fc);
+            outputParameters.AddOutput("p_col", PDF.fvalp(fc, df, dfres));
+            outputParameters.AddOutput("f_treat", ftr);
+            outputParameters.AddOutput("p_treat", PDF.fvalp(ftr, df, dfres));
             return outputParameters;
         }
 
@@ -2141,25 +2141,25 @@ namespace StatsDirect.Builtins
             double dbar2 = dsum / Convert.ToDouble(ng2);
             double pbar2 = psum / Convert.ToDouble(ng2);
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("grp1_p1", host.RoundU(dbar1));
-            outputParameters.AddOutput("grp1_p2", host.RoundU(pbar1));
-            outputParameters.AddOutput("grp1_diff", host.RoundU(difbar1));
-            outputParameters.AddOutput("grp2_p1", host.RoundU(dbar2));
-            outputParameters.AddOutput("grp2_p2", host.RoundU(pbar2));
-            outputParameters.AddOutput("grp2_diff", host.RoundU(difbar2));
+            outputParameters.AddOutput("grp1_p1", dbar1);
+            outputParameters.AddOutput("grp1_p2", pbar1);
+            outputParameters.AddOutput("grp1_diff", difbar1);
+            outputParameters.AddOutput("grp2_p1", dbar2);
+            outputParameters.AddOutput("grp2_p2", pbar2);
+            outputParameters.AddOutput("grp2_diff", difbar2);
             double se = Math.Sqrt(totdifvar / Convert.ToDouble(ng1 + ng2));
-            outputParameters.AddOutput("relative_diff", host.RoundU(totdifbar));
-            outputParameters.AddOutput("relative_se", host.RoundU(se));
+            outputParameters.AddOutput("relative_diff", totdifbar);
+            outputParameters.AddOutput("relative_se", se);
             double df = Convert.ToDouble(ng1 + ng2 - 1L);
             double t = totdifbar / se;
-            outputParameters.AddOutput("relative_t", host.RoundU(t));
-            outputParameters.AddOutput("relative_df", df.ToString());
+            outputParameters.AddOutput("relative_t", t);
+            outputParameters.AddOutput("relative_df", df);
             double P = PDF.tvalp(Math.Abs(t), df);
             if (P > 1.0 - P)
             {
                 P = 1.0 - P;
             }
-            outputParameters.AddOutput("relative_p", host.pval(P * 2.0));
+            outputParameters.AddOutput("relative_p", P * 2.0);
             double var1 = (difss1 - (difsum1 * difsum1 / Convert.ToDouble(ng1)));
             double var2 = (difss2 - (difsum2 * difsum2 / Convert.ToDouble(ng2)));
             double var = (var1 + var2) / Convert.ToDouble(ng1 + ng2 - 2L);
@@ -2169,20 +2169,20 @@ namespace StatsDirect.Builtins
             double mag = (difbar1 - difbar2) / 2.0;
             double pot = 1.0 - GAMMA;
             double crit = PDF.tfromp(pot / 2.0, df);
-            outputParameters.AddOutput("treatment_diff", host.RoundU(difbar1 - difbar2));
-            outputParameters.AddOutput("treatment_se", host.RoundU(se));
-            outputParameters.AddOutput("treatment_mag", host.RoundU(mag));
-            outputParameters.AddOutput("treatment_pc", host.RoundU(100 * GAMMA));
-            outputParameters.AddOutput("treatment_from", host.RoundU(mag - (crit * se / 2.0)));
-            outputParameters.AddOutput("treatment_to", host.RoundU(mag + (crit * se / 2.0)));
-            outputParameters.AddOutput("treatment_t", host.RoundU(t));
-            outputParameters.AddOutput("treatment_df", df.ToString());
+            outputParameters.AddOutput("treatment_diff", difbar1 - difbar2);
+            outputParameters.AddOutput("treatment_se", se);
+            outputParameters.AddOutput("treatment_mag", mag);
+            outputParameters.AddOutput("treatment_pc", 100 * GAMMA);
+            outputParameters.AddOutput("treatment_from", mag - (crit * se / 2.0));
+            outputParameters.AddOutput("treatment_to", mag + (crit * se / 2.0));
+            outputParameters.AddOutput("treatment_t", t);
+            outputParameters.AddOutput("treatment_df", df);
             P = PDF.tvalp(Math.Abs(t), df);
             if (P > 1.0 - P)
             {
                 P = 1.0 - P;
             }
-            outputParameters.AddOutput("treatment_p", host.pval(P * 2.0));
+            outputParameters.AddOutput("treatment_p", P * 2.0);
             t = (difbar1 + difbar2) / se;
             outputParameters.AddOutput("period_diff", host.RoundU(difbar1 + difbar2));
             outputParameters.AddOutput("period_se", host.RoundU(se));
@@ -2199,16 +2199,16 @@ namespace StatsDirect.Builtins
             var = (var1 + var2) / Convert.ToDouble(ng1 + ng2 - 2L);
             se = Math.Sqrt(var * ((1.0 / Convert.ToDouble(ng2)) + (1.0 / Convert.ToDouble(ng1))));
             t = (sumbar1 - sumbar2) / se;
-            outputParameters.AddOutput("tpi_sum", host.RoundU(sumbar1 - sumbar2));
-            outputParameters.AddOutput("tpi_se", host.RoundU(se));
-            outputParameters.AddOutput("tpi_t", host.RoundU(t));
-            outputParameters.AddOutput("tpi_df", df.ToString());
+            outputParameters.AddOutput("tpi_sum", sumbar1 - sumbar2);
+            outputParameters.AddOutput("tpi_se", se);
+            outputParameters.AddOutput("tpi_t", t);
+            outputParameters.AddOutput("tpi_df", df);
             P = PDF.tvalp(Math.Abs(t), df);
             if (P > 1.0 - P)
             {
                 P = 1.0 - P;
             }
-            outputParameters.AddOutput("tpi_p", host.pval(P * 2.0));
+            outputParameters.AddOutput("tpi_p", P * 2.0);
             return outputParameters;
         }
 

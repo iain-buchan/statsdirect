@@ -1,12 +1,12 @@
 <report>
 <line><title><in>method</in> multiple comparisons</title></line>
 <line></line>
-<line>Critical value (Studentized range) = <in>q</in>,  |q<sup>*</sup>| = <in>d</in></line>
-<line>Pooled standard deviation = <in>psd</in></line>
+<line>Critical value (Studentized range) = <inu>q</inu>,  |q<sup>*</sup>| = <inu>d</inu></line>
+<line>Pooled standard deviation = <inu>psd</inu></line>
 <line></line>
 <table>
 <tr><th>Comparison</th><th>Mean difference L <ci>(<in>pc</in>% CI)</ci></th><th>|L/SE(L)|</th><th></th></tr>
-<block name="differences"><tr><td><in>cf1</in> vs. <in>cf2</in></td><td><in>delta</in><ci>(<in>lci</in>  to  <in>uci</in>)</ci></td><td><in>t</in></td><td><pval><in>p</in></pval></td></tr></block>
+<block name="differences"><tr><td><in>cf1</in> vs. <in>cf2</in></td><td><inu>delta</inu><ci>(<inu>lci</inu>  to  <inu>uci</inu>)</ci></td><td><inu>t</inu></td><td><pval><in>p</in></pval></td></tr></block>
 </table>
 <line></line>
 <table>
