@@ -1,11 +1,11 @@
 <report>
 <line><title>Sample size for independent cohort study</title></line>
 <line></line>
-<line>Probability of event in control group = <in>pc</in></line>
-<line>Probability of event in experimental group = <in>ps</in></line>
+<line>Probability of event in control group = <inu>pc</inu></line>
+<line>Probability of event in experimental group = <inu>ps</inu></line>
 <line>Controls per case subject = <in>cpc</in></line>
-<line>Alpha = <in>alpha</in></line>
-<line>Power = <in>power</in></line>
+<line>Alpha = <inu>alpha</inu></line>
+<line>Power = <inu>power</inu></line>
 <line></line>
 <line>For uncorrected chi-square test:</line>
 <line>N = <in>case</in> case subjects and <in>controls</in> controls</line>

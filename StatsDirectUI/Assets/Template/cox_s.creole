@@ -3,6 +3,6 @@
 <line></line>
 <table>
 <tr><th>Time</th><th>Survival probability</th><th>Cumulative hazard</th><th>Hazard ratio</th></tr>
-<block name="time"><tr><td><in>time</in></td><td><in>sur</in></td><td><in>haz</in></td><td><in>hr</in></td></tr></block>
+<block name="time"><tr><td><inu>time</inu></td><td><inu>sur</inu></td><td><inu>haz</inu></td><td><inu>hr</inu></td></tr></block>
 </table>
 </report>

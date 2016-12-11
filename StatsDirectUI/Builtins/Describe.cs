@@ -226,18 +226,18 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("groups", groups.ToString());
-            outputParameters.AddOutput("capacity", capacity.ToString());
-            outputParameters.AddOutput("subjects", subjects.ToString());
-            outputParameters.AddOutput("seed", seed.ToString());
+            outputParameters.AddOutput("groups", groups);
+            outputParameters.AddOutput("capacity", capacity);
+            outputParameters.AddOutput("subjects", subjects);
+            outputParameters.AddOutput("seed", seed);
             IList<ParameterBag> groupsList = new List<ParameterBag>();
             outputParameters.AddOutput("*groups", groupsList);
             for (int i = 1; i <= subjects; i++)
             {
                 ParameterBag groupsParameters = new ParameterBag();
                 groupsList.Add(groupsParameters);
-                groupsParameters.AddOutput("sub", i.ToString());
-                groupsParameters.AddOutput("grp", allocatedGroup[i].ToString());
+                groupsParameters.AddOutput("sub", i);
+                groupsParameters.AddOutput("grp", allocatedGroup[i]);
             }
             return outputParameters;
         }
@@ -284,7 +284,7 @@ namespace StatsDirect.Builtins
                 ParameterBag variableParameters = new ParameterBag();
                 variableList.Add(variableParameters);
                 variableParameters.AddOutput("ti", vc.Title);
-                variableParameters.AddOutput("n", vc.Length.ToString());
+                variableParameters.AddOutput("n", vc.Length);
                 int cm = 0;
                 int xtot = vc.Length;
                 int bins = vc.GroupCount;
@@ -321,13 +321,13 @@ namespace StatsDirect.Builtins
                     ParameterBag binParameters = new ParameterBag();
                     binList.Add(binParameters);
                     binParameters.AddOutput("x", bin[i].Label);
-                    binParameters.AddOutput("fx", xn.ToString());
+                    binParameters.AddOutput("fx", xn);
                     if (bin[i].Label != Formatting.MISSINGLABEL)
                     {
-                        binParameters.AddOutput("pc", host.RoundU(100.0 * Convert.ToDouble(xn) / Convert.ToDouble(xtot)));
+                        binParameters.AddOutput("pc", 100.0 * Convert.ToDouble(xn) / Convert.ToDouble(xtot));
                         cm = cm + xn;
-                        binParameters.AddOutput("cm", cm.ToString());
-                        binParameters.AddOutput("pc2", host.RoundU(100.0 * Convert.ToDouble(cm) / Convert.ToDouble(xtot)));
+                        binParameters.AddOutput("cm", cm);
+                        binParameters.AddOutput("pc2", 100.0 * Convert.ToDouble(cm) / Convert.ToDouble(xtot));
                     }
                     else
                     {

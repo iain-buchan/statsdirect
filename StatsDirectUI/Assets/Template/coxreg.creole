@@ -2,11 +2,11 @@
 <line><title>Cox (proportional hazards) regression</title></line>
 <line></line>
 <line><in>n</in> subjects with <in>d</in> events</line>
-<line>Deviance (likelihood ratio) chi-square = <in>x2</in>   df = <in>df</in>   <pval><in>p_dev</in></pval></line>
+<line>Deviance (likelihood ratio) chi-square = <inu>x2</inu>   df = <in>df</in>   <pval><inp>p_dev</inp></pval></line>
 <block name="pred">
 <line></line>
 <table>
-<tr><td><in>lab</in></td><td>b<in>i</in>  = <warn><in>b</in></warn></td><td>z = <in>z</in></td><td><pval><in>p</in></pval></td></tr>
+<tr><td><in>lab</in></td><td>b<in>i</in>  = <warn><inu>b</inu></warn></td><td>z = <inu>z</inu></td><td><pval><inp>p</inp></pval></td></tr>
 </table>
 </block>
 </report>

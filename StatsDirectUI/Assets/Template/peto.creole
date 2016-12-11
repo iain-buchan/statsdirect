@@ -8,24 +8,24 @@
 <line></line>
 <table>
 <tr><th>Stratum</th><th>O-E</th><th>Odds ratio</th><thfirst><ci><in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
-<block name="odds"><tr><td><in>st</in></td><td><in>oe</in></td><td><in>or</in></td><td><ci><in>lci</in></ci></td><td><ci><in>uci</in></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="odds"><tr><td><in>st</in></td><td><inu>oe</inu></td><td><inu>or</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th>% Weights</th><th></th></tr>
-<block name="odds"><tr><td><in>st</in></td><td><in>yi</in></td><td><in>vi</in></td><td><in>wt</in> </td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="odds"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><inu>wt</inu> </td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>V</th><th>z</th><th><pval>P(two sided)</pval></th><th></th></tr>
-<block name="z"><tr><td><in>st</in></td><td><in>v</in></td><td><in>z</in></td><td><pval><in>p</in></pval></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="z"><tr><td><in>st</in></td><td><inu>v</inu></td><td><inu>z</inu></td><td><pval><inp>p</inp></pval></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
-<line>Pooled odds ratio = <in>por</in> (<ci><in>pc</in>% CI = <in>from</in> to <in>to</in></ci>)</line>
-<line>Z (test of odds ratio differs from 1) = <in>z</in>  <pval><in>p_z</in></pval></line>
+<line>Pooled odds ratio = <inu>por</inu> (<ci><in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci>)</line>
+<line>Z (test of odds ratio differs from 1) = <inu>z</inu>  <pval><inp>p_z</inp></pval></line>
 <line></line>
 <line><u>Non-combinability of studies</u></line>
-<line>Cochran Q = <in>qc</in>  (df = <in>df</in>)  <pval><in>xp</in></pval></line>
+<line>Cochran Q = <inu>qc</inu>  (df = <in>df</in>)  <pval><inp>xp</inp></pval></line>
 <line>I<sub>2</sub> (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
 <line></line>
 <line><u>Bias indicators</u></line>

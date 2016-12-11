@@ -85,7 +85,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        title[i] = "stratum " + i.ToString();
+                        title[i] = "stratum " + i;
                     }
                 }
             }
@@ -94,7 +94,7 @@ namespace StatsDirect.Builtins
                 stratlab = false;
                 for (i = 1; i <= k; i++)
                 {
-                    title[i] = "stratum " + i.ToString();
+                    title[i] = "stratum " + i;
                 }
             }
 
@@ -205,11 +205,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("st", i.ToString());
-                inputsParameters.AddOutput("a", o[i, 1].ToString());
-                inputsParameters.AddOutput("b", o[i, 2].ToString());
-                inputsParameters.AddOutput("c", o[i, 3].ToString());
-                inputsParameters.AddOutput("d", o[i, 4].ToString());
+                inputsParameters.AddOutput("st", i);
+                inputsParameters.AddOutput("a", o[i, 1]);
+                inputsParameters.AddOutput("b", o[i, 2]);
+                inputsParameters.AddOutput("c", o[i, 3]);
+                inputsParameters.AddOutput("d", o[i, 4]);
                 inputsParameters.AddOutput("lb", GetMetaLabel(host, o, i, stratlab, cced, title));
             }
 
@@ -221,14 +221,14 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag oddsParameters = new ParameterBag();
                 oddsList.Add(oddsParameters);
-                oddsParameters.AddOutput("st", i.ToString());
-                oddsParameters.AddOutput("oe", host.RoundU(oe[i]));
-                oddsParameters.AddOutput("or", host.RoundU(odr[i]));
-                oddsParameters.AddOutput("yi", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
-                oddsParameters.AddOutput("vi", host.RoundU(odrv[i]));
-                oddsParameters.AddOutput("lci", host.RoundU(odrl[i]));
-                oddsParameters.AddOutput("uci", host.RoundU(odru[i]));
-                oddsParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
+                oddsParameters.AddOutput("st", i);
+                oddsParameters.AddOutput("oe", oe[i]);
+                oddsParameters.AddOutput("or", odr[i]);
+                oddsParameters.AddOutput("yi", odr[i] > 0 ? Math.Log(odr[i]) : 0);
+                oddsParameters.AddOutput("vi", odrv[i]);
+                oddsParameters.AddOutput("lci", odrl[i]);
+                oddsParameters.AddOutput("uci", odru[i]);
+                oddsParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
                 oddsParameters.AddOutput("lb", GetMetaLabel(host, o, i, stratlab, cced, title));
             }
 
@@ -238,9 +238,9 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag zParameters = new ParameterBag();
                 zList.Add(zParameters);
-                zParameters.AddOutput("st", i.ToString());
-                zParameters.AddOutput("v", host.RoundU(odw[i]));
-                zParameters.AddOutput("z", host.RoundU(odz[i]));
+                zParameters.AddOutput("st", i);
+                zParameters.AddOutput("v", odw[i]);
+                zParameters.AddOutput("z", odz[i]);
                 if (odz[i] != Constant.MISSING)
                 {
                     p = 1.0 - PDF.alnorm(odz[i]);
@@ -248,7 +248,7 @@ namespace StatsDirect.Builtins
                     {
                         p = 1.0 - p;
                     }
-                    zParameters.AddOutput("p", host.pval(2.0 * p));
+                    zParameters.AddOutput("p", 2.0 * p);
                 }
                 else
                 {
@@ -257,21 +257,21 @@ namespace StatsDirect.Builtins
                 zParameters.AddOutput("lb", GetMetaLabel(host, o, i, stratlab, cced, title));
             }
 
-            outputParameters.AddOutput("por", host.RoundU(por));
-            outputParameters.AddOutput("from", host.RoundU(porl));
-            outputParameters.AddOutput("to", host.RoundU(poru));
+            outputParameters.AddOutput("por", por);
+            outputParameters.AddOutput("from", porl);
+            outputParameters.AddOutput("to", poru);
 
-            outputParameters.AddOutput("z", host.RoundU(z));
+            outputParameters.AddOutput("z", z);
             p = 1.0 - PDF.alnorm(z);
             if (p > 1.0 - p)
             {
                 p = 1.0 - p;
             }
-            outputParameters.AddOutput("p_z", host.pval(2.0 * p));
+            outputParameters.AddOutput("p_z", 2.0 * p);
 
-            outputParameters.AddOutput("qc", host.RoundU(qc));
-            outputParameters.AddOutput("df", (realk - 1).ToString());
-            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
+            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("df", (realk - 1));
+            outputParameters.AddOutput("xp", PDF.chivalp(qc, Convert.ToDouble(realk - 1)));
             IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
@@ -632,7 +632,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        title[i] = "stratum " + i.ToString();
+                        title[i] = "stratum " + i;
                     }
                 }
             }
@@ -641,7 +641,7 @@ namespace StatsDirect.Builtins
                 stratlab = false;
                 for (i = 1; i <= k; i++)
                 {
-                    title[i] = "stratum " + i.ToString();
+                    title[i] = "stratum " + i;
                 }
             }
 
@@ -685,11 +685,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("st", i.ToString());
-                inputsParameters.AddOutput("a", o[i, 1].ToString());
-                inputsParameters.AddOutput("b", o[i, 2].ToString());
-                inputsParameters.AddOutput("c", o[i, 3].ToString());
-                inputsParameters.AddOutput("d", o[i, 4].ToString());
+                inputsParameters.AddOutput("st", i);
+                inputsParameters.AddOutput("a", o[i, 1]);
+                inputsParameters.AddOutput("b", o[i, 2]);
+                inputsParameters.AddOutput("c", o[i, 3]);
+                inputsParameters.AddOutput("d", o[i, 4]);
                 string tmp = stratlab ? title[i] : string.Empty;
                 if (cced[i])
                 {
@@ -710,15 +710,15 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag differencesParameters = new ParameterBag();
                 differencesList.Add(differencesParameters);
-                differencesParameters.AddOutput("st", i.ToString());
-                differencesParameters.AddOutput("rd", host.RoundU(rkr[i]));
-                differencesParameters.AddOutput("lci", host.RoundU(rkrl[i]));
-                differencesParameters.AddOutput("uci", host.RoundU(rkru[i]));
-                differencesParameters.AddOutput("wt", host.RoundU(100 * rkw[i] / Formatting.dsum(rkw, 1)));
-                differencesParameters.AddOutput("dwt", host.RoundU(100 * dsw[i] / Formatting.dsum(dsw, 1)));
+                differencesParameters.AddOutput("st", i);
+                differencesParameters.AddOutput("rd", rkr[i]);
+                differencesParameters.AddOutput("lci", rkrl[i]);
+                differencesParameters.AddOutput("uci", rkru[i]);
+                differencesParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
+                differencesParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
                 differencesParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
-                differencesParameters.AddOutput("yi", host.RoundU(rkr[i]));
-                differencesParameters.AddOutput("vi", host.RoundU(VarianceFromCI(rkrl[i], rkru[i], cit,false)));
+                differencesParameters.AddOutput("yi", rkr[i]);
+                differencesParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit,false));
                 // double a = o[ i, 1 ]; 
                 // double b = o[ i, 2 ]; 
                 // double C = o[ i, 3 ]; 
@@ -726,30 +726,30 @@ namespace StatsDirect.Builtins
                 // double N = a + b + C + D; 
             }
 
-            outputParameters.AddOutput("rmh", host.RoundU(rmh));
-            outputParameters.AddOutput("from", host.RoundU(ll));
-            outputParameters.AddOutput("to", host.RoundU(ul));
+            outputParameters.AddOutput("rmh", rmh);
+            outputParameters.AddOutput("from", ll);
+            outputParameters.AddOutput("to", ul);
 
-            outputParameters.AddOutput("x2", host.RoundU(x2Rmh));
-            outputParameters.AddOutput("df", 1.ToString());
-            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(x2Rmh, 1.0)));
+            outputParameters.AddOutput("x2", x2Rmh);
+            outputParameters.AddOutput("df", 1);
+            outputParameters.AddOutput("xp", PDF.chivalp(x2Rmh, 1.0));
 
-            outputParameters.AddOutput("qc", host.RoundU(qc));
-            outputParameters.AddOutput("df_cochran", (k - 1).ToString());
-            outputParameters.AddOutput("xp_cochran", host.pval(PDF.chivalp(qc, Convert.ToDouble(k - 1))));
-            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("df_cochran", (k - 1));
+            outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, Convert.ToDouble(k - 1)));
+            outputParameters.AddOutput("tausq", tausq);
             IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
             outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
 
-            outputParameters.AddOutput("dsrd", host.RoundU(dsrd));
-            outputParameters.AddOutput("dsll", host.RoundU(dsll));
-            outputParameters.AddOutput("dsul", host.RoundU(dsul));
-            outputParameters.AddOutput("dsx2", host.RoundU(dsx2));
-            outputParameters.AddOutput("df_ds", 1.ToString());
-            outputParameters.AddOutput("xp_ds", host.pval(PDF.chivalp(dsx2, 1.0)));
+            outputParameters.AddOutput("dsrd", dsrd);
+            outputParameters.AddOutput("dsll", dsll);
+            outputParameters.AddOutput("dsul", dsul);
+            outputParameters.AddOutput("dsx2", dsx2);
+            outputParameters.AddOutput("df_ds", 1);
+            outputParameters.AddOutput("xp_ds", PDF.chivalp(dsx2, 1.0));
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
@@ -871,7 +871,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        title[i] = "stratum " + i.ToString();
+                        title[i] = "stratum " + i;
                     }
                 }
             }
@@ -880,7 +880,7 @@ namespace StatsDirect.Builtins
                 stratlab = false;
                 for (i = 1; i <= k; i++)
                 {
-                    title[i] = "stratum " + i.ToString();
+                    title[i] = "stratum " + i;
                 }
             }
 
@@ -926,11 +926,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("st", i.ToString());
-                inputsParameters.AddOutput("a", o[i, 1].ToString());
-                inputsParameters.AddOutput("b", o[i, 2].ToString());
-                inputsParameters.AddOutput("c", o[i, 3].ToString());
-                inputsParameters.AddOutput("d", o[i, 4].ToString());
+                inputsParameters.AddOutput("st", i);
+                inputsParameters.AddOutput("a", o[i, 1]);
+                inputsParameters.AddOutput("b", o[i, 2]);
+                inputsParameters.AddOutput("c", o[i, 3]);
+                inputsParameters.AddOutput("d", o[i, 4]);
                 inputsParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
@@ -943,29 +943,29 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag risksParameters = new ParameterBag();
                 risksList.Add(risksParameters);
-                risksParameters.AddOutput("st", i.ToString());
-                risksParameters.AddOutput("rr", host.RoundU(rkr[i]));
-                risksParameters.AddOutput("yi", host.RoundU(rkr[i] > 0 ? Math.Log(rkr[i]) : 0));
-                risksParameters.AddOutput("vi", host.RoundU(VarianceFromCI(rkrl[i], rkru[i], cit,true)));
-                risksParameters.AddOutput("lci", host.RoundU(rkrl[i]));
-                risksParameters.AddOutput("uci", host.RoundU(rkru[i]));
-                risksParameters.AddOutput("wt", host.RoundU(100 * rkw[i] / Formatting.dsum(rkw, 1)));
-                risksParameters.AddOutput("dwt", host.RoundU(100 * dsw[i] / Formatting.dsum(dsw, 1)));
+                risksParameters.AddOutput("st", i);
+                risksParameters.AddOutput("rr", rkr[i]);
+                risksParameters.AddOutput("yi", rkr[i] > 0 ? Math.Log(rkr[i]) : 0);
+                risksParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit,true));
+                risksParameters.AddOutput("lci", rkrl[i]);
+                risksParameters.AddOutput("uci", rkru[i]);
+                risksParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
+                risksParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
                 risksParameters.AddOutput("lb", GetMetaLabel(host, o, i, stratlab, cced, title));
             }
 
-            outputParameters.AddOutput("rr", host.RoundU(rmh));
-            outputParameters.AddOutput("from", host.RoundU(ll));
-            outputParameters.AddOutput("to", host.RoundU(ul));
+            outputParameters.AddOutput("rr", rmh);
+            outputParameters.AddOutput("from", ll);
+            outputParameters.AddOutput("to", ul);
 
-            outputParameters.AddOutput("x2", host.RoundU(x2Rmh));
-            outputParameters.AddOutput("df", 1.ToString());
-            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(x2Rmh, 1.0)));
+            outputParameters.AddOutput("x2", x2Rmh);
+            outputParameters.AddOutput("df", 1);
+            outputParameters.AddOutput("xp", PDF.chivalp(x2Rmh, 1.0));
 
-            outputParameters.AddOutput("qc", host.RoundU(qc));
-            outputParameters.AddOutput("df_cochran", (realk - 1).ToString());
-            outputParameters.AddOutput("xp_cochran", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
-            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("df_cochran", (realk - 1));
+            outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, Convert.ToDouble(realk - 1)));
+            outputParameters.AddOutput("tausq", tausq);
             IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
@@ -973,12 +973,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
 
 
-            outputParameters.AddOutput("dsrr", host.RoundU(dsrr));
-            outputParameters.AddOutput("dsll", host.RoundU(dsll));
-            outputParameters.AddOutput("dsul", host.RoundU(dsul));
-            outputParameters.AddOutput("dsx2", host.RoundU(dsx2));
-            outputParameters.AddOutput("df_ds", 1.ToString());
-            outputParameters.AddOutput("xp_ds", host.pval(PDF.chivalp(dsx2, 1.0)));
+            outputParameters.AddOutput("dsrr", dsrr);
+            outputParameters.AddOutput("dsll", dsll);
+            outputParameters.AddOutput("dsul", dsul);
+            outputParameters.AddOutput("dsx2", dsx2);
+            outputParameters.AddOutput("df_ds", 1);
+            outputParameters.AddOutput("xp_ds", PDF.chivalp(dsx2, 1.0));
 
             GetAproxrrCI(host, o, k, cit, axll, axul);
 
@@ -1172,7 +1172,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        title[i] = "stratum " + i.ToString();
+                        title[i] = "stratum " + i;
                     }
                 }
             }
@@ -1180,7 +1180,7 @@ namespace StatsDirect.Builtins
             {
                 for (i = 1; i <= k; i++)
                 {
-                    title[i] = "stratum " + i.ToString();
+                    title[i] = "stratum " + i;
                 }
             }
 
@@ -1323,11 +1323,11 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag exactParameters = new ParameterBag();
                     exactList.Add(exactParameters);
-                    exactParameters.AddOutput("st", i.ToString());
-                    exactParameters.AddOutput("gj", host.RoundU(gj[i]));
-                    exactParameters.AddOutput("g", host.RoundU(g[i]));
-                    exactParameters.AddOutput("lci", host.RoundU(lcig[i]));
-                    exactParameters.AddOutput("uci", host.RoundU(ucig[i]));
+                    exactParameters.AddOutput("st", i);
+                    exactParameters.AddOutput("gj", gj[i]);
+                    exactParameters.AddOutput("g", g[i]);
+                    exactParameters.AddOutput("lci", lcig[i]);
+                    exactParameters.AddOutput("uci", ucig[i]);
                     exactParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
                 }
 
@@ -1337,12 +1337,12 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag approximateParameters = new ParameterBag();
                     approximateList.Add(approximateParameters);
-                    approximateParameters.AddOutput("st", i.ToString());
-                    approximateParameters.AddOutput("ne", en[i].ToString());
-                    approximateParameters.AddOutput("nc", cn[i].ToString());
-                    approximateParameters.AddOutput("d", host.RoundU(d[i]));
-                    approximateParameters.AddOutput("lci", host.RoundU(lcid[i]));
-                    approximateParameters.AddOutput("uci", host.RoundU(ucid[i]));
+                    approximateParameters.AddOutput("st", i);
+                    approximateParameters.AddOutput("ne", en[i]);
+                    approximateParameters.AddOutput("nc", cn[i]);
+                    approximateParameters.AddOutput("d", d[i]);
+                    approximateParameters.AddOutput("lci", lcid[i]);
+                    approximateParameters.AddOutput("uci", ucid[i]);
                     approximateParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
                 }
 
@@ -1352,25 +1352,25 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag poolOkParameters = new ParameterBag();
                     poolOkList.Add(poolOkParameters);
-                    poolOkParameters.AddOutput("dplus", host.RoundU(dplus));
-                    poolOkParameters.AddOutput("from", host.RoundU(dplusll));
-                    poolOkParameters.AddOutput("to", host.RoundU(dplusul));
-                    poolOkParameters.AddOutput("z", host.RoundU(dplusz));
-                    poolOkParameters.AddOutput("p", host.pval(MathDbl.zvalp2(dplusz)));
-                    poolOkParameters.AddOutput("qc", host.RoundU(qc));
-                    poolOkParameters.AddOutput("df", (k - 1).ToString());
+                    poolOkParameters.AddOutput("dplus", dplus);
+                    poolOkParameters.AddOutput("from", dplusll);
+                    poolOkParameters.AddOutput("to", dplusul);
+                    poolOkParameters.AddOutput("z", dplusz);
+                    poolOkParameters.AddOutput("p", MathDbl.zvalp2(dplusz));
+                    poolOkParameters.AddOutput("qc", qc);
+                    poolOkParameters.AddOutput("df", (k - 1));
                     poolOkParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, Convert.ToDouble(k - 1))));
-                    poolOkParameters.AddOutput("tausq", host.RoundU(tausq));
+                    poolOkParameters.AddOutput("tausq", tausq);
                     IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
                     poolOkParameters.AddOutput("isq", Formatting.XRound(isq, 1));
                     poolOkParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
                     poolOkParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
                     poolOkParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
-                    poolOkParameters.AddOutput("dsrd", host.RoundU(dsd));
-                    poolOkParameters.AddOutput("dsll", host.RoundU(dsll));
-                    poolOkParameters.AddOutput("dsul", host.RoundU(dsul));
-                    poolOkParameters.AddOutput("dz", host.RoundU(dsz));
-                    poolOkParameters.AddOutput("dp", host.pval(MathDbl.zvalp2(dsz)));
+                    poolOkParameters.AddOutput("dsrd", dsd);
+                    poolOkParameters.AddOutput("dsll", dsll);
+                    poolOkParameters.AddOutput("dsul", dsul);
+                    poolOkParameters.AddOutput("dz", dsz);
+                    poolOkParameters.AddOutput("dp", MathDbl.zvalp2(dsz));
                 }
 
                 IList<ParameterBag> eggerList = new List<ParameterBag>();
@@ -1506,12 +1506,12 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag approximateParameters = new ParameterBag();
                     approximateList.Add(approximateParameters);
-                    approximateParameters.AddOutput("st", i.ToString());
-                    approximateParameters.AddOutput("ne", en[i].ToString());
-                    approximateParameters.AddOutput("nc", cn[i].ToString());
-                    approximateParameters.AddOutput("d", host.RoundU(d[i]));
-                    approximateParameters.AddOutput("lci", host.RoundU(lcid[i]));
-                    approximateParameters.AddOutput("uci", host.RoundU(ucid[i]));
+                    approximateParameters.AddOutput("st", i);
+                    approximateParameters.AddOutput("ne", en[i]);
+                    approximateParameters.AddOutput("nc", cn[i]);
+                    approximateParameters.AddOutput("d", d[i]);
+                    approximateParameters.AddOutput("lci", lcid[i]);
+                    approximateParameters.AddOutput("uci", ucid[i]);
                     approximateParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
                 }
 
@@ -1521,25 +1521,25 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag poolOkParameters = new ParameterBag();
                     poolOkList.Add(poolOkParameters);
-                    poolOkParameters.AddOutput("dplus", host.RoundU(dplus));
-                    poolOkParameters.AddOutput("from", host.RoundU(dplusll));
-                    poolOkParameters.AddOutput("to", host.RoundU(dplusul));
-                    poolOkParameters.AddOutput("z", host.RoundU(dplusz));
-                    poolOkParameters.AddOutput("p", host.pval(MathDbl.zvalp2(dplusz)));
-                    poolOkParameters.AddOutput("qc", host.RoundU(qc));
-                    poolOkParameters.AddOutput("df", (k - 1).ToString());
-                    poolOkParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, Convert.ToDouble(k - 1))));
-                    poolOkParameters.AddOutput("tausq", host.RoundU(tausq));
+                    poolOkParameters.AddOutput("dplus", dplus);
+                    poolOkParameters.AddOutput("from", dplusll);
+                    poolOkParameters.AddOutput("to", dplusul);
+                    poolOkParameters.AddOutput("z", dplusz);
+                    poolOkParameters.AddOutput("p", MathDbl.zvalp2(dplusz));
+                    poolOkParameters.AddOutput("qc", qc);
+                    poolOkParameters.AddOutput("df", (k - 1));
+                    poolOkParameters.AddOutput("xp", PDF.chivalp(qc, Convert.ToDouble(k - 1)));
+                    poolOkParameters.AddOutput("tausq", tausq);
                     IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
                     poolOkParameters.AddOutput("isq", Formatting.XRound(isq, 1));
                     poolOkParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
                     poolOkParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
                     poolOkParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
-                    poolOkParameters.AddOutput("dsrd", host.RoundU(dsd));
-                    poolOkParameters.AddOutput("dsll", host.RoundU(dsll));
-                    poolOkParameters.AddOutput("dsul", host.RoundU(dsul));
-                    poolOkParameters.AddOutput("dz", host.RoundU(dsz));
-                    poolOkParameters.AddOutput("zp", host.pval(MathDbl.zvalp2(dsz)));
+                    poolOkParameters.AddOutput("dsrd", dsd);
+                    poolOkParameters.AddOutput("dsll", dsll);
+                    poolOkParameters.AddOutput("dsul", dsul);
+                    poolOkParameters.AddOutput("dz", dsz);
+                    poolOkParameters.AddOutput("zp", MathDbl.zvalp2(dsz));
                 }
 
                 IList<ParameterBag> eggerList = new List<ParameterBag>();
@@ -2113,7 +2113,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        title[i] = "stratum " + i.ToString();
+                        title[i] = "stratum " + i;
                     }
                 }
             }
@@ -2122,7 +2122,7 @@ namespace StatsDirect.Builtins
                 stratlab = false;
                 for (i = 1; i <= k; i++)
                 {
-                    title[i] = "stratum " + i.ToString();
+                    title[i] = "stratum " + i;
                 }
             }
 
@@ -2192,11 +2192,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("st", i.ToString());
-                inputsParameters.AddOutput("a", a[i].ToString());
-                inputsParameters.AddOutput("pt1", host.RoundU(pt1[i]));
-                inputsParameters.AddOutput("b", b[i].ToString());
-                inputsParameters.AddOutput("pt2", host.RoundU(pt2[i]));
+                inputsParameters.AddOutput("st", i);
+                inputsParameters.AddOutput("a", a[i]);
+                inputsParameters.AddOutput("pt1", pt1[i]);
+                inputsParameters.AddOutput("b", b[i]);
+                inputsParameters.AddOutput("pt2", pt2[i]);
                 inputsParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
@@ -2206,10 +2206,10 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag irParameters = new ParameterBag();
                 irList.Add(irParameters);
-                irParameters.AddOutput("st", i.ToString());
-                irParameters.AddOutput(index == 1 ? "ird" : "irr", host.RoundU(rkr[i]));
-                irParameters.AddOutput("lci", host.RoundU(rkrl[i]));
-                irParameters.AddOutput("uci", host.RoundU(rkru[i]));
+                irParameters.AddOutput("st", i);
+                irParameters.AddOutput(index == 1 ? "ird" : "irr", rkr[i]);
+                irParameters.AddOutput("lci", rkrl[i]);
+                irParameters.AddOutput("uci", rkru[i]);
                 irParameters.AddOutput("wt",
                                        rkw[i] != Constant.MISSING
                                            ? host.RoundU(100 * rkw[i] / Formatting.dsum(rkw, 1))
@@ -2221,21 +2221,21 @@ namespace StatsDirect.Builtins
                 irParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
                 if (index == 1)
                 {
-                    irParameters.AddOutput("yi", host.RoundU(rkr[i]));
-                    irParameters.AddOutput("vi", host.RoundU(VarianceFromCI(rkrl[i], rkru[i], cit, false)));
+                    irParameters.AddOutput("yi", rkr[i]);
+                    irParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit, false));
                 }
                 else
                 {
-                    irParameters.AddOutput("yi", host.RoundU(rkr[i] > 0 ? Math.Log(rkr[i]) : 0));
-                    irParameters.AddOutput("vi", host.RoundU(VarianceFromCI(rkrl[i], rkru[i], cit, true)));
+                    irParameters.AddOutput("yi", rkr[i] > 0 ? Math.Log(rkr[i]) : 0);
+                    irParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit, true));
                 }
 
             }
-            outputParameters.AddOutput("rmh", host.RoundU(rmh));
-            outputParameters.AddOutput("from", host.RoundU(ll));
-            outputParameters.AddOutput("to", host.RoundU(ul));
-            outputParameters.AddOutput("z", host.RoundU(zrmh));
-            outputParameters.AddOutput("p_z", host.pval(MathDbl.zvalp2(zrmh)));
+            outputParameters.AddOutput("rmh", rmh);
+            outputParameters.AddOutput("from", ll);
+            outputParameters.AddOutput("to", ul);
+            outputParameters.AddOutput("z", zrmh);
+            outputParameters.AddOutput("p_z", MathDbl.zvalp2(zrmh));
             if (index == 2)
             {
                 if (ierr == -9)
@@ -2248,22 +2248,22 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("*poolok", poolokList);
                     ParameterBag poolokParameters = new ParameterBag();
                     poolokList.Add(poolokParameters);
-                    poolokParameters.AddOutput("eor", host.RoundU(eor));
-                    poolokParameters.AddOutput("llf", host.RoundU(llf));
-                    poolokParameters.AddOutput("ulf", host.RoundU(ulf));
-                    poolokParameters.AddOutput("p1f", host.pval(p1F));
-                    poolokParameters.AddOutput("p2f", host.pval(p2F));
-                    poolokParameters.AddOutput("llm", host.RoundU(llm));
-                    poolokParameters.AddOutput("ulm", host.RoundU(ulm));
-                    poolokParameters.AddOutput("p1m", host.pval(p1M));
-                    poolokParameters.AddOutput("p2m", host.pval(p2M));
+                    poolokParameters.AddOutput("eor", eor);
+                    poolokParameters.AddOutput("llf", llf);
+                    poolokParameters.AddOutput("ulf", ulf);
+                    poolokParameters.AddOutput("p1f", p1F);
+                    poolokParameters.AddOutput("p2f", p2F);
+                    poolokParameters.AddOutput("llm", llm);
+                    poolokParameters.AddOutput("ulm", ulm);
+                    poolokParameters.AddOutput("p1m", p1M);
+                    poolokParameters.AddOutput("p2m", p2M);
                 }
             }
 
-            outputParameters.AddOutput("qc", host.RoundU(qc));
-            outputParameters.AddOutput("df", (realk - 1).ToString());
-            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, realk - 1)));
-            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("df", (realk - 1));
+            outputParameters.AddOutput("xp", PDF.chivalp(qc, realk - 1));
+            outputParameters.AddOutput("tausq", tausq);
             // Call isquare(qc, k, cit, isq, llisq, ulisq)
             IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
@@ -2273,16 +2273,16 @@ namespace StatsDirect.Builtins
 
             if (index == 1)
             {
-                outputParameters.AddOutput("dsird", host.RoundU(dsird));
+                outputParameters.AddOutput("dsird", dsird);
             }
             else
             {
-                outputParameters.AddOutput("dsirr", host.RoundU(dsirr));
+                outputParameters.AddOutput("dsirr", dsirr);
             }
-            outputParameters.AddOutput("dsll", host.RoundU(dsll));
-            outputParameters.AddOutput("dsul", host.RoundU(dsul));
-            outputParameters.AddOutput("dz", host.RoundU(dz));
-            outputParameters.AddOutput("dp", host.pval(MathDbl.zvalp2(dz)));
+            outputParameters.AddOutput("dsll", dsll);
+            outputParameters.AddOutput("dsul", dsul);
+            outputParameters.AddOutput("dz", dz);
+            outputParameters.AddOutput("dp", MathDbl.zvalp2(dz));
 
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
@@ -2446,7 +2446,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        title[i] = "stratum " + i.ToString();
+                        title[i] = "stratum " + i;
                     }
                 }
             }
@@ -2455,7 +2455,7 @@ namespace StatsDirect.Builtins
                 stratlab = false;
                 for (int i = 1; i <= k; i++)
                 {
-                    title[i] = "stratum " + i.ToString();
+                    title[i] = "stratum " + i;
                 }
             }
 
@@ -2539,11 +2539,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("st", i.ToString());
-                inputsParameters.AddOutput("a", o[i, 1].ToString());
-                inputsParameters.AddOutput("b", o[i, 2].ToString());
-                inputsParameters.AddOutput("c", o[i, 3].ToString());
-                inputsParameters.AddOutput("d", o[i, 4].ToString());
+                inputsParameters.AddOutput("st", i);
+                inputsParameters.AddOutput("a", o[i, 1]);
+                inputsParameters.AddOutput("b", o[i, 2]);
+                inputsParameters.AddOutput("c", o[i, 3]);
+                inputsParameters.AddOutput("d", o[i, 4]);
                 inputsParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
@@ -2555,14 +2555,14 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag orParameters = new ParameterBag();
                 orList.Add(orParameters);
-                orParameters.AddOutput("st", i.ToString());
-                orParameters.AddOutput("or", host.RoundU(odr[i]));
-                orParameters.AddOutput("yi", host.RoundU(odr[i] > 0 ? Math.Log(odr[i]) : 0));
-                orParameters.AddOutput("vi", host.RoundU(VarianceFromCI(odrl[i], odru[i], cit,true)));
-                orParameters.AddOutput("lci", host.RoundU(odrl[i]));
-                orParameters.AddOutput("uci", host.RoundU(odru[i]));
-                orParameters.AddOutput("wt", host.RoundU(100 * odw[i] / Formatting.dsum(odw, 1)));
-                orParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
+                orParameters.AddOutput("st", i);
+                orParameters.AddOutput("or", odr[i]);
+                orParameters.AddOutput("yi", odr[i] > 0 ? Math.Log(odr[i]) : 0);
+                orParameters.AddOutput("vi", VarianceFromCI(odrl[i], odru[i], cit,true));
+                orParameters.AddOutput("lci", odrl[i]);
+                orParameters.AddOutput("uci", odru[i]);
+                orParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
+                orParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
                 string tmp = GetMetaLabel(host, o, i, stratlab, cced, title);
                 if (host.Preferences.DelayContinuityCorrection)
                 {
@@ -2589,18 +2589,18 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("meth", "Sato");
                 outputParameters.AddOutput("odds", "undefined");
-                outputParameters.AddOutput("from", host.RoundU(ll));
+                outputParameters.AddOutput("from", ll);
                 outputParameters.AddOutput("to", Formatting.INFRES);
             }
             else
             {
                 outputParameters.AddOutput("meth", "Robins-Breslow-Greenland");
-                outputParameters.AddOutput("odds", host.RoundU(rmh));
-                outputParameters.AddOutput("from", host.RoundU(ll));
-                outputParameters.AddOutput("to", host.RoundU(ul));
+                outputParameters.AddOutput("odds", rmh);
+                outputParameters.AddOutput("from", ll);
+                outputParameters.AddOutput("to", ul);
             }
-            outputParameters.AddOutput("chi_mantel", host.RoundU(x2));
-            outputParameters.AddOutput("chi_p", host.pval(PDF.chivalp(x2, 1.0)));
+            outputParameters.AddOutput("chi_mantel", x2);
+            outputParameters.AddOutput("chi_p", PDF.chivalp(x2, 1.0));
 
             IList<ParameterBag> cmlList = new List<ParameterBag>();
             outputParameters.AddOutput("*cml", cmlList);
@@ -2608,25 +2608,25 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag cmlParameters = new ParameterBag();
                 cmlList.Add(cmlParameters);
-                cmlParameters.AddOutput("eor", host.RoundU(eor));
-                cmlParameters.AddOutput("llf", host.RoundU(llf));
-                cmlParameters.AddOutput("ulf", host.RoundU(ulf));
-                cmlParameters.AddOutput("p1f", host.pval(p1F));
-                cmlParameters.AddOutput("p2f", host.pval(p2F));
-                cmlParameters.AddOutput("llm", host.RoundU(llm));
-                cmlParameters.AddOutput("ulm", host.RoundU(ulm));
-                cmlParameters.AddOutput("p1m", host.pval(p1M));
-                cmlParameters.AddOutput("p2m", host.pval(p2M));
+                cmlParameters.AddOutput("eor", eor);
+                cmlParameters.AddOutput("llf", llf);
+                cmlParameters.AddOutput("ulf", ulf);
+                cmlParameters.AddOutput("p1f", p1F);
+                cmlParameters.AddOutput("p2f", p2F);
+                cmlParameters.AddOutput("llm", llm);
+                cmlParameters.AddOutput("ulm", ulm);
+                cmlParameters.AddOutput("p1m", p1M);
+                cmlParameters.AddOutput("p2m", p2M);
             }
 
-            outputParameters.AddOutput("bd", host.RoundU(bd));
-            outputParameters.AddOutput("df", (realk - 1).ToString());
-            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(bd, Convert.ToDouble(realk - 1))));
+            outputParameters.AddOutput("bd", bd);
+            outputParameters.AddOutput("df", (realk - 1));
+            outputParameters.AddOutput("xp", PDF.chivalp(bd, Convert.ToDouble(realk - 1)));
 
-            outputParameters.AddOutput("qc", host.RoundU(qc));
-            outputParameters.AddOutput("df_cochran", (realk - 1).ToString());
-            outputParameters.AddOutput("xp_cochran", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
-            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("df_cochran", (realk - 1));
+            outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, Convert.ToDouble(realk - 1)));
+            outputParameters.AddOutput("tausq", tausq);
 
             IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
@@ -2634,12 +2634,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
             outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
 
-            outputParameters.AddOutput("dsor", host.RoundU(dsor));
-            outputParameters.AddOutput("dsll", host.RoundU(dsll));
-            outputParameters.AddOutput("dsul", host.RoundU(dsul));
-            outputParameters.AddOutput("dsx2", host.RoundU(dsx2));
-            outputParameters.AddOutput("df_ds", 1.ToString());
-            outputParameters.AddOutput("xp_ds", host.pval(PDF.chivalp(dsx2, 1.0)));
+            outputParameters.AddOutput("dsor", dsor);
+            outputParameters.AddOutput("dsll", dsll);
+            outputParameters.AddOutput("dsul", dsul);
+            outputParameters.AddOutput("dsx2", dsx2);
+            outputParameters.AddOutput("df_ds", 1);
+            outputParameters.AddOutput("xp_ds", PDF.chivalp(dsx2, 1.0));
 
             GetLogitCi(host, o, k, cit, axll, axul);
 
@@ -3382,14 +3382,14 @@ namespace StatsDirect.Builtins
                         title[i] = buf;
                     }
                     else
-                        title[i] = "study " + i.ToString();
+                        title[i] = "study " + i;
                 }
             }
             else
             {
                 stratlab = false;
                 for (i = 1; i <= k; i++)
-                    title[i] = "study " + i.ToString();
+                    title[i] = "study " + i;
             }
             title[k + 1] = ChartRenderer.combo_ti(string.Empty);
 
@@ -3488,30 +3488,30 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag studiesParameters = new ParameterBag();
                 studiesList.Add(studiesParameters);
-                studiesParameters.AddOutput("st", i.ToString());
-                studiesParameters.AddOutput("y", host.RoundU(y[i]));
-                studiesParameters.AddOutput("se", host.RoundU(seY[i]));
-                studiesParameters.AddOutput("from", host.RoundU(llY[i]));
-                studiesParameters.AddOutput("to", host.RoundU(ulY[i]));
-                studiesParameters.AddOutput("wt", host.RoundU(100 * wt[i] / Formatting.dsum(wt, 1)));
-                studiesParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
-                studiesParameters.AddOutput("standardized_effect", host.RoundU(y[i])); // TODO: Correct?  Is re-using se correct?
+                studiesParameters.AddOutput("st", i);
+                studiesParameters.AddOutput("y", y[i]);
+                studiesParameters.AddOutput("se", seY[i]);
+                studiesParameters.AddOutput("from", llY[i]);
+                studiesParameters.AddOutput("to", ulY[i]);
+                studiesParameters.AddOutput("wt", 100 * wt[i] / Formatting.dsum(wt, 1));
+                studiesParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
+                studiesParameters.AddOutput("standardized_effect", y[i]); // TODO: Correct?  Is re-using se correct?
                 studiesParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
             outputParameters.AddOutput("stat_fixed", stat.ToLower(CultureInfo.CurrentCulture));
-            outputParameters.AddOutput("rmh", host.RoundU(rmh));
-            outputParameters.AddOutput("from_fixed", host.RoundU(llrmh));
-            outputParameters.AddOutput("to_fixed", host.RoundU(ulrmh));
+            outputParameters.AddOutput("rmh", rmh);
+            outputParameters.AddOutput("from_fixed", llrmh);
+            outputParameters.AddOutput("to_fixed", ulrmh);
 
             outputParameters.AddOutput("task", "test " + stat + " " + statx.ToLower(CultureInfo.CurrentCulture));
-            outputParameters.AddOutput("z", host.RoundU(zrmh));
-            outputParameters.AddOutput("p_fixed", host.pval(MathDbl.zvalp2(zrmh)));
+            outputParameters.AddOutput("z", zrmh);
+            outputParameters.AddOutput("p_fixed", MathDbl.zvalp2(zrmh));
 
-            outputParameters.AddOutput("qc", host.RoundU(qc));
-            outputParameters.AddOutput("df", (k - 1).ToString());
-            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, Convert.ToDouble(k - 1))));
-            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("df", (k - 1));
+            outputParameters.AddOutput("xp", PDF.chivalp(qc, Convert.ToDouble(k - 1)));
+            outputParameters.AddOutput("tausq", tausq);
             IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
@@ -3519,13 +3519,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
 
             outputParameters.AddOutput("dsstat", stat.ToLower(CultureInfo.CurrentCulture));
-            outputParameters.AddOutput("dsrr", host.RoundU(dsrr));
-            outputParameters.AddOutput("dsll", host.RoundU(dsll));
-            outputParameters.AddOutput("dsul", host.RoundU(dsul));
+            outputParameters.AddOutput("dsrr", dsrr);
+            outputParameters.AddOutput("dsll", dsll);
+            outputParameters.AddOutput("dsul", dsul);
 
             outputParameters.AddOutput("zstat", "test " + stat + statx.ToLower(CultureInfo.CurrentCulture));
-            outputParameters.AddOutput("dz", host.RoundU(dsz));
-            outputParameters.AddOutput("dp", host.pval(MathDbl.zvalp2(dsz)));
+            outputParameters.AddOutput("dz", dsz);
+            outputParameters.AddOutput("dp", MathDbl.zvalp2(dsz));
 
             IList<ParameterBag> biasList = new List<ParameterBag>();
             outputParameters.AddOutput("*bias", biasList);
@@ -3653,7 +3653,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        title[i] = "study " + i.ToString();
+                        title[i] = "study " + i;
                     }
                 }
             }
@@ -3662,7 +3662,7 @@ namespace StatsDirect.Builtins
                 stratlab = false;
                 for (i = 1; i <= k; i++)
                 {
-                    title[i] = "study " + i.ToString();
+                    title[i] = "study " + i;
                 }
             }
             title[k + 1] = ChartRenderer.combo_ti(string.Empty);
@@ -3790,31 +3790,31 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag studiesParameters = new ParameterBag();
                 studiesList.Add(studiesParameters);
-                studiesParameters.AddOutput("st", i.ToString());
-                studiesParameters.AddOutput("n", host.RoundU(ss[i]));
-                studiesParameters.AddOutput("y", host.RoundU(y[i]));
-                studiesParameters.AddOutput("from", host.RoundU(llY[i]));
-                studiesParameters.AddOutput("to", host.RoundU(ulY[i]));
-                studiesParameters.AddOutput("wt", host.RoundU(100 * wt[i] / Formatting.dsum(wt, 1)));
-                studiesParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
-                studiesParameters.AddOutput("nwt", host.RoundU(100 * ss[i] / Formatting.dsum(ss, 1)));
-                studiesParameters.AddOutput("yi", host.RoundU(MathDbl.rtoz(y[i])));
-                studiesParameters.AddOutput("vi", host.RoundU(seY[i]*seY[i]));
+                studiesParameters.AddOutput("st", i);
+                studiesParameters.AddOutput("n", ss[i]);
+                studiesParameters.AddOutput("y", y[i]);
+                studiesParameters.AddOutput("from", llY[i]);
+                studiesParameters.AddOutput("to", ulY[i]);
+                studiesParameters.AddOutput("wt", 100 * wt[i] / Formatting.dsum(wt, 1));
+                studiesParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
+                studiesParameters.AddOutput("nwt", 100 * ss[i] / Formatting.dsum(ss, 1));
+                studiesParameters.AddOutput("yi", MathDbl.rtoz(y[i]));
+                studiesParameters.AddOutput("vi", seY[i]*seY[i]);
                 studiesParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
             outputParameters.AddOutput("stat_fixed", stat.ToLower(CultureInfo.CurrentCulture));
-            outputParameters.AddOutput("rmh", host.RoundU(rmh));
-            outputParameters.AddOutput("from_fixed", host.RoundU(llrmh));
-            outputParameters.AddOutput("to_fixed", host.RoundU(ulrmh));
+            outputParameters.AddOutput("rmh", rmh);
+            outputParameters.AddOutput("from_fixed", llrmh);
+            outputParameters.AddOutput("to_fixed", ulrmh);
 
-            outputParameters.AddOutput("z", host.RoundU(zrmh));
-            outputParameters.AddOutput("p_fixed", host.pval(MathDbl.zvalp2(zrmh)));
+            outputParameters.AddOutput("z", zrmh);
+            outputParameters.AddOutput("p_fixed", MathDbl.zvalp2(zrmh));
 
-            outputParameters.AddOutput("qc", host.RoundU(qc));
-            outputParameters.AddOutput("df", (k - 1).ToString());
-            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, Convert.ToDouble(k - 1))));
-            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("df", (k - 1));
+            outputParameters.AddOutput("xp", PDF.chivalp(qc, Convert.ToDouble(k - 1)));
+            outputParameters.AddOutput("tausq", tausq);
 
             IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
@@ -3823,28 +3823,28 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
 
             outputParameters.AddOutput("dsstat", stat.ToLower(CultureInfo.CurrentCulture));
-            outputParameters.AddOutput("dsrr", host.RoundU(dsrr));
-            outputParameters.AddOutput("dsll", host.RoundU(dsll));
-            outputParameters.AddOutput("dsul", host.RoundU(dsul));
+            outputParameters.AddOutput("dsrr", dsrr);
+            outputParameters.AddOutput("dsll", dsll);
+            outputParameters.AddOutput("dsul", dsul);
 
-            outputParameters.AddOutput("dz", host.RoundU(dsz));
-            outputParameters.AddOutput("dp", host.pval(MathDbl.zvalp2(dsz)));
+            outputParameters.AddOutput("dz", dsz);
+            outputParameters.AddOutput("dp", MathDbl.zvalp2(dsz));
 
-            outputParameters.AddOutput("wmr", host.RoundU(wmr));
-            outputParameters.AddOutput("wmr_lcl", host.RoundU(wmrLcl));
-            outputParameters.AddOutput("wmr_ucl", host.RoundU(wmrUcl));
-            outputParameters.AddOutput("wmr_z", host.RoundU(wmrZ));
-            outputParameters.AddOutput("wmr_p", host.pval(wmrP));
-            outputParameters.AddOutput("var_r", host.RoundU(varR));
-            outputParameters.AddOutput("var_e", host.RoundU(varE));
-            outputParameters.AddOutput("var_p", host.RoundU(varP));
-            outputParameters.AddOutput("wmr_crll", host.RoundU(wmrCrll));
-            outputParameters.AddOutput("wmr_crul", host.RoundU(wmrCrul));
-            outputParameters.AddOutput("wmr4", host.RoundU(wmr / 4.0));
-            outputParameters.AddOutput("sres", host.RoundU(sres));
-            outputParameters.AddOutput("percvar", host.RoundU(percvar));
-            outputParameters.AddOutput("het_x2", host.RoundU(hetX2));
-            outputParameters.AddOutput("het_p", host.pval(hetP));
+            outputParameters.AddOutput("wmr", wmr);
+            outputParameters.AddOutput("wmr_lcl", wmrLcl);
+            outputParameters.AddOutput("wmr_ucl", wmrUcl);
+            outputParameters.AddOutput("wmr_z", wmrZ);
+            outputParameters.AddOutput("wmr_p", wmrP);
+            outputParameters.AddOutput("var_r", varR);
+            outputParameters.AddOutput("var_e", varE);
+            outputParameters.AddOutput("var_p", varP);
+            outputParameters.AddOutput("wmr_crll", wmrCrll);
+            outputParameters.AddOutput("wmr_crul", wmrCrul);
+            outputParameters.AddOutput("wmr4", wmr / 4.0);
+            outputParameters.AddOutput("sres", sres);
+            outputParameters.AddOutput("percvar", percvar);
+            outputParameters.AddOutput("het_x2", hetX2);
+            outputParameters.AddOutput("het_p", hetP);
 
             IList<ParameterBag> biasList = new List<ParameterBag>();
             outputParameters.AddOutput("*bias", biasList);
@@ -4157,14 +4157,14 @@ namespace StatsDirect.Builtins
                         title[i] = buf;
                     }
                     else
-                        title[i] = "stratum " + i.ToString();
+                        title[i] = "stratum " + i;
                 }
             }
             else
             {
                 stratlab = false;
                 for (int i = 1; i <= k; i++)
-                    title[i] = "stratum " + i.ToString();
+                    title[i] = "stratum " + i;
             }
             title[k + 1] = ChartRenderer.combo_ti(string.Empty);
 
@@ -4260,9 +4260,9 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("st", i.ToString());
-                inputsParameters.AddOutput("r", sr[i].ToString());
-                inputsParameters.AddOutput("n", sn[i].ToString());
+                inputsParameters.AddOutput("st", i);
+                inputsParameters.AddOutput("r", sr[i]);
+                inputsParameters.AddOutput("n", sn[i]);
                 inputsParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
@@ -4274,16 +4274,16 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag proportionsParameters = new ParameterBag();
                 proportionsList.Add(proportionsParameters);
-                proportionsParameters.AddOutput("st", i.ToString());
-                proportionsParameters.AddOutput("p", host.RoundU(sr[i] / sn[i]));
+                proportionsParameters.AddOutput("st", i);
+                proportionsParameters.AddOutput("p", sr[i] / sn[i]);
                 string tmp;
                 MathDbl.binci(sr[i], sn[i], out llY[i], out ulY[i], cco, out tmp);
-                proportionsParameters.AddOutput("from_y", host.RoundU(llY[i]));
-                proportionsParameters.AddOutput("to_y", host.RoundU(ulY[i]));
-                proportionsParameters.AddOutput("wt", host.RoundU(100 * wt[i] / Formatting.dsum(wt, 1)));
-                proportionsParameters.AddOutput("dwt", host.RoundU(100 * dswt[i] / Formatting.dsum(dswt, 1)));
-                proportionsParameters.AddOutput("yi", host.RoundU(y[i]));
-                proportionsParameters.AddOutput("vi", host.RoundU(seY[i]*seY[i]));
+                proportionsParameters.AddOutput("from_y", llY[i]);
+                proportionsParameters.AddOutput("to_y", ulY[i]);
+                proportionsParameters.AddOutput("wt", 100 * wt[i] / Formatting.dsum(wt, 1));
+                proportionsParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
+                proportionsParameters.AddOutput("yi", y[i]);
+                proportionsParameters.AddOutput("vi", seY[i]*seY[i]);
                 if (stratlab)
                 {
                     tmp = title[i] + tmp;
@@ -4293,14 +4293,14 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("methodLabel", method == VarianceStabilisationMethod.ArcsineSquareRoot ? "Stuart-Ord (inverse double arcsine square root)" : "Miller (exact inverse Freeman-Tukey double arcsine)");
 
-            outputParameters.AddOutput("rmh", host.RoundU(rmh));
-            outputParameters.AddOutput("from", host.RoundU(llrmh));
-            outputParameters.AddOutput("to", host.RoundU(ulrmh));
+            outputParameters.AddOutput("rmh", rmh);
+            outputParameters.AddOutput("from", llrmh);
+            outputParameters.AddOutput("to", ulrmh);
 
-            outputParameters.AddOutput("qc", host.RoundU(qc));
-            outputParameters.AddOutput("df", (k - 1).ToString());
-            outputParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, Convert.ToDouble(k - 1))));
-            outputParameters.AddOutput("tausq", host.RoundU(tausq));
+            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("df", (k - 1));
+            outputParameters.AddOutput("xp", PDF.chivalp(qc, Convert.ToDouble(k - 1)));
+            outputParameters.AddOutput("tausq", tausq);
             // Call isquare(qc, k, cit, isq, llisq, ulisq)
             IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
@@ -4308,9 +4308,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
             outputParameters.AddOutput("ulisq", Formatting.XRound(ulisq, 1));
 
-            outputParameters.AddOutput("dspr", host.RoundU(dspr));
-            outputParameters.AddOutput("from_ds", host.RoundU(dsll));
-            outputParameters.AddOutput("to_ds", host.RoundU(dsul));
+            outputParameters.AddOutput("dspr", dspr);
+            outputParameters.AddOutput("from_ds", dsll);
+            outputParameters.AddOutput("to_ds", dsul);
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);

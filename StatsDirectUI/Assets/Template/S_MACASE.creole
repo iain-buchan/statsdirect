@@ -1,12 +1,12 @@
 <report>
 <line><title>Sample size for matched case-control study</title></line>
 <line></line>
-<line>case-control correlation = <in>corr</in></line>
-<line>probability of exposure in controls = <in>pc</in></line>
-<line>odds ratio = <in>odds</in></line>
-<line>controls per case subject = <in>cpc</in></line>
-<line>alpha = <in>alpha</in></line>
-<line>power = <in>power</in></line>
+<line>case-control correlation = <inu>corr</inu></line>
+<line>probability of exposure in controls = <inu>pc</inu></line>
+<line>odds ratio = <inu>odds</inu></line>
+<line>controls per case subject = <inu>cpc</inu></line>
+<line>alpha = <inu>alpha</inu></line>
+<line>power = <inu>power</inu></line>
 <block name="lower">
 <line></line>
 <line><warn>NB. Assuming power from lower tail is negligible.</warn></line>

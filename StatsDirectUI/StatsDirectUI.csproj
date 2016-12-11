@@ -1105,7 +1105,9 @@
     </None>
     <None Include="Assets\Operations\Operation.xsd" />
     <None Include="Assets\Template\abridged.creole" />
-    <None Include="Assets\Template\agree.creole" />
+    <None Include="Assets\Template\agree.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\asciigr.creole" />
     <None Include="Assets\Template\BACKINT.creole" />
     <None Include="Assets\Template\blank.creole" />
@@ -1287,7 +1289,9 @@
     <None Include="Assets\Template\treat.creole">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Assets\Template\tukey.creole" />
+    <None Include="Assets\Template\tukey.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\twomulti.creole" />
     <None Include="Assets\Template\TWONEST.creole" />
     <None Include="Assets\Template\twoway.creole" />
@@ -1891,7 +1895,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

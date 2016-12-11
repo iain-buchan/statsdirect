@@ -8,7 +8,7 @@
 <line></line>
 <table>
 <tr><th>Value</th><th>Frequency</th><th>Relative %</th><th>Cumulative</th><th>Cumulative Relative %</th></tr>
-<block name="bin"><tr><td><in>x</in></td><td><in>fx</in></td><td><in>pc</in></td><td><in>cm</in></td><td><in>pc2</in></td></tr></block>
+<block name="bin"><tr><td><in>x</in></td><td><in>fx</in></td><td><inu>pc</inu></td><td><in>cm</in></td><td><inu>pc2</inu></td></tr></block>
 </table>
 </block>
 </report>

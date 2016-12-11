@@ -455,12 +455,12 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("n", ARR2[0, 0].ToString());
-            outputParameters.AddOutput("d", ARR2[4, 0].ToString());
+            outputParameters.AddOutput("n", ARR2[0, 0]);
+            outputParameters.AddOutput("d", ARR2[4, 0]);
             double x2dev = -2.0 * (ARR2[3, 0] - ARR2[2, 0]);
-            outputParameters.AddOutput("x2", host.RoundU(x2dev));
-            outputParameters.AddOutput("df", ARR2[1, 0].ToString());
-            outputParameters.AddOutput("p_dev", host.pval(PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0])));
+            outputParameters.AddOutput("x2", x2dev);
+            outputParameters.AddOutput("df", ARR2[1, 0]);
+            outputParameters.AddOutput("p_dev", PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0]));
             IList<ParameterBag> predList = new List<ParameterBag>();
             outputParameters.AddOutput("*pred", predList);
             for (i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
@@ -468,10 +468,10 @@ namespace StatsDirect.Builtins
                 ParameterBag predParameters = new ParameterBag();
                 predList.Add(predParameters);
                 predParameters.AddOutput("lab", CDAT1[i].Title);
-                predParameters.AddOutput("i", i.ToString());
-                predParameters.AddOutput("b", host.RoundU(ARR3[1, i, 1]));
-                predParameters.AddOutput("z", host.RoundU(ARR3[1, i, 3]));
-                predParameters.AddOutput("p", host.pval(MathDbl.zvalp2(ARR3[1, i, 3])));
+                predParameters.AddOutput("i", i);
+                predParameters.AddOutput("b", ARR3[1, i, 1]);
+                predParameters.AddOutput("z", ARR3[1, i, 3]);
+                predParameters.AddOutput("p", MathDbl.zvalp2(ARR3[1, i, 3]));
             }
             outputParameters.Add("subgroups", new FilledParameter(FilledParameterDirection.Input, new DataFrame(new StringVariable(subgroups.ToArray()))));
             outputParameters.Add("ARR2", new FilledParameter(FilledParameterDirection.Input, ARR2));
@@ -2597,10 +2597,10 @@ namespace StatsDirect.Builtins
                         watch_time = z[i].Time;
                         ParameterBag timeParameters = new ParameterBag();
                         timeList.Add(timeParameters);
-                        timeParameters.AddOutput("time", host.RoundU(z[i].Time));
-                        timeParameters.AddOutput("sur", host.RoundU(z[i].S));
-                        timeParameters.AddOutput("haz", host.RoundU(z[i].H));
-                        timeParameters.AddOutput("hr", host.RoundU(z[i].Exb));
+                        timeParameters.AddOutput("time", z[i].Time);
+                        timeParameters.AddOutput("sur", z[i].S);
+                        timeParameters.AddOutput("haz", z[i].H);
+                        timeParameters.AddOutput("hr", z[i].Exb);
                     }
                 }
             }
@@ -3023,9 +3023,9 @@ namespace StatsDirect.Builtins
                 ParameterBag hazardParameters = new ParameterBag();
                 hazardList.Add(hazardParameters);
                 hazardParameters.AddOutput("par", CDAT1[i].Title);
-                hazardParameters.AddOutput("ec", host.RoundU(Formatting.SafeExp(ARR3[1, i, 1])));
-                hazardParameters.AddOutput("ell", host.RoundU(Formatting.SafeExp(ARR3[1, i, 1] - cit * ARR3[1, i, 2])));
-                hazardParameters.AddOutput("eul", host.RoundU(Formatting.SafeExp(ARR3[1, i, 1] + cit * ARR3[1, i, 2])));
+                hazardParameters.AddOutput("ec", Formatting.SafeExp(ARR3[1, i, 1]));
+                hazardParameters.AddOutput("ell", Formatting.SafeExp(ARR3[1, i, 1] - cit * ARR3[1, i, 2]));
+                hazardParameters.AddOutput("eul", Formatting.SafeExp(ARR3[1, i, 1] + cit * ARR3[1, i, 2]));
             }
             IList<ParameterBag> parameterList = new List<ParameterBag>();
             outputParameters.AddOutput("*parameter", parameterList);
@@ -3034,8 +3034,8 @@ namespace StatsDirect.Builtins
                 ParameterBag parameterParameters = new ParameterBag();
                 parameterList.Add(parameterParameters);
                 parameterParameters.AddOutput("par", CDAT1[i].Title);
-                parameterParameters.AddOutput("coef", host.RoundU(ARR3[1, i, 1]));
-                parameterParameters.AddOutput("se", host.RoundU(ARR3[1, i, 2]));
+                parameterParameters.AddOutput("coef", ARR3[1, i, 1]);
+                parameterParameters.AddOutput("se", ARR3[1, i, 2]);
             }
             return outputParameters;
         }
@@ -3045,12 +3045,12 @@ namespace StatsDirect.Builtins
         {
             double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("ll0", host.RoundU(ARR2[3, 0]));
-            outputParameters.AddOutput("ll", host.RoundU(ARR2[2, 0]));
+            outputParameters.AddOutput("ll0", ARR2[3, 0]);
+            outputParameters.AddOutput("ll", ARR2[2, 0]);
             double x2dev = -2.0 * (ARR2[3, 0] - ARR2[2, 0]);
-            outputParameters.AddOutput("x2", host.RoundU(x2dev));
-            outputParameters.AddOutput("df", ARR2[1, 0].ToString());
-            outputParameters.AddOutput("p", host.pval(PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0])));
+            outputParameters.AddOutput("x2", x2dev);
+            outputParameters.AddOutput("df", ARR2[1, 0]);
+            outputParameters.AddOutput("p", PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0]));
             return outputParameters;
         }
 
