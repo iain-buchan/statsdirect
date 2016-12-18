@@ -8,23 +8,23 @@
 <line>Number of classes observed (richness) = <in>s</in></line>
 <line></line>
 <line><b>Estimated total number of classes = <in>stotal</in></b></line>
-<line>Standard error (large sample) = <in>se-largeSample</in></line>
+<line>Standard error (large sample) = <inu>se-largeSample</inu></line>
 <line><ci>Normal (large sample) <in>pc</in>% CI = <in>from-largeSample</in> to <in>to-largeSample</in></ci></line>
 <line></line>
-<line><b>Simpson D<sub>s</sub> (Hurlburt PIE) = <in>simpson</in>  </b>(dominance <i>l</i> = <in>dom</in>, <i>d<sub>s</sub></i> = <in>ds</in>)</line>
-<line>Standard error (large sample) = <in>se-simpson-largeSample</in></line>
-<line>Standard error (small sample) = <in>ses-simpson</in></line>
-<line><ci>Normal (large sample) <in>pc</in>% CI = <in>from-simpson-largeSample</in> to <in>to-simpson-largeSample</in></ci></line>
-<line>Re-samples = <in>boots</in>, bias = <in>bias-simpson</in>, standard error (bootstrap) = <in>se-simpson-bootstrap</in></line>
-<line><ci>Normal (bootstrap) <in>pc</in>% CI = <in>from-simpson-bootstrap</in> to <in>to-simpson-bootstrap</in></ci></line>
-<line><ci>Centred bootstrap-t <in>pc</in>% CI = <in>from-simpson-bootstrap-t</in> to <in>to-simpson-bootstrap-t</in></ci></line>
+<line><b>Simpson D<sub>s</sub> (Hurlburt PIE) = <inu>simpson</inu>  </b>(dominance <i>l</i> = <inu>dom</inu>, <i>d<sub>s</sub></i> = <in>ds</in>)</line>
+<line>Standard error (large sample) = <inu>se-simpson-largeSample</inu></line>
+<line>Standard error (small sample) = <inu>ses-simpson</inu></line>
+<line><ci>Normal (large sample) <in>pc</in>% CI = <inu>from-simpson-largeSample</inu> to <inu>to-simpson-largeSample</inu></ci></line>
+<line>Re-samples = <in>boots</in>, bias = <inu>bias-simpson</inu>, standard error (bootstrap) = <inu>se-simpson-bootstrap</inu></line>
+<line><ci>Normal (bootstrap) <in>pc</in>% CI = <inu>from-simpson-bootstrap</inu> to <inu>to-simpson-bootstrap</inu></ci></line>
+<line><ci>Centred bootstrap-t <in>pc</in>% CI = <inu>from-simpson-bootstrap-t</inu> to <inu>to-simpson-bootstrap-t</inu></ci></line>
 <line></line>
-<line><b>Shannon H' (base e) = <in>shannon</in></b></line>
-<line>Standard error (large sample) = <in>se-shannon-largeSample</in></line>
-<line>Standard error (small sample) = <in>ses-shannon</in></line>
-<line><ci>Normal (large sample) <in>pc</in>% CI = <in>from-shannon-largeSample</in> to <in>to-shannon-largeSample</in></ci></line>
-<line>Re-samples = <in>boots</in>, bias = <in>bias-shannon</in>, standard error (bootstrap) = <in>se-shannon-bootstrap</in></line>
-<line><ci>Normal (bootstrap) <in>pc</in>% CI = <in>from-shannon-bootstrap</in> to <in>to-shannon-bootstrap</in></ci></line>
-<line><ci>Centred bootstrap-t <in>pc</in>% CI = <in>from-shannon-bootstrap-t</in> to <in>to-shannon-bootstrap-t</in></ci></line>
+<line><b>Shannon H' (base e) = <inu>shannon</inu></b></line>
+<line>Standard error (large sample) = <inu>se-shannon-largeSample</inu></line>
+<line>Standard error (small sample) = <inu>ses-shannon</inu></line>
+<line><ci>Normal (large sample) <in>pc</in>% CI = <inu>from-shannon-largeSample</inu> to <inu>to-shannon-largeSample</inu></ci></line>
+<line>Re-samples = <in>boots</in>, bias = <inu>bias-shannon</inu>, standard error (bootstrap) = <inu>se-shannon-bootstrap</inu></line>
+<line><ci>Normal (bootstrap) <in>pc</in>% CI = <inu>from-shannon-bootstrap</inu> to <inu>to-shannon-bootstrap</inu></ci></line>
+<line><ci>Centred bootstrap-t <in>pc</in>% CI = <inu>from-shannon-bootstrap-t</inu> to <inu>to-shannon-bootstrap-t</inu></ci></line>
 </block>
 </report>

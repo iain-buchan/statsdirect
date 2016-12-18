@@ -6,20 +6,20 @@
 <line>Order: <in>order</in></line>
 <line></line>
 <table>
-<tr><td>Ez =  <in>ez</in></td><td>Var(z) = <in>varz</in></td></tr>
-<tr><td>T = <in>t</in></td><td>ET = <in>et</in></td><td>Var(T) = <in>vart</in></td></tr>
-<tr><td>z = <in>z</in></td></tr>
+<tr><td>Ez =  <inu>ez</inu></td><td>Var(z) = <inu>varz</inu></td></tr>
+<tr><td>T = <inu>t</inu></td><td>ET = <inu>et</inu></td><td>Var(T) = <inu>vart</inu></td></tr>
+<tr><td>z = <inu>z</inu></td></tr>
 </table>
 <line></line>
-<line><pval>One sided <in>p_1</in></pval></line>
-<line><pval>Two sided <in>p_2</in></pval></line>
+<line><pval>One sided <inp>p_1</inp></pval></line>
+<line><pval>Two sided <inp>p_2</inp></pval></line>
 <block name="ties">
 <line></line>
 <line>Corrected for ties:</line>
-<line>VarT = <in>varttie</in></line>
-<line>z   = <in>ztie</in></line>
+<line>VarT = <inu>varttie</inu></line>
+<line>z   = <inu>ztie</inu></line>
 <line></line>
-<line><pval>One sided <in>p_1tie</in></pval></line>
-<line><pval>Two sided <in>p_2tie</in></pval></line>
+<line><pval>One sided <inp>p_1tie</inp></pval></line>
+<line><pval>Two sided <inp>p_2tie</inp></pval></line>
 </block>
 </report>

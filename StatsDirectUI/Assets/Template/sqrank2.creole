@@ -1,7 +1,7 @@
 <report>
 <line><title>Squared ranks approximate equality of variance test (2 sample)</title></line>
 <line></line>
-<line>z = <in>z</in></line>
-<line><ci>Two tailed <in>p2</in></ci></line>
-<line><ci>One tailed <in>p1</in></ci></line>
+<line>z = <inu>z</inu></line>
+<line><ci>Two tailed <inp>p2</inp></ci></line>
+<line><ci>One tailed <inp>p1</inp></ci></line>
 </report>

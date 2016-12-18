@@ -11,14 +11,14 @@
 <line>Fault in calculation</line>
 </block>
 <line></line>
-<line>T = <in>t</in></line>
-<line><pval><in>p</in></pval></line>
+<line>T = <inu>t</inu></line>
+<line><pval><inp>p</inp></pval></line>
 <block name="ties">
 <line></line>
 <line>Adjusted for ties:</line>
 <line></line>
-<line>T = <in>t_ties</in></line>
-<line><pval><in>p_ties</in></pval></line>
+<line>T = <inu>t_ties</inu></line>
+<line><pval><inp>p_ties</inp></pval></line>
 </block>
 <block name="message"><line></line>
 <line><in>msg</in></line>

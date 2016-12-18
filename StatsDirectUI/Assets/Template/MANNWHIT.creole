@@ -1,16 +1,16 @@
 <report>
 <line><title>Mann-Whitney U test</title></line>
 <line></line>
-<line>Observations (x) in <in>sample_1</in> = <in>obs_1</in>   median = <in>median_1</in>   rank sum = <in>ranksum</in></line>
-<line>Observations (y) in <in>sample_2</in> = <in>obs_2</in>   median = <in>median_2</in></line>
-<line>U = <in>u</in>      U' = <in>u_prime</in></line>
+<line>Observations (x) in <in>sample_1</in> = <in>obs_1</in>   median = <inu>median_1</inu>   rank sum = <inu>ranksum</inu></line>
+<line>Observations (y) in <in>sample_2</in> = <in>obs_2</in>   median = <inu>median_2</inu></line>
+<line>U = <inu>u</inu>      U' = <inu>u_prime</inu></line>
 <line></line>
 <line><in>stats</in></line>
-<line><pval>Lower side <in>p_l</in></pval> (H<sub>1</sub>: x tends to be less than y)</line>
-<line><pval>Upper side <in>p_u</in></pval> (H<sub>1</sub>: x tends to be greater than y)</line>
-<line><pval>Two sided <in>p_2</in></pval> (H<sub>1</sub>: x tends to be distributed differently to y)</line>
+<line><pval>Lower side <inp>p_l</inp></pval> (H<sub>1</sub>: x tends to be less than y)</line>
+<line><pval>Upper side <inp>p_u</inp></pval> (H<sub>1</sub>: x tends to be greater than y)</line>
+<line><pval>Two sided <inp>p_2</inp></pval> (H<sub>1</sub>: x tends to be distributed differently to y)</line>
 <line></line>
-<line>Theta (U'/mn) = <in>theta</in> <ci>(<in>pc0</in>% CI: <in>tll</in> to <in>tul</in>)</ci></line>
+<line>Theta (U'/mn) = <inu>theta</inu> <ci>(<in>pc0</in>% CI: <inu>tll</inu> to <inu>tul</inu>)</ci></line>
 <line></line>
 <block name="noconf">
 <line>confidence interval not calculated if n1 or n2 </line>

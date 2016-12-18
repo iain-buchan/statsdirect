@@ -6,9 +6,9 @@
 <line><in>sum</in></line>
 <line></line>
 <line><in>stats</in></line>
-<line><pval>Lower side <in>p_l</in></pval>  (H<sub>1</sub>: differences tend to be less than zero)</line>
-<line><pval>Upper side <in>p_u</in></pval>  (H<sub>1</sub>: differences tend to be greater than zero)</line>
-<line><pval>Two sided <in>p_2</in></pval>  (H<sub>1</sub>: differences tend not to be zero)</line>
+<line><pval>Lower side <inp>p_l</inp></pval>  (H<sub>1</sub>: differences tend to be less than zero)</line>
+<line><pval>Upper side <inp>p_u</inp></pval>  (H<sub>1</sub>: differences tend to be greater than zero)</line>
+<line><pval>Two sided <inp>p_2</inp></pval>  (H<sub>1</sub>: differences tend not to be zero)</line>
 <block name="noconf">
 <line></line>
 <line>confidence interval not calculated if n &lt; 4</line>

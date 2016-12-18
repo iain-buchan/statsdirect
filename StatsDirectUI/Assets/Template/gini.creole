@@ -5,19 +5,19 @@
 <line><subtitle>Analysis for <in>ti</in>:</subtitle></line>
 <line></line>
 <line>Positive non-zero observations = <in>n</in>  <warn><in>msg</in></warn></line>
-<line>Variance coefficient = <in>cv</in></line>
+<line>Variance coefficient = <inu>cv</inu></line>
 <line></line>
 <line>Re-samples = <in>boots</in></line>
-<line>Bias = <in>bias</in></line>
-<line>Standard error (bootstrap) = <in>se</in></line>
+<line>Bias = <inu>bias</inu></line>
+<line>Standard error (bootstrap) = <inu>se</inu></line>
 <line></line>
-<line>Gini coefficient = <in>gini</in></line>
-<line><ci>Percentile <in>pc</in>% CI = <in>from</in> to <in>to</in></ci></line>
-<line><ci>BCa <in>pc</in>% CI = <in>BCafrom</in> to <in>BCato</in></ci></line>
+<line>Gini coefficient = <inu>gini</inu></line>
+<line><ci>Percentile <in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci></line>
+<line><ci>BCa <in>pc</in>% CI = <inu>BCafrom</inu> to <inu>BCato</inu></ci></line>
 <line></line>
-<line>Unbiased estimator of population Gini coefficient = <in>gini-unbiased</in></line>
-<line><ci>Percentile <in>pc</in>% CI = <in>from-unbiased</in> to <in>to-unbiased</in></ci></line>
-<line><ci>BCa <in>pc</in>% CI = <in>BCafrom-unbiased</in> to <in>BCato-unbiased</in></ci></line>
+<line>Unbiased estimator of population Gini coefficient = <inu>gini-unbiased</inu></line>
+<line><ci>Percentile <in>pc</in>% CI = <inu>from-unbiased</inu> to <inu>to-unbiased</inu></ci></line>
+<line><ci>BCa <in>pc</in>% CI = <inu>BCafrom-unbiased</inu> to <inu>BCato-unbiased</inu></ci></line>
 </block>
 <line></line>
 <line><in>chart</in></line>

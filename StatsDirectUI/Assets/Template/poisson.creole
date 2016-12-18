@@ -5,9 +5,9 @@
 <table>
 <tr><td>Sample name:</td><td><in>ti</in>    <warn><in>warn</in></warn></td></tr>
 <tr><td>Size =</td><td><in>n</in></td></tr>
-<tr><td>Mean =</td><td><in>mean</in></td></tr>
+<tr><td>Mean =</td><td><inu>mean</inu></td></tr>
 </table>
-<line><ci>Approximate two sided <in>pc2</in>% CI =  <in>lower2</in>  to  <in>upper2</in></ci></line>
-<line><ci>Approximate one sided <in>pc1</in>% CI =  <in>lower1</in>  to  <in>upper1</in></ci>  </line>
+<line><ci>Approximate two sided <in>pc2</in>% CI =  <inu>lower2</inu>  to  <inu>upper2</inu></ci></line>
+<line><ci>Approximate one sided <in>pc1</in>% CI =  <inu>lower1</inu>  to  <inu>upper1</inu></ci>  </line>
 </block>
 </report>

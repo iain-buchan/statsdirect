@@ -1,22 +1,22 @@
 <report>
 <line><title>Kruskal-Wallis: all pairwise comparisons (Dwass-Steel-Chritchlow-Fligner)</title></line>
-<line>Critical q (range) = <in>q</in></line>
+<line>Critical q (range) = <inu>q</inu></line>
 <block name="dwass">
 <line></line>
 <table>
 <tr><td><in>compare</in></td><td><ci><in>diff</in></ci></td></tr>
-<tr><td>(<in>val</in>)</td><td><pval><in>p</in></pval></td></tr>
+<tr><td>(<in>val</in>)</td><td><pval><inp>p</inp></pval></td></tr>
 </table>
 </block>
 <line></line>
 <line></line>
 <line>Kruskal-Wallis: all pairwise comparisons (Conover-Iman)</line>
-<line>Critical t (<in>df</in> df) = <in>t</in></line>
+<line>Critical t (<in>df</in> df) = <inu>t</inu></line>
 <block name="conover">
 <line></line>
 <table>
 <tr><td><in>compare</in></td><td><ci><in>diff</in></ci></td></tr>
-<tr><td>(<in>val</in>)</td><td><pval><in>p</in></pval></td></tr>
+<tr><td>(<in>val</in>)</td><td><pval><inp>p</inp></pval></td></tr>
 </table>
 </block>
 </report>

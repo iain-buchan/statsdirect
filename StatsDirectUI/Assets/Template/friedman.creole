@@ -5,14 +5,14 @@
 <line></line>
 <line>Mean rank: <in>rlist</in></line>
 <line></line>
-<line>Treatment average sum of squares of ranks = <in>a2</in></line>
+<line>Treatment average sum of squares of ranks = <inu>a2</inu></line>
 <line>Number of blocks = <in>nb</in></line>
-<line>T<sub>1</sub> (chi-square) = <in>t1</in></line>
+<line>T<sub>1</sub> (chi-square) = <inu>t1</inu></line>
 <line>df = <in>df</in></line>
 <line></line>
 <line>After Iman &amp; Davenport (1980):</line>
-<line>T<sub>2</sub> (F) =  <in>t2</in></line>
-<line><pval><in>p</in></pval></line>
+<line>T<sub>2</sub> (F) =  <inu>t2</inu></line>
+<line><pval><inp>p</inp></pval></line>
 <block name="message">
 <line></line>
 <line><in>msg</in></line>

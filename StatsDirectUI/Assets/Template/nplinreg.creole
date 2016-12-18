@@ -7,12 +7,12 @@
 <line></line>
 <line>Can not calculate regression</line>
 </block>
-<block name="results"><line>Median slope (<ci><in>pc</in>% CI</ci>) = <in>mdn</in>  (<ci><in>from</in> to <in>to</in></ci>)</line>
-<line>Y-intercept = <in>intercept</in></line>
+<block name="results"><line>Median slope (<ci><in>pc</in>% CI</ci>) = <inu>mdn</inu>  (<ci><inu>from</inu> to <inu>to</inu></ci>)</line>
+<line>Y-intercept = <inu>intercept</inu></line>
 </block>
 <line></line>
-<line>Kendall's rank correlation coefficient <in>taulab</in> =  <in>tau</in></line>
-<line><pval>Two sided (on continuity corrected z) <in>p_2</in></pval>  (H<sub>1</sub>: any correlation)</line>
+<line>Kendall's rank correlation coefficient <in>taulab</in> =  <inu>tau</inu></line>
+<line><pval>Two sided (on continuity corrected z) <inp>p_2</inp></pval>  (H<sub>1</sub>: any correlation)</line>
 <line></line>
 <line><in>chart</in></line>
 </report>
