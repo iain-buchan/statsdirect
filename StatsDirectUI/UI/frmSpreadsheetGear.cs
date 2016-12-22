@@ -2252,7 +2252,7 @@ namespace StatsDirect.UI
                     MangleClipboardIfNecessary();
                     return base.Execute();
                 }
-                catch (Exception conversionEx)
+                catch (Exception)
                 {
                     throw new Exception("Cannot paste: the data on the clipboard is in a format that StatsDirect cannot interpret", rawPasteEx);
                 }
