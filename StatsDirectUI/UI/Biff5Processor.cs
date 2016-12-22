@@ -152,7 +152,8 @@ namespace StatsDirect.UI
                     try
                     {
                         here = here.OpenSubKey(subkeyName);
-                        toDispose.Push(here);
+                        if (null != here)
+                            toDispose.Push(here);
                     }
                     catch (Exception)
                     {

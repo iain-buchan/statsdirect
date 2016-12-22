@@ -2228,8 +2228,35 @@ namespace StatsDirect.UI
         // Gets called anytime a Paste command is invoked (Ctrl+V, context menu item, WorkbookView.Paste(), etc)
         public override Command CreateCommandPaste(IRange range)
         {
-            MangleClipboardIfNecessary();
-            return base.CreateCommandPaste(range);
+            return new ClipboardManglingPasteCommand(range);
+        }
+    }
+
+    public class ClipboardManglingPasteCommand : CommandRange.Paste
+    {
+        public ClipboardManglingPasteCommand(IRange range)
+            : base(range)
+        {
+        }
+
+        protected override bool Execute()
+        {
+            try
+            {
+                return base.Execute();
+            }
+            catch (Exception rawPasteEx)
+            {
+                try
+                {
+                    MangleClipboardIfNecessary();
+                    return base.Execute();
+                }
+                catch (Exception conversionEx)
+                {
+                    throw new Exception("Cannot paste: the data on the clipboard is in a format that StatsDirect cannot interpret", rawPasteEx);
+                }
+            }
         }
 
         private void MangleClipboardIfNecessary()
