@@ -4002,9 +4002,18 @@ namespace StatsDirect.UI
             mnuMain.Enabled = false;
             // Disabling a form appears to pop any enabled form over the top of it.  Therefore, disable the active form last.  See #681.
             Form activeForm = ActiveMdiChild;
-            foreach (Form f in MdiChildren)
-                if (f != activeForm)
-                    f.Enabled = false;
+
+            // Beware!  If the message is popping up that there's unsaved data, then MdiChildren may change behind the scenes.  Be cautious.
+            try
+            {
+                foreach (Form f in MdiChildren)
+                    if (f != activeForm)
+                        f.Enabled = false;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Do nothing; the world has changed behind the scenes.
+            }
             if (null != activeForm)
                 activeForm.Enabled = false;
             do
@@ -4018,8 +4027,16 @@ namespace StatsDirect.UI
                 mnuMain.Enabled = true;
             if (null != MdiChildren)
             {
-                foreach (Form f in MdiChildren)
-                    f.Enabled = true;
+                // Beware!  If the message is popping up that there's unsaved data, then MdiChildren may change behind the scenes.  Be cautious.
+                try
+                {
+                    foreach (Form f in MdiChildren)
+                        f.Enabled = true;
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    // Do nothing; the world has changed behind the scenes.
+                }
             }
             if (null != puntedException)
             {
