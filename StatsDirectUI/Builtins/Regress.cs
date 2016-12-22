@@ -278,7 +278,7 @@ namespace StatsDirect.Builtins
                 z[j] = vx.Data[j] * context.Slope + context.YIntercept;
                 r[j] = vy.Data[j] - z[j];
             }
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 outputParameters.AddOutput("residualsVsY", ch.PlotXYAndReturnRtf(host, z, r, "Fitted " + vy.Title, "Residuals (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false));
             }
@@ -289,7 +289,7 @@ namespace StatsDirect.Builtins
                 r[j] = vy.Data[j] - z[j];
                 z[j] = vx.Data[j];
             }
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 outputParameters.AddOutput("residualsVsPredictor", ch.PlotXYAndReturnRtf(host, z, r, "Predictor: " + vx.Title, "Residuals (Y - y fit)", "Residuals vs. Predictor [linear regression]", true, 0, false));
             }
@@ -306,7 +306,7 @@ namespace StatsDirect.Builtins
                     z[j] = Constant.MISSING;
                 }
             }
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 outputParameters.AddOutput("residualsNormalPlot", ch.PlotXYAndReturnRtf(host, r, z, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals [linear regression]", false, 0, false));
             }
@@ -336,7 +336,7 @@ namespace StatsDirect.Builtins
             cd.AddXSeries(vx.Data, vx.Title);
             ParameterBag outputParameters = new ParameterBag();
 
-            using (ChartRenderer ch = new ChartRenderer(cd))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
             {
                 // Ensure lines will fit on chart scale
                 double maxpcon = double.MinValue;
@@ -383,7 +383,7 @@ namespace StatsDirect.Builtins
             ChartDefinition cd = new ChartDefinition();
             cd.AddYSeries(vy.Data, vy.Title);
             cd.AddXSeries(vx.Data, vx.Title);
-            using (ChartRenderer ch = new ChartRenderer(cd))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
             {
 
                 double maxpcon = double.MinValue;
@@ -1420,7 +1420,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 context.R[0] = Constant.MISSING;
                 chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ch.PlotXYAndReturnRtf(host, context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, 0, false))));
@@ -1437,7 +1437,7 @@ namespace StatsDirect.Builtins
                     {
                         r[j] = context.X[j, i];
                     }
-                    using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                    using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                     {
                         chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ch.PlotXYAndReturnRtf(host, r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, 0, false))));
                     }
@@ -1456,7 +1456,7 @@ namespace StatsDirect.Builtins
                     r[j] = Constant.MISSING;
                 }
             }
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ch.PlotXYAndReturnRtf(host, context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, 0, false))));
             }
@@ -2477,7 +2477,7 @@ namespace StatsDirect.Builtins
             AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) { mxd = vY.Data, av = vX.Data };
             cd.ChartOptions = aOptions;
             ParameterBag outputParameters = new ParameterBag();
-            using (ChartRenderer ch = new ChartRenderer(cd))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
             {
                 string rtf = ch.PlotLinearizedEstimationAndReturnRtf(host, string.Empty, model, context.A, context.G, vX.Title, vY.Title);
                 outputParameters.AddOutput("chart", rtf);
@@ -2653,7 +2653,7 @@ namespace StatsDirect.Builtins
             ChartDefinition cd = new ChartDefinition {ChartOptions = aOptions};
             cd.AddYSeries(vY.Data, vY.Title);
             cd.AddXSeries(vX.Data, vX.Title);
-            using (ChartRenderer ch = new ChartRenderer(cd))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
             {
                 return ch.PlotPolynomialRegressionAndReturnRtf(host, title, mode, xtxi, bd, rss, nx, P, GAMMA, vX.Title, vY.Title);
             }
@@ -3734,49 +3734,49 @@ namespace StatsDirect.Builtins
             hi[0] = Constant.MISSING;
 
             //  delta beta vs. proportion
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, xx, yy1, ep, db, db + " vs. " + ep, false, 0, false);
                 chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  std delta beta vs. proportion
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, xx, yy2, ep, dbs, dbs + " vs. " + ep, false, 0, false);
                 chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta deviance vs. proportion
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, xx, yy3, ep, dd, dd + " vs. " + ep, false, 0, false);
                 chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta x2 vs. proportion
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYZAndReturnRtf(host, xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, 0);
                 chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta beta vs. hi
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, hi, yy1, lv, db, db + " vs. " + lv, false, 0, false);
                 chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta beta std vs. hi
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, hi, yy2, lv, dbs, dbs + " vs. " + lv, false, 0, false);
                 chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta deviance vs. hi
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, hi, yy3, lv, dd, dd + " vs. " + lv, false, 0, false);
                 chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
             }
             //  delta x2 vs. hi
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string chart = ch.PlotXYAndReturnRtf(host, hi, yy4, lv, dx, dx + " vs. " + lv, false, 0, false);
                 chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, chart)));
@@ -4612,7 +4612,7 @@ namespace StatsDirect.Builtins
             double auc = MathDbl.trapezoid_xy_roc(rx, ry, 1, stps);
             outputParameters.AddOutput("cmax", Formatting.XRound(cmax, 3));
             outputParameters.AddOutput("area", host.RoundU(auc));
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 ch.SetBox0To1();
                 outputParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, rx, ry, "1-specificity", "sensitivity", string.Empty, false, DataMinMax.XPreset_YPreset, false));
@@ -5762,7 +5762,7 @@ namespace StatsDirect.Builtins
             {
                 r[j] = Math.Abs(dr[j]);
             }
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
@@ -5783,7 +5783,7 @@ namespace StatsDirect.Builtins
                     }
                     if (OK)
                     {
-                        using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                        using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                         {
                             ParameterBag chartParameters = new ParameterBag();
                             chartList.Add(chartParameters);
@@ -6664,7 +6664,7 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
 
-            using (ChartRenderer ch = new ChartRenderer(cd))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
             {
                 string rtf = ch.PlotLogitAndReturnRtf(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle);
                 outputParameters.AddOutput("chart", rtf);

@@ -511,7 +511,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 IList<string> imageList = ch.x_plgraph(host, h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
                 foreach (string rtf in imageList)

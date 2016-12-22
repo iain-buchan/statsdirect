@@ -2795,41 +2795,37 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
             ParameterBag chartParameters;
 
+            string rtf;
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false);
+                    rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
                 }
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
+                rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
             }
 
             bool scrap;
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-            {
-                string rtf = ch.PlotMHAndReturnRtf(host, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap, null);
-                chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
-            }
+            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap);
+            chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", rtf);
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-            {
-                string rtf = ch.PlotMHAndReturnRtf(host, k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out scrap, null);
-                chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
-            }
+            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out scrap);
+            chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", rtf);
+
             return outputParameters;
         }
 
@@ -3714,7 +3710,7 @@ namespace StatsDirect.Builtins
 
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false);
                     chartParameters = new ParameterBag();
@@ -3723,7 +3719,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
@@ -3733,23 +3729,16 @@ namespace StatsDirect.Builtins
 
             if (sk != 0)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-                {
-                    bool scrap;
-                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap, null);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+                bool scrap;
+                string rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap);
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-                {
-                    bool scrap;
-                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap, null);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap);
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
             }
 
             return outputParameters;

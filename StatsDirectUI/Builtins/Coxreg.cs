@@ -2724,7 +2724,7 @@ namespace StatsDirect.Builtins
             for (j3 = 1; j3 <= 2; j3++)
             {
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     ch.DataMaxX = double.MinValue;
                     ch.DataMaxY = double.MinValue;
@@ -2805,7 +2805,7 @@ namespace StatsDirect.Builtins
                 cd.AddYSeries(yp, null);
                 ParameterBag cox2Parameters = new ParameterBag();
                 chartList.Add(cox2Parameters);
-                using (ChartRenderer ch = new ChartRenderer(cd))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
                 {
                     string rtf = ch.PlotCox2AndReturnRtf(host, gn, igroups, xp, yp, CDAT1, groupid);
                     cox2Parameters.AddOutput("chart", rtf);
@@ -2951,14 +2951,14 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, 0, false));
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);

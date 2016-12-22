@@ -687,7 +687,7 @@ namespace StatsDirect.Builtins
                 ChartDefinition cd = new ChartDefinition {ChartOptions = nOptions};
                 cd.XSeries.Add(new DoubleSeries(data, v0.Title));
 
-                using (ChartRenderer ch = new ChartRenderer(cd))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
                 {
                     string rtf = ch.PlotNormalAndReturnRtf(host, data);
                     variableParameters.AddOutput("chart", rtf);
@@ -1427,7 +1427,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotTiesAndReturnMetafile(host, x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean);
                     ParameterBag chartParameters = new ParameterBag();

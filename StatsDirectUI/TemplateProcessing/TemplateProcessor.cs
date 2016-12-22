@@ -241,19 +241,12 @@ namespace StatsDirect.Templates
 
             // Plot to metafile if ascii, text otherwise
             ParameterBag results;
-            using (ChartRenderer ch = new ChartRenderer(definition) { IsAscii = step.IsAscii })
+            using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(definition))
             {
-                if (step.IsAscii)
-                {
-                    results = ch.Plot(host);
-                    results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, ch.GetAsciiRTF()));
-                }
-                else
-                {
-                    string rtf;
-                    results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
-                    results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, rtf));
-                }
+                ch.IsAscii = step.IsAscii;
+                string rtf;
+                results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
+                results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, rtf));
                 SaveChartDefinition(step, results, definition);
             }
             return results;

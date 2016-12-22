@@ -8,6 +8,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using StatsDirect.Charting;
+
 namespace StatsDirect.Builtins
 {
     public static class Describe
@@ -1035,7 +1036,7 @@ namespace StatsDirect.Builtins
                 }
 
                 // Line plot, one line per subject with x-axis = time, y-axis = observation
-                Charting.ChartDefinition cd = new Charting.ChartDefinition() { ChartType = Templates.ChartType.ScatterXY, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                ChartDefinition cd = new ChartDefinition() { ChartType = ChartType.ScatterXY, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
                 double[] times = group.IndexToTimeMap;
                 for (int subjectIndex = 0; subjectIndex < group.IndexToSubjectMap.Length; subjectIndex++)
                 {
@@ -1045,16 +1046,16 @@ namespace StatsDirect.Builtins
                     cd.AddXSeries(times, null);
                     cd.AddYSeries(subjectObservations, null);
                 }
-                Charting.ScatterXYOptions options = new Charting.ScatterXYOptions(host.Preferences.ShouldUseColour, cd.XSeries, true)
+                Charting.ScatterXYOptions options = new ScatterXYOptions(host.Preferences.ShouldUseColour, cd.XSeries, true)
                 {
                     Title = group.Group.Label,
                     XAxisTitle = timesVariable.Title,
                     YAxisTitle = observationsVariable.Title
                 };
                 for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
-                    options.MarkerTypes[marker] = ChartRenderer.MarkerTypes[Charting.ScatterXYOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
+                    options.MarkerTypes[marker] = AbstractChartRenderer.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
                 cd.ChartOptions = options;
-                Charting.ChartRenderer chart = new Charting.ChartRenderer(cd);
+                IChartRenderer chart = ChartRendererFactory.ChartRendererFor(cd);
                 string rtf;
                 ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
                 groupParameters.AddOutput("chart", rtf);
@@ -1078,9 +1079,9 @@ namespace StatsDirect.Builtins
                     ShouldScaleZ = true
                 };
                 cd.ChartOptions = options;
-                ChartRenderer chart = new Charting.ChartRenderer(cd);
+                IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd);
                 string rtf;
-                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
+                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
                 outputParameters.AddOutput("aucNormalChart", rtf);
                 outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
 
@@ -1090,8 +1091,8 @@ namespace StatsDirect.Builtins
                 cd.AddXSeries(points, "Log Area Under Curve");
                 options.Title = "Normal Plot for Log(AUC)";
                 options.XAxisTitle = "Log Area Under Curve";
-                chart = new ChartRenderer(cd);
-                results = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
+                ch = ChartRendererFactory.ChartRendererFor(cd);
+                results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
                 outputParameters.AddOutput("aucLogNormalChart", rtf);
                 outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
             }
@@ -1122,7 +1123,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                Charting.ChartDefinition cd = new Charting.ChartDefinition() { ChartType = Templates.ChartType.ErrorBar, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                ChartDefinition cd = new ChartDefinition() { ChartType = Templates.ChartType.ErrorBar, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
                 Charting.ErrorBarOptions options = new Charting.ErrorBarOptions(host.Preferences.ShouldUseColour)
                 {
                     Series = errorSeries,
@@ -1135,7 +1136,7 @@ namespace StatsDirect.Builtins
                 };
                 options.SetMarkers();
                 cd.ChartOptions = options;
-                Charting.ChartRenderer chart = new Charting.ChartRenderer(cd);
+                IChartRenderer chart = ChartRendererFactory.ChartRendererFor(cd);
                 string rtf;
                 ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
                 outputParameters.AddOutput("meanAucChart", rtf);

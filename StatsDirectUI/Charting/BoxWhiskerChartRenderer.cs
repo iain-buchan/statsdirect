@@ -1,0 +1,1136 @@
+﻿using StatsDirect.Numerics;
+using StatsDirect.Templates;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+
+namespace StatsDirect.Charting
+{
+    class BoxWhiskerChartRenderer : AbstractChartRenderer
+    {
+        //  Box and Whisker constants
+        private const double BOXWHISKER_WHISKER_END_LENGTH = 9;
+        private const double BOXWHISKER_OUTLIER_RADIUS = 4;
+        private const double BOXWHISKER_BOX_FRACTION_OF_SPACE = 0.667;
+        private const double BOXWHISKER_WHISKER_FRACTION_OF_BOX = 0.333;
+
+        public BoxWhiskerChartRenderer(ChartDefinition Definition)
+        {
+            DataMinX = double.MaxValue;
+            DataMaxX = -double.MaxValue;
+            DataMinY = double.MaxValue;
+            DataMaxY = -double.MaxValue;
+
+            definition = Definition;
+            if (Definition == null)
+                return;
+            DataMinX = Definition.DataMinX;
+            DataMinGreaterThanZeroX = Definition.DataMinGreaterThanZeroX;
+            DataMaxX = Definition.DataMaxX;
+            DataMinY = Definition.DataMinY;
+            DataMinGreaterThanZeroY = Definition.DataMinGreaterThanZeroY;
+            DataMaxY = Definition.DataMaxY;
+        }
+
+        public override ScaleParameters GetScaleParameters()
+        {
+            //  If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
+            if (definition.XSeries.Count == 0 && definition.YSeries.Count == 0)
+            {
+                throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
+            }
+            if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
+            {
+                throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
+            }
+            List<Series> SeriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+
+            // sort the array and get the min, max values
+            GetMinMaxSort(SeriesToUse, out DataMinX, out DataMaxX);
+
+            ScaleParameters sp = new ScaleParameters
+            {
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = DataMinX, Max = DataMaxX },
+                Y = { AllowedScaleTypes = new[] { ScaleType.Category }, Min = 0, MinGreaterThanZero = 0, Max = 0 }
+            };
+            return sp;
+        }
+
+        ///  <summary>
+        ///  Plot a box and whisker chart.
+        ///  </summary>
+        ///  <remarks></remarks>
+        public override ParameterBag Plot(ITemplateHost host)
+        {
+            //  If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
+            if (definition.XSeries.Count == 0 && definition.YSeries.Count == 0)
+                throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
+            if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
+                throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
+            List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+
+            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
+
+            if (IsAscii)
+                return PlotBoxWhiskerAscii(seriesToUse);
+            if (bwOptions.Orientation == ChartOrientation.Horizontal)
+                return PlotBoxWhiskerHorizontal(seriesToUse);
+            return PlotBoxWhiskerVertical(seriesToUse);
+        }
+
+        private ParameterBag PlotBoxWhiskerHorizontal(List<Series> seriesToUse)
+        {
+
+            int k = seriesToUse.Count + 1;
+            if (k > 10)
+            {
+                scaleYAxis = 1 + (k - 10) / 20.0;
+                if (scaleYAxis > 5)
+                    scaleYAxis = 5;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
+            }
+            else
+            {
+                scaleYAxis = 1;
+                imageHeight = DEFAULT_METAFILE_HEIGHT;
+            }
+
+            // sort the array and get the min, max values
+            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+
+            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
+
+            double p = (1.0 - bwOptions.Cco) / 2.0;
+            if (p > 1.0 - p)
+                p = 1.0 - p;
+
+            // Plot a Metafile version
+            StartVectorPlot();
+
+            //  Fonts
+            if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
+                axisLabelFont = FontFromSaveString(bwOptions.AxisLabelFontDescriptor);
+            if (!(string.IsNullOrEmpty(bwOptions.AxisFontDescriptor)))
+                axisTitleFont = FontFromSaveString(bwOptions.AxisFontDescriptor);
+            if (!(string.IsNullOrEmpty(bwOptions.TitleFontDescriptor)))
+                titleFont = FontFromSaveString(bwOptions.TitleFontDescriptor);
+
+            AssignMarkersToSeries();
+            double xtra = 0;
+            foreach (Series s in seriesToUse)
+            {
+                double w = MeasureStringInCanvasCoordinates(s.Title, axisLabelFont).Width + 20;
+                if (w > xtra + xAxisCanvas)
+                    xtra = w - xAxisCanvas;
+            }
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, xtra, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
+
+            using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
+            {
+                using (Pen dottedBlackPen = GetMarkerPen(SharedMarkerTypes[10]))
+                {
+                    dottedBlackPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+
+                    // work through the columns
+                    for (int c = 0; c < seriesToUse.Count; c++)
+                    {
+                        DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                        double centre;
+                        double boxL;
+                        double boxR;
+                        double innerFenceL;
+                        double innerFenceR;
+                        double outerFenceL;
+                        double outerFenceR;
+                        double otherMark;
+                        bool centreIsMedian;
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, p, out centre, out boxL, out boxR, out innerFenceL, out innerFenceR, bwOptions.UseInnerFence, out outerFenceL, out outerFenceR, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
+
+                        // Plot graphic
+                        double yctr = (c + 0.5) / divy * yExtCanvas;
+                        double ytop = (c + 1) / divy * yExtCanvas;
+                        double centreX = ToCanvasX(centre);
+
+                        double halfBoxHeight = (ytop - yctr) * BOXWHISKER_BOX_FRACTION_OF_SPACE;
+                        double yc = offy + yctr;
+                        double yt = yc + halfBoxHeight;
+                        double yb = yc - halfBoxHeight;
+
+                        double boxLx = ToCanvasX(boxL);
+                        double boxRx = ToCanvasX(boxR);
+
+                        // Draw marker, centre line and box
+                        DrawRectangleInCanvasCoordinates(blackPen, boxLx, yt, boxRx - boxLx, yt - yb); //  Box
+                        if (bwOptions.MarkMeanAndMedian)
+                        {
+                            //  Other mark
+                            DrawMarkerInCanvasCoordinates(ToCanvasX(otherMark), yc, 10, MarkerShape.Cross, false, blackPen);
+                        }
+                        DrawMarkerInCanvasCoordinates(centreX, yc, 10, MarkerShape.Diamond, true, blackPen);
+                        DrawLineInCanvasCoordinates(blackPen, centreX, yt, centreX, yb); //  Centre line
+
+                        //  Draw whiskers, fences etc.
+                        double halfWhiskerHeight = halfBoxHeight * BOXWHISKER_WHISKER_FRACTION_OF_BOX;
+                        yt = yc + halfWhiskerHeight;
+                        yb = yc - halfWhiskerHeight;
+
+                        //  Left-hand fences
+                        bool gatedInnerL = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[0] < innerFenceL && innerFenceL < boxL;
+                        bool gatedOuterL = s.Data[0] < outerFenceL && outerFenceL < boxL;
+
+                        // double outerFenceLX = ToCanvasX(gatedOuterL ? outerFenceL : s.Data[ 0 ]);
+
+                        //  Draw inner fence
+                        //  The inner fence goes to the first one of:
+                        //  - The inner fence for seven number and Bowley plots;
+                        //  - The inner fence if both inner and outer fences are selected and there's at least one outlier beyond it;
+                        //  - Not drawn otherwise.
+                        bool shouldDrawInnerFenceL = false;
+                        double innerFenceLX = 0;
+                        if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                        {
+                            shouldDrawInnerFenceL = true;
+                            innerFenceLX = ToCanvasX(innerFenceL);
+                        }
+                        if (shouldDrawInnerFenceL)
+                        {
+                            Pen innerPen;
+                            if (bwOptions.UseOuterFence || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                                innerPen = dottedBlackPen;
+                            else
+                                innerPen = blackPen;
+                            DrawLineInCanvasCoordinates(innerPen, innerFenceLX, yt, innerFenceLX, yb);
+                        }
+
+                        //  Draw min whisker
+                        //  The min whisker goes to the first one of:
+                        //  - The outer fence for seven number and Bowley plots;
+                        //  - The first data point inside the inner fence if inner fence is selected;
+                        //  - The first data point inside the outer fence if outer fence is selected;
+                        //  - The min data point otherwise.
+                        double minWhiskerL = 0;
+                        if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                        {
+                            minWhiskerL = outerFenceL;
+                        }
+                        else if (bwOptions.UseInnerFence)
+                        {
+                            for (int i = 0; i < s.Data.Length; i++)
+                            {
+                                if (s.Data[i] >= innerFenceL)
+                                {
+                                    minWhiskerL = s.Data[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else if (bwOptions.UseOuterFence)
+                        {
+                            for (int i = 0; i < s.Data.Length; i++)
+                            {
+                                if (s.Data[i] >= outerFenceL)
+                                {
+                                    minWhiskerL = s.Data[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            minWhiskerL = s.Data[0];
+                        }
+                        double minWhiskerLX = ToCanvasX(minWhiskerL);
+
+                        //  Draw min whisker to outer limit
+                        DrawLineInCanvasCoordinates(blackPen, minWhiskerLX, yc, boxLx, yc);
+
+                        //  Draw outer marker
+                        // ReSharper disable ConvertToConstant.Local
+                        bool shouldDrawOuterFenceL = true;
+                        // ReSharper restore ConvertToConstant.Local
+                        bool shouldDrawOuterBracketL = shouldDrawOuterFenceL && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterL || gatedInnerL));
+                        if (shouldDrawOuterFenceL)
+                        {
+                            DrawLineInCanvasCoordinates(blackPen, minWhiskerLX, yt, minWhiskerLX, yb);
+                            if (shouldDrawOuterBracketL)
+                            {
+                                DrawLineInCanvasCoordinates(blackPen, minWhiskerLX + BOXWHISKER_WHISKER_END_LENGTH, yt, minWhiskerLX, yt);
+                                DrawLineInCanvasCoordinates(blackPen, minWhiskerLX, yb, minWhiskerLX + BOXWHISKER_WHISKER_END_LENGTH, yb);
+                            }
+                        }
+
+                        //  Min outliers - below outer fence
+                        const double outlierRadius = BOXWHISKER_OUTLIER_RADIUS;
+                        if (gatedInnerL)
+                        {
+                            for (int r = 0; r < s.Data.Length; r++)
+                            {
+                                if (s.Data[r] < innerFenceL && (s.Data[r] >= outerFenceL || !(gatedOuterL)))
+                                {
+                                    double x1 = ToCanvasX(s.Data[r]);
+                                    DrawMarkerInCanvasCoordinates(x1, yc, 2 * outlierRadius, MarkerShape.Circle, false, blackPen);
+                                }
+                            }
+                        }
+                        if (gatedOuterL)
+                        {
+                            for (int r = 0; r < s.Data.Length; r++)
+                            {
+                                if (s.Data[r] < outerFenceL)
+                                {
+                                    double x1 = ToCanvasX(s.Data[r]);
+                                    DrawMarkerInCanvasCoordinates(x1, yc, 2 * outlierRadius, MarkerShape.Circle, true, blackPen);
+                                }
+                            }
+                        }
+
+                        //  Right-hand fences
+                        bool gatedInnerR = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[s.Data.Length - 1] > innerFenceR && innerFenceR > boxR;
+                        bool gatedOuterR = s.Data[s.Data.Length - 1] > outerFenceR && outerFenceR > boxR;
+
+                        // double outerFenceRX = ToCanvasX(gatedOuterR ? outerFenceR : s.Data[ s.Data.Length - 1 ]);
+
+                        //  Draw inner fence
+                        //  The inner fence goes to the first one of:
+                        //  - The inner fence for seven number and Bowley plots;
+                        //  - The inner fence if both inner and outer fences are selected and there's at least one outlier betond it;
+                        //  - Not drawn otherwise.
+                        bool shouldDrawInnerFenceR = false;
+                        double innerFenceRX = 0;
+                        if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                        {
+                            shouldDrawInnerFenceR = true;
+                            innerFenceRX = ToCanvasX(innerFenceR);
+                        }
+                        if (shouldDrawInnerFenceR)
+                        {
+                            Pen innerPen;
+                            if (bwOptions.UseOuterFence || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                            {
+                                innerPen = dottedBlackPen;
+                            }
+                            else
+                            {
+                                innerPen = blackPen;
+                            }
+                            DrawLineInCanvasCoordinates(innerPen, innerFenceRX, yt, innerFenceRX, yb);
+                        }
+
+                        //  Draw max whisker
+                        //  The max whisker goes to the first one of:
+                        //  - The outer fence for seven number and Bowley plots;
+                        //  - The last data point below the inner fence if inner fence is selected;
+                        //  - The last data point below the outer fence if outer fence is selected;
+                        //  - The max data point otherwise.
+                        double maxWhiskerR = 0;
+                        if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                        {
+                            maxWhiskerR = outerFenceR;
+                        }
+                        else if (bwOptions.UseInnerFence)
+                        {
+                            for (int i = s.Data.Length - 1; i >= 0; i--)
+                            {
+                                if (s.Data[i] <= innerFenceR)
+                                {
+                                    maxWhiskerR = s.Data[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else if (bwOptions.UseOuterFence)
+                        {
+                            for (int i = s.Data.Length - 1; i >= 0; i--)
+                            {
+                                if (s.Data[i] <= outerFenceR)
+                                {
+                                    maxWhiskerR = s.Data[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            maxWhiskerR = s.Data[s.Data.Length - 1];
+                        }
+                        double maxWhiskerRX = ToCanvasX(maxWhiskerR);
+                        DrawLineInCanvasCoordinates(blackPen, maxWhiskerRX, yc, boxRx, yc);
+
+                        //  Outer fence
+                        // ReSharper disable ConvertToConstant.Local
+                        bool shouldDrawOuterFenceR = true;
+                        // ReSharper restore ConvertToConstant.Local
+                        // If (gatedInnerR OrElse gatedOuterR) _
+                        //     AndAlso Not (bwOptions.Method = BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary OrElse bwOptions.Method = BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary) Then
+                        // If bwOptions.UseInnerFence AndAlso (Not bwOptions.UseOuterFence) AndAlso gatedInnerR Then
+                        //  At least one inner outlier, and we're not using the outer fence.  The inner fence will have been drawn; we should not draw this as well.
+                        // shouldDrawOuterFenceR = False
+                        // End If
+                        bool shouldDrawOuterBracketR = shouldDrawOuterFenceR && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterR || gatedInnerR));
+                        if (shouldDrawOuterFenceR)
+                        {
+                            DrawLineInCanvasCoordinates(blackPen, maxWhiskerRX, yt, maxWhiskerRX, yb);
+                            if (shouldDrawOuterBracketR)
+                            {
+                                DrawLineInCanvasCoordinates(blackPen, maxWhiskerRX - BOXWHISKER_WHISKER_END_LENGTH, yt, maxWhiskerRX, yt);
+                                DrawLineInCanvasCoordinates(blackPen, maxWhiskerRX, yb, maxWhiskerRX - BOXWHISKER_WHISKER_END_LENGTH, yb);
+                            }
+                        }
+
+                        //  Max outliers
+                        if (gatedInnerR)
+                        {
+                            for (int r = 0; r <= s.Data.Length - 1; r++)
+                            {
+                                if (s.Data[r] > innerFenceR && (s.Data[r] <= outerFenceR || !(gatedOuterR)))
+                                {
+                                    double x1 = ToCanvasX(s.Data[r]);
+                                    DrawMarkerInCanvasCoordinates(x1, yc, 2 * outlierRadius, MarkerShape.Circle, false, blackPen);
+                                }
+                            }
+                        }
+                        if (gatedOuterR)
+                        {
+                            for (int r = 0; r <= s.Data.Length - 1; r++)
+                            {
+                                if (s.Data[r] > outerFenceR)
+                                {
+                                    double x1 = ToCanvasX(s.Data[r]);
+                                    DrawMarkerInCanvasCoordinates(x1, yc, 2 * outlierRadius, MarkerShape.Circle, true, blackPen);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            MaybeDrawMarkerLines();
+            EndVectorPlot();
+            return new ParameterBag();
+        }
+
+        private ParameterBag PlotBoxWhiskerVertical(List<Series> seriesToUse)
+        {
+            int k = seriesToUse.Count + 1;
+            if (k > 10)
+            {
+                scaleXAxis = 1 + (k - 10) / 20.0;
+                if (scaleXAxis > 5)
+                    scaleXAxis = 5;
+                imageWidth = (int)Math.Ceiling(scaleXAxis * DEFAULT_METAFILE_WIDTH);
+            }
+            else
+            {
+                scaleXAxis = 1;
+                imageWidth = DEFAULT_METAFILE_WIDTH;
+            }
+
+            // sort the array and get the min, max values
+            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+
+            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
+
+            double P = (1.0 - bwOptions.Cco) / 2.0;
+            if (P > 1.0 - P)
+                P = 1.0 - P;
+
+            // Plot a Metafile version
+            StartVectorPlot();
+
+            //  Fonts
+            if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
+                axisLabelFont = FontFromSaveString(bwOptions.AxisLabelFontDescriptor);
+            if (!(string.IsNullOrEmpty(bwOptions.AxisFontDescriptor)))
+                axisTitleFont = FontFromSaveString(bwOptions.AxisFontDescriptor);
+            if (!(string.IsNullOrEmpty(bwOptions.TitleFontDescriptor)))
+                titleFont = FontFromSaveString(bwOptions.TitleFontDescriptor);
+
+            AssignMarkersToSeries();
+            //  Not horizontal, so vertical
+
+            //  Swap over the X and Y axis definitions, as we've flipped the drawing
+            definition = definition.Clone(); //  Make sure the swaps are safe!
+            AxisScaleParameters temp = definition.ScaleParameters.X;
+            definition.ScaleParameters.X = definition.ScaleParameters.Y;
+            definition.ScaleParameters.Y = temp;
+
+            //  Ensure the X and Y series are where we need them to be for drawing axes
+            List<Series> tempSeries = definition.YSeries;
+            definition.YSeries = definition.XSeries;
+            definition.XSeries = tempSeries;
+
+            //  Get overall minima and maxima
+            double min = double.MaxValue;
+            double minGreaterThanZero = double.MaxValue;
+            double max = double.MinValue;
+            foreach (DoubleSeries s in seriesToUse)
+            {
+                min = Math.Min(min, s.Min);
+                minGreaterThanZero = Math.Min(minGreaterThanZero, s.MinGreaterThanZero);
+                max = Math.Max(max, s.Max);
+            }
+
+            int div;
+            double zmin;
+            double zint;
+            Q_AxisOrFromDefinition(ref min, minGreaterThanZero, ref max, out div, out zmin, out zint, out minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
+            string msk = AxisMaskOrFromDefinition(zint, zmin, div, minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
+
+            float xtra = 0;
+            float w = MeasureStringInCanvasCoordinates(min.ToString(msk), axisLabelFont).Width;
+            //  Allow 20 units for axes; if we need more, offset the axis
+            if (w - 20 > xtra)
+                xtra = w - 20;
+            w = MeasureStringInCanvasCoordinates(max.ToString(msk), axisLabelFont).Width;
+            if (w - 20 > xtra)
+                xtra = w - 20;
+            //  Offset the axis label
+
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(null, AxisMode.Series, 0, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), false, false);
+
+            using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
+            {
+                using (Pen dottedBlackPen = GetMarkerPen(SharedMarkerTypes[10]))
+                {
+                    dottedBlackPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+
+                    // work through the columns
+                    for (int c = 0; c < seriesToUse.Count; c++)
+                    {
+                        DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                        double centre;
+                        double boxB;
+                        double boxT;
+                        double innerFenceB;
+                        double innerFenceT;
+                        double outerFenceB;
+                        double outerFenceT;
+                        double otherMark;
+                        bool centreIsMedian;
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, P, out centre, out boxB, out boxT, out innerFenceB, out innerFenceT, bwOptions.UseInnerFence, out outerFenceB, out outerFenceT, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
+
+                        // Plot graphic
+                        double xctr = (c + 0.5) / divx * xExtCanvas;
+                        double xright = (c + 1) / divx * xExtCanvas;
+                        double centreY = ToCanvasY(centre);
+
+                        double halfBoxWidth = (xright - xctr) * BOXWHISKER_BOX_FRACTION_OF_SPACE;
+                        double xc = offx + xctr;
+                        double xr = xc + halfBoxWidth;
+                        double xl = xc - halfBoxWidth;
+
+                        double boxBY = ToCanvasY(boxB);
+                        double boxTY = ToCanvasY(boxT);
+
+                        // Draw marker, centre line and box
+                        DrawRectangleInCanvasCoordinates(blackPen, xl, boxTY, xr - xl, boxTY - boxBY); //  Box
+                        if (bwOptions.MarkMeanAndMedian)
+                        {
+                            //  Other mark
+                            DrawMarkerInCanvasCoordinates(xc, ToCanvasY(otherMark), 10, MarkerShape.Cross, false, blackPen);
+                        }
+                        DrawMarkerInCanvasCoordinates(xc, centreY, 10, MarkerShape.Diamond, true, blackPen);
+                        DrawLineInCanvasCoordinates(blackPen, xr, centreY, xl, centreY); //  Centre line
+
+                        //  Draw whiskers, fences etc.
+                        double halfWhiskerWidth = halfBoxWidth * BOXWHISKER_WHISKER_FRACTION_OF_BOX;
+                        xr = xc + halfWhiskerWidth;
+                        xl = xc - halfWhiskerWidth;
+
+                        //  Left-hand fences
+                        bool gatedInnerB = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[0] < innerFenceB && innerFenceB < boxB;
+                        bool gatedOuterB = s.Data[0] < outerFenceB && outerFenceB < boxB;
+
+                        // double outerFenceBY = ToCanvasY(gatedOuterB ? outerFenceB : s.Data[ 0 ]);
+
+                        //  Draw inner fence
+                        //  The inner fence goes to the first one of:
+                        //  - The inner fence for seven number and Bowley plots;
+                        //  - The inner fence if both inner and outer fences are selected and there's at least one outlier beyond it;
+                        //  - Not drawn otherwise.
+                        bool shouldDrawInnerFenceB = false;
+                        double innerFenceBY = 0;
+                        if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                        {
+                            shouldDrawInnerFenceB = true;
+                            innerFenceBY = ToCanvasY(innerFenceB);
+                        }
+                        if (shouldDrawInnerFenceB)
+                        {
+                            Pen innerPen;
+                            if (bwOptions.UseOuterFence || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                                innerPen = dottedBlackPen;
+                            else
+                                innerPen = blackPen;
+                            DrawLineInCanvasCoordinates(innerPen, xr, innerFenceBY, xl, innerFenceBY);
+                        }
+
+                        //  Draw min whisker
+                        //  The min whisker goes to the first one of:
+                        //  - The outer fence for seven number and Bowley plots;
+                        //  - The first data point inside the inner fence if inner fence is selected;
+                        //  - The first data point inside the outer fence if outer fence is selected;
+                        //  - The min data point otherwise.
+                        double minWhiskerB = 0;
+                        if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                        {
+                            minWhiskerB = outerFenceB;
+                        }
+                        else if (bwOptions.UseInnerFence)
+                        {
+                            for (int i = 0; i < s.Data.Length; i++)
+                            {
+                                if (s.Data[i] >= innerFenceB)
+                                {
+                                    minWhiskerB = s.Data[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else if (bwOptions.UseOuterFence)
+                        {
+                            for (int i = 0; i < s.Data.Length; i++)
+                            {
+                                if (s.Data[i] >= outerFenceB)
+                                {
+                                    minWhiskerB = s.Data[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            minWhiskerB = s.Data[0];
+                        }
+                        double minWhiskerBY = ToCanvasY(minWhiskerB);
+
+                        //  Draw min whisker to outer limit
+                        DrawLineInCanvasCoordinates(blackPen, xc, minWhiskerBY, xc, boxBY);
+
+                        //  Draw outer marker
+                        const bool shouldDrawOuterFenceB = true;
+                        // ReSharper disable RedundantLogicalConditionalExpressionOperand
+                        bool shouldDrawOuterBracketB = shouldDrawOuterFenceB && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterB || gatedInnerB));
+                        // ReSharper restore RedundantLogicalConditionalExpressionOperand
+                        if (shouldDrawOuterFenceB)
+                        {
+                            DrawLineInCanvasCoordinates(blackPen, xr, minWhiskerBY, xl, minWhiskerBY);
+                            if (shouldDrawOuterBracketB)
+                            {
+                                DrawLineInCanvasCoordinates(blackPen, xr, minWhiskerBY + BOXWHISKER_WHISKER_END_LENGTH, xr, minWhiskerBY);
+                                DrawLineInCanvasCoordinates(blackPen, xl, minWhiskerBY, xl, minWhiskerBY + BOXWHISKER_WHISKER_END_LENGTH);
+                            }
+                        }
+
+                        //  Min outliers - below outer fence
+                        if (gatedInnerB)
+                        {
+                            for (int r = 0; r < s.Data.Length; r++)
+                            {
+                                if (s.Data[r] < innerFenceB && (s.Data[r] >= outerFenceB || !(gatedOuterB)))
+                                {
+                                    double y1 = ToCanvasY(s.Data[r]);
+                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * BOXWHISKER_OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
+                                }
+                            }
+                        }
+                        if (gatedOuterB)
+                        {
+                            for (int r = 0; r < s.Data.Length; r++)
+                            {
+                                if (s.Data[r] < outerFenceB)
+                                {
+                                    double y1 = ToCanvasY(s.Data[r]);
+                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * BOXWHISKER_OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
+                                }
+                            }
+                        }
+
+                        //  Right-hand fences
+                        bool gatedInnerT = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[s.Data.Length - 1] > innerFenceT && innerFenceT > boxT;
+                        bool gatedOuterT = s.Data[s.Data.Length - 1] > outerFenceT && outerFenceT > boxT;
+
+                        // double outerFenceTY = ToCanvasY(gatedOuterT ? outerFenceT : s.Data[ s.Data.Length - 1 ]);
+
+                        //  Draw inner fence
+                        //  The inner fence goes to the first one of:
+                        //  - The inner fence for seven number and Bowley plots;
+                        //  - The inner fence if both inner and outer fences are selected and there's at least one outlier betond it;
+                        //  - Not drawn otherwise.
+                        bool shouldDrawInnerFenceT = false;
+                        double innerFenceTY = 0;
+                        if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                        {
+                            shouldDrawInnerFenceT = true;
+                            innerFenceTY = ToCanvasY(innerFenceT);
+                        }
+                        if (shouldDrawInnerFenceT)
+                        {
+                            Pen innerPen;
+                            if (bwOptions.UseOuterFence || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                                innerPen = dottedBlackPen;
+                            else
+                                innerPen = blackPen;
+                            DrawLineInCanvasCoordinates(innerPen, xr, innerFenceTY, xl, innerFenceTY);
+                        }
+
+                        //  Draw max whisker
+                        //  The max whisker goes to the first one of:
+                        //  - The outer fence for seven number and Bowley plots;
+                        //  - The last data point below the inner fence if inner fence is selected;
+                        //  - The last data point below the outer fence if outer fence is selected;
+                        //  - The max data point otherwise.
+                        double maxWhiskerT = 0;
+                        if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
+                        {
+                            maxWhiskerT = outerFenceT;
+                        }
+                        else if (bwOptions.UseInnerFence)
+                        {
+                            for (int i = s.Data.Length - 1; i >= 0; i--)
+                            {
+                                if (s.Data[i] <= innerFenceT)
+                                {
+                                    maxWhiskerT = s.Data[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else if (bwOptions.UseOuterFence)
+                        {
+                            for (int i = s.Data.Length - 1; i >= 0; i--)
+                            {
+                                if (s.Data[i] <= outerFenceT)
+                                {
+                                    maxWhiskerT = s.Data[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            maxWhiskerT = s.Data[s.Data.Length - 1];
+                        }
+                        double maxWhiskerTY = ToCanvasY(maxWhiskerT);
+                        DrawLineInCanvasCoordinates(blackPen, xc, maxWhiskerTY, xc, boxTY);
+
+                        //  Outer fence
+                        const bool shouldDrawOuterFenceT = true;
+                        // If (gatedInnerT OrElse gatedOuterT) _
+                        //     AndAlso Not (bwOptions.Method = BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary OrElse bwOptions.Method = BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary) Then
+                        // If bwOptions.UseInnerFence AndAlso (Not bwOptions.UseOuterFence) AndAlso gatedInnerR Then
+                        //  At least one inner outlier, and we're not using the outer fence.  The inner fence will have been drawn; we should not draw this as well.
+                        // shouldDrawOuterFenceT = False
+                        //  End If
+                        // ReSharper disable RedundantLogicalConditionalExpressionOperand
+                        bool shouldDrawOuterBracketT = shouldDrawOuterFenceT && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterT || gatedInnerT));
+                        // ReSharper restore RedundantLogicalConditionalExpressionOperand
+                        if (shouldDrawOuterFenceT)
+                        {
+                            DrawLineInCanvasCoordinates(blackPen, xr, maxWhiskerTY, xl, maxWhiskerTY);
+                            if (shouldDrawOuterBracketT)
+                            {
+                                DrawLineInCanvasCoordinates(blackPen, xr, maxWhiskerTY - BOXWHISKER_WHISKER_END_LENGTH, xr, maxWhiskerTY);
+                                DrawLineInCanvasCoordinates(blackPen, xl, maxWhiskerTY, xl, maxWhiskerTY - BOXWHISKER_WHISKER_END_LENGTH);
+                            }
+                        }
+
+                        //  Max outliers
+                        if (gatedInnerT)
+                        {
+                            for (int r = 0; r <= s.Data.Length - 1; r++)
+                            {
+                                if (s.Data[r] > innerFenceT && (s.Data[r] <= outerFenceT || !(gatedOuterT)))
+                                {
+                                    double y1 = ToCanvasY(s.Data[r]);
+                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * BOXWHISKER_OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
+                                }
+                            }
+                        }
+                        if (gatedOuterT)
+                        {
+                            for (int r = 0; r <= s.Data.Length - 1; r++)
+                            {
+                                if (s.Data[r] > outerFenceT)
+                                {
+                                    double y1 = ToCanvasY(s.Data[r]);
+                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * BOXWHISKER_OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            MaybeDrawMarkerLines();
+            EndVectorPlot();
+            return new ParameterBag();
+        }
+
+        private ParameterBag PlotBoxWhiskerAscii(List<Series> seriesToUse)
+        {
+            // sort the array and get the min, max values
+            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+
+            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
+
+            double P = (1.0 - bwOptions.Cco) / 2.0;
+            if (P > 1.0 - P)
+                P = 1.0 - P;
+
+            ASCII_InitPlot(seriesToUse.Count * 2 + 4);
+
+            // Draw the scale
+            DefaultAxes(0);
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n", new Axis(bwOptions.XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, 0, definition.ScaleParameters.X.ScaleType), false, false);
+            divx = axisXMax - axisXMin;
+            offx = Convert.ToInt32(-(axisXMin / divx * 60) + 16);
+            divy = seriesToUse.Count + 1;
+            offy = Convert.ToInt32(-(0 / divy * 20) + ASCII_Ytxt);
+
+            if (shTx[0].Length > bwOptions.XAxisTitle.Length)
+            {
+                WriteAsciiYX(0, 45 - bwOptions.XAxisTitle.Length / 2, bwOptions.XAxisTitle);
+            }
+            else
+            {
+                //  Axis title is larger than the chart, so replace the entire first string
+                shTx[0] = bwOptions.XAxisTitle;
+            }
+
+            // work through the columns
+            for (int c = 0; c <= seriesToUse.Count - 1; c++)
+            {
+                DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                double mdn = 0; double Q1 = 0; double Q3 = 0;
+                double innerFenceL = 0; double innerFenceR = 0;
+                double outerFenceL = 0; double outerFenceR = 0;
+                double otherMark = 0;
+                bool centreIsMedian = false;
+                PlotBoxWhiskerCalc(s, bwOptions.Method, P, out mdn, out Q1, out Q3, out innerFenceL, out innerFenceR, bwOptions.UseInnerFence, out outerFenceL, out outerFenceR, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
+
+                bool gatedl;
+                int xl;
+                if (s.Data[0] < outerFenceL && outerFenceL < Q1)
+                {
+                    xl = Convert.ToInt32(offx + outerFenceL / divx * 60);
+                    gatedl = true;
+                }
+                else
+                {
+                    xl = Convert.ToInt32(offx + s.Data[0] / divx * 60);
+                    gatedl = false;
+                }
+
+                bool gatedr;
+                int xr;
+                if (s.Data[s.Data.Length - 1] > outerFenceR && outerFenceR > Q3)
+                {
+                    xr = Convert.ToInt32(offx + outerFenceR / divx * 60);
+                    gatedr = true;
+                }
+                else
+                {
+                    xr = Convert.ToInt32(offx + s.Data[s.Data.Length - 1] / divx * 60);
+                    gatedr = false;
+                }
+
+                int xm = Convert.ToInt32(offx + (mdn / divx * 60));
+
+                int lq = Convert.ToInt32(offx + (Q1 / divx * 60));
+                int uq = Convert.ToInt32(offx + (Q3 / divx * 60));
+
+                // Plot it
+                int Y2 = 3 + c * 2;
+                WriteAsciiYX(Y2, lq, new string('.', uq - lq));
+                WriteAsciiYX(Y2, xm, "*");
+
+                int l;
+                if (gatedl)
+                {
+                    l = lq - xl;
+                    if (l < 2)
+                        l = 2;
+                    WriteAsciiYX(Y2, xl, "|" + new string('-', l - 2) + "[");
+                    for (int r = 0; r <= s.Data.Length - 1; r++)
+                    {
+                        if (s.Data[r] < outerFenceL)
+                        {
+                            int x1 = Convert.ToInt32(offx + s.Data[r] / divx * 60);
+                            WriteAsciiYX(Y2, x1, ".");
+                        }
+                    }
+                }
+                else
+                {
+                    l = lq - xl;
+                    if (l < 2)
+                        l = 2;
+                    WriteAsciiYX(Y2, xl, ">" + new string('-', l - 2) + "[");
+                }
+
+                if (gatedr)
+                {
+                    l = xr - uq;
+                    if (l < 2)
+                        l = 2;
+                    WriteAsciiYX(Y2, uq, "]" + new string('-', l - 2) + "|");
+                    for (int r = 0; r <= s.Data.Length - 1; r++)
+                    {
+                        if (s.Data[r] > outerFenceR)
+                        {
+                            int x1 = Convert.ToInt32(offx + s.Data[r] / divx * 60);
+                            WriteAsciiYX(Y2, x1, ".");
+                        }
+                    }
+                }
+                else
+                {
+                    l = xr - uq;
+                    if (l < 2)
+                        l = 2;
+                    WriteAsciiYX(Y2, uq, "]" + new string('-', l - 2) + "<");
+                }
+            }
+            return new ParameterBag();
+        }
+        ///  <summary>
+        ///  Calculate and return as output parameters many values that are useful for a single box+whisker from the given series.
+        ///  </summary>
+        ///  <param name="s">The series to use for calculation</param>
+        ///  <param name="method">The calculation method</param>
+        ///  <param name="P">For Mean, CI, Range: the CI to calculate</param>
+        ///  <param name="centre">Returns the median value</param>
+        ///  <param name="boxL">Returns the lower quertile</param>
+        ///  <param name="boxR">Returns the upper quartile</param>
+        ///  <param name="innerFenceL">The lower inner fence value if used, 9th centile for seven number, or 10th centile for Bowley</param>
+        ///  <param name="innerFenceR">The upper inner fence value if used, 91st centile for seven number, or 90th centile for Bowley</param>
+        ///  <param name="useInnerFence">True to calculate inner fences</param>
+        ///  <param name="outerFenceL">The lower outer fence value if used, 2nd centile for seven number, min otherwise</param>
+        ///  <param name="outerFenceR">The upper outer fence value if used, 98th centile for seven number, max otherwise</param>
+        ///  <param name="useOuterFence">True to calculate outer fences</param>
+        ///  <param name="otherCentre">Another centre that might be appropriate to plot.  Mean if centre is median, and vice versa.</param>
+        /// <param name="centreIsMedian">True if centre is the median and otherCentre is mean, false if the reverse is true.</param>
+        private void PlotBoxWhiskerCalc(DoubleSeries s, BoxWhiskerOptions.BoxWhiskerMethod method, double P, out double centre, out double boxL, out double boxR, out double innerFenceL, out double innerFenceR, bool useInnerFence, out double outerFenceL, out double outerFenceR, bool useOuterFence, out double otherCentre, out bool centreIsMedian)
+        {
+            int count = s.Data.Length;
+            switch (method)
+            {
+                case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
+                case BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary:
+                case BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary:
+                    {
+
+                        //  Median
+                        centre = Quantile(s, 0.5);
+                        //  Lower quartile
+                        boxL = Quantile(s, 0.25);
+                        //  Upper quartile
+                        boxR = Quantile(s, 0.75);
+
+                        //  Inner fence
+                        switch (method)
+                        {
+                            case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
+                                double interQuartileRange = Math.Abs(boxR - boxL);
+                                if (useInnerFence)
+                                {
+                                    innerFenceL = boxL - 1.5 * interQuartileRange;
+                                    innerFenceR = boxR + 1.5 * interQuartileRange;
+                                }
+                                else
+                                {
+                                    //  Get out of the way!
+                                    innerFenceL = boxL;
+                                    innerFenceR = boxR;
+                                }
+                                break;
+                            case BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary:
+                                innerFenceL = Quantile(s, 0.09);
+                                innerFenceR = Quantile(s, 0.91);
+                                break;
+                            case BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary:
+                                innerFenceL = Quantile(s, 0.1);
+                                innerFenceR = Quantile(s, 0.9);
+                                break;
+                            default:
+                                throw new Exception("Unexpected method");
+                        }
+
+                        //  Fences never extend beyond the data
+                        if (innerFenceL < s.Data[0])
+                            innerFenceL = s.Data[0];
+                        if (innerFenceR > s.Data[s.Data.Length - 1])
+                            innerFenceR = s.Data[s.Data.Length - 1];
+
+                        //  Outer fence
+                        switch (method)
+                        {
+                            case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
+                                if (useOuterFence)
+                                {
+                                    double interQuartileRange = Math.Abs(boxR - boxL);
+                                    outerFenceL = boxL - 3.0 * interQuartileRange;
+                                    outerFenceR = boxR + 3.0 * interQuartileRange;
+                                }
+                                else
+                                {
+                                    //  Min/max
+                                    outerFenceL = s.Data[0];
+                                    outerFenceR = s.Data[s.Points - 1];
+                                }
+                                break;
+                            case BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary:
+                                outerFenceL = Quantile(s, 0.02);
+                                outerFenceR = Quantile(s, 0.98);
+                                break;
+                            case BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary:
+                                //  Min/max
+                                outerFenceL = s.Data[0];
+                                outerFenceR = s.Data[s.Points - 1];
+                                break;
+                            default:
+                                throw new Exception("Unexpected method");
+                        }
+
+                        //  Fences never extend beyond the data
+                        if (outerFenceL < s.Data[0])
+                            outerFenceL = s.Data[0];
+                        if (outerFenceR > s.Data[s.Data.Length - 1])
+                            outerFenceR = s.Data[s.Data.Length - 1];
+
+                        centreIsMedian = true;
+                        //  Other centre is the mean
+                        double sum = 0;
+                        for (int n = 0; n < count; n++)
+                            sum += s.Data[n];
+                        otherCentre = sum / Convert.ToDouble(count);
+
+                    }
+                    break;
+                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange:
+                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange:
+                case BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange:
+                    {
+                        double sum = 0.0;
+                        double sumsqdev = 0.0;
+
+                        for (int n = 0; n < count; n++)
+                            sum += s.Data[n];
+
+                        double mean = sum / count;
+
+                        for (int n = 0; n < count; n++)
+                        {
+                            if (Math.Abs(sumsqdev) > 1.0E+300)
+                            {
+                                sumsqdev = Constant.MISSING;
+                                break;
+                            }
+                            double dev = s.Data[n] - mean;
+                            sumsqdev += dev * dev;
+                        }
+
+                        centre = mean;
+                        centreIsMedian = false;
+                        otherCentre = Quantile(s, 0.5); //  Median
+                        if (sumsqdev == Constant.MISSING)
+                        {
+                            //  Everything collapses
+                            boxL = centre;
+                            boxR = centre;
+                            if (useInnerFence)
+                            {
+                                innerFenceL = centre;
+                                innerFenceR = centre;
+                            }
+                            else
+                            {
+                                innerFenceL = 0;
+                                innerFenceR = 0;
+                            }
+                            if (useOuterFence)
+                            {
+                                outerFenceL = centre;
+                                outerFenceR = centre;
+                            }
+                            else
+                            {
+                                outerFenceL = 0;
+                                outerFenceR = 0;
+                            }
+                        }
+                        else
+                        {
+                            double variance = sumsqdev / (count - 1);
+                            double standardDeviation = Math.Sqrt(variance);
+                            double standardError = Math.Sqrt(variance / count);
+
+                            switch (method)
+                            {
+                                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange:
+                                    boxL = mean - standardDeviation;
+                                    boxR = mean + standardDeviation;
+                                    break;
+                                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange:
+                                    boxL = mean - standardError;
+                                    boxR = mean + standardError;
+                                    break;
+                                case BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange:
+                                    double cit = PDF.tfromp(P, Convert.ToDouble(count - 1));
+                                    double bit = cit * standardDeviation / Math.Sqrt(count);
+                                    boxL = mean - bit;
+                                    boxR = mean + bit;
+                                    break;
+                                default:
+                                    throw new Exception("Unexpected box+whisker plot type");
+                            }
+
+                            if (useInnerFence)
+                            {
+                                //  95% CI
+                                double innerFenceFactor = PDF.gauinv(0.975);
+                                innerFenceL = mean - innerFenceFactor * standardDeviation;
+                                innerFenceR = mean + innerFenceFactor * standardDeviation;
+                            }
+                            else
+                            {
+                                innerFenceL = 0;
+                                innerFenceR = 0;
+                            }
+                            if (useOuterFence)
+                            {
+                                //  99% CI
+                                double outerFenceFactor = PDF.gauinv(0.995);
+                                outerFenceL = mean - outerFenceFactor * standardDeviation;
+                                outerFenceR = mean + outerFenceFactor * standardDeviation;
+                            }
+                            else
+                            {
+                                outerFenceL = 0;
+                                outerFenceR = 0;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("method", method.ToString());
+            }
+        }
+
+        ///  <summary>
+        ///  Get the nth centile (divided by 100,  so 0.25 for lower quartile etc) from the given series containing a sorted 0-based array of data
+        ///  </summary>
+        private double Quantile(DoubleSeries s, double n)
+        {
+            int count = s.Data.Length;
+            double imdn = n * count - 0.5;
+            if (imdn < 0)
+                imdn = 0.0;
+            if (imdn > s.Data.Length - 1)
+                imdn = s.Data.Length - 1;
+            if (imdn - Math.Floor(imdn) == 0.0)
+                return s.Data[Convert.ToInt32(imdn)];
+            return s.Data[((int)(Math.Floor(imdn)))] + (s.Data[((int)(Math.Floor(imdn))) + 1] - s.Data[((int)(Math.Floor(imdn)))]) * (imdn - Math.Floor(imdn));
+        }
+    }
+}

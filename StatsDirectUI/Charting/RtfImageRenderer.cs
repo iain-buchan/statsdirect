@@ -1,18 +1,18 @@
 ﻿using StatsDirect.Templates;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace StatsDirect.Charting
 {
     public static class RtfImageRenderer
     {
-        public static ParameterBag PlotAndReturnRtf(ITemplateHost host, ChartRenderer renderer, out string rtf)
+        public static ParameterBag PlotAndReturnRtf(ITemplateHost host, IChartRenderer ch, out string rtf)
         {
-            ParameterBag results = renderer.Plot(host);
-            rtf = ImageStreamToRtf(renderer.GetImageStream(), (int)renderer.ImageWidth, (int)renderer.ImageHeight);
+            ParameterBag results = ch.Plot(host);
+            if (ch.IsAscii)
+                rtf = ch.GetAsciiRTF();
+            else
+                rtf = ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
             return results;
         }
 

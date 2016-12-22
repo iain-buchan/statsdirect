@@ -34,9 +34,9 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  A default ChartDefinition with no values set.
         ///  </summary>
-        ///  <remarks>TODO: This shouldn't be needed as even the one-liners should set most of their options in the definition.</remarks>
         private static ChartDefinition _Empty;
 
+        [Obsolete("TODO: Empty() is a cop-out and should be removed")]
         public static ChartDefinition Empty()
         {
             return _Empty ?? (_Empty = new ChartDefinition());
@@ -126,7 +126,7 @@ namespace StatsDirect.Charting
 
         private ScaleParameters GetScaleParameters()
         {
-            using (ChartRenderer renderer = new ChartRenderer(this))
+            using (IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(this))
             {
                 return renderer.GetScaleParameters();
             }

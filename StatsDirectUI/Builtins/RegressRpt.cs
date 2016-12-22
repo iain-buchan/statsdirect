@@ -343,7 +343,7 @@ namespace StatsDirect.Builtins
                 }
             }
             string ylab = yrep ? "Y Replicates" : "Y";
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 ch.DataMinX = gcd.minMax.MinX;
                 ch.DataMaxX = gcd.minMax.MaxX;

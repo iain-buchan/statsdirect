@@ -294,39 +294,37 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
             ParameterBag chartParameters;
 
+            string rtf;
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Peto odds ratio", odrl, odru, cco, cit, por, Transformation.Log, false);
+                    rtf = ch.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Peto odds ratio", odrl, odru, cco, cit, por, Transformation.Log, false);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
                 }
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
+                rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-            {
-                bool scrap;
-                string rtf = ch.PlotMHAndReturnRtf(host, k, o, odw, title, por, porl, poru, cco, odr, odrl, odru, lerr, uerr, "Peto odds ratio plot", 1, "Peto odds ratio", out scrap, "Pooled Peto odds ratio");
-                chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
-            }
+            bool scrap;
+            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, por, porl, poru, cco, odr, odrl, odru, lerr, uerr, "Peto odds ratio plot", 1, "Peto odds ratio", out scrap /* , "Pooled Peto odds ratio" */);
+            chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", rtf);
 
             if (k > 2)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotBiasMAAndReturnRtf(host, odw, oe, oe, k, "Peto weights", odrl, odru, cco, cit, por, Transformation.None, true);
+                    rtf = ch.PlotBiasMAAndReturnRtf(host, odw, oe, oe, k, "Peto weights", odrl, odru, cco, cit, por, Transformation.None, true);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
@@ -768,7 +766,7 @@ namespace StatsDirect.Builtins
 
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Risk difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false);
                     chartParameters = new ParameterBag();
@@ -778,7 +776,7 @@ namespace StatsDirect.Builtins
             }
 
             bool bfault;
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotMHRDAndReturnRtf(host, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference", out bfault);
                 chartParameters = new ParameterBag();
@@ -786,7 +784,7 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotMHRDAndReturnRtf(host, k, o, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [random effects]", 1, "risk difference", out bfault);
                 chartParameters = new ParameterBag();
@@ -998,42 +996,36 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
             ParameterBag chartParameters;
 
+            string rtf;
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false);
+                    rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false);
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);
                 }
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
-                string rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
+                rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-            {
-                bool fault;
-                string rtf = ch.PlotMHAndReturnRtf(host, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out fault, null);
-                chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
-            }
+            bool fault;
+            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out fault);
+            chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", rtf);
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-            {
-                bool fault;
-                string rtf = ch.PlotMHAndReturnRtf(host, k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out fault, null);
-                chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
-            }
+            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out fault);
+            chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", rtf);
 
             return outputParameters;
         }
@@ -1385,7 +1377,7 @@ namespace StatsDirect.Builtins
 
                 if (k > 3)
                 {
-                    using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                    using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                     {
                         string rtf = ch.PlotBiasMAAndReturnRtf(host, d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false);
                         chartParameters = new ParameterBag();
@@ -1394,7 +1386,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "effect size");
                     chartParameters = new ParameterBag();
@@ -1402,7 +1394,7 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "effect size");
                     chartParameters = new ParameterBag();
@@ -1554,7 +1546,7 @@ namespace StatsDirect.Builtins
 
                 if (k > 3)
                 {
-                    using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                    using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                     {
                         string rtf = ch.PlotBiasMAAndReturnRtf(host, d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false);
                         chartParameters = new ParameterBag();
@@ -1564,7 +1556,7 @@ namespace StatsDirect.Builtins
                 }
 
                 // bool bfault = false; 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "weighted mean difference");
                     chartParameters = new ParameterBag();
@@ -1572,7 +1564,7 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotEffectAndReturnRtf(host, k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "weighted mean difference");
                     chartParameters = new ParameterBag();
@@ -2318,7 +2310,7 @@ namespace StatsDirect.Builtins
             {
                 if (k > 3)
                 {
-                    using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                    using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                     {
                         string rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, ptt, rkw, k, "Incidence rate difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false);
                         chartParameters = new ParameterBag();
@@ -2328,7 +2320,7 @@ namespace StatsDirect.Builtins
                 }
 
                 bool bfault;
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotMHRDAndReturnRtf(host, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference", out bfault);
                     chartParameters = new ParameterBag();
@@ -2336,7 +2328,7 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", rtf);
                 }
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotMHRDAndReturnRtf(host, k, o, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference", out bfault);
                     chartParameters = new ParameterBag();
@@ -2346,11 +2338,12 @@ namespace StatsDirect.Builtins
             }
             else
             {
+                string rtf;
                 if (k > 3)
                 {
-                    using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                    using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                     {
-                        string rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, ptt, rkw, k, "Incidence rate ratio", rkrl, rkru, cco, cit, rmh, Transformation.Log, false);
+                        rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, ptt, rkw, k, "Incidence rate ratio", rkrl, rkru, cco, cit, rmh, Transformation.Log, false);
                         chartParameters = new ParameterBag();
                         chartList.Add(chartParameters);
                         chartParameters.AddOutput("chart", rtf);
@@ -2358,21 +2351,15 @@ namespace StatsDirect.Builtins
                 }
 
                 bool fault;
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-                {
-                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio", out fault, null);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio", out fault);
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-                {
-                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio", out fault, null);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio", out fault);
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
             }
             return outputParameters;
         }
@@ -2661,7 +2648,7 @@ namespace StatsDirect.Builtins
 
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false);
                     chartParameters = new ParameterBag();
@@ -2670,7 +2657,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
@@ -2682,21 +2669,15 @@ namespace StatsDirect.Builtins
             {
                 bool fault;
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-                {
-                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out fault, null);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+                string rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out fault);
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
 
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
-                {
-                    string rtf = ch.PlotMHAndReturnRtf(host, k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out fault, null);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out fault);
+                chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
             }
             return outputParameters;
         }
@@ -2723,12 +2704,8 @@ namespace StatsDirect.Builtins
 
             bool rkok = false;
             for (i = 1; i <= k; i++)
-            {
                 if (o[i, 1] * o[i, 4] != 0.0)
-                {
                     rkok = true;
-                }
-            }
 
             for (i = 1; i <= k; i++)
             {
@@ -2739,14 +2716,10 @@ namespace StatsDirect.Builtins
                 n = a + b + c + d;
                 odx[i] = n;
                 if (n <= 0)
-                {
                     throw new InvalidDataException();
-                }
 
                 if (host.Preferences.DelayContinuityCorrection == false)
-                {
                     rkok = false;
-                }
 
                 // MH across strata
                 if (IncludeTable(o, i))
@@ -3542,7 +3515,7 @@ namespace StatsDirect.Builtins
 
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotBiasMAAndReturnRtf(host, y, odx, wt, k, stat.ToLower(CultureInfo.CurrentCulture), llY, ulY, cco, cit, rmh, xform, false);
                     chartParameters = new ParameterBag();
@@ -3554,7 +3527,7 @@ namespace StatsDirect.Builtins
             y[k + 1] = rmh;
             llY[k + 1] = llrmh;
             ulY[k + 1] = ulrmh;
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
                 chartParameters = new ParameterBag();
@@ -3565,7 +3538,7 @@ namespace StatsDirect.Builtins
             y[k + 1] = dsrr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio);
                 chartParameters = new ParameterBag();
@@ -3858,7 +3831,7 @@ namespace StatsDirect.Builtins
 
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotBiasMAAndReturnRtf(host, y, odx, wt, k, "Correlation", llY, ulY, cco, cit, wmr, Transformation.Z, false);
                     chartParameters = new ParameterBag();
@@ -3870,7 +3843,7 @@ namespace StatsDirect.Builtins
             y[k + 1] = rmh;
             llY[k + 1] = llrmh;
             ulY[k + 1] = ulrmh;
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
@@ -3881,7 +3854,7 @@ namespace StatsDirect.Builtins
             y[k + 1] = dsrr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
@@ -3892,7 +3865,7 @@ namespace StatsDirect.Builtins
             y[k + 1] = wmr;
             llY[k + 1] = wmrLcl;
             ulY[k + 1] = wmrUcl;
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
@@ -4330,7 +4303,7 @@ namespace StatsDirect.Builtins
 
             if (k > 3)
             {
-                using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
                     string rtf = ch.PlotBiasMAAndReturnRtf(host, y, sn, wt, k, "Proportion", llY, ulY, cco, cit, rmh, Transformation.None, false);
                     chartParameters = new ParameterBag();
@@ -4343,7 +4316,7 @@ namespace StatsDirect.Builtins
             llY[k + 1] = llrmh;
             ulY[k + 1] = ulrmh;
 
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
@@ -4354,7 +4327,7 @@ namespace StatsDirect.Builtins
             y[k + 1] = dspr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
-            using (ChartRenderer ch = new ChartRenderer(ChartDefinition.Empty()))
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
             {
                 string rtf = ch.PlotCorrelationAndReturnRtf(host, k + 1, title, y, llY, ulY, dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false);
                 chartParameters = new ParameterBag();
