@@ -8,42 +8,42 @@
         <double>
           <name>r0</name>
           <prompt>Correlation coefficient under null hypothesis</prompt>
+          <must-request>true</must-request>
           <minimum-value>0</minimum-value>
           <maximum-value>1</maximum-value>
           <default-value>0</default-value>
-          <must-request>true</must-request>
         </double>
         <double>
           <name>r1</name>
           <prompt>Correlation coefficient under alternative hypothesis</prompt>
+          <must-request>true</must-request>
           <minimum-value>0</minimum-value>
           <maximum-value>1</maximum-value>
-          <must-request>true</must-request>
         </double>
         <confidence-interval>
           <name>p</name>
           <prompt>% POWER (% probability of correctly detecting a real effect)</prompt>
+          <must-request>true</must-request>
           <minimum-suggested-value>0.7</minimum-suggested-value>
           <maximum-suggested-value>0.95</maximum-suggested-value>
           <suggested-step>0.05</suggested-step>
           <default-value>0.8</default-value>
-          <must-request>true</must-request>
           <can-default>false</can-default>
         </confidence-interval>
         <confidence-interval>
           <name>a</name>
           <prompt>% ALPHA (% probability of incorrectly rejecting the null hypothesis)</prompt>
+          <must-request>true</must-request>
           <minimum-suggested-value>0.001</minimum-suggested-value>
           <maximum-suggested-value>0.05</maximum-suggested-value>
           <suggested-step>0.001</suggested-step>
           <default-value>0.05</default-value>
-          <must-request>true</must-request>
           <can-default>false</can-default>
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptSizeCorrelation" />
 	  <report type="text/rtf" filename="s_corr.rtf" />
-    <report type="application/x-statsdirect-creole" filename="s_corr.creole" />
+    <!-- <report type="application/x-statsdirect-creole" filename="s_corr.creole" /> -->
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeCorrelation</suggested-operation>
