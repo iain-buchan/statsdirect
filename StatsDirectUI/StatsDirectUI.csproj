@@ -842,6 +842,7 @@
     </Compile>
     <Compile Include="UI\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\WindowsFormsExtensions.cs" />
     <Compile Include="Utilities\CoxP.cs" />
     <Compile Include="Utilities\DataAcquisitionMode.cs" />
     <Compile Include="Utilities\Formatting.cs" />

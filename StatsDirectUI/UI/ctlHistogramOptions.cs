@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using StatsDirect.Charting;
 using System.Media;
 using StatsDirect.Utilities;
+using System.Drawing;
 
 namespace StatsDirect.UI
 {
@@ -167,16 +168,21 @@ namespace StatsDirect.UI
         {
             try
             {
-                List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
-                options.BinChoiceMethod = ToBinChoiceMethod((string)cboBinChoiceMethod.SelectedItem);
-                options.PoolVariablesForBins = chkPoolVariables.Checked;
-                options.Reset(true, 0, currentSeriesIndex, series[currentSeriesIndex]);
-                FillFormFromOptions();
+                DoAutoBins();
             }
             catch (Exception)
             {
                 // Do nothing
             }
+        }
+
+        private void DoAutoBins()
+        {
+            List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+            options.BinChoiceMethod = ToBinChoiceMethod((string)cboBinChoiceMethod.SelectedItem);
+            options.PoolVariablesForBins = chkPoolVariables.Checked;
+            options.Reset(true, 0, currentSeriesIndex, series[currentSeriesIndex]);
+            FillFormFromOptions();
         }
 
         private void cmdAutoMidpoints_Click(object sender, EventArgs e)
@@ -245,6 +251,21 @@ namespace StatsDirect.UI
             }
         }
 
+        private void cboBinChoiceMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!fillingForm)
+            {
+                try
+                {
+                    DoAutoBins();
+                }
+                catch (Exception)
+                {
+                    // Do nothing
+                }
+            }
+        }
+
         private void chkShowRelativeFrequencies_CheckedChanged(object sender, EventArgs e)
         {
             if (!FillOptionsFromForm())
@@ -292,6 +313,12 @@ namespace StatsDirect.UI
             if ("Freedman-Daconis".Equals(displayString))
                 return BinChoiceMethod.FreedmanDaconis;
             return BinChoiceMethod.NotSet;
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            cboBinChoiceMethod.AutoSizeToList();
         }
     }
 }

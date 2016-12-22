@@ -320,6 +320,7 @@ namespace StatsDirect.UI
             this.cboBinChoiceMethod.Name = "cboBinChoiceMethod";
             this.cboBinChoiceMethod.Size = new System.Drawing.Size(181, 21);
             this.cboBinChoiceMethod.TabIndex = 4;
+            this.cboBinChoiceMethod.SelectedIndexChanged += new System.EventHandler(this.cboBinChoiceMethod_SelectedIndexChanged);
             // 
             // ctlHistogramOptions
             // 

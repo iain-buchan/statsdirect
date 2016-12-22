@@ -89,7 +89,7 @@ namespace StatsDirect.UI
                         cbo.Text = SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval ? (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
                 }
             }
-            AutoSizeCombo(cbo);
+            cbo.AutoSizeToList();
         }
 
         public void Visit(Double2By2Parameter parameter)
@@ -501,7 +501,7 @@ namespace StatsDirect.UI
                     if (initialState.Length > v)
                         cbo.SelectedIndex = initialState[v];
                 }
-                AutoSizeCombo(cbo);
+                cbo.AutoSizeToList();
                 holder.Controls.Add(cbo);
                 Label l = new Label
                 {
@@ -849,7 +849,7 @@ namespace StatsDirect.UI
                 cbo.DropDownStyle = ComboBoxStyle.DropDownList;
 
                 // There's no way of autosizing a combo... so we do it by hand!
-                AutoSizeCombo(cbo);
+                cbo.AutoSizeToList();
                 tlp.Controls.Add(cbo);
             }
 
@@ -899,7 +899,7 @@ namespace StatsDirect.UI
                             cbo.SelectedItem = defaultItem;
 
                         // There's no way of autosizing a combo... so we do it by hand!
-                        AutoSizeCombo(cbo);
+                        cbo.AutoSizeToList();
 
                         Label lbl = new Label
                         {
@@ -1517,25 +1517,6 @@ namespace StatsDirect.UI
                     else
                         values.SetNumber(i, column, data[i]);
             }
-        }
-
-        private static void AutoSizeCombo(ComboBox cbo)
-        {
-            // There's no way of autosizing a combo... so we do it by hand!
-            int width = cbo.DropDownWidth;
-            Graphics g = cbo.CreateGraphics();
-            Font font = cbo.Font;
-            int vertScrollBarWidth = (cbo.Items.Count > cbo.MaxDropDownItems) ? SystemInformation.VerticalScrollBarWidth : 0;
-
-            foreach (object item in cbo.Items)
-            {
-                string s = item.ToString();
-                int newWidth = (int)g.MeasureString(s, font).Width + vertScrollBarWidth;
-                if (width < newWidth)
-                    width = newWidth;
-            }
-            cbo.DropDownWidth = width;
-            cbo.Size = new Size(width + SystemInformation.VerticalScrollBarWidth, cbo.PreferredHeight); // Surprisingly, it appears the width of the drop-down arrow part of a ComboBox is the same as that of a vertical scrollbar.
         }
     }
 }
