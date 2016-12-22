@@ -18,5 +18,6 @@
       </parameters>
 		<builtin function-name="rptPrincipalComponentsRegressionMatrix" />
 		<report type="text/rtf" filename="prmatrix.rtf" />
+    <report type="application/x-statsdirect-creole" filename="prmatrix.creole" />
 	</steps>
 </operation>

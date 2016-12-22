@@ -1136,7 +1136,9 @@
     <None Include="Assets\Template\cronbach.creole">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Assets\Template\cuzick.creole" />
+    <None Include="Assets\Template\cuzick.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\describe.creole">
       <SubType>Designer</SubType>
     </None>
@@ -1196,7 +1198,9 @@
     <None Include="Assets\Template\mcnamar.creole" />
     <None Include="Assets\Template\metaCorrelation.creole" />
     <None Include="Assets\Template\multi.creole" />
-    <None Include="Assets\Template\M_PAIRED.creole" />
+    <None Include="Assets\Template\M_PAIRED.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\M_SINGLE.creole" />
     <None Include="Assets\Template\M_UNPAIR.creole" />
     <None Include="Assets\Template\nestmean.creole" />
@@ -1210,7 +1214,9 @@
     <None Include="Assets\Template\pardet.creole" />
     <None Include="Assets\Template\peto.creole" />
     <None Include="Assets\Template\pinterp.creole" />
-    <None Include="Assets\Template\poisson.creole" />
+    <None Include="Assets\Template\poisson.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\poly.creole" />
     <None Include="Assets\Template\POLY_AUC.creole" />
     <None Include="Assets\Template\prate.creole" />
@@ -1897,7 +1903,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

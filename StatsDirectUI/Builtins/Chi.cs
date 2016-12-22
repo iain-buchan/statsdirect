@@ -742,7 +742,7 @@ namespace StatsDirect.Builtins
                 string warn;
                 MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out ll, out ul, ci, out warn);
                 outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
-                outputParameters.AddOutput("ll", ll));
+                outputParameters.AddOutput("ll", ll);
                 outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
                 outputParameters.AddOutput("k", actualIterations.ToString("N0"));
                 outputParameters.AddOutput("seed_fmt", seed.ToString());

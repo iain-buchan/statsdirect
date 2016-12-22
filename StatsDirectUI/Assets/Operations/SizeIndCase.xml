@@ -62,6 +62,7 @@
       </parameters>
   	<builtin function-name="rptSizeIndCase" />
 	  <report type="text/rtf" filename="s_incase.rtf" />
+    <report type="application/x-statsdirect-creole" filename="s_incase.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeIndCase</suggested-operation>

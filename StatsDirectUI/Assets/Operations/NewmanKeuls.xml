@@ -21,5 +21,6 @@
 		</parameters>
 		<builtin function-name="rptNewmanKeuls" />
     <report type="application/x-statsdirect-creole" filename="nkeuls.creole" />
+    <report type="application/x-statsdirect-creole" filename="nkeuls.creole" />
 	</steps>
 </operation>
