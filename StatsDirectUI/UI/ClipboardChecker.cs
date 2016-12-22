@@ -71,9 +71,9 @@ namespace StatsDirect.UI
             {
                 Factory.GetWorkbookSet().Workbooks.OpenFromStream(s);
             }
-            catch (InvalidOperationException)
+            catch (Exception)
             {
-                // Bad format
+                // Bad format, or something else unreadable (SSG is capable of throwing multiple exceptions here)
                 return false;
             }
             return true;
