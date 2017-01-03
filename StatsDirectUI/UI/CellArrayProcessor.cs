@@ -80,7 +80,7 @@ namespace StatsDirect.UI
 
                 // #1131: If the frame contains multiple variables, remove any that have no data.  Single variables are retained.
                 // TODO: How does this affect minimum-column requirements?  Do they need checking later?
-                if (frame.VariableCount > 1)
+                if (null != frame && frame.VariableCount > 1)
                 {
                     List<Variable> toRemove = new List<Variable>();
                     foreach (Variable v in frame.Variables)
