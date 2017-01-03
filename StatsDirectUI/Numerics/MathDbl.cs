@@ -242,12 +242,6 @@ namespace StatsDirect.Numerics
             }
         }
 
-        public static double log10(double x)
-        {
-            return Math.Log(x) / Math.Log(10.0);
-        }
-
-
         ///  <summary>
         ///  Large sample approximation for Spearman Rho P
         ///  </summary>
