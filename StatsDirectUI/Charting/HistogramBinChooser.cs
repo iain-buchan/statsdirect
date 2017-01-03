@@ -190,29 +190,4 @@ namespace StatsDirect.Charting
             return sumSq / divisor;
         }
     }
-
-    public class BinsDescriptor
-    {
-        /// <summary>
-        /// One count per bin
-        /// </summary>
-        public int[] Counts { get; set; }
-        /// <summary>
-        /// One edge per bin, plus the upper edge of the last bin in Edges[Edges.Length - 1].
-        /// </summary>
-        public double[] Edges { get; set; }
-        public int Bins { get { return Counts.Length; } }
-        public double LowestEdge { get { return Edges[0]; } }
-        public double HighestEdge { get { return Edges[Edges.Length - 1]; } }
-    }
-
-    public enum BinChoiceMethod
-    {
-        NotSet = 0,
-        Doane = 1,
-        FreedmanDaconis = 2,
-        Stata = 3,
-        Sturges = 4,
-        Shimazaki = 5
-    }
 }
