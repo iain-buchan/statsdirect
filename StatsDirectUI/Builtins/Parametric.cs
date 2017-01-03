@@ -1429,7 +1429,7 @@ namespace StatsDirect.Builtins
 
                 using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
                 {
-                    string rtf = ch.PlotTiesAndReturnMetafile(host, x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean);
+                    string rtf = ChartRendererFactory.PlotTiesAndReturnMetafile(x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean);
                     ParameterBag chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
                     chartParameters.AddOutput("chart", rtf);

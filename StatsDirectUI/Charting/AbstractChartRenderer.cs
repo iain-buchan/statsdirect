@@ -846,11 +846,8 @@ namespace StatsDirect.Charting
                     divy = axisYMax - axisYMin;
                     offy = -(axisYMin / divy * yExtCanvas) + yAxisCanvas;
                 }
-            }
 
-            //  We now know by how much we might have to shift the titles.  If we have to, restart our drawing process.
-            if (!IsAscii)
-            {
+                //  We now know by how much we might have to shift the titles.  If we have to, restart our drawing process.
                 bool succeeded = true;
                 double xShiftFromAxis = Math.Max(xHeight + x.ExtraSpace - ALREADY_ALLOWED_HEIGHT, 0);
                 if (DrawXAxisTitle(x.Title, Math.Max(xShiftFromAxis, x.AxisTitleOffset)))
@@ -908,12 +905,12 @@ namespace StatsDirect.Charting
                 //  Not ASCII, not drawing our own labels
                 xDiv = 20;
                 minorTicsPerMajorTic = 5;
-                xInt = (DataMaxX - DataMinX) / Convert.ToDouble(xDiv);
+                xInt = (DataMaxX - DataMinX) / xDiv;
                 axisXMin = DataMinX;
                 axisXMax = DataMaxX;
             }
 
-            if (!(IsAscii))
+            if (!IsAscii)
             {
                 LabelDirection direction = LabelDirection.Across;
                 bool hasGridLines = false;
@@ -990,7 +987,7 @@ namespace StatsDirect.Charting
             else
             {
                 //  ASCII - always linear for now.  TODO: Log
-                shTx[ASCII_Ytxt - 1] = String.Empty.PadLeft(13) + "/" + new string('-', 61);
+                shTx[ASCII_Ytxt - 1] = string.Empty.PadLeft(13) + "/" + new string('-', 61);
                 for (int x = 0; x <= xDiv; x++)
                 {
                     if (x % minorTicsPerMajorTic == 0)
@@ -1360,12 +1357,14 @@ namespace StatsDirect.Charting
             }
         }
 
-        protected void DrawMarker(double x, double y, double size, DoubleSeries series)
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        protected void DrawMarkerInCanvasCoordinates(double x, double y, double size, DoubleSeries series)
         {
             statsDirectCanvas.DrawMarker(x, y, size, series.MarkerDetails.MarkerShape, series.MarkerDetails.IsMarkerFilled, series.MarkerDetails.MarkerPen);
         }
 
-        protected void DrawMarker(double x, double y, double size, MarkerType mType)
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        protected void DrawMarkerInCanvasCoordinates(double x, double y, double size, MarkerType mType)
         {
             using (Pen p = GetMarkerPen(mType))
             {
@@ -1375,7 +1374,10 @@ namespace StatsDirect.Charting
 
         protected void DrawMarkerInChartCoordinates(double x, double y, double size, MarkerType mType)
         {
-            DrawMarker(ToCanvasX(x), ToCanvasY(y), size, mType);
+            using (Pen p = GetMarkerPen(mType))
+            {
+                statsDirectCanvas.DrawMarker(ToCanvasX(x), ToCanvasY(y), size, mType.MarkerShape, mType.IsMarkerFilled, p);
+            }
         }
 
         protected void SetStandardAsciiScaling()
@@ -1388,7 +1390,7 @@ namespace StatsDirect.Charting
 
         protected double SafeToInt32(double d)
         {
-            if (double.IsNaN(d) || d < Int32.MinValue || d > Int32.MaxValue)
+            if (double.IsNaN(d) || d < int.MinValue || d > Int32.MaxValue)
                 return 0;
             return Convert.ToInt32(d);
         }
@@ -1404,9 +1406,9 @@ namespace StatsDirect.Charting
             switch (scaleType)
             {
                 case ScaleType.Log10:
-                    return chartValue > 0 ? (Single)Math.Log10(chartValue) : 0;
+                    return chartValue > 0 ? (float)Math.Log10(chartValue) : 0;
                 case ScaleType.LogNatural:
-                    return chartValue > 0 ? (Single)(Math.Log(chartValue) / LOG2) : 0;
+                    return chartValue > 0 ? (float)(Math.Log(chartValue) / LOG2) : 0;
                 default:
                     return (Single)chartValue;
             }
@@ -1577,10 +1579,8 @@ namespace StatsDirect.Charting
         {
             if (mostRecentPen == null || !(mostRecentPen.Color.Equals(Color)))
             {
-                if (mostRecentPen != null)
-                {
+                if (null != mostRecentPen)
                     mostRecentPen.Dispose();
-                }
                 mostRecentPen = new Pen(Color);
             }
             double dx1 = ToCanvasX(x1);
@@ -1622,6 +1622,9 @@ namespace StatsDirect.Charting
             return new Pen(ShouldUseColour ? mt.MarkerColor : grBlack, mt.Width);
         }
 
+        /// <summary>
+        /// Return a new Pen of the given type. It is up to the caller to dispose of this.
+        /// </summary>
         public Pen GetLinePen(MarkerType mt, bool ignoreStyle)
         {
             Pen p = new Pen(ShouldUseColour ? mt.LineColor : grBlack, mt.Width);
@@ -1690,10 +1693,9 @@ namespace StatsDirect.Charting
 
         public string GetAsciiRTF()
         {
-            if (!(IsAscii))
-            {
+            if (!IsAscii)
                 throw new InvalidOperationException("Trying to get ASCII string for a non-ASCII chart");
-            }
+
             StringBuilder sb = new StringBuilder();
             for (int i = shTx.GetUpperBound(0); i >= shTx.GetLowerBound(0); i--)
             {
@@ -1747,25 +1749,17 @@ namespace StatsDirect.Charting
         public void AssignMarkersToSeries()
         {
             if (definition.XSeries.Count > 0)
-            {
                 AssignMarkersToSeries(definition.XSeries);
-            }
             if (definition.YSeries.Count > 0)
-            {
                 AssignMarkersToSeries(definition.YSeries);
-            }
         }
 
         protected void AssignMarkersToSeries(GenericOptions opts)
         {
             if (definition.XSeries.Count > 0)
-            {
                 AssignMarkersToSeries(definition.XSeries, opts);
-            }
             if (definition.YSeries.Count > 0)
-            {
                 AssignMarkersToSeries(definition.YSeries, opts);
-            }
         }
 
         protected void AssignMarkersToSeries(List<Series> s)
@@ -1781,9 +1775,7 @@ namespace StatsDirect.Charting
         private void SetSeriesFromMarkerTypeAndOptions(DoubleSeries ds, MarkerType mt, GenericOptions o)
         {
             if (o != null)
-            {
                 ds.MarkerDetails.IsMarkerFilled = o.ShouldForceIsFilled ? o.ForcedIsFilled : mt.IsMarkerFilled;
-            }
             ds.MarkerDetails.MarkerPen = GetMarkerPen(mt);
             //  Dash styles are only used in monochrome plots; if colour, ignore.
             ds.MarkerDetails.LinePen = GetLinePen(mt, ShouldUseColour);
@@ -1795,7 +1787,7 @@ namespace StatsDirect.Charting
         {
             if (opts == null || opts.MarkerTypes == null || opts.MarkerTypes.Count < 1)
             {
-                for (int i = 0; i <= s.Count - 1; i++)
+                for (int i = 0; i < s.Count; i++)
                 {
                     DoubleSeries ds = ((DoubleSeries)(s[i]));
                     int mkr = ChartOptions.SeriesNumberToMarkerNumber(i);
@@ -1804,9 +1796,9 @@ namespace StatsDirect.Charting
             }
             else
             {
-                for (int i = 0; i <= s.Count - 1; i++)
+                for (int i = 0; i < s.Count; i++)
                 {
-                    if ((s[i]) is DoubleSeries)
+                    if (s[i] is DoubleSeries)
                     {
                         DoubleSeries ds = ((DoubleSeries)(s[i]));
                         int mkr = i % opts.MarkerTypes.Count;
@@ -1884,7 +1876,7 @@ namespace StatsDirect.Charting
             shTx = new string[lines + 1];
             for (int c = 0; c <= shTx.GetUpperBound(0); c++)
             {
-                shTx[c] = String.Empty.PadLeft(85);
+                shTx[c] = string.Empty.PadLeft(85);
             }
         }
 
@@ -1915,26 +1907,24 @@ namespace StatsDirect.Charting
 
         protected void MaybeDrawMarkerLines()
         {
-            if (definition != null)
+            if (null == definition)
+                return;
+            if (null == definition.ScaleParameters)
+                return;
+            if (definition.ScaleParameters.X.MarkerLineValue.HasValue)
             {
-                if (definition.ScaleParameters != null)
+                double x = ToCanvasX(definition.ScaleParameters.X.MarkerLineValue.Value);
+                using (Pen tenPen = new Pen(grBlack, 1))
                 {
-                    if (definition.ScaleParameters.X.MarkerLineValue.HasValue)
-                    {
-                        double x = ToCanvasX(definition.ScaleParameters.X.MarkerLineValue.Value);
-                        using (Pen tenPen = new Pen(grBlack, 1))
-                        {
-                            DrawLineInCanvasCoordinates(tenPen, x, yAxisCanvas, x, yAxisCanvas + yExtCanvas);
-                        }
-                    }
-                    if (definition.ScaleParameters.Y.MarkerLineValue.HasValue)
-                    {
-                        double y = ToCanvasY(definition.ScaleParameters.Y.MarkerLineValue.Value);
-                        using (Pen tenPen = new Pen(grBlack, 1))
-                        {
-                            DrawLineInCanvasCoordinates(tenPen, xAxisCanvas, y, xAxisCanvas + xExtCanvas, y);
-                        }
-                    }
+                    DrawLineInCanvasCoordinates(tenPen, x, yAxisCanvas, x, yAxisCanvas + yExtCanvas);
+                }
+            }
+            if (definition.ScaleParameters.Y.MarkerLineValue.HasValue)
+            {
+                double y = ToCanvasY(definition.ScaleParameters.Y.MarkerLineValue.Value);
+                using (Pen tenPen = new Pen(grBlack, 1))
+                {
+                    DrawLineInCanvasCoordinates(tenPen, xAxisCanvas, y, xAxisCanvas + xExtCanvas, y);
                 }
             }
         }

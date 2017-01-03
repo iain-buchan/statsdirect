@@ -2798,22 +2798,14 @@ namespace StatsDirect.Builtins
             string rtf;
             if (k > 3)
             {
-                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-                {
-                    rtf = ch.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
-            }
-
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-            {
-                rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
+                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false));
             }
+
+            chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", ChartRendererFactory.PlotLAbbeAndReturnRtf(k, o, rmh));
 
             bool scrap;
             rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out scrap);
@@ -3710,22 +3702,14 @@ namespace StatsDirect.Builtins
 
             if (k > 3)
             {
-                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-                {
-                    string rtf = ch.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false);
-                    chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
-            }
-
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-            {
-                string rtf = ch.PlotLAbbeAndReturnRtf(host, k, o, rmh);
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
+                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false));
             }
+
+            chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", ChartRendererFactory.PlotLAbbeAndReturnRtf(k, o, rmh));
 
             if (sk != 0)
             {

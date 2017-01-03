@@ -2640,7 +2640,6 @@ namespace StatsDirect.Builtins
 
         private static void CoxPlot(ITemplateHost host, ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
         {
-            int j3; int i;
             int igroups;
             int groupid = 0;
             bool grouped; bool stratified;
@@ -2675,7 +2674,7 @@ namespace StatsDirect.Builtins
                     stratified = false;
                     groupid = -1;
                     igroups = 0;
-                    for (i = 1; i <= ncoef; i++)
+                    for (int i = 1; i <= ncoef; i++)
                     {
                         if ((CDAT1[i].Title).Trim().ToLower(CultureInfo.CurrentCulture).Equals(groupVar.ToLower(CultureInfo.CurrentCulture)))
                         {
@@ -2701,17 +2700,13 @@ namespace StatsDirect.Builtins
             // set group indicator
             if (grouped)
             {
-                for (i = 1; i <= iobs; i++)
-                {
+                for (int i = 1; i <= iobs; i++)
                     z[i].Id = Convert.ToInt32(holdx[i, groupid]);
-                }
             }
             else
             {
-                for (i = 1; i <= iobs; i++)
-                {
+                for (int i = 1; i <= iobs; i++)
                     z[i].Id = 1;
-                }
             }
 
             //  TODO: The original SD2 code removed anything other than the first sort in the order - should we also do that?
@@ -2720,71 +2715,12 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            // loop twice - first survival then hazard plot
-            for (j3 = 1; j3 <= 2; j3++)
-            {
-
-                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-                {
-                    ch.DataMaxX = double.MinValue;
-                    ch.DataMaxY = double.MinValue;
-                    ch.DataMinX = double.MaxValue;
-                    ch.DataMinY = double.MaxValue;
-                    const string tim = "Time";
-                    string vq = grouped ? "(individual)" : "(baseline)";
-                    string vt;
-                    string vx;
-                    string vy;
-                    switch (j3)
-                    {
-                        case 1:
-                            vx = tim;
-                            vy = "Survival Probability " + vq;
-                            vt = "Survival Plot (Cox regression)";
-                            ch.DataMaxY = 1;
-                            ch.DataMinY = 0;
-                            for (i = 1; i <= iobs; i++)
-                            {
-                                if (z[i].Time > ch.DataMaxX)
-                                    ch.DataMaxX = z[i].Time;
-                                if (z[i].Time < ch.DataMinX)
-                                    ch.DataMinX = z[i].Time;
-                            }
-                            break;
-                        case 2:
-                            vx = tim;
-                            vy = "Cumulative Hazard " + vq;
-                            vt = "Hazard Plot (Cox regression)";
-                            for (i = 1; i <= iobs; i++)
-                            {
-                                if (z[i].Time > ch.DataMaxX)
-                                    ch.DataMaxX = z[i].Time;
-                                if (z[i].Time < ch.DataMinX)
-                                    ch.DataMinX = z[i].Time;
-                                double haz;
-                                if (grouped)
-                                {
-                                    haz = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
-                                    haz = haz > 0.0 ? -Math.Log(haz) : Constant.MISSING;
-                                }
-                                else
-                                    haz = z[i].H;
-                                if (haz != Constant.MISSING & haz > ch.DataMaxY & z[i].Censor != 0)
-                                    ch.DataMaxY = haz;
-                                if (haz != Constant.MISSING & haz < ch.DataMinY & z[i].Censor != 0)
-                                    ch.DataMinY = haz;
-                            }
-                            break;
-                        default:
-                            throw new Exception("Unexpected case");
-                    }
-
-                    ParameterBag cox1Parameters = new ParameterBag();
-                    chartList.Add(cox1Parameters);
-                    string rtf = ch.PlotCox1AndReturnRtf(host, vt, z, iobs, stratified, grouped, istrata, igroups, CDAT1, groupid, use_marker, use_tic, ARR3, j3, vx, vy, ref gn);
-                    cox1Parameters.AddOutput("chart", rtf);
-                }
-            }
+            ParameterBag cox1Parameters = new ParameterBag();
+            chartList.Add(cox1Parameters);
+            cox1Parameters.AddOutput("chart", SurvivalOrHazardPlot(host, z, iobs, istrata, ChartRenderer.CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, ref gn));
+            cox1Parameters = new ParameterBag();
+            chartList.Add(cox1Parameters);
+            cox1Parameters.AddOutput("chart", SurvivalOrHazardPlot(host, z, iobs, istrata, ChartRenderer.CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, ref gn));
 
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
             if (grouped)
@@ -2793,7 +2729,7 @@ namespace StatsDirect.Builtins
                 double[] yp = new double[iobs + 1];
                 xp[0] = Constant.MISSING;
                 yp[0] = Constant.MISSING;
-                for (i = 1; i <= iobs; i++)
+                for (int i = 1; i <= iobs; i++)
                 {
                     double surv = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
                     xp[i] = Math.Log(z[i].Time);
@@ -2807,12 +2743,71 @@ namespace StatsDirect.Builtins
                 chartList.Add(cox2Parameters);
                 using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
                 {
-                    string rtf = ch.PlotCox2AndReturnRtf(host, gn, igroups, xp, yp, CDAT1, groupid);
-                    cox2Parameters.AddOutput("chart", rtf);
+                    cox2Parameters.AddOutput("chart", ch.PlotCox2AndReturnRtf(host, gn, igroups, xp, yp, CDAT1, groupid));
                 }
             }
         }
 
+        private static string SurvivalOrHazardPlot(ITemplateHost host, CoxP[] z, int iobs, int istrata, ChartRenderer.CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] ARR3, ColumnData[] CDAT1, bool use_tic, bool use_marker, ref int[] gn)
+        {
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
+            {
+                ch.DataMaxX = double.MinValue;
+                ch.DataMaxY = double.MinValue;
+                ch.DataMinX = double.MaxValue;
+                ch.DataMinY = double.MaxValue;
+                const string tim = "Time";
+                string vq = grouped ? "(individual)" : "(baseline)";
+                string vt;
+                string vx;
+                string vy;
+                switch (plotMode)
+                {
+                    case ChartRenderer.CoxPlotMode.Survival:
+                        vx = tim;
+                        vy = "Survival Probability " + vq;
+                        vt = "Survival Plot (Cox regression)";
+                        ch.DataMaxY = 1;
+                        ch.DataMinY = 0;
+                        for (int i = 1; i <= iobs; i++)
+                        {
+                            if (z[i].Time > ch.DataMaxX)
+                                ch.DataMaxX = z[i].Time;
+                            if (z[i].Time < ch.DataMinX)
+                                ch.DataMinX = z[i].Time;
+                        }
+                        break;
+                    case ChartRenderer.CoxPlotMode.Hazard:
+                        vx = tim;
+                        vy = "Cumulative Hazard " + vq;
+                        vt = "Hazard Plot (Cox regression)";
+                        for (int i = 1; i <= iobs; i++)
+                        {
+                            if (z[i].Time > ch.DataMaxX)
+                                ch.DataMaxX = z[i].Time;
+                            if (z[i].Time < ch.DataMinX)
+                                ch.DataMinX = z[i].Time;
+                            double haz;
+                            if (grouped)
+                            {
+                                haz = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
+                                haz = haz > 0.0 ? -Math.Log(haz) : Constant.MISSING;
+                            }
+                            else
+                                haz = z[i].H;
+                            if (haz != Constant.MISSING & haz > ch.DataMaxY & z[i].Censor != 0)
+                                ch.DataMaxY = haz;
+                            if (haz != Constant.MISSING & haz < ch.DataMinY & z[i].Censor != 0)
+                                ch.DataMinY = haz;
+                        }
+                        break;
+                    default:
+                        throw new Exception("Unexpected case");
+                }
+
+                return ch.PlotCox1AndReturnRtf(host, vt, z, iobs, stratified, grouped, istrata, igroups, CDAT1, groupid, use_marker, use_tic, ARR3, plotMode, vx, vy, ref gn);
+            }
+        }
 
         public static ParameterBag RptCoxResiduals(ITemplateHost host, ParameterBag parameters)
         {
@@ -2951,19 +2946,13 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-            {
-                ParameterBag chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, 0, false));
-            }
+            ParameterBag chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", ChartRendererFactory.PlotXYAndReturnRtf(xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, 0, false));
 
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-            {
-                ParameterBag chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ch.PlotXYAndReturnRtf(host, xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, 0, false));
-            }
+            chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", ChartRendererFactory.PlotXYAndReturnRtf(xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, 0, false));
 
             // save to worksheet if requested
             if (save)
