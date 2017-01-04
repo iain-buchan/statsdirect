@@ -4928,14 +4928,10 @@ namespace StatsDirect.Charting
                             x2 = ToCanvasX(xdat[r]);
                             y2 = ToCanvasY(ydat[r]);
                             if (use_marker & cdat[r] > 0)
-                            {
                                 DrawMarkerInCanvasCoordinates(x2, y2, mType.MarkerSize, mType);
-                            }
                             // Draw tic if censored
                             if (cdat[r] == 0 & use_tic)
-                            {
                                 DrawLineInCanvasCoordinates(p, x2, y2, x2, y2 + 7);
-                            }
                             // Then the lines
                             DrawLineInCanvasCoordinates(p, x1, y1, x2, y1);
                             DrawLineInCanvasCoordinates(p, x2, y1, x2, y2);
@@ -5055,28 +5051,24 @@ namespace StatsDirect.Charting
                 case Transformation.Log:
                     for (int r = 1; r <= rows; r++)
                     {
-                        if (x[r] > 0.0 & x[r] != Constant.MISSING)
-                        {
+                        if (x[r] > 0.0 && x[r] != Constant.MISSING)
                             xx[r] = Math.Log(x[r]);
-                        }
-                        else { xx[r] = Constant.MISSING; }
+                        else
+                            xx[r] = Constant.MISSING;
                     }
                     break;
                 case Transformation.Z:
                     for (int r = 1; r <= rows; r++)
                     {
                         if (x[r] != Constant.MISSING)
-                        {
                             xx[r] = MathDbl.rtoz(x[r]);
-                        }
-                        else { xx[r] = Constant.MISSING; }
+                        else
+                            xx[r] = Constant.MISSING;
                     }
                     break;
                 case Transformation.None:
                     for (int r = 1; r <= rows; r++)
-                    {
                         xx[r] = x[r];
-                    }
                     break;
             }
 
@@ -5110,25 +5102,19 @@ namespace StatsDirect.Charting
             {
                 if (plotMethod == 2)
                 {
-                    if (DataMaxX < pool + ma_plot_se(ymn, mini, plotMethod) * cit)
-                    {
-                        DataMaxX = pool + ma_plot_se(ymn, mini, plotMethod) * cit;
-                    }
-                    if (DataMinX > pool - ma_plot_se(ymn, mini, plotMethod) * cit)
-                    {
-                        DataMinX = pool - ma_plot_se(ymn, mini, plotMethod) * cit;
-                    }
+                    double se = ma_plot_se(ymn, mini, plotMethod);
+                    if (DataMaxX < pool + se * cit)
+                        DataMaxX = pool + se * cit;
+                    if (DataMinX > pool - se * cit)
+                        DataMinX = pool - se * cit;
                 }
                 else
                 {
-                    if (DataMaxX < pool + ma_plot_se(ymx, mini, plotMethod) * cit)
-                    {
-                        DataMaxX = pool + ma_plot_se(ymx, mini, plotMethod) * cit;
-                    }
-                    if (DataMinX > pool - ma_plot_se(ymx, mini, plotMethod) * cit)
-                    {
-                        DataMinX = pool - ma_plot_se(ymx, mini, plotMethod) * cit;
-                    }
+                    double se = ma_plot_se(ymx, mini, plotMethod);
+                    if (DataMaxX < pool + se * cit)
+                        DataMaxX = pool + se * cit;
+                    if (DataMinX > pool - se * cit)
+                        DataMinX = pool - se * cit;
                 }
             }
 
@@ -5629,7 +5615,6 @@ namespace StatsDirect.Charting
 
         private static double ma_plot_se(double y, double z, int plot_method)
         {
-
             switch (plot_method)
             {
                 case 1:
@@ -5638,9 +5623,9 @@ namespace StatsDirect.Charting
                     return y == 0.0 ? 1.0 / z : 1.0 / y;
                 case 7:
                     return y < 0.0 ? 0.0 : Math.Sqrt(y);
+                default:
+                    return 0;
             }
-
-            return 0;
         }
 
         ///  <summary>
