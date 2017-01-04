@@ -2736,15 +2736,9 @@ namespace StatsDirect.Builtins
                     yp[i] = -Math.Log(-Math.Log(surv));
                 }
                 // Plot a metafile version
-                ChartDefinition cd = new ChartDefinition();
-                cd.AddXSeries(xp, null);
-                cd.AddYSeries(yp, null);
                 ParameterBag cox2Parameters = new ParameterBag();
                 chartList.Add(cox2Parameters);
-                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
-                {
-                    cox2Parameters.AddOutput("chart", ch.PlotCox2AndReturnRtf(host, gn, igroups, xp, yp, CDAT1, groupid));
-                }
+                cox2Parameters.AddOutput("chart", ChartRendererFactory.PlotCox2AndReturnRtf(gn, igroups, xp, yp, CDAT1, groupid));
             }
         }
 

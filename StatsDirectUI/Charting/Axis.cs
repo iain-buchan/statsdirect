@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
+    /// <summary>
+    /// Describes the features of one axis (horizontal or vertical) on a chart.
+    /// </summary>
     public class Axis
     {
         public string Title { get; set; }

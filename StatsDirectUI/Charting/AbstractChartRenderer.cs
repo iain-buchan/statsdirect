@@ -1682,6 +1682,7 @@ namespace StatsDirect.Charting
             get { return ShouldUseColour ? Color.FromArgb(134, 134, 134) : Color.Black; }
         }
 
+        [Obsolete("RTF should not be used in ChartRenderer")]
         public string GetAsciiRTF()
         {
             if (!IsAscii)
@@ -1729,12 +1730,6 @@ namespace StatsDirect.Charting
             axisXMin = 0.0;
             axisYMin = 0.0;
             boxAxes = true;
-        }
-
-        protected string EndVectorPlotAndReturnRtf()
-        {
-            EndVectorPlot();
-            return RtfImageRenderer.ImageStreamToRtf(statsDirectCanvas.DetachAndReturnImageStream(), imageWidth, imageHeight);
         }
 
         public void AssignMarkersToSeries()

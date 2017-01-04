@@ -380,13 +380,13 @@ namespace StatsDirect.Charting
             return new ParameterBag();
         }
 
-        public string PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(ITemplateHost host, string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle, double PERT, int nx, double MS, double SUMX, double SSX, bool isPredictionInterval)
+        internal void PlotLinearRegressionAndMaybeSeCiOrPredictionInterval(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle, double PERT, int nx, double MS, double SUMX, double SSX, bool isPredictionInterval)
         {
             StartVectorPlot();
             PlotLinearRegressionInternal(title, slope, intercept, fullWidth, xAxisTitle, yAxisTitle);
             if (PERT != 0)
                 PlotSeCiOrPredictionInterval(PERT, slope, intercept, nx, MS, SUMX, SSX, isPredictionInterval);
-            return EndVectorPlotAndReturnRtf();
+            EndVectorPlot();
         }
 
         private void PlotLinearRegressionInternal(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle)
@@ -468,15 +468,9 @@ namespace StatsDirect.Charting
             }
         }
 
-        public string PlotCox2AndReturnRtf(ITemplateHost host, int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
+        internal void PlotCox2(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
         {
             StartVectorPlot();
-            PlotCox2Internal(gn, igroups, xp, yp, cdat1, groupid);
-            return EndVectorPlotAndReturnRtf();
-        }
-
-        private void PlotCox2Internal(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
-        {
             double xtra = 0;
             if (definition.XSeries.Count > 1)
             {
@@ -525,6 +519,7 @@ namespace StatsDirect.Charting
                     istart += gn[k];
                 }
             }
+            EndVectorPlot();
         }
 
         public enum CoxPlotMode
@@ -755,17 +750,11 @@ namespace StatsDirect.Charting
             EndVectorPlot();
         }
 
-        public string PlotLinearizedEstimationAndReturnRtf(ITemplateHost host, string title, int model, double a, double b, string XAxisTitle, string YAxisTitle)
-        {
-            StartVectorPlot();
-            PlotLinearizedEstimationInternal(title, model, a, b, XAxisTitle, YAxisTitle);
-            return EndVectorPlotAndReturnRtf();
-        }
-
-        private void PlotLinearizedEstimationInternal(string title, int model, double a, double b, string XAxisTitle, string YAxisTitle)
+        internal void PlotLinearizedEstimation(string title, int model, double a, double b, string xAxisTitle, string yAxisTitle)
         {
             const int MARKER_SIZE = 6;
 
+            StartVectorPlot();
             AssignMarkersToSeries();
             //  What extra space do we need before the X axis?
             double xtra = 0;
@@ -779,7 +768,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            DrawAxesOrEnlargeCanvas(title, new Axis(XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(YAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
+            DrawAxesOrEnlargeCanvas(title, new Axis(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(yAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
 
             // plot points
             DoubleSeries xs = definition.XSeries[0].AsDoubleSeries;
@@ -840,19 +829,14 @@ namespace StatsDirect.Charting
                     oldy = y1;
                 }
             }
+            EndVectorPlot();
         }
 
-        public string PlotPolynomialRegressionAndReturnRtf(ITemplateHost host, string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P, double gamma, string xAxisTitle, string yAxisTitle)
-        {
-            StartVectorPlot();
-            PlotPolynomialRegressionInternal(title, mode, xtxi, bd, rss, nx, P, gamma, xAxisTitle, yAxisTitle);
-            return EndVectorPlotAndReturnRtf();
-        }
-
-        private void PlotPolynomialRegressionInternal(string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P, double gamma, string xAxisTitle, string yAxisTitle)
+        internal void PlotPolynomialRegression(string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P, double gamma, string xAxisTitle, string yAxisTitle)
         {
             const int MARKER_SIZE = 6;
 
+            StartVectorPlot();
             AssignMarkersToSeries();
             //  What extra space do we need before the X axis?
             double xtra = 0;
@@ -1020,17 +1004,11 @@ namespace StatsDirect.Charting
                     }
                 }
             }
-        }
-
-        public string PlotLogitAndReturnRtf(ITemplateHost host, string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle)
-        {
-            StartVectorPlot();
-            PlotLogitInternal(title, model, t, sw, s1, a, b, xAxisTitle, yAxisTitle);
-            return EndVectorPlotAndReturnRtf();
+            EndVectorPlot();
         }
 
         ///  <remarks>Jul 09: updated to put log models on a log x axis scale</remarks>
-        private void PlotLogitInternal(string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle)
+        internal void PlotLogit(string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle)
         {
             const int MARKER_SIZE = 6;
 
@@ -1058,6 +1036,7 @@ namespace StatsDirect.Charting
             }
             double xm = cl / Convert.ToDouble(nx);
 
+            StartVectorPlot();
             AssignMarkersToSeries();
             if (DataMaxY - DataMinY > 0.25)
             {
@@ -1158,6 +1137,7 @@ namespace StatsDirect.Charting
                     oldy = y1;
                 }
             }
+            EndVectorPlot();
         }
 
 
@@ -3002,31 +2982,14 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         private ParameterBag PlotNormal()
         {
-            DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
-            int rows = xs0.Points;
-
-            double[] y = new double[rows];
-            for (int j = 0; j < rows; j++)
-                y[j] = xs0.Data[j];
-
-            StartVectorPlot();
-            ParameterBag outputParameters = Plot_Normal(y);
-            EndVectorPlot();
-            return outputParameters;
-        }
-
-        public string PlotNormalAndReturnRtf(ITemplateHost host, double[] y)
-        {
-            StartVectorPlot();
-            Plot_Normal(y);
-            return EndVectorPlotAndReturnRtf();
+            return PlotNormal(definition.XSeries[0].AsDoubleSeries.Data);
         }
 
         ///  <summary>
         ///  Plot normal scores for a single variable in XSeries.
         ///  </summary>
         ///  <remarks></remarks>
-        private ParameterBag Plot_Normal(double[] y)
+        internal ParameterBag PlotNormal(double[] y)
         {
             NormalOptions nOptions = ((NormalOptions)(definition.ChartOptions));
             NormalOptions.ScoreMethod method = nOptions.Method;
@@ -3107,6 +3070,7 @@ namespace StatsDirect.Charting
                     x[j] = x[j] * sdy + ybar;
             }
 
+            StartVectorPlot();
             SetFontsAndThicknessesFromOptions(nOptions);
             AssignMarkersToSeries(definition.XSeries, nOptions);
 
@@ -3119,6 +3083,7 @@ namespace StatsDirect.Charting
             PlotXYInternal(x, y, lab, "Observed (" + definition.XSeries[0].Title + ")", nOptions.Title, false, Select_MinMaxY, mt.MarkerSize, mt.MarkerShape, mt.IsMarkerFilled, GetMarkerPen(mt), true);
             if (shouldScaleZ)
                 DrawLineInCanvasCoordinates(axisPen, xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas);
+            EndVectorPlot();
 
             // Regression results
             SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(x, y);

@@ -683,15 +683,7 @@ namespace StatsDirect.Builtins
                     variableParameters.AddOutput("result", "Error in calculation");
                 }
 
-                NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour) {ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom};
-                ChartDefinition cd = new ChartDefinition {ChartOptions = nOptions};
-                cd.XSeries.Add(new DoubleSeries(data, v0.Title));
-
-                using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
-                {
-                    string rtf = ch.PlotNormalAndReturnRtf(host, data);
-                    variableParameters.AddOutput("chart", rtf);
-                }
+                variableParameters.AddOutput("chart", ChartRendererFactory.PlotNormalAndReturnRtf(data, v0.Title, host.Preferences.ShouldUseColour));
             }
             return outputParameters;
         }

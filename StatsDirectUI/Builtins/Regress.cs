@@ -322,38 +322,8 @@ namespace StatsDirect.Builtins
             double REGGAMMA = parameters["reggamma"].AsDouble;
             context.CalcRcia(REGGAMMA);
 
-            ChartDefinition cd = new ChartDefinition();
-            cd.AddYSeries(vy.Data, vy.Title);
-            cd.AddXSeries(vx.Data, vx.Title);
             ParameterBag outputParameters = new ParameterBag();
-
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
-            {
-                // Ensure lines will fit on chart scale
-                double maxpcon = double.MinValue;
-                double minpcon = double.MaxValue;
-                if (context.PERT != 0)
-                {
-                    for (double calcx = ch.DataMinX; calcx <= ch.DataMaxX; calcx += (ch.DataMaxX - ch.DataMinX) / 20.0)
-                    {
-                        double calcy = context.Slope * calcx + context.YIntercept;
-                        double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX));
-                        double pconu = calcy + (sey * context.PERT);
-                        double pconl = calcy - (sey * context.PERT);
-                        if (pconu > maxpcon)
-                            maxpcon = pconu;
-                        if (pconl < minpcon)
-                            minpcon = pconl;
-                    }
-                }
-                if (maxpcon > ch.DataMaxY)
-                    ch.DataMaxY = maxpcon;
-                if (minpcon < ch.DataMinY)
-                    ch.DataMinY = minpcon;
-
-                string rtf = ch.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(host, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, false);
-                outputParameters.AddOutput("chart", rtf);
-            }
+            outputParameters.AddOutput("chart", ChartRendererFactory.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(vx.Data, vy.Data, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, false));
             return outputParameters;
         }
 
@@ -370,48 +340,7 @@ namespace StatsDirect.Builtins
             context.CalcRcia(REGGAMMA);
 
             ParameterBag outputParameters = new ParameterBag();
-
-            ChartDefinition cd = new ChartDefinition();
-            cd.AddYSeries(vy.Data, vy.Title);
-            cd.AddXSeries(vx.Data, vx.Title);
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
-            {
-
-                double maxpcon = double.MinValue;
-                double minpcon = double.MaxValue;
-                if (context.PERT != 0)
-                {
-                    double calcx;
-                    for (calcx = ch.DataMinX; calcx <= ch.DataMaxX; calcx += (ch.DataMaxX - ch.DataMinX) / 20.0)
-                    {
-                        double calcy = context.Slope * calcx + context.YIntercept;
-                        double sey = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
-                        double pconu = calcy + (sey * context.PERT);
-                        double pconl = calcy - (sey * context.PERT);
-                        if (pconu > maxpcon)
-                        {
-                            maxpcon = pconu;
-                        }
-                        if (pconl < minpcon)
-                        {
-                            minpcon = pconl;
-                        }
-                    }
-                }
-                if (maxpcon > ch.DataMaxY)
-                {
-                    ch.DataMaxY = maxpcon;
-                }
-                if (minpcon < ch.DataMinY)
-                {
-                    ch.DataMinY = minpcon;
-                }
-
-                string rtf = ch.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(host, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, true);
-
-                outputParameters.AddOutput("chart", rtf);
-            }
-
+            outputParameters.AddOutput("chart", ChartRendererFactory.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(vx.Data, vy.Data, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, true));
             return outputParameters;
         }
 
@@ -2450,20 +2379,10 @@ namespace StatsDirect.Builtins
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             int model = 0;
             if (parameters.ContainsKey("model"))
-            {
                 model = Parsing.Cint_Txt(parameters["model"].AsString);
-            }
-            ChartDefinition cd = new ChartDefinition();
-            cd.AddYSeries(vY.Data, vY.Title);
-            cd.AddXSeries(vX.Data, vX.Title);
-            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) { mxd = vY.Data, av = vX.Data };
-            cd.ChartOptions = aOptions;
+
             ParameterBag outputParameters = new ParameterBag();
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
-            {
-                string rtf = ch.PlotLinearizedEstimationAndReturnRtf(host, string.Empty, model, context.A, context.G, vX.Title, vY.Title);
-                outputParameters.AddOutput("chart", rtf);
-            }
+                outputParameters.AddOutput("chart", ChartRendererFactory.PlotLinearizedEstimationAndReturnRtf(vX.Data, vY.Data, string.Empty, model, context.A, context.G, vX.Title, vY.Title, host.Preferences.ShouldUseColour));
             return outputParameters;
         }
 
@@ -2631,14 +2550,7 @@ namespace StatsDirect.Builtins
                     break;
             }
 
-            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour) { mxd = vY.Data, av = vX.Data };
-            ChartDefinition cd = new ChartDefinition {ChartOptions = aOptions};
-            cd.AddYSeries(vY.Data, vY.Title);
-            cd.AddXSeries(vX.Data, vX.Title);
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
-            {
-                return ch.PlotPolynomialRegressionAndReturnRtf(host, title, mode, xtxi, bd, rss, nx, P, GAMMA, vX.Title, vY.Title);
-            }
+            return ChartRendererFactory.PlotPolynomialRegressionAndReturnRtf(vX.Data, vY.Data, title, mode, xtxi, bd, rss, nx, P, GAMMA, vX.Title, vY.Title, host.Preferences.ShouldUseColour);
         }
 
 
@@ -6591,21 +6503,11 @@ namespace StatsDirect.Builtins
             string XAxisTitle = context.Labels[0];
             y[0] = Constant.MISSING; //  Force no point at (0,0)
             x[0] = Constant.MISSING;
-            ChartDefinition cd = new ChartDefinition();
-            cd.AddYSeries(y, YAxisTitle);
-            cd.AddXSeries(x, XAxisTitle);
-            cd.ScaleParameters.X.ScaleType = clog ? ScaleType.Log10 : ScaleType.Linear;
 
             ParameterBag outputParameters = new ParameterBag();
-
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(cd))
-            {
-                string rtf = ch.PlotLogitAndReturnRtf(host, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle);
-                outputParameters.AddOutput("chart", rtf);
-            }
+            outputParameters.AddOutput("chart", ChartRendererFactory.PlotLogitAndReturnRtf(x, y, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", Model, t, sw, S1, a, b, XAxisTitle, YAxisTitle, clog));
             return outputParameters;
         }
-
 
         public static ParameterBag RptProbitInterpolateX(ITemplateHost host, ParameterBag parameters)
         {
