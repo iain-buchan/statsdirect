@@ -2717,10 +2717,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", SurvivalOrHazardPlot(host, z, iobs, istrata, ChartRenderer.CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, ref gn));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.SurvivalOrHazardPlot(z, iobs, istrata, ChartRenderer.CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn));
             cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", SurvivalOrHazardPlot(host, z, iobs, istrata, ChartRenderer.CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, ref gn));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.SurvivalOrHazardPlot(z, iobs, istrata, ChartRenderer.CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn));
 
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
             if (grouped)
@@ -2745,67 +2745,6 @@ namespace StatsDirect.Builtins
                 {
                     cox2Parameters.AddOutput("chart", ch.PlotCox2AndReturnRtf(host, gn, igroups, xp, yp, CDAT1, groupid));
                 }
-            }
-        }
-
-        private static string SurvivalOrHazardPlot(ITemplateHost host, CoxP[] z, int iobs, int istrata, ChartRenderer.CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] ARR3, ColumnData[] CDAT1, bool use_tic, bool use_marker, ref int[] gn)
-        {
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-            {
-                ch.DataMaxX = double.MinValue;
-                ch.DataMaxY = double.MinValue;
-                ch.DataMinX = double.MaxValue;
-                ch.DataMinY = double.MaxValue;
-                const string tim = "Time";
-                string vq = grouped ? "(individual)" : "(baseline)";
-                string vt;
-                string vx;
-                string vy;
-                switch (plotMode)
-                {
-                    case ChartRenderer.CoxPlotMode.Survival:
-                        vx = tim;
-                        vy = "Survival Probability " + vq;
-                        vt = "Survival Plot (Cox regression)";
-                        ch.DataMaxY = 1;
-                        ch.DataMinY = 0;
-                        for (int i = 1; i <= iobs; i++)
-                        {
-                            if (z[i].Time > ch.DataMaxX)
-                                ch.DataMaxX = z[i].Time;
-                            if (z[i].Time < ch.DataMinX)
-                                ch.DataMinX = z[i].Time;
-                        }
-                        break;
-                    case ChartRenderer.CoxPlotMode.Hazard:
-                        vx = tim;
-                        vy = "Cumulative Hazard " + vq;
-                        vt = "Hazard Plot (Cox regression)";
-                        for (int i = 1; i <= iobs; i++)
-                        {
-                            if (z[i].Time > ch.DataMaxX)
-                                ch.DataMaxX = z[i].Time;
-                            if (z[i].Time < ch.DataMinX)
-                                ch.DataMinX = z[i].Time;
-                            double haz;
-                            if (grouped)
-                            {
-                                haz = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
-                                haz = haz > 0.0 ? -Math.Log(haz) : Constant.MISSING;
-                            }
-                            else
-                                haz = z[i].H;
-                            if (haz != Constant.MISSING & haz > ch.DataMaxY & z[i].Censor != 0)
-                                ch.DataMaxY = haz;
-                            if (haz != Constant.MISSING & haz < ch.DataMinY & z[i].Censor != 0)
-                                ch.DataMinY = haz;
-                        }
-                        break;
-                    default:
-                        throw new Exception("Unexpected case");
-                }
-
-                return ch.PlotCox1AndReturnRtf(host, vt, z, iobs, stratified, grouped, istrata, igroups, CDAT1, groupid, use_marker, use_tic, ARR3, plotMode, vx, vy, ref gn);
             }
         }
 

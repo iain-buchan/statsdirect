@@ -548,15 +548,62 @@ namespace StatsDirect.Charting
             Hazard = 2
         }
 
-        public string PlotCox1AndReturnRtf(ITemplateHost host, string title, CoxP[] z, int iobs, bool stratified, bool grouped, int istrata, int igroups, ColumnData[] cdat1, int groupid, bool use_marker, bool use_tic, double[,,] ARR3, CoxPlotMode j3, string xAxisTitle, string yAxisTitle, ref int[] gn)
+        internal void PlotCox1(CoxP[] z, int iobs, int istrata, CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] ARR3, ColumnData[] cdat1, bool use_tic, bool use_marker, int[] gn)
         {
-            StartVectorPlot();
-            PlotCox1Internal(title, z, iobs, stratified, grouped, istrata, igroups, cdat1, groupid, use_marker, use_tic, ARR3, j3, xAxisTitle, yAxisTitle, ref gn);
-            return EndVectorPlotAndReturnRtf();
-        }
+            DataMaxX = double.MinValue;
+            DataMaxY = double.MinValue;
+            DataMinX = double.MaxValue;
+            DataMinY = double.MaxValue;
+            const string tim = "Time";
+            string xAxisSuffix = grouped ? "(individual)" : "(baseline)";
+            string title;
+            string xAxisTitle;
+            string yAxisTitle;
+            switch (plotMode)
+            {
+                case CoxPlotMode.Survival:
+                    xAxisTitle = tim;
+                    yAxisTitle = "Survival Probability " + xAxisSuffix;
+                    title = "Survival Plot (Cox regression)";
+                    DataMaxY = 1;
+                    DataMinY = 0;
+                    for (int i = 1; i <= iobs; i++)
+                    {
+                        if (z[i].Time > DataMaxX)
+                            DataMaxX = z[i].Time;
+                        if (z[i].Time < DataMinX)
+                            DataMinX = z[i].Time;
+                    }
+                    break;
+                case CoxPlotMode.Hazard:
+                    xAxisTitle = tim;
+                    yAxisTitle = "Cumulative Hazard " + xAxisSuffix;
+                    title = "Hazard Plot (Cox regression)";
+                    for (int i = 1; i <= iobs; i++)
+                    {
+                        if (z[i].Time > DataMaxX)
+                            DataMaxX = z[i].Time;
+                        if (z[i].Time < DataMinX)
+                            DataMinX = z[i].Time;
+                        double haz;
+                        if (grouped)
+                        {
+                            haz = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
+                            haz = haz > 0.0 ? -Math.Log(haz) : Constant.MISSING;
+                        }
+                        else
+                            haz = z[i].H;
+                        if (haz != Constant.MISSING & haz > DataMaxY & z[i].Censor != 0)
+                            DataMaxY = haz;
+                        if (haz != Constant.MISSING & haz < DataMinY & z[i].Censor != 0)
+                            DataMinY = haz;
+                    }
+                    break;
+                default:
+                    throw new Exception("Unexpected case");
+            }
 
-        private void PlotCox1Internal(string title, CoxP[] z, int iobs, bool stratified, bool grouped, int istrata, int igroups, ColumnData[] cdat1, int groupid, bool use_marker, bool use_tic, double[,,] ARR3, CoxPlotMode j3, string xAxisTitle, string yAxisTitle, ref int[] gn)
-        {
+            StartVectorPlot();
             AssignMarkersToSeries();
             double xtra = 0;
             if (stratified)
@@ -588,7 +635,7 @@ namespace StatsDirect.Charting
                 for (int k = 1; k <= igroups; k++)
                 {
                     string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[k - 1].Label;
-                    if (!(use_marker))
+                    if (!use_marker)
                     {
                         using (Pen legendPen = GetLinePen(SharedMarkerTypes[(k - 1) % 9], true))
                         {
@@ -628,7 +675,7 @@ namespace StatsDirect.Charting
             // starting positions
             double ix0 = 0;
             double iy0 = 0;
-            switch (j3)
+            switch (plotMode)
             {
                 case CoxPlotMode.Survival:
                     ix0 = ToCanvasX(axisXMin);
@@ -670,7 +717,7 @@ namespace StatsDirect.Charting
                 double iy2 = 0;
 
                 // get survivor or hazard function if an event occured
-                switch (j3)
+                switch (plotMode)
                 {
                     case CoxPlotMode.Survival:
                         double surv = grouped ? Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1])) : z[i].S;
@@ -720,6 +767,7 @@ namespace StatsDirect.Charting
             }
             markerPen.Dispose();
             linePen.Dispose();
+            EndVectorPlot();
         }
 
         public string PlotLinearizedEstimationAndReturnRtf(ITemplateHost host, string title, int model, double a, double b, string XAxisTitle, string YAxisTitle)
@@ -3416,15 +3464,9 @@ namespace StatsDirect.Charting
             return b;
         }
 
-        public string PlotXYRAndReturnRtf(ITemplateHost host, double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam)
+        internal void PlotXYR(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam)
         {
             StartVectorPlot();
-            PlotXYRInternal(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam);
-            return EndVectorPlotAndReturnRtf();
-        }
-
-        private void PlotXYRInternal(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam)
-        {
             const int LEGEND_MARKER_X = 12;
             const int LEGEND_MARKER_Y_OFFSET = 15;
             const int LEGEND_TEXT_X = 24;
@@ -3539,6 +3581,7 @@ namespace StatsDirect.Charting
                     DrawLineInCanvasCoordinates(p, x1, y1, x2, y2);
                 }
             }
+            EndVectorPlot();
         }
 
         internal void PlotXYZ(double[] x, double[] y, double[] z, int lowerBound, int rows, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, MarkerShape shape, bool isFilled, Pen p, object labbePool)

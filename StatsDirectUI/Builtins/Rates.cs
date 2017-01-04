@@ -819,13 +819,10 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
-            {
-                string rtf = ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 2, title, rkr, rkrl, rkru, rkw, pg, "Stratified rate ratio plot (direct standardization)", "rate ratio (" + Formatting.XRound(cco * 100, 1) + "% confidence interval)", Transformation.Log, false);
-                ParameterBag chartParameters = new ParameterBag();
-                chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
-            }
+            ParameterBag chartParameters = new ParameterBag();
+            chartList.Add(chartParameters);
+            chartParameters.AddOutput("chart", ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 2, title, rkr, rkrl, rkru, rkw, pg, "Stratified rate ratio plot (direct standardization)", "rate ratio (" + Formatting.XRound(cco * 100, 1) + "% confidence interval)", Transformation.Log, false));
+
             return outputParameters;
         }
 

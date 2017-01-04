@@ -1,7 +1,20 @@
-﻿namespace StatsDirect.Charting
+﻿using StatsDirect.Builtins;
+using StatsDirect.Data;
+using StatsDirect.Utilities;
+
+namespace StatsDirect.Charting
 {
     public static class ChartRendererFactory
     {
+        public static string SurvivalOrHazardPlot(CoxP[] z, int iobs, int istrata, ChartRenderer.CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] ARR3, ColumnData[] cdat1, bool use_tic, bool use_marker, int[] gn)
+        {
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(ChartDefinition.Empty()))
+            {
+                ch.PlotCox1(z, iobs, istrata, plotMode, igroups, groupid, grouped, stratified, ARR3, cdat1, use_tic, use_marker, gn);
+                return RtfImageRenderer.ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
+            }
+        }
+
         public static string PlotEffectAndReturnRtf(Templates.ITemplateHost host, int k, double[] cn, double[] En, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
         {
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(ChartDefinition.Empty()))
@@ -81,6 +94,20 @@
                 return RtfImageRenderer.ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
             }
         }
+
+        public static string PlotXYRAndReturnRtf(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam, MinMax minMax)
+        {
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(ChartDefinition.Empty()))
+            {
+                ch.DataMinX = minMax.MinX;
+                ch.DataMaxX = minMax.MaxX;
+                ch.DataMinY = minMax.MinY;
+                ch.DataMaxY = minMax.MaxY;
+                ch.PlotXYR(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam);
+                return RtfImageRenderer.ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
+            }
+        }
+
 
         public static string PlotXYZAndReturnRtf(double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY)
         {

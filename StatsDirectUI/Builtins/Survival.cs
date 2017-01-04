@@ -491,9 +491,8 @@ namespace StatsDirect.Builtins
             outputParameters.Add("cnx", new FilledParameter(FilledParameterDirection.Input, cnx));
             outputParameters.Add("glab", new FilledParameter(FilledParameterDirection.Input, glab));
             if (save)
-            {
                 outputParameters.AddOutput("results", resultsFrame);
-            }
+
             return outputParameters;
         }
 
