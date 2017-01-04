@@ -10,6 +10,11 @@
 <tr><th>Stratum</th><th>N (exptl.)</th><th>N (ctrl.)</th><th>d</th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
 <block name="approximate"><tr><td><in>st</in></td><td><in>ne</in></td><td><in>nc</in></td><td><inu>d</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
+<line></line>
+<table>
+<tr><th>Stratum</th><thfirst>% weights (fixed, random)</thfirst><thspan/><th></th></tr>
+<block name="weights"><tr><td><in>st</in></td><td><inu>howt</inu></td><td><inu>dswt</inu></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+</table>
 <block name="poolok">
 <line></line>
 <line><subtitle>Fixed effects (Hedges-Olkin)</subtitle></line>

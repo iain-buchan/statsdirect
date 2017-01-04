@@ -34,7 +34,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0] as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -43,7 +43,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
+            DoubleVariable srVariable = srFrame.Variables[0] as DoubleVariable;
             double[] sr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -51,7 +51,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
+            DoubleVariable xnVariable = xnFrame.Variables[0] as DoubleVariable;
             double[] xn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -59,19 +59,19 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
+            DoubleVariable xrVariable = xrFrame.Variables[0] as DoubleVariable;
             double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 xr[i] = xrVariable.Data[i - 1];
             }
 
-            string[] title = new string[k + 1 ];
+            string[] title = new string[k + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -103,13 +103,13 @@ namespace StatsDirect.Builtins
             double[] odr = new double[k + 1];
             double[] odrv = new double[k + 1];
             double[] odrl = new double[k + 1];
-            double[] odru = new double[k + 1 ];
+            double[] odru = new double[k + 1];
             double[] odw = new double[k + 1];
             double[] odz = new double[k + 1];
             double[] odx = new double[k + 1];
             bool[] lerr = new bool[k + 1];
             bool[] uerr = new bool[k + 1];
-            bool[] cced = new bool[k + 1 ];
+            bool[] cced = new bool[k + 1];
             for (i = 1; i <= k; i++)
             {
                 cced[i] = false;
@@ -363,12 +363,12 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                double[] y = new double[nx + 1 ];
+                double[] y = new double[nx + 1];
                 double[,] x = new double[nx + 1, P + 1];
-                double[] wt = new double[nx + 1 ];
+                double[] wt = new double[nx + 1];
                 double[] var = new double[nx + 1];
                 double[] tt = new double[nx + 1];
-                double[] ts = new double[nx + 1 ];
+                double[] ts = new double[nx + 1];
                 nx = 0;
                 double se;
                 switch (xform)
@@ -460,9 +460,9 @@ namespace StatsDirect.Builtins
                 int iwt = 1;
                 double[,] xx = new double[nx + 1, indep + 1 + iwt + 1];
                 double[,] r = new double[P + 1, P + 1];
-                double[] D = new double[P + 1 ];
-                double[] xmin = new double[P + 1 ];
-                double[] XMax = new double[P + 1 ];
+                double[] D = new double[P + 1];
+                double[] xmin = new double[P + 1];
+                double[] XMax = new double[P + 1];
                 double[] WK = new double[2 * (P + 1) + 1];
                 int[] idum = new int[1 + 1];
                 for (i = 1; i <= nx; i++)
@@ -567,7 +567,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0] as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -576,35 +576,35 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
-            double[] sr = new double[k + 1 ];
+            DoubleVariable srVariable = srFrame.Variables[0] as DoubleVariable;
+            double[] sr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 sr[i] = srVariable.Data[i - 1];
             }
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
-            double[] xn = new double[k + 1 ];
+            DoubleVariable xnVariable = xnFrame.Variables[0] as DoubleVariable;
+            double[] xn = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 xn[i] = xnVariable.Data[i - 1];
             }
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
+            DoubleVariable xrVariable = xrFrame.Variables[0] as DoubleVariable;
             double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 xr[i] = xrVariable.Data[i - 1];
             }
 
-            string[] title = new string[k + 1 ];
+            string[] title = new string[k + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -633,14 +633,14 @@ namespace StatsDirect.Builtins
 
             double[,] o = new double[k + 1, 4 + 1];
             double[] rkr = new double[k + 1];
-            double[] rkw = new double[k + 1 ];
-            double[] dsw = new double[k + 1 ];
-            double[] rkrl = new double[k + 1 ];
-            double[] rkru = new double[k + 1 ];
-            double[] rkx = new double[k + 1 ];
-            bool[] lerr = new bool[k + 1 ];
-            bool[] uerr = new bool[k + 1 ];
-            bool[] cced = new bool[k + 1 ];
+            double[] rkw = new double[k + 1];
+            double[] dsw = new double[k + 1];
+            double[] rkrl = new double[k + 1];
+            double[] rkru = new double[k + 1];
+            double[] rkx = new double[k + 1];
+            bool[] lerr = new bool[k + 1];
+            bool[] uerr = new bool[k + 1];
+            bool[] cced = new bool[k + 1];
             for (i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
@@ -704,7 +704,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
                 differencesParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
                 differencesParameters.AddOutput("yi", rkr[i]);
-                differencesParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit,false));
+                differencesParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit, false));
                 // double a = o[ i, 1 ]; 
                 // double b = o[ i, 2 ]; 
                 // double C = o[ i, 3 ]; 
@@ -779,118 +779,98 @@ namespace StatsDirect.Builtins
             double isq; double llisq; double ulisq; double tausq = 0;
             int i;
             int realk; int ierr; bool stratlab;
-            int ifault;
 
             double cco = parameters["gamma"].AsDouble;
             if (cco > 0)
             {
                 double p = (1.0 - cco) / 2.0;
-                cit = PDF.gauinv(1.0 - p, out ifault);
+                cit = PDF.gauinv(1.0 - p);
             }
             else
             {
                 cco = 0.95;
-                cit = PDF.gauinv(0.975, out ifault);
+                cit = PDF.gauinv(0.975);
             }
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0] as DoubleVariable;
             int k = snVariable.Length;
-            double[] sn = new double[k + 1 ];
+            double[] sn = new double[k + 1];
             for (i = 1; i <= k; i++)
-            {
                 sn[i] = snVariable.Data[i - 1];
-            }
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
-            double[] sr = new double[k + 1 ];
+            DoubleVariable srVariable = srFrame.Variables[0] as DoubleVariable;
+            double[] sr = new double[k + 1];
             for (i = 1; i <= k; i++)
-            {
                 sr[i] = srVariable.Data[i - 1];
-            }
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
+            DoubleVariable xnVariable = xnFrame.Variables[0] as DoubleVariable;
             double[] xn = new double[k + 1];
             for (i = 1; i <= k; i++)
-            {
                 xn[i] = xnVariable.Data[i - 1];
-            }
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
+            DoubleVariable xrVariable = xrFrame.Variables[0] as DoubleVariable;
             double[] xr = new double[k + 1];
             for (i = 1; i <= k; i++)
-            {
                 xr[i] = xrVariable.Data[i - 1];
-            }
 
             string[] title = new string[k + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
                     if (buf.Length > 0)
                     {
                         if (buf.Length > 50)
-                        {
                             buf = buf.Substring(0, 50);
-                        }
                         title[i] = buf;
                     }
                     else
-                    {
                         title[i] = "stratum " + i;
-                    }
                 }
             }
             else
             {
                 stratlab = false;
                 for (i = 1; i <= k; i++)
-                {
                     title[i] = "stratum " + i;
-                }
             }
 
             double[,] o = new double[k + 1, 4 + 1];
             double[] rkr = new double[k + 1];
             double[] rkw = new double[k + 1];
             double[] dsw = new double[k + 1];
-            double[] rkrl = new double[k + 1 ];
+            double[] rkrl = new double[k + 1];
             double[] rkru = new double[k + 1];
             double[] rkx = new double[k + 1];
             bool[] lerr = new bool[k + 1];
             bool[] uerr = new bool[k + 1];
             bool[] cced = new bool[k + 1];
-            double[] axll = new double[k + 1 ];
-            double[] axul = new double[k + 1 ];
+            double[] axll = new double[k + 1];
+            double[] axul = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 || sn[i] < 0 || sn[i] < sr[i])
-                {
                     throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
-                }
+
                 o[i, 2] = Math.Abs(xr[i]);
                 o[i, 4] = Math.Abs(xn[i] - xr[i]);
                 if (xr[i] < 0 || xn[i] < 0 || xn[i] < xr[i])
-                {
                     throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
-                }
             }
 
             RelativeRiskMA(host, k, out realk, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
             if (ierr == -1)
-            {
                 throw new InvalidDataException("relriskma() returned an error");
-            }
 
             ParameterBag outputParameters = new ParameterBag();
 
@@ -920,7 +900,7 @@ namespace StatsDirect.Builtins
                 risksParameters.AddOutput("st", i);
                 risksParameters.AddOutput("rr", rkr[i]);
                 risksParameters.AddOutput("yi", rkr[i] > 0 ? Math.Log(rkr[i]) : 0);
-                risksParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit,true));
+                risksParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit, true));
                 risksParameters.AddOutput("lci", rkrl[i]);
                 risksParameters.AddOutput("uci", rkru[i]);
                 risksParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
@@ -998,37 +978,23 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static ParameterBag RptEffect(ITemplateHost host, ParameterBag parameters)
         {
-            double dsul = 0; double dsll = 0; double dsz = 0; double dsd = 0;
-            double tausq = 0; double sumsqwt; double qc = 0; double dplusul = 0; double dplusll = 0; double dplusz = 0;
-            double vardplus; double dplus = 0; double wt; double sumdwt; double sumwt;
-            double n; double cit;
-            double isq; double llisq; double ulisq;
-            int i;
-            int proc; bool stratlab = false;
-            double[] em = null; double[] es = null;
-            double[] cm = null; double[] cs = null;
-            double[] d;
-            double[] lcid; double[] ucid;
-            double[] rkw; double[] rkx;
-            bool poolok; bool gotg;
-            int fault;
-
             double cco = parameters["gamma"].AsDouble;
+            double cit;
             if (cco > 0)
             {
                 double p = (1.0 - cco) / 2.0;
-                cit = PDF.gauinv(1.0 - p, out fault);
+                cit = PDF.gauinv(1.0 - p);
             }
             else
             {
                 cco = 0.95;
-                cit = PDF.gauinv(0.975, out fault);
+                cit = PDF.gauinv(0.975);
             }
 
             string type = parameters["type"].AsString.ToLower(CultureInfo.InvariantCulture);
+            int proc;
             switch (type)
             {
                 case "g":
@@ -1043,126 +1009,110 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame enFrame = parameters["en"].AsDataFrame;
-            DoubleVariable enVariable = enFrame.Variables[0]as DoubleVariable;
+            DoubleVariable enVariable = enFrame.Variables[0] as DoubleVariable;
             int k = enVariable.Length;
-            double[] en = new double[k + 1 ];
-            double[] g = new double[k + 1 ];
-            string[] title = new string[k + 1 ];
-            for (i = 1; i <= k; i++)
-            {
+            double[] en = new double[k + 1];
+            double[] g = new double[k + 1];
+            string[] title = new string[k + 1];
+            for (int i = 1; i <= k; i++)
                 en[i] = enVariable.Data[i - 1];
-            }
 
+            double[] em = null;
+            double[] es = null;
             if (proc != 2)
             {
                 DataFrame emFrame = parameters["em"].AsDataFrame;
-                DoubleVariable emVariable = emFrame.Variables[0]as DoubleVariable;
-                em = new double[k + 1 ];
-                for (i = 1; i <= k; i++)
-                {
+                DoubleVariable emVariable = emFrame.Variables[0] as DoubleVariable;
+                em = new double[k + 1];
+                for (int i = 1; i <= k; i++)
                     em[i] = emVariable.Data[i - 1];
-                }
 
                 DataFrame esFrame = parameters["es"].AsDataFrame;
-                DoubleVariable esVariable = esFrame.Variables[0]as DoubleVariable;
-                es = new double[k + 1 ];
-                for (i = 1; i <= k; i++)
-                {
+                DoubleVariable esVariable = esFrame.Variables[0] as DoubleVariable;
+                es = new double[k + 1];
+                for (int i = 1; i <= k; i++)
                     es[i] = esVariable.Data[i - 1];
-                }
             }
 
             DataFrame cnFrame = parameters["cn"].AsDataFrame;
-            DoubleVariable cnVariable = cnFrame.Variables[0]as DoubleVariable;
+            DoubleVariable cnVariable = cnFrame.Variables[0] as DoubleVariable;
             k = cnVariable.Length;
-            double[] cn = new double[k + 1 ];
-            for (i = 1; i <= k; i++)
-            {
+            double[] cn = new double[k + 1];
+            for (int i = 1; i <= k; i++)
                 cn[i] = cnVariable.Data[i - 1];
-            }
 
+            double[] cm = null;
+            double[] cs = null;
+            bool gotg;
             if (proc == 2)
             {
                 gotg = true;
                 DataFrame gFrame = parameters["g"].AsDataFrame;
-                DoubleVariable gVariable = gFrame.Variables[0]as DoubleVariable;
+                DoubleVariable gVariable = gFrame.Variables[0] as DoubleVariable;
                 k = gVariable.Length;
-                //  ReDim g(k)
-                for (i = 1; i <= k; i++)
-                {
+                for (int i = 1; i <= k; i++)
                     g[i] = gVariable.Data[i - 1];
-                }
             }
             else
             {
                 gotg = false;
                 DataFrame cmFrame = parameters["cm"].AsDataFrame;
-                DoubleVariable cmVariable = cmFrame.Variables[0]as DoubleVariable;
-                cm = new double[k + 1 ];
-                for (i = 1; i <= k; i++)
-                {
+                DoubleVariable cmVariable = cmFrame.Variables[0] as DoubleVariable;
+                cm = new double[k + 1];
+                for (int i = 1; i <= k; i++)
                     cm[i] = cmVariable.Data[i - 1];
-                }
 
                 DataFrame csFrame = parameters["cs"].AsDataFrame;
-                DoubleVariable csVariable = csFrame.Variables[0]as DoubleVariable;
-                cs = new double[k + 1 ];
-                for (i = 1; i <= k; i++)
-                {
+                DoubleVariable csVariable = csFrame.Variables[0] as DoubleVariable;
+                cs = new double[k + 1];
+                for (int i = 1; i <= k; i++)
                     cs[i] = csVariable.Data[i - 1];
-                }
             }
 
-            //  ReDim title(k)
+            bool stratlab = false;
             if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
-                for (i = 1; i <= k; i++)
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
+                for (int i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
                     if (buf.Length > 0)
                     {
                         if (buf.Length > 50)
-                        {
                             buf = buf.Substring(0, 50);
-                        }
                         title[i] = buf;
                     }
                     else
-                    {
                         title[i] = "stratum " + i;
-                    }
                 }
             }
             else
             {
-                for (i = 1; i <= k; i++)
-                {
+                for (int i = 1; i <= k; i++)
                     title[i] = "stratum " + i;
-                }
             }
 
             if (proc != 3)
             {
 
                 // single effect analysis
-                d = new double[k + 1 ];
+                double[] d = new double[k + 1];
                 double[] gj = new double[k + 1];
-                lcid = new double[k + 1];
-                ucid = new double[k + 1 ];
-                double[] lcig = new double[k + 1 ];
-                double[] ucig = new double[k + 1 ];
-                rkw = new double[k + 1];
-                rkx = new double[k + 1 ];
+                double[] lcid = new double[k + 1];
+                double[] ucid = new double[k + 1];
+                double[] lcig = new double[k + 1];
+                double[] ucig = new double[k + 1];
+                double[] rkw = new double[k + 1];
+                double[] rkx = new double[k + 1];
                 Debug.Assert(null != es);
-                poolok = k > 1;
-                if (!(gotg))
+                bool poolok = k > 1;
+                if (!gotg)
                 {
-                    for (i = 1; i <= k; i++)
+                    for (int i = 1; i <= k; i++)
                     {
-                        n = cn[i] + en[i];
+                        double n = cn[i] + en[i];
                         if (((en[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (n - 2.0) > 0)
                         {
                             double s = Math.Sqrt(((en[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (n - 2.0));
@@ -1176,21 +1126,17 @@ namespace StatsDirect.Builtins
                 }
 
                 double vard;
-                for (i = 1; i <= k; i++)
+                for (int i = 1; i <= k; i++)
                 {
-                    n = cn[i] + en[i];
+                    double n = cn[i] + en[i];
                     rkx[i] = n;
                     if (g[i] != Constant.MISSING)
                     {
                         double m = n - 2;
                         if (m < 200)
-                        {
                             gj[i] = Math.Exp(PDF.alogam(m / 2.0)) / (Math.Sqrt(m / 2.0) * Math.Exp(PDF.alogam((m - 1.0) / 2.0)));
-                        }
                         else
-                        {
                             gj[i] = 1.0 - 3.0 / (4.0 * m - 1.0);
-                        }
                         d[i] = gj[i] * g[i];
                         vard = n / (cn[i] * en[i]) + Math.Pow(d[i], 2.0) / (2.0 * n);
                         lcid[i] = d[i] - cit * Math.Sqrt(vard);
@@ -1211,75 +1157,12 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                // pooled analysis
-                if (poolok)
-                {
-                    sumwt = 0;
-                    sumdwt = 0;
-                    for (i = 1; i <= k; i++)
-                    {
-                        n = cn[i] + en[i];
-                        vard = n / (cn[i] * en[i]) + Math.Pow(d[i], 2.0) / (2.0 * n);
-                        wt = 1.0 / vard;
-                        rkw[i] = wt;
-                        sumwt += wt;
-                        sumdwt += d[i] * wt;
-                    }
-                    dplus = sumdwt / sumwt;
-                    vardplus = 1 / sumwt;
-                    dplusz = dplus / Math.Sqrt(vardplus);
-                    dplusll = dplus - cit * Math.Sqrt(vardplus);
-                    dplusul = dplus + cit * Math.Sqrt(vardplus);
-                    qc = 0;
-                    sumwt = 0;
-                    sumsqwt = 0;
-                    for (i = 1; i <= k; i++)
-                    {
-                        n = cn[i] + en[i];
-                        vard = n / (cn[i] * en[i]) + (d[i] * d[i]) / (2.0 * n);
-                        wt = 1.0 / vard;
-                        qc += wt * Math.Pow((d[i] - dplus), 2.0);
-                        sumwt += wt;
-                        sumsqwt += wt * wt;
-                    }
-
-                    // DerSimonian-Laird treatment
-                    if ((sumwt - sumsqwt / sumwt) == 0.0)
-                    {
-                        tausq = 0.0;
-                    }
-                    else
-                    {
-                        tausq = (qc - Convert.ToDouble(k - 1)) / (sumwt - sumsqwt / sumwt);
-                    }
-                    if (tausq < 0)
-                    {
-                        tausq = 0;
-                    }
-                    sumwt = 0;
-                    sumdwt = 0;
-                    for (i = 1; i <= k; i++)
-                    {
-                        n = cn[i] + en[i];
-                        vard = n / (cn[i] * en[i]) + (d[i] * d[i]) / (2.0 * n);
-                        wt = 1.0 / vard;
-                        wt = 1.0 / (tausq + 1.0 / wt);
-                        sumwt += wt;
-                        sumdwt += d[i] * wt;
-                    }
-
-                    dsd = sumdwt / sumwt;
-                    dsz = sumdwt / Math.Sqrt(sumwt);
-                    dsll = dsd - cit / Math.Sqrt(sumwt);
-                    dsul = dsd + cit / Math.Sqrt(sumwt);
-                }
-
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
 
                 IList<ParameterBag> exactList = new List<ParameterBag>();
                 outputParameters.AddOutput("*exact", exactList);
-                for (i = 1; i <= k; i++)
+                for (int i = 1; i <= k; i++)
                 {
                     ParameterBag exactParameters = new ParameterBag();
                     exactList.Add(exactParameters);
@@ -1293,7 +1176,7 @@ namespace StatsDirect.Builtins
 
                 IList<ParameterBag> approximateList = new List<ParameterBag>();
                 outputParameters.AddOutput("*approximate", approximateList);
-                for (i = 1; i <= k; i++)
+                for (int i = 1; i <= k; i++)
                 {
                     ParameterBag approximateParameters = new ParameterBag();
                     approximateList.Add(approximateParameters);
@@ -1308,8 +1191,71 @@ namespace StatsDirect.Builtins
 
                 IList<ParameterBag> poolOkList = new List<ParameterBag>();
                 outputParameters.AddOutput("*poolok", poolOkList);
+                // pooled analysis
+                double dsd = 0; double dsll = 0; double dsul = 0;
+                double dplus = 0; double dplusll = 0; double dplusul = 0;
+                double sumwt = 0; double sumdwt = 0;
+                double[] hedgesOlkinWeights = new double[k + 1];
+                double[] derSimonianLairdWeights = new double[k + 1];
+
                 if (poolok)
                 {
+                    for (int i = 1; i <= k; i++)
+                    {
+                        double n = cn[i] + en[i];
+                        vard = n / (cn[i] * en[i]) + Math.Pow(d[i], 2.0) / (2.0 * n);
+                        double wt = 1.0 / vard;
+                        rkw[i] = wt;
+                        sumwt += wt;
+                        sumdwt += d[i] * wt;
+                    }
+                    dplus = sumdwt / sumwt;
+                    double vardplus = 1 / sumwt;
+                    double dplusz = dplus / Math.Sqrt(vardplus);
+                    dplusll = dplus - cit * Math.Sqrt(vardplus);
+                    dplusul = dplus + cit * Math.Sqrt(vardplus);
+                    double qc = 0;
+                    sumwt = 0;
+                    double sumsqwt = 0;
+                    for (int i = 1; i <= k; i++)
+                    {
+                        double n = cn[i] + en[i];
+                        vard = n / (cn[i] * en[i]) + (d[i] * d[i]) / (2.0 * n);
+                        double wt = 1.0 / vard;
+                        qc += wt * Math.Pow((d[i] - dplus), 2.0);
+                        sumwt += wt;
+                        sumsqwt += wt * wt;
+                        hedgesOlkinWeights[i] = wt;
+                    }
+                    double sumHedgesOlkinWeights = sumwt;
+
+                    // DerSimonian-Laird treatment
+                    double tausq;
+                    if ((sumwt - sumsqwt / sumwt) == 0.0)
+                        tausq = 0.0;
+                    else
+                        tausq = (qc - Convert.ToDouble(k - 1)) / (sumwt - sumsqwt / sumwt);
+                    if (tausq < 0)
+                        tausq = 0;
+                    sumwt = 0;
+                    sumdwt = 0;
+                    for (int i = 1; i <= k; i++)
+                    {
+                        double n = cn[i] + en[i];
+                        vard = n / (cn[i] * en[i]) + (d[i] * d[i]) / (2.0 * n);
+                        double wt = 1.0 / vard;
+                        wt = 1.0 / (tausq + 1.0 / wt);
+                        sumwt += wt;
+                        sumdwt += d[i] * wt;
+                        derSimonianLairdWeights[i] = wt;
+                    }
+                    double sumDerSimonianLairdWeights = sumwt;
+
+                    dsd = sumdwt / sumwt;
+                    double dsz = sumdwt / Math.Sqrt(sumwt);
+                    dsll = dsd - cit / Math.Sqrt(sumwt);
+                    dsul = dsd + cit / Math.Sqrt(sumwt);
+
                     ParameterBag poolOkParameters = new ParameterBag();
                     poolOkList.Add(poolOkParameters);
                     poolOkParameters.AddOutput("dplus", dplus);
@@ -1321,6 +1267,9 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("df", (k - 1));
                     poolOkParameters.AddOutput("xp", host.pval(PDF.chivalp(qc, Convert.ToDouble(k - 1))));
                     poolOkParameters.AddOutput("tausq", tausq);
+                    double isq;
+                    double llisq;
+                    double ulisq;
                     IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
                     poolOkParameters.AddOutput("isq", Formatting.XRound(isq, 1));
                     poolOkParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
@@ -1331,6 +1280,18 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("dsul", dsul);
                     poolOkParameters.AddOutput("dz", dsz);
                     poolOkParameters.AddOutput("dp", MathDbl.zvalp2(dsz));
+
+                    IList<ParameterBag> weightsList = new List<ParameterBag>();
+                    outputParameters.AddOutput("*weights", weightsList);
+                    for (int i = 1; i <= k; i++)
+                    {
+                        ParameterBag weightsParameters = new ParameterBag();
+                        weightsList.Add(weightsParameters);
+                        weightsParameters.AddOutput("st", i);
+                        weightsParameters.AddOutput("howt", 100.0 * hedgesOlkinWeights[i] / sumHedgesOlkinWeights);
+                        weightsParameters.AddOutput("dswt", 100.0 * derSimonianLairdWeights[i] / sumDerSimonianLairdWeights);
+                        weightsParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
+                    }
                 }
 
                 IList<ParameterBag> eggerList = new List<ParameterBag>();
@@ -1363,15 +1324,15 @@ namespace StatsDirect.Builtins
             else
             {
                 // single wmd analysis
-                d = new double[k + 1 ];
-                lcid = new double[k + 1];
-                ucid = new double[k + 1 ];
-                rkw = new double[k + 1];
-                rkx = new double[k + 1];
-                poolok = k > 1;
-                for (i = 1; i <= k; i++)
+                double[] d = new double[k + 1];
+                double[] lcid = new double[k + 1];
+                double[] ucid = new double[k + 1];
+                double[] rkw = new double[k + 1];
+                double[] rkx = new double[k + 1];
+                bool poolok = k > 1;
+                for (int i = 1; i <= k; i++)
                 {
-                    n = cn[i] + en[i];
+                    double n = cn[i] + en[i];
                     rkx[i] = n;
                     if (en[i] > 0 & cn[i] > 0 & cs[i] > 0)
                     {
@@ -1390,67 +1351,11 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                // pooled wmd analysis
-                if (poolok)
-                {
-                    sumwt = 0;
-                    sumdwt = 0;
-                    for (i = 1; i <= k; i++)
-                    {
-                        wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
-                        rkw[i] = wt;
-                        sumwt = sumwt + wt;
-                        sumdwt = sumdwt + d[i] * wt;
-                    }
-                    dplus = sumdwt / sumwt;
-                    vardplus = 1.0 / sumwt;
-                    dplusz = dplus / Math.Sqrt(vardplus);
-                    dplusll = dplus - cit * Math.Sqrt(vardplus);
-                    dplusul = dplus + cit * Math.Sqrt(vardplus);
-                    qc = 0;
-                    sumwt = 0;
-                    sumsqwt = 0;
-                    for (i = 1; i <= k; i++)
-                    {
-                        wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
-                        qc = qc + wt * Math.Pow((d[i] - dplus), 2.0);
-                        sumwt = sumwt + wt;
-                        sumsqwt = sumsqwt + wt * wt;
-                    }
-
-                    // DerSimonian-Laird treatment
-                    if ((sumwt - sumsqwt / sumwt) == 0.0)
-                    {
-                        tausq = 0.0;
-                    }
-                    else
-                    {
-                        tausq = (qc - Convert.ToDouble(k - 1)) / (sumwt - sumsqwt / sumwt);
-                    }
-                    if (tausq < 0)
-                    {
-                        tausq = 0;
-                    }
-                    sumwt = 0;
-                    sumdwt = 0;
-                    for (i = 1; i <= k; i++)
-                    {
-                        wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
-                        wt = 1.0 / (tausq + 1.0 / wt);
-                        sumwt = sumwt + wt;
-                        sumdwt = sumdwt + d[i] * wt;
-                    }
-                    dsd = sumdwt / sumwt;
-                    dsz = sumdwt / Math.Sqrt(sumwt);
-                    dsll = dsd - cit / Math.Sqrt(sumwt);
-                    dsul = dsd + cit / Math.Sqrt(sumwt);
-                }
-
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
                 IList<ParameterBag> approximateList = new List<ParameterBag>();
                 outputParameters.AddOutput("*approximate", approximateList);
-                for (i = 1; i <= k; i++)
+                for (int i = 1; i <= k; i++)
                 {
                     ParameterBag approximateParameters = new ParameterBag();
                     approximateList.Add(approximateParameters);
@@ -1463,10 +1368,61 @@ namespace StatsDirect.Builtins
                     approximateParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
                 }
 
+
                 IList<ParameterBag> poolOkList = new List<ParameterBag>();
                 outputParameters.AddOutput("*poolok", poolOkList);
+                // pooled wmd analysis
+                double dsd = 0; double dsll = 0; double dsul = 0;
+                double dplus = 0; double dplusll = 0; double dplusul = 0;
                 if (poolok)
                 {
+                    double sumwt = 0;
+                    double sumdwt = 0;
+                    for (int i = 1; i <= k; i++)
+                    {
+                        double wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
+                        rkw[i] = wt;
+                        sumwt = sumwt + wt;
+                        sumdwt = sumdwt + d[i] * wt;
+                    }
+                    dplus = sumdwt / sumwt;
+                    double vardplus = 1.0 / sumwt;
+                    double dplusz = dplus / Math.Sqrt(vardplus);
+                    dplusll = dplus - cit * Math.Sqrt(vardplus);
+                    dplusul = dplus + cit * Math.Sqrt(vardplus);
+                    double qc = 0;
+                    sumwt = 0;
+                    double sumsqwt = 0;
+                    for (int i = 1; i <= k; i++)
+                    {
+                        double wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
+                        qc = qc + wt * Math.Pow((d[i] - dplus), 2.0);
+                        sumwt = sumwt + wt;
+                        sumsqwt = sumsqwt + wt * wt;
+                    }
+
+                    // DerSimonian-Laird treatment
+                    double tausq;
+                    if ((sumwt - sumsqwt / sumwt) == 0.0)
+                        tausq = 0.0;
+                    else
+                        tausq = (qc - Convert.ToDouble(k - 1)) / (sumwt - sumsqwt / sumwt);
+                    if (tausq < 0)
+                        tausq = 0;
+                    sumwt = 0;
+                    sumdwt = 0;
+                    for (int i = 1; i <= k; i++)
+                    {
+                        double wt = 1.0 / (Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
+                        wt = 1.0 / (tausq + 1.0 / wt);
+                        sumwt = sumwt + wt;
+                        sumdwt = sumdwt + d[i] * wt;
+                    }
+                    dsd = sumdwt / sumwt;
+                    double dsz = sumdwt / Math.Sqrt(sumwt);
+                    dsll = dsd - cit / Math.Sqrt(sumwt);
+                    dsul = dsd + cit / Math.Sqrt(sumwt);
+
                     ParameterBag poolOkParameters = new ParameterBag();
                     poolOkList.Add(poolOkParameters);
                     poolOkParameters.AddOutput("dplus", dplus);
@@ -1478,6 +1434,9 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("df", (k - 1));
                     poolOkParameters.AddOutput("xp", PDF.chivalp(qc, Convert.ToDouble(k - 1)));
                     poolOkParameters.AddOutput("tausq", tausq);
+                    double isq;
+                    double llisq;
+                    double ulisq;
                     IsquareNcc(host, qc, k, cco, cit, out isq, out llisq, out ulisq);
                     poolOkParameters.AddOutput("isq", Formatting.XRound(isq, 1));
                     poolOkParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
@@ -1998,7 +1957,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame aFrame = parameters["a"].AsDataFrame;
-            DoubleVariable aVariable = aFrame.Variables[0]as DoubleVariable;
+            DoubleVariable aVariable = aFrame.Variables[0] as DoubleVariable;
             int k = aVariable.Length;
             double[] a = new double[k + 1];
             for (i = 1; i <= k; i++)
@@ -2007,7 +1966,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame pt1Frame = parameters["pt1"].AsDataFrame;
-            DoubleVariable pt1Variable = pt1Frame.Variables[0]as DoubleVariable;
+            DoubleVariable pt1Variable = pt1Frame.Variables[0] as DoubleVariable;
             double[] pt1 = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -2015,7 +1974,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame bFrame = parameters["b"].AsDataFrame;
-            DoubleVariable bVariable = bFrame.Variables[0]as DoubleVariable;
+            DoubleVariable bVariable = bFrame.Variables[0] as DoubleVariable;
             double[] b = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -2023,7 +1982,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame pt2Frame = parameters["pt2"].AsDataFrame;
-            DoubleVariable pt2Variable = pt2Frame.Variables[0]as DoubleVariable;
+            DoubleVariable pt2Variable = pt2Frame.Variables[0] as DoubleVariable;
             double[] pt2 = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
@@ -2035,7 +1994,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -2232,7 +2191,7 @@ namespace StatsDirect.Builtins
             }
             Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, xform);
 
-            double[] ptt = new double[k + 1 ];
+            double[] ptt = new double[k + 1];
             for (i = 1; i <= k; i++)
             {
                 o[i, 1] = pt1[i];
@@ -2318,27 +2277,27 @@ namespace StatsDirect.Builtins
                 cit = PDF.gauinv(0.975, out scrap);
             }
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0] as DoubleVariable;
             int k = snVariable.Length;
             double[] sn = new double[k + 1];
             for (int i = 1; i <= k; i++)
                 sn[i] = snVariable.Data[i - 1];
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
-            double[] sr = new double[k + 1 ];
+            DoubleVariable srVariable = srFrame.Variables[0] as DoubleVariable;
+            double[] sr = new double[k + 1];
             for (int i = 1; i <= k; i++)
                 sr[i] = srVariable.Data[i - 1];
 
             DataFrame xnFrame = parameters["xn"].AsDataFrame;
-            DoubleVariable xnVariable = xnFrame.Variables[0]as DoubleVariable;
-            double[] xn = new double[k + 1 ];
+            DoubleVariable xnVariable = xnFrame.Variables[0] as DoubleVariable;
+            double[] xn = new double[k + 1];
             for (int i = 1; i <= k; i++)
                 xn[i] = xnVariable.Data[i - 1];
 
             DataFrame xrFrame = parameters["xr"].AsDataFrame;
-            DoubleVariable xrVariable = xrFrame.Variables[0]as DoubleVariable;
-            double[] xr = new double[k + 1 ];
+            DoubleVariable xrVariable = xrFrame.Variables[0] as DoubleVariable;
+            double[] xr = new double[k + 1];
             for (int i = 1; i <= k; i++)
                 xr[i] = xrVariable.Data[i - 1];
 
@@ -2347,7 +2306,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
                 for (int i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -2376,12 +2335,12 @@ namespace StatsDirect.Builtins
 
             double[,] o = new double[k + 1, 4 + 1];
             double[] odr = new double[k + 1];
-            double[] odrl = new double[k + 1 ];
-            double[] odru = new double[k + 1 ];
+            double[] odrl = new double[k + 1];
+            double[] odru = new double[k + 1];
             double[] odw = new double[k + 1];
-            double[] dswt = new double[k + 1 ];
-            double[] odx = new double[k + 1 ];
-            bool[] lerr = new bool[k + 1 ];
+            double[] dswt = new double[k + 1];
+            double[] odx = new double[k + 1];
+            bool[] lerr = new bool[k + 1];
             bool[] uerr = new bool[k + 1];
             bool[] cced = new bool[k + 1];
             double[] axll = new double[k + 1];
@@ -2473,7 +2432,7 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("st", i);
                 orParameters.AddOutput("or", odr[i]);
                 orParameters.AddOutput("yi", odr[i] > 0 ? Math.Log(odr[i]) : 0);
-                orParameters.AddOutput("vi", VarianceFromCI(odrl[i], odru[i], cit,true));
+                orParameters.AddOutput("vi", VarianceFromCI(odrl[i], odru[i], cit, true));
                 orParameters.AddOutput("lci", odrl[i]);
                 orParameters.AddOutput("uci", odru[i]);
                 orParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
@@ -2717,7 +2676,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            
+
             if (sk == 0)
             {
                 // SATO T. BIOMETRICS 46 71-80
@@ -3186,7 +3145,7 @@ namespace StatsDirect.Builtins
             bool useCI = "true".Equals(parameters["use_ci"].AsString.ToLower(CultureInfo.InvariantCulture));
 
             DataFrame yFrame = parameters["y"].AsDataFrame;
-            DoubleVariable yVariable = yFrame.Variables[0]as DoubleVariable;
+            DoubleVariable yVariable = yFrame.Variables[0] as DoubleVariable;
             int k = yVariable.Length;
             double[] y = new double[k + 2];
             double[] seY = new double[k + 2];
@@ -3207,14 +3166,14 @@ namespace StatsDirect.Builtins
             if (useCI)
             {
                 DataFrame llYFrame = parameters["ll_y"].AsDataFrame;
-                DoubleVariable llYVariable = llYFrame.Variables[0]as DoubleVariable;
+                DoubleVariable llYVariable = llYFrame.Variables[0] as DoubleVariable;
                 for (i = 1; i <= k; i++)
                 {
                     llY[i] = llYVariable.Data[i - 1];
                 }
 
                 DataFrame ulYFrame = parameters["ul_y"].AsDataFrame;
-                DoubleVariable ulYVariable = ulYFrame.Variables[0]as DoubleVariable;
+                DoubleVariable ulYVariable = ulYFrame.Variables[0] as DoubleVariable;
                 for (i = 1; i <= k; i++)
                 {
                     ulY[i] = ulYVariable.Data[i - 1];
@@ -3243,7 +3202,7 @@ namespace StatsDirect.Builtins
             {
                 // tmp = use_ratio ? "LOG " : string.Empty; - unused
                 DataFrame seYFrame = parameters["se_y"].AsDataFrame;
-                DoubleVariable seYVariable = seYFrame.Variables[0]as DoubleVariable;
+                DoubleVariable seYVariable = seYFrame.Variables[0] as DoubleVariable;
                 for (i = 1; i <= k; i++)
                 {
                     seY[i] = seYVariable.Data[i - 1];
@@ -3264,7 +3223,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["studies"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -3481,12 +3440,12 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame rFrame = parameters["r"].AsDataFrame;
-            DoubleVariable rVariable = rFrame.Variables[0]as DoubleVariable; //  Ends up in y
+            DoubleVariable rVariable = rFrame.Variables[0] as DoubleVariable; //  Ends up in y
             int k = rVariable.Length;
-            double[] y = new double[k + 2 ];
+            double[] y = new double[k + 2];
             // double[] n = new double[k + 2 ]; - unused
-            string[] title = new string[k + 2 ];
-            int[] pg = new int[k + 2 ];
+            string[] title = new string[k + 2];
+            int[] pg = new int[k + 2];
             for (i = 1; i <= k; i++)
             {
                 y[i] = rVariable.Data[i - 1];
@@ -3498,11 +3457,11 @@ namespace StatsDirect.Builtins
             pg[k + 1] = -1;
 
             DataFrame nFrame = parameters["n"].AsDataFrame;
-            DoubleVariable nVariable = nFrame.Variables[0]as DoubleVariable;
-            double[] seY = new double[k + 2 ];
-            double[] llY = new double[k + 2 ];
-            double[] ulY = new double[k + 2 ];
-            double[] ss = new double[k + 2 ];
+            DoubleVariable nVariable = nFrame.Variables[0] as DoubleVariable;
+            double[] seY = new double[k + 2];
+            double[] llY = new double[k + 2];
+            double[] ulY = new double[k + 2];
+            double[] ss = new double[k + 2];
             for (i = 1; i <= k; i++)
             {
                 double sampleSize = nVariable.Data[i - 1];
@@ -3520,7 +3479,7 @@ namespace StatsDirect.Builtins
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["studies"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
                 for (i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -3552,8 +3511,8 @@ namespace StatsDirect.Builtins
             double sumwt = 0.0;
             double sumsqwt = 0.0;
             double sumywt = 0.0;
-            double[] wt = new double[k + 2 ];
-            double[] dswt = new double[k + 2 ];
+            double[] wt = new double[k + 2];
+            double[] dswt = new double[k + 2];
             for (i = 1; i <= k; i++)
             {
                 if (seY[i] == 0.0)
@@ -3680,7 +3639,7 @@ namespace StatsDirect.Builtins
                 studiesParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
                 studiesParameters.AddOutput("nwt", 100 * ss[i] / Formatting.dsum(ss, 1));
                 studiesParameters.AddOutput("yi", MathDbl.rtoz(y[i]));
-                studiesParameters.AddOutput("vi", seY[i]*seY[i]);
+                studiesParameters.AddOutput("vi", seY[i] * seY[i]);
                 studiesParameters.AddOutput("lb", stratlab ? title[i] : string.Empty);
             }
 
@@ -3796,7 +3755,7 @@ namespace StatsDirect.Builtins
             double px = x1 / n1;
             double py = x2 / n2;
             double theta;
-            if ((((aa == 0.0) & (bb == 0.0)) | ((aa == aa+cc) & (bb == bb+dd))))
+            if ((((aa == 0.0) & (bb == 0.0)) | ((aa == aa + cc) & (bb == bb + dd))))
             {
                 ul = double.PositiveInfinity;
                 ll = 0.0;
@@ -3972,14 +3931,14 @@ namespace StatsDirect.Builtins
             double fudge = 0.5; // Parsing.Cdbl_Txt(parameters["fudge"].AsString); removed as part of #893
 
             DataFrame snFrame = parameters["sn"].AsDataFrame;
-            DoubleVariable snVariable = snFrame.Variables[0]as DoubleVariable;
+            DoubleVariable snVariable = snFrame.Variables[0] as DoubleVariable;
             int k = snVariable.Length;
-            double[] sn = new double[k + 2 ];
-            double[] y = new double[k + 2 ];
-            double[] seY = new double[k + 2 ];
-            double[] llY = new double[k + 2 ];
-            double[] ulY = new double[k + 2 ];
-            int[] pg = new int[k + 2 ];
+            double[] sn = new double[k + 2];
+            double[] y = new double[k + 2];
+            double[] seY = new double[k + 2];
+            double[] llY = new double[k + 2];
+            double[] ulY = new double[k + 2];
+            int[] pg = new int[k + 2];
             for (int i = 1; i <= k; i++)
             {
                 sn[i] = snVariable.Data[i - 1];
@@ -3988,8 +3947,8 @@ namespace StatsDirect.Builtins
             pg[k + 1] = -1;
 
             DataFrame srFrame = parameters["sr"].AsDataFrame;
-            DoubleVariable srVariable = srFrame.Variables[0]as DoubleVariable;
-            double[] sr = new double[k + 1 ];
+            DoubleVariable srVariable = srFrame.Variables[0] as DoubleVariable;
+            double[] sr = new double[k + 1];
             bool allRZero = true;
             bool allREqualN = true;
             for (int i = 1; i <= k; i++)
@@ -4006,12 +3965,12 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            string[] title = new string[k + 2 ];
+            string[] title = new string[k + 2];
             if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
             {
                 stratlab = true;
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
+                StringVariable strataVariable = strataFrame.Variables[0] as StringVariable;
                 for (int i = 1; i <= k; i++)
                 {
                     string buf = strataVariable.Data[i - 1].Trim();
@@ -4037,8 +3996,8 @@ namespace StatsDirect.Builtins
             double sumwt = 0.0;
             double sumsqwt = 0.0;
             double sumywt = 0.0;
-            double[] wt = new double[k + 2 ];
-            double[] dswt = new double[k + 2 ];
+            double[] wt = new double[k + 2];
+            double[] dswt = new double[k + 2];
             for (int i = 1; i <= k; i++)
             {
                 // arcsine transformation to stabilize the variance of the proportion
@@ -4148,7 +4107,7 @@ namespace StatsDirect.Builtins
                 proportionsParameters.AddOutput("wt", 100 * wt[i] / Formatting.dsum(wt, 1));
                 proportionsParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
                 proportionsParameters.AddOutput("yi", y[i]);
-                proportionsParameters.AddOutput("vi", seY[i]*seY[i]);
+                proportionsParameters.AddOutput("vi", seY[i] * seY[i]);
                 if (stratlab)
                 {
                     tmp = title[i] + tmp;
@@ -4705,9 +4664,9 @@ namespace StatsDirect.Builtins
             return b;
         }
 
-        public static double VarianceFromCI(double ll, double ul, double cit,Boolean logtransform)
+        public static double VarianceFromCI(double ll, double ul, double cit, Boolean logtransform)
         {
-            double ret=Constant.MISSING;
+            double ret = Constant.MISSING;
             if (cit <= 0) return ret;
             if (logtransform)
             {
