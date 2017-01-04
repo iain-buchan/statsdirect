@@ -510,15 +510,12 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFactory.ChartRendererFor(ChartDefinition.Empty()))
+            IList<string> imageList = ChartRendererFactory.x_plgraph(h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
+            foreach (string rtf in imageList)
             {
-                IList<string> imageList = ch.x_plgraph(host, h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
-                foreach (string rtf in imageList)
-                {
-                    ParameterBag chartParameters = new ParameterBag();
-                    chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", rtf);
-                }
+                ParameterBag chartParameters = new ParameterBag();
+                chartList.Add(chartParameters);
+                chartParameters.AddOutput("chart", rtf);
             }
             return outputParameters;
         }

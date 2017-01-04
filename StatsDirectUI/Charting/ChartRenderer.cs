@@ -5740,203 +5740,107 @@ namespace StatsDirect.Charting
             return x;
         }
 
-        public IList<string> x_plgraph(ITemplateHost host, double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
+        internal void x_plGraphInternal(int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker, double[,] x, double[,] y, int plotMode, string xAxisTitle, string yAxisTitle, string title)
         {
-            double x1 = 0; double y1 = 0;
-
-            IList<string> outputImages = new List<string>();
-            const string tim = "Times";
-            const string ltim = "Log Times";
-            int gx = stime.GetUpperBound(0);
-            double[,] x = new double[gx + 1, groups + 1];
-            double[,] y = new double[gx + 1, groups + 1];
-            for (int j3 = 1; j3 <= 5; j3++)
+            StartVectorPlot();
+            DataMaxX = double.MinValue;
+            DataMaxY = double.MinValue;
+            DataMinX = double.MaxValue;
+            DataMinY = double.MaxValue;
+            for (int k = 1; k <= groups; k++)
             {
-                string vx;
-                string vy;
-                string vt;
-                switch (j3)
+                for (int j = 1; j <= cnx[k]; j++)
                 {
-                    case 1:
-                        vx = tim;
-                        vy = "Survivor";
-                        vt = "Survival Plot (PL estimates)";
-                        break;
-                    case 2:
-                        vx = tim;
-                        vy = "Hazard";
-                        vt = "Hazard Plot";
-                        break;
-                    case 3:
-                        vx = ltim;
-                        vy = "Log Hazard";
-                        vt = "Log Hazard Plot";
-                        break;
-                    case 4:
-                        vx = ltim;
-                        vy = "Z (Survivor)";
-                        vt = "Lognormal Survival Plot";
-                        break;
-                    case 5:
-                        vx = tim;
-                        vy = "Hazard / Time";
-                        vt = "Hazard Rate Plot";
-                        break;
-                    default:
-                        throw new Exception("Unexpected j3");
+                    if (x[j, k] > DataMaxX)
+                        DataMaxX = x[j, k];
+                    if (x[j, k] < DataMinX)
+                        DataMinX = x[j, k];
+                    if (y[j, k] > DataMaxY)
+                        DataMaxY = y[j, k];
+                    if (y[j, k] < DataMinY)
+                        DataMinY = y[j, k];
                 }
-
-                for (int k = 1; k <= groups; k++)
-                {
-                    int nx = 0;
-                    for (int j = 1; j <= cnx[k]; j++)
-                    {
-                        switch (j3)
-                        {
-                            case 1:
-                                nx = nx + 1;
-                                x[nx, k] = stime[j, k];
-                                y[nx, k] = s[j, k];
-                                break;
-                            case 2:
-                                if (h[j, k] != Constant.MISSING)
-                                {
-                                    nx = nx + 1;
-                                    x[nx, k] = stime[j, k];
-                                    y[nx, k] = h[j, k];
-                                }
-                                break;
-                            case 3:
-                                if (h[j, k] != Constant.MISSING & stime[j, k] > 0 & h[j, k] > 0)
-                                {
-                                    nx = nx + 1;
-                                    x[nx, k] = Math.Log(stime[j, k]);
-                                    y[nx, k] = Math.Log(h[j, k]);
-                                }
-                                break;
-                            case 4:
-                                int fault;
-                                double Q = PDF.gauinv(s[j, k], out fault);
-                                if (fault == 0 & stime[j, k] > 0)
-                                {
-                                    nx = nx + 1;
-                                    x[nx, k] = Math.Log(stime[j, k]);
-                                    y[nx, k] = Q;
-                                }
-                                break;
-                            case 5:
-                                if (h[j, k] != Constant.MISSING & stime[j, k] != 0)
-                                {
-                                    nx = nx + 1;
-                                    x[nx, k] = stime[j, k];
-                                    y[nx, k] = h[j, k] / stime[j, k];
-                                }
-                                break;
-                        }
-
-                    }
-                    cnx[k] = nx;
-                }
-                // Plot the results
-                StartVectorPlot();
-                DataMaxX = double.MinValue;
-                DataMaxY = double.MinValue;
-                DataMinX = double.MaxValue;
-                DataMinY = double.MaxValue;
-                for (int k = 1; k <= groups; k++)
-                {
-                    for (int j = 1; j <= cnx[k]; j++)
-                    {
-                        if (x[j, k] > DataMaxX)
-                            DataMaxX = x[j, k];
-                        if (x[j, k] < DataMinX)
-                            DataMinX = x[j, k];
-                        if (y[j, k] > DataMaxY)
-                            DataMaxY = y[j, k];
-                        if (y[j, k] < DataMinY)
-                            DataMinY = y[j, k];
-                    }
-                }
-                if (j3 == 1)
-                {
-                    DataMaxY = 1;
-                    DataMinY = 0;
-                }
-                DrawAxesOrEnlargeCanvas(vt, new Axis(vx, AxisMode.Scale, 0, ScaleType.Linear), new Axis(vy, AxisMode.Scale, 0, ScaleType.Linear), false, false);
-
-                // Plot the legends
-                int size2 = labelFont.Height * 2;
-                if (groups > 1)
-                {
-                    for (int k = 1; k <= groups; k++)
-                    {
-                        string vq = glab[k];
-                        if (marker)
-                        {
-                            DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, SharedMarkerTypes[(k - 1) % 9]);
-                        }
-                        else
-                        {
-                            using (Pen p = GetMarkerPen(SharedMarkerTypes[(k - 1) % 9]))
-                            {
-                                DrawLineInCanvasCoordinates(p, 10, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k));
-                                DrawLineInCanvasCoordinates(p, 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 28 - (size2 * k));
-                            }
-                        }
-                        DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - (size2 * k));
-                    }
-                }
-                for (int k = 1; k <= groups; k++)
-                {
-                    using (Pen p = GetMarkerPen(SharedMarkerTypes[(k - 1) % 9]))
-                    {
-                        switch (j3)
-                        {
-                            case 1:
-                                x1 = ToCanvasX(axisXMin);
-                                y1 = ToCanvasY(1.0);
-                                break;
-                            case 2:
-                                x1 = ToCanvasX(axisXMin);
-                                y1 = ToCanvasY(0);
-                                break;
-                            case 3:
-                                x1 = ToCanvasX(x[1, k]);
-                                y1 = ToCanvasY(y[1, k]);
-                                break;
-                            case 4:
-                                x1 = ToCanvasX(x[1, k]);
-                                y1 = ToCanvasY(y[1, k]);
-                                break;
-                            case 5:
-                                x1 = ToCanvasX(x[1, k]);
-                                y1 = ToCanvasY(y[1, k]);
-                                break;
-                        }
-
-                        for (int j = 1; j <= cnx[k]; j++)
-                        {
-                            double x2 = ToCanvasX(x[j, k]);
-                            double Y2 = ToCanvasY(y[j, k]);
-                            // Draw the markers
-                            // If Y2 <> Y1 Then Draw_Marker X2, Y2, 6, (k - 1) Mod 9
-                            // changed to tic mark at censor points March 01
-                            if (dead[j, k] == 0 && tic)
-                                DrawLineInCanvasCoordinates(p, x2, Y2, x2, Y2 + 7);
-                            if (dead[j, k] != 0 && marker)
-                                DrawMarkerInCanvasCoordinates(x2, Y2, 6, SharedMarkerTypes[(k - 1) % 9]);
-                            // Then the lines
-                            DrawLineInCanvasCoordinates(p, x1, y1, x2, y1);
-                            DrawLineInCanvasCoordinates(p, x2, y1, x2, Y2);
-                            x1 = x2;
-                            y1 = Y2;
-                        }
-                    }
-                }
-                EndVectorPlot();
-                outputImages.Add(RtfImageRenderer.ImageStreamToRtf(GetImageStream(), imageWidth, imageHeight));
             }
-            return outputImages;
+            if (plotMode == 1)
+            {
+                DataMaxY = 1;
+                DataMinY = 0;
+            }
+            DrawAxesOrEnlargeCanvas(title, new Axis(xAxisTitle, AxisMode.Scale, 0, ScaleType.Linear), new Axis(yAxisTitle, AxisMode.Scale, 0, ScaleType.Linear), false, false);
+
+            // Plot the legends
+            int size2 = labelFont.Height * 2;
+            if (groups > 1)
+            {
+                for (int k = 1; k <= groups; k++)
+                {
+                    string vq = glab[k];
+                    if (marker)
+                    {
+                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, SharedMarkerTypes[(k - 1) % 9]);
+                    }
+                    else
+                    {
+                        using (Pen p = GetMarkerPen(SharedMarkerTypes[(k - 1) % 9]))
+                        {
+                            DrawLineInCanvasCoordinates(p, 10, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k));
+                            DrawLineInCanvasCoordinates(p, 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 28 - (size2 * k));
+                        }
+                    }
+                    DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - (size2 * k));
+                }
+            }
+            for (int k = 1; k <= groups; k++)
+            {
+                using (Pen p = GetMarkerPen(SharedMarkerTypes[(k - 1) % 9]))
+                {
+                    double x1; double y1;
+                    switch (plotMode)
+                    {
+                        case 1:
+                            x1 = ToCanvasX(axisXMin);
+                            y1 = ToCanvasY(1.0);
+                            break;
+                        case 2:
+                            x1 = ToCanvasX(axisXMin);
+                            y1 = ToCanvasY(0);
+                            break;
+                        case 3:
+                            x1 = ToCanvasX(x[1, k]);
+                            y1 = ToCanvasY(y[1, k]);
+                            break;
+                        case 4:
+                            x1 = ToCanvasX(x[1, k]);
+                            y1 = ToCanvasY(y[1, k]);
+                            break;
+                        case 5:
+                            x1 = ToCanvasX(x[1, k]);
+                            y1 = ToCanvasY(y[1, k]);
+                            break;
+                        default:
+                            throw new Exception("Unknown plot mode");
+                    }
+
+                    for (int j = 1; j <= cnx[k]; j++)
+                    {
+                        double x2 = ToCanvasX(x[j, k]);
+                        double Y2 = ToCanvasY(y[j, k]);
+                        // Draw the markers
+                        // If Y2 <> Y1 Then Draw_Marker X2, Y2, 6, (k - 1) Mod 9
+                        // changed to tic mark at censor points March 01
+                        if (dead[j, k] == 0 && tic)
+                            DrawLineInCanvasCoordinates(p, x2, Y2, x2, Y2 + 7);
+                        if (dead[j, k] != 0 && marker)
+                            DrawMarkerInCanvasCoordinates(x2, Y2, 6, SharedMarkerTypes[(k - 1) % 9]);
+                        // Then the lines
+                        DrawLineInCanvasCoordinates(p, x1, y1, x2, y1);
+                        DrawLineInCanvasCoordinates(p, x2, y1, x2, Y2);
+                        x1 = x2;
+                        y1 = Y2;
+                    }
+                }
+            }
+            EndVectorPlot();
         }
 
         internal void Plot_MH(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)

@@ -31,17 +31,6 @@ namespace StatsDirect.Charting
 
         public ChartOptions ChartOptions { get; set; }
 
-        ///  <summary>
-        ///  A default ChartDefinition with no values set.
-        ///  </summary>
-        private static ChartDefinition _Empty;
-
-        [Obsolete("TODO: Empty() is a cop-out and should be removed")]
-        public static ChartDefinition Empty()
-        {
-            return _Empty ?? (_Empty = new ChartDefinition());
-        }
-
         public ChartDefinition()
         {
             YSeries = new List<Series>();
@@ -84,9 +73,7 @@ namespace StatsDirect.Charting
         public void AddXSeriesAt(Series newSeries, int index)
         {
             while (XSeries.Count <= index)
-            {
                 XSeries.Add(null);
-            }
             XSeries[index] = newSeries;
             CheckXSeriesData(newSeries.AsDoubleSeries);
         }
@@ -103,9 +90,7 @@ namespace StatsDirect.Charting
         public void AddYSeriesAt(Series newSeries, int index)
         {
             while (YSeries.Count <= index)
-            {
                 YSeries.Add(null);
-            }
             YSeries[index] = newSeries;
             CheckYSeriesData(newSeries.AsDoubleSeries);
         }
