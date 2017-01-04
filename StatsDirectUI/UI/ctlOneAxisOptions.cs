@@ -251,8 +251,15 @@ namespace StatsDirect.UI
 
         private void cboScale_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SetScaleVisibility();
-            SetCandidateScaleValues();
+            try
+            {
+                SetScaleVisibility();
+                SetCandidateScaleValues();
+            }
+            catch (Exception)
+            {
+                // TODO: Warn of the exception
+            }
         }
 
         private void SetDataRangeLabel()
@@ -290,7 +297,14 @@ namespace StatsDirect.UI
 
         private void txtMinimum_TextChanged(object sender, EventArgs e)
         {
-            RecalculateScale();
+            try
+            {
+                RecalculateScale();
+            }
+            catch (Exception)
+            {
+                // TODO: Warn of the exception
+            }
         }
 
         private void RecalculateScale()
@@ -305,12 +319,26 @@ namespace StatsDirect.UI
 
         private void txtTics_TextChanged(object sender, EventArgs e)
         {
-            RecalculateScale();
+            try
+            {
+                RecalculateScale();
+            }
+            catch (Exception)
+            {
+                // TODO: Warn of the exception
+            }
         }
 
         private void txtInterval_TextChanged(object sender, EventArgs e)
         {
-            RecalculateScale();
+            try
+            {
+                RecalculateScale();
+            }
+            catch (Exception)
+            {
+                // TODO: Warn of the exception
+            }
         }
 
         private void txtScaleTextMask_TextChanged(object sender, EventArgs e)
@@ -318,12 +346,26 @@ namespace StatsDirect.UI
             if (settingValues)
                 return;
             mask = txtScaleTextMask.Text;
-            lblMaximumValue.Text = ScaleMax.ToString(mask);
+            try
+            {
+                lblMaximumValue.Text = ScaleMax.ToString(mask);
+            }
+            catch (FormatException)
+            {
+                // TODO: Warn of an invalid format
+            }
         }
 
         private void cboMarkerLineAt_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SetCandidateScaleValues();
+            try
+            {
+                SetCandidateScaleValues();
+            }
+            catch (Exception)
+            {
+                // TODO: Warn of the exception
+            }
         }
     }
 }
