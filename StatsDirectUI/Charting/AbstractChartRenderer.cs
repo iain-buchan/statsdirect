@@ -108,10 +108,9 @@ namespace StatsDirect.Charting
 
         /// <summary>How many minor tics per major tic on the axis?</summary>
         protected int minorTicsPerMajorTic;
-        protected double scaleYAxis = 1.0;
-        protected double scaleXAxis = 1.0;
         protected const int DEFAULT_METAFILE_HEIGHT = 800;
         protected const int DEFAULT_METAFILE_WIDTH = 1132;
+        protected const double DEFAULT_X_GAP = 80;
         protected const double DEFAULT_Y_GAP = 80;
         protected int imageHeight = DEFAULT_METAFILE_HEIGHT;
         protected int imageWidth = DEFAULT_METAFILE_WIDTH;
@@ -579,7 +578,7 @@ namespace StatsDirect.Charting
             // Initialise scaling and resources
             IsAscii = false;
             if (shouldDefaultAxes)
-                DefaultAxes(0);
+                DefaultAxes();
             if (!(AreSharedValuesInitialised))
                 InitSharedValues();
 
@@ -604,13 +603,13 @@ namespace StatsDirect.Charting
         ///  The X axis uses 80% of the width and is offset by a few percent to the right
         ///  The Y axis is centred and uses 75% of the height
         ///  </remarks>
-        protected void DefaultAxes(double extraHeightRequiredAtBottom)
+        protected void DefaultAxes(double extraHeightRequiredAtBottom = 0, double extraWidthRequiredAtLeft = 0, double extraWidthRequiredAtRight = 0)
         {
             //  xaxis also needs to be reset in routines with legends
-            xAxisCanvas = imageWidth / 7.55;
-            yAxisCanvas = Math.Min(imageHeight / 8, DEFAULT_Y_GAP) + extraHeightRequiredAtBottom;
-            xExtCanvas = imageWidth / 1.25 * scaleXAxis;
-            yExtCanvas = imageHeight - Math.Min(imageHeight / 4, 2 * DEFAULT_Y_GAP * scaleYAxis) - extraHeightRequiredAtBottom;
+            xAxisCanvas = DEFAULT_X_GAP + extraWidthRequiredAtLeft;
+            yAxisCanvas = DEFAULT_Y_GAP + extraHeightRequiredAtBottom;
+            xExtCanvas = imageWidth - xAxisCanvas - extraWidthRequiredAtRight - DEFAULT_X_GAP;
+            yExtCanvas = imageHeight - yAxisCanvas - DEFAULT_Y_GAP;
         }
 
         private bool ReconstituteFonts()
@@ -693,13 +692,12 @@ namespace StatsDirect.Charting
             return true;
         }
 
-        public bool DrawYAxisTitle(string title, double gapForAxisLabels)
+        public bool DrawYAxisTitle(string title, double axisLabelWidth)
         {
             // If the title would not fit on the current canvas, return false
             bool titleHasText = !(string.IsNullOrEmpty(title));
-            double rightOfYAxisTitle = xAxisCanvas - AXIS_BIG_TICK - gapForAxisLabels - LABEL_TO_AXIS_LABEL_GAP;
-            double leftOfYAxisTitle = rightOfYAxisTitle - (titleHasText ? (axisTitleFont.Height * 0.5) : 0);
-            double middleOfYAxisTitle = (leftOfYAxisTitle + rightOfYAxisTitle) / 2.0;
+            double rightOfYAxisTitle = xAxisCanvas - AXIS_BIG_TICK - axisLabelWidth - LABEL_TO_AXIS_LABEL_GAP;
+            double leftOfYAxisTitle = rightOfYAxisTitle - (titleHasText ? (axisTitleFont.Height) : 0);
             if (leftOfYAxisTitle < 0)
                 return false;
 
@@ -708,8 +706,8 @@ namespace StatsDirect.Charting
                 using (StringFormat txtFormat = new StringFormat())
                 {
                     txtFormat.Alignment = StringAlignment.Center;
-                    txtFormat.LineAlignment = StringAlignment.Center;
-                    statsDirectCanvas.DrawStringAtAngle(title, axisTitleFont, Brushes.Black, middleOfYAxisTitle, (yExtCanvas / 2.0) + yAxisCanvas, txtFormat, LabelDirection.Up);
+                    txtFormat.LineAlignment = StringAlignment.Far;
+                    statsDirectCanvas.DrawStringAtAngle(title, axisTitleFont, Brushes.Black, rightOfYAxisTitle, (yExtCanvas / 2.0) + yAxisCanvas, txtFormat, LabelDirection.Up);
                 }
             }
             return true;
@@ -726,32 +724,26 @@ namespace StatsDirect.Charting
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
         protected void DrawAxesOrEnlargeCanvas(string title, Axis x, Axis y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition)
         {
-            double extraWidthRequired;
-            double extraHeightRequired;
-            if (!DrawAxesOrFail(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition, out extraHeightRequired, out extraWidthRequired))
+            DefaultAxes(0, 0, x.ExtraSpaceAfterAxisEnds);
+            Size extraSizeRequired = DrawAxesOrFail(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition);
+            if (extraSizeRequired.Width > 0 || extraSizeRequired.Height > 0)
             {
-                extraWidthRequired = Math.Ceiling(extraWidthRequired);
-                imageWidth += (int)Math.Ceiling(extraWidthRequired);
-                extraHeightRequired = Math.Ceiling(extraHeightRequired);
-                imageHeight += (int)Math.Ceiling(extraHeightRequired);
+                imageWidth += extraSizeRequired.Width;
+                imageHeight += extraSizeRequired.Height;
                 statsDirectCanvas.Dispose();
                 statsDirectCanvas = new EmfCanvas(imageWidth, imageHeight);
-                DefaultAxes(extraHeightRequired);
-                if (!DrawAxesOrFail(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition, out extraHeightRequired, out extraWidthRequired))
+                DefaultAxes(extraSizeRequired.Height, extraSizeRequired.Width, x.ExtraSpaceAfterAxisEnds);
+                extraSizeRequired = DrawAxesOrFail(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition);
+                if (extraSizeRequired.Width > 0 || extraSizeRequired.Height > 0)
                     throw new Exception("Even after trying to enlarge the canvas, I don't have enough space for the chart.");
             }
         }
 
-        protected bool DrawAxesOrFail(string title, Axis x, Axis y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition, out double extraHeightRequired, out double extraWidthRequired)
+        protected Size DrawAxesOrFail(string title, Axis x, Axis y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition)
         {
-            const int ALREADY_ALLOWED_WIDTH = 30;
-            const int ALREADY_ALLOWED_HEIGHT = 30;
-
+            Size extraSizeRequired = new Size();
             if (!IsAscii)
             {
-                xAxisCanvas += y.ExtraSpace;
-                xExtCanvas -= y.ExtraSpace;
-
                 // Draw the axes
                 if ((x.Mode & AxisMode.Line) == AxisMode.Line)
                     AxisDrawline(xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas);
@@ -775,7 +767,7 @@ namespace StatsDirect.Charting
             }
 
             double xHeight = 0;
-            double yWidth = 0;
+            double yAxisWidthIncludingLabels = 0;
             switch (x.Mode)
             {
                 case AxisMode.LineOnly:
@@ -807,18 +799,18 @@ namespace StatsDirect.Charting
                     //  Do nothing
                     break;
                 case AxisMode.ReverseScale:
-                    yWidth = DrawYScale(true, y.ScaleType, useCalculatedScalesEvenWithDefinition);
+                    yAxisWidthIncludingLabels = DrawYScale(true, y.ScaleType, useCalculatedScalesEvenWithDefinition);
                     break;
                 case AxisMode.Scale:
-                    yWidth = DrawYScale(false, y.ScaleType, useCalculatedScalesEvenWithDefinition);
+                    yAxisWidthIncludingLabels = DrawYScale(false, y.ScaleType, useCalculatedScalesEvenWithDefinition);
                     break;
                 case AxisMode.ScaleWithoutLabels:
                     throw new ArgumentException("A Y scale without labels is not currently supported");
                 case AxisMode.Series:
                     if (null != y.Series)
-                        yWidth = DrawYSeries(y.Series);
+                        yAxisWidthIncludingLabels = DrawYSeries(y.Series);
                     else if (null != y.Labels)
-                        yWidth = DrawYSeries(y.Labels);
+                        yAxisWidthIncludingLabels = DrawYSeries(y.Labels);
                     break;
             }
 
@@ -848,36 +840,25 @@ namespace StatsDirect.Charting
                 }
 
                 //  We now know by how much we might have to shift the titles.  If we have to, restart our drawing process.
-                bool succeeded = true;
-                double xShiftFromAxis = Math.Max(xHeight + x.ExtraSpace - ALREADY_ALLOWED_HEIGHT, 0);
-                if (DrawXAxisTitle(x.Title, Math.Max(xShiftFromAxis, x.AxisTitleOffset)))
-                    extraHeightRequired = 0;
-                else
+                double xShiftFromAxis = Math.Max(xHeight + x.ExtraSpaceBeforeAxisStarts, 0);
+                if (!DrawXAxisTitle(x.Title, xShiftFromAxis))
                 {
                     // The x axis title, or the bottom of the labels, or the legend, would fall off the bottom of the current canvas.  We need a new canvas with a better size.
-                    extraHeightRequired = xShiftFromAxis;
-                    succeeded = false;
+                    extraSizeRequired.Height = (int)Math.Ceiling(xShiftFromAxis);
                 }
 
-                double yShiftFromAxis = Math.Max(yWidth + y.ExtraSpace - ALREADY_ALLOWED_WIDTH, 0);
-                if (DrawYAxisTitle(y.Title, Math.Max(yShiftFromAxis, y.AxisTitleOffset)))
-                    extraWidthRequired = 0;
-                else
+                double yShiftFromAxis = Math.Max(yAxisWidthIncludingLabels + y.ExtraSpaceBeforeAxisStarts, 0);
+                if (!DrawYAxisTitle(y.Title, yShiftFromAxis))
                 {
-                    // The x axis title, or the bottom of the labels, or the legend, would fall off the bottom of the current canvas.  We need a new canvas with a better size.
-                    extraWidthRequired = yShiftFromAxis;
-                    succeeded = false;
+                    // The y axis title, or the left of the labels, would fall off the left of the current canvas.  We need a new canvas with a better size.
+                    extraSizeRequired.Width = (int)Math.Ceiling(yShiftFromAxis);
                 }
-                if (!succeeded)
-                    return false;
             }
 
             // Draw the chart title now that we know it's safe to do so.
             if (!IsAscii)
                 DrawTitle(title);
-            extraWidthRequired = 0;
-            extraHeightRequired = 0;
-            return true;
+            return extraSizeRequired;
         }
 
         protected double DrawXScale(bool drawLabels, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
@@ -1043,6 +1024,13 @@ namespace StatsDirect.Charting
             return AxisScaler.AxisMask(stepp, znmin, nstep, sp, ScaleType);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reverse"></param>
+        /// <param name="scaleType"></param>
+        /// <param name="useCalculatedScalesEvenWithDefinition"></param>
+        /// <returns>The width of the axis, ticks, gap to labels, and labels</returns>
         protected double DrawYScale(bool reverse, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
             const double AXIS_LABEL_OFFSET_FROM_BIG_TICK = 8;
@@ -1070,7 +1058,7 @@ namespace StatsDirect.Charting
                 gridLineDashStyle = definition.ScaleParameters.Y.GridLineDashStyle;
             }
 
-            double maxWidth = 0;
+            double maxLabelWidth = 0;
             if (!(IsAscii))
             {
                 using (Pen gridLinePen = new Pen(axisPen.Color, 1))
@@ -1108,7 +1096,7 @@ namespace StatsDirect.Charting
 
 
                             string lab = value.ToString(msk);
-                            maxWidth = Math.Max(Convert.ToSingle(maxWidth), AxisDrawStringAtAngleRM(lab, xAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction).Width);
+                            maxLabelWidth = Math.Max(Convert.ToSingle(maxLabelWidth), AxisDrawStringAtAngleRM(lab, xAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction).Width);
                             AxisDrawline(xAxisCanvas - AXIS_BIG_TICK, y1, xAxisCanvas, y1);
                             if (hasGridLines)
                                 statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
@@ -1133,7 +1121,7 @@ namespace StatsDirect.Charting
                     }
                 }
             }
-            return maxWidth;
+            return maxLabelWidth + AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK;
         }
 
 
@@ -1141,7 +1129,7 @@ namespace StatsDirect.Charting
         ///  Draw the Y axis as a series
         ///  </summary>
         ///  <remarks>Labels are drawn centred between ticks</remarks>
-        ///  <returns>The extra distance occupied by the labels</returns>
+        /// <returns>The width of the axis, ticks, gap to labels, and labels</returns>
         protected double DrawYSeries(IList<Series> series)
         {
             if (null == series)
@@ -1152,10 +1140,13 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  Draw the Y axis as a series
         ///  </summary>
+        /// <returns>The width of the axis, ticks, gap to labels, and labels</returns>
         ///  <remarks>Labels are drawn centred between tics</remarks>
         protected double DrawYSeries(IList<string> labels)
         {
-            double maxWidth = 0;
+            const int AXIS_LABEL_OFFSET_FROM_TICK = 3;
+
+            double maxLabelWidth = 0;
             if (!IsAscii)
             {
                 // Vector
@@ -1180,7 +1171,7 @@ namespace StatsDirect.Charting
                         {
                             double yctr = yAxisCanvas + yExtCanvas - ((y + 0.5) / count * yExtCanvas);
                             double ytic = yAxisCanvas + yExtCanvas - (y / count * yExtCanvas);
-                            maxWidth = Math.Max(maxWidth, statsDirectCanvas.DrawStringAtAngle(labels[y], axisLabelFont, axisBrush, xAxisCanvas - (AXIS_BIG_TICK + 3), yctr, txtFormat, direction).Width);
+                            maxLabelWidth = Math.Max(maxLabelWidth, statsDirectCanvas.DrawStringAtAngle(labels[y], axisLabelFont, axisBrush, xAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_TICK), yctr, txtFormat, direction).Width);
                             AxisDrawline(xAxisCanvas - AXIS_BIG_TICK, ytic, xAxisCanvas, ytic);
                             if (hasGridLines)
                                 statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, ytic, xAxisCanvas + xExtCanvas, ytic);
@@ -1204,7 +1195,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            return maxWidth;
+            return maxLabelWidth + AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_TICK;
         }
 
         ///  <summary>

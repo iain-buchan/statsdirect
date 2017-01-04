@@ -84,15 +84,10 @@ namespace StatsDirect.Charting
             int k = seriesToUse.Count + 1;
             if (k > 10)
             {
-                scaleYAxis = 1 + (k - 10) / 20.0;
+                double scaleYAxis = 1 + (k - 10) / 20.0;
                 if (scaleYAxis > 5)
                     scaleYAxis = 5;
                 imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
-            else
-            {
-                scaleYAxis = 1;
-                imageHeight = DEFAULT_METAFILE_HEIGHT;
             }
 
             // sort the array and get the min, max values
@@ -116,14 +111,8 @@ namespace StatsDirect.Charting
                 titleFont = FontFromSaveString(bwOptions.TitleFontDescriptor);
 
             AssignMarkersToSeries();
-            double xtra = 0;
-            foreach (Series s in seriesToUse)
-            {
-                double w = MeasureStringInCanvasCoordinates(s.Title, axisLabelFont).Width + 20;
-                if (w > xtra + xAxisCanvas)
-                    xtra = w - xAxisCanvas;
-            }
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, xtra, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
+
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
 
             using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
             {
@@ -413,15 +402,10 @@ namespace StatsDirect.Charting
             int k = seriesToUse.Count + 1;
             if (k > 10)
             {
-                scaleXAxis = 1 + (k - 10) / 20.0;
+                double scaleXAxis = 1 + (k - 10) / 20.0;
                 if (scaleXAxis > 5)
                     scaleXAxis = 5;
                 imageWidth = (int)Math.Ceiling(scaleXAxis * DEFAULT_METAFILE_WIDTH);
-            }
-            else
-            {
-                scaleXAxis = 1;
-                imageWidth = DEFAULT_METAFILE_WIDTH;
             }
 
             // sort the array and get the min, max values
@@ -458,34 +442,7 @@ namespace StatsDirect.Charting
             definition.YSeries = definition.XSeries;
             definition.XSeries = tempSeries;
 
-            //  Get overall minima and maxima
-            double min = double.MaxValue;
-            double minGreaterThanZero = double.MaxValue;
-            double max = double.MinValue;
-            foreach (DoubleSeries s in seriesToUse)
-            {
-                min = Math.Min(min, s.Min);
-                minGreaterThanZero = Math.Min(minGreaterThanZero, s.MinGreaterThanZero);
-                max = Math.Max(max, s.Max);
-            }
-
-            int div;
-            double zmin;
-            double zint;
-            Q_AxisOrFromDefinition(ref min, minGreaterThanZero, ref max, out div, out zmin, out zint, out minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
-            string msk = AxisMaskOrFromDefinition(zint, zmin, div, minorTicsPerMajorTic, true, definition.ScaleParameters.Y.ScaleType, false);
-
-            float xtra = 0;
-            float w = MeasureStringInCanvasCoordinates(min.ToString(msk), axisLabelFont).Width;
-            //  Allow 20 units for axes; if we need more, offset the axis
-            if (w - 20 > xtra)
-                xtra = w - 20;
-            w = MeasureStringInCanvasCoordinates(max.ToString(msk), axisLabelFont).Width;
-            if (w - 20 > xtra)
-                xtra = w - 20;
-            //  Offset the axis label
-
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(null, AxisMode.Series, 0, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), false, false);
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
 
             using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
             {
@@ -780,8 +737,8 @@ namespace StatsDirect.Charting
             ASCII_InitPlot(seriesToUse.Count * 2 + 4);
 
             // Draw the scale
-            DefaultAxes(0);
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n", new Axis(bwOptions.XAxisTitle, AxisMode.Scale, 0, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, 0, definition.ScaleParameters.X.ScaleType), false, false);
+            DefaultAxes();
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n", new Axis(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType), false, false);
             divx = axisXMax - axisXMin;
             offx = Convert.ToInt32(-(axisXMin / divx * 60) + 16);
             divy = seriesToUse.Count + 1;
