@@ -6137,8 +6137,7 @@ namespace StatsDirect.Charting
             w = MeasureStringInCanvasCoordinates(combo_ti(cap), labelFont).Width + 30;
             if (w > xtra + xAxisCanvas)
                 xtra = w - xAxisCanvas - 5;
-            xExtCanvas = 940 - rgap;
-            DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+            DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
 
             divx = DataMaxX - DataMinX;
             offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
@@ -6613,7 +6612,6 @@ namespace StatsDirect.Charting
             w = MeasureStringInCanvasCoordinates(combo_ti(cap), labelFont).Width + 30;
             if (w > xtra + xAxisCanvas)
                 xtra = w - xAxisCanvas - 5;
-            xExtCanvas = 940 - rgap;
 
             switch (xform)
             {
@@ -6621,7 +6619,7 @@ namespace StatsDirect.Charting
                     {
                         double realamin, realamax;
                         CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
-                        DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+                        DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
                         divx = DataMaxX - DataMinX;
                         offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
                         divy = k;
@@ -6655,7 +6653,7 @@ namespace StatsDirect.Charting
                     double amin;
                     double aint;
                     AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
-                    DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Linear), new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
+                    DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
                     DataMinX = axisXMin;
                     DataMaxX = axisXMax;
                     break;
