@@ -131,18 +131,18 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag groupsParameters = new ParameterBag();
                 groupsList.Add(groupsParameters);
-                groupsParameters.AddOutput("group", host.RoundU(asm[j]));
-                groupsParameters.AddOutput("observed", spop[j].ToString());
-                groupsParameters.AddOutput("expected", host.RoundU(spop[j] * asm[j]));
+                groupsParameters.AddOutput("group", asm[j]);
+                groupsParameters.AddOutput("observed", spop[j]);
+                groupsParameters.AddOutput("expected", spop[j] * asm[j]);
                 groupsParameters.AddOutput("lb", stratlab ? title[j] : string.Empty);
             }
-            outputParameters.AddOutput("total", etot.ToString());
+            outputParameters.AddOutput("total", etot);
 
             int fault;
             PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
             if (fault == 0)
             {
-                outputParameters.AddOutput("ratio", host.RoundU(dead / etot));
+                outputParameters.AddOutput("ratio", dead / etot);
                 outputParameters.AddOutput("smr", Formatting.XRound(Convert.ToInt32((dead / etot) * 100), 0));
 
                 double xu;
@@ -154,10 +154,10 @@ namespace StatsDirect.Builtins
                 if (xu != Constant.MISSING)
                     xu = xu / etot;
                 outputParameters.AddOutput("pc", Formatting.XRound(100 * cco, 2));
-                outputParameters.AddOutput("from", host.RoundU(xl));
-                outputParameters.AddOutput("to", host.RoundU(xu));
+                outputParameters.AddOutput("from", xl);
+                outputParameters.AddOutput("to", xu);
                 outputParameters.AddOutput("from100", Formatting.XRound(Convert.ToInt32(100 * xl), 0));
-                outputParameters.AddOutput("to100", host.RoundU(Convert.ToInt32(100 * xu)));
+                outputParameters.AddOutput("to100", Convert.ToInt32(100 * xu));
 
                 double term;
                 double plo;
@@ -166,9 +166,9 @@ namespace StatsDirect.Builtins
                 if (fault != 0)
                     phi = Constant.MISSING;
 
-                outputParameters.AddOutput("qty", Convert.ToInt64(dead).ToString());
-                outputParameters.AddOutput("p_hi", host.pval(phi));
-                outputParameters.AddOutput("p_lo", host.pval(plo));
+                outputParameters.AddOutput("qty", Convert.ToInt64(dead));
+                outputParameters.AddOutput("p_hi", phi);
+                outputParameters.AddOutput("p_lo", plo);
             }
             return outputParameters;
         }
@@ -282,11 +282,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("idxy", host.RoundU(idxy[j]));
-                inputsParameters.AddOutput("idxn", host.RoundU(idxn[j]));
-                inputsParameters.AddOutput("idxr", host.RoundU(idxr[j] * nunit));
-                inputsParameters.AddOutput("refn", host.RoundU(refn[j]));
-                inputsParameters.AddOutput("refw", host.RoundU(refw[j]));
+                inputsParameters.AddOutput("idxy", idxy[j]);
+                inputsParameters.AddOutput("idxn", idxn[j]);
+                inputsParameters.AddOutput("idxr", idxr[j] * nunit);
+                inputsParameters.AddOutput("refn", refn[j]);
+                inputsParameters.AddOutput("refw", refw[j]);
             }
             // CIs for the single Poisson parameter (stratum specific rate)
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
@@ -296,24 +296,24 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag cisParameters = new ParameterBag();
                 cisList.Add(cisParameters);
-                cisParameters.AddOutput("idxr", host.RoundU(idxr[j] * nunit));
+                cisParameters.AddOutput("idxr", idxr[j] * nunit);
                 poisson_ci(alpha, idxy[j], idxn[j], out XL, out xu);
-                cisParameters.AddOutput("from", host.RoundU(XL * nunit));
-                cisParameters.AddOutput("to", host.RoundU(xu * nunit));
+                cisParameters.AddOutput("from", XL * nunit);
+                cisParameters.AddOutput("to", xu * nunit);
                 cisParameters.AddOutput("label", title[j]);
             }
 
             // pooled
-            outputParameters.AddOutput("events", host.RoundU(events));
-            outputParameters.AddOutput("stde", host.RoundU(stdr * ntot));
+            outputParameters.AddOutput("events", events);
+            outputParameters.AddOutput("stde", stdr * ntot);
 
-            outputParameters.AddOutput("crude", host.RoundU(nunit * events / ntot));
-            outputParameters.AddOutput("stdr", host.RoundU(nunit * stdr));
+            outputParameters.AddOutput("crude", nunit * events / ntot);
+            outputParameters.AddOutput("stdr", nunit * stdr);
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
 
             // Binomial approx CI - see Armitage
             double ser = bino_var > 0.0 ? Math.Sqrt(bino_var) : Constant.MISSING;
-            outputParameters.AddOutput("ser_any", host.RoundU(nunit * ser));
+            outputParameters.AddOutput("ser_any", nunit * ser);
             if (fault != 0)
             {
                 XL = Constant.MISSING;
@@ -324,12 +324,12 @@ namespace StatsDirect.Builtins
                 XL = stdr - cit * ser;
                 xu = stdr + cit * ser;
             }
-            outputParameters.AddOutput("from_any", host.RoundU(nunit * XL));
-            outputParameters.AddOutput("to_any", host.RoundU(nunit * xu));
+            outputParameters.AddOutput("from_any", nunit * XL);
+            outputParameters.AddOutput("to_any", nunit * xu);
 
             // Poisson approx CI
             ser = pois_var > 0.0 ? Math.Sqrt(pois_var) : Constant.MISSING;
-            outputParameters.AddOutput("ser_small", host.RoundU(nunit * ser));
+            outputParameters.AddOutput("ser_small", nunit * ser);
 
             if (fault != 0)
             {
@@ -341,8 +341,8 @@ namespace StatsDirect.Builtins
                 XL = stdr - cit * ser;
                 xu = stdr + cit * ser;
             }
-            outputParameters.AddOutput("from_small", host.RoundU(nunit * XL));
-            outputParameters.AddOutput("to_small", host.RoundU(nunit * xu));
+            outputParameters.AddOutput("from_small", nunit * XL);
+            outputParameters.AddOutput("to_small", nunit * xu);
 
             // Dobson et al. improved approx Poisson CI - Stats in Medicine 1991 (10)457
             poisson_ci(alpha, events, 1.0, out XL, out xu);
@@ -362,8 +362,8 @@ namespace StatsDirect.Builtins
             {
                 xu = Constant.MISSING;
             }
-            outputParameters.AddOutput("from_dobson", host.RoundU(nunit * XL));
-            outputParameters.AddOutput("to_dobson", host.RoundU(nunit * xu));
+            outputParameters.AddOutput("from_dobson", nunit * XL);
+            outputParameters.AddOutput("to_dobson", nunit * xu);
 
             return outputParameters;
         }
@@ -725,11 +725,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag strataParameters = new ParameterBag();
                 strataList.Add(strataParameters);
-                strataParameters.AddOutput("st", i.ToString());
-                strataParameters.AddOutput("a", a[i].ToString());
-                strataParameters.AddOutput("pt1", pt1[i].ToString());
-                strataParameters.AddOutput("b", b[i].ToString());
-                strataParameters.AddOutput("pt2", pt2[i].ToString());
+                strataParameters.AddOutput("st", i);
+                strataParameters.AddOutput("a", a[i]);
+                strataParameters.AddOutput("pt1", pt1[i]);
+                strataParameters.AddOutput("b", b[i]);
+                strataParameters.AddOutput("pt2", pt2[i]);
                 tmp = stratlab ? title[i] : string.Empty;
                 strataParameters.AddOutput("lb", tmp);
             }
@@ -743,10 +743,10 @@ namespace StatsDirect.Builtins
                 ParameterBag ratesParameters = new ParameterBag();
                 ratesList.Add(ratesParameters);
                 ratesParameters.AddOutput("st", i <= k ? i.ToString() : "All");
-                ratesParameters.AddOutput("rr", host.RoundU(rkr[i]));
-                ratesParameters.AddOutput("lci", host.RoundU(rkrl[i]));
-                ratesParameters.AddOutput("uci", host.RoundU(rkru[i]));
-                ratesParameters.AddOutput("wt", host.RoundU(rkw[i]));
+                ratesParameters.AddOutput("rr", rkr[i]);
+                ratesParameters.AddOutput("lci", rkrl[i]);
+                ratesParameters.AddOutput("uci", rkru[i]);
+                ratesParameters.AddOutput("wt", rkw[i]);
                 tmp = stratlab ? title[i] : string.Empty;
                 ratesParameters.AddOutput("lb", tmp);
             }
@@ -761,48 +761,48 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("units", nunit.ToString("#,##0") + " units");
             }
 
-            outputParameters.AddOutput("cre", host.RoundU(cre * nunit));
-            outputParameters.AddOutput("cre_from", host.RoundU(crel * nunit));
+            outputParameters.AddOutput("cre", cre * nunit);
+            outputParameters.AddOutput("cre_from", crel * nunit);
             outputParameters.AddOutput("cre_to", host.RoundU(creu * nunit) + warn1);
 
-            outputParameters.AddOutput("crne", host.RoundU(crne * nunit));
-            outputParameters.AddOutput("crne_from", host.RoundU(crnel * nunit));
+            outputParameters.AddOutput("crne", crne * nunit);
+            outputParameters.AddOutput("crne_from", crnel * nunit);
             outputParameters.AddOutput("crne_to", host.RoundU(crneu * nunit) + warn2);
 
-            outputParameters.AddOutput("sre", host.RoundU(sre * nunit));
+            outputParameters.AddOutput("sre", sre * nunit);
             if (model == 1)
             {
-                outputParameters.AddOutput("sre_from", host.RoundU(srel * nunit));
-                outputParameters.AddOutput("sre_to", host.RoundU(sreu * nunit));
+                outputParameters.AddOutput("sre_from", srel * nunit);
+                outputParameters.AddOutput("sre_to", sreu * nunit);
             }
             else
             {
-                outputParameters.AddOutput("sre_from", host.RoundU(srel_bino * nunit));
-                outputParameters.AddOutput("sre_to", host.RoundU(sreu_bino * nunit));
+                outputParameters.AddOutput("sre_from", srel_bino * nunit);
+                outputParameters.AddOutput("sre_to", sreu_bino * nunit);
             }
 
-            outputParameters.AddOutput("srne", host.RoundU(srne * nunit));
+            outputParameters.AddOutput("srne", srne * nunit);
             if (model == 1)
             {
-                outputParameters.AddOutput("srne_from", host.RoundU(srnel * nunit));
-                outputParameters.AddOutput("srne_to", host.RoundU(srneu * nunit));
+                outputParameters.AddOutput("srne_from", srnel * nunit);
+                outputParameters.AddOutput("srne_to", srneu * nunit);
             }
             else
             {
-                outputParameters.AddOutput("srne_from", host.RoundU(srnel_bino * nunit));
-                outputParameters.AddOutput("srne_to", host.RoundU(srneu_bino * nunit));
+                outputParameters.AddOutput("srne_from", srnel_bino * nunit);
+                outputParameters.AddOutput("srne_to", srneu_bino * nunit);
             }
 
-            outputParameters.AddOutput("srr", host.RoundU(srr));
+            outputParameters.AddOutput("srr", srr);
             if (model == 1)
             {
-                outputParameters.AddOutput("srr_from", host.RoundU(srrl));
-                outputParameters.AddOutput("srr_to", host.RoundU(srru));
+                outputParameters.AddOutput("srr_from", srrl);
+                outputParameters.AddOutput("srr_to", srru);
             }
             else
             {
-                outputParameters.AddOutput("srr_from", host.RoundU(srrl_bino));
-                outputParameters.AddOutput("srr_to", host.RoundU(srru_bino));
+                outputParameters.AddOutput("srr_from", srrl_bino);
+                outputParameters.AddOutput("srr_to", srru_bino);
             }
 
             int[] pg = new int[k + 2 + 1 /* VB to C# conversion */ ];

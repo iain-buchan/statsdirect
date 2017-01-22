@@ -8,24 +8,24 @@
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Rate ratio</th><thfirst><ci><in>pc</in>% CI (<in>method</in>)</ci></thfirst><thspan/><th>Weight</th><th></th></tr>
-<block name="rates"><tr><td><in>st</in></td><td><in>rr</in></td><td><ci><in>lci</in></ci></td><td><ci><in>uci</in></ci></td><td><in>wt</in></td><td><in>lb</in></td></tr></block>
+<block name="rates"><tr><td><in>st</in></td><td><inu>rr</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><inu>wt</inu></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <line>Analysis model for rates: <in>model_out</in></line>
 <line>Rates are expressed per <in>units</in> of person time:</line>
 <line></line>
-<line>Crude rate exposed = <in>cre</in></line>
-<line><ci>Exact <in>pc</in>% CI = <in>cre_from</in>  to  <in>cre_to</in></ci></line>
+<line>Crude rate exposed = <inu>cre</inu></line>
+<line><ci>Exact <in>pc</in>% CI = <inu>cre_from</inu>  to  <in>cre_to</in></ci></line>
 <line></line>
-<line>Crude rate not exposed = <in>crne</in></line>
-<line><ci>Exact <in>pc</in>% CI = <in>crne_from</in>  to  <in>crne_to</in></ci></line>
+<line>Crude rate not exposed = <inu>crne</inu></line>
+<line><ci>Exact <in>pc</in>% CI = <inu>crne_from</inu>  to  <in>crne_to</in></ci></line>
 <line></line>
-<line>Standardized rate exposed = <in>sre</in></line>
-<line><ci>Approximate <in>pc</in>% CI = <in>sre_from</in>  to  <in>sre_to</in></ci></line>
+<line>Standardized rate exposed = <inu>sre</inu></line>
+<line><ci>Approximate <in>pc</in>% CI = <inu>sre_from</inu>  to  <inu>sre_to</inu></ci></line>
 <line></line>
-<line>Standardized rate not exposed = <in>srne</in></line>
-<line><ci>Approximate <in>pc</in>% CI = <in>srne_from</in>  to  <in>srne_to</in></ci></line>
+<line>Standardized rate not exposed = <inu>srne</inu></line>
+<line><ci>Approximate <in>pc</in>% CI = <inu>srne_from</inu>  to  <inu>srne_to</inu></ci></line>
 <line></line>
-<line>Standardized rate ratio = <in>srr</in></line>
-<line><ci>Approximate <in>pc</in>% CI = <in>srr_from</in>  to  <in>srr_to</in></ci></line>
+<line>Standardized rate ratio = <inu>srr</inu></line>
+<line><ci>Approximate <in>pc</in>% CI = <inu>srr_from</inu>  to  <inu>srr_to</inu></ci></line>
 </report>
