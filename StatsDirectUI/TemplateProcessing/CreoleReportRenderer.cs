@@ -8,6 +8,9 @@ namespace StatsDirect.TemplateProcessing
 {
     public class CreoleReportRenderer : ReportRenderer
     {
+        const string RTF_REPORT_START = @"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}{\f2\fswiss Courier New;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;\red127\green127\blue0;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 ";
+        const string RTF_REPORT_END = @"\par }";
+
         public string Template { get; set; }
 
         public override string Render(ITemplateHost host, ParameterBag substitutions)
@@ -29,8 +32,8 @@ namespace StatsDirect.TemplateProcessing
             Dictionary<string, CreoleReportSubstitute> substitutions = new Dictionary<string, CreoleReportSubstitute>
             {
                 // Colour table entries: 1=black, 2=white, 3=dark cyan, 4=blue (CI), 5=green (pval), 6=red (warn), 7=dark red (subtotal), 8=dark blue (model/grandtotal), 9 = dark yellow (warnabit).
-                { "<report>", new CreoleReportSubstitute(@"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}{\f2\fswiss Courier New;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;\red127\green127\blue0;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 ") },
-                { "</report>", new CreoleReportSubstitute(@"\par }") },
+                { "<report>", new CreoleReportSubstitute("") },
+                { "</report>", new CreoleReportSubstitute("") },
                 { "<b>", new CreoleReportSubstitute(@"{\b ") },
                 { "</b>", new CreoleReportSubstitute(@"}") },
                 { "<ci>", new CreoleReportSubstitute(@"{\cf4 ") },
@@ -98,6 +101,7 @@ namespace StatsDirect.TemplateProcessing
             StringBuilder finalOutput = new StringBuilder();
             Regex cellFinder = new Regex(@"\\intbl(?:!!(?<span>[A-Z]+)!!)?");
             bool wasInTable = false;
+            finalOutput.Append(RTF_REPORT_START);
             foreach (string unchangedLine in splitResults)
             {
                 // Do not propagate blank lines
@@ -147,6 +151,7 @@ namespace StatsDirect.TemplateProcessing
                     finalOutput.AppendLine(line);
                 wasInTable = isInTable;
             }
+            finalOutput.Append(RTF_REPORT_END);
             return finalOutput.ToString();
         }
 
@@ -185,28 +190,28 @@ namespace StatsDirect.TemplateProcessing
         /// <summary>
         /// Search for strings of the form &lt;include src="name"/> in the template; where they exist, replace them with the named template
         /// </summary>
-        /// <param name="rawRtf">The RTF to examine for inclusions</param>
+        /// <param name="rawCreole">The RTF to examine for inclusions</param>
         /// <param name="knownInclusions"></param>
         /// <returns>The RTF with inclusions replaced</returns>
-        private static string ResolveTemplates(string rawRtf, ICollection<string> knownInclusions)
+        private static string ResolveTemplates(string rawCreole, ICollection<string> knownInclusions)
         {
             StringBuilder sb = new StringBuilder();
             int sourcePosition = 0;
             do
             {
-                int startOfInclusion = rawRtf.IndexOf("<include src=", sourcePosition, StringComparison.Ordinal);
+                int startOfInclusion = rawCreole.IndexOf("<include src=", sourcePosition, StringComparison.Ordinal);
                 if (startOfInclusion < 0)
                 {
-                    sb.Append(rawRtf.Substring(sourcePosition));
+                    sb.Append(rawCreole.Substring(sourcePosition));
                     return sb.ToString();
                 }
 
-                int endOfInclusion = rawRtf.IndexOf("/>", startOfInclusion + 1, StringComparison.Ordinal);
+                int endOfInclusion = rawCreole.IndexOf("/>", startOfInclusion + 1, StringComparison.Ordinal);
                 if (-1 == endOfInclusion)
                     throw new Exception("No terminating > after a <include");
 
-                sb.Append(rawRtf.Substring(sourcePosition, startOfInclusion - sourcePosition));
-                string includedName = rawRtf.Substring(startOfInclusion + 13, endOfInclusion - (startOfInclusion + 13));
+                sb.Append(rawCreole.Substring(sourcePosition, startOfInclusion - sourcePosition));
+                string includedName = rawCreole.Substring(startOfInclusion + 13, endOfInclusion - (startOfInclusion + 13));
                 includedName = includedName.Trim();
                 if (includedName.StartsWith("\""))
                     includedName = includedName.Substring(1);
@@ -215,13 +220,12 @@ namespace StatsDirect.TemplateProcessing
                 if (!knownInclusions.Contains(includedName))
                 {
                     knownInclusions.Add(includedName);
-                    string includedRtf = GetContent(includedName);
-                    sb.Append(ResolveTemplates(includedRtf, knownInclusions));
+                    string includedContent = GetContent(includedName);
+                    sb.Append(ResolveTemplates(includedContent, knownInclusions));
                     knownInclusions.Remove(includedName);
                 }
                 sourcePosition = endOfInclusion + 2;
             } while (true);
-
         }
 
         /// <summary>

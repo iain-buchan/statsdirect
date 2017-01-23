@@ -14,4 +14,6 @@
 <block name="y"><tr><td><b><grandtotal><in>y</in></grandtotal></b></td><block name="tot"><td><in>tot</in></td></block></tr></block>
 </table>
 </block>
+<line></line>
+<line></line>
 </report>

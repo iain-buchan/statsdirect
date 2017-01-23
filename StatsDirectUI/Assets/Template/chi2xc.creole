@@ -20,4 +20,6 @@
 <line></line>
 <line>Remaining Chi&#xb2; (non-linearity) = <in>chi_non</in> (<in>df</in> DF)  <pval><in>chi_non_p</in></pval></line>
 </block>
+<line></line>
+<line></line>
 </report>

@@ -152,6 +152,6 @@
       </iftrue>
     </test>
     <builtin function-name="rptCrosstabs" />
-		<report type="text/rtf" filename="xtabouter.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="xtabouter.creole" />
+  </steps>
 </operation>

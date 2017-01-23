@@ -1340,12 +1340,8 @@
     <None Include="Assets\STATSDIRECT.chm" />
     <None Include="Assets\Template\BACKINT.rtf" />
     <None Include="Assets\Template\blank.rtf" />
-    <None Include="Assets\Template\charts.rtf" />
-    <None Include="Assets\Template\chirxc.rtf" />
     <None Include="Assets\Template\universalAgreement.rtf" />
     <None Include="Assets\Template\kappaSimulatedExactP.rtf" />
-    <None Include="Assets\Template\xtabouter.rtf" />
-    <None Include="Assets\Template\gencmh.rtf" />
     <None Include="Assets\Template\kappa.rtf" />
     <None Include="Assets\Template\kappa2.rtf" />
     <None Include="Assets\Template\kappam.rtf" />
@@ -1359,7 +1355,6 @@
     <None Include="Assets\Template\prmatrix.rtf" />
     <None Include="Assets\Template\prscores.rtf" />
     <None Include="Assets\Template\residm.rtf" />
-    <None Include="Assets\Template\rrmeta.rtf" />
     <None Include="Assets\Template\subset.rtf" />
     <None Include="Assets\Template\s_corr.rtf" />
     <None Include="Assets\Template\S_INCASE.rtf" />
@@ -1372,8 +1367,6 @@
     <None Include="Assets\Template\TWONEST.rtf" />
     <None Include="Assets\Template\twoway.rtf" />
     <None Include="Assets\Template\woolf.rtf" />
-    <None Include="Assets\Template\xtab.rtf" />
-    <None Include="Assets\Template\xtabz.rtf" />
     <Compile Include="UI\Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
