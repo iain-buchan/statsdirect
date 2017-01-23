@@ -925,34 +925,49 @@ namespace StatsDirect.Charting
                     gridLinePen.DashStyle = gridLineDashStyle;
                     for (int x = 0; x <= xDiv; x++)
                     {
-                        double x1 = x / (double)xDiv * xExtCanvas + xAxisCanvas;
                         if (x % minorTicsPerMajorTic != 0)
                         {
                             //  Minor tic
                             switch (scaleType)
                             {
                                 case ScaleType.Log10:
-                                    // Assume 3 minors per major
-                                    double baseValue = axisXMin + (x - (x % minorTicsPerMajorTic)) * aint;
-                                    double value = Math.Pow(10, baseValue);
-                                    if (x % minorTicsPerMajorTic == 1)
-                                        x1 = ToCanvasX(2.0 * value, scaleType);
-                                    else if (x % minorTicsPerMajorTic == 2)
-                                        x1 = ToCanvasX(5.0 * value, scaleType);
-                                    AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
-                                    if (hasGridLines && !(drawLabels))
-                                        statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
+                                    {
+                                        // Assume 3 minors per major: 2, 5
+                                        double x1;
+                                        double baseValue = axisXMin + (x - (x % minorTicsPerMajorTic)) * aint;
+                                        double value = Math.Pow(10, baseValue);
+                                        if (x % minorTicsPerMajorTic == 1)
+                                            value *= 2;
+                                        else if (x % minorTicsPerMajorTic == 2)
+                                            value *= 5;
+                                        else
+                                            throw new Exception("Log10 scale expects two minor tics between each major tic");
+                                        x1 = ToCanvasX(value);
+                                        if (drawLabels)
+                                        {
+                                            string lab = value.ToString(msk);
+                                            labelHeight = Math.Max(AxisDrawStringAtAngleCT(lab, x1, yAxisCanvas - AXIS_BIG_TICK, direction).Height, Convert.ToSingle(labelHeight));
+                                            AxisDrawline(x1, yAxisCanvas - AXIS_BIG_TICK, x1, yAxisCanvas);
+                                        }
+                                        AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
+                                        if (hasGridLines && !drawLabels)
+                                            statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
+                                    }
                                     break;
                                 default:
-                                    AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
-                                    if (hasGridLines && !(drawLabels))
-                                        statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
+                                    {
+                                        double x1 = x / (double)xDiv * xExtCanvas + xAxisCanvas;
+                                        AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
+                                        if (hasGridLines && !(drawLabels))
+                                            statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
+                                    }
                                     break;
                             }
                         }
                         else
                         {
                             //  Major tic - may or may not be labelled
+                            double x1 = x / (double)xDiv * xExtCanvas + xAxisCanvas;
                             if (drawLabels)
                             {
                                 double value = axisXMin + x * aint;
@@ -2057,12 +2072,26 @@ namespace StatsDirect.Charting
             return x;
         }
 
-        protected static void CreateRatioLogScale(out int tics, ref double[] tic, ref double min, ref double max, out double scalemin, out double scalemax)
+        /// <summary>
+        /// Calculate a ratio scale with tics in each decade at 1, 2, 3, 5.
+        /// </summary>
+        /// <param name="tics"></param>
+        /// <param name="tic"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <param name="scalemin"></param>
+        /// <param name="scalemax"></param>
+        protected static void CreateRatioLogScale(out int tics, out double[] tic, ref double min, ref double max, out double scalemin, out double scalemax)
         {
-
             double top = max, bot = min;
-            if (max <= 0) top = 100000000;
-            if (min <= 0) bot = 0.00000001;
+            // #1323: Detect an exact power of 10 and prevent it from fouling up the algorithm
+            if (min == Math.Pow(10, Math.Floor(Math.Log10(min))))
+                bot = 0.99 * bot;
+
+            if (max <= 0)
+                top = 100000000;
+            if (min <= 0)
+                bot = 0.00000001;
 
             double tmp = bot;
             int i = 1;
@@ -2086,11 +2115,10 @@ namespace StatsDirect.Charting
             } while (tmp < top * 2);
 
             tics = i;
-            Array.Resize(ref tic, tics + 1);
+            tic = new double[tics + 1];
 
             tmp = bot;
             i = 1;
-
             do
             {
                 z = Math.Pow(10, Math.Floor(Math.Log10(tmp)));
@@ -2110,13 +2138,14 @@ namespace StatsDirect.Charting
                 if (tmp >= bot) i++;
                 tic[i] = tmp;
                 if (tmp >= top) break;
+                // TODO: Does this give a higher max than our scale points if we multiply tmp here and then exit (yes), and does it matter if it does (dunno)?
                 tmp += z * 5;
             } while (tmp < top * 2);
 
             scalemin = tic[1];
             scalemax = tmp;
-            min = Math.Log(scalemin);
-            max = Math.Log(scalemax);
+            min = scalemin;
+            max = scalemax;
         }
 
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]

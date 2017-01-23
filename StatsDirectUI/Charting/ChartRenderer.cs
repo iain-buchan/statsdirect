@@ -4114,10 +4114,10 @@ namespace StatsDirect.Charting
             if (DataMaxX < orumax && orumax != Constant.MISSING && !double.IsInfinity(orumax))
                 DataMaxX = orumax;
 
-            int tics = 1;
-            double[] tic = new double[tics + 1];
+            int tics;
+            double[] tic;
             double realamin, realamax;
-            CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
+            CreateRatioLogScale(out tics, out tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
 
             StartVectorPlot();
             double rgap = 0;
@@ -4718,8 +4718,8 @@ namespace StatsDirect.Charting
             double orlmin = double.PositiveInfinity;
             double max_gn = double.NegativeInfinity;
 
-            int tics = 1;
-            double[] tic = new double[tics + 1];
+            // int tics;
+            // double[] tic;
 
             switch (xform)
             {
@@ -4831,6 +4831,8 @@ namespace StatsDirect.Charting
             DataMinX = ormin;
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
                 DataMinX = orlmin;
+            // TODO: Is this always correct?
+            DataMinGreaterThanZeroX = DataMinX;
 
             double rgap = 0;
             double xtra = 0;
@@ -4856,9 +4858,13 @@ namespace StatsDirect.Charting
             {
                 case Transformation.Log:
                     {
-                        double realamin, realamax;
-                        CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
-                        DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+                        // double realamin, realamax;
+                        // CreateRatioLogScale(out tics, out tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
+                        double amin;
+                        double aint;
+                        AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Log10);
+                        DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+                        /*
                         divx = DataMaxX - DataMinX;
                         offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
                         divy = k;
@@ -4870,7 +4876,7 @@ namespace StatsDirect.Charting
                             {
                                 if (tic[i] >= realamin && tic[i] <= realamax)
                                 {
-                                    double xm = ToCanvasX(Math.Log(tic[i]));
+                                    double xm = ToCanvasX(tic[i]);
                                     string lab = tic[i].ToString("G");
                                     if (lastXM == 0 || MeasureStringInCanvasCoordinates(lab, axisLabelFont).Width < xm - lastXM)
                                     {
@@ -4881,20 +4887,23 @@ namespace StatsDirect.Charting
                                 }
                             }
                         }
+                        */
                     }
                     break;
                 default:
-                    if (cap.IndexOf("Correlation (", StringComparison.Ordinal) >= 0)
                     {
-                        DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
-                        DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
+                        if (cap.IndexOf("Correlation (", StringComparison.Ordinal) >= 0)
+                        {
+                            DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
+                            DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
+                        }
+                        double amin;
+                        double aint;
+                        AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
+                        DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
+                        DataMinX = axisXMin;
+                        DataMaxX = axisXMax;
                     }
-                    double amin;
-                    double aint;
-                    AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
-                    DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
-                    DataMinX = axisXMin;
-                    DataMaxX = axisXMax;
                     break;
             }
 
@@ -4953,7 +4962,7 @@ namespace StatsDirect.Charting
                                     xm = ToCanvasX(odr[i]);
                                     break;
                                 case Transformation.Log:
-                                    xm = ToCanvasX(Math.Log(odr[i]));
+                                    xm = ToCanvasX(Math.Log10(odr[i]));
                                     break;
                             }
 
@@ -4968,7 +4977,7 @@ namespace StatsDirect.Charting
                             switch (xform)
                             {
                                 case Transformation.Log:
-                                    xl = ToCanvasX(Math.Log(odrl[i]));
+                                    xl = ToCanvasX(Math.Log10(odrl[i]));
                                     break;
                                 case Transformation.Z:
                                     xl = ToCanvasX(MathDbl.rtoz(odrl[i]));
@@ -4983,7 +4992,7 @@ namespace StatsDirect.Charting
                         switch (xform)
                         {
                             case Transformation.Log:
-                                xr = ToCanvasX(Math.Log(odru[i]));
+                                xr = ToCanvasX(Math.Log10(odru[i]));
                                 break;
                             case Transformation.Z:
                                 xr = ToCanvasX(MathDbl.rtoz(odru[i]));

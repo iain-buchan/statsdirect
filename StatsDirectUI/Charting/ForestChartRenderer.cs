@@ -32,22 +32,39 @@ namespace StatsDirect.Charting
             {
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
+                    // Odds ratio
                     if (odr[i] > DataMaxX)
                         DataMaxX = odr[i];
                     if (odr[i] < DataMinX)
                         DataMinX = odr[i];
-                    if (odr[i] < DataMinGreaterThanZeroX)
+                    if (odr[i] > 0 && odr[i] < DataMinGreaterThanZeroX)
                         DataMinGreaterThanZeroX = odr[i];
+
+                    // Swap LCI and UCI if the user's entered them the wrong way round
                     if (odrl[i] > odru[i])
                     {
                         double tmp = odrl[i];
                         odrl[i] = odru[i];
                         odru[i] = tmp;
                     }
-                    if (odrl[i] < DataMinX && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
-                        DataMinX = odrl[i];
-                    if (odru[i] > DataMaxX && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
-                        DataMaxX = odru[i];
+                    if (odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
+                    {
+                        if (odrl[i] > DataMaxX)
+                            DataMaxX = odrl[i];
+                        if (odrl[i] < DataMinX)
+                            DataMinX = odrl[i];
+                        if (odrl[i] > 0 && odrl[i] < DataMinGreaterThanZeroX)
+                            DataMinGreaterThanZeroX = odrl[i];
+                    }
+                    if (odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
+                    {
+                        if (odru[i] > DataMaxX)
+                            DataMaxX = odru[i];
+                        if (odru[i] < DataMinX)
+                            DataMinX = odru[i];
+                        if (odru[i] > 0 && odru[i] < DataMinGreaterThanZeroX)
+                            DataMinGreaterThanZeroX = odru[i];
+                    }
                 }
             }
 
@@ -63,7 +80,7 @@ namespace StatsDirect.Charting
 
             return new ScaleParameters
             {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.LogNatural }, Min = DataMinX, MinGreaterThanZero = DataMinGreaterThanZeroX, Max = DataMaxX },
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Log10 }, Min = DataMinX, MinGreaterThanZero = DataMinGreaterThanZeroX, Max = DataMaxX },
                 Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
             };
         }
@@ -136,9 +153,6 @@ namespace StatsDirect.Charting
 
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 
-            ScaleType xlogscale = definition.ScaleParameters.X.ScaleType;
-            bool isLogScale = (xlogscale == ScaleType.Log10 || xlogscale == ScaleType.LogNatural);
-
             // Determine whether to draw a vertical line and, if so, where; ensure it is within our scale.
             bool shouldDrawLine = DataMinX <= 0 || (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue);
             double lineX = (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue) ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
@@ -161,12 +175,8 @@ namespace StatsDirect.Charting
             double[] tic = null;
             double realamin = 0;
             double realamax = 0;
-            if (isLogScale)
-            {
-                tics = 1;
-                tic = new double[tics + 1];
-                CreateRatioLogScale(out tics, ref tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
-            }
+            if (false)
+                CreateRatioLogScale(out tics, out tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
 
             StartVectorPlot();
 
@@ -191,17 +201,17 @@ namespace StatsDirect.Charting
             float w = TitleWidthInCanvasCoordinates(combo_ti(fOptions.Title)) + 30;
             if (w > xtra + xAxisCanvas)
                 xtra = w - xAxisCanvas - 5;
-            if (isLogScale)
-                DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.LineOnly, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+            if (false)
+                DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
             else
-                DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.Scale, ScaleType.NotSet) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
+                DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
 
             divx = DataMaxX - DataMinX;
             offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
             divy = kok + pbias;
             offy = yAxisCanvas;
 
-            if (isLogScale)
+            if (false)
             {
                 double lastXM = 0;
                 for (int i = 1; i <= tics; i++)
@@ -209,8 +219,7 @@ namespace StatsDirect.Charting
                     //  The use of tic is safe, as this code is only run if logscale, which is where tic is set above.
                     if (tic[i] >= realamin && tic[i] <= realamax)
                     {
-                        // force ToCanvas to use log on a linear canvas because scatter plot etc. uses different scaling: TODO
-                        double xm = ToCanvasX(Math.Log(tic[i]), ScaleType.Linear);
+                        double xm = ToCanvasX(tic[i], ScaleType.Log10);
                         string lab = tic[i].ToString("G");
                         if (lastXM == 0 || MeasureStringInCanvasCoordinates(lab, axisLabelFont).Width < xm - lastXM)
                         {
@@ -223,7 +232,7 @@ namespace StatsDirect.Charting
             }
 
             int r = 0;
-            double botlim = isLogScale ? realamin : double.MinValue;
+            double bottomPlotLimit = realamin;
 
             using (Pen effectTenPen = GetLinePen(SharedMarkerTypes[10], false),
                 ciPen = GetLinePen(studyMarkerType, true),
@@ -238,9 +247,9 @@ namespace StatsDirect.Charting
                         r++;
                         double yctr = (r + pbias - 0.5) / divy * yExtCanvas;
                         double ytop = (r + pbias) / divy * yExtCanvas;
-                        double xm = odr[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odr[i]) : odr[i], ScaleType.Linear);
-                        double xl = odrl[i] < botlim ? xAxisCanvas : ToCanvasX(isLogScale ? Math.Log(odrl[i]) : odrl[i], ScaleType.Linear);
-                        double xr = ToCanvasX(isLogScale ? Math.Log(odru[i]) : odru[i], ScaleType.Linear);
+                        double xm = odr[i] < bottomPlotLimit ? xAxisCanvas : ToCanvasX(odr[i]);
+                        double xl = odrl[i] < bottomPlotLimit ? xAxisCanvas : ToCanvasX(odrl[i]);
+                        double xr = ToCanvasX(odru[i]);
                         double y2 = (ytop - yctr) / 1.5;
                         double y3 = (ytop - yctr) / 4;
                         double yc = offy + yctr;
@@ -256,7 +265,7 @@ namespace StatsDirect.Charting
                             // CI line
                             DrawLineInCanvasCoordinates(ciPen, xl, yc, xr, yc);
                             // Arrow ends if not plottable
-                            if ((odrl[i] <= 0 & isLogScale) || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i]))
+                            if (odrl[i] <bottomPlotLimit || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i]))
                             {
                                 DrawLineInCanvasCoordinates(ciPen, xl + y3, yc + y3, xl, yc);
                                 DrawLineInCanvasCoordinates(ciPen, xl, yc, xl + y3, yc - y3);

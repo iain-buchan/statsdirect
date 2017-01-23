@@ -151,7 +151,7 @@ namespace StatsDirect.Templates
             {
                 // #987: If the summary statistic variable ("odds") contains the word "ratio" then select log plot by default, else linear plot
                 if (definition.ChartOptions.XAxisTitle.Contains("ratio") || definition.ChartOptions.XAxisTitle.Contains("Ratio"))
-                    definition.ScaleParameters.X.ScaleType = ScaleType.LogNatural;
+                    definition.ScaleParameters.X.ScaleType = ScaleType.Log10;
                 else
                     definition.ScaleParameters.X.ScaleType = ScaleType.Linear;
             }
