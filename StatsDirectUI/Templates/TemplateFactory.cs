@@ -82,6 +82,9 @@ namespace StatsDirect.Templates
                         catch (Exception ex)
                         {
                             loadErrors[info.Name] = ex;
+#if WATCH_EXCEPTIONS
+                            throw;
+#endif
                         }
                     }
                 }
