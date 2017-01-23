@@ -18,6 +18,7 @@ namespace StatsDirect.UI
         private int minorTicsPerMajorTic;
         private string mask;
         private bool settingValues;
+        private List<ScaleType> scaleTypesInCboScale;
 
         // Must match the indices order of ScaleType, as must the combo box entries.
         private static readonly string[] printableScaleTypes = { "Linear", "Natural log", "Log 10", "Date", "Category" };
@@ -28,6 +29,7 @@ namespace StatsDirect.UI
             hasScale = true; // By default
             cboGridLines.SelectedIndex = 0;
             cboScaleTextDirection.SelectedIndex = 0;
+            scaleTypesInCboScale = new List<ScaleType>();
         }
 
         public ICollection<ScaleType> AllowedScaleTypes
@@ -106,8 +108,9 @@ namespace StatsDirect.UI
 
         public ScaleType ScaleType
         {
-            get { return (ScaleType)(cboScale.SelectedIndex); }
-            set { cboScale.SelectedIndex = (int)value; }
+            // TODO: Why does the combo on Y sometimes drift to having nothing selected?
+            get { return scaleTypesInCboScale[cboScale.SelectedIndex < 0 ? 0 : cboScale.SelectedIndex]; }
+            set { cboScale.SelectedIndex = scaleTypesInCboScale.IndexOf(value); }
         }
 
         public string Title
@@ -180,10 +183,14 @@ namespace StatsDirect.UI
         private void SetFormFromAllowedScaleTypes()
         {
             cboScale.Items.Clear();
-            for (int i = 0; i <= (int)ScaleType.Category; i++)
+            scaleTypesInCboScale.Clear();
+            foreach (ScaleType scaleType in Enum.GetValues(typeof(ScaleType)))
             {
-                if (allowedScaleTypes.Contains((ScaleType)i))
-                    cboScale.Items.Add(printableScaleTypes[i]);
+                if (allowedScaleTypes.Contains(scaleType))
+                {
+                    cboScale.Items.Add(printableScaleTypes[(int)scaleType]);
+                    scaleTypesInCboScale.Add(scaleType);
+                }
             }
             if (cboScale.Items.Count > 0)
                 cboScale.SelectedIndex = 0;
@@ -202,7 +209,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                ScaleType selectedScaleType = SelectedScaleType();
+                ScaleType selectedScaleType = ScaleType;
                 return selectedScaleType == ScaleType.Linear;
             }
         }
@@ -211,7 +218,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                ScaleType selectedScaleType = SelectedScaleType();
+                ScaleType selectedScaleType = ScaleType;
                 return selectedScaleType == ScaleType.Linear
                     || selectedScaleType == ScaleType.Log10
                     || selectedScaleType == ScaleType.LogNatural;
@@ -222,7 +229,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                ScaleType selectedScaleType = SelectedScaleType();
+                ScaleType selectedScaleType = ScaleType;
                 return selectedScaleType == ScaleType.Linear
                     || selectedScaleType == ScaleType.Log10
                     || selectedScaleType == ScaleType.LogNatural
@@ -233,20 +240,6 @@ namespace StatsDirect.UI
         private static bool ShouldShowScaleTextDirection
         {
             get { return true; }
-        }
-
-        private ScaleType SelectedScaleType()
-        {
-            if (cboScale.SelectedIndex >= 0)
-            {
-                string selectedValue = (string)cboScale.SelectedItem;
-                for (int i = 0; i < printableScaleTypes.Length; i++)
-                {
-                    if (printableScaleTypes[i].Equals(selectedValue))
-                        return (ScaleType)i;
-                }
-            }
-            return ScaleType.NotSet;
         }
 
         private void cboScale_SelectedIndexChanged(object sender, EventArgs e)
@@ -283,7 +276,7 @@ namespace StatsDirect.UI
                 if (v > qMax)
                     qMax = v;
             }
-            ScaleType selectedScaleType = SelectedScaleType();
+            ScaleType selectedScaleType = ScaleType;
             Charting.AxisScaler.Q_Axis(ref qMin, DataMinGreaterThanZero, ref qMax, out div, out zMin, out zInt, out minorTicsPerMajorTic, selectedScaleType);
             mask = Charting.AxisScaler.AxisMask(zInt, zMin, div, minorTicsPerMajorTic, selectedScaleType);
             settingValues = true;

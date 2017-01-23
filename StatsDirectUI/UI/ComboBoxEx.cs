@@ -25,7 +25,7 @@ namespace StatsDirect.UI
 
             using (Brush foreBrush = new SolidBrush(e.ForeColor))
             {
-                if (Items[e.Index] is ComboBoxExItem)
+                if (e.Index >= 0 && Items[e.Index] is ComboBoxExItem)
                 {
                     ComboBoxExItem item = (ComboBoxExItem)Items[e.Index];
 
