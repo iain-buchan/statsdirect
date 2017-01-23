@@ -332,8 +332,22 @@ namespace StatsDirect.Charting
         {
             switch (chartDefinition.ChartType)
             {
+                case ChartType.Bar:
+                case ChartType.StackedBar:
+                case ChartType.StackedBar100Percent:
+                    return new BarChartRenderer(chartDefinition);
                 case ChartType.BoxWhisker:
                     return new BoxWhiskerChartRenderer(chartDefinition);
+                case ChartType.Forest:
+                    return new ForestChartRenderer(chartDefinition);
+                case ChartType.Ladder:
+                    return new LadderChartRenderer(chartDefinition);
+                case ChartType.Pyramid:
+                    return new PyramidChartRenderer(chartDefinition);
+                case ChartType.Spread:
+                    return new SpreadChartRenderer(chartDefinition);
+                case ChartType.Survival:
+                    return new SurvivalChartRenderer(chartDefinition);
                 default:
                     return new ChartRenderer(chartDefinition);
             }

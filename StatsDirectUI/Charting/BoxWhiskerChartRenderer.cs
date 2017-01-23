@@ -9,51 +9,33 @@ namespace StatsDirect.Charting
     class BoxWhiskerChartRenderer : AbstractChartRenderer
     {
         //  Box and Whisker constants
-        private const double BOXWHISKER_WHISKER_END_LENGTH = 9;
-        private const double BOXWHISKER_OUTLIER_RADIUS = 4;
-        private const double BOXWHISKER_BOX_FRACTION_OF_SPACE = 0.667;
-        private const double BOXWHISKER_WHISKER_FRACTION_OF_BOX = 0.333;
+        private const double WHISKER_END_LENGTH = 9;
+        private const double OUTLIER_RADIUS = 4;
+        private const double BOX_FRACTION_OF_SPACE = 0.667;
+        private const double WHISKER_FRACTION_OF_BOX = 0.333;
 
-        public BoxWhiskerChartRenderer(ChartDefinition Definition)
+        public BoxWhiskerChartRenderer(ChartDefinition definition)
+            : base(definition)
         {
-            DataMinX = double.MaxValue;
-            DataMaxX = -double.MaxValue;
-            DataMinY = double.MaxValue;
-            DataMaxY = -double.MaxValue;
-
-            definition = Definition;
-            if (Definition == null)
-                return;
-            DataMinX = Definition.DataMinX;
-            DataMinGreaterThanZeroX = Definition.DataMinGreaterThanZeroX;
-            DataMaxX = Definition.DataMaxX;
-            DataMinY = Definition.DataMinY;
-            DataMinGreaterThanZeroY = Definition.DataMinGreaterThanZeroY;
-            DataMaxY = Definition.DataMaxY;
         }
 
         public override ScaleParameters GetScaleParameters()
         {
             //  If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
             if (definition.XSeries.Count == 0 && definition.YSeries.Count == 0)
-            {
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
-            }
             if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
-            {
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            }
             List<Series> SeriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
             // sort the array and get the min, max values
             GetMinMaxSort(SeriesToUse, out DataMinX, out DataMaxX);
 
-            ScaleParameters sp = new ScaleParameters
+            return new ScaleParameters
             {
                 X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = DataMinX, Max = DataMaxX },
-                Y = { AllowedScaleTypes = new[] { ScaleType.Category }, Min = 0, MinGreaterThanZero = 0, Max = 0 }
+                Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
             };
-            return sp;
         }
 
         ///  <summary>
@@ -113,10 +95,16 @@ namespace StatsDirect.Charting
             AssignMarkersToSeries();
 
             DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
+            MarkerType mt = SharedMarkerTypes[10];
+            Color black = Color.Black;
+            MarkerType crossMarker = new MarkerType() { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
+            MarkerType filledDiamondMarker = new MarkerType() { MarkerShape = MarkerShape.Diamond, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
+            MarkerType hollowCircleMarker = new MarkerType() { MarkerShape = MarkerShape.Circle, MarkerColor = black, MarkerSize = 10 };
+            MarkerType filledCircleMarker = new MarkerType() { MarkerShape = MarkerShape.Circle, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
 
-            using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
+            using (Pen blackPen = GetMarkerPen(mt))
             {
-                using (Pen dottedBlackPen = GetMarkerPen(SharedMarkerTypes[10]))
+                using (Pen dottedBlackPen = GetMarkerPen(mt))
                 {
                     dottedBlackPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
 
@@ -136,32 +124,27 @@ namespace StatsDirect.Charting
                         PlotBoxWhiskerCalc(s, bwOptions.Method, p, out centre, out boxL, out boxR, out innerFenceL, out innerFenceR, bwOptions.UseInnerFence, out outerFenceL, out outerFenceR, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
 
                         // Plot graphic
-                        double yctr = (c + 0.5) / divy * yExtCanvas;
-                        double ytop = (c + 1) / divy * yExtCanvas;
-                        double centreX = ToCanvasX(centre);
+                        // #1316: Plot labels are plotted top-down, data was plotted bottom-up.  Reverse the data so that the first series is at the top to match the labels.
+                        double yctr = seriesToUse.Count - c - 0.5;
 
-                        double halfBoxHeight = (ytop - yctr) * BOXWHISKER_BOX_FRACTION_OF_SPACE;
-                        double yc = offy + yctr;
-                        double yt = yc + halfBoxHeight;
-                        double yb = yc - halfBoxHeight;
-
-                        double boxLx = ToCanvasX(boxL);
-                        double boxRx = ToCanvasX(boxR);
+                        double halfBoxHeight = 0.5 * BOX_FRACTION_OF_SPACE;
+                        double yTop = yctr + halfBoxHeight;
+                        double yBottom = yctr - halfBoxHeight;
 
                         // Draw marker, centre line and box
-                        DrawRectangleInCanvasCoordinates(blackPen, boxLx, yt, boxRx - boxLx, yt - yb); //  Box
+                        DrawRectangleInChartCoordinates(black, boxL, yTop, boxR - boxL, yTop - yBottom); //  Box
                         if (bwOptions.MarkMeanAndMedian)
                         {
                             //  Other mark
-                            DrawMarkerInCanvasCoordinates(ToCanvasX(otherMark), yc, 10, MarkerShape.Cross, false, blackPen);
+                            DrawMarkerInChartCoordinates(otherMark, yctr, 10, crossMarker);
                         }
-                        DrawMarkerInCanvasCoordinates(centreX, yc, 10, MarkerShape.Diamond, true, blackPen);
-                        DrawLineInCanvasCoordinates(blackPen, centreX, yt, centreX, yb); //  Centre line
+                        DrawMarkerInChartCoordinates(centre, yctr, 10, filledDiamondMarker);
+                        DrawLineInChartCoordinates(black, centre, yTop, centre, yBottom); //  Centre line
 
                         //  Draw whiskers, fences etc.
-                        double halfWhiskerHeight = halfBoxHeight * BOXWHISKER_WHISKER_FRACTION_OF_BOX;
-                        yt = yc + halfWhiskerHeight;
-                        yb = yc - halfWhiskerHeight;
+                        double halfWhiskerHeight = halfBoxHeight * WHISKER_FRACTION_OF_BOX;
+                        yTop = yctr + halfWhiskerHeight;
+                        yBottom = yctr - halfWhiskerHeight;
 
                         //  Left-hand fences
                         bool gatedInnerL = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[0] < innerFenceL && innerFenceL < boxL;
@@ -174,21 +157,14 @@ namespace StatsDirect.Charting
                         //  - The inner fence for seven number and Bowley plots;
                         //  - The inner fence if both inner and outer fences are selected and there's at least one outlier beyond it;
                         //  - Not drawn otherwise.
-                        bool shouldDrawInnerFenceL = false;
-                        double innerFenceLX = 0;
                         if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
-                        {
-                            shouldDrawInnerFenceL = true;
-                            innerFenceLX = ToCanvasX(innerFenceL);
-                        }
-                        if (shouldDrawInnerFenceL)
                         {
                             Pen innerPen;
                             if (bwOptions.UseOuterFence || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
                                 innerPen = dottedBlackPen;
                             else
                                 innerPen = blackPen;
-                            DrawLineInCanvasCoordinates(innerPen, innerFenceLX, yt, innerFenceLX, yb);
+                            DrawLineInCanvasCoordinates(innerPen, ToCanvasX(innerFenceL), ToCanvasY(yTop), ToCanvasX(innerFenceL), ToCanvasY(yBottom));
                         }
 
                         //  Draw min whisker
@@ -228,37 +204,27 @@ namespace StatsDirect.Charting
                         {
                             minWhiskerL = s.Data[0];
                         }
-                        double minWhiskerLX = ToCanvasX(minWhiskerL);
 
                         //  Draw min whisker to outer limit
-                        DrawLineInCanvasCoordinates(blackPen, minWhiskerLX, yc, boxLx, yc);
+                        DrawLineInChartCoordinates(black, minWhiskerL, yctr, boxL, yctr);
 
                         //  Draw outer marker
-                        // ReSharper disable ConvertToConstant.Local
-                        bool shouldDrawOuterFenceL = true;
-                        // ReSharper restore ConvertToConstant.Local
-                        bool shouldDrawOuterBracketL = shouldDrawOuterFenceL && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterL || gatedInnerL));
-                        if (shouldDrawOuterFenceL)
+                        bool shouldDrawOuterBracketL = !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterL || gatedInnerL));
+                        DrawLineInChartCoordinates(black, minWhiskerL, yTop, minWhiskerL, yBottom);
+                        if (shouldDrawOuterBracketL)
                         {
-                            DrawLineInCanvasCoordinates(blackPen, minWhiskerLX, yt, minWhiskerLX, yb);
-                            if (shouldDrawOuterBracketL)
-                            {
-                                DrawLineInCanvasCoordinates(blackPen, minWhiskerLX + BOXWHISKER_WHISKER_END_LENGTH, yt, minWhiskerLX, yt);
-                                DrawLineInCanvasCoordinates(blackPen, minWhiskerLX, yb, minWhiskerLX + BOXWHISKER_WHISKER_END_LENGTH, yb);
-                            }
+                            DrawLineInChartCoordinates(black, minWhiskerL + FromCanvasWidth(WHISKER_END_LENGTH), yTop, minWhiskerL, yTop);
+                            DrawLineInChartCoordinates(black, minWhiskerL, yBottom, minWhiskerL + FromCanvasWidth(WHISKER_END_LENGTH), yBottom);
                         }
 
                         //  Min outliers - below outer fence
-                        const double outlierRadius = BOXWHISKER_OUTLIER_RADIUS;
+                        const double outlierRadius = OUTLIER_RADIUS;
                         if (gatedInnerL)
                         {
                             for (int r = 0; r < s.Data.Length; r++)
                             {
                                 if (s.Data[r] < innerFenceL && (s.Data[r] >= outerFenceL || !(gatedOuterL)))
-                                {
-                                    double x1 = ToCanvasX(s.Data[r]);
-                                    DrawMarkerInCanvasCoordinates(x1, yc, 2 * outlierRadius, MarkerShape.Circle, false, blackPen);
-                                }
+                                    DrawMarkerInChartCoordinates(s.Data[r], yctr, 2 * outlierRadius, hollowCircleMarker);
                             }
                         }
                         if (gatedOuterL)
@@ -266,10 +232,7 @@ namespace StatsDirect.Charting
                             for (int r = 0; r < s.Data.Length; r++)
                             {
                                 if (s.Data[r] < outerFenceL)
-                                {
-                                    double x1 = ToCanvasX(s.Data[r]);
-                                    DrawMarkerInCanvasCoordinates(x1, yc, 2 * outlierRadius, MarkerShape.Circle, true, blackPen);
-                                }
+                                    DrawMarkerInChartCoordinates(s.Data[r], yctr, 2 * outlierRadius, filledCircleMarker);
                             }
                         }
 
@@ -284,25 +247,14 @@ namespace StatsDirect.Charting
                         //  - The inner fence for seven number and Bowley plots;
                         //  - The inner fence if both inner and outer fences are selected and there's at least one outlier betond it;
                         //  - Not drawn otherwise.
-                        bool shouldDrawInnerFenceR = false;
-                        double innerFenceRX = 0;
                         if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
-                        {
-                            shouldDrawInnerFenceR = true;
-                            innerFenceRX = ToCanvasX(innerFenceR);
-                        }
-                        if (shouldDrawInnerFenceR)
                         {
                             Pen innerPen;
                             if (bwOptions.UseOuterFence || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)
-                            {
                                 innerPen = dottedBlackPen;
-                            }
                             else
-                            {
                                 innerPen = blackPen;
-                            }
-                            DrawLineInCanvasCoordinates(innerPen, innerFenceRX, yt, innerFenceRX, yb);
+                            DrawLineInCanvasCoordinates(innerPen, ToCanvasX(innerFenceR), ToCanvasY(yTop), ToCanvasX(innerFenceR), ToCanvasY(yBottom));
                         }
 
                         //  Draw max whisker
@@ -342,8 +294,7 @@ namespace StatsDirect.Charting
                         {
                             maxWhiskerR = s.Data[s.Data.Length - 1];
                         }
-                        double maxWhiskerRX = ToCanvasX(maxWhiskerR);
-                        DrawLineInCanvasCoordinates(blackPen, maxWhiskerRX, yc, boxRx, yc);
+                        DrawLineInChartCoordinates(black, maxWhiskerR, yctr, boxR, yctr);
 
                         //  Outer fence
                         // ReSharper disable ConvertToConstant.Local
@@ -358,35 +309,29 @@ namespace StatsDirect.Charting
                         bool shouldDrawOuterBracketR = shouldDrawOuterFenceR && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterR || gatedInnerR));
                         if (shouldDrawOuterFenceR)
                         {
-                            DrawLineInCanvasCoordinates(blackPen, maxWhiskerRX, yt, maxWhiskerRX, yb);
+                            DrawLineInChartCoordinates(black, maxWhiskerR, yTop, maxWhiskerR, yBottom);
                             if (shouldDrawOuterBracketR)
                             {
-                                DrawLineInCanvasCoordinates(blackPen, maxWhiskerRX - BOXWHISKER_WHISKER_END_LENGTH, yt, maxWhiskerRX, yt);
-                                DrawLineInCanvasCoordinates(blackPen, maxWhiskerRX, yb, maxWhiskerRX - BOXWHISKER_WHISKER_END_LENGTH, yb);
+                                DrawLineInChartCoordinates(black, maxWhiskerR - FromCanvasWidth(WHISKER_END_LENGTH), yTop, maxWhiskerR, yTop);
+                                DrawLineInChartCoordinates(black, maxWhiskerR, yBottom, maxWhiskerR - FromCanvasWidth(WHISKER_END_LENGTH), yBottom);
                             }
                         }
 
                         //  Max outliers
                         if (gatedInnerR)
                         {
-                            for (int r = 0; r <= s.Data.Length - 1; r++)
+                            for (int r = 0; r < s.Data.Length; r++)
                             {
                                 if (s.Data[r] > innerFenceR && (s.Data[r] <= outerFenceR || !(gatedOuterR)))
-                                {
-                                    double x1 = ToCanvasX(s.Data[r]);
-                                    DrawMarkerInCanvasCoordinates(x1, yc, 2 * outlierRadius, MarkerShape.Circle, false, blackPen);
-                                }
+                                    DrawMarkerInChartCoordinates(s.Data[r], yctr, 2 * outlierRadius, hollowCircleMarker);
                             }
                         }
                         if (gatedOuterR)
                         {
-                            for (int r = 0; r <= s.Data.Length - 1; r++)
+                            for (int r = 0; r < s.Data.Length; r++)
                             {
                                 if (s.Data[r] > outerFenceR)
-                                {
-                                    double x1 = ToCanvasX(s.Data[r]);
-                                    DrawMarkerInCanvasCoordinates(x1, yc, 2 * outlierRadius, MarkerShape.Circle, true, blackPen);
-                                }
+                                    DrawMarkerInChartCoordinates(s.Data[r], yctr, 2 * outlierRadius, filledCircleMarker);
                             }
                         }
                     }
@@ -470,7 +415,7 @@ namespace StatsDirect.Charting
                         double xright = (c + 1) / divx * xExtCanvas;
                         double centreY = ToCanvasY(centre);
 
-                        double halfBoxWidth = (xright - xctr) * BOXWHISKER_BOX_FRACTION_OF_SPACE;
+                        double halfBoxWidth = (xright - xctr) * BOX_FRACTION_OF_SPACE;
                         double xc = offx + xctr;
                         double xr = xc + halfBoxWidth;
                         double xl = xc - halfBoxWidth;
@@ -489,7 +434,7 @@ namespace StatsDirect.Charting
                         DrawLineInCanvasCoordinates(blackPen, xr, centreY, xl, centreY); //  Centre line
 
                         //  Draw whiskers, fences etc.
-                        double halfWhiskerWidth = halfBoxWidth * BOXWHISKER_WHISKER_FRACTION_OF_BOX;
+                        double halfWhiskerWidth = halfBoxWidth * WHISKER_FRACTION_OF_BOX;
                         xr = xc + halfWhiskerWidth;
                         xl = xc - halfWhiskerWidth;
 
@@ -573,8 +518,8 @@ namespace StatsDirect.Charting
                             DrawLineInCanvasCoordinates(blackPen, xr, minWhiskerBY, xl, minWhiskerBY);
                             if (shouldDrawOuterBracketB)
                             {
-                                DrawLineInCanvasCoordinates(blackPen, xr, minWhiskerBY + BOXWHISKER_WHISKER_END_LENGTH, xr, minWhiskerBY);
-                                DrawLineInCanvasCoordinates(blackPen, xl, minWhiskerBY, xl, minWhiskerBY + BOXWHISKER_WHISKER_END_LENGTH);
+                                DrawLineInCanvasCoordinates(blackPen, xr, minWhiskerBY + WHISKER_END_LENGTH, xr, minWhiskerBY);
+                                DrawLineInCanvasCoordinates(blackPen, xl, minWhiskerBY, xl, minWhiskerBY + WHISKER_END_LENGTH);
                             }
                         }
 
@@ -586,7 +531,7 @@ namespace StatsDirect.Charting
                                 if (s.Data[r] < innerFenceB && (s.Data[r] >= outerFenceB || !(gatedOuterB)))
                                 {
                                     double y1 = ToCanvasY(s.Data[r]);
-                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * BOXWHISKER_OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
+                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
                                 }
                             }
                         }
@@ -597,7 +542,7 @@ namespace StatsDirect.Charting
                                 if (s.Data[r] < outerFenceB)
                                 {
                                     double y1 = ToCanvasY(s.Data[r]);
-                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * BOXWHISKER_OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
+                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
                                 }
                             }
                         }
@@ -686,8 +631,8 @@ namespace StatsDirect.Charting
                             DrawLineInCanvasCoordinates(blackPen, xr, maxWhiskerTY, xl, maxWhiskerTY);
                             if (shouldDrawOuterBracketT)
                             {
-                                DrawLineInCanvasCoordinates(blackPen, xr, maxWhiskerTY - BOXWHISKER_WHISKER_END_LENGTH, xr, maxWhiskerTY);
-                                DrawLineInCanvasCoordinates(blackPen, xl, maxWhiskerTY, xl, maxWhiskerTY - BOXWHISKER_WHISKER_END_LENGTH);
+                                DrawLineInCanvasCoordinates(blackPen, xr, maxWhiskerTY - WHISKER_END_LENGTH, xr, maxWhiskerTY);
+                                DrawLineInCanvasCoordinates(blackPen, xl, maxWhiskerTY, xl, maxWhiskerTY - WHISKER_END_LENGTH);
                             }
                         }
 
@@ -699,7 +644,7 @@ namespace StatsDirect.Charting
                                 if (s.Data[r] > innerFenceT && (s.Data[r] <= outerFenceT || !(gatedOuterT)))
                                 {
                                     double y1 = ToCanvasY(s.Data[r]);
-                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * BOXWHISKER_OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
+                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
                                 }
                             }
                         }
@@ -710,7 +655,7 @@ namespace StatsDirect.Charting
                                 if (s.Data[r] > outerFenceT)
                                 {
                                     double y1 = ToCanvasY(s.Data[r]);
-                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * BOXWHISKER_OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
+                                    DrawMarkerInCanvasCoordinates(xc, y1, 2 * OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
                                 }
                             }
                         }

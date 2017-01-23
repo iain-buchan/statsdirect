@@ -226,6 +226,7 @@
     <Compile Include="Charting\Axis.cs" />
     <Compile Include="Charting\AxisMode.cs" />
     <Compile Include="Charting\AxisScaler.cs" />
+    <Compile Include="Charting\BarChartRenderer.cs" />
     <Compile Include="Charting\BarOptions.cs" />
     <Compile Include="Charting\BinChoiceMethod.cs" />
     <Compile Include="Charting\BinsDescriptor.cs" />
@@ -238,10 +239,12 @@
     <Compile Include="Charting\ChartRendererFactory.cs" />
     <Compile Include="Charting\ComparisonValue.cs" />
     <Compile Include="Charting\ControlOptions.cs" />
+    <Compile Include="Charting\ForestChartRenderer.cs" />
     <Compile Include="Charting\HistogramBinChooser.cs" />
     <Compile Include="Charting\HistogramSeriesOptions.cs" />
     <Compile Include="Charting\IChartRenderer.cs" />
     <Compile Include="Charting\IImageRenderer.cs" />
+    <Compile Include="Charting\LadderChartRenderer.cs" />
     <Compile Include="Charting\MarkerDetails.cs" />
     <Compile Include="Charting\MultiDoublePoint.cs" />
     <Compile Include="Charting\MultiDoubleSeries.cs" />
@@ -260,6 +263,7 @@
     <Compile Include="Charting\MarkerShape.cs" />
     <Compile Include="Charting\MarkerType.cs" />
     <Compile Include="Charting\NormalOptions.cs" />
+    <Compile Include="Charting\PyramidChartRenderer.cs" />
     <Compile Include="Charting\PyramidOptions.cs" />
     <Compile Include="Charting\ROCCutoff.cs" />
     <Compile Include="Charting\ROCOptions.cs" />
@@ -270,8 +274,10 @@
     <Compile Include="Charting\SDGlobalStub.cs" />
     <Compile Include="Charting\Series.cs" />
     <Compile Include="Charting\SeriesOptionsDescriptor.cs" />
+    <Compile Include="Charting\SpreadChartRenderer.cs" />
     <Compile Include="Charting\SpreadOptions.cs" />
     <Compile Include="Charting\StringSeries.cs" />
+    <Compile Include="Charting\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\SurvivalOptions.cs" />
     <Compile Include="Charting\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />
@@ -1913,7 +1919,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

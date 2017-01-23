@@ -132,6 +132,24 @@ namespace StatsDirect.Charting
         /// </summary>
         protected static MarkerType[] SharedMarkerTypes;
 
+        protected AbstractChartRenderer(ChartDefinition Definition)
+        {
+            DataMinX = double.MaxValue;
+            DataMaxX = -double.MaxValue;
+            DataMinY = double.MaxValue;
+            DataMaxY = -double.MaxValue;
+
+            definition = Definition;
+            if (Definition == null)
+                return;
+            DataMinX = Definition.DataMinX;
+            DataMinGreaterThanZeroX = Definition.DataMinGreaterThanZeroX;
+            DataMaxX = Definition.DataMaxX;
+            DataMinY = Definition.DataMinY;
+            DataMinGreaterThanZeroY = Definition.DataMinGreaterThanZeroY;
+            DataMaxY = Definition.DataMaxY;
+        }
+
         public static bool DefaultRequestScaleLimits
         {
             get { return false; }
@@ -784,7 +802,7 @@ namespace StatsDirect.Charting
                     break;
                 case AxisMode.Series:
                     if (null != x.Series)
-                        xHeight = DrawXSeries(x.Series);
+                        xHeight = DrawXSeries(x.Series.Select(s => s.Title).ToList());
                     else if (null != x.Labels)
                         xHeight = DrawXSeries(x.Labels);
                     break;
@@ -808,7 +826,7 @@ namespace StatsDirect.Charting
                     throw new ArgumentException("A Y scale without labels is not currently supported");
                 case AxisMode.Series:
                     if (null != y.Series)
-                        yAxisWidthIncludingLabels = DrawYSeries(y.Series);
+                        yAxisWidthIncludingLabels = DrawYSeries(y.Series.Select(s => s.Title).ToList());
                     else if (null != y.Labels)
                         yAxisWidthIncludingLabels = DrawYSeries(y.Labels);
                     break;
@@ -1124,19 +1142,6 @@ namespace StatsDirect.Charting
             return maxLabelWidth + AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK;
         }
 
-
-        ///  <summary>
-        ///  Draw the Y axis as a series
-        ///  </summary>
-        ///  <remarks>Labels are drawn centred between ticks</remarks>
-        /// <returns>The width of the axis, ticks, gap to labels, and labels</returns>
-        protected double DrawYSeries(IList<Series> series)
-        {
-            if (null == series)
-                return 0;
-            return DrawYSeries(series.Select(s => s.Title).ToList());
-        }
-
         ///  <summary>
         ///  Draw the Y axis as a series
         ///  </summary>
@@ -1196,16 +1201,6 @@ namespace StatsDirect.Charting
             }
 
             return maxLabelWidth + AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_TICK;
-        }
-
-        ///  <summary>
-        ///  Draw the X axis as a series
-        ///  </summary>
-        protected double DrawXSeries(IList<Series> series)
-        {
-            if (null == series)
-                return 0;
-            return DrawXSeries(series.Select(s => s.Title).ToList());
         }
 
         ///  <summary>
@@ -1418,6 +1413,19 @@ namespace StatsDirect.Charting
             }
         }
 
+        protected double ToCanvasWidth(double chartX)
+        {
+            ScaleType scaleType = ScaleType.Linear;
+            if (HasScaleParameters && definition.ScaleParameters.X != null)
+                scaleType = definition.ScaleParameters.X.ScaleType;
+            return ToCanvasWidth(chartX, scaleType);
+        }
+
+        protected double ToCanvasWidth(double chartX, ScaleType scaleType)
+        {
+            return Transform(chartX, scaleType) / divx * xExtCanvas;
+        }
+
         protected double ToCanvasX(double chartX)
         {
             ScaleType scaleType = ScaleType.Linear;
@@ -1428,15 +1436,21 @@ namespace StatsDirect.Charting
 
         protected double ToCanvasX(double chartX, ScaleType scaleType)
         {
-            double transformed = Transform(chartX, scaleType);
-            return offx + (transformed / divx * xExtCanvas);
+            return offx + ToCanvasWidth(chartX, scaleType);
         }
 
-        protected double TransformX(double chartX)
+        protected double FromCanvasWidth(double canvasWidth)
         {
-            if ((!HasScaleParameters || definition.ScaleParameters.X == null))
-                return chartX;
-            return Transform(chartX, definition.ScaleParameters.X.ScaleType);
+            ScaleType scaleType = ScaleType.Linear;
+            if (HasScaleParameters && definition.ScaleParameters.X != null)
+                scaleType = definition.ScaleParameters.X.ScaleType;
+            return FromCanvasWidth(canvasWidth, scaleType);
+        }
+
+        protected double FromCanvasWidth(double canvasWidth, ScaleType scaleType)
+        {
+            double rawChartWidth = canvasWidth * divx / xExtCanvas;
+            return InverseTransform(rawChartWidth, scaleType);
         }
 
         protected double InverseTransformX(double canvasX)
@@ -1444,6 +1458,20 @@ namespace StatsDirect.Charting
             if ((!HasScaleParameters || definition.ScaleParameters.X == null))
                 return canvasX;
             return InverseTransform(canvasX, definition.ScaleParameters.X.ScaleType);
+        }
+
+        protected double ToCanvasHeight(double chartY)
+        {
+            ScaleType scaleType = ScaleType.Linear;
+            if (HasScaleParameters && definition.ScaleParameters.Y != null)
+                scaleType = definition.ScaleParameters.Y.ScaleType;
+            return ToCanvasHeight(chartY, scaleType);
+        }
+
+        protected double ToCanvasHeight(double chartY, ScaleType scaleType)
+        {
+            double transformed = Transform(chartY, scaleType);
+            return transformed / divy * yExtCanvas;
         }
 
         protected double ToCanvasY(double chartY)
@@ -1456,25 +1484,24 @@ namespace StatsDirect.Charting
 
         protected double ToCanvasY(double chartY, ScaleType scaleType)
         {
-            double transformed = Transform(chartY, scaleType);
-            return offy + (transformed / divy * yExtCanvas);
+            return offy + ToCanvasHeight(chartY, scaleType);
         }
 
-        protected double TransformY(double chartY)
+        protected double FromCanvasHeight(double canvasHeight)
         {
-            if ((!HasScaleParameters || definition.ScaleParameters.Y == null))
-                return chartY;
-            return Transform(chartY, definition.ScaleParameters.Y.ScaleType);
+            ScaleType scaleType = ScaleType.Linear;
+            if (HasScaleParameters && definition.ScaleParameters.Y != null)
+                scaleType = definition.ScaleParameters.Y.ScaleType;
+            return FromCanvasHeight(canvasHeight, scaleType);
         }
 
-        protected double InverseTransformY(float canvasY)
+        protected double FromCanvasHeight(double canvasHeight, ScaleType scaleType)
         {
-            if ((!HasScaleParameters || definition.ScaleParameters.Y == null))
-                return canvasY;
-            return InverseTransform(canvasY, definition.ScaleParameters.Y.ScaleType);
+            double rawChartHeight = canvasHeight * divy / yExtCanvas;
+            return InverseTransform(rawChartHeight, scaleType);
         }
 
-        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        [Obsolete("TODO: Get pyramid to use an x scale without tics and draw this in that way")]
         protected void DrawStringInCanvasCoordinates(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat)
         {
             statsDirectCanvas.DrawString(s, font, brush, x, y, txtFormat);
@@ -1566,19 +1593,28 @@ namespace StatsDirect.Charting
             return statsDirectCanvas.GetFontHeight(f);
         }
 
-        public void DrawLineInChartCoordinates(Color Color, double x1, double y1, double x2, double y2)
+        private Pen GetSameOrDifferentPen(Color color)
         {
-            if (mostRecentPen == null || !(mostRecentPen.Color.Equals(Color)))
+            if (mostRecentPen == null || !(mostRecentPen.Color.Equals(color)))
             {
                 if (null != mostRecentPen)
                     mostRecentPen.Dispose();
-                mostRecentPen = new Pen(Color);
+                mostRecentPen = new Pen(color);
             }
+            return mostRecentPen;
+        }
+        public void DrawLineInChartCoordinates(Color color, double x1, double y1, double x2, double y2)
+        {
             double dx1 = ToCanvasX(x1);
             double dy1 = ToCanvasY(y1);
             double dx2 = ToCanvasX(x2);
             double dy2 = ToCanvasY(y2);
-            statsDirectCanvas.DrawLine(mostRecentPen, dx1, dy1, dx2, dy2);
+            statsDirectCanvas.DrawLine(GetSameOrDifferentPen(color), dx1, dy1, dx2, dy2);
+        }
+
+        protected void DrawRectangleInChartCoordinates(Color color, double left, double top, double width, double height)
+        {
+            statsDirectCanvas.DrawRectangle(GetSameOrDifferentPen(color), ToCanvasX(left), ToCanvasY(top), ToCanvasWidth(width), ToCanvasHeight(height));
         }
 
         protected bool HasScaleParameters
@@ -1891,6 +1927,9 @@ namespace StatsDirect.Charting
             }
         }
 
+        /// <summary>
+        /// Marker lines are single values on the X or Y axis that the user has requested to be drawn.
+        /// </summary>
         protected void MaybeDrawMarkerLines()
         {
             if (null == definition)
@@ -1913,6 +1952,201 @@ namespace StatsDirect.Charting
                     DrawLineInCanvasCoordinates(tenPen, xAxisCanvas, y, xAxisCanvas + xExtCanvas, y);
                 }
             }
+        }
+
+        protected void SetFontsAndThicknessesFromOptions(GenericOptions o)
+        {
+            if (o.UsesAxisLabelFontDescriptor && !(string.IsNullOrEmpty(o.AxisLabelFontDescriptor)))
+                axisLabelFont = FontFromSaveString(o.AxisLabelFontDescriptor);
+            if (o.UsesAxisTitleFontDescriptor && !(string.IsNullOrEmpty(o.AxisTitleFontDescriptor)))
+                axisTitleFont = FontFromSaveString(o.AxisTitleFontDescriptor);
+            if (o.UsesLegendFontDescriptor && !(string.IsNullOrEmpty(o.LegendFontDescriptor)))
+                legendFont = FontFromSaveString(o.LegendFontDescriptor);
+            if (o.UsesTitleFontDescriptor && !(string.IsNullOrEmpty(o.TitleFontDescriptor)))
+                titleFont = FontFromSaveString(o.TitleFontDescriptor);
+
+            if (o.UsesAxisLineThickness)
+            {
+                axisLineThickness = o.AxisLineThickness;
+                Color c = Color.Black;
+                if (axisPen != null)
+                {
+                    c = axisPen.Color;
+                    axisPen.Dispose();
+                }
+                axisPen = new Pen(c, axisLineThickness);
+            }
+        }
+
+        public static IList<MarkerType> MarkersFromDescriptors(IList<SeriesOptionsDescriptor> seriesOptionsDescriptors, bool shouldForceIsFilled, bool forcedIsFilled, bool shouldForceFillStyle, FillStyle forcedFillStyle)
+        {
+            IList<MarkerType> markerTypes = new List<MarkerType>(seriesOptionsDescriptors.Count);
+            foreach (SeriesOptionsDescriptor t in seriesOptionsDescriptors)
+            {
+                int markerIndex = t.MarkerIndex;
+                int mkr = ChartOptions.SeriesNumberToMarkerNumber(markerIndex);
+
+                MarkerType clone = MarkerTypes[mkr].Clone();
+                if (shouldForceIsFilled)
+                    clone.IsMarkerFilled = forcedIsFilled;
+                if (shouldForceFillStyle)
+                    clone.MarkerFillStyle = forcedFillStyle;
+                markerTypes.Add(clone);
+            }
+            return markerTypes;
+        }
+
+        protected Brush MarkerTypeToBrush(MarkerType mt)
+        {
+            Color c;
+            FillStyle f;
+            if (ShouldUseColour)
+            {
+                c = mt.MarkerColor;
+                f = FillStyle.Solid;
+            }
+            else
+            {
+                c = grBlack;
+                f = mt.MarkerFillStyle;
+            }
+
+            Brush b = null;
+            switch (f)
+            {
+                case FillStyle.None:
+                    //  Do nothing
+                    break;
+                case FillStyle.Crosshatch:
+                    b = new System.Drawing.Drawing2D.HatchBrush(System.Drawing.Drawing2D.HatchStyle.DiagonalCross, c, Color.White);
+                    break;
+                case FillStyle.BackwardDiagonal:
+                    b = new System.Drawing.Drawing2D.HatchBrush(System.Drawing.Drawing2D.HatchStyle.BackwardDiagonal, c, Color.White);
+                    break;
+                case FillStyle.ForwardDiagonal:
+                    b = new System.Drawing.Drawing2D.HatchBrush(System.Drawing.Drawing2D.HatchStyle.ForwardDiagonal, c, Color.White);
+                    break;
+                case FillStyle.Solid:
+                    b = new SolidBrush(c);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("mt", f, "FillStyle Values between 0 and 4 accepted");
+            }
+
+            return b;
+        }
+
+        protected static string MakeTitle(string useIfAvailable, string defaultTitle)
+        {
+            if (string.IsNullOrWhiteSpace(useIfAvailable))
+                return defaultTitle;
+
+            if (useIfAvailable.Length > MAX_LABEL_LENGTH)
+                return useIfAvailable.Substring(0, MAX_LABEL_LENGTH);
+            else
+                return useIfAvailable;
+        }
+
+        public static string combo_ti(string cap)
+        {
+            string x = "combined";
+            if (cap.Contains("fixed effects"))
+                x += " [fixed]";
+            else if (cap.Contains("random effects"))
+                x += " [random]";
+            return x;
+        }
+
+        protected static void CreateRatioLogScale(out int tics, ref double[] tic, ref double min, ref double max, out double scalemin, out double scalemax)
+        {
+
+            double top = max, bot = min;
+            if (max <= 0) top = 100000000;
+            if (min <= 0) bot = 0.00000001;
+
+            double tmp = bot;
+            int i = 1;
+            double z;
+            do
+            {
+                z = Math.Pow(10, Math.Floor(Math.Log10(tmp)));
+                tmp = z;
+                if (tmp >= bot) i++;
+                if (tmp >= top) break;
+                tmp += z;
+                if (tmp >= bot) i++;
+                if (tmp >= top) break;
+                tmp += z;
+                if (tmp >= bot) i++;
+                if (tmp >= top) break;
+                tmp += z * 2;
+                if (tmp >= bot) i++;
+                if (tmp >= top) break;
+                tmp += z * 5;
+            } while (tmp < top * 2);
+
+            tics = i;
+            Array.Resize(ref tic, tics + 1);
+
+            tmp = bot;
+            i = 1;
+
+            do
+            {
+                z = Math.Pow(10, Math.Floor(Math.Log10(tmp)));
+                tmp = z;
+                if (tmp >= bot) i++;
+                tic[i] = tmp;
+                if (tmp >= top) break;
+                tmp += z;
+                if (tmp >= bot) i++;
+                tic[i] = tmp;
+                if (tmp >= top) break;
+                tmp += z;
+                if (tmp >= bot) i++;
+                tic[i] = tmp;
+                if (tmp >= top) break;
+                tmp += z * 2;
+                if (tmp >= bot) i++;
+                tic[i] = tmp;
+                if (tmp >= top) break;
+                tmp += z * 5;
+            } while (tmp < top * 2);
+
+            scalemin = tic[1];
+            scalemax = tmp;
+            min = Math.Log(scalemin);
+            max = Math.Log(scalemax);
+        }
+
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        protected float AxisLabelWidthInCanvasCoordinates(string s)
+        {
+            return MeasureStringInCanvasCoordinates(s, axisLabelFont).Width;
+        }
+
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        protected float AxisLabelHeightInCanvasCoordinates(string s)
+        {
+            return MeasureStringInCanvasCoordinates(s, axisLabelFont).Height;
+        }
+
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        protected float LegendWidthInCanvasCoordinates(string s)
+        {
+            return MeasureStringInCanvasCoordinates(s, legendFont).Width;
+        }
+
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        protected float LegendHeightInCanvasCoordinates(string s)
+        {
+            return MeasureStringInCanvasCoordinates(s, legendFont).Height;
+        }
+
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        protected float TitleWidthInCanvasCoordinates(string s)
+        {
+            return MeasureStringInCanvasCoordinates(s, titleFont).Width;
         }
 
         public abstract ParameterBag Plot(ITemplateHost host);
