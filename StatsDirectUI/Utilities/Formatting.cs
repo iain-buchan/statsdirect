@@ -179,10 +179,10 @@ namespace StatsDirect.Utilities
         /// <remarks>Converted from Safe_Exp</remarks>
         public static double SafeExp(double x)
         {
-            if (Math.Abs(x) > Math.Log(Constant.LMREAL))
+            if (Math.Abs(x) > Math.Log(double.MaxValue))
                 return Constant.MISSING;
             double z = Math.Exp(x);
-            if (z > Constant.LMREAL || z < Constant.SPREAL)
+            if (z > double.MaxValue || z < Constant.SPREAL)
                 return Constant.MISSING;
             return z;
         }

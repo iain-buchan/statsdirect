@@ -1328,7 +1328,8 @@ namespace StatsDirect.Builtins
 
         public static double XSpr(double q)
         {
-            double q1 = Math.Abs(q) > Constant.LMREAL ? Constant.MISSING : q;
+            // TODO: This can never work as we're off the top of what double can represent.  Should we be using IsInfinity here?
+            double q1 = Math.Abs(q) > double.MaxValue ? Constant.MISSING : q;
             return double.IsNaN(q) ? Constant.MISSING : q1;
         }
 

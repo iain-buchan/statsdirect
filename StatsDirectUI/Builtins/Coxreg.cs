@@ -1471,10 +1471,9 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= ncoef; i++)
             {
                 coef[i, 2] = Math.Sqrt(cov[i, i]);
-                uoverd(coef[i, 1], coef[i, 2], out coef[i, 3]);
+                coef[i, 3] = uoverd(coef[i, 1], coef[i, 2]);
             }
         }
-
 
         ///  <summary>
         ///  COMPUTE HESSIAN, GRADIENT, AND PARAMETER UPDATES
@@ -2077,61 +2076,39 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="u"></param>
         ///  <param name="d"></param>
-        ///  <param name="Q"></param>
         ///  <remarks></remarks>
-        private static void uoverd(double u, double d, out double Q)
+        private static double uoverd(double u, double d)
         {
-            if (u == Constant.MISSING | d == Constant.MISSING)
-            {
-                Q = Constant.MISSING;
-                return;
-            }
+            if (u == Constant.MISSING || d == Constant.MISSING)
+                return Constant.MISSING;
+
             double absden = Math.Abs(d);
             if (absden <= 1.0)
             {
-                const double BIG = Constant.LMREAL;
+                const double BIG = double.MaxValue;
                 if (Math.Abs(u) < BIG * absden)
-                {
-                    Q = u / d;
-                    return;
-                }
+                    return u / d;
+
                 if (u == 0.0)
-                {
-                    Q = Constant.MISSING;
-                }
-                else if (d >= 0.0)
+                    return Constant.MISSING;
+
+                if (d >= 0.0)
                 {
                     if (u >= 0.0)
-                    {
-                        Q = Constant.LMREAL;
-                    }
+                        return double.MaxValue;
                     else
-                    {
-                        Q = -Constant.LMREAL;
-                    }
+                        return -double.MaxValue;
                 }
+
+                if (u >= 0.0)
+                    return -double.MaxValue;
                 else
-                {
-                    if (u >= 0.0)
-                    {
-                        Q = -Constant.LMREAL;
-                    }
-                    else
-                    {
-                        Q = Constant.LMREAL;
-                    }
-                }
-                return;
+                    return double.MaxValue;
             }
             const double small = Constant.SPREAL;
             if (Math.Abs(u) >= small * absden)
-            {
-                Q = u / d;
-                return;
-            }
-            Q = 0.0;
-            return;
-            // TRANSWARNING: Unreachable code detected and removed 
+                return u / d;
+            return 0.0;
         }
 
 

@@ -3,20 +3,6 @@ namespace StatsDirect.Numerics
     using System;
     public static class Constant
     {
-        //IEEE 754 floating point constants as per float.h in other C
-        //compatability with old netlib.org machine constant routine
-        // DMACH1 = DBL_MIN;
-        // DMACH2 = DBL_MAX;
-        // DMACH3 = DBL_LRS/2;
-        // DMACH4 = Math.Pow (2.0,1.0-DBL_MANT_DIG);
-        // DMACH5 = Math.Log10 (2.0);
-        public const int DBL_MANT_DIG = 53; //digits in the mantissa
-        public const int DBL_DIG = 15; //significant digits
-        public const double DBL_MIN_EXP = -1021; //minimum exponent to the base e
-        public const double DBL_MIN_10_EXP = -307; //minimum exponent to the base 10
-        public const double DBL_MAX_EXP = 1024; //maximum exponent to the base e
-        public const double DBL_MAX_10_EXP = 308; //maximum exponent to the base 10
-        public const double DBL_MAX = 1.7976931348623157E+308; //largest magnitude [LMREAL]
         public const double DBL_MIN = 2.2250738585072014E-308; //smallest positive magnitude [SPREAL]
         public const double DBL_LRS = 2.22044604925031308085E-016; //largest relative spacing [EPSILON]
         public const double DBL_SRS = 1.11022302462515654042E-016; //smallest relative spacing [EPSNEG]
@@ -27,22 +13,11 @@ namespace StatsDirect.Numerics
         public const double SQ2PIL = 0.918938533204672741780329736405617639861397473637;  //log(sqrt(pi*2))
         public const double SQPI2L = 0.225791352644727432363097614947441071785897339277;  //log(sqrt(pi/2))
 
-        public const double MISSING = double.MinValue; //missing data value was 1E+300 in SD2
+        public const double MISSING = double.MinValue; //missing data value, was 1E+300 in SD2
 
         public const double EPSNEG = DBL_SRS; //largest relative spacing of doubles = B**(-MACHEP)
         public const double SPREAL = DBL_MIN; //smallest positive double = B**(EMIN-1)
-        public const double LMREAL = DBL_MAX; //largest double = B**EMAX*(1 - B**(-D))
         public const double EPSILON = DBL_LRS; //smallest relative spacing of doubles = B**(-D)
-
-        // For conversion purposes:
-        // dpmach(1) = Constant.MISSING
-        // dpmach(2) = Constant.DBL_MIN
-        // dpmach(3) = epsilon(0.0d+0)/radix(0.0d+0)
-        // dpmach(4) = Constant.DBL_MAX
-        // dpmach(5) = Constant.EPSILON
-        // dpmach(6) = 3.141592653589793238462643383279502884197169399375
-        // dpmach(7) = 2147483647.0
-        // dpmach(8) = 2.718281828459045235360287
     }
 
     /// <summary>
@@ -389,7 +364,7 @@ namespace StatsDirect.Numerics
             //xmax=0.0;
             //dxrel=0.0;
             double ret = double.NaN;
-            double xmax = Constant.DBL_MAX / Math.Log(Constant.DBL_MAX);
+            double xmax = double.MaxValue / Math.Log(double.MaxValue);
             //dxrel = Math.Sqrt(Defs.DBL_LRS)
             double y = Math.Abs(x);
             if (y <= 10.0)
@@ -460,7 +435,7 @@ namespace StatsDirect.Numerics
             const int nalgm = 5;
             double
                 xbig = 1.0 / Math.Sqrt(Constant.DBL_SRS),
-                xmax = Math.Exp(Math.Min(Math.Log(Constant.DBL_MAX / 12.0), -Math.Log(12.0 * Constant.DBL_SRS)));
+                xmax = Math.Exp(Math.Min(Math.Log(double.MaxValue / 12.0), -Math.Log(12.0 * Constant.DBL_SRS)));
             double ret = double.NaN;
             if (x < 10.0)
             {
@@ -552,7 +527,7 @@ namespace StatsDirect.Numerics
             double
                 ret,
                 // dxrel = Math.Sqrt(Constant.DBL_LRS),
-                xsml = Math.Exp(Math.Max(Math.Log(Constant.DBL_MIN), -Math.Log(Constant.DBL_MAX)) + 0.01);
+                xsml = Math.Exp(Math.Max(Math.Log(Constant.DBL_MIN), -Math.Log(double.MaxValue)) + 0.01);
 
             double y = Math.Abs(x);
             if (y <= 10.0)
@@ -1027,7 +1002,7 @@ namespace StatsDirect.Numerics
             const double tol = Constant.DBL_SRS, zero = 0.0, one = 1.0, two = 2.0, three = 3.0, nine = 9.0, plimit = 1000.0, xbig = 1.0e12;
             double
                 elimit = Math.Log(Constant.DBL_MIN),
-                oflo = Math.Sqrt(Constant.DBL_MAX);
+                oflo = Math.Sqrt(double.MaxValue);
             double pn1, arg, c, a;
             double ret = zero;
             if (p <= zero || x < zero || double.IsNaN(x) || double.IsNaN(p))

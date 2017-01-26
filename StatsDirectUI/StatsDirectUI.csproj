@@ -271,7 +271,6 @@
     <Compile Include="Charting\RtfImageConverter.cs" />
     <Compile Include="Charting\RtfImageRenderer.cs" />
     <Compile Include="Charting\ScatterXYOptions.cs" />
-    <Compile Include="Charting\SDGlobalStub.cs" />
     <Compile Include="Charting\Series.cs" />
     <Compile Include="Charting\SeriesOptionsDescriptor.cs" />
     <Compile Include="Charting\SpreadChartRenderer.cs" />
@@ -279,6 +278,7 @@
     <Compile Include="Charting\StringSeries.cs" />
     <Compile Include="Charting\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\SurvivalOptions.cs" />
+    <Compile Include="Charting\Tic.cs" />
     <Compile Include="Charting\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />
     <Compile Include="CsvParser\Csv.g4.lexer.cs">
@@ -1912,7 +1912,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

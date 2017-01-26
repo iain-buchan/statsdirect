@@ -274,7 +274,7 @@ namespace StatsDirect.Builtins
             //   Tables(i).informative = (d(0) * d(3) <> 0) Or (d(1) * d(2) <> 0)
 
 
-            MAXEXP = Math.Log(Constant.LMREAL);
+            MAXEXP = Math.Log(double.MaxValue);
             //  Make sure that exact calculations can be performed
             logScale = useLogScale;
             CheckData(dataType, numTables, tables, out ierr);

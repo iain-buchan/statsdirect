@@ -1390,7 +1390,7 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        string mask = GetAxisMask(binMidpointInterval, minimumBinMidpoint, descriptor.Bins, 1);
+                        string mask = AxisScaler.AxisMask(binMidpointInterval, minimumBinMidpoint, descriptor.Bins, 1, ScaleType.Linear);
 
                         // Plot one ASCII histogram per series.  The cheat is to plot each one, save it, and concatenate at the end!
                         ASCII_InitPlot(descriptor.Bins + 4);
@@ -1632,46 +1632,6 @@ namespace StatsDirect.Charting
                 }
             }
             return yMax;
-        }
-
-        private static string GetAxisMask(double stepp, double znmin, int nstep, int sp)
-        {
-            int dp;
-
-            if (stepp > 0.000001)
-            {
-                string q = (stepp * sp).ToString(CultureInfo.InvariantCulture);
-                string q2 = Math.Abs(znmin).ToString(CultureInfo.InvariantCulture);
-                int xp = q.IndexOf(SDGlobalStub.DECP_CHAR, StringComparison.Ordinal) + 1;
-                dp = xp == 0 ? 0 : q.Length - xp;
-                int xp2 = q2.IndexOf(SDGlobalStub.DECP_CHAR, StringComparison.Ordinal) + 1;
-                int dp2 = xp2 == 0 ? 0 : q2.Length - xp2;
-                if (dp2 > dp & xp2 != 0)
-                    dp = dp2;
-                else
-                {
-                    if (xp == 0)
-                        dp = 0;
-                }
-            }
-            else
-                dp = -1;
-            int maxc = 1;
-            double x = Math.Abs(znmin) + Math.Abs(nstep * stepp);
-            if (x > 0.0)
-                maxc += Convert.ToInt32(Math.Abs(Math.Floor(Math.Log(x) / Math.Log(10))));
-            if (znmin < 0)
-                maxc++;
-            if (maxc > 6)
-                dp = -1;
-            string msk = string.Empty;
-            if (dp > 0)
-                msk = new string('#', maxc - 1) + "0." + new string('0', dp);
-            else if (dp == 0)
-                msk = new string('#', maxc - 1) + "0";
-            if (msk.Length > 9 || dp < 0)
-                msk = "E";
-            return msk;
         }
 
         private ScaleParameters GetRocScaleParameters()
@@ -3357,6 +3317,7 @@ namespace StatsDirect.Charting
 
             double amin;
             double aint;
+            int minorTicsPerMajorTic;
             AxisScaler.Q_Axis(ref DataMinY, 0, ref DataMaxY, out yDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
             double ymn = amin;
             double ymx = amin + (aint * yDiv);
@@ -4292,6 +4253,7 @@ namespace StatsDirect.Charting
         internal void Plot_MHRD(int k, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool fault)
         {
             double aint; double amin;
+            int minorTicsPerMajorTic;
             double w;
             double yc = 0; double yt = 0;
 
@@ -4406,7 +4368,7 @@ namespace StatsDirect.Charting
                 dotPen = GetMarkerPen(SharedMarkerTypes[10]),
                 tenPenFalse = GetLinePen(SharedMarkerTypes[10], false))
             {
-                string mask = GetAxisMask(aint, amin, xDiv, minorTicsPerMajorTic);
+                string mask = AxisScaler.AxisMask(aint, amin, xDiv, minorTicsPerMajorTic, ScaleType.Linear);
                 for (int i = 0; i <= xDiv; i++)
                 {
                     double XM = ToCanvasX(amin + aint * i);
@@ -4571,6 +4533,7 @@ namespace StatsDirect.Charting
                 DataMinX = orlmin;
 
             double aint; double amin;
+            int minorTicsPerMajorTic;
             AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
             DataMinX = amin;
             DataMaxX = amin + xDiv * aint;
@@ -4596,7 +4559,7 @@ namespace StatsDirect.Charting
 
             using (Pen linePen = GetLinePen(SharedMarkerTypes[10], true))
             {
-                string msk = GetAxisMask(aint, amin, xDiv, minorTicsPerMajorTic);
+                string msk = AxisScaler.AxisMask(aint, amin, xDiv, minorTicsPerMajorTic, ScaleType.Linear);
                 double xm;
                 string lab;
                 for (int i = 0; i <= xDiv; i++)
@@ -4862,6 +4825,7 @@ namespace StatsDirect.Charting
                         // CreateRatioLogScale(out tics, out tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
                         double amin;
                         double aint;
+                        int minorTicsPerMajorTic;
                         AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Log10);
                         DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
                         /*
@@ -4899,6 +4863,7 @@ namespace StatsDirect.Charting
                         }
                         double amin;
                         double aint;
+                        int minorTicsPerMajorTic;
                         AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
                         DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
                         DataMinX = axisXMin;

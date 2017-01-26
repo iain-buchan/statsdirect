@@ -11,7 +11,7 @@ namespace StatsDirect.Charting
         ///  Try to get a neat axis division suitable for values between qmin and qmax.
         ///  </summary>
         ///  <param name="qmin">The smallest value likely to be plotted on the axis. OUTPUT: May be modified if there are no values so that it is 0; will never otherwise be modified.</param>
-        ///  <param name="qmin">The smallest value greater than zero likely to be plotted on the axis. Used for log scales; may be zero if scaleType is known to be Linear.</param>
+        ///  <param name="qMinGreaterThanZero">The smallest value greater than zero likely to be plotted on the axis. Used for log scales; may be zero if scaleType is known to be Linear.</param>
         ///  <param name="qmax">The largest value likely to be plotted on the axis. OUTPUT: May be modified if there are no values so that it is 1; will never otherwise be modified.</param>
         ///  <param name="div">OUTPUT: The number of equal divisions in the scale.</param>
         ///  <param name="zmin">OUTPUT: The value of the lowest division.</param>
@@ -122,7 +122,7 @@ namespace StatsDirect.Charting
             shorteq = newlen <= oldlen;
             if (zmin < 0.0 & zmin + zint * Convert.ToDouble(div) > 0.0)
             {
-                const double acc = SDGlobalStub.EPSNEG * 10.0;
+                const double acc = Constant.EPSNEG * 10.0;
                 bool ok = false;
                 double x = zmin;
                 int j;
@@ -305,7 +305,7 @@ namespace StatsDirect.Charting
             double[] r = { 0.1, 0.15, 0.2, 0.25, 0.4, 0.5, 0.6, 0.75, 0.8 };
 
             //  can replace with smallest relative spacing constant EPSNEG
-            const double xmp = SDGlobalStub.EPSNEG;
+            const double xmp = Constant.EPSNEG;
             if (Math.Abs(zmn- Constant.MISSING)<Constant.EPSNEG || Math.Abs(zmx)==Constant.MISSING || double.IsInfinity(zmn) || double.IsInfinity(zmx) || double.IsNaN (zmn) || double.IsNaN (zmx))
             {
                 znmin = 0;
@@ -403,29 +403,21 @@ namespace StatsDirect.Charting
             for (int i = 0; i <= 9; i++)
             {
                 if (znm + zstep * (rnstpz + 0.04) < zmx)
-                {
                     break;
-                }
                 znmin = znm;
                 znm = znmin * Math.Pow(10.0, (maxB - i));
                 if (znm < 0.0)
-                {
                     znm = znm - 1.0;
-                }
                 znm = Math.Floor(znm) / Math.Pow(10.0, (maxB - i));
             }
         }
 
-        public static double Axis_Q0(double zmin, double Q)
+        public static double Axis_Q0(double zmin, double q)
         {
-            if (Math.Abs(zmin) > SDGlobalStub.EPSILON)
-            {
-                if (Math.Abs(Q) < SDGlobalStub.EPSILON)
-                {
+            if (Math.Abs(zmin) > Constant.EPSILON)
+                if (Math.Abs(q) < Constant.EPSILON)
                     return 0.0;
-                }
-            }
-            return Q;
+            return q;
         }
 
         public static void v_axis(ref double qmin, ref double qmax, ref int cm, out double zmin, out double zint)
@@ -453,6 +445,8 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         public static string AxisMask(double stepp, double znmin, int nstep, int sp, ScaleType scaleType)
         {
+            string DECP_CHAR = System.Globalization.NumberFormatInfo.CurrentInfo.NumberDecimalSeparator;
+
             //  Handle input scaling - if this isn't a linear scale, our input values are the transformed versions
             switch (scaleType)
             {
@@ -473,12 +467,12 @@ namespace StatsDirect.Charting
             {
                 //  How many decimal places in the division between major tics?
                 string q = (stepp * sp).ToString();
-                int xp = q.IndexOf(SDGlobalStub.DECP_CHAR, StringComparison.Ordinal) + 1;
+                int xp = q.IndexOf(DECP_CHAR, StringComparison.Ordinal) + 1;
                 numberOfDecimalPlaces = xp == 0 ? 0 : q.Length - xp;
 
                 //  How many decimal places in the smallest valued label?
                 string q2 = Math.Abs(znmin).ToString();
-                int xp2 = q2.IndexOf(SDGlobalStub.DECP_CHAR, StringComparison.Ordinal) + 1;
+                int xp2 = q2.IndexOf(DECP_CHAR, StringComparison.Ordinal) + 1;
                 int dp2 = xp2 == 0 ? 0 : q2.Length - xp2;
 
                 //  Use the longer DPs

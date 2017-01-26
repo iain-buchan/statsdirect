@@ -106,8 +106,6 @@ namespace StatsDirect.Charting
         protected double divy;
         protected double offy;
 
-        /// <summary>How many minor tics per major tic on the axis?</summary>
-        protected int minorTicsPerMajorTic;
         protected const int DEFAULT_METAFILE_HEIGHT = 800;
         protected const int DEFAULT_METAFILE_WIDTH = 1132;
         protected const double DEFAULT_X_GAP = 80;
@@ -882,6 +880,7 @@ namespace StatsDirect.Charting
         protected double DrawXScale(bool drawLabels, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
             double aint = 0;
+            int minorTicsPerMajorTic;
             string msk = string.Empty;
             double labelHeight = 0;
 
@@ -1070,6 +1069,7 @@ namespace StatsDirect.Charting
 
             // find a neat axis division
             double aint, amin;
+            int minorTicsPerMajorTic;
             Q_AxisOrFromDefinition(ref DataMinY, DataMinGreaterThanZeroY, ref DataMaxY, out yDiv, out amin, out aint, out minorTicsPerMajorTic, true, scaleType, useCalculatedScalesEvenWithDefinition);
 
             // set the Y axis min and max values to fit the scale

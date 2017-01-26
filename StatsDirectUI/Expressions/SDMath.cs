@@ -24,7 +24,7 @@ namespace StatsDirect.Expressions
                 return Q;
             }
             double a = PDF.alogam(n + 1.0);
-            double maxExp = Math.Log(Constant.LMREAL);
+            double maxExp = Math.Log(double.MaxValue);
             return a > maxExp ? Constant.MISSING : Math.Exp(a);
         }
 
