@@ -4,16 +4,16 @@
 <line><b>Equation: </b><in>eq_y</in> <in>eq_x</in></line>
 <line></line>
 <block name="se">
-<line>Standard Error of slope = <in>slope_err</in></line>
-<line><ci><in>se_pc</in>% CI for population value of slope = <in>se_from</in> to <in>se_to</in></ci></line>
+<line>Standard Error of slope = <inu>slope_err</inu></line>
+<line><ci><in>se_pc</in>% CI for population value of slope = <inu>se_from</inu> to <inu>se_to</inu></ci></line>
 <line></line>
-<line>Correlation coefficient (r) = <in>se_r</in> (r<sub>2</sub> = <in>se_r2</in>)</line>
+<line>Correlation coefficient (r) = <inu>se_r</inu> (r<sub>2</sub> = <inu>se_r2</inu>)</line>
 <line></line>
 <block name="ci">
-<line><ci><in>ci_pc</in>% CI for r (Fisher's z transformed) = <in>ci_from</in> to <in>ci_to</in></ci></line>
+<line><ci><in>ci_pc</in>% CI for r (Fisher's z transformed) = <inu>ci_from</inu> to <inu>ci_to</inu></ci></line>
 <line></line>
-<line>t with <in>df</in> DF = <in>tdf</in></line>
-<line><pval>Two sided <in>p</in></pval></line>
+<line>t with <in>df</in> DF = <inu>tdf</inu></line>
+<line><pval>Two sided <inp>p</inp></pval></line>
 <line>Power <in>pwr</in></line>
 <line></line>
 <line><in>sig</in></line>
@@ -21,7 +21,7 @@
 </block>
 <block name="notcalc">
 <line><warn>SE and CI for slope not calculated when r = 1 or -1</warn></line>
-<line><subtotal>Correlation coefficient (r) = <in>r</in></subtotal></line>
+<line><subtotal>Correlation coefficient (r) = <inu>r</inu></subtotal></line>
 <line><warn>CI and t for correlation not calculated when r = 1 or -1</warn></line>
 </block>
 </report>

@@ -3,13 +3,13 @@
 <line></line>
 <table>
 <tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
-<tr><td>Regression</td><td><in>reg_sum</in></td><td><in>reg_df</in></td><td><in>reg_mean</in></td></tr>
-<tr><td><ci>Residual</ci></td><td><ci><in>res_sum</in></ci></td><td><ci><in>res_df</in></ci></td><td><ci><in>res_mean</in></ci></td></tr>
-<tr><td><subtotal>Total, corrected</subtotal></td><td><subtotal><in>tot_sum</in></subtotal></td><td><subtotal><in>tot_df</in></subtotal></td><td></td></tr>
+<tr><td>Regression</td><td><inu>reg_sum</inu></td><td><in>reg_df</in></td><td><inu>reg_mean</inu></td></tr>
+<tr><td><ci>Residual</ci></td><td><ci><inu>res_sum</inu></ci></td><td><ci><in>res_df</in></ci></td><td><ci><inu>res_mean</inu></ci></td></tr>
+<tr><td><subtotal>Total, corrected</subtotal></td><td><subtotal><inu>tot_sum</inu></subtotal></td><td><subtotal><in>tot_df</in></subtotal></td><td></td></tr>
 </table>
 <line></line>
-<line>F = <in>f</in> <pval><in>p</in></pval></line>
+<line>F = <inu>f</inu> <pval><inp>p</inp></pval></line>
 <line></line>
-<line>R square = <in>r</in></line>
-<line>Root MSE = <in>mse</in></line>
+<line>R square = <inu>r</inu></line>
+<line>Root MSE = <inu>mse</inu></line>
 </report>

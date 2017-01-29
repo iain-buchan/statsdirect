@@ -6,10 +6,10 @@
 <line></line>
 <line>Confidence interval:</line>
 <line>SE for <in>ci_y</in></line>
-<line><in>pci</in>% confidence interval = <in>fromi</in> to <in>toi</in></line>
+<line><in>pci</in>% confidence interval = <inu>fromi</inu> to <inu>toi</inu></line>
 <line></line>
 <line></line>
 <line><ci>Prediction interval:</ci></line>
-<line>S pred = <in>s_pred</in></line>
-<line><ci><in>pcp</in>% prediction interval = <in>fromp</in> to <in>top</in></ci></line>
+<line>S pred = <inu>s_pred</inu></line>
+<line><ci><in>pcp</in>% prediction interval = <inu>fromp</inu> to <inu>top</inu></ci></line>
 </report>

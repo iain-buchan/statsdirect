@@ -5,10 +5,10 @@
 <line>Method: unweighted least squares</line>
 <line>For <in>lab_y</in> vs <in>lab_x</in></line>
 <line></line>
-<line>A = <in>a</in></line>
-<line>B = <in>b</in></line>
+<line>A = <inu>a</inu></line>
+<line>B = <inu>b</inu></line>
 <line></line>
-<line>Correlation coefficient (r) = <in>r</in>    (r<sup>2</sup> = <in>r2</in>)</line>
+<line>Correlation coefficient (r) = <inu>r</inu>    (r<sup>2</sup> = <inu>r2</inu>)</line>
 <line></line>
-<line>Standard error of estimate  = <in>ste</in></line>
+<line>Standard error of estimate  = <inu>ste</inu></line>
 </report>

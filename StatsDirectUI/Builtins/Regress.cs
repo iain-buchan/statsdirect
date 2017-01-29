@@ -135,22 +135,22 @@ namespace StatsDirect.Builtins
             DataFrame fy = parameters["y"].AsDataFrame;
             DoubleVariable vy = fy.Variables[0]as DoubleVariable;
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("reg_sum", host.RoundU(context.SSREG));
+            outputParameters.AddOutput("reg_sum", context.SSREG);
             outputParameters.AddOutput("reg_df", "1");
-            outputParameters.AddOutput("reg_mean", host.RoundU(context.SSREG));
-            outputParameters.AddOutput("res_sum", host.RoundU(context.SSY - context.SSREG));
+            outputParameters.AddOutput("reg_mean", context.SSREG);
+            outputParameters.AddOutput("res_sum", context.SSY - context.SSREG);
             double res_df = vy.Length - 2;
-            outputParameters.AddOutput("res_df", res_df.ToString());
-            outputParameters.AddOutput("res_mean", host.RoundU((context.SSY - context.SSREG) / res_df));
-            outputParameters.AddOutput("tot_sum", host.RoundU(context.SSY));
+            outputParameters.AddOutput("res_df", res_df);
+            outputParameters.AddOutput("res_mean", (context.SSY - context.SSREG) / res_df);
+            outputParameters.AddOutput("tot_sum", context.SSY);
             double tot_df = vy.Length - 1;
-            outputParameters.AddOutput("tot_df", tot_df.ToString());
+            outputParameters.AddOutput("tot_df", tot_df);
             double vr = context.SSREG / ((context.SSY - context.SSREG) / res_df);
-            outputParameters.AddOutput("f", host.RoundU(vr));
+            outputParameters.AddOutput("f", vr);
             double prob = PDF.fvalp(vr, 1.0, res_df);
-            outputParameters.AddOutput("p", host.pval(prob));
-            outputParameters.AddOutput("r", host.RoundU(context.SSREG / context.SSY));
-            outputParameters.AddOutput("mse", host.RoundU(Math.Sqrt((context.SSY - context.SSREG) / res_df)));
+            outputParameters.AddOutput("p", prob);
+            outputParameters.AddOutput("r", context.SSREG / context.SSY);
+            outputParameters.AddOutput("mse", Math.Sqrt((context.SSY - context.SSREG) / res_df));
             return outputParameters;
         }
 
@@ -181,12 +181,12 @@ namespace StatsDirect.Builtins
                 ParameterBag seParameters = new ParameterBag();
                 seList.Add(seParameters);
                 double SEB = context.SeEst / (context.SDX * Math.Sqrt(context.NX - 1));
-                seParameters.AddOutput("slope_err", host.RoundU(SEB));
+                seParameters.AddOutput("slope_err", SEB);
                 seParameters.AddOutput("se_pc", Formatting.XRound(100 * (1.0 - context.P0), 2));
-                seParameters.AddOutput("se_from", host.RoundU(context.Slope - (context.CIT * SEB)));
-                seParameters.AddOutput("se_to", host.RoundU(context.Slope + (context.CIT * SEB)));
-                seParameters.AddOutput("se_r", host.RoundU(context.R));
-                seParameters.AddOutput("se_r2", host.RoundU(context.R * context.R));
+                seParameters.AddOutput("se_from", context.Slope - (context.CIT * SEB));
+                seParameters.AddOutput("se_to", context.Slope + (context.CIT * SEB));
+                seParameters.AddOutput("se_r", context.R);
+                seParameters.AddOutput("se_r2", context.R * context.R);
                 if (context.NX > 3)
                 {
                     IList<ParameterBag> ciList = new List<ParameterBag>();
@@ -202,19 +202,19 @@ namespace StatsDirect.Builtins
                     double con1 = (Math.Exp(2.0 * fz1) - 1.0) / (Math.Exp(2.0 * fz1) + 1.0);
                     double con2 = (Math.Exp(2.0 * fz2) - 1.0) / (Math.Exp(2.0 * fz2) + 1.0);
                     ciParameters.AddOutput("ci_pc", Formatting.XRound(100 * (1.0 - context.P0), 1));
-                    ciParameters.AddOutput("ci_from", host.RoundU(con1));
-                    ciParameters.AddOutput("ci_to", host.RoundU(con2));
+                    ciParameters.AddOutput("ci_from", con1);
+                    ciParameters.AddOutput("ci_to", con2);
                     // double af = 1; 
                     int df = context.NX - 2;
                     double r = context.R;
                     double st = r * Math.Sqrt(Math.Abs(Convert.ToDouble(df) / (1.0 - (r * r))));
-                    ciParameters.AddOutput("df", df.ToString());
-                    ciParameters.AddOutput("tdf", host.RoundU(st));
+                    ciParameters.AddOutput("df", df);
+                    ciParameters.AddOutput("tdf", st);
                     double P = PDF.tvalp(Math.Abs(st), Convert.ToDouble(df));
                     if (P > 1.0 - P)
                         P = 1.0 - P;
                     P = 2.0 * P;
-                    ciParameters.AddOutput("p", host.pval(P));
+                    ciParameters.AddOutput("p", P);
                     ciParameters.AddOutput("pwr", Formatting.pwr(Power.rpower(0.0, r, Convert.ToDouble(context.NX), context.P0), context.P0));
                     string x = "Correlation coefficient is ";
                     if (P > 0.05)
@@ -235,7 +235,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*notcalc", notcalcList);
                 ParameterBag notcalcParameters = new ParameterBag();
                 notcalcList.Add(notcalcParameters);
-                notcalcParameters.AddOutput("r", host.RoundU(context.R));
+                notcalcParameters.AddOutput("r", context.R);
             }
 
             outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
@@ -366,15 +366,15 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("var_y", vy.Title + " = " + host.RoundU(ya));
             outputParameters.AddOutput("ci_y", vy.Title + " = " + host.RoundU(sey));
             outputParameters.AddOutput("pci", Formatting.XRound(100 * (1.0 - context.P0), 1));
-            outputParameters.AddOutput("fromi", host.RoundU(ncon));
-            outputParameters.AddOutput("toi", host.RoundU(pcon));
+            outputParameters.AddOutput("fromi", ncon);
+            outputParameters.AddOutput("toi", pcon);
             double spred = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
             pcon = ya + (spred * context.PERT);
             ncon = ya - (spred * context.PERT);
-            outputParameters.AddOutput("s_pred", host.RoundU(spred));
+            outputParameters.AddOutput("s_pred", spred);
             outputParameters.AddOutput("pcp", Formatting.XRound(100 * (1.0 - context.P0), 1));
-            outputParameters.AddOutput("fromp", host.RoundU(ncon));
-            outputParameters.AddOutput("top", host.RoundU(pcon));
+            outputParameters.AddOutput("fromp", ncon);
+            outputParameters.AddOutput("top", pcon);
             return outputParameters;
         }
 
@@ -2049,9 +2049,9 @@ namespace StatsDirect.Builtins
                 }
             }
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("raw_t", host.RoundU(talpha));
+            outputParameters.AddOutput("raw_t", talpha);
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100.0, 1));
-            outputParameters.AddOutput("raw_cl", host.RoundU(cl));
+            outputParameters.AddOutput("raw_cl", cl);
             IList<ParameterBag> rawList = new List<ParameterBag>();
             outputParameters.AddOutput("*raw", rawList);
             for (int L = 1; L <= k; L++)
@@ -2093,7 +2093,7 @@ namespace StatsDirect.Builtins
                 ParameterBag rawParameters = new ParameterBag();
                 rawList.Add(rawParameters);
                 rawParameters.AddOutput("lab", frame.Variables[L - 1].Title);
-                rawParameters.AddOutput("a", host.RoundU(alpha));
+                rawParameters.AddOutput("a", alpha);
                 if (alpha != Constant.MISSING && alpha - talpha > 0.1)
                 {
                     rawParameters.AddOutput("x", Formatting.ASTERISK);
@@ -2102,7 +2102,7 @@ namespace StatsDirect.Builtins
                 {
                     rawParameters.AddOutput("x", string.Empty);
                 }
-                rawParameters.AddOutput("a-t", host.RoundU(alpha - talpha));
+                rawParameters.AddOutput("a-t", alpha - talpha);
             }
             // FOR STANDARDIZED DATA (see SAS & SPSS)
             double rtot = 0.0;
@@ -2131,8 +2131,8 @@ namespace StatsDirect.Builtins
                     cl = 0.0;
                 }
             }
-            outputParameters.AddOutput("standard_t", host.RoundU(talpha));
-            outputParameters.AddOutput("standard_cl", host.RoundU(cl));
+            outputParameters.AddOutput("standard_t", talpha);
+            outputParameters.AddOutput("standard_cl", cl);
             IList<ParameterBag> standardList = new List<ParameterBag>();
             outputParameters.AddOutput("*standard", standardList);
             for (int L = 1; L <= k; L++)
@@ -2162,7 +2162,7 @@ namespace StatsDirect.Builtins
                 ParameterBag standardParameters = new ParameterBag();
                 standardList.Add(standardParameters);
                 standardParameters.AddOutput("lab", frame.Variables[L - 1].Title);
-                standardParameters.AddOutput("a", host.RoundU(alpha));
+                standardParameters.AddOutput("a", alpha);
                 if (alpha != Constant.MISSING && alpha - talpha > 0.1)
                 {
                     standardParameters.AddOutput("x", Formatting.ASTERISK);
@@ -2171,7 +2171,7 @@ namespace StatsDirect.Builtins
                 {
                     standardParameters.AddOutput("x", string.Empty);
                 }
-                standardParameters.AddOutput("a-t", host.RoundU(alpha - talpha));
+                standardParameters.AddOutput("a-t", alpha - talpha);
             }
             return outputParameters;
         }
@@ -2319,11 +2319,11 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("lab_y", vY.Title);
             outputParameters.AddOutput("lab_x", vX.Title);
-            outputParameters.AddOutput("a", host.RoundU(context.A));
-            outputParameters.AddOutput("b", host.RoundU(context.G));
-            outputParameters.AddOutput("r", host.RoundU(context.R));
-            outputParameters.AddOutput("r2", host.RoundU(context.R * context.R));
-            outputParameters.AddOutput("ste", host.RoundU(context.SeEst));
+            outputParameters.AddOutput("a", context.A);
+            outputParameters.AddOutput("b", context.G);
+            outputParameters.AddOutput("r", context.R);
+            outputParameters.AddOutput("r2", context.R * context.R);
+            outputParameters.AddOutput("ste", context.SeEst);
             outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
             return outputParameters;
         }
@@ -2363,9 +2363,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("lab_x", vX.Title);
-            outputParameters.AddOutput("res_x", host.RoundU(newx));
+            outputParameters.AddOutput("res_x", newx);
             outputParameters.AddOutput("lab_y", vY.Title);
-            outputParameters.AddOutput("res_y", host.RoundU(newy));
+            outputParameters.AddOutput("res_y", newy);
             return outputParameters;
         }
 
