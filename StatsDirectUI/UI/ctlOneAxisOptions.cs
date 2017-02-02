@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using StatsDirect.Templates;
+using System.Linq;
 
 namespace StatsDirect.UI
 {
@@ -9,13 +10,13 @@ namespace StatsDirect.UI
     {
         private bool hasScale;
         private ICollection<ScaleType> allowedScaleTypes;
-        private double dataMin;
+        private double dataMinimum;
         private double dataMinGreaterThanZero;
-        private double dataMax;
-        private int div;
-        private double zMin;
-        private double zInt;
-        private int minorTicsPerMajorTic;
+        private double dataMaximum;
+        private int intervals;
+        private double scaleMinimum;
+        private double scaleMaximum;
+        private int intervalsPerMajorTic;
         private string mask;
         private bool settingValues;
         private List<ScaleType> scaleTypesInCboScale;
@@ -42,12 +43,12 @@ namespace StatsDirect.UI
             }
         }
 
-        public double DataMin
+        public double MinimumDataValue
         {
-            get { return dataMin; }
+            get { return dataMinimum; }
             set
             {
-                dataMin = value;
+                dataMinimum = value;
                 SetCandidateScaleValues();
                 SetDataRangeLabel();
             }
@@ -64,20 +65,20 @@ namespace StatsDirect.UI
             }
         }
 
-        public double DataMax
+        public double MaximumDataValue
         {
-            get { return dataMax; }
+            get { return dataMaximum; }
             set
             {
-                dataMax = value;
+                dataMaximum = value;
                 SetCandidateScaleValues();
                 SetDataRangeLabel();
             }
         }
 
-        public int Div
+        public int Intervals
         {
-            get { return div; }
+            get { return intervals; }
         }
 
         public LabelDirection LabelDirection
@@ -91,19 +92,19 @@ namespace StatsDirect.UI
             get { return mask; }
         }
 
-        public int MinorTicsPerMajorTic
+        public int IntervalsPerMajorTic
         {
-            get { return minorTicsPerMajorTic; }
+            get { return intervalsPerMajorTic; }
         }
 
-        public double ScaleMin
+        public double MinimumScaleValue
         {
-            get { return zMin; }
+            get { return scaleMinimum; }
         }
 
-        public double ScaleMax
+        public double MaximumScaleValue
         {
-            get { return zMin + div * zInt; }
+            get { return scaleMaximum; }
         }
 
         public ScaleType ScaleType
@@ -117,11 +118,6 @@ namespace StatsDirect.UI
         {
             get { return txtTitle.Text; }
             set { txtTitle.Text = value; }
-        }
-
-        public double ZInt
-        {
-            get { return zInt; }
         }
 
         public System.Drawing.Drawing2D.DashStyle GridLineDashStyle
@@ -174,10 +170,7 @@ namespace StatsDirect.UI
 
         public double MarkerLineValue
         {
-            get
-            {
-                return Utilities.Parsing.Cdbl_Txt(cboMarkerLineAt.Text);
-            }
+            get { return Utilities.Parsing.Cdbl_Txt(cboMarkerLineAt.Text); }
         }
 
         private void SetFormFromAllowedScaleTypes()
@@ -257,17 +250,17 @@ namespace StatsDirect.UI
 
         private void SetDataRangeLabel()
         {
-            lblDataRange.Text = string.Format("Data range: {0} to {1}", SdApplication.SoleInstance.RoundU(DataMin), SdApplication.SoleInstance.RoundU(DataMax));
+            lblDataRange.Text = string.Format("Data range: {0} to {1}", SdApplication.SoleInstance.RoundU(MinimumDataValue), SdApplication.SoleInstance.RoundU(MaximumDataValue));
         }
 
         private void SetCandidateScaleValues()
         {
             // Ensure we have at least some range before trying to set the scale - this can be called, for example, when min has been set but max hasn't yet.
-            if (DataMax <= DataMin)
+            if (MaximumDataValue <= MinimumDataValue)
                 return;
 
-            double qMin = DataMin;
-            double qMax = DataMax;
+            double qMin = MinimumDataValue;
+            double qMax = MaximumDataValue;
             if (ShouldShowMarkerLine && HasMarkerLine)
             {
                 double v = MarkerLineValue;
@@ -277,15 +270,23 @@ namespace StatsDirect.UI
                     qMax = v;
             }
             ScaleType selectedScaleType = ScaleType;
-            Charting.AxisScaler.Q_Axis(ref qMin, DataMinGreaterThanZero, ref qMax, out div, out zMin, out zInt, out minorTicsPerMajorTic, selectedScaleType);
-            mask = Charting.AxisScaler.AxisMask(zInt, zMin, div, minorTicsPerMajorTic, selectedScaleType);
+            IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(qMin, DataMinGreaterThanZero, qMax);
+            IList<Tic> tics = axisScale.Tics();
+            intervals = tics.Count - 1;
+            scaleMinimum = axisScale.MinimumScaleValue;
+            scaleMaximum = axisScale.MaximumScaleValue;
+            int majorTics = tics.Where(tic => tic.TicType == TicType.Major).Count();
+            if (majorTics > 1)
+                intervalsPerMajorTic = intervals / (majorTics - 1); // There's one extra tic - should be a major - at the end. TODO: Check this if there's ever phase added to this.
+            else
+                intervalsPerMajorTic = 1;
+            mask = Charting.AxisMasker.AxisMask(axisScale);
             settingValues = true;
             txtScaleTextMask.Text = mask;
-            txtMinimum.Text = zMin.ToString(mask);
-            txtTics.Text = div.ToString("N0");
-            txtInterval.Text = zInt.ToString(/*mask*/); // #1090: Don't use mask as it's calculated for the major tics; minor tics may well require more decimal places.
+            txtMinimum.Text = scaleMinimum.ToString(mask);
+            txtTics.Text = intervals.ToString("N0");
+            txtMaximum.Text = scaleMaximum.ToString(mask);
             settingValues = false;
-            lblMaximumValue.Text = (zMin + div * zInt).ToString(mask);
         }
 
         private void txtMinimum_TextChanged(object sender, EventArgs e)
@@ -304,10 +305,9 @@ namespace StatsDirect.UI
         {
             if (settingValues)
                 return;
-            zMin = Utilities.Parsing.Cdbl_Txt(txtMinimum.Text);
-            div = Utilities.Parsing.Cint_Txt(txtTics.Text);
-            zInt = Utilities.Parsing.Cdbl_Txt(txtInterval.Text);
-            lblMaximumValue.Text = ScaleMax.ToString(mask);
+            scaleMinimum = Utilities.Parsing.Cdbl_Txt(txtMinimum.Text);
+            intervals = Utilities.Parsing.Cint_Txt(txtTics.Text);
+            scaleMaximum = Utilities.Parsing.Cdbl_Txt(txtMaximum.Text);
         }
 
         private void txtTics_TextChanged(object sender, EventArgs e)
@@ -322,7 +322,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void txtInterval_TextChanged(object sender, EventArgs e)
+        private void txtMaximum_TextChanged(object sender, EventArgs e)
         {
             try
             {
@@ -339,14 +339,6 @@ namespace StatsDirect.UI
             if (settingValues)
                 return;
             mask = txtScaleTextMask.Text;
-            try
-            {
-                lblMaximumValue.Text = ScaleMax.ToString(mask);
-            }
-            catch (FormatException)
-            {
-                // TODO: Warn of an invalid format
-            }
         }
 
         private void cboMarkerLineAt_SelectedIndexChanged(object sender, EventArgs e)

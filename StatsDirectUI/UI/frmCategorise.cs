@@ -6,6 +6,8 @@ using StatsDirect.Numerics;
 using StatsDirect.Utilities;
 using StatsDirect.Data;
 using StatsDirect.Builtins;
+using StatsDirect.Charting;
+using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
@@ -149,24 +151,16 @@ namespace StatsDirect.UI
                         for (j = start; j <= reali; j++)
                         {
                             if (ao[j] <= bin[i])
-                            {
                                 count++;
-                            }
                             else
-                            {
                                 break;
-                            }
                         }
                         start = j;
                     }
                     if (1 == i)
-                    {
                         gridCutoffs.Rows[i - 1].Cells[0].Value = "<= " + bin[i].ToString();
-                    }
                     else
-                    {
                         gridCutoffs.Rows[i - 1].Cells[0].Value = "> " + bin[i - 1].ToString() + "; <= " + bin[i].ToString();
-                    }
                 }
                 else
                 {
@@ -212,13 +206,9 @@ namespace StatsDirect.UI
                     }
                 }
                 if (Constant.MISSING == v.Data[i])
-                {
                     options.PassX[i] = Constant.MISSING;
-                }
                 else
-                {
                     options.PassX[i] = j;
-                }
             }
         }
 
@@ -336,14 +326,10 @@ namespace StatsDirect.UI
             }
             else
             {
-                double zmin = 0;
-                double zint = 0;
-                double min = sx.Minimum;
-                double max = sx.Maximum;
-                Charting.AxisScaler.v_axis(ref min, ref max, ref nsteps, out zmin, out zint);
+                LinearAxisScale axisScale = LinearAxisScaler.v_axis(sx.Minimum, sx.Maximum, nsteps);
                 txtIntervals.Text = nsteps.ToString();
-                txtMinimum.Text = Math.Round(zmin, 14).ToString();
-                txtInterval.Text = Math.Round(zint, 14).ToString();
+                txtMinimum.Text = Math.Round(axisScale.MinimumScaleValue, 14).ToString();
+                txtInterval.Text = Math.Round(axisScale.Interval, 14).ToString();
             }
             filling = false;
         }

@@ -13,13 +13,7 @@ namespace StatsDirect.Templates
         public ScaleType ScaleType { get; set; }
 
         // Scale
-        public bool HasAxisScale { get; set; }
-        public double QMin { get; set; }
-        public double QMax { get; set; }
-        public int Div { get; set; }
-        public double ZMin { get; set; }
-        public double ZInt { get; set; }
-        public int MinorTicsPerMajorTic { get; set; }
+        public IAxisScale AxisScale { get; set; }
         public string Mask { get; set; }
         public LabelDirection LabelDirection { get; set; }
 

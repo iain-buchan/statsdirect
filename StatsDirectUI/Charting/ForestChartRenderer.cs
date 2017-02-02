@@ -202,9 +202,9 @@ namespace StatsDirect.Charting
             if (w > xtra + xAxisCanvas)
                 xtra = w - xAxisCanvas - 5;
             if (false)
-                DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+                DrawAxesOrEnlargeCanvas(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
             else
-                DrawAxesOrEnlargeCanvas(fOptions.Title, new Axis(fOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
+                DrawAxesOrEnlargeCanvas(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
 
             divx = DataMaxX - DataMinX;
             offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;

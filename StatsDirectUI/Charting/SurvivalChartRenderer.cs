@@ -157,7 +157,7 @@ namespace StatsDirect.Charting
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
 
-            DrawAxesOrEnlargeCanvas(sOptions.Title, new Axis("Times", AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(sOptions.YAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), false, false);
+            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition("Times", AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), false, false);
             //divy = cols + 1;
             divy = 1;
             offy = yAxisCanvas;

@@ -40,7 +40,7 @@ namespace StatsDirect.Charting
 
             //  No need to calculate min/max values, as they've already been calculated as the series were added.
             //  We just need to set the neat scale.
-            DrawAxesOrEnlargeCanvas(lOptions.Title, new Axis(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = definition.YSeries }, new Axis(lOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), lOptions.ShouldBoxAxes, false);
+            DrawAxesOrEnlargeCanvas(lOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = definition.YSeries }, new AxisDefinition(lOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), lOptions.ShouldBoxAxes, false);
             double x1 = xAxisCanvas + (xExtCanvas * 0.25);
             double x2 = xAxisCanvas + (xExtCanvas * 0.75);
 

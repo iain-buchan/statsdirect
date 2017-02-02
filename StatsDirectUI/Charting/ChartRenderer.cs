@@ -179,7 +179,7 @@ namespace StatsDirect.Charting
                     }
                 }
 
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(sOptions.YAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
+                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
 
                 float size2 = labelFont.Size * 2;
                 //  If there are multiple series, draw the legends
@@ -231,13 +231,13 @@ namespace StatsDirect.Charting
             }
             else
             {
-                int y = definition.ScaleParameters.Y.Div;
+                int y = ((LinearAxisScale)definition.ScaleParameters.Y.AxisScale).Intervals;
                 ASCII_InitPlot(5 + y); // 5 = Title, top axis title, bottom axis, bottom scale, bottom axis title
 
                 // Draw the scale
                 DefaultAxes();
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(sOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
-                SetStandardAsciiScaling();
+                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
+                SetStandardAsciiScaling(y);
 
                 // Draw the title text
                 int L = sOptions.YAxisTitle.Length;
@@ -259,7 +259,7 @@ namespace StatsDirect.Charting
                         if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
                         {
                             int x1 = Convert.ToInt32(offx + Convert.ToInt32(xdat[r] / divx * 60));
-                            int y1 = Convert.ToInt32(offy + Convert.ToInt32(ydat[r] / divy * yDiv));
+                            int y1 = Convert.ToInt32(offy + Convert.ToInt32(ydat[r] / divy * y));
                             ASCII_PlotPoint(x1, y1);
                         }
                     }
@@ -300,7 +300,7 @@ namespace StatsDirect.Charting
             // Plot a metafile version
             StartVectorPlot();
             AssignMarkersToSeries();
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(lrOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(lrOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(lrOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(lrOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
 
             // plot points
             DoubleSeries xs = definition.XSeries[0].AsDoubleSeries;
@@ -323,7 +323,7 @@ namespace StatsDirect.Charting
             }
             DrawMarkerSeries(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            double xstep = xInt / 2;
+            double xstep = axisScales.X.Tics().Count / 2.0;
 
             // Plot regression
             using (Pen p = new Pen(grGreen, 2))
@@ -387,7 +387,7 @@ namespace StatsDirect.Charting
                         xtra = w - xAxisCanvas;
                 }
             }
-            DrawAxesOrEnlargeCanvas(title, new Axis(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new Axis(yAxisTitle, AxisMode.Scale, xtra, ScaleType.Linear), boxAxes, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, xtra, ScaleType.Linear), boxAxes, false);
 
             // plot points
             DoubleSeries xs = definition.XSeries[0].AsDoubleSeries;
@@ -410,7 +410,7 @@ namespace StatsDirect.Charting
             }
             DrawMarkerSeries(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            double xstep = xInt / 2;
+            double xstep = axisScales.X.Tics().Count / 2.0;
 
             // Plot regression
             using (Pen p = new Pen(grGreen, 2))
@@ -465,7 +465,7 @@ namespace StatsDirect.Charting
             }
 
             //  TODO: Log and log-log axes here
-            DrawAxesOrEnlargeCanvas("Log-log plot (parallel groups if hazards proportional)", new Axis("log(Time)", AxisMode.Scale, ScaleType.Linear), new Axis("-log(-log(Survival))", AxisMode.Scale, xtra, ScaleType.Linear), false, false);
+            DrawAxesOrEnlargeCanvas("Log-log plot (parallel groups if hazards proportional)", new AxisDefinition("log(Time)", AxisMode.Scale, ScaleType.Linear), new AxisDefinition("-log(-log(Survival))", AxisMode.Scale, xtra, ScaleType.Linear), false, false);
 
             // Draw the legends
             using (Pen p = new Pen(grBlack, 1))
@@ -588,7 +588,7 @@ namespace StatsDirect.Charting
             }
 
             // Draw the axes
-            DrawAxesOrEnlargeCanvas(title, new Axis(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(yAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), false, false);
+            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), false, false);
 
             // draw legend
             double size2 = labelFont.Size * 2;
@@ -750,7 +750,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            DrawAxesOrEnlargeCanvas(title, new Axis(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(yAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
 
             // plot points
             DoubleSeries xs = definition.XSeries[0].AsDoubleSeries;
@@ -773,7 +773,7 @@ namespace StatsDirect.Charting
             }
             DrawMarkerSeries(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            double xstep = xInt / 2;
+            double xstep = axisScales.X.Tics().Count / 2;
 
             // Plot regression
             using (Pen p = new Pen(grBlack, 2))
@@ -832,7 +832,7 @@ namespace StatsDirect.Charting
                 }
             }
 
-            DrawAxesOrEnlargeCanvas(title, new Axis(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(yAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
 
             // plot points
             DoubleSeries xs = definition.XSeries[0].AsDoubleSeries;
@@ -862,7 +862,7 @@ namespace StatsDirect.Charting
             double rms = rss / rdf;
             double[] px = new double[P + 1];
             px[1] = 1.0;
-            double xstep = xInt / 2;
+            double xstep = axisScales.X.Tics().Count / 2;
 
             // This routine has changed from the original
             // It is more efficient in drawing - but bigger in code
@@ -999,10 +999,9 @@ namespace StatsDirect.Charting
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
             double[] x = new double[xdat.Length];
-            double log10 = Math.Log(10);
             for (int i = 0; i < xdat.Length; i++)
                 if (xdat[i] > 0 && x[i] != Constant.MISSING)
-                    x[i] = Math.Log(xdat[i]) / log10;
+                    x[i] = Math.Log10(xdat[i]);
                 else
                     x[i] = xdat[i];
 
@@ -1025,7 +1024,7 @@ namespace StatsDirect.Charting
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            DrawAxesOrEnlargeCanvas(title, new Axis(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
+            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
 
             // plot points
             PointF[] xys = new PointF[Math.Min(xdat.Length, ydat.Length)];
@@ -1360,8 +1359,8 @@ namespace StatsDirect.Charting
 
                         // Draw the axes.
                         DrawAxesOrFail(title,
-                            new Axis(histOptions.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
-                            new Axis(histOptions.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
+                            new AxisDefinition(histOptions.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
+                            new AxisDefinition(histOptions.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
                             false,
                             true);
 
@@ -1390,7 +1389,7 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        string mask = AxisScaler.AxisMask(binMidpointInterval, minimumBinMidpoint, descriptor.Bins, 1, ScaleType.Linear);
+                        string mask = AxisMasker.AxisMask(new LinearAxisScale(0, 0, minimumBinMidpoint, minimumBinMidpoint + binMidpointInterval * descriptor.Bins, descriptor.Bins, 1));
 
                         // Plot one ASCII histogram per series.  The cheat is to plot each one, save it, and concatenate at the end!
                         ASCII_InitPlot(descriptor.Bins + 4);
@@ -1405,7 +1404,7 @@ namespace StatsDirect.Charting
                         axisXMax = DataMaxY;
 
                         DefaultAxes();
-                        DrawAxesOrEnlargeCanvas(title, new Axis(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.None, definition.ScaleParameters.Y.ScaleType), false, true);
+                        DrawAxesOrEnlargeCanvas(title, new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.None, definition.ScaleParameters.Y.ScaleType), false, true);
 
                         for (int c = 0; c < descriptor.Bins; c++)
                         {
@@ -1532,7 +1531,7 @@ namespace StatsDirect.Charting
             DataMinGreaterThanZeroX = axisXMinGreaterThanZero;
             DataMaxX = axisXMax;
 
-            DrawAxesOrEnlargeCanvas(title, new Axis(xtxt, AxisMode.Scale, scaleTypeX), new Axis(ytxt, AxisMode.Scale, scaleTypeY), false, UseCalculatedScalesEvenWithDefinition);
+            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, scaleTypeX), new AxisDefinition(ytxt, AxisMode.Scale, scaleTypeY), false, UseCalculatedScalesEvenWithDefinition);
 
             if (ZPlot)
                 DrawQCanvas(offy);
@@ -1728,7 +1727,7 @@ namespace StatsDirect.Charting
             DataMaxY = 1;
 
             // Draw the scale
-            DrawAxesOrEnlargeCanvas(rOptions.Title, new Axis("1-Specificity", AxisMode.Scale, ScaleType.Linear), new Axis("Sensitivity", AxisMode.Scale, ScaleType.Linear), true, false);
+            DrawAxesOrEnlargeCanvas(rOptions.Title, new AxisDefinition("1-Specificity", AxisMode.Scale, ScaleType.Linear), new AxisDefinition("Sensitivity", AxisMode.Scale, ScaleType.Linear), true, false);
 
             // null effect diagonal
             using (Pen tenPenDiagonal = new Pen(SharedMarkerTypes[10].LineColor, rOptions.AxisLineThickness))
@@ -2313,7 +2312,7 @@ namespace StatsDirect.Charting
                 if (w > xtra + xAxisCanvas)
                     xtra = w - xAxisCanvas;
             }
-            DrawAxesOrEnlargeCanvas(title, new Axis(xtxt, AxisMode.Scale, ScaleType.Linear), new Axis(ytxt, AxisMode.Scale, xtra, ScaleType.Linear), false, false);
+            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, xtra, ScaleType.Linear), false, false);
 
             double size2 = labelFont.Size * 2;
 
@@ -2443,7 +2442,7 @@ namespace StatsDirect.Charting
                     }
                 }
             }
-            DrawAxesOrEnlargeCanvas(title, new Axis(xtxt, AxisMode.Scale, ScaleType.Linear), new Axis(ytxt, AxisMode.Scale, ScaleType.Linear), labbe, false);
+            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), labbe, false);
 
             if (zPlot)
                 DrawQCanvas(offy);
@@ -2591,10 +2590,10 @@ namespace StatsDirect.Charting
                 ysd = cOptions.UserSpecifiedSD;
             }
 
-            // bool restricted;
             cOptions.HasUserSpecifiedLimits = cOptions.LowerWarningLimit != Constant.MISSING & cOptions.UpperWarningLimit != Constant.MISSING & cOptions.LowerControlLimit != Constant.MISSING & cOptions.UpperControlLimit != Constant.MISSING;
             if (cOptions.HasUserSpecifiedLimits)
             {
+                // TODO: These swaps are not effective!  Poor translation from VB.
                 double transTemp61 = cOptions.LowerControlLimit;
                 double transTemp62 = cOptions.UpperControlLimit;
                 if (cOptions.LowerControlLimit > cOptions.UpperControlLimit)
@@ -2794,7 +2793,7 @@ namespace StatsDirect.Charting
                 xspace = AxisLabelWidthInCanvasCoordinates(new DateTime(1900, 1, 1, 0, 0, 0).ToString("d"));
                 xmode = AxisMode.ScaleWithoutLabels;
             }
-            DrawAxesOrEnlargeCanvas(cOptions.Title, new Axis(cOptions.XAxisTitle, xmode, xspace, definition.ScaleParameters.X.ScaleType), new Axis(cOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), cOptions.ShouldBoxAxes, false);
+            DrawAxesOrEnlargeCanvas(cOptions.Title, new AxisDefinition(cOptions.XAxisTitle, xmode, xspace, definition.ScaleParameters.X.ScaleType), new AxisDefinition(cOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), cOptions.ShouldBoxAxes, false);
 
             double x1; double y1; double last_x1 = 0;
 
@@ -3085,7 +3084,7 @@ namespace StatsDirect.Charting
             AssignMarkersToSeries(eOptions);
 
             // Draw the scale
-            DrawAxesOrEnlargeCanvas(eOptions.Title, new Axis(eOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(eOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
+            DrawAxesOrEnlargeCanvas(eOptions.Title, new AxisDefinition(eOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(eOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
 
             // #1079: Prevent overdrawing of error bars by offsetting bars that would otherwise overlap.
             Dictionary<int, List<MultiDoublePoint>> alreadyUsed = new Dictionary<int, List<MultiDoublePoint>>();
@@ -3224,7 +3223,7 @@ namespace StatsDirect.Charting
             DataMinY = 0.0;
             DataMaxY = 1.0;
 
-            DrawAxesOrEnlargeCanvas(gOptions.Title.Trim(), new Axis(gOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(gOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), true, false);
+            DrawAxesOrEnlargeCanvas(gOptions.Title.Trim(), new AxisDefinition(gOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(gOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), true, false);
 
             // Draw equality line
             using (Pen redPen = new Pen(grRed))
@@ -3259,13 +3258,9 @@ namespace StatsDirect.Charting
             string ytx = null;
             double[] y;
             string title;
-            bool reverse = false; bool use_ci = false;
+            bool reverse; bool use_ci = false;
             int plotMethod;
-
-            // TODO: check why hangover ScaleParameters from previous chart runs cause this function to have inappropriate log transforms and crash (comment out the following line to re-create the error)
-            definition.ScaleParameters = null; // Cannot reproduce even with this commented out - PJC 2014-05-02
-
-            get_ma_ordinate(host, out y, yy, yw, cl, cu, ref cco, rows, out title, ref ytx, xtxt, out plotMethod, xform, ref reverse, ref use_ci);
+            get_ma_ordinate(host, out y, yy, yw, cl, cu, ref cco, rows, out title, ref ytx, xtxt, out plotMethod, xform, out reverse, ref use_ci);
 
             double[] xx = new double[rows + 1];
             xx[0] = Constant.MISSING;
@@ -3315,31 +3310,19 @@ namespace StatsDirect.Charting
                     break;
             }
 
-            double amin;
-            double aint;
-            int minorTicsPerMajorTic;
-            AxisScaler.Q_Axis(ref DataMinY, 0, ref DataMaxY, out yDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
-            double ymn = amin;
-            double ymx = amin + (aint * yDiv);
-            double mini = Math.Min(aint, DataMinY);
+            LinearAxisScale axisScale = (LinearAxisScale)new LinearAxisScaler().Q_Axis(DataMinY, 0, DataMaxY);
+            DataMinY = axisScale.MinimumDataValue;
+            DataMaxY = axisScale.MaximumDataValue;
+            double ymn = axisScale.MinimumScaleValue;
+            double ymx = axisScale.MaximumScaleValue;
+            double mini = Math.Min(axisScale.Interval, DataMinY);
             if (use_ci)
             {
-                if (plotMethod == 2)
-                {
-                    double se = ma_plot_se(ymn, mini, plotMethod);
-                    if (DataMaxX < pool + se * cit)
-                        DataMaxX = pool + se * cit;
-                    if (DataMinX > pool - se * cit)
-                        DataMinX = pool - se * cit;
-                }
-                else
-                {
-                    double se = ma_plot_se(ymx, mini, plotMethod);
-                    if (DataMaxX < pool + se * cit)
-                        DataMaxX = pool + se * cit;
-                    if (DataMinX > pool - se * cit)
-                        DataMinX = pool - se * cit;
-                }
+                double se = ma_plot_se(plotMethod == 2 ? ymn : ymx, mini, plotMethod);
+                if (DataMaxX < pool + se * cit)
+                    DataMaxX = pool + se * cit;
+                if (DataMinX > pool - se * cit)
+                    DataMinX = pool - se * cit;
             }
 
             switch (xform)
@@ -3357,35 +3340,19 @@ namespace StatsDirect.Charting
 
             StartVectorPlot();
             // Peto plots are boxed
-            DrawAxesOrEnlargeCanvas(title, new Axis(xtxt, AxisMode.Scale, ScaleType.Linear), new Axis(ytx, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear), !reverse && diagonal, false);
+            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytx, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear), !reverse && diagonal, false);
 
             // plot the points
-            double x1; double y1;
             for (int r = 1; r <= rows; r++)
-            {
                 if (xx[r] != Constant.MISSING & y[r] != Constant.MISSING)
-                {
-                    x1 = ToCanvasX(xx[r]);
-                    y1 = get_y1(y[r], reverse);
-                    DrawMarkerInCanvasCoordinates(x1, y1, 6, SharedMarkerTypes[0]);
-                }
-            }
+                    DrawMarkerInCanvasCoordinates(ToCanvasX(xx[r]), ToCanvasY(y[r], reverse), 6, SharedMarkerTypes[0]);
 
             using (Pen blackPen = new Pen(grBlack, 1))
             {
-                double xnow;
-                double ynow;
-                if (!(diagonal))
+                if (!diagonal)
                 {
                     // mark pooled value
-                    ynow = axisYMin;
-                    xnow = pool;
-                    y1 = get_y1(ynow, reverse);
-                    x1 = ToCanvasX(xnow);
-                    ynow = axisYMax;
-                    double y2 = get_y1(ynow, reverse);
-                    double x2 = ToCanvasX(xnow);
-                    DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
+                    DrawLineInCanvasCoordinates(blackPen, ToCanvasX(pool), ToCanvasY(axisYMin, reverse), ToCanvasX(pool), ToCanvasY(axisYMax, reverse));
                 }
 
                 if ((plotMethod == 1 || plotMethod == 2 || plotMethod == 7) && !(diagonal) && use_ci)
@@ -3395,17 +3362,17 @@ namespace StatsDirect.Charting
                     double yinc = divy / Convert.ToDouble(incs);
                     if (plotMethod == 2)
                     {
-                        ynow = axisYMax;
-                        xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
-                        y1 = get_y1(ynow, reverse);
-                        x1 = ToCanvasX(xnow);
+                        double ynow = axisYMax;
+                        double xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
+                        double y1 = ToCanvasY(ynow, reverse);
+                        double x1 = ToCanvasX(xnow);
                         for (int r = 1; r <= incs; r++)
                         {
-                            ynow = ynow - yinc;
+                            ynow -= yinc;
                             xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
                             if (xnow >= axisXMin & xnow <= axisXMax)
                             {
-                                double y2 = get_y1(ynow, reverse);
+                                double y2 = ToCanvasY(ynow, reverse);
                                 double x2 = ToCanvasX(xnow);
                                 DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
                                 y1 = y2;
@@ -3414,15 +3381,15 @@ namespace StatsDirect.Charting
                         }
                         ynow = axisYMax;
                         xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
-                        y1 = get_y1(ynow, reverse);
+                        y1 = ToCanvasY(ynow, reverse);
                         x1 = ToCanvasX(xnow);
                         for (int r = 1; r <= incs; r++)
                         {
-                            ynow = ynow - yinc;
+                            ynow -= yinc;
                             xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
                             if (xnow >= axisXMin & xnow <= axisXMax)
                             {
-                                double y2 = get_y1(ynow, reverse);
+                                double y2 = ToCanvasY(ynow, reverse);
                                 double x2 = ToCanvasX(xnow);
                                 DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
                                 y1 = y2;
@@ -3432,17 +3399,17 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        ynow = axisYMin;
-                        xnow = pool;
-                        y1 = get_y1(ynow, reverse);
-                        x1 = ToCanvasX(xnow);
+                        double ynow = axisYMin;
+                        double xnow = pool;
+                        double y1 = ToCanvasY(ynow, reverse);
+                        double x1 = ToCanvasX(xnow);
                         for (int r = 1; r <= incs; r++)
                         {
-                            ynow = ynow + yinc;
+                            ynow += yinc;
                             xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
                             if (xnow >= axisXMin & xnow <= axisXMax)
                             {
-                                double y2 = get_y1(ynow, reverse);
+                                double y2 = ToCanvasY(ynow, reverse);
                                 double x2 = ToCanvasX(xnow);
                                 DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
                                 y1 = y2;
@@ -3451,15 +3418,15 @@ namespace StatsDirect.Charting
                         }
                         ynow = axisYMin;
                         xnow = pool;
-                        y1 = get_y1(ynow, reverse);
+                        y1 = ToCanvasY(ynow, reverse);
                         x1 = ToCanvasX(xnow);
                         for (int r = 1; r <= incs; r++)
                         {
-                            ynow = ynow + yinc;
+                            ynow += yinc;
                             xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
                             if (xnow >= axisXMin & xnow <= axisXMax)
                             {
-                                double y2 = get_y1(ynow, reverse);
+                                double y2 = ToCanvasY(ynow, reverse);
                                 double x2 = ToCanvasX(xnow);
                                 DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
                                 y1 = y2;
@@ -3505,7 +3472,7 @@ namespace StatsDirect.Charting
             string xtxt = "Mean ((" + v0Title + " + " + v1Title + ") / 2)";
             string ytxt = "Difference (" + v0Title + " - " + v1Title + ")";
             StartVectorPlot();
-            DrawAxesOrEnlargeCanvas(string.Empty, new Axis(xtxt, AxisMode.Scale, ScaleType.Linear), new Axis(ytxt, AxisMode.Scale, ScaleType.Linear), false, false);
+            DrawAxesOrEnlargeCanvas(string.Empty, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), false, false);
 
             // Draw the titles
             int size2 = labelFont.Height * 2;
@@ -3533,11 +3500,6 @@ namespace StatsDirect.Charting
                 }
             }
             EndVectorPlot();
-        }
-
-        private double get_y1(double ynow, bool reverse)
-        {
-            return reverse ? yExtCanvas + yAxisCanvas + yAxisCanvas - ToCanvasY(ynow) : ToCanvasY(ynow);
         }
 
         private ScaleParameters GetAgreementPairScaleParameters()
@@ -3642,7 +3604,7 @@ namespace StatsDirect.Charting
         }
 
 
-        private void get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, ref string ytx, string xtxt, out int plot_method, Transformation xform, ref bool reverse, ref bool use_ci)
+        private void get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, ref string ytx, string xtxt, out int plot_method, Transformation xform, out bool reverse, ref bool use_ci)
         {
             y = new double[rows + 1];
             y[0] = Constant.MISSING;
@@ -3658,6 +3620,7 @@ namespace StatsDirect.Charting
                     else
                         y[r] = 1.0 / yw[r];
                 }
+                reverse = false;
                 return;
             }
 
@@ -3690,30 +3653,27 @@ namespace StatsDirect.Charting
                             for (int r = 1; r <= rows; r++)
                             {
                                 if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING || cu[r] <= 0.0 || cl[r] <= 0.0)
-                                {
                                     y[r] = Constant.MISSING;
-                                }
-                                else { y[r] = ((Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0) / cit; }
+                                else
+                                    y[r] = ((Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0) / cit;
                             }
                             break;
                         case Transformation.Z:
                             for (int r = 1; r <= rows; r++)
                             {
                                 if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING)
-                                {
                                     y[r] = Constant.MISSING;
-                                }
-                                else { y[r] = ((MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0) / cit; }
+                                else
+                                    y[r] = ((MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0) / cit;
                             }
                             break;
                         case Transformation.None:
                             for (int r = 1; r <= rows; r++)
                             {
                                 if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING)
-                                {
                                     y[r] = Constant.MISSING;
-                                }
-                                else { y[r] = ((cu[r] - cl[r]) / 2.0) / cit; }
+                                else
+                                    y[r] = ((cu[r] - cl[r]) / 2.0) / cit;
                             }
                             break;
                     }
@@ -3728,45 +3688,39 @@ namespace StatsDirect.Charting
                             for (int r = 1; r <= rows; r++)
                             {
                                 if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING || cu[r] <= 0.0 || cl[r] <= 0.0)
-                                {
                                     y[r] = Constant.MISSING;
-                                }
-                                else { y[r] = ((Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0) / cit; }
+                                else
+                                    y[r] = ((Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0) / cit;
                                 if (y[r] != 0.0 & y[r] != Constant.MISSING)
-                                {
                                     y[r] = 1.0 / y[r];
-                                }
-                                else { y[r] = Constant.MISSING; }
+                                else
+                                    y[r] = Constant.MISSING;
                             }
                             break;
                         case Transformation.Z:
                             for (int r = 1; r <= rows; r++)
                             {
                                 if (cu[r] == Constant.MISSING | cl[r] == Constant.MISSING)
-                                {
                                     y[r] = Constant.MISSING;
-                                }
-                                else { y[r] = ((MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0) / cit; }
+                                else
+                                    y[r] = ((MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0) / cit;
                                 if (y[r] != 0.0 & y[r] != Constant.MISSING)
-                                {
                                     y[r] = 1.0 / y[r];
-                                }
-                                else { y[r] = Constant.MISSING; }
+                                else
+                                    y[r] = Constant.MISSING;
                             }
                             break;
                         case Transformation.None:
                             for (int r = 1; r <= rows; r++)
                             {
                                 if (cu[r] == Constant.MISSING | cl[r] == Constant.MISSING)
-                                {
                                     y[r] = Constant.MISSING;
-                                }
-                                else { y[r] = ((cu[r] - cl[r]) / 2.0) / cit; }
+                                else
+                                    y[r] = ((cu[r] - cl[r]) / 2.0) / cit;
                                 if (y[r] != 0.0 & y[r] != Constant.MISSING)
-                                {
                                     y[r] = 1.0 / y[r];
-                                }
-                                else { y[r] = Constant.MISSING; }
+                                else
+                                    y[r] = Constant.MISSING;
                             }
                             break;
                     }
@@ -3778,19 +3732,16 @@ namespace StatsDirect.Charting
                     for (int r = 1; r <= rows; r++)
                     {
                         if (yy[r] == 0.0)
-                        {
                             y[r] = Constant.MISSING;
-                        }
-                        else { y[r] = 1.0 / yy[r]; }
+                        else
+                            y[r] = 1.0 / yy[r];
                     }
                     break;
                 case 4:
                     reverse = false;
                     ytx = "Sample size";
                     for (int r = 1; r <= rows; r++)
-                    {
                         y[r] = yy[r];
-                    }
                     break;
                 case 5:
                     reverse = true;
@@ -3798,10 +3749,9 @@ namespace StatsDirect.Charting
                     for (int r = 1; r <= rows; r++)
                     {
                         if (yy[r] <= 0.0 | yy[r] == 1.0)
-                        {
                             y[r] = Constant.MISSING;
-                        }
-                        else { y[r] = 1.0 / (Math.Log(yy[r]) / Math.Log(10.0)); }
+                        else
+                            y[r] = 1.0 / Math.Log10(yy[r]);
                     }
                     break;
                 case 6:
@@ -3810,10 +3760,9 @@ namespace StatsDirect.Charting
                     for (int r = 1; r <= rows; r++)
                     {
                         if (yy[r] <= 0.0)
-                        {
                             y[r] = Constant.MISSING;
-                        }
-                        else { y[r] = Math.Log(yy[r]) / Math.Log(10.0); }
+                        else
+                            y[r] = Math.Log10(yy[r]);
                     }
                     break;
                 case 7:
@@ -3822,18 +3771,17 @@ namespace StatsDirect.Charting
                     for (int r = 1; r <= rows; r++)
                     {
                         if (yw[r] == 0.0)
-                        {
                             y[r] = Constant.MISSING;
-                        }
-                        else { y[r] = 1.0 / yw[r]; }
+                        else
+                            y[r] = 1.0 / yw[r];
                     }
                     break;
+                default:
+                    throw new NotImplementedException("Unknown meta plot method");
             }
 
             if (usept)
-            {
                 ytx = ytx.Replace("sample size", "person-time");
-            }
             title = "Bias assessment plot";
         }
 
@@ -3935,7 +3883,7 @@ namespace StatsDirect.Charting
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            DrawAxesOrEnlargeCanvas(title, new Axis(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new Axis(yAxisTitle, AxisMode.Scale, ScaleType.Linear), false, false);
+            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear), false, false);
 
             // Plot the legends
             int size2 = labelFont.Height * 2;
@@ -4015,10 +3963,6 @@ namespace StatsDirect.Charting
 
         internal void Plot_MH(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
         {
-            double w;
-            double yc = 0; double yt = 0;
-            int i;
-
             if (k > 10)
             {
                 double scaleYAxis = 1 + (k - 10) / 20.0;
@@ -4034,7 +3978,7 @@ namespace StatsDirect.Charting
             double orlmin = double.PositiveInfinity;
             double max_gw = double.NegativeInfinity;
             double absmin = double.PositiveInfinity;
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 if (odw[i] != Constant.MISSING)
                 {
@@ -4066,8 +4010,10 @@ namespace StatsDirect.Charting
                 }
             }
 
-            DataMaxX = ormax;
             DataMinX = orlmin;
+            DataMinGreaterThanZeroX = orlmin;
+            DataMaxX = ormax;
+
             if (DataMaxX < rmh)
                 DataMaxX = rmh;
             if (DataMaxX < ul && ul != Constant.MISSING && !double.IsInfinity(ul))
@@ -4075,16 +4021,12 @@ namespace StatsDirect.Charting
             if (DataMaxX < orumax && orumax != Constant.MISSING && !double.IsInfinity(orumax))
                 DataMaxX = orumax;
 
-            int tics;
-            double[] tic;
-            double realamin, realamax;
-            CreateRatioLogScale(out tics, out tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
-
             StartVectorPlot();
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
-            for (i = 1; i <= k; i++)
+            double w = MeasureStringInCanvasCoordinates(combo_ti(cap), legendFont).Width + 30;
+            for (int i = 1; i <= k; i++)
             {
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
@@ -4096,13 +4038,10 @@ namespace StatsDirect.Charting
                         rgap = w;
                 }
             }
-            w = MeasureStringInCanvasCoordinates(combo_ti(cap), legendFont).Width + 30;
             if (w > xtra + xAxisCanvas)
                 xtra = w - xAxisCanvas - 5;
-            DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, xtra, ScaleType.Category), false, false);
 
-            divx = DataMaxX - DataMinX;
-            offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
             divy = k + pbias;
             offy = yAxisCanvas;
 
@@ -4131,61 +4070,44 @@ namespace StatsDirect.Charting
                 tenPenTrue = GetMarkerPen(SharedMarkerTypes[10]),
                 pooledEffectPen = GetLinePen(SharedMarkerTypes[10], false))
             {
-                double XM;
-                double lastXM = 0;
-                for (i = 1; i <= tics; i++)
-                {
-                    if (tic[i] >= realamin && tic[i] <= realamax)
-                    {
-                        XM = ToCanvasX(Math.Log(tic[i]));
-                        string lab = tic[i].ToString("G");
-                        if (lastXM == 0 || MeasureStringInCanvasCoordinates(lab, axisLabelFont).Width < XM - lastXM)
-                        {
-                            DrawStringLabel(lab, XM, yAxisCanvas - 12, StringAlignment.Center);
-                            DrawLineInCanvasCoordinates(tenPenTrue, XM, yAxisCanvas - 12, XM, yAxisCanvas);
-                            lastXM = XM;
-                        }
-                    }
-                }
-
                 int r = 0;
                 double txh = MeasureStringInCanvasCoordinates(title[1], labelFont).Height;
-                double ytop;
-                double xl;
-                double xr;
-                double y2;
-                double yctr;
-                for (i = k; i >= 1; i--)
+                double realamin = axisScales.X.MinimumScaleValue;
+                double realamax = axisScales.X.MaximumScaleValue;
+                double yc = 0;
+                double yt = 0;
+                for (int i = k; i >= 1; i--)
                 {
-                    r = r + 1;
-                    yctr = (r + pbias - 0.5) / divy * yExtCanvas;
-                    ytop = (r + pbias) / divy * yExtCanvas;
-                    y2 = (ytop - yctr) / 1.5;
+                    r++;
+                    double yctr = (r + pbias - 0.5) / divy * yExtCanvas;
+                    double ytop = (r + pbias) / divy * yExtCanvas;
+                    double y2 = (ytop - yctr) / 1.5;
                     double y3 = (ytop - yctr) / 4;
                     yc = offy + yctr;
                     yt = offy + yctr + y2;
                     double yb = offy + yctr - y2;
-                    // ytop = yctr + ( ytop - yctr ) * 0.1 + ( ytop - yctr ) * 0.9 * ( gw[ i ] / max_gw ); 
-                    // ytop = yctr + ( ytop - yctr ) * 0.8; 
                     if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]) && include_table(o, i))
                     {
-                        if (odr[i] <= 0 | odr[i] < realamin)
-                            XM = xAxisCanvas;
+                        double xm;
+                        if (odr[i] <= 0 || odr[i] < realamin)
+                            xm = xAxisCanvas;
                         else
-                            XM = ToCanvasX(Math.Log(odr[i]));
-                        if (odrl[i] <= 0 | odrl[i] < realamin | odrl[i] == Constant.MISSING | double.IsInfinity(odrl[i]))
+                            xm = ToCanvasX(odr[i]);
+                        double xl;
+                        if (odrl[i] <= 0 || odrl[i] < realamin || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i]))
                             xl = xAxisCanvas;
                         else
-                            xl = ToCanvasX(Math.Log(odrl[i]));
-                        if (double.IsInfinity(odru[i]) | odru[i] == Constant.MISSING | double.IsInfinity(odru[i]))
-                            xr = ToCanvasX(Math.Log(realamax));
+                            xl = ToCanvasX(odrl[i]);
+                        double xr;
+                        if (double.IsInfinity(odru[i]) || odru[i] == Constant.MISSING || double.IsInfinity(odru[i]))
+                            xr = ToCanvasX(realamax);
                         else
-                            xr = odru[i] <= 0 ? offx : ToCanvasX(Math.Log(odru[i]));
+                            xr = odru[i] <= 0 ? offx : ToCanvasX(odru[i]);
 
                         // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                         // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
                         double blobSize = (5 + Math.Abs(yt - yb) * (Math.Sqrt(gw[i] / max_gw))) * 0.7;
-                        DrawMarkerInCanvasCoordinates(XM, yc, blobSize / 2, studyMarkerType);
+                        DrawMarkerInCanvasCoordinates(xm, yc, blobSize / 2, studyMarkerType);
 
                         // CI line
                         DrawLineInCanvasCoordinates(ciPen, xl, yc, xr, yc);
@@ -4201,7 +4123,7 @@ namespace StatsDirect.Charting
                             DrawLineInCanvasCoordinates(ciPen, xr, yc, xr - y3, yc - y3);
                         }
                         // Centre mark.  Draw this last so that it appears in front of the line.  Always black.
-                        DrawMarkerInCanvasCoordinates(XM, yc, 2, MarkerShape.Circle, true, dotPen);
+                        DrawMarkerInCanvasCoordinates(xm, yc, 2, MarkerShape.Circle, true, dotPen);
 
                         DrawStringLabel(title[i], xAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
                         DrawStringLabel(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", xAxisCanvas + xExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
@@ -4216,27 +4138,26 @@ namespace StatsDirect.Charting
                 if (DataMinX <= 0)
                 {
                     // zero effect marker
-                    XM = ToCanvasX(0);
-                    DrawLineInCanvasCoordinates(tenPenTrue, XM, yt, XM, yAxisCanvas);
+                    DrawLineInCanvasCoordinates(tenPenTrue, ToCanvasX(0), yt, ToCanvasX(0), yAxisCanvas);
                 }
 
                 if (pbias == 1)
                 {
                     // pooled marker
                     double save_yc = yc;
-                    yctr = 0.5 / divy * yExtCanvas;
-                    ytop = 1 / divy * yExtCanvas;
-                    XM = ToCanvasX(Math.Log(rmh));
-                    xl = ToCanvasX(Math.Log(ll));
-                    xr = ToCanvasX(Math.Log(ul));
-                    y2 = (ytop - yctr) / 1.5;
+                    double yctr = 0.5 / divy * yExtCanvas;
+                    double ytop = 1 / divy * yExtCanvas;
+                    double xm = ToCanvasX(rmh);
+                    double xl = ToCanvasX(ll);
+                    double xr = ToCanvasX(ul);
+                    double y2 = (ytop - yctr) / 1.5;
                     yc = offy + yctr;
                     yt = offy + yctr + y2;
                     // yb = offy + yctr - Y2; 
-                    DrawMarkerInCanvasCoordinates(XM, yc, y2, pooledMarkerType);
+                    DrawMarkerInCanvasCoordinates(xm, yc, y2, pooledMarkerType);
                     DrawLineInCanvasCoordinates(pooledCiPen, xr, yc, xl, yc);
                     // pooled effect marker
-                    DrawLineInCanvasCoordinates(pooledEffectPen, XM, save_yc, XM, yt);
+                    DrawLineInCanvasCoordinates(pooledEffectPen, xm, save_yc, xm, yt);
                     // pool label
                     DrawStringLabel(combo_ti(cap), xAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
                     DrawStringLabel(Formatting.RoundMeta(rmh, absmin) + " (" + Formatting.RoundMeta(ll, absmin) + ", " + Formatting.RoundMeta(ul, absmin) + ")", xAxisCanvas + xExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
@@ -4252,11 +4173,6 @@ namespace StatsDirect.Charting
 
         internal void Plot_MHRD(int k, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool fault)
         {
-            double aint; double amin;
-            int minorTicsPerMajorTic;
-            double w;
-            double yc = 0; double yt = 0;
-
             if (k > 10)
             {
                 double scaleYAxis = 1 + (k - 10) / 20.0;
@@ -4316,13 +4232,16 @@ namespace StatsDirect.Charting
             if (DataMinX > orlMin && orlMin != Constant.MISSING)
                 DataMinX = orlMin;
 
-            AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
-            DataMinX = amin;
-            DataMaxX = amin + xDiv * aint;
+            LinearAxisScale axisScale = (LinearAxisScale)new LinearAxisScaler().Q_Axis(DataMinX, 0, DataMaxX);
+            DataMinX = axisScale.MinimumScaleValue;
+            DataMaxX = axisScale.MaximumScaleValue;
 
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
+            float w = MeasureStringInCanvasCoordinates(combo_ti(cap), labelFont).Width + 30;
+            if (w > xtra + xAxisCanvas)
+                xtra = w - xAxisCanvas - 5;
             for (int i = 1; i <= k; i++)
             {
                 if (odr[i] != Constant.MISSING)
@@ -4335,10 +4254,7 @@ namespace StatsDirect.Charting
                         rgap = w;
                 }
             }
-            w = MeasureStringInCanvasCoordinates(combo_ti(cap), labelFont).Width + 30;
-            if (w > xtra + xAxisCanvas)
-                xtra = w - xAxisCanvas - 5;
-            DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
 
             divx = DataMaxX - DataMinX;
             offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
@@ -4368,67 +4284,46 @@ namespace StatsDirect.Charting
                 dotPen = GetMarkerPen(SharedMarkerTypes[10]),
                 tenPenFalse = GetLinePen(SharedMarkerTypes[10], false))
             {
-                string mask = AxisScaler.AxisMask(aint, amin, xDiv, minorTicsPerMajorTic, ScaleType.Linear);
-                for (int i = 0; i <= xDiv; i++)
-                {
-                    double XM = ToCanvasX(amin + aint * i);
-                    if ((i % minorTicsPerMajorTic) != 0)
-                    {
-                        DrawLineInCanvasCoordinates(tenPenTrue, XM, yAxisCanvas - 7, XM, yAxisCanvas);
-                    }
-                    else
-                    {
-                        string lab = (amin + i * aint).ToString(mask);
-                        if (double.Parse(lab) != 0)
-                        {
-                            DrawStringLabel(lab, XM, yAxisCanvas - 12, StringAlignment.Center);
-                            DrawLineInCanvasCoordinates(tenPenTrue, XM, yAxisCanvas - 12, XM, yAxisCanvas);
-                        }
-                    }
-                }
-
                 int r = 0;
+                double yc = 0;
+                double yt = 0;
                 double txh = MeasureStringInCanvasCoordinates(title[1], labelFont).Height;
-                double ytop;
-                double XL;
-                double XR;
-                double Y2;
-                double yctr;
                 for (int i = k; i >= 1; i--)
                 {
                     r++;
-                    yctr = (r + pbias - 0.5) / divy * yExtCanvas;
-                    ytop = (r + pbias) / divy * yExtCanvas;
-                    Y2 = (ytop - yctr) / 1.5;
+                    double yctr = (r + pbias - 0.5) / divy * yExtCanvas;
+                    double ytop = (r + pbias) / divy * yExtCanvas;
+                    double y2 = (ytop - yctr) / 1.5;
                     yc = offy + yctr;
-                    yt = offy + yctr + Y2;
-                    double yb = offy + yctr - Y2;
+                    yt = offy + yctr + y2;
+                    double yb = offy + yctr - y2;
                     if (odr[i] != Constant.MISSING)
                     {
                         double XM = ToCanvasX(odr[i]);
-                        XL = odrl[i] == Constant.MISSING ? xAxisCanvas : ToCanvasX(odrl[i]);
+                        double xl = odrl[i] == Constant.MISSING ? xAxisCanvas : ToCanvasX(odrl[i]);
+                        double xr;
                         if (odru[i] == double.PositiveInfinity || odru[i] == Constant.MISSING)
-                            XR = xAxisCanvas + xExtCanvas;
+                            xr = xAxisCanvas + xExtCanvas;
                         else
-                            XR = ToCanvasX(odru[i]);
+                            xr = ToCanvasX(odru[i]);
                         // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                         // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
                         double blobSize = (5 + Math.Abs(yt - yb) * (Math.Sqrt(gw[i] / max_gw))) * 0.7;
                         DrawMarkerInCanvasCoordinates(XM, yc, blobSize / 2, studyMarkerType);
 
                         // CI line
-                        DrawLineInCanvasCoordinates(tenPenTrue, XL, yc, XR, yc);
+                        DrawLineInCanvasCoordinates(tenPenTrue, xl, yc, xr, yc);
 
                         // Arrow ends if not plottable
                         if (lerr[i])
                         {
-                            DrawLineInCanvasCoordinates(tenPenTrue, XL + Y2, yc + Y2, XL, yc);
-                            DrawLineInCanvasCoordinates(tenPenTrue, XL, yc, XL + Y2, yc - Y2);
+                            DrawLineInCanvasCoordinates(tenPenTrue, xl + y2, yc + y2, xl, yc);
+                            DrawLineInCanvasCoordinates(tenPenTrue, xl, yc, xl + y2, yc - y2);
                         }
                         if (uerr[i])
                         {
-                            DrawLineInCanvasCoordinates(tenPenTrue, XR - Y2, yc + Y2, XR, yc);
-                            DrawLineInCanvasCoordinates(tenPenTrue, XR, yc, XR - Y2, yb - Y2);
+                            DrawLineInCanvasCoordinates(tenPenTrue, xr - y2, yc + y2, xr, yc);
+                            DrawLineInCanvasCoordinates(tenPenTrue, xr, yc, xr - y2, yb - y2);
                         }
                         // Centre mark.  Draw this last so that it appears in front of the line.  Always black.
                         DrawMarkerInCanvasCoordinates(XM, yc, 2, MarkerShape.Circle, true, dotPen);
@@ -4446,25 +4341,24 @@ namespace StatsDirect.Charting
                 if (DataMinX <= 0)
                 {
                     //  no effect marker
-                    double XM = offx;
-                    DrawLineInCanvasCoordinates(tenPenTrue, XM, yt, XM, yAxisCanvas - 12);
-                    DrawStringLabel("  0  ", XM, yAxisCanvas - 12, StringAlignment.Center);
+                    DrawLineInCanvasCoordinates(tenPenTrue, offx, yt, offx, yAxisCanvas - 12);
+                    DrawStringLabel("  0  ", offx, yAxisCanvas - 12, StringAlignment.Center);
                 }
 
                 if (pbias == 1)
                 {
                     double save_yc = yc;
-                    yctr = 0.5 / divy * yExtCanvas;
-                    ytop = 1 / divy * yExtCanvas;
+                    double yctr = 0.5 / divy * yExtCanvas;
+                    double ytop = 1 / divy * yExtCanvas;
                     double XM = ToCanvasX(rmh);
-                    XL = ToCanvasX(ll);
-                    XR = ToCanvasX(ul);
-                    Y2 = (ytop - yctr) / 1.5;
+                    double xl = ToCanvasX(ll);
+                    double xr = ToCanvasX(ul);
+                    double y2 = (ytop - yctr) / 1.5;
                     yc = offy + yctr;
-                    yt = offy + yctr + Y2;
+                    yt = offy + yctr + y2;
                     // yb = offy + yctr - Y2; 
-                    DrawDiamondInCanvasCoordinates(tenPenTrue, XM, yc, Y2 * 2, false);
-                    DrawLineInCanvasCoordinates(tenPenTrue, XR, yc, XL, yc);
+                    DrawDiamondInCanvasCoordinates(tenPenTrue, XM, yc, y2 * 2, false);
+                    DrawLineInCanvasCoordinates(tenPenTrue, xr, yc, xl, yc);
                     // pooled effect marker
                     DrawLineInCanvasCoordinates(tenPenFalse, XM, save_yc, XM, yt);
                     // pool label
@@ -4532,11 +4426,9 @@ namespace StatsDirect.Charting
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
                 DataMinX = orlmin;
 
-            double aint; double amin;
-            int minorTicsPerMajorTic;
-            AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
-            DataMinX = amin;
-            DataMaxX = amin + xDiv * aint;
+            LinearAxisScale xAxisScale = (LinearAxisScale)new LinearAxisScaler().Q_Axis(DataMinX, 0, DataMaxX);
+            DataMinX = xAxisScale.MinimumScaleValue;
+            DataMaxX = xAxisScale.MaximumScaleValue;
 
             double xtra = 0;
             for (int i = 1; i <= k; i++)
@@ -4545,12 +4437,10 @@ namespace StatsDirect.Charting
                 {
                     double w = MeasureStringInCanvasCoordinates(title[i], titleFont).Width + 30;
                     if (w > xtra + xAxisCanvas)
-                    {
                         xtra = w - xAxisCanvas - 5;
-                    }
                 }
             }
-            DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.LineOnly, ScaleType.NotSet), new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
+            DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.NotSet), new AxisDefinition(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
 
             divx = DataMaxX - DataMinX;
             offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
@@ -4559,47 +4449,21 @@ namespace StatsDirect.Charting
 
             using (Pen linePen = GetLinePen(SharedMarkerTypes[10], true))
             {
-                string msk = AxisScaler.AxisMask(aint, amin, xDiv, minorTicsPerMajorTic, ScaleType.Linear);
-                double xm;
-                string lab;
-                for (int i = 0; i <= xDiv; i++)
-                {
-                    xm = ToCanvasX(amin + aint * i);
-                    if ((i % minorTicsPerMajorTic) != 0)
-                    {
-                        DrawLineInCanvasCoordinates(linePen, xm, yAxisCanvas - 7, xm, yAxisCanvas);
-                    }
-                    else
-                    {
-                        lab = (amin + i * aint).ToString(msk);
-                        if (double.Parse(lab) != 0)
-                        {
-                            DrawStringLabel(lab, xm, yAxisCanvas - 12, StringAlignment.Center);
-                            DrawLineInCanvasCoordinates(linePen, xm, yAxisCanvas - 12, xm, yAxisCanvas);
-                        }
-                    }
-                }
-
-                int r = 0;
-                double txh = MeasureStringInCanvasCoordinates(title[1], labelFont).Height;
-                double yctr;
-                double ytop;
-                double xl;
-                double xr;
-                double y2;
                 double yc = 0;
                 double yt = 0;
+                int r = 0;
+                double txh = MeasureStringInCanvasCoordinates(title[1], labelFont).Height;
                 for (int i = k; i >= 1; i--)
                 {
                     if (odr[i] != Constant.MISSING)
                     {
-                        r = r + 1;
-                        yctr = (r + pbias - 0.5) / divy * yExtCanvas;
-                        ytop = (r + pbias) / divy * yExtCanvas;
-                        xm = ToCanvasX(odr[i]);
-                        xl = ToCanvasX(odrl[i]);
-                        xr = ToCanvasX(odru[i]);
-                        y2 = (ytop - yctr) / 1.5;
+                        r++;
+                        double yctr = (r + pbias - 0.5) / divy * yExtCanvas;
+                        double ytop = (r + pbias) / divy * yExtCanvas;
+                        double xm = ToCanvasX(odr[i]);
+                        double xl = ToCanvasX(odrl[i]);
+                        double xr = ToCanvasX(odru[i]);
+                        double y2 = (ytop - yctr) / 1.5;
                         yc = offy + yctr;
                         yt = offy + yctr + y2;
                         double yb = offy + yctr - y2;
@@ -4615,7 +4479,7 @@ namespace StatsDirect.Charting
 
                 if (DataMinX <= 0)
                 {
-                    xm = offx;
+                    double xm = offx;
                     DrawLineInCanvasCoordinates(linePen, xm, yt, xm, yAxisCanvas - 12);
                     DrawStringLabel("  0  ", xm, yAxisCanvas - 12, StringAlignment.Center);
                 }
@@ -4623,12 +4487,12 @@ namespace StatsDirect.Charting
                 if (pbias == 1)
                 {
                     double save_yc = yc;
-                    yctr = 0.5 / divy * yExtCanvas;
-                    ytop = 1 / divy * yExtCanvas;
-                    xm = ToCanvasX(rmh);
-                    xl = ToCanvasX(ll);
-                    xr = ToCanvasX(ul);
-                    y2 = (ytop - yctr) / 1.5;
+                    double yctr = 0.5 / divy * yExtCanvas;
+                    double ytop = 1 / divy * yExtCanvas;
+                    double xm = ToCanvasX(rmh);
+                    double xl = ToCanvasX(ll);
+                    double xr = ToCanvasX(ul);
+                    double y2 = (ytop - yctr) / 1.5;
                     yc = offy + yctr;
                     yt = offy + yctr + y2;
                     // yb = offy + yctr - y2; 
@@ -4639,7 +4503,7 @@ namespace StatsDirect.Charting
                     {
                         DrawLineInCanvasCoordinates(pooledEffectPen, xm, save_yc, xm, yt);
                     }
-                    lab = "pooled " + qid + " = " + host.RoundU(rmh) + "  (" + Formatting.XRound(cco * 100, 1) + "% CI = " + host.RoundU(ll) + " to " + host.RoundU(ul) + ")";
+                    string lab = "pooled " + qid + " = " + host.RoundU(rmh) + "  (" + Formatting.XRound(cco * 100, 1) + "% CI = " + host.RoundU(ll) + " to " + host.RoundU(ul) + ")";
                     string xlab = cap.IndexOf("fixed", StringComparison.Ordinal) + 1 != 0 ? string.Empty : "DL ";
                     //  If hSS <> -99 Then Lab = xlab & Lab
                     lab = xlab + lab;
@@ -4820,39 +4684,7 @@ namespace StatsDirect.Charting
             switch (xform)
             {
                 case Transformation.Log:
-                    {
-                        // double realamin, realamax;
-                        // CreateRatioLogScale(out tics, out tic, ref DataMinX, ref DataMaxX, out realamin, out realamax);
-                        double amin;
-                        double aint;
-                        int minorTicsPerMajorTic;
-                        AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Log10);
-                        DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
-                        /*
-                        divx = DataMaxX - DataMinX;
-                        offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
-                        divy = k;
-                        offy = yAxisCanvas;
-                        double lastXM = 0;
-                        using (Pen tenPenTrue = GetLinePen(SharedMarkerTypes[10], true))
-                        {
-                            for (int i = 1; i <= tics; i++)
-                            {
-                                if (tic[i] >= realamin && tic[i] <= realamax)
-                                {
-                                    double xm = ToCanvasX(tic[i]);
-                                    string lab = tic[i].ToString("G");
-                                    if (lastXM == 0 || MeasureStringInCanvasCoordinates(lab, axisLabelFont).Width < xm - lastXM)
-                                    {
-                                        DrawStringLabel(lab, xm, yAxisCanvas - 12, StringAlignment.Center);
-                                        DrawLineInCanvasCoordinates(tenPenTrue, xm, yAxisCanvas - 12, xm, yAxisCanvas);
-                                        lastXM = xm;
-                                    }
-                                }
-                            }
-                        }
-                        */
-                    }
+                    DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, xtra, ScaleType.Linear), false, false);
                     break;
                 default:
                     {
@@ -4861,11 +4693,7 @@ namespace StatsDirect.Charting
                             DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
                             DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
                         }
-                        double amin;
-                        double aint;
-                        int minorTicsPerMajorTic;
-                        AxisScaler.Q_Axis(ref DataMinX, 0, ref DataMaxX, out xDiv, out amin, out aint, out minorTicsPerMajorTic, ScaleType.Linear);
-                        DrawAxesOrEnlargeCanvas(cap, new Axis(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new Axis(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
+                        DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, xtra, ScaleType.NotSet), false, false);
                         DataMinX = axisXMin;
                         DataMaxX = axisXMax;
                     }

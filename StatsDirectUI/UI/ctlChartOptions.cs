@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using StatsDirect.Numerics;
 using StatsDirect.Charting;
 using StatsDirect.Templates;
+using System.Collections.Generic;
 
 namespace StatsDirect.UI
 {
@@ -129,14 +130,26 @@ namespace StatsDirect.UI
             asp.ScaleType = ao.ScaleType;
             asp.LabelDirection = ao.LabelDirection;
 
-            asp.QMin = ao.ScaleMin;
-            asp.QMax = ao.ScaleMax;
-            asp.Div = ao.Div;
-            asp.ZMin = ao.ScaleMin;
-            asp.ZInt = ao.ZInt;
-            asp.MinorTicsPerMajorTic = ao.MinorTicsPerMajorTic;
+            switch (asp.ScaleType)
+            {
+                case ScaleType.Category:
+                    // Do nothing
+                    break;
+                case ScaleType.Date:
+                case ScaleType.Linear:
+                    asp.AxisScale = new LinearAxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, ao.Intervals, ao.IntervalsPerMajorTic);
+                    break;
+                case ScaleType.Log10:
+                    asp.AxisScale = new Log10AxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, (int)Math.Round(Math.Log10(ao.MinimumScaleValue)), (int)Math.Round(Math.Log10(ao.MaximumScaleValue)), new List<double>());
+                    break;
+                case ScaleType.LogNatural:
+                    asp.AxisScale = new Log2AxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, (int)Math.Round(Log2(ao.MinimumScaleValue)), (int)Math.Round(Log2(ao.MaximumScaleValue)));
+                    break;
+                case ScaleType.NotSet:
+                default:
+                    throw new NotImplementedException("Unknown scale type in FillAxisScaleParametersFromForm");
+            }
             asp.Mask = ao.Mask;
-            asp.HasAxisScale = true;
 
             asp.HasGridLines = ao.HasGridLines;
             asp.GridLineDashStyle = ao.GridLineDashStyle;
@@ -145,6 +158,11 @@ namespace StatsDirect.UI
                 asp.MarkerLineValue = ao.MarkerLineValue;
             else
                 asp.MarkerLineValue = default(double?);
+        }
+
+        private static double Log2(double value)
+        {
+            return Math.Log(value) / Math.Log(2.0);
         }
 
         private void FillOrientationFromForm()
@@ -422,9 +440,9 @@ namespace StatsDirect.UI
         {
             ao.AllowedScaleTypes = asp.AllowedScaleTypes;
             ao.ScaleType = asp.ScaleType;
-            ao.DataMin = asp.Min;
+            ao.MinimumDataValue = asp.Min;
             ao.DataMinGreaterThanZero = asp.MinGreaterThanZero;
-            ao.DataMax = asp.Max;
+            ao.MaximumDataValue = asp.Max;
             ao.LabelDirection = asp.LabelDirection;
         }
 
@@ -776,9 +794,9 @@ namespace StatsDirect.UI
             {
                 if (bOptions.Stacked100Percent)
                 {
-                    yo.DataMin = 0;
+                    yo.MinimumDataValue = 0;
                     yo.DataMinGreaterThanZero = 0;
-                    yo.DataMax = 100;
+                    yo.MaximumDataValue = 100;
                 }
                 else
                 {
@@ -815,16 +833,16 @@ namespace StatsDirect.UI
                                 maxValue = totalValue;
                         }
                     }
-                    yo.DataMin = minValue;
+                    yo.MinimumDataValue = minValue;
                     yo.DataMinGreaterThanZero = minValue;
-                    yo.DataMax = maxValue;
+                    yo.MaximumDataValue = maxValue;
                 }
             }
             else
             {
-                yo.DataMin = definition.ScaleParameters.Y.Min;
+                yo.MinimumDataValue = definition.ScaleParameters.Y.Min;
                 yo.DataMinGreaterThanZero = definition.ScaleParameters.Y.MinGreaterThanZero;
-                yo.DataMax = definition.ScaleParameters.Y.Max;
+                yo.MaximumDataValue = definition.ScaleParameters.Y.Max;
             }
         }
 

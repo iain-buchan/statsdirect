@@ -98,11 +98,6 @@ namespace StatsDirect.Expressions
             return (Math.Exp(arg) + Math.Exp(-arg)) / (Math.Exp(arg) - Math.Exp(-arg));
         }
 
-        public static double Clog(double arg)
-        {
-            return Math.Log(arg) / Math.Log(10.0);
-        }
-
         public static double Cexp(double arg)
         {
             return Math.Exp(arg * Math.Log(10.0));

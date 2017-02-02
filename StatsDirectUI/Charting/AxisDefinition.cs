@@ -4,9 +4,9 @@ using System.Collections.Generic;
 namespace StatsDirect.Charting
 {
     /// <summary>
-    /// Describes the features of one axis (horizontal or vertical) on a chart.
+    /// Describes the features defining one axis (horizontal or vertical) on a chart.
     /// </summary>
-    public class Axis
+    public class AxisDefinition
     {
         public string Title { get; set; }
 
@@ -29,7 +29,7 @@ namespace StatsDirect.Charting
         public IList<Series> Series { get; set; }
         public IList<string> Labels { get; set; }
 
-        public Axis(string title, AxisMode mode, double extraSpaceBeforeAxisStarts, ScaleType scaleType)
+        public AxisDefinition(string title, AxisMode mode, double extraSpaceBeforeAxisStarts, ScaleType scaleType)
         {
             Title = title;
             Mode = mode;
@@ -37,7 +37,7 @@ namespace StatsDirect.Charting
             ScaleType = scaleType;
         }
 
-        public Axis(string title, AxisMode mode, ScaleType scaleType)
+        public AxisDefinition(string title, AxisMode mode, ScaleType scaleType)
         {
             Title = title;
             Mode = mode;

@@ -94,7 +94,7 @@ namespace StatsDirect.Charting
 
             AssignMarkersToSeries();
 
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
             MarkerType mt = SharedMarkerTypes[10];
             Color black = Color.Black;
             MarkerType crossMarker = new MarkerType() { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
@@ -387,7 +387,7 @@ namespace StatsDirect.Charting
             definition.YSeries = definition.XSeries;
             definition.XSeries = tempSeries;
 
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new Axis(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
 
             using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
             {
@@ -683,7 +683,7 @@ namespace StatsDirect.Charting
 
             // Draw the scale
             DefaultAxes();
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n", new Axis(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType), false, false);
+            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n", new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType), false, false);
             divx = axisXMax - axisXMin;
             offx = Convert.ToInt32(-(axisXMin / divx * 60) + 16);
             divy = seriesToUse.Count + 1;
@@ -714,12 +714,12 @@ namespace StatsDirect.Charting
                 int xl;
                 if (s.Data[0] < outerFenceL && outerFenceL < Q1)
                 {
-                    xl = Convert.ToInt32(offx + outerFenceL / divx * 60);
+                    xl = ToAsciiX(outerFenceL);
                     gatedl = true;
                 }
                 else
                 {
-                    xl = Convert.ToInt32(offx + s.Data[0] / divx * 60);
+                    xl =  ToAsciiX(s.Data[0]);
                     gatedl = false;
                 }
 
@@ -727,19 +727,19 @@ namespace StatsDirect.Charting
                 int xr;
                 if (s.Data[s.Data.Length - 1] > outerFenceR && outerFenceR > Q3)
                 {
-                    xr = Convert.ToInt32(offx + outerFenceR / divx * 60);
+                    xr = ToAsciiX(outerFenceR);
                     gatedr = true;
                 }
                 else
                 {
-                    xr = Convert.ToInt32(offx + s.Data[s.Data.Length - 1] / divx * 60);
+                    xr = ToAsciiX(s.Data[s.Data.Length - 1]);
                     gatedr = false;
                 }
 
-                int xm = Convert.ToInt32(offx + (mdn / divx * 60));
+                int xm = ToAsciiX(mdn);
 
-                int lq = Convert.ToInt32(offx + (Q1 / divx * 60));
-                int uq = Convert.ToInt32(offx + (Q3 / divx * 60));
+                int lq = ToAsciiX(Q1);
+                int uq = ToAsciiX(Q3);
 
                 // Plot it
                 int Y2 = 3 + c * 2;
@@ -757,7 +757,7 @@ namespace StatsDirect.Charting
                     {
                         if (s.Data[r] < outerFenceL)
                         {
-                            int x1 = Convert.ToInt32(offx + s.Data[r] / divx * 60);
+                            int x1 = ToAsciiX(s.Data[r]);
                             WriteAsciiYX(Y2, x1, ".");
                         }
                     }
@@ -780,7 +780,7 @@ namespace StatsDirect.Charting
                     {
                         if (s.Data[r] > outerFenceR)
                         {
-                            int x1 = Convert.ToInt32(offx + s.Data[r] / divx * 60);
+                            int x1 = ToAsciiX(s.Data[r]);
                             WriteAsciiYX(Y2, x1, ".");
                         }
                     }
@@ -795,6 +795,7 @@ namespace StatsDirect.Charting
             }
             return new ParameterBag();
         }
+
         ///  <summary>
         ///  Calculate and return as output parameters many values that are useful for a single box+whisker from the given series.
         ///  </summary>

@@ -16,7 +16,7 @@ namespace StatsDirect.Charting
                 case BinChoiceMethod.Shimazaki:
                     return ChooseBinsShimazaki(sortedX, length);
                 case BinChoiceMethod.Stata:
-                    return MkBinsDescriptor(sortedX, length, (int)Math.Min(Math.Sqrt(length), 10 * Math.Log(length) / Math.Log(10)));
+                    return MkBinsDescriptor(sortedX, length, (int)Math.Min(Math.Sqrt(length), 10 * Math.Log10(length)));
                 case BinChoiceMethod.Sturges:
                     return MkBinsDescriptor(sortedX, length, 1 + (int)Math.Ceiling(Log2(length)));
                 case BinChoiceMethod.NotSet:

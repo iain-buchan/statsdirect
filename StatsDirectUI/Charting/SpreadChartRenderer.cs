@@ -66,7 +66,7 @@ namespace StatsDirect.Charting
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
 
-            DrawAxesOrEnlargeCanvas(sOptions.Title, new Axis(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, sOptions.ShouldBoxAxes, false);
+            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, sOptions.ShouldBoxAxes, false);
 
             double ygap = yExtCanvas / divy;
 
@@ -162,7 +162,7 @@ namespace StatsDirect.Charting
             AssignMarkersToSeries(sOptions);
 
             //  TODO: Should we be using the X axis title for something that will be shown vertically?
-            DrawAxesOrEnlargeCanvas(sOptions.Title, new Axis(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new Axis(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), sOptions.ShouldBoxAxes, false);
+            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), sOptions.ShouldBoxAxes, false);
             double xgap = xExtCanvas / divx;
 
             //  Work out what markers to use

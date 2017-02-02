@@ -5,6 +5,7 @@ using StatsDirect.Charting;
 using System.Media;
 using StatsDirect.Utilities;
 using System.Drawing;
+using StatsDirect.Numerics;
 
 namespace StatsDirect.UI
 {
@@ -154,14 +155,24 @@ namespace StatsDirect.UI
             lstBinValues.Items.Clear();
             for (int i = 0; i < mp; i++)
             {
-                double leftPoint = AxisScaler.Axis_Q0(zMin, zMin + (zInt * i) - zInt / 2.0);
-                double midPoint = AxisScaler.Axis_Q0(zMin, zMin + (zInt * i));
-                double rightPoint = AxisScaler.Axis_Q0(zMin, zMin + (zInt * i) + zInt / 2.0);
+                double leftPoint = Q0(zMin, zMin + zInt * (i - 0.5));
+                double midPoint = Q0(zMin, zMin + zInt * i);
+                double rightPoint = Q0(zMin, zMin + zInt * (i + 0.5));
                 ListViewItem item = new ListViewItem {Text = Formatting.XRound(leftPoint, 9)};
                 item.SubItems.Add(Formatting.XRound(midPoint, 9));
                 item.SubItems.Add(Formatting.XRound(rightPoint, 9));
                 lstBinValues.Items.Add(item);
             }
+        }
+
+        /// <summary>
+        /// Snap q to 0 if it is small and zmin is not - useful when binning to provide reasonable displays.
+        /// </summary>
+        private static double Q0(double zmin, double q)
+        {
+            if (Math.Abs(zmin) > Constant.EPSILON && Math.Abs(q) < Constant.EPSILON)
+                return 0.0;
+            return q;
         }
 
         private void cmdAutoBins_Click(object sender, EventArgs e)

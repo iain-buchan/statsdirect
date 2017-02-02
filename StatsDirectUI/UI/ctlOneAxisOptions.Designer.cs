@@ -37,12 +37,10 @@
             this.lblDataRange = new System.Windows.Forms.Label();
             this.txtMinimum = new System.Windows.Forms.TextBox();
             this.txtTics = new System.Windows.Forms.TextBox();
-            this.txtInterval = new System.Windows.Forms.TextBox();
+            this.txtMaximum = new System.Windows.Forms.TextBox();
             this.lblMinimum = new System.Windows.Forms.Label();
             this.lblTics = new System.Windows.Forms.Label();
-            this.lblInterval = new System.Windows.Forms.Label();
             this.lblMaximum = new System.Windows.Forms.Label();
-            this.lblMaximumValue = new System.Windows.Forms.Label();
             this.cboMarkerLineAt = new System.Windows.Forms.ComboBox();
             this.lblMarkerLineAt = new System.Windows.Forms.Label();
             this.lblGridLines = new System.Windows.Forms.Label();
@@ -166,14 +164,14 @@
             this.txtTics.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtTics.TextChanged += new System.EventHandler(this.txtTics_TextChanged);
             // 
-            // txtInterval
+            // txtMaximum
             // 
-            this.txtInterval.Location = new System.Drawing.Point(106, 71);
-            this.txtInterval.Name = "txtInterval";
-            this.txtInterval.Size = new System.Drawing.Size(125, 20);
-            this.txtInterval.TabIndex = 9;
-            this.txtInterval.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtInterval.TextChanged += new System.EventHandler(this.txtInterval_TextChanged);
+            this.txtMaximum.Location = new System.Drawing.Point(106, 71);
+            this.txtMaximum.Name = "txtMaximum";
+            this.txtMaximum.Size = new System.Drawing.Size(125, 20);
+            this.txtMaximum.TabIndex = 9;
+            this.txtMaximum.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtMaximum.TextChanged += new System.EventHandler(this.txtMaximum_TextChanged);
             // 
             // lblMinimum
             // 
@@ -193,32 +191,14 @@
             this.lblTics.TabIndex = 11;
             this.lblTics.Text = "Tics";
             // 
-            // lblInterval
-            // 
-            this.lblInterval.AutoSize = true;
-            this.lblInterval.Location = new System.Drawing.Point(3, 74);
-            this.lblInterval.Name = "lblInterval";
-            this.lblInterval.Size = new System.Drawing.Size(42, 13);
-            this.lblInterval.TabIndex = 12;
-            this.lblInterval.Text = "Interval";
-            // 
             // lblMaximum
             // 
             this.lblMaximum.AutoSize = true;
-            this.lblMaximum.Location = new System.Drawing.Point(3, 94);
+            this.lblMaximum.Location = new System.Drawing.Point(3, 74);
             this.lblMaximum.Name = "lblMaximum";
             this.lblMaximum.Size = new System.Drawing.Size(51, 13);
             this.lblMaximum.TabIndex = 13;
             this.lblMaximum.Text = "Maximum";
-            // 
-            // lblMaximumValue
-            // 
-            this.lblMaximumValue.Location = new System.Drawing.Point(106, 94);
-            this.lblMaximumValue.Name = "lblMaximumValue";
-            this.lblMaximumValue.Size = new System.Drawing.Size(125, 13);
-            this.lblMaximumValue.TabIndex = 14;
-            this.lblMaximumValue.Text = "<value>";
-            this.lblMaximumValue.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // cboMarkerLineAt
             // 
@@ -308,7 +288,7 @@
             this.tlpOnOff.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpOnOff.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpOnOff.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpOnOff.Size = new System.Drawing.Size(234, 249);
+            this.tlpOnOff.Size = new System.Drawing.Size(234, 236);
             this.tlpOnOff.TabIndex = 24;
             // 
             // pnlTitle
@@ -366,16 +346,14 @@
             this.pnlRange.Controls.Add(this.lblDataRange);
             this.pnlRange.Controls.Add(this.txtMinimum);
             this.pnlRange.Controls.Add(this.txtTics);
-            this.pnlRange.Controls.Add(this.txtInterval);
+            this.pnlRange.Controls.Add(this.txtMaximum);
             this.pnlRange.Controls.Add(this.lblMinimum);
-            this.pnlRange.Controls.Add(this.lblMaximumValue);
             this.pnlRange.Controls.Add(this.lblTics);
             this.pnlRange.Controls.Add(this.lblMaximum);
-            this.pnlRange.Controls.Add(this.lblInterval);
             this.pnlRange.Location = new System.Drawing.Point(0, 94);
             this.pnlRange.Margin = new System.Windows.Forms.Padding(0);
             this.pnlRange.Name = "pnlRange";
-            this.pnlRange.Size = new System.Drawing.Size(234, 107);
+            this.pnlRange.Size = new System.Drawing.Size(234, 94);
             this.pnlRange.TabIndex = 4;
             // 
             // pnlGridLines
@@ -384,7 +362,7 @@
             this.pnlGridLines.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlGridLines.Controls.Add(this.cboGridLines);
             this.pnlGridLines.Controls.Add(this.lblGridLines);
-            this.pnlGridLines.Location = new System.Drawing.Point(0, 201);
+            this.pnlGridLines.Location = new System.Drawing.Point(0, 188);
             this.pnlGridLines.Margin = new System.Windows.Forms.Padding(0);
             this.pnlGridLines.Name = "pnlGridLines";
             this.pnlGridLines.Size = new System.Drawing.Size(234, 24);
@@ -396,7 +374,7 @@
             this.pnlMarkerLine.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlMarkerLine.Controls.Add(this.cboMarkerLineAt);
             this.pnlMarkerLine.Controls.Add(this.lblMarkerLineAt);
-            this.pnlMarkerLine.Location = new System.Drawing.Point(0, 225);
+            this.pnlMarkerLine.Location = new System.Drawing.Point(0, 212);
             this.pnlMarkerLine.Margin = new System.Windows.Forms.Padding(0);
             this.pnlMarkerLine.Name = "pnlMarkerLine";
             this.pnlMarkerLine.Size = new System.Drawing.Size(234, 24);
@@ -410,7 +388,7 @@
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tlpOnOff);
             this.Name = "ctlOneAxisOptions";
-            this.Size = new System.Drawing.Size(234, 249);
+            this.Size = new System.Drawing.Size(234, 236);
             this.tlpOnOff.ResumeLayout(false);
             this.tlpOnOff.PerformLayout();
             this.pnlTitle.ResumeLayout(false);
@@ -443,12 +421,10 @@
         private System.Windows.Forms.Label lblDataRange;
         private System.Windows.Forms.TextBox txtMinimum;
         private System.Windows.Forms.TextBox txtTics;
-        private System.Windows.Forms.TextBox txtInterval;
+        private System.Windows.Forms.TextBox txtMaximum;
         private System.Windows.Forms.Label lblMinimum;
         private System.Windows.Forms.Label lblTics;
-        private System.Windows.Forms.Label lblInterval;
         private System.Windows.Forms.Label lblMaximum;
-        private System.Windows.Forms.Label lblMaximumValue;
         private System.Windows.Forms.ComboBox cboMarkerLineAt;
         private System.Windows.Forms.Label lblMarkerLineAt;
         private System.Windows.Forms.Label lblGridLines;

@@ -223,9 +223,19 @@
     </Compile>
     <Compile Include="Charting\AbstractChartRenderer.cs" />
     <Compile Include="Charting\AgreementOptions.cs" />
-    <Compile Include="Charting\Axis.cs" />
+    <Compile Include="Charting\AxisDefinition.cs" />
     <Compile Include="Charting\AxisMode.cs" />
-    <Compile Include="Charting\AxisScaler.cs" />
+    <Compile Include="Charting\AxisScalerFactory.cs" />
+    <Compile Include="Charting\AxisScales.cs" />
+    <Compile Include="Charting\IAxisScaler.cs" />
+    <Compile Include="Charting\LinearAxisScaler.cs" />
+    <Compile Include="Charting\Log10AxisScaler.cs" />
+    <Compile Include="Charting\LogNaturalAxisScaler.cs" />
+    <Compile Include="Templates\IAxisScale.cs" />
+    <Compile Include="Templates\Log2AxisScale.cs" />
+    <Compile Include="Templates\Log10AxisScale.cs" />
+    <Compile Include="Templates\LinearAxisScale.cs" />
+    <Compile Include="Charting\AxisMasker.cs" />
     <Compile Include="Charting\BarChartRenderer.cs" />
     <Compile Include="Charting\BarOptions.cs" />
     <Compile Include="Charting\BinChoiceMethod.cs" />
@@ -278,7 +288,7 @@
     <Compile Include="Charting\StringSeries.cs" />
     <Compile Include="Charting\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\SurvivalOptions.cs" />
-    <Compile Include="Charting\Tic.cs" />
+    <Compile Include="Templates\Tic.cs" />
     <Compile Include="Charting\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />
     <Compile Include="CsvParser\Csv.g4.lexer.cs">

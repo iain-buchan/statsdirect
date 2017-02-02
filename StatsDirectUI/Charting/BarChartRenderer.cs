@@ -216,7 +216,7 @@ namespace StatsDirect.Charting
                 }
                 xtra = Math.Max(0, Convert.ToInt32(xtra - 20));
 
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(axisTitle, AxisMode.Scale, legendSpaceRequired, definition.ScaleParameters.X.ScaleType), new Axis(null, AxisMode.Series, xtra, definition.ScaleParameters.Y.ScaleType) { Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
+                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(axisTitle, AxisMode.Scale, legendSpaceRequired, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, xtra, definition.ScaleParameters.Y.ScaleType) { Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
                 divy = ((DoubleSeries)(seriesToUse[0])).Points;
                 offy = -(0 / divy * yExtCanvas) + yAxisCanvas;
 
@@ -312,7 +312,7 @@ namespace StatsDirect.Charting
                                 {
                                     double areaYOffset = (s.Data.Length - 1 - barIndex) * eachAreaHeight;
                                     double barH = eachBarHeight;
-                                    double barW = dataW / divx * xExtCanvas;
+                                    double barW = ToCanvasWidth(dataW);
                                     double barY = offy + areaYOffset + bottomOffsetInArea;
                                     double barX = ToCanvasX(dataLowX);
                                     if (barBrush != null)
@@ -362,7 +362,7 @@ namespace StatsDirect.Charting
                 }
                 DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new Axis(null, AxisMode.Series, legendSpaceRequired, definition.ScaleParameters.X.ScaleType) { Labels = bOptions.SeriesTitles }, new Axis(axisTitle, AxisMode.Scale, 0, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
+                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, legendSpaceRequired, definition.ScaleParameters.X.ScaleType) { Labels = bOptions.SeriesTitles }, new AxisDefinition(axisTitle, AxisMode.Scale, 0, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
                 divx = ((DoubleSeries)(seriesToUse[0])).Points;
                 offx = -(0 / divx * xExtCanvas) + xAxisCanvas;
 

@@ -745,11 +745,9 @@ namespace StatsDirect.UI
             }
             if ("addedConstant".Equals(parameter.SpecialType))
             {
-                double minimumC;
-                double suggestedC;
                 DataFrame frame = Context["data"].AsDataFrame;
                 DoubleVariable dv = frame.Variables[0]as DoubleVariable;
-                Sheet.XConstant(dv.Length, 0, dv.Data, out minimumC, out suggestedC);
+                double minimumC = Sheet.XConstant(dv.Data);
                 Context.AddOutput("a_min", minimumC);
 
                 if (minimumC != Constant.MISSING)
@@ -759,7 +757,7 @@ namespace StatsDirect.UI
                         Name = parameter.Name,
                         PromptExpression = parameter.PromptExpression,
                         MinimumValueExpression = new Expression(minimumC.ToString()),
-                        DefaultValueExpression = new Expression(suggestedC.ToString()),
+                        DefaultValueExpression = new Expression(minimumC.ToString()),
                         CancelSkipsParameter = "Skip"
                     };
                     // Safe to delegate to another Visit rather than going through the Accept.

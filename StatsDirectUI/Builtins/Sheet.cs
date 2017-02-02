@@ -128,35 +128,15 @@ namespace StatsDirect.Builtins
         }
 
         ///  <summary>
-        ///  Returns a constant to add to all input values to ensure that all f(x) with the given input data are valid.
+        ///  Returns a constant to add to all input values to ensure that all are greater than 0.
         ///  </summary>
-        public static void XConstant(int rows, int lowerBound, double[] data, out double minimumC, out double suggestedC)
+        public static double XConstant(double[] data)
         {
-            //  Suggest constant to make all fn(x) possible
-            double aMin = double.MaxValue;
-            double aMax = double.MinValue;
-            for (int n = lowerBound; n < rows + lowerBound; n++)
-            {
-                if (data[n] != Constant.MISSING)
-                {
-                    if (data[n] < aMin)
-                        aMin = data[n];
-                    if (data[n] > aMax)
-                        aMax = data[n];
-                }
-            }
-            if (aMin < 0)
-            {
-                double zmin; double zstep;
-                Charting.AxisScaler.Axis(ref aMin, ref aMax, 20, out zmin, out zstep);
-                minimumC = Math.Abs(aMin);
-                suggestedC = Math.Abs(zmin);
-            }
-            else
-            {
-                minimumC = Constant.MISSING;
-                suggestedC = Constant.MISSING;
-            }
+            double minimum = double.MaxValue;
+            for (int n = 0; n < data.Length; n++)
+                if (data[n] != Constant.MISSING && data[n] < minimum)
+                    minimum = data[n];
+            return (minimum < 0) ? Math.Abs(minimum) : Constant.MISSING;
         }
 
         public static ParameterBag ShtClearMissing(ITemplateHost host, ParameterBag parameters)
