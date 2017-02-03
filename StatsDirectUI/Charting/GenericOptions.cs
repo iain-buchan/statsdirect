@@ -27,53 +27,38 @@ namespace StatsDirect.Charting
         {
             SeriesOptions = new List<SeriesOptionsDescriptor>();
             if (UsesAxisLabelFontDescriptor)
-                AxisLabelFontDescriptor = ChartRenderer.DefaultAxisLabelFont;
+                AxisLabelFontDescriptor = AbstractChartRenderer.DefaultAxisLabelFont;
             if (UsesAxisTitleFontDescriptor)
-                AxisTitleFontDescriptor = ChartRenderer.DefaultAxisTitleFont;
+                AxisTitleFontDescriptor = AbstractChartRenderer.DefaultAxisTitleFont;
             if (UsesLegendFontDescriptor)
-                LegendFontDescriptor = ChartRenderer.DefaultLegendFont;
+                LegendFontDescriptor = AbstractChartRenderer.DefaultLegendFont;
             if (UsesTitleFontDescriptor)
-                TitleFontDescriptor = ChartRenderer.DefaultTitleFont;
+                TitleFontDescriptor = AbstractChartRenderer.DefaultTitleFont;
         }
 
         public virtual bool UsesChartTitle
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public virtual bool UsesAutoscale
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public virtual bool UsesBoxAxes
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public virtual bool UsesSeriesLabels
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public virtual bool UsesAxisLabelFontDescriptor
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public virtual string AxisLabelFontLabel
@@ -86,18 +71,12 @@ namespace StatsDirect.Charting
 
         public virtual bool UsesAxisTitleFontDescriptor
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public virtual bool UsesLegendFontDescriptor
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public virtual string LegendFontLabel
@@ -125,26 +104,17 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         public virtual bool IsNaturalOrientation
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public virtual bool UsesTitleFontDescriptor
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public virtual bool UsesOrientation
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -153,10 +123,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowBarOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -165,10 +132,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowBoxWhiskerOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -177,10 +141,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowControlOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -189,10 +150,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowErrorBarOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -201,10 +159,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowForestOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -213,10 +168,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowHistogramOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -225,10 +177,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowNormalOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -237,10 +186,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowPyramidOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -249,10 +195,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowRocOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -261,10 +204,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowScatterXYOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         ///  <summary>
@@ -273,10 +213,7 @@ namespace StatsDirect.Charting
         ///  <returns>True if the extra options should be shown, False if not.</returns>
         public virtual bool ShowSurvivalOptions
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public override ChartOptions Clone()
@@ -292,6 +229,6 @@ namespace StatsDirect.Charting
     public enum ChartOrientation
     {
         Horizontal,
-        Vertical,
+        Vertical
     }
 }

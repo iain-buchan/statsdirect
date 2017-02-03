@@ -78,8 +78,10 @@ namespace StatsDirect.Charting
         public static string PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(double[] xData, double[] yData, string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle, double PERT, int nx, double MS, double SUMX, double SSX, bool isPredictionInterval)
         {
             ChartDefinition cd = new ChartDefinition();
-            cd.AddYSeries(yData, yAxisTitle);
-            cd.AddXSeries(xData, xAxisTitle);
+            DoubleSeries ys = new DoubleSeries(yData, yAxisTitle);
+            cd.AddYSeriesAt(ys, 0);
+            DoubleSeries xs = new DoubleSeries(xData, xAxisTitle);
+            cd.AddXSeriesAt(xs, 0);
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
             {
                 double maxpcon = double.MinValue;
@@ -87,7 +89,7 @@ namespace StatsDirect.Charting
                 if (PERT != 0)
                 {
                     double calcx;
-                    for (calcx = ch.DataMinX; calcx <= ch.DataMaxX; calcx += (ch.DataMaxX - ch.DataMinX) / 20.0)
+                    for (calcx = xs.Min; calcx <= xs.Max; calcx += (xs.Max - xs.Min) / 20.0)
                     {
                         double calcy = slope * calcx + intercept;
                         double sey = Math.Sqrt(MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (SUMX / Convert.ToDouble(nx))), 2.0) / SSX)));
@@ -99,12 +101,8 @@ namespace StatsDirect.Charting
                             minpcon = pconl;
                     }
                 }
-                if (maxpcon > ch.DataMaxY)
-                    ch.DataMaxY = maxpcon;
-                if (minpcon < ch.DataMinY)
-                    ch.DataMinY = minpcon;
 
-                ch.PlotLinearRegressionAndMaybeSeCiOrPredictionInterval(title, slope, intercept, fullWidth, xAxisTitle, yAxisTitle, PERT, nx, MS, SUMX, SSX, isPredictionInterval);
+                ch.PlotLinearRegressionAndMaybeSeCiOrPredictionInterval(title, slope, intercept, fullWidth, xAxisTitle, yAxisTitle, PERT, nx, MS, SUMX, SSX, isPredictionInterval, Math.Min(ys.Min, minpcon), Math.Max(ys.Max, maxpcon));
                 return Render(ch);
             }
         }
@@ -199,11 +197,7 @@ namespace StatsDirect.Charting
         {
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(new ChartDefinition()))
             {
-                ch.DataMinX = minMax.MinX;
-                ch.DataMaxX = minMax.MaxX;
-                ch.DataMinY = minMax.MinY;
-                ch.DataMaxY = minMax.MaxY;
-                ch.PlotXYR(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam);
+                ch.PlotXYR(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam, minMax.MinX, minMax.MaxX, minMax.MinY, minMax.MaxY);
                 return Render(ch);
             }
         }
@@ -212,8 +206,7 @@ namespace StatsDirect.Charting
         {
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(new ChartDefinition()))
             {
-                // TODO: Shouldn't need to reference Pens here.
-                ch.PlotXYZ(x, y, z, 1, x.Length - 1, xtxt, ytxt, title, zPlot, minMaxY, MarkerShape.Circle, false, System.Drawing.Pens.Black, null);
+                ch.PlotXYZ(x, y, z, 1, x.Length - 1, xtxt, ytxt, title, zPlot, minMaxY, new MarkerType { MarkerShape = MarkerShape.Circle, IsMarkerFilled = false, MarkerColor = AbstractChartRenderer.grBlack });
                 return Render(ch);
             }
         }

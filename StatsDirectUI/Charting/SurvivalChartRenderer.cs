@@ -157,7 +157,7 @@ namespace StatsDirect.Charting
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
 
-            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition("Times", AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, xtra, definition.ScaleParameters.Y.ScaleType), false, false);
+            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition("Times", AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
             //divy = cols + 1;
             divy = 1;
             offy = yAxisCanvas;
@@ -202,20 +202,20 @@ namespace StatsDirect.Charting
                         }
                     }
 
-                    double x1 = ToCanvasX(axisXMin);
+                    double x1 = ToCanvasX(AxisXMin);
                     double y1 = ToCanvasY(1.0);
                     double x2 = 0;
                     double y2 = 0;
                     for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
                     {
-                        if (ydat[r] != Constant.MISSING & xdat[r] != Constant.MISSING & cdat[r] != -1)
+                        if (ydat[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)
                         {
                             x2 = ToCanvasX(xdat[r]);
                             y2 = ToCanvasY(ydat[r]);
-                            if (use_marker & cdat[r] > 0)
+                            if (use_marker && cdat[r] > 0)
                                 DrawMarkerInCanvasCoordinates(x2, y2, mType.MarkerSize, mType);
                             // Draw tic if censored
-                            if (cdat[r] == 0 & use_tic)
+                            if (cdat[r] == 0 && use_tic)
                                 DrawLineInCanvasCoordinates(p, x2, y2, x2, y2 + 7);
                             // Then the lines
                             DrawLineInCanvasCoordinates(p, x1, y1, x2, y1);

@@ -326,7 +326,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                LinearAxisScale axisScale = LinearAxisScaler.v_axis(sx.Minimum, sx.Maximum, nsteps);
+                ILinearAxisScale axisScale = LinearAxisScaler.v_axis(sx.Minimum, sx.Maximum, nsteps);
                 txtIntervals.Text = nsteps.ToString();
                 txtMinimum.Text = Math.Round(axisScale.MinimumScaleValue, 14).ToString();
                 txtInterval.Text = Math.Round(axisScale.Interval, 14).ToString();

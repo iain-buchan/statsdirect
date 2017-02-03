@@ -19,7 +19,6 @@ namespace StatsDirect.Charting
 
             // No false origins
             DataMinY = 0;
-            axisYMin = 0;
 
             //  Stacked and 100% stacked charts require different scaling
             if (bOptions.Stacked)
@@ -27,7 +26,6 @@ namespace StatsDirect.Charting
                 if (bOptions.Stacked100Percent)
                 {
                     DataMaxY = 100;
-                    axisYMax = 100;
                 }
                 else
                 {
@@ -46,7 +44,6 @@ namespace StatsDirect.Charting
                     if (largestSoFar == 0)
                         largestSoFar = 1;
                     DataMaxY = largestSoFar;
-                    axisYMax = largestSoFar;
                 }
             }
 
@@ -133,8 +130,8 @@ namespace StatsDirect.Charting
                 if (bOptions.Stacked100Percent)
                 {
                     //  Y axis scales 0-100
-                    axisYMin = 0;
-                    axisYMax = 100;
+                    DataMinY = 0;
+                    DataMaxY = 100;
                 }
                 else
                 {
@@ -194,10 +191,6 @@ namespace StatsDirect.Charting
                 definition.ScaleParameters.Y = tempAxisScaleParameters;
                 DataMinX = DataMinY;
                 DataMaxX = DataMaxY;
-                axisXMin = axisYMin;
-                axisXMax = axisYMax;
-                axisYMin = 0;
-                axisYMax = 0;
                 DataMinY = 0;
                 DataMaxY = 0;
 
@@ -216,7 +209,7 @@ namespace StatsDirect.Charting
                 }
                 xtra = Math.Max(0, Convert.ToInt32(xtra - 20));
 
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(axisTitle, AxisMode.Scale, legendSpaceRequired, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, xtra, definition.ScaleParameters.Y.ScaleType) { Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
+                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(axisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired }, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
                 divy = ((DoubleSeries)(seriesToUse[0])).Points;
                 offy = -(0 / divy * yExtCanvas) + yAxisCanvas;
 
@@ -297,10 +290,10 @@ namespace StatsDirect.Charting
                                 double dataW;
                                 double dataLowX;
                                 //  Dim dataHighX As Double = totalBelowThisBar + thisData
-                                if (totalBelowThisBar < axisXMin)
+                                if (totalBelowThisBar < AxisXMin)
                                 {
-                                    dataW = thisData + totalBelowThisBar - axisXMin;
-                                    dataLowX = axisXMin;
+                                    dataW = thisData + totalBelowThisBar - AxisXMin;
+                                    dataLowX = AxisXMin;
                                 }
                                 else
                                 {
@@ -362,7 +355,7 @@ namespace StatsDirect.Charting
                 }
                 DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, legendSpaceRequired, definition.ScaleParameters.X.ScaleType) { Labels = bOptions.SeriesTitles }, new AxisDefinition(axisTitle, AxisMode.Scale, 0, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
+                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(axisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
                 divx = ((DoubleSeries)(seriesToUse[0])).Points;
                 offx = -(0 / divx * xExtCanvas) + xAxisCanvas;
 
@@ -451,10 +444,10 @@ namespace StatsDirect.Charting
                                 double dataH;
                                 double dataLowY;
                                 //  Dim dataHighX As Double = totalBelowThisBar + thisData
-                                if (totalBelowThisBar < axisYMin)
+                                if (totalBelowThisBar < AxisYMin)
                                 {
-                                    dataH = thisData + totalBelowThisBar - axisYMin;
-                                    dataLowY = axisYMin;
+                                    dataH = thisData + totalBelowThisBar - AxisYMin;
+                                    dataLowY = AxisYMin;
                                 }
                                 else
                                 {

@@ -12,6 +12,8 @@ namespace StatsDirect.Charting
 
         public AxisMode Mode { get; set; }
 
+        public bool Reverse { get { return (Mode & AxisMode.Reverse) != 0; } }
+
         ///  <summary>
         ///  Space by which the axis should be shifted in or the canvas enlarged, depending on the renderer
         ///  </summary>
@@ -28,14 +30,6 @@ namespace StatsDirect.Charting
         /// </summary>
         public IList<Series> Series { get; set; }
         public IList<string> Labels { get; set; }
-
-        public AxisDefinition(string title, AxisMode mode, double extraSpaceBeforeAxisStarts, ScaleType scaleType)
-        {
-            Title = title;
-            Mode = mode;
-            ExtraSpaceBeforeAxisStarts = extraSpaceBeforeAxisStarts;
-            ScaleType = scaleType;
-        }
 
         public AxisDefinition(string title, AxisMode mode, ScaleType scaleType)
         {

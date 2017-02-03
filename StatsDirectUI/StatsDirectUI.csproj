@@ -232,6 +232,9 @@
     <Compile Include="Charting\Log10AxisScaler.cs" />
     <Compile Include="Charting\LogNaturalAxisScaler.cs" />
     <Compile Include="Templates\IAxisScale.cs" />
+    <Compile Include="Templates\ILinearAxisScale.cs" />
+    <Compile Include="Templates\CategoryAxisScale.cs" />
+    <Compile Include="Templates\NewLinearAxisScale.cs" />
     <Compile Include="Templates\Log2AxisScale.cs" />
     <Compile Include="Templates\Log10AxisScale.cs" />
     <Compile Include="Templates\LinearAxisScale.cs" />
@@ -288,6 +291,7 @@
     <Compile Include="Charting\StringSeries.cs" />
     <Compile Include="Charting\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\SurvivalOptions.cs" />
+    <Compile Include="Charting\NewLinearAxisScaler.cs" />
     <Compile Include="Templates\Tic.cs" />
     <Compile Include="Charting\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />
@@ -1924,7 +1928,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
