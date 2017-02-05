@@ -3,20 +3,20 @@
 <line></line>
 <line>Iterations = <in>itr</in></line>
 <line></line>
-<line>Sxx = <in>sxx</in></line>
-<line>Sxy = <in>sxy</in></line>
-<line>Syy = <in>syy</in></line>
+<line>Sxx = <inu>sxx</inu></line>
+<line>Sxy = <inu>sxy</inu></line>
+<line>Syy = <inu>syy</inu></line>
 <line></line>
-<line>Variance of B = <in>var_b</in></line>
-<line>Standard error of B <in>het</in> = <in>seb</in></line>
+<line>Variance of B = <inu>var_b</inu></line>
+<line>Standard error of B <in>het</in> = <inu>seb</inu></line>
 <block name="natural">
 <line></line>
-<line>Estimated natural response rate (C) = <in>c</in></line>
-<line>Standard error of B <in>het_c</in> = <in>seb_c</in></line>
+<line>Estimated natural response rate (C) = <inu>c</inu></line>
+<line>Standard error of B <in>het_c</in> = <inu>seb_c</inu></line>
 </block>
 <line></line>
 <table>
 <tr><th>Index</th><th>Subjects</th><th>Responses</th><th>Expected</th><th>Deviation</th></tr>
-<block name="obs"><tr><td><in>obs</in></td><td><in>sub</in></td><td><in>res</in></td><td><in>exp</in></td><td><in>dev</in></td></tr></block>
+<block name="obs"><tr><td><in>obs</in></td><td><inu>sub</inu></td><td><inu>res</inu></td><td><inu>exp</inu></td><td><inu>dev</inu></td></tr></block>
 </table>
 </report>

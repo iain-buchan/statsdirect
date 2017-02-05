@@ -81,24 +81,24 @@ namespace StatsDirect.Builtins
             double P = PDF.fvalp(vr, 1.0, totny - nx);
             string Q2 = P > 0.05 ? "NOT " : string.Empty;
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("reg_ssq", host.RoundU(regssq));
+            outputParameters.AddOutput("reg_ssq", regssq);
             outputParameters.AddOutput("reg_df", "1");
-            outputParameters.AddOutput("reg_msq", host.RoundU(regssq));
-            outputParameters.AddOutput("reg_vr", host.RoundU(vr));
-            outputParameters.AddOutput("reg_p", host.pval(P));
+            outputParameters.AddOutput("reg_msq", regssq);
+            outputParameters.AddOutput("reg_vr", vr);
+            outputParameters.AddOutput("reg_p", P);
             vr = (devssq / Convert.ToDouble(nx - 2)) / (rsdssq / (totny - nx));
             P = PDF.fvalp(vr, nx - 2, totny - nx);
             string Q = P <= 0.05 ? "NOT " : string.Empty;
-            outputParameters.AddOutput("dev_ssq", host.RoundU(devssq));
-            outputParameters.AddOutput("dev_df", (nx - 2).ToString());
-            outputParameters.AddOutput("dev_msq", host.RoundU(devssq / Convert.ToDouble(nx - 2)));
-            outputParameters.AddOutput("dev_vr", host.RoundU(vr));
-            outputParameters.AddOutput("dev_p", host.pval(P));
-            outputParameters.AddOutput("res_ssq", host.RoundU(rsdssq));
-            outputParameters.AddOutput("res_df", (totny - nx).ToString());
-            outputParameters.AddOutput("res_msq", host.RoundU(rsdssq / (totny - nx)));
-            outputParameters.AddOutput("tot_ssq", host.RoundU(totssq));
-            outputParameters.AddOutput("tot_df", (totny - 1).ToString());
+            outputParameters.AddOutput("dev_ssq", devssq);
+            outputParameters.AddOutput("dev_df", (nx - 2));
+            outputParameters.AddOutput("dev_msq", devssq / Convert.ToDouble(nx - 2));
+            outputParameters.AddOutput("dev_vr", vr);
+            outputParameters.AddOutput("dev_p", P);
+            outputParameters.AddOutput("res_ssq", rsdssq);
+            outputParameters.AddOutput("res_df", (totny - nx));
+            outputParameters.AddOutput("res_msq", rsdssq / (totny - nx));
+            outputParameters.AddOutput("tot_ssq", totssq);
+            outputParameters.AddOutput("tot_df", (totny - 1));
             outputParameters.AddOutput("reg", Q2);
             outputParameters.AddOutput("lin", Q);
             return outputParameters;
@@ -200,24 +200,24 @@ namespace StatsDirect.Builtins
             double vr = comssq / (residssq / (grandn - 2 * k));
             double p = PDF.fvalp(vr, 1.0, grandn - 2 * k);
             string Q = p > 0.05 ? "NOT " : string.Empty;
-            outputParameters.AddOutput("com_ssq", host.RoundU(comssq));
+            outputParameters.AddOutput("com_ssq", comssq);
             outputParameters.AddOutput("com_df", "1");
-            outputParameters.AddOutput("com_msq", host.RoundU(comssq));
-            outputParameters.AddOutput("com_vr", host.RoundU(vr));
-            outputParameters.AddOutput("com_p", host.pval(p));
+            outputParameters.AddOutput("com_msq", comssq);
+            outputParameters.AddOutput("com_vr", vr);
+            outputParameters.AddOutput("com_p", p);
             vr = (btwnssq / Convert.ToDouble(k - 1)) / (residssq / (grandn - 2 * k));
             p = PDF.fvalp(vr, k - 1, grandn - 2 * k);
             string q2 = p > 0.05 ? "NOT " : string.Empty;
-            outputParameters.AddOutput("bet_ssq", host.RoundU(btwnssq));
-            outputParameters.AddOutput("bet_df", (k - 1).ToString());
-            outputParameters.AddOutput("bet_msq", host.RoundU(btwnssq / Convert.ToDouble(k - 1)));
-            outputParameters.AddOutput("bet_vr", host.RoundU(vr));
-            outputParameters.AddOutput("bet_p", host.pval(p));
-            outputParameters.AddOutput("res_ssq", host.RoundU(residssq));
-            outputParameters.AddOutput("res_df", (grandn - 2 * k).ToString());
-            outputParameters.AddOutput("res_msq", host.RoundU(residmsq));
-            outputParameters.AddOutput("grp_ssq", host.RoundU(grandsqy));
-            outputParameters.AddOutput("grp_df", (grandn - k).ToString());
+            outputParameters.AddOutput("bet_ssq", btwnssq);
+            outputParameters.AddOutput("bet_df", (k - 1));
+            outputParameters.AddOutput("bet_msq", btwnssq / Convert.ToDouble(k - 1));
+            outputParameters.AddOutput("bet_vr", vr);
+            outputParameters.AddOutput("bet_p", p);
+            outputParameters.AddOutput("res_ssq", residssq);
+            outputParameters.AddOutput("res_df", (grandn - 2 * k));
+            outputParameters.AddOutput("res_msq", residmsq);
+            outputParameters.AddOutput("grp_ssq", grandsqy);
+            outputParameters.AddOutput("grp_df", (grandn - k));
             outputParameters.AddOutput("com", Q);
             outputParameters.AddOutput("diff", q2);
             int degf = Convert.ToInt32(grandn - 2 * k);
@@ -232,22 +232,22 @@ namespace StatsDirect.Builtins
                     slopeList.Add(slopeParameters);
                     slopeParameters.AddOutput("lab1", bnam[g]);
                     slopeParameters.AddOutput("lab2", bnam[j]);
-                    slopeParameters.AddOutput("res1", host.RoundU(b[g]));
-                    slopeParameters.AddOutput("res2", host.RoundU(b[j]));
+                    slopeParameters.AddOutput("res1", b[g]);
+                    slopeParameters.AddOutput("res2", b[j]);
                     double dif = Math.Abs(b[g] - b[j]);
                     t = Math.Sqrt(residmsq * (rssx[g] + rssx[j])) * cit;
                     slopeParameters.AddOutput("pc", Formatting.XRound((1 - p0) * 100, 2));
-                    slopeParameters.AddOutput("dif", host.RoundU(dif));
-                    slopeParameters.AddOutput("from", host.RoundU(dif - t));
-                    slopeParameters.AddOutput("to", host.RoundU(dif + t));
+                    slopeParameters.AddOutput("dif", dif);
+                    slopeParameters.AddOutput("from", dif - t);
+                    slopeParameters.AddOutput("to", dif + t);
                     t = (b[g] - b[j]) / Math.Sqrt(residmsq * (rssx[g] + rssx[j]));
-                    slopeParameters.AddOutput("t", host.RoundU(t));
+                    slopeParameters.AddOutput("t", t);
                     p = PDF.tvalp(Math.Abs(t), grandn - 2 * k);
                     if (p > 1.0 - p)
                     {
                         p = 1.0 - p;
                     }
-                    slopeParameters.AddOutput("p", host.pval(p * 2.0));
+                    slopeParameters.AddOutput("p", p * 2.0);
                 }
             }
             double syyb = syy - (tsy * tsy / tn);
@@ -263,35 +263,35 @@ namespace StatsDirect.Builtins
             double cssw = syyw - (sxyw * sxyw / sxxw);
             double cssb = csst - cssw;
             // Uncorrected
-            outputParameters.AddOutput("uc_bet_yy", host.RoundU(syyb));
-            outputParameters.AddOutput("uc_bet_xy", host.RoundU(sxyb));
-            outputParameters.AddOutput("uc_bet_xx", host.RoundU(sxxb));
-            outputParameters.AddOutput("uc_bet_df", (k - 1).ToString());
-            outputParameters.AddOutput("uc_with_yy", host.RoundU(syyw));
-            outputParameters.AddOutput("uc_with_xy", host.RoundU(sxyw));
-            outputParameters.AddOutput("uc_with_xx", host.RoundU(sxxw));
-            outputParameters.AddOutput("uc_with_df", (tnx - k).ToString());
-            outputParameters.AddOutput("uc_tot_yy", host.RoundU(syyt));
-            outputParameters.AddOutput("uc_tot_xy", host.RoundU(sxyt));
-            outputParameters.AddOutput("uc_tot_xx", host.RoundU(sxxt));
-            outputParameters.AddOutput("uc_tot_df", (tnx - 1).ToString());
+            outputParameters.AddOutput("uc_bet_yy", syyb);
+            outputParameters.AddOutput("uc_bet_xy", sxyb);
+            outputParameters.AddOutput("uc_bet_xx", sxxb);
+            outputParameters.AddOutput("uc_bet_df", (k - 1));
+            outputParameters.AddOutput("uc_with_yy", syyw);
+            outputParameters.AddOutput("uc_with_xy", sxyw);
+            outputParameters.AddOutput("uc_with_xx", sxxw);
+            outputParameters.AddOutput("uc_with_df", (tnx - k));
+            outputParameters.AddOutput("uc_tot_yy", syyt);
+            outputParameters.AddOutput("uc_tot_xy", sxyt);
+            outputParameters.AddOutput("uc_tot_xx", sxxt);
+            outputParameters.AddOutput("uc_tot_df", (tnx - 1));
             // Corrected
             double crWithDf = tnx - k - 1;
             vr = (cssb / Convert.ToDouble(k - 1)) / (cssw / crWithDf);
             p = PDF.fvalp(vr, k - 1, crWithDf);
-            outputParameters.AddOutput("cr_bet_ssq", host.RoundU(cssb));
-            outputParameters.AddOutput("cr_bet_df", (k - 1).ToString());
-            outputParameters.AddOutput("cr_bet_msq", host.RoundU(cssb / Convert.ToDouble(k - 1)));
-            outputParameters.AddOutput("cr_bet_vr", host.RoundU(vr));
-            outputParameters.AddOutput("cr_with_ssq", host.RoundU(cssw));
-            outputParameters.AddOutput("cr_with_df", crWithDf.ToString());
-            outputParameters.AddOutput("cr_with_msq", host.RoundU(cssw / crWithDf));
-            outputParameters.AddOutput("cr_tot_ssq", host.RoundU(csst));
-            outputParameters.AddOutput("cr_tot_df", (tnx - 2).ToString());
+            outputParameters.AddOutput("cr_bet_ssq", cssb);
+            outputParameters.AddOutput("cr_bet_df", (k - 1));
+            outputParameters.AddOutput("cr_bet_msq", cssb / Convert.ToDouble(k - 1));
+            outputParameters.AddOutput("cr_bet_vr", vr);
+            outputParameters.AddOutput("cr_with_ssq", cssw);
+            outputParameters.AddOutput("cr_with_df", crWithDf);
+            outputParameters.AddOutput("cr_with_msq", cssw / crWithDf);
+            outputParameters.AddOutput("cr_tot_ssq", csst);
+            outputParameters.AddOutput("cr_tot_df", (tnx - 2));
             Q = p <= 0.05 ? "NOT " : string.Empty;
-            outputParameters.AddOutput("p", host.pval(p));
+            outputParameters.AddOutput("p", p);
             double bs = sxyw / sxxw;
-            outputParameters.AddOutput("x_mean", host.RoundU(mx0));
+            outputParameters.AddOutput("x_mean", mx0);
             IList<ParameterBag> cmyList = new List<ParameterBag>();
             outputParameters.AddOutput("*cmy", cmyList);
             for (int g = 1; g <= k; g++)
@@ -300,11 +300,11 @@ namespace StatsDirect.Builtins
                 cmyList.Add(cmyParameters);
                 double cmy = ymean[g] + (bs * (mx0 - xmean[g]));
                 double secmy = Math.Sqrt((cssw / crWithDf) * ((1.0 / Convert.ToDouble(nxi[g]) + ((mx0 - xmean[g]) * (mx0 - xmean[g]) / sxxw))));
-                cmyParameters.AddOutput("y", host.RoundU(cmy));
-                cmyParameters.AddOutput("res", host.RoundU(secmy));
+                cmyParameters.AddOutput("y", cmy);
+                cmyParameters.AddOutput("res", secmy);
             }
             // Line separations
-            outputParameters.AddOutput("slope", host.RoundU(bs));
+            outputParameters.AddOutput("slope", bs);
             cit = PDF.tfromp(p0 / 2, crWithDf);
             if (q2.Length == 0)
             { // Lines not parallel
@@ -328,18 +328,18 @@ namespace StatsDirect.Builtins
                     sepList.Add(sepParameters);
                     sepParameters.AddOutput("lab1", bnam[g]);
                     sepParameters.AddOutput("lab2", bnam[j]);
-                    sepParameters.AddOutput("sep", host.RoundU(t));
+                    sepParameters.AddOutput("sep", t);
                     double zz = cit * Math.Sqrt((cssw / crWithDf) * ((1.0 / Convert.ToDouble(nxi[g])) + (1.0 / Convert.ToDouble(nxi[j])) + ((xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw)));
                     sepParameters.AddOutput("pc", Formatting.XRound((1 - p0) * 100, 2));
-                    sepParameters.AddOutput("fromSep", host.RoundU(t - zz));
-                    sepParameters.AddOutput("toSep", host.RoundU(t + zz));
+                    sepParameters.AddOutput("fromSep", t - zz);
+                    sepParameters.AddOutput("toSep", t + zz);
                     t = t / Math.Sqrt((cssw / crWithDf) * ((1.0 / Convert.ToDouble(nxi[g])) + (1.0 / Convert.ToDouble(nxi[j])) + ((xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw)));
-                    sepParameters.AddOutput("t", host.RoundU(t));
-                    sepParameters.AddOutput("df", host.RoundU(tnx - k - 1));
+                    sepParameters.AddOutput("t", t);
+                    sepParameters.AddOutput("df", tnx - k - 1);
                     p = PDF.tvalp(Math.Abs(t), crWithDf);
                     if (p > 1.0 - p)
                         p = 1.0 - p;
-                    sepParameters.AddOutput("pSep", host.pval(p * 2.0));
+                    sepParameters.AddOutput("pSep", p * 2.0);
                 }
             }
             string ylab = yrep ? "Y Replicates" : "Y";
@@ -493,8 +493,8 @@ namespace StatsDirect.Builtins
                     ParameterBag countParameters = new ParameterBag();
                     countList.Add(countParameters);
                     countParameters.AddOutput("st", stratlab[i]);
-                    countParameters.AddOutput("ca", NCA[i].ToString());
-                    countParameters.AddOutput("ct", nct[i].ToString());
+                    countParameters.AddOutput("ca", NCA[i]);
+                    countParameters.AddOutput("ct", nct[i]);
                 }
             }
             else
@@ -502,11 +502,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*counts", null);
             }
 
-            outputParameters.AddOutput("dv", host.RoundU(dev));
+            outputParameters.AddOutput("dv", dev);
             outputParameters.AddOutput("warn", warn);
-            outputParameters.AddOutput("x2", host.RoundU(lrx2));
-            outputParameters.AddOutput("p_dev", host.pval(PDF.chivalp(lrx2, Convert.ToDouble(cols))));
-            outputParameters.AddOutput("r2", host.RoundU(lrx2 / devx));
+            outputParameters.AddOutput("x2", lrx2);
+            outputParameters.AddOutput("p_dev", PDF.chivalp(lrx2, Convert.ToDouble(cols)));
+            outputParameters.AddOutput("r2", lrx2 / devx);
 
             IList<ParameterBag> estList = new List<ParameterBag>();
             outputParameters.AddOutput("*est", estList);
@@ -515,13 +515,13 @@ namespace StatsDirect.Builtins
                 ParameterBag estParameters = new ParameterBag();
                 estList.Add(estParameters);
                 estParameters.AddOutput("lab", cd[i].Title);
-                estParameters.AddOutput("b", host.RoundU(-b[i]));
-                estParameters.AddOutput("se", host.RoundU(se[i]));
+                estParameters.AddOutput("b", -b[i]);
+                estParameters.AddOutput("se", se[i]);
                 double zz;
                 if (se[i] == 0.0)
                 {
                     zz = Constant.MISSING;
-                    estParameters.AddOutput("z", host.RoundU(zz));
+                    estParameters.AddOutput("z", zz);
                     estParameters.AddOutput("p", "* error: drop this variable *");
                 }
                 else
@@ -533,8 +533,8 @@ namespace StatsDirect.Builtins
                         P = 1.0 - P;
                     }
                     P = 2.0 * P;
-                    estParameters.AddOutput("z", host.RoundU(zz));
-                    estParameters.AddOutput("p", host.pval(P));
+                    estParameters.AddOutput("z", zz);
+                    estParameters.AddOutput("p", P);
                 }
             }
 
@@ -546,7 +546,7 @@ namespace StatsDirect.Builtins
                 ParameterBag orParameters = new ParameterBag();
                 orList.Add(orParameters);
                 orParameters.AddOutput("lab", cd[i].Title);
-                orParameters.AddOutput("or", host.RoundU(Formatting.SafeExp(-b[i])));
+                orParameters.AddOutput("or", Formatting.SafeExp(-b[i]));
                 double lci = Formatting.SafeExp(-b[i] - se[i] * cit);
                 double uci = Formatting.SafeExp(-b[i] + se[i] * cit);
                 if (lci > uci)
@@ -555,8 +555,8 @@ namespace StatsDirect.Builtins
                     lci = uci;
                     uci = temp;
                 }
-                orParameters.AddOutput("from", host.RoundU(lci));
-                orParameters.AddOutput("to", host.RoundU(uci));
+                orParameters.AddOutput("from", lci);
+                orParameters.AddOutput("to", uci);
             }
             return outputParameters;
         }

@@ -8,17 +8,17 @@
 </table>
 </block>
 <line></line>
-<line>Deviance (-2 log likelihood) = <in>dv</in>   <warn><in>warn</in></warn></line>
-<line>Deviance (likelihood ratio) chi-square = <in>x2</in>  <pval><in>p_dev</in></pval></line>
-<line>Pseudo (McFadden) R-square = <in>r2</in></line>
+<line>Deviance (-2 log likelihood) = <inu>dv</inu>   <warn><in>warn</in></warn></line>
+<line>Deviance (likelihood ratio) chi-square = <inu>x2</inu>  <pval><inp>p_dev</inp></pval></line>
+<line>Pseudo (McFadden) R-square = <inu>r2</inu></line>
 <line></line>
 <table>
 <tr><th>Label</th><th>Parameter estimate</th><th>Standard error</th><th></th><th></th></tr>
-<block name="est"><tr><td><in>lab</in></td><td><in>b</in></td><td><in>se</in></td><td>z = <in>z</in></td><td><pval><in>p</in></pval></td></tr></block>
+<block name="est"><tr><td><in>lab</in></td><td><inu>b</inu></td><td><inu>se</inu></td><td>z = <inu>z</inu></td><td><pval><inp>p</inp></pval></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Label</th><th>Odds ratio</th><th><ci><in>pc</in>% confidence interval</ci></th></tr>
-<block name="or"><tr><td><in>lab</in></td><td><in>or</in></td><td><ci><in>from</in>  to  <in>to</in></ci></td></tr></block>
+<block name="or"><tr><td><in>lab</in></td><td><inu>or</inu></td><td><ci><inu>from</inu>  to  <inu>to</inu></ci></td></tr></block>
 </table>
 </report>

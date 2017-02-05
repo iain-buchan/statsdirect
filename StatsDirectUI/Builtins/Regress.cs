@@ -6537,7 +6537,7 @@ namespace StatsDirect.Builtins
             }
             double yval = a + b * xval;
             outputParameters.AddOutput("x_lab", Label[0]);
-            outputParameters.AddOutput("x", host.RoundU(xval));
+            outputParameters.AddOutput("x", xval);
             if (Model == 1)
             {
                 yval = PDF.alnorm(yval);
@@ -6546,11 +6546,11 @@ namespace StatsDirect.Builtins
             {
                 yval = Math.Exp(yval * 2.0) / (1.0 + Math.Exp(yval * 2.0));
             }
-            outputParameters.AddOutput("resp", host.RoundU(yval));
+            outputParameters.AddOutput("resp", yval);
             if (C2 > 0)
             {
                 yval = C2 + yval * (1.0 - C2);
-                outputParameters.AddOutput("mort", "Incorporating natural mortality, proportional response = " + yval.ToString());
+                outputParameters.AddOutput("mort", "Incorporating natural mortality, proportional response = " + yval);
             }
             else
             {
@@ -6579,7 +6579,7 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("resp", host.RoundU(yval));
+            outputParameters.AddOutput("resp", yval);
             outputParameters.AddOutput("mort", C2 > 0 ? "Not considering natural mortality." : string.Empty);
             if (Model == 1)
             {
@@ -6596,7 +6596,7 @@ namespace StatsDirect.Builtins
                 qdose = Math.Exp(qdose * Math.Log(10.0));
             }
             outputParameters.AddOutput("x_lab", Label[0]);
-            outputParameters.AddOutput("x", host.RoundU(qdose));
+            outputParameters.AddOutput("x", qdose);
             return outputParameters;
         }
 
@@ -6631,20 +6631,20 @@ namespace StatsDirect.Builtins
             int i;
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("itr", laps.ToString());
-            outputParameters.AddOutput("sxx", host.RoundU(S1));
-            outputParameters.AddOutput("sxy", host.RoundU(S2));
-            outputParameters.AddOutput("syy", host.RoundU(S3));
-            outputParameters.AddOutput("var_b", host.RoundU(varb));
+            outputParameters.AddOutput("itr", laps);
+            outputParameters.AddOutput("sxx", S1);
+            outputParameters.AddOutput("sxy", S2);
+            outputParameters.AddOutput("syy", S3);
+            outputParameters.AddOutput("var_b", varb);
             if (hetp < 0.05)
             {
                 outputParameters.AddOutput("het", "with heterogeneity");
-                outputParameters.AddOutput("seb", host.RoundU(seh));
+                outputParameters.AddOutput("seb", seh);
             }
             else
             {
                 outputParameters.AddOutput("het", "without heterogeneity");
-                outputParameters.AddOutput("seb", host.RoundU(se));
+                outputParameters.AddOutput("seb", se);
             }
             if (C1 != 0)
             {
@@ -6652,16 +6652,16 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*natural", naturalList);
                 ParameterBag naturalParameters = new ParameterBag();
                 naturalList.Add(naturalParameters);
-                naturalParameters.AddOutput("c", host.RoundU(C2));
+                naturalParameters.AddOutput("c", C2);
                 if (hetp < 0.05)
                 {
                     naturalParameters.AddOutput("het_c", "with heterogeneity");
-                    naturalParameters.AddOutput("seb_c", host.RoundU(cseh));
+                    naturalParameters.AddOutput("seb_c", cseh);
                 }
                 else
                 {
                     naturalParameters.AddOutput("het_c", "without heterogeneity");
-                    naturalParameters.AddOutput("seb_c", host.RoundU(cse));
+                    naturalParameters.AddOutput("seb_c", cse);
                 }
             }
             else
@@ -6687,11 +6687,11 @@ namespace StatsDirect.Builtins
                 double ex = yval * sv[i];
                 ParameterBag obsParameters = new ParameterBag();
                 obsList.Add(obsParameters);
-                obsParameters.AddOutput("obs", i.ToString());
-                obsParameters.AddOutput("sub", host.RoundU(sv[i]));
-                obsParameters.AddOutput("res", host.RoundU(rv[i]));
-                obsParameters.AddOutput("exp", host.RoundU(ex));
-                obsParameters.AddOutput("dev", host.RoundU(rv[i] - ex));
+                obsParameters.AddOutput("obs", i);
+                obsParameters.AddOutput("sub", sv[i]);
+                obsParameters.AddOutput("res", rv[i]);
+                obsParameters.AddOutput("exp", ex);
+                obsParameters.AddOutput("dev", rv[i] - ex);
             }
             return outputParameters;
         }
