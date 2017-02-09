@@ -1413,6 +1413,7 @@ namespace StatsDirect.UI
                     // If we get here, the Close button closes the operation.
                     // Nuke the cache of starting parameters, so that they are not used by mistake in later tests.
                     knownParameters = null;
+                    pnlFollowOnInstructions.Visible = false;
                     ShowPanel(PanelType.Default, false);
                 }
             }
@@ -1703,6 +1704,7 @@ namespace StatsDirect.UI
         private void CloseCurrentOperation()
         {
             CancelCurrentOperation();
+            pnlFollowOnInstructions.Visible = false;
             ShowPanel(PanelType.Default, false);
         }
 
