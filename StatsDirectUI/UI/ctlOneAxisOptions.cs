@@ -33,6 +33,8 @@ namespace StatsDirect.UI
             scaleTypesInCboScale = new List<ScaleType>();
         }
 
+        public bool IsYAxis { get; set; }
+
         public ICollection<ScaleType> AllowedScaleTypes
         {
             get { return allowedScaleTypes; }
@@ -270,7 +272,7 @@ namespace StatsDirect.UI
                     qMax = v;
             }
             ScaleType selectedScaleType = ScaleType;
-            IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(qMin, DataMinGreaterThanZero, qMax);
+            IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(qMin, DataMinGreaterThanZero, qMax, IsYAxis);
             IList<Tic> tics = axisScale.Tics();
             intervals = tics.Count - 1;
             scaleMinimum = axisScale.MinimumScaleValue;

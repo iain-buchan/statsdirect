@@ -732,6 +732,9 @@ namespace StatsDirect.Charting
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
         protected AxisScales DrawAxesOrEnlargeCanvas(string title, AxisDefinition x, AxisDefinition y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition)
         {
+            // TODO: Fix this so that the user can spec their own scales again!
+            useCalculatedScalesEvenWithDefinition = true;
+
             DefaultAxes(0, 0, x.ExtraSpaceAfterAxisEnds);
             AxisScalesAndExtraSize ases = DrawAxesOrFail(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition);
             if (ases.ExtraSize.Width > 0 || ases.ExtraSize.Height > 0)
@@ -825,10 +828,9 @@ namespace StatsDirect.Charting
                     break;
                 case AxisMode.ReverseScale:
                 case AxisMode.Scale:
-                    yAss = DrawYScale(y.ScaleType, useCalculatedScalesEvenWithDefinition);
-                    break;
                 case AxisMode.ScaleWithoutLabels:
-                    throw new ArgumentException("A Y scale without labels is not currently supported");
+                    yAss = DrawYScale((x.Mode & AxisMode.Labels) == AxisMode.Labels, y.ScaleType, useCalculatedScalesEvenWithDefinition);
+                    break;
                 case AxisMode.Series:
                     if (null != y.Series)
                     {
@@ -913,28 +915,24 @@ namespace StatsDirect.Charting
                         switch (tic.TicType)
                         {
                             case TicType.Minor:
-                                {
-                                    AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
-                                    if (hasGridLines && !drawLabels)
-                                        statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
-                                }
+                                AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
+                                if (hasGridLines && !drawLabels)
+                                    statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
                                 break;
                             case TicType.Major:
                                 //  Major tic - may or may not be labelled
+                                if (drawLabels)
                                 {
-                                    if (drawLabels)
-                                    {
-                                        string lab = tic.Value.ToString(msk);
-                                        labelHeight = Math.Max(AxisDrawStringAtAngleCT(lab, x1, yAxisCanvas - AXIS_BIG_TICK, direction).Height, Convert.ToSingle(labelHeight));
-                                        AxisDrawline(x1, yAxisCanvas - AXIS_BIG_TICK, x1, yAxisCanvas);
-                                    }
-                                    else
-                                    {
-                                        AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
-                                    }
-                                    if (hasGridLines)
-                                        statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
+                                    string lab = tic.Value.ToString(msk);
+                                    labelHeight = Math.Max(AxisDrawStringAtAngleCT(lab, x1, yAxisCanvas - AXIS_BIG_TICK, direction).Height, Convert.ToSingle(labelHeight));
+                                    AxisDrawline(x1, yAxisCanvas - AXIS_BIG_TICK, x1, yAxisCanvas);
                                 }
+                                else
+                                {
+                                    AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
+                                }
+                                if (hasGridLines)
+                                    statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
                                 break;
                         }
                     }
@@ -977,7 +975,7 @@ namespace StatsDirect.Charting
                     return asp.AxisScale;
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
-            return AxisScalerFactory.AxisScalerFor(scaleType).Q_Axis(qmin, qMinGreaterThanZero, qmax);
+            return AxisScalerFactory.AxisScalerFor(scaleType).Q_Axis(qmin, qMinGreaterThanZero, qmax, isY);
         }
 
         private string AxisMaskOrFromDefinition(IAxisScale axisScale, /* double stepp, double znmin, int nstep, int sp, */ bool isY, /* ScaleType scaleType, */ bool UseCalculatedScalesEvenWithDefinition)
@@ -1000,7 +998,7 @@ namespace StatsDirect.Charting
         /// <param name="scaleType"></param>
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
         /// <returns>The width of the axis, ticks, gap to labels, and labels</returns>
-        private AxisScaleAndSize DrawYScale(ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
+        private AxisScaleAndSize DrawYScale(bool drawLabels, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
             const double AXIS_LABEL_OFFSET_FROM_BIG_TICK = 8;
 
@@ -1036,11 +1034,21 @@ namespace StatsDirect.Charting
                         {
                             case TicType.Minor:
                                 AxisDrawline(xAxisCanvas - AXIS_LITTLE_TICK, y1, xAxisCanvas, y1);
+                                if (hasGridLines && !drawLabels)
+                                    statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
                                 break;
                             case TicType.Major:
-                                string lab = tic.Value.ToString(msk);
-                                maxLabelWidth = Math.Max(Convert.ToSingle(maxLabelWidth), AxisDrawStringAtAngleRM(lab, xAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction).Width);
-                                AxisDrawline(xAxisCanvas - AXIS_BIG_TICK, y1, xAxisCanvas, y1);
+                                //  Major tic - may or may not be labelled
+                                if (drawLabels)
+                                {
+                                    string lab = tic.Value.ToString(msk);
+                                    maxLabelWidth = Math.Max(Convert.ToSingle(maxLabelWidth), AxisDrawStringAtAngleRM(lab, xAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction).Width);
+                                    AxisDrawline(xAxisCanvas - AXIS_BIG_TICK, y1, xAxisCanvas, y1);
+                                }
+                                else
+                                {
+                                    AxisDrawline(xAxisCanvas - AXIS_LITTLE_TICK, y1, xAxisCanvas, y1);
+                                }
                                 if (hasGridLines)
                                     statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
                                 break;

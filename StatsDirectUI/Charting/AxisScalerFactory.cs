@@ -13,7 +13,7 @@ namespace StatsDirect.Charting
                     throw new NotImplementedException("Axis scales are only for scale axes - AxisScalerFactory should never be asked for a scaler for a category axis");
                 case ScaleType.Date: // TODO: Eventually dates should use a different scaler as e.g. weeks, months might be useful intervals.
                 case ScaleType.Linear:
-                    return new NewLinearAxisScaler();
+                    return new TalbotLinHanrahanAxisScaler();
                 case ScaleType.Log10:
                     return new Log10AxisScaler();
                 case ScaleType.LogNatural:

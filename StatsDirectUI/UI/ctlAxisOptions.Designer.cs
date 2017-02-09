@@ -75,6 +75,7 @@
             // 
             this.ctlOneAxisOptionsX.AutoSize = true;
             this.ctlOneAxisOptionsX.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ctlOneAxisOptionsX.IsYAxis = false;
             this.ctlOneAxisOptionsX.Location = new System.Drawing.Point(0, 0);
             this.ctlOneAxisOptionsX.Margin = new System.Windows.Forms.Padding(0);
             this.ctlOneAxisOptionsX.Name = "ctlOneAxisOptionsX";
@@ -86,6 +87,7 @@
             // 
             this.ctlOneAxisOptionsY.AutoSize = true;
             this.ctlOneAxisOptionsY.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ctlOneAxisOptionsX.IsYAxis = true;
             this.ctlOneAxisOptionsY.Location = new System.Drawing.Point(0, 0);
             this.ctlOneAxisOptionsY.Margin = new System.Windows.Forms.Padding(0);
             this.ctlOneAxisOptionsY.Name = "ctlOneAxisOptionsY";

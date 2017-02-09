@@ -17,7 +17,7 @@ namespace StatsDirect.Charting
         /// <param name="something"></param>
         /// <returns></returns>
 
-        public IAxisScale Q_Axis(double qmin, double qMinGreaterThanZero, double qmax)
+        public IAxisScale Q_Axis(double qmin, double qMinGreaterThanZero, double qmax, bool isYAxis)
         {
             double range = niceNum(qmax - qmin, false);
             double tickSpacing = niceNum(range / (maxTicks - 1), true);

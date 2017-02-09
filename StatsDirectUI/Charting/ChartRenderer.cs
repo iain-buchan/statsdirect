@@ -1312,7 +1312,7 @@ namespace StatsDirect.Charting
                                 DataMaxY = mxy;
                         }
 
-                        // Draw the axes.
+                        // Draw the axes
                         DrawAxesOrFail(title,
                             new AxisDefinition(histOptions.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
                             new AxisDefinition(histOptions.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
@@ -3259,7 +3259,7 @@ namespace StatsDirect.Charting
                     break;
             }
 
-            ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinY, 0, DataMaxY);
+            ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinY, 0, DataMaxY, true);
             DataMinY = axisScale.MinimumDataValue;
             DataMaxY = axisScale.MaximumDataValue;
             double ymn = axisScale.MinimumScaleValue;
@@ -4174,7 +4174,7 @@ namespace StatsDirect.Charting
             if (DataMinX > orlMin && orlMin != Constant.MISSING)
                 DataMinX = orlMin;
 
-            ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX);
+            ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX, false);
             DataMinX = axisScale.MinimumScaleValue;
             DataMaxX = axisScale.MaximumScaleValue;
 
@@ -4365,7 +4365,7 @@ namespace StatsDirect.Charting
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
                 DataMinX = orlmin;
 
-            xAxisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX);
+            xAxisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX, false);
             DataMinX = xAxisScale.MinimumScaleValue;
             DataMaxX = xAxisScale.MaximumScaleValue;
 

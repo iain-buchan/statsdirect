@@ -123,7 +123,7 @@ namespace StatsDirect.Charting
         public static string PlotMHAndReturnRtf(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
         {
             ChartDefinition cd = new ChartDefinition();
-            cd.ScaleParameters.X.ScaleType = ScaleType.Log10;
+            cd.ScaleParameters.X.ScaleType = ScaleType.LogNatural;
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
             {
                 ch.Plot_MH(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);

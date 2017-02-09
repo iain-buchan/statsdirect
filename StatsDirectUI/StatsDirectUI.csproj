@@ -231,6 +231,8 @@
     <Compile Include="Charting\LinearAxisScaler.cs" />
     <Compile Include="Charting\Log10AxisScaler.cs" />
     <Compile Include="Charting\LogNaturalAxisScaler.cs" />
+    <Compile Include="Charting\TalbotLinHanrahanAxisScale.cs" />
+    <Compile Include="Charting\TalbotLinHanrahanAxisScaler.cs" />
     <Compile Include="Templates\IAxisScale.cs" />
     <Compile Include="Templates\ILinearAxisScale.cs" />
     <Compile Include="Templates\CategoryAxisScale.cs" />
@@ -1904,7 +1906,12 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Layout\Layout.csproj">
+      <Project>{1aa1f23b-bada-4bbd-9b09-8680188b4d4f}</Project>
+      <Name>Layout</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -1928,7 +1935,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
