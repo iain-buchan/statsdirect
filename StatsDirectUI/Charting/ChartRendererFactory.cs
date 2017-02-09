@@ -333,6 +333,8 @@ namespace StatsDirect.Charting
                     return new BarChartRenderer(chartDefinition);
                 case ChartType.BoxWhisker:
                     return new BoxWhiskerChartRenderer(chartDefinition);
+                case ChartType.Control:
+                    return new ControlChartRenderer(chartDefinition);
                 case ChartType.Forest:
                     return new ForestChartRenderer(chartDefinition);
                 case ChartType.Ladder:

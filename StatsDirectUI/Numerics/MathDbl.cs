@@ -412,12 +412,12 @@ namespace StatsDirect.Numerics
 
             double xsum = 0.0;
             int ctr = 0;
-            for (int i = lowerBound; i <= k + lowerBound - 1; i++)
+            for (int i = lowerBound; i < k + lowerBound; i++)
             {
                 if (x[i] != Constant.MISSING)
                 {
-                    ctr = ctr + 1;
-                    xsum = xsum + x[i];
+                    ctr++;
+                    xsum += x[i];
                 }
             }
             if (ctr < 2)
@@ -428,14 +428,10 @@ namespace StatsDirect.Numerics
             }
             xmean = xsum / Convert.ToDouble(k);
             double xss = 0.0;
-            for (int i = lowerBound; i <= k + lowerBound - 1; i++)
-            {
+            for (int i = lowerBound; i < k + lowerBound; i++)
                 if (x[i] != Constant.MISSING)
-                {
-                    xss = xss + (x[i] - xmean) * (x[i] - xmean);
-                }
-            }
-            double xvar = xss / Convert.ToDouble(ctr - 1);
+                    xss += (x[i] - xmean) * (x[i] - xmean);
+            double xvar = xss / (ctr - 1);
             xsd = xvar >= 0 ? Math.Sqrt(xvar) : Constant.MISSING;
             k = ctr;
         }

@@ -227,6 +227,7 @@
     <Compile Include="Charting\AxisMode.cs" />
     <Compile Include="Charting\AxisScalerFactory.cs" />
     <Compile Include="Charting\AxisScales.cs" />
+    <Compile Include="Charting\ControlChartRenderer.cs" />
     <Compile Include="Charting\IAxisScaler.cs" />
     <Compile Include="Charting\LinearAxisScaler.cs" />
     <Compile Include="Charting\Log10AxisScaler.cs" />

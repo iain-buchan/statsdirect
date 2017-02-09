@@ -1305,6 +1305,46 @@ namespace StatsDirect.Charting
             }
         }
 
+        ///  <summary>
+        ///  Draw the set of markers whose centre device co-ordinates are in xys.
+        ///  </summary>
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+        protected void DrawMarkerSeriesInCanvasCoordinates(PointF[] xys, double size, MarkerShape shape, bool isFilled, Pen markerPen, Pen linePen, bool joinMarkersWithLines, bool drawMarkers)
+        {
+            // sort by x, then by y
+            Array.Sort(xys, new SortXThenY());
+
+            PointF oldXy;
+            if (joinMarkersWithLines)
+            {
+                // Plot joining lines
+                // Set initial values so that the first line won't be drawn
+                oldXy = xys[0];
+                foreach (PointF xy in xys)
+                {
+                    if (xy.X >= 0 && xy.Y >= 0 && oldXy.X >= 0 && oldXy.Y >= 0 && (xy.X != oldXy.X || xy.Y != oldXy.Y))
+                    {
+                        DrawLineInCanvasCoordinates(linePen, xy.X, xy.Y, oldXy.X, oldXy.Y);
+                        oldXy = xy;
+                    }
+                }
+            }
+
+            if (drawMarkers)
+            {
+                oldXy = new PointF(-1, -1);
+                foreach (PointF xy in xys)
+                {
+                    if (xy.X != oldXy.X || xy.Y != oldXy.Y)
+                    {
+                        if (xy.X >= 0 && xy.Y >= 0)
+                            DrawMarkerInCanvasCoordinates(xy.X, xy.Y, size, shape, isFilled, markerPen);
+                        oldXy = xy;
+                    }
+                }
+            }
+        }
+
         protected void SetStandardAsciiScaling(int yDivisions)
         {
             divx = AxisXMax - AxisXMin;
@@ -2118,5 +2158,19 @@ namespace StatsDirect.Charting
             public AxisScales AxisScales { get; set; }
             public Size ExtraSize { get; set; }
         }
+
+        ///  <summary>
+        ///  Sometimes we need to draw line charts (for example) with their points sorted.
+        ///  This comparer sorts PointFs by increasing X, then by increasing Y.
+        ///  </summary>
+        private class SortXThenY : IComparer<PointF>
+        {
+            int IComparer<PointF>.Compare(PointF x, PointF y)
+            {
+                float xDiff = x.X - y.X;
+                return xDiff == 0 ? Math.Sign(x.Y - y.Y) : Math.Sign(xDiff);
+            }
+        }
+
     }
 }
