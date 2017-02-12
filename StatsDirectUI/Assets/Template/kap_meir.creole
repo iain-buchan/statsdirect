@@ -12,9 +12,9 @@
 </table>
 <line></line>
 <line>Median survival time = <in>med</in></line>
-<line><ci>Andersen <in>pc</in>% CI</ci> for median survival time = <ci><in>all</in> to <in>aul</in></ci></line>
-<line><ci>Brookmeyer-Crowley <in>pc</in>% CI</ci> for median survival time = <ci><in>bll</in> to <in>bul</in></ci></line>
+<line><ci>Andersen <in>pc</in>% CI</ci> for median survival time = <ci><inu>all</inu> to <inu>aul</inu></ci></line>
+<line><ci>Brookmeyer-Crowley <in>pc</in>% CI</ci> for median survival time = <ci><inu>bll</inu> to <inu>bul</inu></ci></line>
 <line></line>
-<line>Mean survival time <ci>(<in>pc</in>% CI)</ci> <in>lim</in>= <in>mu</in>  <ci>(<in>ll</in> to <in>ul</in>)</ci></line>
+<line>Mean survival time <ci>(<in>pc</in>% CI)</ci> <in>lim</in>= <in>mu</in>  <ci>(<inu>ll</inu> to <inu>ul</inu>)</ci></line>
 </block>
 </report>

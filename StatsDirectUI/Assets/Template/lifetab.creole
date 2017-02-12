@@ -3,11 +3,11 @@
 <line></line>
 <table>
 <tr><th>Interval</th><th>Deaths</th><th>Withdrawn</th><th>At risk</th><th>Adj. at risk</th><th>P(death)</th></tr>
-<block name="deaths"><tr><td><in>int</in></td><td><in>death</in></td><td><in>wdrawn</in></td><td><in>risk</in></td><td><in>nx</in></td><td><in>q</in></td></tr></block>
+<block name="deaths"><tr><td><in>int</in></td><td><in>death</in></td><td><in>wdrawn</in></td><td><in>risk</in></td><td><in>nx</in></td><td><inu>q</inu></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Interval</th><th>P(survival)</th><th>Survivors (l<sub>x</sub>%)</th><th>SD of l<sub>x</sub>%</th><th><ci><in>pc</in>% CI for l<sub>x</sub>%</ci></th></tr>
-<block name="survival"><tr><td><in>int</in></td><td><in>p</in></td><td><in>lx</in></td><td><in>var</in></td><td><ci><in>lci</in>  to  <in>uci</in></ci></td></tr></block>
+<block name="survival"><tr><td><in>int</in></td><td><inu>p</inu></td><td><inu>lx</inu></td><td><in>var</in></td><td><ci><in>lci</in>  to  <in>uci</in></ci></td></tr></block>
 </table>
 </report>

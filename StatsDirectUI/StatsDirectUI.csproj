@@ -1197,14 +1197,22 @@
     <None Include="Assets\Template\glranova.creole" />
     <None Include="Assets\Template\groupedoneway.creole" />
     <None Include="Assets\Template\groupedtwoway.creole" />
-    <None Include="Assets\Template\grpcov.creole" />
-    <None Include="Assets\Template\grprep.creole" />
+    <None Include="Assets\Template\grpcov.creole">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Assets\Template\grprep.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\incid.creole" />
     <None Include="Assets\Template\interlin.creole" />
     <None Include="Assets\Template\INTERP.creole" />
     <None Include="Assets\Template\interpmr.creole" />
-    <None Include="Assets\Template\INTPROBX.creole" />
-    <None Include="Assets\Template\INTPROBY.creole" />
+    <None Include="Assets\Template\INTPROBX.creole">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Assets\Template\INTPROBY.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\irdmeta.creole" />
     <None Include="Assets\Template\irrmeta.creole" />
     <None Include="Assets\Template\kappa.creole" />
@@ -1261,7 +1269,9 @@
     <None Include="Assets\Template\prmatrix.creole" />
     <None Include="Assets\Template\probcal.creole" />
     <None Include="Assets\Template\probit.creole" />
-    <None Include="Assets\Template\probmore.creole" />
+    <None Include="Assets\Template\probmore.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\propmeta.creole" />
     <None Include="Assets\Template\prscores.creole" />
     <None Include="Assets\Template\p_pair.creole" />
@@ -1936,7 +1946,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

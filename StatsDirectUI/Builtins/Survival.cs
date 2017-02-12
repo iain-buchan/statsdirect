@@ -342,8 +342,8 @@ namespace StatsDirect.Builtins
                 }
                 groupParameters.AddOutput("med", imed != 0 ? host.RoundU(stime[imed, lap]) : "can not estimate");
                 groupParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 1));
-                groupParameters.AddOutput("all", host.RoundU(ll));
-                groupParameters.AddOutput("aul", host.RoundU(ul));
+                groupParameters.AddOutput("all", ll);
+                groupParameters.AddOutput("aul", ul);
                 //  Hosmer & Lemeshow
                 //  Brookmeyer R, Crowley JJ. A confidence interval for the median survival time. Biometrics 1982;38:29-41.
                 imed = 0;
@@ -376,7 +376,7 @@ namespace StatsDirect.Builtins
                 }
                 if (ilcl != 0)
                 {
-                    groupParameters.AddOutput("bll", host.RoundU(stime[ilcl, lap]));
+                    groupParameters.AddOutput("bll", stime[ilcl, lap]);
                 }
                 else
                 {
@@ -384,7 +384,7 @@ namespace StatsDirect.Builtins
                 }
                 if (iucl != 0 & iucl <= cnx[lap] & imed > 0)
                 {
-                    groupParameters.AddOutput("bul", host.RoundU(stime[iucl, lap]));
+                    groupParameters.AddOutput("bul", stime[iucl, lap]);
                 }
                 else
                 {
@@ -467,13 +467,13 @@ namespace StatsDirect.Builtins
                     // Hosmer & Lemeshow always multiply by totdead / (totdead - 1#)
                     // SPSS does only if tk is part cens:- emailed Hosmer to check 16/4/00
                     vmu = vmu * totdead / (totdead - 1.0);
-                    groupParameters.AddOutput("ll", host.RoundU(mu - Math.Sqrt(vmu) * cit));
-                    groupParameters.AddOutput("ul", host.RoundU(mu + Math.Sqrt(vmu) * cit));
+                    groupParameters.AddOutput("ll", mu - Math.Sqrt(vmu) * cit);
+                    groupParameters.AddOutput("ul", mu + Math.Sqrt(vmu) * cit);
                 }
                 else
                 {
-                    groupParameters.AddOutput("ll", host.RoundU(Constant.MISSING));
-                    groupParameters.AddOutput("ul", host.RoundU(Constant.MISSING));
+                    groupParameters.AddOutput("ll", Constant.MISSING);
+                    groupParameters.AddOutput("ul", Constant.MISSING);
                 }
                 if (save)
                 {
@@ -1840,9 +1840,9 @@ namespace StatsDirect.Builtins
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("int", LifetabInterval(i, rows, x));
-                inputsParameters.AddOutput("pop", host.RoundU(p[i]));
-                inputsParameters.AddOutput("dead", host.RoundU(d[i]));
-                inputsParameters.AddOutput("rate", host.RoundU(rm[i]));
+                inputsParameters.AddOutput("pop", p[i]);
+                inputsParameters.AddOutput("dead", d[i]);
+                inputsParameters.AddOutput("rate", rm[i]);
             }
 
             // probability of dying q, se, ci
@@ -1855,7 +1855,7 @@ namespace StatsDirect.Builtins
                 ParameterBag pdyingParameters = new ParameterBag();
                 pdyingList.Add(pdyingParameters);
                 pdyingParameters.AddOutput("int", LifetabInterval(i, rows, x));
-                pdyingParameters.AddOutput("q", host.RoundU(q[i]));
+                pdyingParameters.AddOutput("q", q[i]);
                 if (vq[i] < 0.0 | vq[i] == Constant.MISSING)
                 {
                     se = Constant.MISSING;
@@ -1868,9 +1868,9 @@ namespace StatsDirect.Builtins
                     lci = q[i] - cit * se;
                     uci = q[i] + cit * se;
                 }
-                pdyingParameters.AddOutput("se", host.RoundU(se));
-                pdyingParameters.AddOutput("lci", host.RoundU(lci));
-                pdyingParameters.AddOutput("uci", host.RoundU(uci));
+                pdyingParameters.AddOutput("se", se);
+                pdyingParameters.AddOutput("lci", lci);
+                pdyingParameters.AddOutput("uci", uci);
             }
 
             // numbers living, dying from a standard population of usually 100k, fraction of last interval of life a
@@ -1883,7 +1883,7 @@ namespace StatsDirect.Builtins
                 livingParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 livingParameters.AddOutput("l", Convert.ToInt32(sl[i]).ToString());
                 livingParameters.AddOutput("d", Convert.ToInt32(dd[i]).ToString());
-                livingParameters.AddOutput("a", host.RoundU(a[i]));
+                livingParameters.AddOutput("a", a[i]);
             }
 
             // years in interval, years beyond age x(i)
@@ -1906,7 +1906,7 @@ namespace StatsDirect.Builtins
                 ParameterBag expectationParameters = new ParameterBag();
                 expectationList.Add(expectationParameters);
                 expectationParameters.AddOutput("int", LifetabInterval(i, rows, x));
-                expectationParameters.AddOutput("e", host.RoundU(e[i]));
+                expectationParameters.AddOutput("e", e[i]);
                 if (ve[i] < 0.0 | i == rows | ve[i] == Constant.MISSING)
                 {
                     se = Constant.MISSING;
@@ -1919,9 +1919,9 @@ namespace StatsDirect.Builtins
                     lci = e[i] - cit * se;
                     uci = e[i] + cit * se;
                 }
-                expectationParameters.AddOutput("se", host.RoundU(se));
-                expectationParameters.AddOutput("lci", host.RoundU(lci));
-                expectationParameters.AddOutput("uci", host.RoundU(uci));
+                expectationParameters.AddOutput("se", se);
+                expectationParameters.AddOutput("lci", lci);
+                expectationParameters.AddOutput("uci", uci);
             }
 
             // healthy life expectancy
@@ -1943,7 +1943,7 @@ namespace StatsDirect.Builtins
                         eh = Constant.MISSING;
                     else
                         eh = (u[i] * t[i]) / sl[i];
-                    adjustedParameters.AddOutput("eh", host.RoundU(eh));
+                    adjustedParameters.AddOutput("eh", eh);
                 }
             }
             else
@@ -1951,12 +1951,12 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*util", null);
             }
 
-            outputParameters.AddOutput("med", host.RoundU(emd));
-            outputParameters.AddOutput("its", simits.ToString());
-            outputParameters.AddOutput("med_lci", host.RoundU(emdsimll));
-            outputParameters.AddOutput("med_uci", host.RoundU(emdsimul));
+            outputParameters.AddOutput("med", emd);
+            outputParameters.AddOutput("its", simits);
+            outputParameters.AddOutput("med_lci", emdsimll);
+            outputParameters.AddOutput("med_uci", emdsimul);
 
-            outputParameters.AddOutput("elb", host.RoundU(e[1]));
+            outputParameters.AddOutput("elb", e[1]);
             if (ve[1] < 0.0 || ve[1] == Constant.MISSING)
             {
                 se = Constant.MISSING;
@@ -1969,10 +1969,10 @@ namespace StatsDirect.Builtins
                 lci = e[1] - cit * se;
                 uci = e[1] + cit * se;
             }
-            outputParameters.AddOutput("elb_lci", host.RoundU(lci));
-            outputParameters.AddOutput("elb_uci", host.RoundU(uci));
-            outputParameters.AddOutput("elb_mc_lci", host.RoundU(esimll));
-            outputParameters.AddOutput("elb_mc_uci", host.RoundU(esimul));
+            outputParameters.AddOutput("elb_lci", lci);
+            outputParameters.AddOutput("elb_uci", uci);
+            outputParameters.AddOutput("elb_mc_lci", esimll);
+            outputParameters.AddOutput("elb_mc_uci", esimul);
 
             if (saveDetails)
             {
@@ -2192,13 +2192,13 @@ namespace StatsDirect.Builtins
                 else
                     xx = Convert.ToInt32(t[j]).ToString() + " up";
                 deathsParameters.AddOutput("int", xx);
-                deathsParameters.AddOutput("death", d[j].ToString());
-                deathsParameters.AddOutput("wdrawn", w[j].ToString());
-                deathsParameters.AddOutput("risk", natr.ToString());
+                deathsParameters.AddOutput("death", d[j]);
+                deathsParameters.AddOutput("wdrawn", w[j]);
+                deathsParameters.AddOutput("risk", natr);
                 if (j < nt)
                 {
-                    deathsParameters.AddOutput("nx", en1.ToString());
-                    deathsParameters.AddOutput("q", host.RoundU(q));
+                    deathsParameters.AddOutput("nx", en1);
+                    deathsParameters.AddOutput("q", q);
                 }
                 else
                 {
@@ -2214,9 +2214,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag survivalParameters = new ParameterBag();
             survivalList.Add(survivalParameters);
-            survivalParameters.AddOutput("int", Convert.ToInt32(t[1]).ToString() + " to " + Convert.ToInt32(t[2]).ToString());
-            survivalParameters.AddOutput("p", host.RoundU(xp[1]));
-            survivalParameters.AddOutput("lx", host.RoundU(100.0));
+            survivalParameters.AddOutput("int", Convert.ToInt32(t[1]) + " to " + Convert.ToInt32(t[2]));
+            survivalParameters.AddOutput("p", xp[1]);
+            survivalParameters.AddOutput("lx", 100.0);
             survivalParameters.AddOutput("var", nan);
             survivalParameters.AddOutput("lci", nan);
             survivalParameters.AddOutput("uci", nan);
@@ -2250,7 +2250,7 @@ namespace StatsDirect.Builtins
                     xx = Convert.ToInt32(t[j + 1]).ToString() + " up";
                 survivalParameters.AddOutput("int", xx);
                 survivalParameters.AddOutput("p", j < nt - 1 ? host.RoundU(xp[j + 1]) : nan);
-                survivalParameters.AddOutput("lx", host.RoundU(100.0 * cump));
+                survivalParameters.AddOutput("lx", 100.0 * cump);
                 survivalParameters.AddOutput("var", sd);
                 survivalParameters.AddOutput("lci", lc);
                 survivalParameters.AddOutput("uci", uc);
@@ -2573,7 +2573,7 @@ namespace StatsDirect.Builtins
                     outerParameters.AddOutput("title", testname);
                     if (strata != 0)
                     {
-                        outerParameters.AddOutput("strata", " * [STRATUM " + stratum.ToString() + " of " + strata.ToString() + ": " + slab[stratum] + "]");
+                        outerParameters.AddOutput("strata", " * [STRATUM " + stratum + " of " + strata + ": " + slab[stratum] + "]");
                     }
                     else
                     {
@@ -2589,9 +2589,9 @@ namespace StatsDirect.Builtins
                         {
                             ParameterBag groupsParameters = new ParameterBag();
                             groupsList.Add(groupsParameters);
-                            groupsParameters.AddOutput("grp", j.ToString() + " (" + gid + " = " + glab[Convert.ToInt32(gpid[j])] + ")");
-                            groupsParameters.AddOutput("obs", dg[j].ToString());
-                            groupsParameters.AddOutput("ext", host.RoundU(esum[j]));
+                            groupsParameters.AddOutput("grp", j + " (" + gid + " = " + glab[Convert.ToInt32(gpid[j])] + ")");
+                            groupsParameters.AddOutput("obs", dg[j]);
+                            groupsParameters.AddOutput("ext", esum[j]);
                             tesum[j] = tesum[j] + esum[j];
                             tdg[j] = tdg[j] + dg[j];
                             if (esum[j] <= 0)
@@ -2599,7 +2599,7 @@ namespace StatsDirect.Builtins
                                 rr = Constant.MISSING;
                             }
                             else { rr = Convert.ToDouble(dg[j]) / esum[j]; }
-                            groupsParameters.AddOutput("rel", host.RoundU(rr));
+                            groupsParameters.AddOutput("rel", rr);
                         }
                     }
                     else
@@ -2628,7 +2628,7 @@ namespace StatsDirect.Builtins
                         covarParameters.AddOutput("mat", x);
                     }
                     //  test this stratum or whole
-                    outerParameters.AddOutput("chi", host.RoundU(x2));
+                    outerParameters.AddOutput("chi", x2);
                     outerParameters.AddOutput("p",
                                               x2 != Constant.MISSING
                                                   ? host.pval(PDF.chivalp(x2, Convert.ToDouble(groups - 1)))
@@ -2639,8 +2639,8 @@ namespace StatsDirect.Builtins
                         outerParameters.AddOutput("*trends", trendsList);
                         ParameterBag trendsParameters = new ParameterBag();
                         trendsList.Add(trendsParameters);
-                        trendsParameters.AddOutput("trend", host.RoundU(x2T));
-                        trendsParameters.AddOutput("p_trend", host.pval(PDF.chivalp(x2T, 1.0)));
+                        trendsParameters.AddOutput("trend", x2T);
+                        trendsParameters.AddOutput("p_trend", PDF.chivalp(x2T, 1.0));
                     }
                     else
                     {
@@ -2687,10 +2687,10 @@ namespace StatsDirect.Builtins
                         {
                             ParameterBag stratumParameters = new ParameterBag();
                             stratumList.Add(stratumParameters);
-                            stratumParameters.AddOutput("grp", j3.ToString());
-                            stratumParameters.AddOutput("res", tdg[j3].ToString());
-                            stratumParameters.AddOutput("sum", host.RoundU(tesum[j3]));
-                            stratumParameters.AddOutput("tot", host.RoundU(Convert.ToDouble(tdg[j3]) / tesum[j3]));
+                            stratumParameters.AddOutput("grp", j3);
+                            stratumParameters.AddOutput("res", tdg[j3]);
+                            stratumParameters.AddOutput("sum", tesum[j3]);
+                            stratumParameters.AddOutput("tot", Convert.ToDouble(tdg[j3]) / tesum[j3]);
                         }
                         // get U0'inv(V)U0 from combined matrices
                         if (test == 1)
@@ -2743,8 +2743,8 @@ namespace StatsDirect.Builtins
                                 }
                             }
                         }
-                        strataParameters.AddOutput("chi_strata", host.RoundU(x2));
-                        strataParameters.AddOutput("p_strata", host.pval(PDF.chivalp(x2, Convert.ToDouble(groups - 1))));
+                        strataParameters.AddOutput("chi_strata", x2);
+                        strataParameters.AddOutput("p_strata", PDF.chivalp(x2, Convert.ToDouble(groups - 1)));
                         if (groups > 2)
                         {
                             // trend statistic (c'U0)^2 / c'Vc
@@ -2786,8 +2786,8 @@ namespace StatsDirect.Builtins
                             strataParameters.AddOutput("*strata_trend", strataTrendList);
                             ParameterBag strataTrendParameters = new ParameterBag();
                             strataTrendList.Add(strataTrendParameters);
-                            strataTrendParameters.AddOutput("strata_trend", host.RoundU(x2T));
-                            strataTrendParameters.AddOutput("p_strata_trend", host.pval(PDF.chivalp(x2T, 1.0)));
+                            strataTrendParameters.AddOutput("strata_trend", x2T);
+                            strataTrendParameters.AddOutput("p_strata_trend", PDF.chivalp(x2T, 1.0));
                         }
                         else
                         {
@@ -2840,10 +2840,10 @@ namespace StatsDirect.Builtins
                                 }
                                 ParameterBag hazardParameters = new ParameterBag();
                                 hazardList.Add(hazardParameters);
-                                hazardParameters.AddOutput("vs", "Group " + j.ToString() + " vs. Group " + k.ToString());
-                                hazardParameters.AddOutput("haz", host.RoundU(rr));
-                                hazardParameters.AddOutput("from", host.RoundU(rl));
-                                hazardParameters.AddOutput("to", host.RoundU(ru));
+                                hazardParameters.AddOutput("vs", "Group " + j + " vs. Group " + k);
+                                hazardParameters.AddOutput("haz", rr);
+                                hazardParameters.AddOutput("from", rl);
+                                hazardParameters.AddOutput("to", ru);
                             }
                         }
                         if (groups == 2 & strata == 0)
@@ -2853,16 +2853,16 @@ namespace StatsDirect.Builtins
                             ParameterBag cmlParameters = new ParameterBag();
                             cmlList.Add(cmlParameters);
                             // exact Hazard Ratio
-                            cmlParameters.AddOutput("hr", host.RoundU(hr));
+                            cmlParameters.AddOutput("hr", hr);
                             cmlParameters.AddOutput("pc", Formatting.XRound(gamma * 100.0, 2));
-                            cmlParameters.AddOutput("llf", host.RoundU(llf));
-                            cmlParameters.AddOutput("ulf", host.RoundU(ulf));
-                            cmlParameters.AddOutput("p1f", host.pval(p1F));
-                            cmlParameters.AddOutput("p2f", host.pval(p2F));
-                            cmlParameters.AddOutput("llm", host.RoundU(llm));
-                            cmlParameters.AddOutput("ulm", host.RoundU(ulm));
-                            cmlParameters.AddOutput("p1m", host.pval(p1M));
-                            cmlParameters.AddOutput("p2m", host.pval(p2M));
+                            cmlParameters.AddOutput("llf", llf);
+                            cmlParameters.AddOutput("ulf", ulf);
+                            cmlParameters.AddOutput("p1f", p1F);
+                            cmlParameters.AddOutput("p2f", p2F);
+                            cmlParameters.AddOutput("llm", llm);
+                            cmlParameters.AddOutput("ulm", ulm);
+                            cmlParameters.AddOutput("p1m", p1M);
+                            cmlParameters.AddOutput("p2m", p2M);
                         }
                         else
                         {

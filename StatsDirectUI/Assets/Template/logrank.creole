@@ -7,8 +7,8 @@
 <line></line>
 <line><u><subtotal>For group <in>grp</in></subtotal></u></line>
 <line>Observed deaths = <in>obs</in></line>
-<line>Extent of exposure to risk of death = <in>ext</in></line>
-<line>Relative rate = <in>rel</in></line>
+<line>Extent of exposure to risk of death = <inu>ext</inu></line>
+<line>Relative rate = <inu>rel</inu></line>
 </block>
 <line></line>
 <line>test statistics:</line>
@@ -17,33 +17,33 @@
 <line>variance-covariance matrix:</line>
 <block name="covar"><line><in>mat</in></line></block>
 <line></line>
-<line>Chi-square for equivalence of death rates = <in>chi</in>  <pval><in>p</in></pval></line>
-<block name="trends"><line>Chi-square for trend = <in>trend</in> <pval> <in>p_trend</in></pval></line></block>
+<line>Chi-square for equivalence of death rates = <inu>chi</inu>  <pval><in>p</in></pval></line>
+<block name="trends"><line>Chi-square for trend = <inu>trend</inu> <pval> <inp>p_trend</inp></pval></line></block>
 <block name="strata">
 <line></line>
 <line><title><in>test</in> for COMBINED STRATA</title><subtotal>:</subtotal></line>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Deaths</th><th>Extent of exposure to risk of death</th><th>Relative rate</th></tr>
-<block name="stratum"><tr><td><in>grp</in></td><td><in>res</in></td><td><in>sum</in></td><td><in>tot</in></td></tr></block>
+<block name="stratum"><tr><td><in>grp</in></td><td><in>res</in></td><td><inu>sum</inu></td><td><inu>tot</inu></td></tr></block>
 </table>
 <line></line>
-<line>overall chi-square = <in>chi_strata</in>  <pval><in>p_strata</in></pval></line>
-<block name="strata_trend"><line>Chi-square for trend = <in>strata_trend</in><pval>  <in>p_strata_trend</in></pval></line></block>
+<line>overall chi-square = <inu>chi_strata</inu>  <pval><inp>p_strata</inp></pval></line>
+<block name="strata_trend"><line>Chi-square for trend = <inu>strata_trend</inu><pval>  <inp>p_strata_trend</inp></pval></line></block>
 </block>
 <block name="hazards">
 <line></line>
 <line></line>
 <line>Hazard Ratio  <ci>(approximate <in>pc</in>% confidence interval)</ci></line>
-<block name="hazard"><line><in>vs</in> = <in>haz</in>  <ci>(<in>from</in> to <in>to</in>)</ci></line></block>
+<block name="hazard"><line><in>vs</in> = <inu>haz</inu>  <ci>(<inu>from</inu> to <inu>to</inu>)</ci></line></block>
 <block name="cml">
 <line></line>
 <line>Conditional maximum likelihood estimates:</line>
-<line>Hazard Ratio = <in>hr</in></line>
-<line><ci>Exact Fisher <in>pc</in>% confidence interval = <in>llf</in> to <in>ulf</in></ci></line>
-<line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
-<line><ci>Exact mid-P <in>pc</in>% confidence interval = <in>llm</in> to <in>ulm</in></ci></line>
-<line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></line>
+<line>Hazard Ratio = <inu>hr</inu></line>
+<line><ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu> to <inu>ulf</inu></ci></line>
+<line><pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval></line>
+<line><ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu> to <inu>ulm</inu></ci></line>
+<line><pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></line>
 </block>
 </block>
 </block>
