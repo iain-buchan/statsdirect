@@ -80,7 +80,7 @@ namespace StatsDirect.Charting
 
             return new ScaleParameters
             {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.LogNatural, ScaleType.Log10 }, Min = DataMinX, MinGreaterThanZero = DataMinGreaterThanZeroX, Max = DataMaxX },
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear, /* ScaleType.LogNatural, */ ScaleType.Log10 }, Min = DataMinX, MinGreaterThanZero = DataMinGreaterThanZeroX, Max = DataMaxX },
                 Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
             };
         }
@@ -111,6 +111,7 @@ namespace StatsDirect.Charting
             int kok = 0;
             DataMaxX = double.NegativeInfinity;
             DataMinX = double.PositiveInfinity;
+            DataMinGreaterThanZeroX = double.PositiveInfinity;
             double max_gn = double.NegativeInfinity;
 
             for (int i = 0; i < k; i++)
@@ -127,6 +128,8 @@ namespace StatsDirect.Charting
                         DataMaxX = odr[i];
                     if (odr[i] < DataMinX && odr[i] > 0)
                         DataMinX = odr[i];
+                    if (odr[i] > 0 && odr[i] < DataMinGreaterThanZeroX)
+                        DataMinGreaterThanZeroX = odr[i];
                     if (odrl[i] > odru[i])
                     {
                         double tmp = odrl[i];
@@ -150,6 +153,7 @@ namespace StatsDirect.Charting
                 if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
                     absmin = Math.Abs(odru[i]);
             }
+            DataMinGreaterThanZeroX = DataMinX;
 
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 

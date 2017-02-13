@@ -4022,13 +4022,9 @@ namespace StatsDirect.Charting
             double orlmin = double.PositiveInfinity;
             double max_gn = double.NegativeInfinity;
 
-            // int tics;
-            // double[] tic;
-
             switch (xform)
             {
                 case Transformation.Log:
-                    // We will be labelling as logs and plotting log-linear values
                     {
                         for (int i = 1; i <= k; i++)
                         {
@@ -4135,7 +4131,6 @@ namespace StatsDirect.Charting
             DataMinX = ormin;
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
                 DataMinX = orlmin;
-            // TODO: Is this always correct?
             DataMinGreaterThanZeroX = DataMinX;
 
             double rgap = 0;
@@ -4230,10 +4225,8 @@ namespace StatsDirect.Charting
                                     xm = ToCanvasX(MathDbl.rtoz(odr[i]));
                                     break;
                                 case Transformation.None:
-                                    xm = ToCanvasX(odr[i]);
-                                    break;
                                 case Transformation.Log:
-                                    xm = ToCanvasX(Math.Log10(odr[i]));
+                                    xm = ToCanvasX(odr[i]);
                                     break;
                             }
 
@@ -4248,7 +4241,7 @@ namespace StatsDirect.Charting
                             switch (xform)
                             {
                                 case Transformation.Log:
-                                    xl = ToCanvasX(Math.Log10(odrl[i]));
+                                    xl = ToCanvasX(odrl[i]);
                                     break;
                                 case Transformation.Z:
                                     xl = ToCanvasX(MathDbl.rtoz(odrl[i]));
@@ -4263,7 +4256,7 @@ namespace StatsDirect.Charting
                         switch (xform)
                         {
                             case Transformation.Log:
-                                xr = ToCanvasX(Math.Log10(odru[i]));
+                                xr = ToCanvasX(odru[i]);
                                 break;
                             case Transformation.Z:
                                 xr = ToCanvasX(MathDbl.rtoz(odru[i]));
@@ -4306,8 +4299,6 @@ namespace StatsDirect.Charting
                             DrawLineInCanvasCoordinates(linePen, xr, yc, xl, yc);
                             if (pg[i] < 0)
                             {
-                                // double ll = odrl[ i ]; 
-                                // double ul = odru[ i ]; 
                                 rmh = odr[i];
                                 // pooled effect marker
                                 DrawLineInCanvasCoordinates(pooledEffectPen, xm, yt, xm, ToCanvasY(k - 0.5));
@@ -4325,8 +4316,7 @@ namespace StatsDirect.Charting
                         // Don't care
                         break;
                     case Transformation.Log:
-                        // Used to be 1 but now we are plotting on log-linear scale
-                        noEffectPosition = 0;
+                        noEffectPosition = 1;
                         break;
                     case Transformation.None:
                         noEffectPosition = 0;
@@ -4339,7 +4329,7 @@ namespace StatsDirect.Charting
                     switch (xform)
                     {
                         case Transformation.Z:
-                            throw new Exception("Shoudn't be plotting no effect marker with a correlation plot");
+                            throw new Exception("Shouldn't be plotting no effect marker with a correlation plot");
                         default:
                             xm = ToCanvasX(noEffectPosition);
                             break;

@@ -24,7 +24,9 @@ namespace StatsDirect.Charting
 
         public static string PlotCorrelationAndReturnRtf(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(new ChartDefinition()))
+            ChartDefinition cd = new ChartDefinition();
+            cd.ScaleParameters.X.ScaleType = ScaleType.Log10;
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
             {
                 ch.PlotCorrelation(k, title, odr, odrl, odru, gn, pg, cap, qid, xform, isDifference);
                 return Render(ch);
@@ -123,7 +125,7 @@ namespace StatsDirect.Charting
         public static string PlotMHAndReturnRtf(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
         {
             ChartDefinition cd = new ChartDefinition();
-            cd.ScaleParameters.X.ScaleType = ScaleType.LogNatural;
+            cd.ScaleParameters.X.ScaleType = ScaleType.Log10;
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
             {
                 ch.Plot_MH(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
