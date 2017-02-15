@@ -206,9 +206,9 @@ namespace StatsDirect.Charting
 
             int r = 0;
 
-            using (Pen effectTenPen = GetLinePen(SharedMarkerTypes[10], false),
+            using (Pen effectTenPen = GetLinePen(MarkerTypes[10], false),
                 ciPen = GetLinePen(studyMarkerType, true),
-                dotPen = GetMarkerPen(SharedMarkerTypes[10]),
+                dotPen = GetMarkerPen(MarkerTypes[10]),
                 pooledCiPen = GetLinePen(pooledMarkerType, true))
             {
                 double yt = 0;

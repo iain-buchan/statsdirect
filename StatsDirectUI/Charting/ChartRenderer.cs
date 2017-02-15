@@ -566,7 +566,7 @@ namespace StatsDirect.Charting
                     string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[k - 1].Label;
                     if (!use_marker)
                     {
-                        using (Pen legendPen = GetLinePen(SharedMarkerTypes[(k - 1) % 9], true))
+                        using (Pen legendPen = GetLinePen(MarkerTypes[(k - 1) % 9], true))
                         {
                             DrawLineInCanvasCoordinates(legendPen, 10, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k));
                             DrawLineInCanvasCoordinates(legendPen, 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 28 - (size2 * k));
@@ -574,7 +574,7 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, SharedMarkerTypes[(k - 1) % 9]);
+                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, MarkerTypes[(k - 1) % 9]);
                     }
                     DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - (size2 * k));
                 }
@@ -587,7 +587,7 @@ namespace StatsDirect.Charting
                     string vq = "Stratum " + k;
                     if (!(use_marker))
                     {
-                        using (Pen legendPen = GetLinePen(SharedMarkerTypes[(k - 1) % 9], true))
+                        using (Pen legendPen = GetLinePen(MarkerTypes[(k - 1) % 9], true))
                         {
                             DrawLineInCanvasCoordinates(legendPen, 10, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k));
                             DrawLineInCanvasCoordinates(legendPen, 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 28 - (size2 * k));
@@ -595,7 +595,7 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, SharedMarkerTypes[(k - 1) % 9]);
+                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, MarkerTypes[(k - 1) % 9]);
                     }
                     DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - (size2 * k));
                 }
@@ -620,7 +620,7 @@ namespace StatsDirect.Charting
             double iy1 = iy0;
             int igp = 0;
 
-            MarkerType mt = SharedMarkerTypes[igp % 9];
+            MarkerType mt = MarkerTypes[igp % 9];
             Pen markerPen = GetMarkerPen(mt);
             Pen linePen = GetLinePen(mt, true);
             MarkerShape shape = mt.MarkerShape;
@@ -635,7 +635,7 @@ namespace StatsDirect.Charting
                     iy1 = iy0;
                     markerPen.Dispose();
                     linePen.Dispose();
-                    mt = SharedMarkerTypes[igp % 9];
+                    mt = MarkerTypes[igp % 9];
                     markerPen = GetMarkerPen(mt);
                     linePen = GetLinePen(mt, true);
                     shape = mt.MarkerShape;
@@ -1180,13 +1180,10 @@ namespace StatsDirect.Charting
 
                     StartVectorPlot();
 
-                    originalMarkerTypes = SharedMarkerTypes;
-                    SharedMarkerTypes = new MarkerType[originalMarkerTypes.Length];
+                    originalMarkerTypes = MarkerTypes;
+                    PushAndCloneMarkerTypes();
                     for (int i = 0; i < originalMarkerTypes.Length; i++)
-                    {
-                        SharedMarkerTypes[i] = originalMarkerTypes[i].Clone();
-                        SharedMarkerTypes[i].Width = histOptions.LineWidth;
-                    }
+                        MarkerTypes[i].Width = histOptions.LineWidth;
                     AssignMarkersToSeries(seriesToUse);
 
                     if (!(string.IsNullOrEmpty(histOptions.AxisFontDescriptor)))
@@ -1358,7 +1355,7 @@ namespace StatsDirect.Charting
                 if (originalMarkerTypes != null)
                 {
                     //  TODO: Resource leak on pens?
-                    SharedMarkerTypes = originalMarkerTypes;
+                    PopMarkerTypes();
                 }
             }
         }
@@ -1644,7 +1641,7 @@ namespace StatsDirect.Charting
             DrawAxesOrEnlargeCanvas(rOptions.Title, new AxisDefinition("1-Specificity", AxisMode.Scale, ScaleType.Linear), new AxisDefinition("Sensitivity", AxisMode.Scale, ScaleType.Linear), true, false);
 
             // null effect diagonal
-            using (Pen tenPenDiagonal = new Pen(SharedMarkerTypes[10].LineColor, rOptions.AxisLineThickness))
+            using (Pen tenPenDiagonal = new Pen(MarkerTypes[10].LineColor, rOptions.AxisLineThickness))
             {
                 DrawLineInCanvasCoordinates(tenPenDiagonal, xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas);
             }
@@ -2243,7 +2240,7 @@ namespace StatsDirect.Charting
                     if (bnam[g].Length > 0)
                     {
                         int mkr = ChartOptions.SeriesNumberToMarkerNumber(g - 1);
-                        DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, yAxisCanvas + yExtCanvas - LEGEND_MARKER_Y_OFFSET - (size2 * g), LEGEND_MARKER_SIZE, SharedMarkerTypes[mkr]); //  TODO: Broken?
+                        DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, yAxisCanvas + yExtCanvas - LEGEND_MARKER_Y_OFFSET - (size2 * g), LEGEND_MARKER_SIZE, MarkerTypes[mkr]); //  TODO: Broken?
                         DrawStringLegendL(bnam[g], LEGEND_TEXT_X, yAxisCanvas + yExtCanvas - 10 - (size2 * g));
                     }
                 }
@@ -2253,7 +2250,7 @@ namespace StatsDirect.Charting
             for (int g = 1; g <= ng; g++)
             {
                 int mkr = ChartOptions.SeriesNumberToMarkerNumber(g - 1);
-                MarkerType t = SharedMarkerTypes[mkr];
+                MarkerType t = MarkerTypes[mkr];
                 using (Pen p = GetMarkerPen(t))
                 {
                     double minx = double.MaxValue;
@@ -2408,7 +2405,7 @@ namespace StatsDirect.Charting
                 // null effect diagonal
                 DrawLineInChartCoordinates(grBlack, AxisXMin, AxisYMin, AxisXMax, AxisYMax);
                 // pooled event rate
-                using (Pen blackFXPen = GetLinePen(SharedMarkerTypes[10], false))
+                using (Pen blackFXPen = GetLinePen(MarkerTypes[10], false))
                 {
                     double x1;
                     double y1;
@@ -2452,7 +2449,7 @@ namespace StatsDirect.Charting
                     x[i] = o[i, 2] / (o[i, 2] + o[i, 4]);
                 w[i] = o[i, 1] + o[i, 2] + o[i, 3] + o[i, 4];
             }
-            PlotXYZ(x, y, w, 1, k, "control percent", "experimental percent", "L'Abbe plot (symbol size represents sample size)", false, 0, SharedMarkerTypes[0], rmh);
+            PlotXYZ(x, y, w, 1, k, "control percent", "experimental percent", "L'Abbe plot (symbol size represents sample size)", false, 0, MarkerTypes[0], rmh);
         }
 
         private ScaleParameters GetErrorBarScaleParameters()
@@ -2831,7 +2828,7 @@ namespace StatsDirect.Charting
             // plot the points
             for (int r = 1; r <= rows; r++)
                 if (xx[r] != Constant.MISSING & y[r] != Constant.MISSING)
-                    DrawMarkerInChartCoordinates(xx[r], y[r], 6, SharedMarkerTypes[0]);
+                    DrawMarkerInChartCoordinates(xx[r], y[r], 6, MarkerTypes[0]);
 
             using (Pen blackPen = new Pen(grBlack, 1))
             {
@@ -2976,7 +2973,7 @@ namespace StatsDirect.Charting
                     {
                         x1 = ToCanvasX(x[r]);
                         y1 = ToCanvasY(y[r]);
-                        DrawMarkerInCanvasCoordinates(x1, y1, 6, SharedMarkerTypes[0]);
+                        DrawMarkerInCanvasCoordinates(x1, y1, 6, MarkerTypes[0]);
                     }
                 }
             }
@@ -3027,7 +3024,7 @@ namespace StatsDirect.Charting
             double mxdMin;
             double mxdMax;
             GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType, out mxdMin, out mxdMax);
-            using (Pen p = GetMarkerPen(SharedMarkerTypes[0]))
+            using (Pen p = GetMarkerPen(MarkerTypes[0]))
             {
                 if (aOptions.HasLimits)
                 {
@@ -3041,7 +3038,7 @@ namespace StatsDirect.Charting
                     string ytxt = definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "difference";
-                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, SharedMarkerTypes[0].MarkerSize, SharedMarkerTypes[0].MarkerShape, SharedMarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
+                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, MarkerTypes[0].MarkerSize, MarkerTypes[0].MarkerShape, MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
                 }
                 else
                 {
@@ -3051,7 +3048,7 @@ namespace StatsDirect.Charting
                     string ytxt = definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "maximum difference";
-                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, SharedMarkerTypes[0].MarkerSize, SharedMarkerTypes[0].MarkerShape, SharedMarkerTypes[0].IsMarkerFilled, p, false);
+                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, MarkerTypes[0].MarkerSize, MarkerTypes[0].MarkerShape, MarkerTypes[0].IsMarkerFilled, p, false);
                 }
             }
 
@@ -3365,11 +3362,11 @@ namespace StatsDirect.Charting
                     string vq = glab[k];
                     if (marker)
                     {
-                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, SharedMarkerTypes[(k - 1) % 9]);
+                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, MarkerTypes[(k - 1) % 9]);
                     }
                     else
                     {
-                        using (Pen p = GetMarkerPen(SharedMarkerTypes[(k - 1) % 9]))
+                        using (Pen p = GetMarkerPen(MarkerTypes[(k - 1) % 9]))
                         {
                             DrawLineInCanvasCoordinates(p, 10, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k));
                             DrawLineInCanvasCoordinates(p, 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 28 - (size2 * k));
@@ -3380,7 +3377,7 @@ namespace StatsDirect.Charting
             }
             for (int k = 1; k <= groups; k++)
             {
-                MarkerType mt = SharedMarkerTypes[(k - 1) % 9];
+                MarkerType mt = MarkerTypes[(k - 1) % 9];
                 using (Pen p = GetMarkerPen(mt))
                 {
                     double x1; double y1;
@@ -3537,10 +3534,10 @@ namespace StatsDirect.Charting
             };
 
             using (Pen ciPen = GetLinePen(studyMarkerType, true),
-                dotPen = GetMarkerPen(SharedMarkerTypes[10]),
+                dotPen = GetMarkerPen(MarkerTypes[10]),
                 pooledCiPen = GetLinePen(pooledMarkerType, true),
-                tenPenTrue = GetMarkerPen(SharedMarkerTypes[10]),
-                pooledEffectPen = GetLinePen(SharedMarkerTypes[10], false))
+                tenPenTrue = GetMarkerPen(MarkerTypes[10]),
+                pooledEffectPen = GetLinePen(MarkerTypes[10], false))
             {
                 int r = 0;
                 double txh = MeasureStringInCanvasCoordinates(title[1], labelFont).Height;
@@ -3758,9 +3755,9 @@ namespace StatsDirect.Charting
                 Width = 1
             };
 
-            using (Pen tenPenTrue = GetLinePen(SharedMarkerTypes[10], true),
-                dotPen = GetMarkerPen(SharedMarkerTypes[10]),
-                tenPenFalse = GetLinePen(SharedMarkerTypes[10], false))
+            using (Pen tenPenTrue = GetLinePen(MarkerTypes[10], true),
+                dotPen = GetMarkerPen(MarkerTypes[10]),
+                tenPenFalse = GetLinePen(MarkerTypes[10], false))
             {
                 int r = 0;
                 double yc = 0;
@@ -3924,7 +3921,7 @@ namespace StatsDirect.Charting
             offy = yAxisCanvas;
             yAxisScale = new CategoryAxisScale((int)divy);
 
-            using (Pen linePen = GetLinePen(SharedMarkerTypes[10], true))
+            using (Pen linePen = GetLinePen(MarkerTypes[10], true))
             {
                 double yc = 0;
                 double yt = 0;
@@ -3976,7 +3973,7 @@ namespace StatsDirect.Charting
                     DrawDiamondInCanvasCoordinates(linePen, xm, yc, y2 * 2, false);
                     DrawLineInCanvasCoordinates(linePen, xr, yc, xl, yc);
                     // pooled effect marker
-                    using (Pen pooledEffectPen = GetLinePen(SharedMarkerTypes[10], false))
+                    using (Pen pooledEffectPen = GetLinePen(MarkerTypes[10], false))
                     {
                         DrawLineInCanvasCoordinates(pooledEffectPen, xm, save_yc, xm, yt);
                     }
@@ -4195,10 +4192,10 @@ namespace StatsDirect.Charting
                 Width = 1
             };
 
-            using (Pen markerPen = GetMarkerPen(SharedMarkerTypes[10]),
-                linePen = GetLinePen(SharedMarkerTypes[10], true),
-                pooledEffectPen = GetLinePen(SharedMarkerTypes[10], false),
-                dotPen = GetMarkerPen(SharedMarkerTypes[10]))
+            using (Pen markerPen = GetMarkerPen(MarkerTypes[10]),
+                linePen = GetLinePen(MarkerTypes[10], true),
+                pooledEffectPen = GetLinePen(MarkerTypes[10], false),
+                dotPen = GetMarkerPen(MarkerTypes[10]))
             {
                 double rmh = -99;
                 int r = 0;

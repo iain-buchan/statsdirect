@@ -189,7 +189,7 @@ namespace StatsDirect.Charting
 
                 double xstep = xExtCanvas / 2;
                 double xc = xAxisCanvas + xstep;
-                using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
+                using (Pen blackPen = GetMarkerPen(MarkerTypes[10]))
                 {
                     for (int i = 0; i < nmale; i++)
                     {

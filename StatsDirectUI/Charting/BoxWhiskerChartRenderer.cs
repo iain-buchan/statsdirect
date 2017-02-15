@@ -95,7 +95,7 @@ namespace StatsDirect.Charting
             AssignMarkersToSeries();
 
             DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
-            MarkerType mt = SharedMarkerTypes[10];
+            MarkerType mt = MarkerTypes[10];
             Color black = Color.Black;
             MarkerType crossMarker = new MarkerType() { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
             MarkerType filledDiamondMarker = new MarkerType() { MarkerShape = MarkerShape.Diamond, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
@@ -389,9 +389,9 @@ namespace StatsDirect.Charting
 
             DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
 
-            using (Pen blackPen = GetMarkerPen(SharedMarkerTypes[10]))
+            using (Pen blackPen = GetMarkerPen(MarkerTypes[10]))
             {
-                using (Pen dottedBlackPen = GetMarkerPen(SharedMarkerTypes[10]))
+                using (Pen dottedBlackPen = GetMarkerPen(MarkerTypes[10]))
                 {
                     dottedBlackPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
 

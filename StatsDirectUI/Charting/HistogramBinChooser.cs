@@ -51,7 +51,7 @@ namespace StatsDirect.Charting
             sx.FullSummaryFromX(sortedX, length, null, 0.95, 5, 95, 1);
 
             double sigmaG1 = Math.Sqrt(6.0 * (length - 2.0) / ((length + 1.0) * (length + 3.0)));
-            double skewTerm = Math.Abs(sx.Skewness / sigmaG1);
+            double skewTerm = sx.Skewness == Constant.MISSING ? 0 : Math.Abs(sx.Skewness / sigmaG1);
             double k = 1 + Log2(length) + Log2(1 + skewTerm);
             return MkBinsDescriptor(sortedX, length, (int)Math.Round(k));
         }

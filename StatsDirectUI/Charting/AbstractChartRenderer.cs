@@ -126,7 +126,9 @@ namespace StatsDirect.Charting
         /// <summary>
         /// Default marker types; shared between renderers.
         /// </summary>
-        protected static MarkerType[] SharedMarkerTypes;
+        private static MarkerType[] sharedMarkerTypes;
+        // TODO: Marker stacks are an abomination for histograms and should be removed forthwith.
+        private Stack<MarkerType[]> markerTypeStack;
 
         protected AbstractChartRenderer(ChartDefinition Definition)
         {
@@ -260,7 +262,7 @@ namespace StatsDirect.Charting
             {
                 if (!AreSharedValuesInitialised)
                     InitSharedValues();
-                return SharedMarkerTypes;
+                return sharedMarkerTypes;
             }
         }
 
@@ -351,9 +353,9 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         private static void InitMarkerTypes()
         {
-            SharedMarkerTypes = new MarkerType[11];
-            for (int i = SharedMarkerTypes.GetLowerBound(0); i <= SharedMarkerTypes.GetUpperBound(0); i++)
-                SharedMarkerTypes[i] = new MarkerType();
+            sharedMarkerTypes = new MarkerType[11];
+            for (int i = sharedMarkerTypes.GetLowerBound(0); i <= sharedMarkerTypes.GetUpperBound(0); i++)
+                sharedMarkerTypes[i] = new MarkerType();
 
             string savedSettings = Settings.Default.Markers;
 
@@ -386,23 +388,23 @@ namespace StatsDirect.Charting
                         int.TryParse(parameterStrings[5], out markerSize);
                     if (markerSize <= 0)
                         markerSize = 6;
-                    SharedMarkerTypes[i].MarkerColor = col;
-                    SharedMarkerTypes[i].LineColor = col;
-                    SharedMarkerTypes[i].IsMarkerFilled = isFilled;
-                    SharedMarkerTypes[i].MarkerSize = markerSize;
-                    SharedMarkerTypes[i].MarkerShape = shape;
-                    SharedMarkerTypes[i].LineDashStyle = style;
-                    SharedMarkerTypes[i].Width = width;
+                    sharedMarkerTypes[i].MarkerColor = col;
+                    sharedMarkerTypes[i].LineColor = col;
+                    sharedMarkerTypes[i].IsMarkerFilled = isFilled;
+                    sharedMarkerTypes[i].MarkerSize = markerSize;
+                    sharedMarkerTypes[i].MarkerShape = shape;
+                    sharedMarkerTypes[i].LineDashStyle = style;
+                    sharedMarkerTypes[i].Width = width;
                 }
 
                 // fixed style
-                SharedMarkerTypes[10].MarkerShape = MarkerShape.Circle;
-                SharedMarkerTypes[10].MarkerColor = Color.Black;
-                SharedMarkerTypes[10].LineColor = Color.Black;
-                SharedMarkerTypes[10].Width = 1;
-                SharedMarkerTypes[10].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
-                SharedMarkerTypes[10].IsMarkerFilled = false;
-                SharedMarkerTypes[10].MarkerSize = 6;
+                sharedMarkerTypes[10].MarkerShape = MarkerShape.Circle;
+                sharedMarkerTypes[10].MarkerColor = Color.Black;
+                sharedMarkerTypes[10].LineColor = Color.Black;
+                sharedMarkerTypes[10].Width = 1;
+                sharedMarkerTypes[10].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                sharedMarkerTypes[10].IsMarkerFilled = false;
+                sharedMarkerTypes[10].MarkerSize = 6;
             }
         }
 
@@ -432,30 +434,30 @@ namespace StatsDirect.Charting
                     savedSettings.Append("|");
                 }
                 //  Shape
-                savedSettings.Append(Convert.ToInt32(SharedMarkerTypes[i].MarkerShape).ToString(CultureInfo.InvariantCulture));
+                savedSettings.Append(Convert.ToInt32(sharedMarkerTypes[i].MarkerShape).ToString(CultureInfo.InvariantCulture));
                 savedSettings.Append(";");
 
                 // Colour.  TODO: Line colour.
-                Color col = SharedMarkerTypes[i].MarkerColor;
+                Color col = sharedMarkerTypes[i].MarkerColor;
                 savedSettings.Append(col.R.ToString(CultureInfo.InvariantCulture));
                 savedSettings.Append(",");
                 savedSettings.Append(col.G.ToString(CultureInfo.InvariantCulture));
                 savedSettings.Append(",");
                 savedSettings.Append(col.B.ToString(CultureInfo.InvariantCulture));
                 savedSettings.Append(";");
-                savedSettings.Append(SharedMarkerTypes[i].Width.ToString(CultureInfo.InvariantCulture));
+                savedSettings.Append(sharedMarkerTypes[i].Width.ToString(CultureInfo.InvariantCulture));
                 savedSettings.Append(";");
 
                 //  Line style
-                savedSettings.Append(Convert.ToInt32(SharedMarkerTypes[i].LineDashStyle).ToString(CultureInfo.InvariantCulture));
+                savedSettings.Append(Convert.ToInt32(sharedMarkerTypes[i].LineDashStyle).ToString(CultureInfo.InvariantCulture));
                 savedSettings.Append(";");
 
                 //  Filled (1/0)
-                savedSettings.Append(SharedMarkerTypes[i].IsMarkerFilled ? "1" : "0");
+                savedSettings.Append(sharedMarkerTypes[i].IsMarkerFilled ? "1" : "0");
                 savedSettings.Append(";");
 
                 //  Marker size
-                savedSettings.Append(SharedMarkerTypes[i].MarkerSize.ToString(CultureInfo.InvariantCulture));
+                savedSettings.Append(sharedMarkerTypes[i].MarkerSize.ToString(CultureInfo.InvariantCulture));
             }
             Settings.Default.Markers = savedSettings.ToString();
             SaveSettings(Settings.Default);
@@ -463,63 +465,63 @@ namespace StatsDirect.Charting
 
         private static void InitFirstMarkerTypes()
         {
-            SharedMarkerTypes[0].MarkerShape = MarkerShape.Circle;
-            SharedMarkerTypes[0].MarkerColor = Color.FromArgb(64, 105, 156);
-            SharedMarkerTypes[0].LineColor = Color.FromArgb(64, 105, 156);
-            SharedMarkerTypes[0].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+            sharedMarkerTypes[0].MarkerShape = MarkerShape.Circle;
+            sharedMarkerTypes[0].MarkerColor = Color.FromArgb(64, 105, 156);
+            sharedMarkerTypes[0].LineColor = Color.FromArgb(64, 105, 156);
+            sharedMarkerTypes[0].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
 
-            SharedMarkerTypes[1].MarkerShape = MarkerShape.Square;
-            SharedMarkerTypes[1].MarkerColor = Color.FromArgb(158, 65, 62);
-            SharedMarkerTypes[1].LineColor = Color.FromArgb(158, 65, 62);
-            SharedMarkerTypes[1].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            sharedMarkerTypes[1].MarkerShape = MarkerShape.Square;
+            sharedMarkerTypes[1].MarkerColor = Color.FromArgb(158, 65, 62);
+            sharedMarkerTypes[1].LineColor = Color.FromArgb(158, 65, 62);
+            sharedMarkerTypes[1].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
 
-            SharedMarkerTypes[2].MarkerShape = MarkerShape.Triangle;
-            SharedMarkerTypes[2].MarkerColor = Color.FromArgb(127, 154, 72);
-            SharedMarkerTypes[2].LineColor = Color.FromArgb(127, 154, 72);
-            SharedMarkerTypes[2].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+            sharedMarkerTypes[2].MarkerShape = MarkerShape.Triangle;
+            sharedMarkerTypes[2].MarkerColor = Color.FromArgb(127, 154, 72);
+            sharedMarkerTypes[2].LineColor = Color.FromArgb(127, 154, 72);
+            sharedMarkerTypes[2].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
 
-            SharedMarkerTypes[3].MarkerShape = MarkerShape.Plus;
-            SharedMarkerTypes[3].MarkerColor = Color.FromArgb(105, 81, 133);
-            SharedMarkerTypes[3].LineColor = Color.FromArgb(105, 81, 133);
-            SharedMarkerTypes[3].LineDashStyle = System.Drawing.Drawing2D.DashStyle.DashDot;
+            sharedMarkerTypes[3].MarkerShape = MarkerShape.Plus;
+            sharedMarkerTypes[3].MarkerColor = Color.FromArgb(105, 81, 133);
+            sharedMarkerTypes[3].LineColor = Color.FromArgb(105, 81, 133);
+            sharedMarkerTypes[3].LineDashStyle = System.Drawing.Drawing2D.DashStyle.DashDot;
 
-            SharedMarkerTypes[4].MarkerShape = MarkerShape.Cross;
-            SharedMarkerTypes[4].MarkerColor = Color.FromArgb(60, 141, 163);
-            SharedMarkerTypes[4].LineColor = Color.FromArgb(60, 141, 163);
-            SharedMarkerTypes[4].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+            sharedMarkerTypes[4].MarkerShape = MarkerShape.Cross;
+            sharedMarkerTypes[4].MarkerColor = Color.FromArgb(60, 141, 163);
+            sharedMarkerTypes[4].LineColor = Color.FromArgb(60, 141, 163);
+            sharedMarkerTypes[4].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
 
-            SharedMarkerTypes[5].MarkerShape = MarkerShape.CircleLine;
-            SharedMarkerTypes[5].MarkerColor = Color.FromArgb(204, 123, 56);
-            SharedMarkerTypes[5].LineColor = Color.FromArgb(204, 123, 56);
-            SharedMarkerTypes[5].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            sharedMarkerTypes[5].MarkerShape = MarkerShape.CircleLine;
+            sharedMarkerTypes[5].MarkerColor = Color.FromArgb(204, 123, 56);
+            sharedMarkerTypes[5].LineColor = Color.FromArgb(204, 123, 56);
+            sharedMarkerTypes[5].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
 
-            SharedMarkerTypes[6].MarkerShape = MarkerShape.SquareLine;
-            SharedMarkerTypes[6].MarkerColor = Color.FromArgb(79, 129, 189);
-            SharedMarkerTypes[6].LineColor = Color.FromArgb(79, 129, 189);
-            SharedMarkerTypes[6].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+            sharedMarkerTypes[6].MarkerShape = MarkerShape.SquareLine;
+            sharedMarkerTypes[6].MarkerColor = Color.FromArgb(79, 129, 189);
+            sharedMarkerTypes[6].LineColor = Color.FromArgb(79, 129, 189);
+            sharedMarkerTypes[6].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
 
-            SharedMarkerTypes[7].MarkerShape = MarkerShape.SquareCross;
-            SharedMarkerTypes[7].MarkerColor = Color.FromArgb(192, 80, 77);
-            SharedMarkerTypes[7].LineColor = Color.FromArgb(192, 80, 77);
-            SharedMarkerTypes[7].LineDashStyle = System.Drawing.Drawing2D.DashStyle.DashDot;
+            sharedMarkerTypes[7].MarkerShape = MarkerShape.SquareCross;
+            sharedMarkerTypes[7].MarkerColor = Color.FromArgb(192, 80, 77);
+            sharedMarkerTypes[7].LineColor = Color.FromArgb(192, 80, 77);
+            sharedMarkerTypes[7].LineDashStyle = System.Drawing.Drawing2D.DashStyle.DashDot;
 
-            SharedMarkerTypes[8].MarkerShape = MarkerShape.Circle;
-            SharedMarkerTypes[8].MarkerColor = Color.FromArgb(155, 187, 89);
-            SharedMarkerTypes[8].LineColor = Color.FromArgb(155, 187, 89);
-            SharedMarkerTypes[8].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+            sharedMarkerTypes[8].MarkerShape = MarkerShape.Circle;
+            sharedMarkerTypes[8].MarkerColor = Color.FromArgb(155, 187, 89);
+            sharedMarkerTypes[8].LineColor = Color.FromArgb(155, 187, 89);
+            sharedMarkerTypes[8].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
 
-            SharedMarkerTypes[9].MarkerShape = MarkerShape.Square;
-            SharedMarkerTypes[9].MarkerColor = Color.FromArgb(128, 100, 162);
-            SharedMarkerTypes[9].LineColor = Color.FromArgb(128, 100, 162);
-            SharedMarkerTypes[9].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            sharedMarkerTypes[9].MarkerShape = MarkerShape.Square;
+            sharedMarkerTypes[9].MarkerColor = Color.FromArgb(128, 100, 162);
+            sharedMarkerTypes[9].LineColor = Color.FromArgb(128, 100, 162);
+            sharedMarkerTypes[9].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
 
             // fixed style
-            SharedMarkerTypes[10].MarkerShape = MarkerShape.Circle;
-            SharedMarkerTypes[10].MarkerColor = Color.Black;
-            SharedMarkerTypes[10].LineColor = Color.Black;
-            SharedMarkerTypes[10].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            sharedMarkerTypes[10].MarkerShape = MarkerShape.Circle;
+            sharedMarkerTypes[10].MarkerColor = Color.Black;
+            sharedMarkerTypes[10].LineColor = Color.Black;
+            sharedMarkerTypes[10].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
 
-            foreach (MarkerType mt in SharedMarkerTypes)
+            foreach (MarkerType mt in sharedMarkerTypes)
             {
                 mt.Width = 1;
                 mt.MarkerSize = 6;
@@ -1766,7 +1768,7 @@ namespace StatsDirect.Charting
             {
                 DoubleSeries ds = ((DoubleSeries)(s[i]));
                 int mkr = ChartOptions.SeriesNumberToMarkerNumber(i);
-                SetSeriesFromMarkerTypeAndOptions(ds, SharedMarkerTypes[mkr], null);
+                SetSeriesFromMarkerTypeAndOptions(ds, MarkerTypes[mkr], null);
             }
         }
 
@@ -1789,7 +1791,7 @@ namespace StatsDirect.Charting
                 {
                     DoubleSeries ds = ((DoubleSeries)(s[i]));
                     int mkr = ChartOptions.SeriesNumberToMarkerNumber(i);
-                    SetSeriesFromMarkerTypeAndOptions(ds, SharedMarkerTypes[mkr], opts);
+                    SetSeriesFromMarkerTypeAndOptions(ds, MarkerTypes[mkr], opts);
                 }
             }
             else
@@ -2142,6 +2144,23 @@ namespace StatsDirect.Charting
         protected int ToAsciiX(double value)
         {
             return Convert.ToInt32(offx + value / divx * 60);
+        }
+
+        protected void PushAndCloneMarkerTypes()
+        {
+            MarkerType[] originalMarkerTypes = sharedMarkerTypes;
+            sharedMarkerTypes = new MarkerType[sharedMarkerTypes.Length];
+            for (int i = 0; i < sharedMarkerTypes.Length; i++)
+                sharedMarkerTypes[i] = originalMarkerTypes[i].Clone();
+            if (null == markerTypeStack)
+                markerTypeStack = new Stack<MarkerType[]>();
+            markerTypeStack.Push(originalMarkerTypes);
+        }
+
+        protected void PopMarkerTypes()
+        {
+            if (null != markerTypeStack && markerTypeStack.Count > 0)
+                sharedMarkerTypes = markerTypeStack.Pop();
         }
 
         public abstract ParameterBag Plot(ITemplateHost host);
