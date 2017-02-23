@@ -1418,9 +1418,9 @@ namespace StatsDirect.Charting
                     // X and Y must have the same scale
                     GetMinMaxArray(x, out axisXMin, out axisXMax, out axisXMinGreaterThanZero);
                     GetMinMaxArray(y, out axisYMin, out axisYMax, out axisYMinGreaterThanZero);
-                    axisYMin = axisXMin = Math.Min(AxisYMin, AxisXMin);
+                    axisYMin = axisXMin = Math.Min(axisYMin, axisXMin);
                     axisYMinGreaterThanZero = axisXMinGreaterThanZero = Math.Min(axisYMinGreaterThanZero, axisXMinGreaterThanZero);
-                    axisYMax = axisXMax = Math.Max(AxisYMax, AxisXMax);
+                    axisYMax = axisXMax = Math.Max(axisYMax, axisXMax);
                     break;
                 case DataMinMax.XCalc_YCalc:
                     GetMinMaxArray(x, out axisXMin, out axisXMax, out axisXMinGreaterThanZero);
@@ -2743,7 +2743,7 @@ namespace StatsDirect.Charting
             string title;
             bool reverse; bool use_ci = false;
             int plotMethod;
-            get_ma_ordinate(host, out y, yy, yw, cl, cu, ref cco, rows, out title, ref ytxt, xtxt, out plotMethod, xform, out reverse, ref use_ci);
+            get_ma_ordinate(host, out y, yy, yw, cl, cu, ref cco, rows, out title, out ytxt, xtxt, out plotMethod, xform, out reverse, ref use_ci);
 
             double[] xx = new double[rows + 1];
             xx[0] = Constant.MISSING;
@@ -2779,7 +2779,7 @@ namespace StatsDirect.Charting
             GetMinMaxArray(y, ScaleType.Linear, out DataMinY, out DataMaxY);
 
             // get complete funnel by extending x axis so the funnel does not cut the y axis
-            double pool = 0;
+            double pool;
             switch (xform)
             {
                 case Transformation.Log:
@@ -2791,6 +2791,8 @@ namespace StatsDirect.Charting
                 case Transformation.None:
                     pool = rmh;
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException("xform", xform, "Unexpected transform: only Log, None, Z known");
             }
 
             ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinY, 0, DataMaxY, true);
@@ -2827,7 +2829,7 @@ namespace StatsDirect.Charting
 
             // plot the points
             for (int r = 1; r <= rows; r++)
-                if (xx[r] != Constant.MISSING & y[r] != Constant.MISSING)
+                if (xx[r] != Constant.MISSING && y[r] != Constant.MISSING)
                     DrawMarkerInChartCoordinates(xx[r], y[r], 6, MarkerTypes[0]);
 
             using (Pen blackPen = new Pen(grBlack, 1))
@@ -2838,45 +2840,41 @@ namespace StatsDirect.Charting
                     DrawLineInChartCoordinates(grBlack, pool, AxisYMin, pool, AxisYMax);
                 }
 
-                if ((plotMethod == 1 || plotMethod == 2 || plotMethod == 7) && !(diagonal) && use_ci)
+                if ((plotMethod == 1 || plotMethod == 2 || plotMethod == 7) && !diagonal && use_ci)
                 {
                     // plot confidence interval
                     int incs = plotMethod == 1 ? 1 : 300;
-                    double yinc = divy / incs;
+                    double yinc = (AxisYMax - AxisYMin) / incs;
                     if (plotMethod == 2)
                     {
                         double ynow = AxisYMax;
                         double xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
-                        double y1 = ToCanvasY(ynow);
-                        double x1 = ToCanvasX(xnow);
+                        double y1 = ynow;
+                        double x1 = xnow;
                         for (int r = 1; r <= incs; r++)
                         {
                             ynow -= yinc;
                             xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
-                            if (xnow >= AxisXMin & xnow <= AxisXMax)
+                            if (xnow >= AxisXMin && xnow <= AxisXMax)
                             {
-                                double y2 = ToCanvasY(ynow);
-                                double x2 = ToCanvasX(xnow);
-                                DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
-                                y1 = y2;
-                                x1 = x2;
+                                DrawLineInChartCoordinates(grBlack, x1, y1, xnow, ynow);
+                                y1 = ynow;
+                                x1 = xnow;
                             }
                         }
                         ynow = AxisYMax;
                         xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
-                        y1 = ToCanvasY(ynow);
-                        x1 = ToCanvasX(xnow);
+                        y1 = ynow;
+                        x1 = xnow;
                         for (int r = 1; r <= incs; r++)
                         {
                             ynow -= yinc;
                             xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
-                            if (xnow >= AxisXMin & xnow <= AxisXMax)
+                            if (xnow >= AxisXMin && xnow <= AxisXMax)
                             {
-                                double y2 = ToCanvasY(ynow);
-                                double x2 = ToCanvasX(xnow);
-                                DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
-                                y1 = y2;
-                                x1 = x2;
+                                DrawLineInChartCoordinates(grBlack, x1, y1, xnow, ynow);
+                                y1 = ynow;
+                                x1 = xnow;
                             }
                         }
                     }
@@ -2884,36 +2882,32 @@ namespace StatsDirect.Charting
                     {
                         double ynow = AxisYMin;
                         double xnow = pool;
-                        double y1 = ToCanvasY(ynow);
-                        double x1 = ToCanvasX(xnow);
+                        double y1 = ynow;
+                        double x1 = xnow;
                         for (int r = 1; r <= incs; r++)
                         {
                             ynow += yinc;
                             xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
-                            if (xnow >= AxisXMin & xnow <= AxisXMax)
+                            if (xnow >= AxisXMin && xnow <= AxisXMax)
                             {
-                                double y2 = ToCanvasY(ynow);
-                                double x2 = ToCanvasX(xnow);
-                                DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
-                                y1 = y2;
-                                x1 = x2;
+                                DrawLineInChartCoordinates(grBlack, x1, y1, xnow, ynow);
+                                y1 = ynow;
+                                x1 = xnow;
                             }
                         }
                         ynow = AxisYMin;
                         xnow = pool;
-                        y1 = ToCanvasY(ynow);
-                        x1 = ToCanvasX(xnow);
+                        y1 = ynow;
+                        x1 = xnow;
                         for (int r = 1; r <= incs; r++)
                         {
                             ynow += yinc;
                             xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
-                            if (xnow >= AxisXMin & xnow <= AxisXMax)
+                            if (xnow >= AxisXMin && xnow <= AxisXMax)
                             {
-                                double y2 = ToCanvasY(ynow);
-                                double x2 = ToCanvasX(xnow);
-                                DrawLineInCanvasCoordinates(blackPen, x1, y1, x2, y2);
-                                y1 = y2;
-                                x1 = x2;
+                                DrawLineInChartCoordinates(grBlack, x1, y1, xnow, ynow);
+                                y1 = ynow;
+                                x1 = xnow;
                             }
                         }
                     }
@@ -3072,7 +3066,7 @@ namespace StatsDirect.Charting
         }
 
 
-        private void get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, ref string ytx, string xtxt, out int plot_method, Transformation xform, out bool reverse, ref bool use_ci)
+        private void get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plot_method, Transformation xform, out bool reverse, ref bool use_ci)
         {
             y = new double[rows + 1];
             y[0] = Constant.MISSING;
@@ -3095,18 +3089,9 @@ namespace StatsDirect.Charting
             bool usept = xtxt.Contains("Incidence");
             use_ci = host.MetaPlotCI;
 
-            double cit;
-            if (cco > 0.0)
-            {
-                int transTemp42;
-                cit = PDF.gauinv(1.0 - ((1.0 - cco) / 2.0), out transTemp42);
-            }
-            else
-            {
+            if (cco <= 0.0)
                 cco = 0.95;
-                int transTemp41;
-                cit = PDF.gauinv(0.975, out transTemp41);
-            }
+            double cit = PDF.gauinv(1.0 - ((1.0 - cco) / 2.0));
 
             plot_method = host.MetaPlotMethod;
 
