@@ -221,8 +221,8 @@ namespace StatsDirect.Charting
 
                 // Draw the scale
                 DefaultAxes();
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
-                SetStandardAsciiScaling(y);
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
+                SetStandardAsciiScaling(y, axisScales);
 
                 // Draw the title text
                 int L = sOptions.YAxisTitle.Length;
@@ -295,7 +295,7 @@ namespace StatsDirect.Charting
             PointF[] xys = new PointF[xs.Data.Length];
             for (int r = 0; r < xs.Data.Length; r++)
             {
-                if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
+                if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
                 {
                     xys[r].X = Convert.ToSingle(ToCanvasX(xdat[r]));
                     xys[r].Y = Convert.ToSingle(ToCanvasY(ydat[r]));
@@ -308,38 +308,17 @@ namespace StatsDirect.Charting
             }
             DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            double xstep = axisScales.X.Tics().Count / 2.0;
-
             // Plot regression
-            using (Pen p = new Pen(grGreen, 2))
+            double oldx = Constant.MISSING;
+            double oldy = Constant.MISSING;
+            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / axisScales.X.Tics().Count / 2.0;
+            for (double calcx = fullWidth ? axisScales.X.MinimumScaleValue : axisScales.X.MinimumDataValue; calcx <= (fullWidth ? axisScales.X.MaximumScaleValue : axisScales.X.MaximumDataValue); calcx += xstep)
             {
-                double oldx = 0;
-                double oldy = 0;
-
-                double lowerX;
-                double upperX;
-                if (fullWidth)
-                {
-                    lowerX = AxisXMin;
-                    upperX = AxisXMax;
-                }
-                else
-                {
-                    lowerX = DataMinX;
-                    upperX = DataMaxX;
-                }
-                for (double calcx = lowerX; calcx <= upperX; calcx += xstep)
-                {
-                    double calcy = slope * calcx + intercept;
-                    double x1 = ToCanvasX(calcx);
-                    double y1 = ToCanvasY(calcy);
-                    if (calcx > lowerX && y1 > yAxisCanvas && x1 > xAxisCanvas && y1 < yAxisCanvas + yExtCanvas)
-                    {
-                        DrawLineInCanvasCoordinates(p, x1, y1, oldx, oldy);
-                    }
-                    oldx = x1;
-                    oldy = y1;
-                }
+                double calcy = slope * calcx + intercept;
+                if (calcx >= axisScales.X.MinimumScaleValue && calcy >= axisScales.Y.MinimumScaleValue && calcx <= axisScales.X.MaximumScaleValue && calcy <= axisScales.Y.MaximumScaleValue)
+                    DrawLineInChartCoordinates(grGreen, calcx, calcy, oldx, oldy);
+                oldx = calcx;
+                oldy = calcy;
             }
 
             MaybeDrawMarkerLines();
@@ -352,13 +331,13 @@ namespace StatsDirect.Charting
             DataMinY = dataMinY;
             DataMaxY = dataMaxY;
             StartVectorPlot();
-            PlotLinearRegressionInternal(title, slope, intercept, fullWidth, xAxisTitle, yAxisTitle);
+            AxisScales axisScales = PlotLinearRegressionInternal(title, slope, intercept, fullWidth, xAxisTitle, yAxisTitle);
             if (PERT != 0)
-                PlotSeCiOrPredictionInterval(PERT, slope, intercept, nx, MS, SUMX, SSX, isPredictionInterval);
+                PlotSeCiOrPredictionInterval(PERT, slope, intercept, nx, MS, SUMX, SSX, isPredictionInterval, axisScales);
             EndVectorPlot();
         }
 
-        private void PlotLinearRegressionInternal(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle)
+        private AxisScales PlotLinearRegressionInternal(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle)
         {
             const int MARKER_SIZE = 6;
 
@@ -382,9 +361,9 @@ namespace StatsDirect.Charting
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
             PointF[] xys = new PointF[xs.Data.Length];
-            for (int r = 0; r <= xs.Data.Length - 1; r++)
+            for (int r = 0; r < xs.Data.Length; r++)
             {
-                if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
+                if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
                 {
                     xys[r].X = Convert.ToSingle(ToCanvasX(xdat[r]));
                     xys[r].Y = Convert.ToSingle(ToCanvasY(ydat[r]));
@@ -397,24 +376,20 @@ namespace StatsDirect.Charting
             }
             DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            double xstep = axisScales.X.Tics().Count / 2.0;
+            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / axisScales.X.Tics().Count / 2.0;
 
             // Plot regression
-            using (Pen p = new Pen(grGreen, 2))
+            double oldx = Constant.MISSING;
+            double oldy = Constant.MISSING;
+            for (double calcx = fullWidth ? axisScales.X.MinimumScaleValue : axisScales.X.MinimumDataValue; calcx <= (fullWidth ? axisScales.X.MaximumScaleValue : axisScales.X.MaximumDataValue); calcx += xstep)
             {
-                double oldx = 0;
-                double oldy = 0;
-                for (double calcx = fullWidth ? AxisXMin: DataMinX; calcx <= (fullWidth ? AxisXMax: DataMaxX); calcx += xstep)
-                {
-                    double calcy = slope * calcx + intercept;
-                    double x1 = ToCanvasX(calcx);
-                    double y1 = ToCanvasY(calcy);
-                    if (calcx > AxisXMin && y1 > yAxisCanvas && x1 > xAxisCanvas && y1 < yAxisCanvas + yExtCanvas)
-                        DrawLineInCanvasCoordinates(p, x1, y1, oldx, oldy);
-                    oldx = x1;
-                    oldy = y1;
-                }
+                double calcy = slope * calcx + intercept;
+                if (calcx >= axisScales.X.MinimumScaleValue && calcy >= axisScales.Y.MinimumScaleValue && calcx <= axisScales.X.MaximumScaleValue && calcy <= axisScales.Y.MaximumScaleValue)
+                    DrawLineInChartCoordinates(grGreen, calcx, calcy, oldx, oldy);
+                oldx = calcx;
+                oldy = calcy;
             }
+            return axisScales;
         }
 
         internal void PlotCox2(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
@@ -555,7 +530,7 @@ namespace StatsDirect.Charting
             }
 
             // Draw the axes
-            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
 
             // draw legend
             double size2 = labelFont.Size * 2;
@@ -607,11 +582,11 @@ namespace StatsDirect.Charting
             switch (plotMode)
             {
                 case CoxPlotMode.Survival:
-                    ix0 = ToCanvasX(AxisXMin);
+                    ix0 = ToCanvasX(axisScales.X.MinimumScaleValue);
                     iy0 = ToCanvasY(1.0);
                     break;
                 case CoxPlotMode.Hazard:
-                    ix0 = ToCanvasX(AxisXMin);
+                    ix0 = ToCanvasX(axisScales.X.MinimumScaleValue);
                     iy0 = ToCanvasY(0.0);
                     break;
             }
@@ -740,14 +715,14 @@ namespace StatsDirect.Charting
             }
             DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            double xstep = axisScales.X.Tics().Count / 2;
+            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / axisScales.X.Tics().Count / 2;
 
             // Plot regression
             using (Pen p = new Pen(grBlack, 2))
             {
                 double oldx = 0;
                 double oldy = 0;
-                for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double calcy = 0;
                     switch (model)
@@ -761,16 +736,14 @@ namespace StatsDirect.Charting
                         case 2:
                             double denom = a + calcx * b;
                             if (denom == 0.0)
-                            {
                                 denom = 0.0000001;
-                            }
                             calcy = calcx / denom;
                             break;
                     }
 
                     double x1 = ToCanvasX(calcx);
                     double y1 = ToCanvasY(calcy);
-                    if (calcx > AxisXMin && y1 > yAxisCanvas && x1 > xAxisCanvas && y1 < yAxisCanvas + yExtCanvas)
+                    if (calcx > axisScales.X.MinimumScaleValue && y1 > yAxisCanvas && x1 > xAxisCanvas && y1 < yAxisCanvas + yExtCanvas)
                     {
                         DrawLineInCanvasCoordinates(p, x1, y1, oldx, oldy);
                     }
@@ -829,7 +802,7 @@ namespace StatsDirect.Charting
             double rms = rss / rdf;
             double[] px = new double[P + 1];
             px[1] = 1.0;
-            double xstep = axisScales.X.Tics().Count / 2;
+            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / axisScales.X.Tics().Count / 2;
 
             // This routine has changed from the original
             // It is more efficient in drawing - but bigger in code
@@ -837,7 +810,7 @@ namespace StatsDirect.Charting
             {
                 double oldx = Constant.MISSING;
                 double oldy = Constant.MISSING;
-                for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double calcy = 0;
                     for (int jj = 1; jj <= P; jj++)
@@ -856,7 +829,7 @@ namespace StatsDirect.Charting
             if (mode > 0)
             {
                 // Draw -Lines
-                for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double calcy = 0;
                     for (int jj = 1; jj <= P; jj++)
@@ -891,7 +864,7 @@ namespace StatsDirect.Charting
                     oldy = y1;
                 }
                 // Draw +Lines
-                for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double calcy = 0;
                     for (int jj = 1; jj <= P; jj++)
@@ -964,7 +937,7 @@ namespace StatsDirect.Charting
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
 
             // plot points
             PointF[] xys = new PointF[Math.Min(xdat.Length, ydat.Length)];
@@ -984,7 +957,7 @@ namespace StatsDirect.Charting
             DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
             // Aim for 100 steps across the chart - anything coarser gives terrible resolution for tight curves (e.g. log10 of the sample data)
-            double xstep = (AxisXMax - AxisXMin) / 100.0;
+            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / 100.0;
 
             // This routine has changed from the original
             // It is more efficient in drawing - but bigger in code
@@ -998,7 +971,7 @@ namespace StatsDirect.Charting
                 // However a and b are based on the transformed non-canvas unit!
                 // So we need to keep both around.
                 // TODO: Better names for Transform and InverseTransform.
-                for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
                     double calcY = a + b * calcx;
@@ -1020,7 +993,7 @@ namespace StatsDirect.Charting
             {
                 double oldx = 0;
                 double oldy = 0;
-                for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
                     cl = t * Math.Sqrt(1.0 / sw + Math.Pow((calcx - xm), 2.0) / s1);
@@ -1040,7 +1013,7 @@ namespace StatsDirect.Charting
                 // Draw lower curve - TODO: repeat fix
                 oldx = 0;
                 oldy = 0;
-                for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
                     cl = t * Math.Sqrt(1.0 / sw + Math.Pow((calcx - xm), 2.0) / s1);
@@ -2354,7 +2327,7 @@ namespace StatsDirect.Charting
                         GetMinMaxArray(y, definition.ScaleParameters.Y.ScaleType, out DataMinY, out DataMaxY);
                 }
             }
-            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), isLAabbe, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), isLAabbe, false);
 
             if (zPlot)
                 DrawQCanvas(offy);
@@ -2403,7 +2376,7 @@ namespace StatsDirect.Charting
             if (isLAabbe)
             {
                 // null effect diagonal
-                DrawLineInChartCoordinates(grBlack, AxisXMin, AxisYMin, AxisXMax, AxisYMax);
+                DrawLineInChartCoordinates(grBlack, axisScales.X.MinimumScaleValue, axisScales.Y.MinimumScaleValue, axisScales.X.MaximumScaleValue, axisScales.Y.MaximumScaleValue);
                 // pooled event rate
                 using (Pen blackFXPen = GetLinePen(MarkerTypes[10], false))
                 {
@@ -2411,15 +2384,15 @@ namespace StatsDirect.Charting
                     double y1;
                     if (rmh >= 1)
                     {
-                        y1 = ToCanvasY(AxisYMax);
-                        x1 = ToCanvasX(AxisYMax / rmh);
+                        y1 = ToCanvasY(axisScales.Y.MaximumScaleValue);
+                        x1 = ToCanvasX(axisScales.Y.MaximumScaleValue / rmh);
                     }
                     else
                     {
-                        x1 = ToCanvasX(AxisXMax);
-                        y1 = ToCanvasY(rmh * AxisXMax);
+                        x1 = ToCanvasX(axisScales.X.MaximumScaleValue);
+                        y1 = ToCanvasY(rmh * axisScales.X.MaximumScaleValue);
                     }
-                    DrawLineInCanvasCoordinates(blackFXPen, ToCanvasX(AxisXMin), ToCanvasY(AxisYMin), x1, y1);
+                    DrawLineInCanvasCoordinates(blackFXPen, ToCanvasX(axisScales.X.MinimumScaleValue), ToCanvasY(axisScales.Y.MinimumScaleValue), x1, y1);
                 }
             }
             EndVectorPlot();
@@ -2825,7 +2798,7 @@ namespace StatsDirect.Charting
 
             StartVectorPlot();
             // Peto plots are boxed
-            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear), !reverse && diagonal, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear), !reverse && diagonal, false);
 
             // plot the points
             for (int r = 1; r <= rows; r++)
@@ -2837,17 +2810,17 @@ namespace StatsDirect.Charting
                 if (!diagonal)
                 {
                     // mark pooled value
-                    DrawLineInChartCoordinates(grBlack, pool, AxisYMin, pool, AxisYMax);
+                    DrawLineInChartCoordinates(grBlack, pool, axisScales.Y.MinimumScaleValue, pool, axisScales.Y.MaximumScaleValue);
                 }
 
                 if ((plotMethod == 1 || plotMethod == 2 || plotMethod == 7) && !diagonal && use_ci)
                 {
                     // plot confidence interval
                     int incs = plotMethod == 1 ? 1 : 300;
-                    double yinc = (AxisYMax - AxisYMin) / incs;
+                    double yinc = (axisScales.Y.MaximumScaleValue - axisScales.Y.MinimumScaleValue) / incs;
                     if (plotMethod == 2)
                     {
-                        double ynow = AxisYMax;
+                        double ynow = axisScales.Y.MaximumScaleValue;
                         double xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
                         double y1 = ynow;
                         double x1 = xnow;
@@ -2855,14 +2828,14 @@ namespace StatsDirect.Charting
                         {
                             ynow -= yinc;
                             xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
-                            if (xnow >= AxisXMin && xnow <= AxisXMax)
+                            if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                             {
                                 DrawLineInChartCoordinates(grBlack, x1, y1, xnow, ynow);
                                 y1 = ynow;
                                 x1 = xnow;
                             }
                         }
-                        ynow = AxisYMax;
+                        ynow = axisScales.Y.MaximumScaleValue;
                         xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
                         y1 = ynow;
                         x1 = xnow;
@@ -2870,7 +2843,7 @@ namespace StatsDirect.Charting
                         {
                             ynow -= yinc;
                             xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
-                            if (xnow >= AxisXMin && xnow <= AxisXMax)
+                            if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                             {
                                 DrawLineInChartCoordinates(grBlack, x1, y1, xnow, ynow);
                                 y1 = ynow;
@@ -2880,7 +2853,7 @@ namespace StatsDirect.Charting
                     }
                     else
                     {
-                        double ynow = AxisYMin;
+                        double ynow = axisScales.Y.MinimumScaleValue;
                         double xnow = pool;
                         double y1 = ynow;
                         double x1 = xnow;
@@ -2888,14 +2861,14 @@ namespace StatsDirect.Charting
                         {
                             ynow += yinc;
                             xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
-                            if (xnow >= AxisXMin && xnow <= AxisXMax)
+                            if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                             {
                                 DrawLineInChartCoordinates(grBlack, x1, y1, xnow, ynow);
                                 y1 = ynow;
                                 x1 = xnow;
                             }
                         }
-                        ynow = AxisYMin;
+                        ynow = axisScales.Y.MinimumScaleValue;
                         xnow = pool;
                         y1 = ynow;
                         x1 = xnow;
@@ -2903,7 +2876,7 @@ namespace StatsDirect.Charting
                         {
                             ynow += yinc;
                             xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
-                            if (xnow >= AxisXMin && xnow <= AxisXMax)
+                            if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                             {
                                 DrawLineInChartCoordinates(grBlack, x1, y1, xnow, ynow);
                                 y1 = ynow;
@@ -2915,7 +2888,7 @@ namespace StatsDirect.Charting
             }
 
             if (diagonal)
-                DrawLineInChartCoordinates(grBlack, AxisXMin, AxisYMin, AxisXMax, AxisYMax);
+                DrawLineInChartCoordinates(grBlack, axisScales.X.MinimumScaleValue, axisScales.Y.MinimumScaleValue, axisScales.X.MaximumScaleValue, axisScales.Y.MaximumScaleValue);
             EndVectorPlot();
         }
 
@@ -3336,7 +3309,7 @@ namespace StatsDirect.Charting
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear), false, false);
 
             // Plot the legends
             int size2 = labelFont.Height * 2;
@@ -3369,11 +3342,11 @@ namespace StatsDirect.Charting
                     switch (plotMode)
                     {
                         case 1:
-                            x1 = (AxisXMin);
+                            x1 = (axisScales.X.MinimumScaleValue);
                             y1 = (1.0);
                             break;
                         case 2:
-                            x1 = (AxisXMin);
+                            x1 = (axisScales.X.MinimumScaleValue);
                             y1 = (0);
                             break;
                         case 3:
@@ -3497,7 +3470,6 @@ namespace StatsDirect.Charting
 
             divy = k + pbias;
             offy = yAxisCanvas;
-            yAxisScale = new CategoryAxisScale((int)divy);
 
             MarkerType studyMarkerType = new MarkerType
             {
@@ -3593,13 +3565,13 @@ namespace StatsDirect.Charting
                 switch (definition.ScaleParameters.X.ScaleType)
                 {
                     case ScaleType.Linear:
-                        if (AxisXMin <= 0 && AxisXMax >= 0)
-                            DrawLineInChartCoordinates(grBlack, 0, AxisYMin, 0, AxisYMax);
+                        if (axisScales.X.MinimumScaleValue <= 0 && axisScales.X.MaximumScaleValue >= 0)
+                            DrawLineInChartCoordinates(grBlack, 0, axisScales.Y.MinimumScaleValue, 0, axisScales.Y.MaximumScaleValue);
                         break;
                     case ScaleType.Log10:
                     case ScaleType.LogNatural:
-                        if (AxisXMin <= 1 && AxisXMax >= 1)
-                            DrawLineInChartCoordinates(grBlack, 1, AxisYMin, 1, AxisYMax);
+                        if (axisScales.X.MinimumScaleValue <= 1 && axisScales.X.MaximumScaleValue >= 1)
+                            DrawLineInChartCoordinates(grBlack, 1, axisScales.Y.MinimumScaleValue, 1, axisScales.Y.MaximumScaleValue);
                         break;
                 }
 
@@ -3719,7 +3691,6 @@ namespace StatsDirect.Charting
 
             divy = k + pbias;
             offy = yAxisCanvas;
-            yAxisScale = new CategoryAxisScale((int)divy);
 
             MarkerType studyMarkerType = new MarkerType
             {
@@ -3798,7 +3769,7 @@ namespace StatsDirect.Charting
                     }
                 }
 
-                if (AxisXMin <= 0 && AxisXMax >= 0)
+                if (axisScales.X.MinimumScaleValue <= 0 && axisScales.X.MaximumScaleValue >= 0)
                 {
                     //  no effect marker
                     DrawLineInCanvasCoordinates(tenPenTrue, offx, yt, offx, yAxisCanvas - 12);
@@ -3884,7 +3855,7 @@ namespace StatsDirect.Charting
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
                 DataMinX = orlmin;
 
-            xAxisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX, false);
+            IAxisScale xAxisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX, false);
             DataMinX = xAxisScale.MinimumScaleValue;
             DataMaxX = xAxisScale.MaximumScaleValue;
 
@@ -3904,7 +3875,6 @@ namespace StatsDirect.Charting
             offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
             divy = kok + pbias;
             offy = yAxisCanvas;
-            yAxisScale = new CategoryAxisScale((int)divy);
 
             using (Pen linePen = GetLinePen(MarkerTypes[10], true))
             {
@@ -4135,10 +4105,11 @@ namespace StatsDirect.Charting
             if (w > xtra + xAxisCanvas)
                 xtra = w - xAxisCanvas - 5;
 
+            AxisScales axisScales;
             switch (xform)
             {
                 case Transformation.Log:
-                    DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+                    axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
                     break;
                 default:
                     {
@@ -4147,16 +4118,15 @@ namespace StatsDirect.Charting
                             DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
                             DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
                         }
-                        DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
-                        DataMinX = AxisXMin;
-                        DataMaxX = AxisXMax;
+                        axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+                        DataMinX = axisScales.X.MinimumScaleValue;
+                        DataMaxX = axisScales.X.MaximumScaleValue;
                     }
                     break;
             }
 
             divy = kok;
             offy = yAxisCanvas;
-            yAxisScale = new CategoryAxisScale((int)divy);
 
             MarkerType studyMarkerType = new MarkerType
             {
@@ -4329,9 +4299,9 @@ namespace StatsDirect.Charting
             EndVectorPlot();
         }
 
-        private void PlotSeCiOrPredictionInterval(double pert, double slope, double yIntercept, int nx, double ms, double sumx, double ssx, bool isPredictionInterval)
+        private void PlotSeCiOrPredictionInterval(double pert, double slope, double yIntercept, int nx, double ms, double sumx, double ssx, bool isPredictionInterval, AxisScales axisScales)
         {
-            double xstep = (AxisXMax - AxisXMin) / 20.0;
+            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / 20.0;
 
             if (isPredictionInterval)
             {
@@ -4343,7 +4313,7 @@ namespace StatsDirect.Charting
                     double lastY1N = 0;
 
                     bool first = true;
-                    for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                    for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                     {
                         double calcy = slope * calcx + yIntercept;
                         double sey = Math.Sqrt(ms * (1.0 + 1.0 / nx + Math.Pow(calcx - sumx / nx, 2.0) / ssx));
@@ -4357,9 +4327,9 @@ namespace StatsDirect.Charting
                             first = false;
                         else
                         {
-                            if (lastY1P >= AxisYMin && lastY1P <= AxisYMax && y1P > AxisYMin && y1P < AxisYMax)
+                            if (lastY1P >= axisScales.Y.MinimumScaleValue && lastY1P <= axisScales.Y.MaximumScaleValue && y1P > axisScales.Y.MinimumScaleValue && y1P < axisScales.Y.MaximumScaleValue)
                                 DrawLineInChartCoordinates(grBlack, lastX1P, lastY1P, x1P, y1P);
-                            if (lastY1N >= AxisYMin && lastY1N <= AxisYMax && y1N > AxisYMin && y1N < AxisYMax)
+                            if (lastY1N >= axisScales.Y.MinimumScaleValue && lastY1N <= axisScales.Y.MaximumScaleValue && y1N > axisScales.Y.MinimumScaleValue && y1N < axisScales.Y.MaximumScaleValue)
                                 DrawLineInChartCoordinates(grBlack, lastX1N, lastY1N, x1N, y1N);
                         }
                         lastY1P = y1P;
@@ -4379,7 +4349,7 @@ namespace StatsDirect.Charting
                     double lastY1N = 0;
 
                     bool first = true;
-                    for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                    for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                     {
                         double calcy = slope * calcx + yIntercept;
                         double sey = Math.Sqrt(ms * (1.0 / nx + Math.Pow(calcx - sumx / nx, 2.0) / ssx));
@@ -4393,9 +4363,9 @@ namespace StatsDirect.Charting
                             first = false;
                         else
                         {
-                            if (lastY1P >= AxisYMin && lastY1P <= AxisYMax && y1P > AxisYMin && y1P < AxisYMax)
+                            if (lastY1P >= axisScales.Y.MinimumScaleValue && lastY1P <= axisScales.Y.MaximumScaleValue && y1P > axisScales.Y.MinimumScaleValue && y1P < axisScales.Y.MaximumScaleValue)
                                 DrawLineInChartCoordinates(grBlack, lastX1P, lastY1P, x1P, y1P);
-                            if (lastY1N >= AxisYMin && lastY1N <= AxisYMax && y1N > AxisYMin && y1N < AxisYMax)
+                            if (lastY1N >= axisScales.Y.MinimumScaleValue && lastY1N <= axisScales.Y.MaximumScaleValue && y1N > axisScales.Y.MinimumScaleValue && y1N < axisScales.Y.MaximumScaleValue)
                                 DrawLineInChartCoordinates(grBlack, lastX1N, lastY1N, x1N, y1N);
                         }
                         lastY1P = y1P;
@@ -4405,7 +4375,7 @@ namespace StatsDirect.Charting
                     }
 
                     first = true;
-                    for (double calcx = AxisXMin; calcx <= AxisXMax; calcx += xstep)
+                    for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                     {
                         double calcy = slope * calcx + yIntercept;
                         double sey = Math.Sqrt(ms * ((1.0 / nx + Math.Pow((calcx - (sumx / nx)), 2.0) / ssx)));
@@ -4419,9 +4389,9 @@ namespace StatsDirect.Charting
                             first = false;
                         else
                         {
-                            if (lastY1P >= AxisYMin && lastY1P <= AxisYMax && y1P > AxisYMin && y1P < AxisYMax)
+                            if (lastY1P >= axisScales.Y.MinimumScaleValue && lastY1P <= axisScales.Y.MaximumScaleValue && y1P > axisScales.Y.MinimumScaleValue && y1P < axisScales.Y.MaximumScaleValue)
                                 DrawLineInChartCoordinates(grMagenta, lastX1P, lastY1P, x1P, y1P);
-                            if (lastY1N >= AxisYMin && lastY1N <= AxisYMax && y1N > AxisYMin && y1N < AxisYMax)
+                            if (lastY1N >= axisScales.Y.MinimumScaleValue && lastY1N <= axisScales.Y.MaximumScaleValue && y1N > axisScales.Y.MinimumScaleValue && y1N < axisScales.Y.MaximumScaleValue)
                                 DrawLineInChartCoordinates(grMagenta, lastX1N, lastY1N, x1N, y1N);
                         }
                         lastY1P = y1P;

@@ -683,9 +683,9 @@ namespace StatsDirect.Charting
 
             // Draw the scale
             DefaultAxes();
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n", new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType), false, false);
-            divx = AxisXMax - AxisXMin;
-            offx = Convert.ToInt32(-(AxisXMin / divx * 60) + 16);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n", new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType), false, false);
+            divx = axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue;
+            offx = Convert.ToInt32(-(axisScales.X.MinimumScaleValue / divx * 60) + 16);
             divy = seriesToUse.Count + 1;
             offy = Convert.ToInt32(-(0 / divy * 20) + ASCII_Ytxt);
 

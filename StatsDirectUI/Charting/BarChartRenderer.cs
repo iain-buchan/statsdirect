@@ -209,7 +209,7 @@ namespace StatsDirect.Charting
                 }
                 xtra = Math.Max(0, Convert.ToInt32(xtra - 20));
 
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(axisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired }, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(axisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired }, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
                 divy = ((DoubleSeries)(seriesToUse[0])).Points;
                 offy = -(0 / divy * yExtCanvas) + yAxisCanvas;
 
@@ -290,10 +290,10 @@ namespace StatsDirect.Charting
                                 double dataW;
                                 double dataLowX;
                                 //  Dim dataHighX As Double = totalBelowThisBar + thisData
-                                if (totalBelowThisBar < AxisXMin)
+                                if (totalBelowThisBar < axisScales.X.MinimumScaleValue)
                                 {
-                                    dataW = thisData + totalBelowThisBar - AxisXMin;
-                                    dataLowX = AxisXMin;
+                                    dataW = thisData + totalBelowThisBar - axisScales.X.MinimumScaleValue;
+                                    dataLowX = axisScales.X.MinimumScaleValue;
                                 }
                                 else
                                 {
@@ -355,7 +355,7 @@ namespace StatsDirect.Charting
                 }
                 DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(axisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(axisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
                 divx = ((DoubleSeries)(seriesToUse[0])).Points;
                 offx = -(0 / divx * xExtCanvas) + xAxisCanvas;
 
@@ -444,10 +444,10 @@ namespace StatsDirect.Charting
                                 double dataH;
                                 double dataLowY;
                                 //  Dim dataHighX As Double = totalBelowThisBar + thisData
-                                if (totalBelowThisBar < AxisYMin)
+                                if (totalBelowThisBar < axisScales.Y.MinimumScaleValue)
                                 {
-                                    dataH = thisData + totalBelowThisBar - AxisYMin;
-                                    dataLowY = AxisYMin;
+                                    dataH = thisData + totalBelowThisBar - axisScales.Y.MinimumScaleValue;
+                                    dataLowY = axisScales.Y.MinimumScaleValue;
                                 }
                                 else
                                 {

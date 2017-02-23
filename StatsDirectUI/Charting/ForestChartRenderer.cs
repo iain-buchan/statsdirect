@@ -198,11 +198,10 @@ namespace StatsDirect.Charting
             float w = TitleWidthInCanvasCoordinates(combo_ti(fOptions.Title)) + 30;
             if (w > xtra + xAxisCanvas)
                 xtra = w - xAxisCanvas - 5;
-            DrawAxesOrEnlargeCanvas(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
 
             divy = kok + pbias;
             offy = yAxisCanvas;
-            yAxisScale = new CategoryAxisScale((int)divy);
 
             int r = 0;
 
@@ -219,8 +218,8 @@ namespace StatsDirect.Charting
                         r++;
                         double yctr = ToCanvasHeight(r + pbias - 0.5);
                         double ytop = ToCanvasHeight(r + pbias);
-                        double xm = ToCanvasX(Math.Max(odr[i], AxisXMin));
-                        double xl = ToCanvasX(Math.Max(odrl[i], AxisXMin));
+                        double xm = ToCanvasX(Math.Max(odr[i], axisScales.X.MinimumScaleValue));
+                        double xl = ToCanvasX(Math.Max(odrl[i], axisScales.X.MinimumScaleValue));
                         double xr = ToCanvasX(odru[i]);
                         double y2 = (ytop - yctr) / 1.5;
                         double y3 = (ytop - yctr) / 4;
@@ -237,7 +236,7 @@ namespace StatsDirect.Charting
                             // CI line
                             DrawLineInCanvasCoordinates(ciPen, xl, yc, xr, yc);
                             // Arrow ends if not plottable
-                            if (odrl[i] < AxisXMin || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i]))
+                            if (odrl[i] < axisScales.X.MinimumScaleValue || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i]))
                             {
                                 DrawLineInCanvasCoordinates(ciPen, xl + y3, yc + y3, xl, yc);
                                 DrawLineInCanvasCoordinates(ciPen, xl, yc, xl + y3, yc - y3);
@@ -272,7 +271,7 @@ namespace StatsDirect.Charting
                 if (shouldDrawLine)
                 {
                     // no effect line, which is effectively part of the axis so uses the axis pen
-                    DrawLineInCanvasCoordinates(axisPen, ToCanvasX(lineX), yt, ToCanvasX(lineX), ToCanvasY(AxisYMin));
+                    DrawLineInCanvasCoordinates(axisPen, ToCanvasX(lineX), yt, ToCanvasX(lineX), ToCanvasY(axisScales.Y.MinimumScaleValue));
                 }
             }
 
