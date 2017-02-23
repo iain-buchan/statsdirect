@@ -236,12 +236,12 @@ namespace StatsDirect.Charting
         private static PyramidOptions PreprocessPyramidOptions(ITemplateHost host, ParameterBag parameters, string dataName)
         {
             PyramidOptions pOptions = new PyramidOptions(host.Preferences.ShouldUseColour) { ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits };
-            if (parameters.ContainsKey("Male"))
-                pOptions.MaleFrame = parameters["Male"].AsDataFrame;
-            if (parameters.ContainsKey("Female"))
-                pOptions.FemaleFrame = parameters["Female"].AsDataFrame;
-            if (parameters.ContainsKey("Labels"))
-                pOptions.LabelFrame = parameters["Labels"].AsDataFrame;
+            if (parameters.ContainsKey("male"))
+                pOptions.MaleFrame = parameters["male"].AsDataFrame;
+            if (parameters.ContainsKey("female"))
+                pOptions.FemaleFrame = parameters["female"].AsDataFrame;
+            if (parameters.ContainsKey("labels"))
+                pOptions.LabelFrame = parameters["labels"].AsDataFrame;
             pOptions.Title = null == dataName ? "Population pyramid" : "Population pyramid from " + dataName;
             pOptions.SetOptions();
             return pOptions;
@@ -457,17 +457,17 @@ namespace StatsDirect.Charting
                     string.IsNullOrWhiteSpace(ydat.Title)
                         ? "Series " + (sIndex + 1).ToString()
                         : ydat.Title;
-                double[][] noMissings = Numerics.Utilities.RemoveMissingRows(new double[][] { xdat.Data, ydat.Data, ydatl.Data, ydatu.Data }, 0, xdat.Length, 0);
-                MultiDoublePoint[] data = new MultiDoublePoint[noMissings[0].Length];
-                for (int i = 0; i < noMissings[0].Length; i++)
+                DoubleArraysAndBooleans noMissings = Numerics.Utilities.RemoveMissingRows(new double[][] { xdat.Data, ydat.Data, ydatl.Data, ydatu.Data }, 0, xdat.Length, 0);
+                MultiDoublePoint[] data = new MultiDoublePoint[noMissings.ArraysWithMissingRowsRemoved[0].Length];
+                for (int i = 0; i < noMissings.ArraysWithMissingRowsRemoved[0].Length; i++)
                 {
                     MultiDoublePoint p = new MultiDoublePoint();
                     // Ordinate
-                    p.X = noMissings[0][i];
+                    p.X = noMissings.ArraysWithMissingRowsRemoved[0][i];
                     // Y values for error bars: [0] is centre, [1] is lower bound, [2] is upper bound.
-                    p.set_Y(0, noMissings[1][i]);
-                    p.set_Y(1, noMissings[2][i]);
-                    p.set_Y(2, noMissings[3][i]);
+                    p.set_Y(0, noMissings.ArraysWithMissingRowsRemoved[1][i]);
+                    p.set_Y(1, noMissings.ArraysWithMissingRowsRemoved[2][i]);
+                    p.set_Y(2, noMissings.ArraysWithMissingRowsRemoved[3][i]);
                     data[i] = p;
                 }
                 allSeries.Add(new MultiDoubleSeries() { Title = seriesTitle, Data = data });
@@ -476,7 +476,7 @@ namespace StatsDirect.Charting
             ErrorBarOptions errorBarOptions = new ErrorBarOptions(host.Preferences.ShouldUseColour)
             {
                 ShouldAutoscale =
-                    !ChartRenderer.DefaultRequestScaleLimits,
+                    !AbstractChartRenderer.DefaultRequestScaleLimits,
                 Title = null == dataName
                             ? "Error bar plot"
                             : "Error bar plot plot from " + dataName,

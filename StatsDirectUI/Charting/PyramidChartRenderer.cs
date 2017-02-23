@@ -15,7 +15,7 @@ namespace StatsDirect.Charting
 
         public override ScaleParameters GetScaleParameters()
         {
-            PyramidOptions pOptions = ((PyramidOptions)(definition.ChartOptions));
+            PyramidOptions pOptions = (PyramidOptions)definition.ChartOptions;
 
             DataFrame maleFrame = pOptions.MaleFrame;
             DoubleVariable males = maleFrame.Variables[0] as DoubleVariable;

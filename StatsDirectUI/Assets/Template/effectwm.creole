@@ -2,10 +2,8 @@
 <line><title>Effect size (weighted mean difference) meta-analysis</title></line>
 <line></line>
 <table>
-<block name="approximate">
-<tr><th>Stratum</th><th>N (exptl.)</th><th>N (ctrl.)</th><th>Mean diff.</th><th><ci>Approximate <in>pc</in>% CI</ci></th><th></th></tr>
-<tr><td><in>st</in></td><td><in>ne</in></td><td><in>nc</in></td><td><inu>d</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr>
-</block>
+<tr><th>Stratum</th><th>N (exptl.)</th><th>N (ctrl.)</th><th>Mean diff.</th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
+<block name="approximate"><tr><td><in>st</in></td><td><in>ne</in></td><td><in>nc</in></td><td><inu>d</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <block name="poolok">
 <line></line>

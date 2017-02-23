@@ -74,53 +74,33 @@ namespace StatsDirect.Builtins
             if (cco > 1.0 || cco < 0.0)
                 cco = 0.95;
 
-            DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable ratesVariable = data.Variables[0]as DoubleVariable;
-            DoubleVariable timesVariable = data.Variables[1]as DoubleVariable;
+            DataFrame ratesFrame = parameters["rates"].AsDataFrame;
+            DoubleVariable ratesVariable = ratesFrame.Variables[0]as DoubleVariable;
+            DataFrame timesFrame = parameters["times"].AsDataFrame;
+            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
+            int rawRows = ratesVariable.Length;
+
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { ratesVariable.Data, timesVariable.Data }, 0, rawRows, 1);
+            double[] asm = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+            double[] spop = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
+
             double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
             if (nunit <= 0.0)
                 nunit = 1.0;
-            int rows = ratesVariable.Length;
-            double[] asm = new double[rows + 1 ];
-            double[] spop = new double[rows + 1 ];
+            int rows = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             for (int i = 1; i <= rows; i++)
-                asm[i] = ratesVariable.Data[i - 1] / nunit;
+                asm[i] /= nunit;
 
             double etot = 0.0;
             for (int i = 1; i <= rows; i++)
-            {
-                spop[i] = timesVariable.Data[i - 1];
                 etot += asm[i] * spop[i];
-            }
             if (etot <= 0)
-                throw new Templates.InvalidDataException();
+                throw new InvalidDataException();
 
-            bool stratlab;
-            string[] title = new string[rows + 2 + 1 /* VB to C# conversion */ ];
-            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
-            {
-                stratlab = true;
-                DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
-                for (int i = 1; i <= rows; i++)
-                {
-                    string buf = strataVariable.Data[i - 1].Trim();
-                    if (buf.Length > 0)
-                    {
-                        if (buf.Length > 50)
-                            buf = buf.Substring(0, 50);
-                        title[i] = buf;
-                    }
-                    else
-                        title[i] = "stratum " + i.ToString();
-                }
-            }
-            else
-            {
-                stratlab = false;
-                for (int i = 1; i <= rows; i++)
-                    title[i] = "stratum " + i.ToString();
-            }
+            bool hasUserSuppliedLabels;
+            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out hasUserSuppliedLabels);
+
+            title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, rows);
 
             double dead = parameters["dead"].AsDouble;
 
@@ -134,7 +114,7 @@ namespace StatsDirect.Builtins
                 groupsParameters.AddOutput("group", asm[j]);
                 groupsParameters.AddOutput("observed", spop[j]);
                 groupsParameters.AddOutput("expected", spop[j] * asm[j]);
-                groupsParameters.AddOutput("lb", stratlab ? title[j] : string.Empty);
+                groupsParameters.AddOutput("lb", hasUserSuppliedLabels ? title[j] : string.Empty);
             }
             outputParameters.AddOutput("total", etot);
 
@@ -176,89 +156,58 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag rptRateDirect(ITemplateHost host, ParameterBag parameters)
         {
-            double xu; double XL;
-            int j; int fault; int i;
-
             double cco = parameters["cco"].AsDouble;
-            if (cco > 1.0 | cco < 0.0)
-            {
+            if (cco > 1.0 || cco < 0.0)
                 cco = 0.95;
-            }
             double alpha = 1.0 - cco;
-            double refntot = 0.0;
-            double events = 0.0;
-            double ntot = 0.0;
-            DataFrame eventsFrame = parameters["events"].AsDataFrame;
-            DoubleVariable eventsVariable = eventsFrame.Variables[0]as DoubleVariable;
-            int rows = eventsVariable.Length;
-            double[] idxy = new double[rows + 1 ];
-            double[] idxn = new double[rows + 1 ];
-            double[] idxr = new double[rows + 1 ];
-            double[] refn = new double[rows + 1 ];
-            double[] refw = new double[rows + 1 ];
-            string[] title = new string[rows + 1 ];
-            for (i = 1; i <= rows; i++)
-            {
-                idxy[i] = eventsVariable.Data[i - 1];
-                events += idxy[i];
-            }
+
+            DataFrame idxnFrame = parameters["idxn"].AsDataFrame;
+            DoubleVariable idxnVariable = idxnFrame.Variables[0]as DoubleVariable;
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
-            for (i = 1; i <= rows; i++)
-            {
-                idxn[i] = timesVariable.Data[i - 1];
-                ntot += idxn[i];
-                if (idxy[i] > idxn[i])
-                {
-                    throw new Templates.InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
-                }
-            }
             DataFrame refnFrame = parameters["refn"].AsDataFrame;
             DoubleVariable refnVariable = refnFrame.Variables[0]as DoubleVariable;
-            for (i = 1; i <= rows; i++)
+            int rawRows = idxnVariable.Length;
+
+
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { idxnVariable.Data, timesVariable.Data, refnVariable.Data }, 0, rawRows, 1);
+            double[] idxy = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+            double[] idxn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
+            double[] refn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
+
+            int rows = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
+
+            double events = 0.0;
+            for (int i = 1; i <= rows; i++)
+                events += idxy[i];
+            double ntot = 0.0;
+            for (int i = 1; i <= rows; i++)
             {
-                refn[i] = refnVariable.Data[i - 1];
+                ntot += idxn[i];
+                if (idxy[i] > idxn[i])
+                    throw new InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
+            }
+            double refntot = 0.0;
+            for (int i = 1; i <= rows; i++)
                 refntot += refn[i];
-            }
-            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
-            {
-                DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
-                for (i = 1; i <= rows; i++)
-                {
-                    string buf = strataVariable.Data[i - 1].Trim();
-                    if (buf.Length > 0)
-                    {
-                        if (buf.Length > 50)
-                        {
-                            buf = buf.Substring(0, 50);
-                        }
-                        title[i] = buf;
-                    }
-                    else
-                    {
-                        title[i] = "stratum " + i.ToString();
-                    }
-                }
-            }
-            else
-            {
-                for (i = 1; i <= rows; i++)
-                    title[i] = "stratum " + i.ToString();
-            }
+
+            bool hasUserSuppliedLabels;
+            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out hasUserSuppliedLabels);
+            title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, rows);
+
             double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
             if (refntot <= 0.0 || ntot <= 0.0)
-                throw new Templates.InvalidDataException();
+                throw new InvalidDataException();
 
             ParameterBag outputParameters = new ParameterBag();
-            for (j = 1; j <= rows; j++)
-            {
+            double[] refw = new double[rows + 1];
+            for (int j = 1; j <= rows; j++)
                 refw[j] = refn[j] / refntot;
-            }
             double stdr = 0.0;
             double pois_var = 0.0;
             double bino_var = 0.0;
-            for (j = 1; j <= rows; j++)
+            double[] idxr = new double[rows + 1];
+            for (int j = 1; j <= rows; j++)
             {
                 idxr[j] = idxy[j] / idxn[j];
                 stdr = stdr + idxr[j] * refn[j];
@@ -269,16 +218,12 @@ namespace StatsDirect.Builtins
             pois_var = pois_var / (refntot * refntot);
             bino_var = bino_var / (refntot * refntot);
             if (nunit == 1.0)
-            {
                 outputParameters.AddOutput("units", "1 unit");
-            }
             else
-            {
                 outputParameters.AddOutput("units", nunit.ToString("#,##0") + " units");
-            }
             List<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
-            for (j = 1; j <= rows; j++)
+            for (int j = 1; j <= rows; j++)
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
@@ -288,17 +233,18 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("refn", refn[j]);
                 inputsParameters.AddOutput("refw", refw[j]);
             }
+            double xu; double xl;
             // CIs for the single Poisson parameter (stratum specific rate)
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
             List<ParameterBag> cisList = new List<ParameterBag>();
             outputParameters.AddOutput("*cis", cisList);
-            for (j = 1; j <= rows; j++)
+            for (int j = 1; j <= rows; j++)
             {
                 ParameterBag cisParameters = new ParameterBag();
                 cisList.Add(cisParameters);
                 cisParameters.AddOutput("idxr", idxr[j] * nunit);
-                poisson_ci(alpha, idxy[j], idxn[j], out XL, out xu);
-                cisParameters.AddOutput("from", XL * nunit);
+                poisson_ci(alpha, idxy[j], idxn[j], out xl, out xu);
+                cisParameters.AddOutput("from", xl * nunit);
                 cisParameters.AddOutput("to", xu * nunit);
                 cisParameters.AddOutput("label", title[j]);
             }
@@ -309,175 +255,86 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("crude", nunit * events / ntot);
             outputParameters.AddOutput("stdr", nunit * stdr);
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
             // Binomial approx CI - see Armitage
             double ser = bino_var > 0.0 ? Math.Sqrt(bino_var) : Constant.MISSING;
             outputParameters.AddOutput("ser_any", nunit * ser);
-            if (fault != 0)
-            {
-                XL = Constant.MISSING;
-                xu = Constant.MISSING;
-            }
-            else
-            {
-                XL = stdr - cit * ser;
-                xu = stdr + cit * ser;
-            }
-            outputParameters.AddOutput("from_any", nunit * XL);
+            xl = stdr - cit * ser;
+            xu = stdr + cit * ser;
+            outputParameters.AddOutput("from_any", nunit * xl);
             outputParameters.AddOutput("to_any", nunit * xu);
 
             // Poisson approx CI
             ser = pois_var > 0.0 ? Math.Sqrt(pois_var) : Constant.MISSING;
             outputParameters.AddOutput("ser_small", nunit * ser);
 
-            if (fault != 0)
-            {
-                XL = Constant.MISSING;
-                xu = Constant.MISSING;
-            }
-            else
-            {
-                XL = stdr - cit * ser;
-                xu = stdr + cit * ser;
-            }
-            outputParameters.AddOutput("from_small", nunit * XL);
+            xl = stdr - cit * ser;
+            xu = stdr + cit * ser;
+            outputParameters.AddOutput("from_small", nunit * xl);
             outputParameters.AddOutput("to_small", nunit * xu);
 
             // Dobson et al. improved approx Poisson CI - Stats in Medicine 1991 (10)457
-            poisson_ci(alpha, events, 1.0, out XL, out xu);
-            if (XL != Constant.MISSING & pois_var >= 0.0 & events > 0.0)
-            {
-                XL = stdr + Math.Sqrt(pois_var / events) * (XL - events);
-            }
+            poisson_ci(alpha, events, 1.0, out xl, out xu);
+            if (xl != Constant.MISSING && pois_var >= 0.0 && events > 0.0)
+                xl = stdr + Math.Sqrt(pois_var / events) * (xl - events);
             else
-            {
-                XL = Constant.MISSING;
-            }
-            if (xu != Constant.MISSING & pois_var >= 0.0 & events > 0.0)
-            {
+                xl = Constant.MISSING;
+            if (xu != Constant.MISSING && pois_var >= 0.0 && events > 0.0)
                 xu = stdr + Math.Sqrt(pois_var / events) * (xu - events);
-            }
             else
-            {
                 xu = Constant.MISSING;
-            }
-            outputParameters.AddOutput("from_dobson", nunit * XL);
+            outputParameters.AddOutput("from_dobson", nunit * xl);
             outputParameters.AddOutput("to_dobson", nunit * xu);
 
             return outputParameters;
         }
 
-
         public static ParameterBag RptStdrr(ITemplateHost host, ParameterBag parameters)
         {
-            double srru_bino; double srrl_bino;
-            double srru; double srrl;
-            double srr; double srneu_bino; double srnel_bino; double srneu; double srnel;
-            double sreu_bino; double srel_bino; double sreu; double srel;
-            double crru; double f; double crrl;
-            double crr; double crneu; double crnel; double creu; double crel;
-            int i;
-            bool stratlab;
-            string warn1; string warn2;
-            string tmp;
-            int ifault;
-
             double cco = parameters["cco"].AsDouble;
-            double cit; double P;
-            if (cco > 0)
-            {
-                P = (1.0 - cco) / 2.0;
-                cit = PDF.gauinv(1.0 - P, out ifault);
-            }
-            else
-            {
+            if (cco <= 0)
                 cco = 0.95;
-                cit = PDF.gauinv(0.975, out ifault);
-            }
-            DataFrame eventsFrame = parameters["events"].AsDataFrame;
-            DoubleVariable eventsVariable = eventsFrame.Variables[0]as DoubleVariable;
-            int k = eventsVariable.Length;
-            double[] a = new double[k + 1 /* VB to C# conversion */ ];
-            for (i = 1; i <= k; i++)
-            {
-                a[i] = eventsVariable.Data[i - 1];
-            }
+            double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0);
+
+            DataFrame aFrame = parameters["a"].AsDataFrame;
+            DoubleVariable aVariable = aFrame.Variables[0]as DoubleVariable;
+            int rawRows = aVariable.Length;
             DataFrame pt1Frame = parameters["pt1"].AsDataFrame;
             DoubleVariable pt1Variable = pt1Frame.Variables[0]as DoubleVariable;
-            double[] pt1 = new double[k + 1 /* VB to C# conversion */ ];
-            for (i = 1; i <= k; i++)
-            {
-                pt1[i] = pt1Variable.Data[i - 1];
-            }
             DataFrame bFrame = parameters["b"].AsDataFrame;
             DoubleVariable bVariable = bFrame.Variables[0]as DoubleVariable;
-            double[] b = new double[k + 1 /* VB to C# conversion */ ];
-            string[] title = new string[k + 2 + 1 /* VB to C# conversion */ ];
-            for (i = 1; i <= k; i++)
-            {
-                b[i] = bVariable.Data[i - 1];
-            }
             DataFrame pt2Frame = parameters["pt2"].AsDataFrame;
             DoubleVariable pt2Variable = pt2Frame.Variables[0]as DoubleVariable;
-            double[] pt2 = new double[k + 1 /* VB to C# conversion */ ];
-            for (i = 1; i <= k; i++)
-            {
-                pt2[i] = pt2Variable.Data[i - 1];
-            }
             DataFrame refFrame = parameters["ref"].AsDataFrame;
             DoubleVariable refVariable = refFrame.Variables[0]as DoubleVariable;
-            double[] refIdent = new double[k + 1 /* VB to C# conversion */ ];
-            for (i = 1; i <= k; i++)
-            {
-                refIdent[i] = refVariable.Data[i - 1];
-            }
-            if (parameters.ContainsKey("strata") && parameters["strata"].HasData)
-            {
-                stratlab = true;
-                DataFrame strataFrame = parameters["strata"].AsDataFrame;
-                StringVariable strataVariable = strataFrame.Variables[0]as StringVariable;
-                for (i = 1; i <= k; i++)
-                {
-                    string buf = strataVariable.Data[i - 1].Trim();
-                    if (buf.Length > 0)
-                    {
-                        if (buf.Length > 50)
-                        {
-                            buf = buf.Substring(0, 50);
-                        }
-                        title[i] = buf;
-                    }
-                    else
-                    {
-                        title[i] = "stratum " + i.ToString();
-                    }
-                }
-            }
-            else
-            {
-                stratlab = false;
-                for (i = 1; i <= k; i++)
-                {
-                    title[i] = "stratum " + i.ToString();
-                }
-            }
+
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { aVariable.Data, pt1Variable.Data, bVariable.Data, pt2Variable.Data, refVariable.Data }, 0, rawRows, 1);
+            double[] a = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+            double[] pt1 = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
+            double[] b = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
+            double[] pt2 = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
+            double[] refIdent = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[4];
+
+            bool hasUserSuppliedLabels;
+            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out hasUserSuppliedLabels);
+
+            int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
+            title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 2);
 
             string modelString = parameters["model"].AsString;
             int model = "poisson".Equals(modelString) ? 1 : 2;
 
             double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
             if (nunit <= 0.0)
-            {
                 nunit = 1.0;
-            }
 
-            double[] rkr = new double[k + 2 + 1 /* VB to C# conversion */ ];
-            double[] rkw = new double[k + 2 + 1 /* VB to C# conversion */ ];
-            double[] rkrl = new double[k + 2 + 1 /* VB to C# conversion */ ];
-            double[] rkru = new double[k + 2 + 1 /* VB to C# conversion */ ];
-            bool[] lerr = new bool[k + 2 + 1 /* VB to C# conversion */ ];
-            bool[] uerr = new bool[k + 2 + 1 /* VB to C# conversion */ ];
+            double[] rkr = new double[k + 3];
+            double[] rkw = new double[k + 3];
+            double[] rkrl = new double[k + 3];
+            double[] rkru = new double[k + 3];
+            bool[] lerr = new bool[k + 3];
+            bool[] uerr = new bool[k + 3];
             // ierr = -1; 
 
             double refsum = 0.0;
@@ -485,7 +342,7 @@ namespace StatsDirect.Builtins
             double bsum = 0.0;
             double pt1Sum = 0.0;
             double pt2Sum = 0.0;
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 refsum = refsum + refIdent[i];
                 asum = asum + a[i];
@@ -496,13 +353,15 @@ namespace StatsDirect.Builtins
 
             double alpha = 1.0 - cco;
             if (alpha <= 0.0 || alpha >= 1.0)
-            {
                 alpha = 0.05;
-            }
-            P = cco + (1.0 - cco) / 2.0;
+            double p = cco + (1.0 - cco) / 2.0;
 
             double cre = asum / pt1Sum;
             double crne = bsum / pt2Sum;
+            string warn1;
+            string warn2;
+            double crneu; double crnel; double creu; double crel;
+
             if (model == 1)
             {
                 // Poisson rate CI
@@ -518,14 +377,12 @@ namespace StatsDirect.Builtins
                 MathDbl.binci(bsum, pt2Sum, out crnel, out crneu, cco, out warn2);
             }
 
+            double crr;
             if (crne != 0.0)
-            {
                 crr = cre / crne;
-            }
             else
-            {
                 crr = Constant.MISSING;
-            }
+            double crru; double f; double crrl;
             if (model == 1)
             {
                 // Poisson
@@ -535,7 +392,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    f = PDF.ffromp(2.0 * asum, 2.0 * (bsum + 1.0), 1.0 - P);
+                    f = PDF.ffromp(2.0 * asum, 2.0 * (bsum + 1.0), 1.0 - p);
                     crrl = (pt2Sum / pt1Sum) * (asum / (bsum + 1.0)) * (1.0 / f);
                 }
                 if (bsum == 0.0)
@@ -545,7 +402,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    f = PDF.ffromp(2.0 * bsum, 2.0 * (asum + 1.0), 1.0 - P);
+                    f = PDF.ffromp(2.0 * bsum, 2.0 * (asum + 1.0), 1.0 - p);
                     crru = (pt2Sum / pt1Sum) * ((asum + 1.0) / bsum) * f;
                 }
             }
@@ -569,7 +426,7 @@ namespace StatsDirect.Builtins
             double vsrne_bino = 0.0;
             int realk = 0;
 
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 // rr and ci for stratum
                 if (a[i] + b[i] <= 0.0 || b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
@@ -587,13 +444,9 @@ namespace StatsDirect.Builtins
                     double ir1 = a[i] / pt1[i];
                     double ir2 = b[i] / pt2[i];
                     if (ir2 != 0.0)
-                    {
                         rkr[i] = ir1 / ir2;
-                    }
                     else
-                    {
                         rkr[i] = Constant.MISSING;
-                    }
                     if (model == 1)
                     {
                         // Poisson
@@ -603,7 +456,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            f = PDF.ffromp(2.0 * a[i], 2.0 * (b[i] + 1.0), 1.0 - P);
+                            f = PDF.ffromp(2.0 * a[i], 2.0 * (b[i] + 1.0), 1.0 - p);
                             rkrl[i] = (pt2[i] / pt1[i]) * (a[i] / (b[i] + 1.0)) * (1.0 / f);
                         }
                         if (b[i] == 0.0)
@@ -613,7 +466,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - P);
+                            f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - p);
                             rkru[i] = (pt2[i] / pt1[i]) * ((a[i] + 1.0) / b[i]) * f;
                         }
                     }
@@ -642,6 +495,7 @@ namespace StatsDirect.Builtins
             sre = sre / refsum;
             srne = srne / refsum;
 
+            double sreu_bino; double srel_bino; double sreu; double srel;
             if (vsre < 0.0)
             {
                 srel = Constant.MISSING;
@@ -664,6 +518,7 @@ namespace StatsDirect.Builtins
                 sreu_bino = sre + cit * Math.Sqrt(vsre_bino);
             }
 
+            double srneu_bino; double srnel_bino; double srneu; double srnel;
             if (vsrne < 0.0)
             {
                 srnel = Constant.MISSING;
@@ -686,6 +541,9 @@ namespace StatsDirect.Builtins
                 srneu_bino = srne + cit * Math.Sqrt(vsrne_bino);
             }
 
+            double srru_bino; double srrl_bino;
+            double srru; double srrl;
+            double srr;
             if (srne != 0.0)
             {
                 srr = sre / srne;
@@ -721,7 +579,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> strataList = new List<ParameterBag>();
             outputParameters.AddOutput("*strata", strataList);
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 ParameterBag strataParameters = new ParameterBag();
                 strataList.Add(strataParameters);
@@ -730,15 +588,14 @@ namespace StatsDirect.Builtins
                 strataParameters.AddOutput("pt1", pt1[i]);
                 strataParameters.AddOutput("b", b[i]);
                 strataParameters.AddOutput("pt2", pt2[i]);
-                tmp = stratlab ? title[i] : string.Empty;
-                strataParameters.AddOutput("lb", tmp);
+                strataParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
             }
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
             string meth = model == 1 ? "exact Poisson" : "Koopman";
             outputParameters.AddOutput("method", meth);
             List<ParameterBag> ratesList = new List<ParameterBag>();
             outputParameters.AddOutput("*rates", ratesList);
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 ParameterBag ratesParameters = new ParameterBag();
                 ratesList.Add(ratesParameters);
@@ -747,19 +604,14 @@ namespace StatsDirect.Builtins
                 ratesParameters.AddOutput("lci", rkrl[i]);
                 ratesParameters.AddOutput("uci", rkru[i]);
                 ratesParameters.AddOutput("wt", rkw[i]);
-                tmp = stratlab ? title[i] : string.Empty;
-                ratesParameters.AddOutput("lb", tmp);
+                ratesParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
             }
 
             outputParameters.AddOutput("model_out", model == 1 ? "Poisson (small rates)" : "Binomial");
             if (nunit == 1.0)
-            {
                 outputParameters.AddOutput("units", "1 unit");
-            }
             else
-            {
                 outputParameters.AddOutput("units", nunit.ToString("#,##0") + " units");
-            }
 
             outputParameters.AddOutput("cre", cre * nunit);
             outputParameters.AddOutput("cre_from", crel * nunit);
@@ -805,9 +657,9 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("srr_to", srru_bino);
             }
 
-            int[] pg = new int[k + 2 + 1 /* VB to C# conversion */ ];
-            pg[k + 1] = 1;
-            pg[k + 2] = -1;
+            ChartRenderer.CorrelationRowType[] pg = new ChartRenderer.CorrelationRowType[k + 2 + 1 /* VB to C# conversion */ ];
+            pg[k + 1] = ChartRenderer.CorrelationRowType.Subgroup;
+            pg[k + 2] = ChartRenderer.CorrelationRowType.Pooled;
 
             rkr[k + 2] = srr;
             rkrl[k + 2] = srrl;

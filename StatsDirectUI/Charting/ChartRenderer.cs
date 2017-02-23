@@ -3171,7 +3171,7 @@ namespace StatsDirect.Charting
                 }
             }
             AxisScales axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Category) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
-
+            axisScales.Y = new CategoryAxisScale(k + pbias);
             divy = k + pbias;
             offy = yAxisCanvas;
 
@@ -3392,7 +3392,7 @@ namespace StatsDirect.Charting
                 }
             }
             AxisScales axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
-
+            axisScales.Y = new CategoryAxisScale(k + pbias);
             divy = k + pbias;
             offy = yAxisCanvas;
 
@@ -3573,10 +3573,8 @@ namespace StatsDirect.Charting
                         xtra = w - xAxisCanvas - 5;
                 }
             }
-            DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.NotSet), new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
-
-            divx = DataMaxX - DataMinX;
-            offx = -(DataMinX / divx * xExtCanvas) + xAxisCanvas;
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            axisScales.Y = new CategoryAxisScale(kok + pbias);
             divy = kok + pbias;
             offy = yAxisCanvas;
 
@@ -3614,7 +3612,6 @@ namespace StatsDirect.Charting
                 {
                     double xm = offx;
                     DrawLineInCanvasCoordinates(linePen, xm, yt, xm, yAxisCanvas - 12);
-                    DrawStringLabel("  0  ", xm, yAxisCanvas - 12, StringAlignment.Center);
                 }
 
                 if (pbias == 1)
@@ -3646,20 +3643,14 @@ namespace StatsDirect.Charting
             EndVectorPlot();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="k"></param>
-        /// <param name="title"></param>
-        /// <param name="odr"></param>
-        /// <param name="odrl"></param>
-        /// <param name="odru"></param>
-        /// <param name="gn"></param>
-        /// <param name="pg">0, 1 or -1</param>
-        /// <param name="cap"></param>
-        /// <param name="qid"></param>
-        /// <param name="xform"></param>
-        internal void PlotCorrelation(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
+        public enum CorrelationRowType
+        {
+            Pooled = -1,
+            Study = 0,
+            Subgroup = 1
+        }
+
+        internal void PlotCorrelation(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
             if (k > 10)
             {
@@ -3684,7 +3675,7 @@ namespace StatsDirect.Charting
                     {
                         for (int i = 1; i <= k; i++)
                         {
-                            if (pg[i] == 0)
+                            if (pg[i] == CorrelationRowType.Study)
                             {
                                 if (gn[i] != Constant.MISSING && gn[i] > max_gn)
                                     max_gn = gn[i];
@@ -3714,7 +3705,7 @@ namespace StatsDirect.Charting
                     {
                         for (int i = 1; i <= k; i++)
                         {
-                            if (pg[i] == 0)
+                            if (pg[i] == CorrelationRowType.Study)
                             {
                                 if (gn[i] != Constant.MISSING & gn[i] > max_gn)
                                     max_gn = gn[i];
@@ -3743,7 +3734,7 @@ namespace StatsDirect.Charting
                 case Transformation.None:
                     for (int i = 1; i <= k; i++)
                     {
-                        if (pg[i] == 0)
+                        if (pg[i] == CorrelationRowType.Study)
                         {
                             if (gn[i] != Constant.MISSING && gn[i] > max_gn)
                                 max_gn = gn[i];
@@ -3829,6 +3820,7 @@ namespace StatsDirect.Charting
                     break;
             }
 
+            axisScales.Y = new CategoryAxisScale(kok);
             divy = kok;
             offy = yAxisCanvas;
 
@@ -3926,7 +3918,7 @@ namespace StatsDirect.Charting
                         double yc = offy + yctr;
                         yt = offy + yctr + y2;
                         double yb = offy + yctr - y2;
-                        if (pg[i] == 0)
+                        if (pg[i] == CorrelationRowType.Study)
                         {
                             // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                             // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
@@ -3953,7 +3945,7 @@ namespace StatsDirect.Charting
                         {
                             DrawMarkerInCanvasCoordinates(xm, yc, y2, pooledMarkerType);
                             DrawLineInCanvasCoordinates(linePen, xr, yc, xl, yc);
-                            if (pg[i] < 0)
+                            if (pg[i] == CorrelationRowType.Pooled)
                             {
                                 rmh = odr[i];
                                 // pooled effect marker

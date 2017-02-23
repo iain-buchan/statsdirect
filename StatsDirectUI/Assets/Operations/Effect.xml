@@ -21,7 +21,7 @@
         <frame>
           <name>en</name>
           <prompt>Select SIZES of EXPERIMENTAL/TREATED groups</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -35,7 +35,7 @@
               <name>em</name>
               <prompt>Select MEANS of EXPERIMENTAL/TREATED groups</prompt>
               <same-length-as>En</same-length-as>
-              <mode>NumericSkipMissing</mode>
+              <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
@@ -44,7 +44,7 @@
               <name>es</name>
               <prompt>Select STANDARD DEVIATIONS of EXPERIMENTAL/TREATED groups</prompt>
               <same-length-as>En</same-length-as>
-              <mode>NumericSkipMissing</mode>
+              <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
@@ -57,7 +57,7 @@
           <name>cn</name>
           <prompt>Select SIZES of CONTROL groups</prompt>
           <same-length-as>En</same-length-as>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -70,7 +70,7 @@
             <frame>
               <name>g</name>
               <prompt>Select EFFECT SIZE ESTIMATES (g)</prompt>
-              <mode>NumericSkipMissing</mode>
+              <mode>NumericReplaceMissing</mode>
               <same-length-as>En</same-length-as>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
@@ -84,7 +84,7 @@
               <name>cm</name>
               <prompt>Select MEANS of CONTROL groups</prompt>
               <same-length-as>En</same-length-as>
-              <mode>NumericSkipMissing</mode>
+              <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
@@ -93,7 +93,7 @@
               <name>cs</name>
               <prompt>Select STANDARD DEVIATIONS of CONTROL groups</prompt>
               <same-length-as>En</same-length-as>
-              <mode>NumericSkipMissing</mode>
+              <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>

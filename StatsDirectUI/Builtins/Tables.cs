@@ -1873,18 +1873,21 @@ namespace StatsDirect.Builtins
             DoubleVariable observed = observedFrame.Variables[0]as DoubleVariable;
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
             DoubleVariable expected = expectedFrame.Variables[0]as DoubleVariable;
-            StringVariable namesVariable = null;
+
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { observed.Data, expected.Data }, 0, observed.Length, 0);
+            //  Observed data is grouped frequencies.
+            double[] observedData = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+            //  Expected data may be probabilities or counts; we'll scale them later.
+            double[] expectedData = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
+
+            int nx = observedData.Length;
+
+            string[] names = null;
             if (parameters.ContainsKey("names"))
             {
-                namesVariable = parameters["names"].AsDataFrame.Variables[0]as StringVariable;
+                StringVariable namesVariable = parameters["names"].AsDataFrame.Variables[0] as StringVariable;
+                names = Numerics.Utilities.CopyValidRows(namesVariable.Data, copiesRemovingMissingRows.ValidRowsInOriginal, 0, expected.Length, 0, nx);
             }
-
-            //  Observed data is grouped frequencies.
-            double[] observedData = observed.Data;
-            //  Expected data may be probabilities or counts; we'll scale them later.
-            double[] expectedData = expected.Data;
-
-            int nx = observed.Length;
 
             if (nx < 2)
             {
@@ -1902,7 +1905,7 @@ namespace StatsDirect.Builtins
             double observedTotal = observed.Sum;
             double expectedTotal = expected.Sum;
             bool expectedIsProbability = expectedTotal <= 1.0;
-            for (int n = 0; n <= nx - 1; n++)
+            for (int n = 0; n < nx; n++)
             {
                 xn[n] = observedData[n];
                 xe[n] = expectedData[n] / expectedTotal * observedTotal;
@@ -1920,24 +1923,16 @@ namespace StatsDirect.Builtins
                     throw new TemplateOperationCancelledException();
                 }
                 if (xe[n] < 5)
-                {
                     expectedsBelow5 += 1;
-                }
             }
             string w2;
             if (!((expectedIsProbability || Convert.ToInt32(expectedTotal) == Convert.ToInt32(observedTotal))))
-            {
                 w2 = Formatting.WRNCOLON + "total expected not equal to total observed";
-            }
             else
-            {
                 w2 = string.Empty;
-            }
             string warn = string.Empty;
             if (expectedsBelow5 > 0)
-            {
                 warn += Formatting.XRound(100 * Convert.ToDouble(expectedsBelow5) / Convert.ToDouble(nx), 1) + "% of the expected frequencies < 5";
-            }
             if (observedTotal < 20)
             {
                 if (warn.Length > 0)
@@ -1945,31 +1940,23 @@ namespace StatsDirect.Builtins
                 warn += "total number < 20";
             }
             if (warn.Length > 0)
-            {
                 warn += Formatting.RTFCRLF + Formatting.WRNCOLON;
-            }
             if (observedTotal < 20 | (Convert.ToDouble(expectedsBelow5) / Convert.ToDouble(nx) > 0.2))
-            {
                 warn += "TEST MAY NOT BE RELIABLE";
-            }
             if (w2.Length > 0)
-            {
                 warn += "  *(" + w2 + ")*";
-            }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("ti", observed.Title);
             outputParameters.AddOutput("n", observedTotal.ToString());
 
             double x2 = 0.0;
             IList<ParameterBag> frequenciesList = new List<ParameterBag>();
-            for (int i = 0; i <= nx - 1; i++)
+            for (int i = 0; i < nx; i++)
             {
                 ParameterBag frequenciesParameters = new ParameterBag();
                 string tx = (i + 1).ToString();
-                if (namesVariable != null)
-                {
-                    tx = namesVariable.Data[i];
-                }
+                if (null != names)
+                    tx = names[i];
                 frequenciesParameters.AddOutput("x", tx);
                 frequenciesParameters.AddOutput("o", xn[i].ToString());
                 frequenciesParameters.AddOutput("e", host.RoundU(xe[i]));
@@ -1999,171 +1986,6 @@ namespace StatsDirect.Builtins
 
             return outputParameters;
         }
-
-
-        //  Old version
-        // Public Shared Function rptChiGood(ByVal host As ITemplateHost, ByVal parameters As ParameterBag) As StepResult
-        //     Dim x() As Double, xn() As Double, xe() As Double, totxe As Double, totob As Double, x2 As Double
-        //     Dim i As Integer, N As Integer, nx As Integer, total As Integer, OK As Integer, df As Integer
-        //     Dim gotx As Boolean
-        //     Dim w2 As String
-        //     Dim warn As String = string.Empty
-        //     Dim cgft As String = "Chi-square goodness of fit test"
-
-        //     Dim frame As DataFrame = parameters("data").AsDataFrame
-        //     Dim individualOrGrouped As String = parameters("individualOrGrouped").AsString
-        //     Dim isIndividual As Boolean = "I".Equals(individualOrGrouped)
-
-        //     Dim chiGFOptions As ChiSquareGoodnessOfFitOptions = New ChiSquareGoodnessOfFitOptions()
-
-        //     If isIndividual Then
-        //         ' Data is individual observations
-        //         Dim soleVariable As ClassifierVariable = (frame.Variables(0)) as ClassifierVariable
-        //         Dim soleData() As Double = soleVariable.Data
-
-        //         ReDim x(1)
-        //         x(1) = soleData(0)
-        //         nx = 1
-        //         total = soleVariable.Length
-        //         For Each val As Double In soleData
-        //             gotx = False
-        //             For i = 1 To nx
-        //                 If val = x(i) Then gotx = True
-        //             Next
-        //             If Not gotx Then
-        //                 nx = nx + 1
-        //                 ReDim Preserve x(nx)
-        //                 x(nx) = val
-        //             End If
-        //         Next
-        //         Array.Sort(x, 1, nx)
-        //         ReDim xn(nx), xe(nx)
-        //         OK = 0
-        //         For N = 1 To nx
-        //             For Each val As Double In soleData
-        //                 If val = x(N) Then xn(N) += 1
-        //             Next
-        //             xe(N) = CDbl(total) / CDbl(nx)
-        //         Next
-        //         For N = 1 To nx
-        //             chiGFOptions.x.Add(soleVariable.Group(CInt(x(N))).Label)
-        //         Next
-        //     Else
-        //         ' Data is grouped frequencies.  We may or may not have group names.
-        //         Dim frequenciesVariable As DoubleVariable = frame.Variables(0) as DoubleVariable
-        //         Dim soleData() As Double = frequenciesVariable.Data
-
-        //         Dim namesVariable As StringVariable = Nothing
-        //         If parameters.ContainsKey("names") Then
-        //             namesVariable = parameters("names").AsDataFrame.Variables(0)as StringVariable
-        //         End If
-
-        //         nx = frequenciesVariable.Length
-        //         ReDim x(nx), xn(nx), xe(nx)
-        //         total = 0
-        //         For N = 1 To nx
-        //             x(N) = N - 1
-        //             xn(N) = soleData(N - 1)
-        //             total += CInt(xn(N))
-        //         Next
-        //         For N = 1 To nx
-        //             xe(N) = CDbl(total) / CDbl(nx)
-        //             Dim label As String
-        //             If namesVariable Is Nothing Then
-        //                 label = soleData(CInt(x(N))).ToString()
-        //             Else
-        //                 label = namesVariable.Data(N - 1)
-        //             End If
-        //             chiGFOptions.x.Add(label)
-        //         Next
-        //     End If
-        //     If nx < 2 Then
-        //         host.Error("Too few categories; use at least three for the chi-square goodness of fit test.", cgft)
-        //         Throw New TemplateOperationCancelledException()
-        //     End If
-        //     If nx = 2 Then
-        //         host.Error("Only two categories, use binomial methods such as the single proportion test.", cgft)
-        //         Throw New TemplateOperationCancelledException()
-        //     End If
-
-        //     ' Set up the rest of the options
-        //     For N = 1 To nx
-        //         chiGFOptions.xn.Add(xn(N))
-        //         chiGFOptions.xe.Add(xe(N))
-        //     Next
-        //     df = nx - 1
-        //     chiGFOptions.categories = nx
-        //     chiGFOptions.n = total
-        //     chiGFOptions.total = total
-        //     chiGFOptions.df = df
-
-        //     If Not host.Amend(chiGFOptions, parameters) Then
-        //         Throw New TemplateOperationCancelledException()
-        //     End If
-        //     df = chiGFOptions.df
-        //     If df < 1 Then df = 1
-        //     For N = 1 To nx
-        //         xe(N) = CDbl(chiGFOptions.xe(N - 1))
-        //     Next
-
-        //     totxe = 0.0
-        //     totob = 0.0
-        //     OK = 0
-        //     For N = 1 To nx
-        //         If xe(N) <= 0 Then
-        //             host.Error("Can not have expected value < = 0.", cgft)
-        //             Throw New TemplateOperationCancelledException()
-        //         End If
-        //         If xe(N) < 5 Then OK = OK + 1
-        //         totxe = totxe + xe(N)
-        //         totob = totob + xn(N)
-        //     Next
-        //     If CLng(totxe) <> CLng(totob) Then
-        //         w2 = Formatting.WRNCOLON & "total expected not equal to total observed"
-        //         host.Error(w2, cgft)
-        //     Else
-        //         w2 = vbNullString
-        //     End If
-        //     If OK > 0 Then warn = warn + Formatting.XRound(100 * CDbl(OK) / CDbl(nx), 1) & "% of the expected frequencies < 5"
-        //     If total < 20 Then
-        //         If Len(warn) > 0 Then warn = warn & " and "
-        //         warn = warn & "total number < 20"
-        //     End If
-        //     If Len(warn) > 0 Then warn = Formatting.WRNCOLON & warn
-        //     If total < 20 Or (CDbl(OK) / CDbl(nx) > 0.2) Then warn = warn & ": TEST MAY NOT BE RELIABLE"
-        //     If Len(w2) > 0 Then warn = warn & "  *(" & w2 & ")*"
-        //     Dim outputParameters As ParameterBag = New ParameterBag()
-        //     outputParameters.AddOutput("ti", frame.Variables(0).Title)
-        //     outputParameters.AddOutput("n", Format(total))
-        //     x2 = 0.0
-        //     Dim frequenciesList As IList(Of ParameterBag) = New List(Of ParameterBag)
-        //     For i = 1 To nx
-        //         Dim frequenciesParameters As ParameterBag = New ParameterBag()
-        //         Dim tx As String = chiGFOptions.x(i - 1)
-        //         'If x(i) = Constant.MISSING Then tx = "missing or text" Else tx = Format(x(i))
-        //         frequenciesParameters.AddOutput("x", tx)
-        //         frequenciesParameters.AddOutput("o", Format(xn(i)))
-        //         frequenciesParameters.AddOutput("e", host.RoundU(xe(i)))
-        //         x2 += ((xn(i) - xe(i)) * (xn(i) - xe(i))) / xe(i)
-        //         frequenciesList.Add(frequenciesParameters)
-        //     Next
-        //     outputParameters.AddOutput("*frequencies", frequenciesList)
-        //     outputParameters.AddOutput("chi2", host.RoundU(x2))
-        //     outputParameters.AddOutput("df", Format(df))
-        //     outputParameters.AddOutput("p", host.pval(PDF.chivalp(x2, CDbl(df))))
-        //     If Len(warn) > 0 Then
-        //         Dim warnList As IList(Of ParameterBag) = New List(Of ParameterBag)
-        //         Dim warnParameters As ParameterBag = New ParameterBag()
-        //         warnParameters.AddOutput("warn", warn)
-        //         warnList.Add(warnParameters)
-        //         outputParameters.AddOutput("*warn", warnList)
-        //     Else
-        //         outputParameters.AddOutput("*warn", Nothing)
-        //     End If
-        //     If Err.Number <> 0 Then host.Error(Err.Description, "Chi-Square Goodness of Fit")
-
-        //     Return New StepResult(StepSuccess.Success, outputParameters)
-        // End Function
 
         public static ParameterBag RptCrosstabsPreprocess(ITemplateHost host, ParameterBag parameters)
         {

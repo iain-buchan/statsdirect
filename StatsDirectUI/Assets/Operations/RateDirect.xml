@@ -9,9 +9,9 @@
           <name>cco</name>
         </confidence-interval>
         <frame>
-          <name>events</name>
+          <name>idxn</name>
           <prompt>Select EVENTS in INDEX population or sample</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -19,7 +19,7 @@
         <frame>
           <name>times</name>
           <prompt>Select PERSON-TIME for INDEX population or sample</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <same-length-as>events</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -28,7 +28,7 @@
         <frame>
           <name>refn</name>
           <prompt>Select GROUP SIZES for REFERENCE population</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <same-length-as>events</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

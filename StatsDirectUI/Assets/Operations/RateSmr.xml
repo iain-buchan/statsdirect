@@ -9,22 +9,21 @@
           <name>cco</name>
         </confidence-interval>
         <frame>
-          <name>data</name>
+          <name>rates</name>
           <prompt>Select EVENT RATE for REFERENCE population</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
         </frame>
         <frame>
-          <name>scrap</name>
+          <name>times</name>
           <prompt>Select PERSON-TIME for INDEX population or sample</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <same-length-as>rates</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
-          <append-to-frame>data</append-to-frame>
         </frame>
         <frame>
           <name>strata</name>

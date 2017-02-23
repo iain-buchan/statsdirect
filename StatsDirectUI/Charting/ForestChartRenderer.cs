@@ -2,10 +2,7 @@
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 
 namespace StatsDirect.Charting
 {
@@ -18,11 +15,12 @@ namespace StatsDirect.Charting
 
         public override ScaleParameters GetScaleParameters()
         {
-            ForestOptions fOptions = ((ForestOptions)(definition.ChartOptions));
-            int k = fOptions.k;
-            double[] odr = fOptions.OddsRatios;
-            double[] odrl = fOptions.OddsRatioLcis;
-            double[] odru = fOptions.OddsRatioUcis;
+            ForestOptions fOptions = (ForestOptions)definition.ChartOptions;
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis }, 0, fOptions.k, 0);
+            double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+            double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
+            double[] odru = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
+            int k = odr.Length;
 
             DataMaxX = double.MinValue;
             DataMinX = double.MaxValue;
@@ -89,16 +87,19 @@ namespace StatsDirect.Charting
         {
             int pbias = 0;
 
-            ForestOptions fOptions = ((ForestOptions)(definition.ChartOptions));
+            ForestOptions fOptions = (ForestOptions)definition.ChartOptions;
             MarkerType studyMarkerType = fOptions.MarkerTypes[0];
             MarkerType pooledMarkerType = fOptions.MarkerTypes[1];
-            double[] gn = fOptions.gn;
-            int k = fOptions.k;
-            double[] odr = fOptions.OddsRatios;
-            double[] odrl = fOptions.OddsRatioLcis;
-            double[] odru = fOptions.OddsRatioUcis;
-            double[] pg = fOptions.pg;
-            string[] title = fOptions.Titles;
+
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis, fOptions.gn, fOptions.pg }, 0, fOptions.k, 0);
+            double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+            double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
+            double[] odru = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
+            double[] gn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
+            double[] pg = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[4];
+            int k = odr.Length;
+
+            string[] title = Numerics.Utilities.CopyValidRows(fOptions.Titles, copiesRemovingMissingRows.ValidRowsInOriginal, 0, fOptions.k, 0, k);
 
             if (k > 10)
             {
@@ -199,7 +200,7 @@ namespace StatsDirect.Charting
             if (w > xtra + xAxisCanvas)
                 xtra = w - xAxisCanvas - 5;
             AxisScales axisScales = DrawAxesOrEnlargeCanvas(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
-
+            axisScales.Y = new CategoryAxisScale(k + pbias);
             divy = kok + pbias;
             offy = yAxisCanvas;
 

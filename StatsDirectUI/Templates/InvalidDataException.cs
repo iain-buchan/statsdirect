@@ -9,6 +9,7 @@ namespace StatsDirect.Templates
     [Serializable]
     public class InvalidDataException : Exception
     {
+        [Obsolete("Invalid data exceptions should tell the user what is invalid")]
         public InvalidDataException()
             : base("Invalid data")
         {

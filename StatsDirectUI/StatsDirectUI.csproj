@@ -1708,11 +1708,15 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Assets\Operations\Chi2by2.xml" />
-    <Content Include="Assets\Operations\Stdrr.xml" />
+    <Content Include="Assets\Operations\Stdrr.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\RateDirect.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\Operations\RateSmr.xml" />
+    <Content Include="Assets\Operations\RateSmr.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\ExactSign.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1751,7 +1755,9 @@
     <Content Include="Assets\Operations\Dunnett.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\Operations\Effect.xml" />
+    <Content Include="Assets\Operations\Effect.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\EqualityOfVariance.xml" />
     <Content Include="Assets\Operations\FollowUpLifeTable.xml">
       <SubType>Designer</SubType>
@@ -1859,7 +1865,9 @@
     <Content Include="Assets\Operations\ProportionMeta.xml">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Assets\Operations\PyramidPlot.xml" />
+    <Content Include="Assets\Operations\PyramidPlot.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\Quantile.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1947,7 +1955,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

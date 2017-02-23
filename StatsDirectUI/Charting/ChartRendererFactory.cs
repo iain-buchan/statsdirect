@@ -15,17 +15,19 @@ namespace StatsDirect.Charting
     {
         public static string PlotBiasMAAndReturnRtf(ITemplateHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
         {
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(new ChartDefinition()))
+            ChartDefinition cd = new ChartDefinition();
+            cd.ScaleParameters.X.ScaleType = ScaleType.Linear;
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
             {
                 ch.Plot_Bias_MA(host, x, yy, yw, rows, xtxt, cl, cu, cco, cit, rmh, xform, diagonal);
                 return Render(ch);
             }
         }
 
-        public static string PlotCorrelationAndReturnRtf(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, int[] pg, string cap, string qid, Transformation xform, bool isDifference)
+        public static string PlotCorrelationAndReturnRtf(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, ChartRenderer.CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
             ChartDefinition cd = new ChartDefinition();
-            cd.ScaleParameters.X.ScaleType = ScaleType.Log10;
+            cd.ScaleParameters.X.ScaleType = Transformation.Log == xform ? ScaleType.Log10 : ScaleType.Linear;
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
             {
                 ch.PlotCorrelation(k, title, odr, odrl, odru, gn, pg, cap, qid, xform, isDifference);
@@ -47,7 +49,9 @@ namespace StatsDirect.Charting
 
         public static string PlotEffectAndReturnRtf(ITemplateHost host, int k, double[] cn, double[] En, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
         {
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(new ChartDefinition()))
+            ChartDefinition cd = new ChartDefinition();
+            cd.ScaleParameters.X.ScaleType = ScaleType.Linear;
+            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
             {
                 ch.PlotEffect(host, k, cn, En, title, rmh, ll, ul, cco, odr, odrl, odru, cap, pbias, qid);
                 return Render(ch);

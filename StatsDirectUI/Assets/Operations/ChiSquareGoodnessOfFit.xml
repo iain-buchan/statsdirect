@@ -10,7 +10,7 @@
           <name>observed</name>
           <prompt>Select observed counts</prompt>
           <title>Observed counts</title>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -20,7 +20,7 @@
           <prompt>Select cell probabilities or expected counts</prompt>
           <title>Probabilities or expected counts</title>
           <same-length-as>observed</same-length-as>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>

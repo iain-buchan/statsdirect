@@ -8,7 +8,7 @@
         <frame>
           <name>odds</name>
           <prompt>Select SUMMARY STATISTIC (e.g. odds ratio)</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -16,7 +16,7 @@
         <frame>
           <name>lci</name>
           <prompt>Select LOWER confidence limit</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <same-length-as>odds</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -25,7 +25,7 @@
         <frame>
           <name>uci</name>
           <prompt>Select UPPER confidence limit</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <same-length-as>odds</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -35,7 +35,7 @@
           <name>gn</name>
           <prompt>Select GROUP SIZE/WEIGHT [skip for none]</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <same-length-as>odds</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

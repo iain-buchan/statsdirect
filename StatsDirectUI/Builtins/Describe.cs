@@ -1481,8 +1481,8 @@ namespace StatsDirect.Builtins
 
             private SimpleLinearRegressionContext GetProcessedContext(double[] y, double[] x, int length)
             {
-                double[][] copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { y, x }, 0, length, 0);
-                SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(copiesRemovingMissingRows[1], copiesRemovingMissingRows[0]);
+                DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { y, x }, 0, length, 0);
+                SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1], copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0]);
                 context.CalculateLeastSquaresMethod();
                 return context;
             }

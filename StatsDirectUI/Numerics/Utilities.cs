@@ -1,4 +1,6 @@
-﻿namespace StatsDirect.Numerics
+﻿using System;
+
+namespace StatsDirect.Numerics
 {
     public static class Utilities
     {
@@ -10,7 +12,7 @@
         /// <param name="inputLength">The number of valid rows in each array in inputs.  Precondition: inputLength + inputBase &lt;= inputs[i].Length for all valid i</param>
         /// <param name="outputBase">The index at which the first row with non-missing data will be emitted in the returns.  Typically 0 or 1; often used for re-basing 0-based inputs from the UI to 1-based outputs for SD functions.</param>
         /// <returns></returns>
-        public static double[][] RemoveMissingRows(double[][] inputs, int inputBase, int inputLength, int outputBase)
+        public static DoubleArraysAndBooleans RemoveMissingRows(double[][] inputs, int inputBase, int inputLength, int outputBase, int extraOutputElementsAtEnd = 0)
         {
             // Implemented in two passes, so that we know how large to make the output arrays rather than blindly copying then having to re-copy.
 
@@ -22,7 +24,7 @@
                 bool shouldCopy = true;
                 foreach (double[] ary in inputs)
                 {
-                    if (ary[inputRow] == Constant.MISSING)
+                    if (null != ary && ary[inputRow] == Constant.MISSING)
                     {
                         shouldCopy = false;
                         break;
@@ -36,18 +38,33 @@
             // Pass 2: Allocate the output arrays and copy the valid rows.
             double[][] outputs = new double[inputs.Length][];
             for (int ary = 0; ary < inputs.Length; ary++)
-                outputs[ary] = new double[validRows + outputBase];
+                outputs[ary] = CopyValidRows(inputs[ary], shouldCopyRow, inputBase, inputLength, outputBase, validRows, extraOutputElementsAtEnd);
+            return new DoubleArraysAndBooleans(outputs, shouldCopyRow);
+        }
+
+        public static T[] CopyValidRows<T>(T[] input, bool[] shouldCopyRow, int inputBase, int inputLength, int outputBase, int outputLength, int extraOutputElementsAtEnd = 0)
+        {
+            if (null == input)
+                return null;
+
+            T[] output = new T[outputLength + outputBase + extraOutputElementsAtEnd];
             int outputRow = outputBase;
             for (int inputRow = inputBase; inputRow < inputBase + inputLength; inputRow++)
-            {
                 if (shouldCopyRow[inputRow])
-                {
-                    for (int ary = 0; ary < inputs.Length; ary++)
-                        outputs[ary][outputRow] = inputs[ary][inputRow];
-                    outputRow++;
-                }
-            }
-            return outputs;
+                    output[outputRow++] = input[inputRow];
+            return output;
+        }
+    }
+
+    public class DoubleArraysAndBooleans
+    {
+        public double[][] ArraysWithMissingRowsRemoved { get; private set; }
+        public bool[] ValidRowsInOriginal { get; private set; }
+
+        public DoubleArraysAndBooleans(double[][] arraysWithMissingRowsRemoved, bool[] validRowsInOriginal)
+        {
+            ArraysWithMissingRowsRemoved = arraysWithMissingRowsRemoved;
+            ValidRowsInOriginal = validRowsInOriginal;
         }
     }
 }

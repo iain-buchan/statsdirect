@@ -85,8 +85,8 @@ namespace StatsDirect.Builtins
             DoubleVariable vy = fy.Variables[0]as DoubleVariable;
             DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0]as DoubleVariable;
-            double[][] copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { vy.Data, vx.Data }, 0, vy.Length, 0);
-            return new SimpleLinearRegressionContext(copiesRemovingMissingRows[1], copiesRemovingMissingRows[0]);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { vy.Data, vx.Data }, 0, vy.Length, 0);
+            return new SimpleLinearRegressionContext(copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1], copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0]);
         }
 
         private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext(ParameterBag parameters)
@@ -2285,8 +2285,8 @@ namespace StatsDirect.Builtins
                 model = Parsing.Cint_Txt(parameters["model"].AsString);
 
             int nx = vY.Length;
-            double[][] copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { vY.Data, vX.Data }, 0, nx, 0);
-            SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(copiesRemovingMissingRows[1], copiesRemovingMissingRows[0]);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { vY.Data, vX.Data }, 0, nx, 0);
+            SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1], copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0]);
             ParameterBag outputParameters = new ParameterBag();
             switch (model)
             {
