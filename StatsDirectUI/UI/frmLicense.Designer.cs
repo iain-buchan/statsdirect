@@ -37,15 +37,12 @@
             this.lblVersion = new System.Windows.Forms.Label();
             this.lblInstructions = new System.Windows.Forms.Label();
             this.lblEmail = new System.Windows.Forms.Label();
-            this.lblOrganisation = new System.Windows.Forms.Label();
             this.lblKey = new System.Windows.Forms.Label();
             this.txtEmail = new System.Windows.Forms.TextBox();
-            this.txtOrganisation = new System.Windows.Forms.TextBox();
             this.txtKey = new System.Windows.Forms.TextBox();
             this.txtInstructions = new System.Windows.Forms.TextBox();
             this.lblWeb = new System.Windows.Forms.Label();
             this.tipEmail = new System.Windows.Forms.ToolTip(this.components);
-            this.tipOrganisation = new System.Windows.Forms.ToolTip(this.components);
             this.tipKey = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
@@ -121,15 +118,6 @@
             this.lblEmail.TabIndex = 15;
             this.lblEmail.Text = "Your email address:";
             // 
-            // lblOrganisation
-            // 
-            this.lblOrganisation.AutoSize = true;
-            this.lblOrganisation.Location = new System.Drawing.Point(12, 130);
-            this.lblOrganisation.Name = "lblOrganisation";
-            this.lblOrganisation.Size = new System.Drawing.Size(92, 13);
-            this.lblOrganisation.TabIndex = 16;
-            this.lblOrganisation.Text = "Your organisation:";
-            // 
             // lblKey
             // 
             this.lblKey.AutoSize = true;
@@ -148,16 +136,6 @@
             this.txtEmail.Size = new System.Drawing.Size(254, 20);
             this.txtEmail.TabIndex = 18;
             this.txtEmail.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtEmail_KeyDown);
-            // 
-            // txtOrganisation
-            // 
-            this.txtOrganisation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtOrganisation.Location = new System.Drawing.Point(117, 127);
-            this.txtOrganisation.Name = "txtOrganisation";
-            this.txtOrganisation.Size = new System.Drawing.Size(254, 20);
-            this.txtOrganisation.TabIndex = 19;
-            this.txtOrganisation.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtOrganisation_KeyDown);
             // 
             // txtKey
             // 
@@ -206,10 +184,8 @@
             this.Controls.Add(this.lblWeb);
             this.Controls.Add(this.txtInstructions);
             this.Controls.Add(this.txtKey);
-            this.Controls.Add(this.txtOrganisation);
             this.Controls.Add(this.txtEmail);
             this.Controls.Add(this.lblKey);
-            this.Controls.Add(this.lblOrganisation);
             this.Controls.Add(this.lblEmail);
             this.Controls.Add(this.lblInstructions);
             this.Controls.Add(this.lblVersion);
@@ -241,15 +217,12 @@
         private System.Windows.Forms.Label lblVersion;
         private System.Windows.Forms.Label lblInstructions;
         private System.Windows.Forms.Label lblEmail;
-        private System.Windows.Forms.Label lblOrganisation;
         private System.Windows.Forms.Label lblKey;
         private System.Windows.Forms.TextBox txtEmail;
-        private System.Windows.Forms.TextBox txtOrganisation;
         private System.Windows.Forms.TextBox txtKey;
         private System.Windows.Forms.TextBox txtInstructions;
         private System.Windows.Forms.Label lblWeb;
         private System.Windows.Forms.ToolTip tipEmail;
-        private System.Windows.Forms.ToolTip tipOrganisation;
         private System.Windows.Forms.ToolTip tipKey;
     }
 }

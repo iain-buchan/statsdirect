@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-using StatsDirect.Utilities;
 using System.Diagnostics;
-using System.Globalization;
 
 namespace StatsDirect.UI
 {
@@ -28,7 +26,6 @@ namespace StatsDirect.UI
                 string company = ui.Company;
                 if (ui.Name.EndsWith("~~" + ui.Name.Substring(0, 1)))
                     company = company.Substring(0, company.Length - 3);
-                txtOrganisation.Text = company.Trim();
             }
         }
 
@@ -40,7 +37,6 @@ namespace StatsDirect.UI
         private void frmLicense_Load(object sender, EventArgs e)
         {
             tipEmail.SetToolTip(txtEmail, "You must either enter the email address that is specified with your licence key or use any email address for a 10 day free trial");
-            tipOrganisation.SetToolTip(txtOrganisation, "Enter the name of your organisation or leave blank");
             tipKey.SetToolTip(txtKey, "Enter licence key or leave blank for 10 day free trial");
         }
 
@@ -65,7 +61,7 @@ namespace StatsDirect.UI
         private bool SetResults()
         {
             string email = txtEmail.Text.Trim();
-            string organisation = txtOrganisation.Text.Trim();
+            string organisation = string.Empty;
             string key = txtKey.Text.Trim();
             string errorMessage;
             bool retval;
@@ -101,17 +97,8 @@ namespace StatsDirect.UI
             if (txtEmail.Text.Length > 4)
             {
                 e.Handled = true;
-                txtOrganisation.Focus();
+                txtKey.Focus();
             }
-        }
-
-        private void txtOrganisation_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode != Keys.Return)
-                return;
-
-            e.Handled = true;
-            txtKey.Focus();
         }
 
         private void txtKey_KeyDown(object sender, KeyEventArgs e)
