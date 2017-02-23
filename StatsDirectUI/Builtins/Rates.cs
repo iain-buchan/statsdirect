@@ -13,60 +13,45 @@ namespace StatsDirect.Builtins
 
         ///  <summary>
         ///  relates chi-sq to Poisson
-        ///  Johnson &amp; Kotz 1969, Ulm in Am J Epidemiol 1990 (131) 373-
-        ///  comments by Dobson Stats in Med 1991 (10) 457-
         ///  </summary>
         ///  <param name="alpha"></param>
         ///  <param name="events"></param>
         ///  <param name="tar"></param>
-        ///  <param name="XL"></param>
+        ///  <param name="xl"></param>
         ///  <param name="xu"></param>
-        ///  <remarks></remarks>
-        public static void poisson_ci(double alpha, double events, double tar, out double XL, out double xu)
+        ///  <remarks>Johnson &amp; Kotz 1969, Ulm in Am J Epidemiol 1990 (131) 373-
+        ///  comments by Dobson Stats in Med 1991 (10) 457-</remarks>
+        public static void poisson_ci(double alpha, double events, double tar, out double xl, out double xu)
         {
             int fault;
             if (events < 0.0)
             {
-                XL = Constant.MISSING;
+                xl = Constant.MISSING;
                 xu = Constant.MISSING;
             }
             else if (events == 0.0)
             {
-                XL = 0.0;
+                xl = 0.0;
                 xu = PDF.ppchi2(1.0 - alpha / 2.0, 2.0, out fault) / 2.0;
                 if (fault != 0)
-                {
                     xu = Constant.MISSING;
-                }
                 else
-                {
                     xu = xu / tar;
-                }
             }
             else
             {
-                XL = PDF.ppchi2(alpha / 2.0, 2.0 * events, out fault) / 2.0;
+                xl = PDF.ppchi2(alpha / 2.0, 2.0 * events, out fault) / 2.0;
                 if (fault != 0)
-                {
-                    XL = Constant.MISSING;
-                }
+                    xl = Constant.MISSING;
                 else
-                {
-                    XL = XL / tar;
-                }
+                    xl = xl / tar;
                 xu = PDF.ppchi2(1.0 - alpha / 2.0, 2.0 * (events + 1.0), out fault) / 2.0;
                 if (fault != 0)
-                {
                     xu = Constant.MISSING;
-                }
                 else
-                {
                     xu = xu / tar;
-                }
             }
         }
-
-
 
         public static ParameterBag RptRateSmr(ITemplateHost host, ParameterBag parameters)
         {
