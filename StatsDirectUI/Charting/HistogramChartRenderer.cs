@@ -1,0 +1,304 @@
+﻿using StatsDirect.Templates;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+
+namespace StatsDirect.Charting
+{
+    class HistogramChartRenderer: AbstractChartRenderer
+    {
+        public HistogramChartRenderer(ChartDefinition definition)
+            : base(definition)
+        {
+        }
+
+        public override ScaleParameters GetScaleParameters()
+        {
+            HistogramOptions options = ((HistogramOptions)(definition.ChartOptions));
+            bool showRelativeFrequencies = options.ShowRelativeFrequencies;
+
+            //  We're looking over multiple histograms and getting a merged view
+            double minX = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = 0.0;
+
+            for (int i = 0; i < definition.YSeries.Count; i++)
+            {
+                HistogramSeriesOptions so = options.HistoSeriesOptions[i];
+                if (null == so.BinsDescriptor)
+                    so.Reset(true, 0, definition.YSeries[i], options.BinChoiceMethod);
+
+                //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
+                minX = Math.Min(minX, so.BinsDescriptor.LowestEdge);
+                maxX = Math.Max(maxX, so.BinsDescriptor.HighestEdge);
+
+                //  Find the number of values in each bin, and hence the size of the histogram's y axis.
+                //  This works because the bins are always of equal width in the histograms we choose to plot - if they weren't, we'd have to scale by the width
+                double seriesMaxY = 0;
+                int points = 0;
+                for (int bindex = 0; bindex < so.BinsDescriptor.Bins; bindex++)
+                {
+                    points += so.BinsDescriptor.Counts[bindex];
+                    seriesMaxY = Math.Max(seriesMaxY, so.BinsDescriptor.Counts[bindex]);
+                }
+                if (showRelativeFrequencies)
+                    seriesMaxY = seriesMaxY / points;
+                if (seriesMaxY > maxY)
+                    maxY = seriesMaxY;
+            }
+            ScaleParameters sp = new ScaleParameters
+            {
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = minX, Max = maxX },
+                Y = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = 0, Max = maxY }
+            };
+            return sp;
+        }
+
+        public override ParameterBag Plot(ITemplateHost host)
+        {
+            HistogramOptions options = (HistogramOptions)definition.ChartOptions;
+            List<Series> seriesToUse = definition.YSeries;
+            MarkerType[] originalMarkerTypes = null;
+            //  A space to save drawn ASCII plots until required
+            List<string> savedLines = null;
+
+            //  Ensure the data is sorted
+            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+
+            // get settings for plot
+            bool overlayNormalCurve = options.OverlayNormalCurve;
+
+            try
+            {
+                if (!IsAscii)
+                {
+                    //  If there's more than one series, they're to be plotted separately.  Each plot is the same height as the original.
+                    imageHeight *= seriesToUse.Count;
+
+                    StartVectorPlot();
+
+                    originalMarkerTypes = MarkerTypes;
+                    PushAndCloneMarkerTypes();
+                    for (int i = 0; i < originalMarkerTypes.Length; i++)
+                        MarkerTypes[i].Width = options.LineWidth;
+                    AssignMarkersToSeries(seriesToUse);
+
+                    if (!(string.IsNullOrEmpty(options.AxisFontDescriptor)))
+                        axisLabelFont = FontFromSaveString(options.AxisFontDescriptor);
+                    if (!(string.IsNullOrEmpty(options.AxisTitleFontDescriptor)))
+                        axisTitleFont = FontFromSaveString(options.AxisTitleFontDescriptor);
+                    if (!(string.IsNullOrEmpty(options.TitleFontDescriptor)))
+                        titleFont = FontFromSaveString(options.TitleFontDescriptor);
+                }
+                else
+                {
+                    // ASCII plot
+                    savedLines = new List<string>();
+                }
+
+                for (int seriesIndex = 0; seriesIndex < seriesToUse.Count; seriesIndex++)
+                {
+                    DoubleSeries s = seriesToUse[seriesIndex].AsDoubleSeries;
+                    HistogramSeriesOptions so = options.HistoSeriesOptions[seriesIndex];
+                    string title = so.ChartTitle;
+
+                    BinsDescriptor descriptor = so.BinsDescriptor;
+                    double minimumBinMidpoint = (descriptor.Edges[0] + descriptor.Edges[1]) / 2.0;
+                    double maximumBinMidpoint = (descriptor.Edges[descriptor.Bins] + descriptor.Edges[descriptor.Bins - 1]) / 2.0;
+                    double binMidpointInterval = (maximumBinMidpoint - minimumBinMidpoint) / (descriptor.Bins - 1);
+
+                    //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
+                    if (!options.PoolVariablesForBins)
+                    {
+                        DataMinX = double.MaxValue;
+                        DataMaxX = double.MinValue;
+                    }
+                    DataMinX = Math.Min(DataMinX, descriptor.LowestEdge);
+                    DataMaxX = Math.Max(DataMaxX, descriptor.HighestEdge);
+                    DataMinY = 0;
+                    DataMaxY = double.MinValue;
+
+                    //  Find the number of values in each bin, and hence the size of the histogram's y axis.
+                    //  This works because the bins are always of equal width in the histograms we choose to plot - if they weren't, we'd have to scale by the width
+                    double seriesMaxY = 0;
+                    int points = 0;
+                    for (int bindex = 0; bindex < descriptor.Bins; bindex++)
+                    {
+                        points += descriptor.Counts[bindex];
+                        seriesMaxY = Math.Max(seriesMaxY, descriptor.Counts[bindex]);
+                    }
+                    if (options.ShowRelativeFrequencies)
+                        seriesMaxY = seriesMaxY / points;
+                    if (seriesMaxY > DataMaxY)
+                        DataMaxY = seriesMaxY;
+
+                    if (!IsAscii)
+                    {
+                        // Plot a Metafile version
+                        double heightPerChart = imageHeight / seriesToUse.Count; //  Should end up as the old MetaH
+                        double thisChartTop = imageHeight - (seriesIndex * heightPerChart);
+                        double thisChartBottom = thisChartTop - heightPerChart;
+
+                        //  No longer the default Y axis!
+                        DefaultAxes();
+                        yAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DEFAULT_Y_GAP);
+                        yExtCanvas = heightPerChart - Math.Min(heightPerChart / 4, 2 * DEFAULT_Y_GAP);
+
+                        //  If necessary, extend the Y axis to accommodate the normal curve
+                        if (overlayNormalCurve)
+                        {
+                            double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
+                            double mxy = PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, false);
+                            if (mxy > DataMaxY)
+                                DataMaxY = mxy;
+                        }
+
+                        // Draw the axes
+                        DrawAxesOrFail(title,
+                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
+                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
+                            false,
+                            true);
+
+                        // Plot each bar
+                        for (int c = 0; c < descriptor.Bins; c++)
+                        {
+                            // plot a bar at an absolute position (maxX / 20)
+                            double x1 = ToCanvasX(descriptor.Edges[c]);
+                            double x2 = ToCanvasX(descriptor.Edges[c + 1]);
+                            double value = options.ShowRelativeFrequencies ? descriptor.Counts[c] / (double)s.Points : descriptor.Counts[c];
+                            double y1 = ToCanvasY(value);
+                            double y2 = yAxisCanvas;
+                            DrawRectangleInCanvasCoordinates(s.MarkerDetails.MarkerPen, x1, y1, x2 - x1, y1 - y2);
+                        }
+
+                        //  ZInt was calculated at Mp*2
+                        if (overlayNormalCurve)
+                        {
+                            double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
+                            PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, true);
+                        }
+                    }
+                    else
+                    {
+                        string mask = AxisMasker.AxisMask(new LinearAxisScale(0, 0, minimumBinMidpoint, minimumBinMidpoint + binMidpointInterval * descriptor.Bins, descriptor.Bins, 1));
+
+                        // Plot one ASCII histogram per series.  The cheat is to plot each one, save it, and concatenate at the end!
+                        ASCII_InitPlot(descriptor.Bins + 4);
+                        // Draw the scale
+
+                        // the ASCII version is plotted sideways
+                        // so save the current X value
+                        // get the values needed to plot the X axis
+                        DataMinX = 0;
+                        DataMaxX = DataMaxY;
+
+                        DefaultAxes();
+                        DrawAxesOrEnlargeCanvas(title, new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.None, definition.ScaleParameters.Y.ScaleType), false, true);
+
+                        for (int c = 0; c < descriptor.Bins; c++)
+                        {
+                            int L = Convert.ToInt32(descriptor.Counts[c] / DataMaxY * 60);
+                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, new string('=', L));
+                            if (descriptor.Counts[c] > 0 && L == 0)
+                                WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, ":");
+
+                            double midpoint = (descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0;
+                            string buf = midpoint.ToString(mask) + "|";
+                            L = buf.Length;
+                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt - L + 5, buf);
+
+                            buf = descriptor.Counts[c].ToString(CultureInfo.InvariantCulture);
+                            WriteAsciiYX(c + ASCII_Ytxt, 1, buf);
+                        }
+
+                        WriteAsciiYX(0, ASCII_XTxt, options.HistoSeriesOptions[seriesIndex].XAxisTitle);
+
+                        WriteAsciiYX(descriptor.Bins + ASCII_Ytxt, 16, "Mid-points");
+                        WriteAsciiYX(descriptor.Bins + ASCII_Ytxt, 1, "Counts");
+                        shTx[2] = "     " + shTx[2].Substring(0, Math.Min(shTx[2].Length, 85));
+                        shTx[1] = "     " + shTx[1].Substring(0, Math.Min(shTx[1].Length, 85));
+                        shTx[0] = "     " + shTx[0].Substring(0, Math.Min(shTx[0].Length, 85));
+
+                        //  Save this plot
+                        for (int i = shTx.Length - 1; i >= 0; i--)
+                            savedLines.Insert(0, shTx[i]);
+
+                        //  Separator
+                        savedLines.Insert(0, string.Empty);
+                    }
+                }
+
+                if (!IsAscii)
+                {
+                    MaybeDrawMarkerLines();
+                    EndVectorPlot();
+                }
+                else
+                {
+                    //  Fill in the output in its expected place from our saved place
+                    shTx = new string[savedLines.Count];
+                    for (int i = 0; i <= savedLines.Count - 1; i++)
+                        shTx[i] = savedLines[i];
+                }
+
+                return new ParameterBag();
+            }
+            finally
+            {
+                if (originalMarkerTypes != null)
+                {
+                    //  TODO: Resource leak on pens?
+                    PopMarkerTypes();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Returns the maximum value of a normal curve from the specified series and bin values.
+        /// </summary>
+        /// <param name="zmin">The smallest midpoint</param>
+        /// <param name="zint">The midpoint interval</param>
+        /// <param name="count">The number of bins</param>
+        /// <param name="s">The series whose data is to be used for the calculation</param>
+        /// <param name="shouldPlot">Draws if true; merely returns the maximum value if false</param>
+        /// <returns>The maximum value of y</returns>
+        private double PlotNormalCurve(double zmin, double zint, int count, DoubleSeries s, double proportionScaler, bool shouldPlot)
+        {
+            // Setup the plotting variables
+            double xbar = s.Sum / s.Points;
+            double sdv = s.StdDev;
+            double sumx = zmin;
+            double bins = zint * s.Points * (1.0 / (sdv * Math.Sqrt(2.0 * Math.PI)));
+
+            //  Multiply the count to give more steps
+            int div = Convert.ToInt32(xExtCanvas / count / 5);
+            count *= div;
+            zint /= div;
+
+            //  Move the cursor to the start
+            double y = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0)) * proportionScaler;
+            double yMax = y;
+            double yold = ToCanvasY(y);
+            double xold = xAxisCanvas;
+
+            for (int c = 1; c <= count; c++)
+            {
+                sumx += zint;
+                y = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0)) * proportionScaler;
+                if (y > yMax)
+                    yMax = y;
+                if (shouldPlot)
+                {
+                    double y1 = ToCanvasY(y);
+                    double x1 = xAxisCanvas + (c / (double)count * xExtCanvas);
+                    DrawLineInCanvasCoordinates(s.MarkerDetails.MarkerPen, xold, yold, x1, y1);
+                    xold = x1;
+                    yold = y1;
+                }
+            }
+            return yMax;
+        }
+    }
+}

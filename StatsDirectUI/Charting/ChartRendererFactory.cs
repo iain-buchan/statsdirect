@@ -339,6 +339,8 @@ namespace StatsDirect.Charting
                     return new ControlChartRenderer(chartDefinition);
                 case ChartType.Forest:
                     return new ForestChartRenderer(chartDefinition);
+                case ChartType.Histogram:
+                    return new HistogramChartRenderer(chartDefinition);
                 case ChartType.Ladder:
                     return new LadderChartRenderer(chartDefinition);
                 case ChartType.Pyramid:
