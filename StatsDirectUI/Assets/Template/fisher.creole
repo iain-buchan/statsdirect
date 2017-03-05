@@ -14,11 +14,11 @@
 <tr><td>\cf7 <in>tab3_a3</in></td><td>\cf7 <in>tab3_b3</in></td><td>\cf6 <in>tab3_c3</in></td></tr>
 </table>
 <line></line>
-<line>Expectation of A = <in>exp_a</in></line>
+<line>Expectation of A = <inu>exp_a</inu></line>
 <line></line>
-<line><pval>One sided <in>tail_1</in> <in>p_1</in>   (doubled one sided <in>p_1d</in>)</pval></line>
-<line><pval>Two sided <in>tail_2</in> <in>p_2</in></pval></line>
+<line><pval>One sided <in>tail_1</in> <inp>p_1</inp>   (doubled one sided <inp>p_1d</inp>)</pval></line>
+<line><pval>Two sided <in>tail_2</in> <inp>p_2</inp></pval></line>
 <line></line>
-<line><pval>One sided mid-<in>mid_p</in></pval></line>
-<line><pval>Two sided mid-<in>mid_p_2</in></pval></line>
+<line><pval>One sided mid-<inp>mid_p</inp></pval></line>
+<line><pval>Two sided mid-<inp>mid_p_2</inp></pval></line>
 </report>

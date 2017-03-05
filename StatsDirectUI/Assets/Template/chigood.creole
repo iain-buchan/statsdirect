@@ -7,11 +7,11 @@
 <line></line>
 <table>
 <tr><th>Count</th><th>Observed frequency</th><th>Expected frequency</th></tr>
-<block name="frequencies"><tr><td><in>x</in></td><td><in>o</in></td><td><in>e</in></td></tr></block>
+<block name="frequencies"><tr><td><in>x</in></td><td><in>o</in></td><td><inu>e</inu></td></tr></block>
 </table>
 <line></line>
-<line>Chi-square = <in>chi2</in>  df = <in>df</in></line>
-<line><pval><in>p</in></pval></line>
+<line>Chi-square = <inu>chi2</inu>  df = <in>df</in></line>
+<line><pval><inp>p</inp></pval></line>
 <block name="warn">
 <line></line>
 <line><warn><in>warn</in></warn></line>

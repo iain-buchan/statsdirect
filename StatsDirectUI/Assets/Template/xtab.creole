@@ -8,6 +8,6 @@
 <line></line>
 <table>
 <tr><td></td><block name="x"><td><b><ci><in>x</in></ci></b></td></block></tr>
-<block name="y"><tr><td><b><grandtotal><in>y</in></grandtotal></b></td><block name="tot"><td><in>tot</in></td></block></tr></block>
+<block name="y"><tr><td><b><grandtotal><in>y</in></grandtotal></b></td><block name="tot"><td><inu>tot</inu></td></block></tr></block>
 </table>
 </report>

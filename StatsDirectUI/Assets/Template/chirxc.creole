@@ -3,16 +3,16 @@
 <line></line>
 <table>
 <block name="rows">
-<tr><td>Observed</td><block name="obs"><td><in>obs</in></td></block><td><subtotal><block name="rtot"><in>rtot</in></block></subtotal></td><td><block name="score"><score><in>score</in></score></block></td></tr>
-<block name="exps"><tr><td><model>Expected</model></td><block name="exp"><td><model><in>exp</in></model></td></block><td></td><td></td></tr></block>
-<block name="chis"><tr><td>DChi&#xb2;</td><block name="chi"><td><in>chi</in></td></block><td></td><td></td></tr></block>
+<tr><td>Observed</td><block name="obs"><td><inu>obs</inu></td></block><td><subtotal><block name="rtot"><inu>rtot</inu></block></subtotal></td><td><block name="score"><score><inu>score</inu></score></block></td></tr>
+<block name="exps"><tr><td><model>Expected</model></td><block name="exp"><td><model><inu>exp</inu></model></td></block><td></td><td></td></tr></block>
+<block name="chis"><tr><td>DChi&#xb2;</td><block name="chi"><td><inu>chi</inu></td></block><td></td><td></td></tr></block>
 <block name="pcrs">
 <tr><td>% of row</td><block name="pcr"><td><in>pcr</in></td></block><td></td><td></td></tr>
 <tr><td>% of col</td><block name="pcc"><td><in>pcc</in></td></block><td></td></tr>
 </block>
 <tr><td></td><td></td><td></td><td></td></tr>
 </block>
-<tr><td><subtotal><b>Total</b></subtotal></td><block name="tot"><td><subtotal><b><in>tot</in></b></subtotal></td></block><td></td></tr>
+<tr><td><subtotal><b>Total</b></subtotal></td><block name="tot"><td><subtotal><b><inu>tot</inu></b></subtotal></td></block><td></td></tr>
 <block name="pcgs"><tr><td>% of n</td><block name="pcg"><td><in>pcg</in></td></block><td></td><td></td></tr></block>
 <block name="scores"><tr><td></td><block name="score"><td><score><in>score</in></score></td></block><td></td><td></td></tr></block>
 </table>
@@ -25,35 +25,35 @@
 <line></line>
 <line><subtitle>NOMINAL INDEPENDENCE</subtitle></line>
 <table>
-<tr><td>Chi-square = <in>chio</in></td><td>DF = <in>dfo</in></td><td><pval><in>po</in></pval></td></tr>
-<tr><td>G-square = <in>g2</in></td><td>DF = <in>dfo</in></td><td><pval><in>pog2</in></pval></td></tr>
-<tr><td>Fisher-Freeman-Halton exact</td><td></td><td><pval><in>p2</in></pval>  <in>lb</in></td></tr>
+<tr><td>Chi-square = <inu>chio</inu></td><td>DF = <inu>dfo</inu></td><td><pval><in>po</in></pval></td></tr>
+<tr><td>G-square = <inu>g2</inu></td><td>DF = <inu>dfo</inu></td><td><pval><in>pog2</in></pval></td></tr>
+<tr><td>Fisher-Freeman-Halton exact</td><td></td><td><pval><inp>p2</inp></pval>  <in>lb</in></td></tr>
 </table>
 <line></line>
 <line><subtitle>ANOVA</subtitle></line>
-<line>Chi-square for equality of mean column scores = <in>chie</in></line>
+<line>Chi-square for equality of mean column scores = <inu>chie</inu></line>
 <line>DF = <in>dfe</in> <pval><in>pe</in></pval></line>
 <line></line>
 <line><subtitle>LINEAR TREND</subtitle></line>
-<line>Sample correlation (r) = <in>r</in></line>
-<line>Chi-square for linear trend (M&#xb2;) = <in>chit</in></line>
+<line>Sample correlation (r) = <inu>r</inu></line>
+<line>Chi-square for linear trend (M&#xb2;) = <inu>chit</inu></line>
 <line>DF = 1  <pval><in>pt</in></pval></line>
 <line></line>
 <line><subtitle>NOMINAL ASSOCIATION</subtitle></line>
-<line>Phi = <in>phi</in></line>
-<line>Pearson's contingency = <in>pearson</in></line>
-<line>Cram&#xe9;r's <i>V</i> = <in>cramer</in></line>
+<line>Phi = <inu>phi</inu></line>
+<line>Pearson's contingency = <inu>pearson</inu></line>
+<line>Cram&#xe9;r's <i>V</i> = <inu>cramer</inu></line>
 <line></line>
 <line><subtitle>ORDINAL</subtitle></line>
-<line>Goodman-Kruskal gamma = <in>gamma</in></line>
+<line>Goodman-Kruskal gamma = <inu>gamma</inu></line>
 <table>
-<tr><td>Approximate test of gamma = 0:</td><td>SE = <in>seg</in></td><td><pval><in>pg</in></pval></td><td><ci><in>pc</in>% CI = <in>llg</in> to <in>ulg</in></ci></td></tr>
-<tr><td>Approximate test of independence:</td><td>SE = <in>segi</in></td><td><pval><in>pgi</in></pval></td><td><ci><in>pc</in>% CI = <in>llgi</in> to <in>ulgi</in></ci></td></tr>
+<tr><td>Approximate test of gamma = 0:</td><td>SE = <inu>seg</inu></td><td><pval><inp>pg</inp></pval></td><td><ci><in>pc</in>% CI = <inu>llg</inu> to <inu>ulg</inu></ci></td></tr>
+<tr><td>Approximate test of independence:</td><td>SE = <inu>segi</inu></td><td><pval><inp>pgi</inp></pval></td><td><ci><in>pc</in>% CI = <inu>llgi</inu> to <inu>ulgi</inu></ci></td></tr>
 </table>
 <line></line>
-<line>Kendall tau-b = <in>taub</in></line>
+<line>Kendall tau-b = <inu>taub</inu></line>
 <table>
-<tr><td>Approximate test of tau-b = 0:</td><td>SE = <in>setaub</in></td><td><pval><in>ptaub</in></pval></td><td><ci><in>pc</in>% CI = <in>lltaub</in> to <in>ultaub</in></ci></td></tr>
-<tr><td>Approximate test of independence:</td><td>SE = <in>setaubi</in></td><td><pval><in>ptaubi</in></pval></td><td><ci><in>pc</in>% CI = <in>lltaubi</in> to <in>ultaubi</in></ci></td></tr>
+<tr><td>Approximate test of tau-b = 0:</td><td>SE = <inu>setaub</inu></td><td><pval><inp>ptaub</inp></pval></td><td><ci><in>pc</in>% CI = <inu>lltaub</inu> to <inu>ultaub</inu></ci></td></tr>
+<tr><td>Approximate test of independence:</td><td>SE = <inu>setaubi</inu></td><td><pval><inp>ptaubi</inp></pval></td><td><ci><in>pc</in>% CI = <inu>lltaubi</inu> to <inu>ultaubi</inu></ci></td></tr>
 </table>
 </report>

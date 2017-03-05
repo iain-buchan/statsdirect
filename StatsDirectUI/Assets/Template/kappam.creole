@@ -5,16 +5,16 @@
 <line></line>
 <table>
 <tr><th>Response</th><th>Kappa</th><th>se</th><th>z(for k=0)</th><th>Probability</th></tr>
-<block name="cats"><tr><td><in>resp</in></td><td><in>k</in></td><td><in>se</in></td><td><in>z</in></td><td><pval><in>p</in></pval></td></tr></block>
+<block name="cats"><tr><td><in>resp</in></td><td><inu>k</inu></td><td><inu>se</inu></td><td><inu>z</inu></td><td><pval><inp>p</inp></pval></td></tr></block>
 </table>
 <line></line>
 <line><u>Combined (Fleiss-Nee-Landis test)</u></line>
-<line>Kappa = <in>kc</in></line>
-<line><in>pc</in>% CI: <in>ll</in> to <in>ul</in></line>
-<line>z (for k = 0) = <in>zc</in></line>
+<line>Kappa = <inu>kc</inu></line>
+<line><in>pc</in>% CI: <inu>ll</inu> to <inu>ul</inu></line>
+<line>z (for k = 0) = <inu>zc</inu></line>
 <line><pval><in>p</in></pval></line>
 <line></line>
 <line><u>Universal (Berry-Mielke) R</u></line>
-<line>Weighted (linear) kappa = <in>kw</in></line>
-<line><pval><in>pw</in></pval></line>
+<line>Weighted (linear) kappa = <inu>kw</inu></line>
+<line><pval><inp>pw</inp></pval></line>
 </report>

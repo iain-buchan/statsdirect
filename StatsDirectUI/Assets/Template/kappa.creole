@@ -4,10 +4,10 @@
 <line><u>Cohen's kappa (unweighted)</u></line>
 <line>Observed agreement = <in>po</in>%</line>
 <line>Expected agreement = <in>pe</in>%</line>
-<line>Kappa = <in>kappa</in> (se_0 = <in>se</in>, se = <in>seci</in>)</line>
-<line><ci><in>pc</in>% confidence interval = <in>from</in> to <in>to</in></ci></line>
+<line>Kappa = <inu>kappa</inu> (se_0 = <inu>se</inu>, se = <inu>seci</inu>)</line>
+<line><ci><inu>pc</inu>% confidence interval = <inu>from</inu> to <inu>to</inu></ci></line>
 <line>z (for k = 0) = <in>z</in></line>
-<line><pval><in>p</in></pval></line>
+<line><pval><inp>p</inp></pval></line>
 <line></line>
 <line><u>Cohen's kappa (weighted by <in>methodName</in>)</u></line>
 <line>ratings weighted by:</line>
@@ -35,7 +35,7 @@
 <line></line>
 <line><title>Disagreement over any category and asymmetry of disagreement (2 raters)</title></line>
 <line></line>
-<line>Marginal homogeneity (Maxwell) chi-square = <inu>x2</inu>  df = <in>df</in>  <pval><in>pmaxwell</in></pval></line>
+<line>Marginal homogeneity (Maxwell) chi-square = <inu>x2</inu>  df = <inu>df</inu>  <pval><in>pmaxwell</in></pval></line>
 <line></line>
-<line>Symmetry (generalised McNemar) chi-square = <inu>x2m</inu>  df = <in>dfmcnemar</in>  <pval><in>pmcnemar</in></pval></line>
+<line>Symmetry (generalised McNemar) chi-square = <inu>x2m</inu>  df = <in>dfmcnemar</in>  <pval><inp>pmcnemar</inp></pval></line>
 </report>
