@@ -333,6 +333,8 @@ namespace StatsDirect.Charting
         {
             switch (chartDefinition.ChartType)
             {
+                case ChartType.AgreementPair:
+                    return new AgreementPairChartRenderer(chartDefinition);
                 case ChartType.Bar:
                 case ChartType.StackedBar:
                 case ChartType.StackedBar100Percent:

@@ -97,10 +97,10 @@ namespace StatsDirect.Charting
             {
                 SurvivalOptions.SurvivalSeries ser = new SurvivalOptions.SurvivalSeries();
                 // Series: xdat...
-                DoubleVariable xdatVariable = xdatFrame.Variables[i]as DoubleVariable;
+                DoubleVariable xdatVariable = xdatFrame.Variables[i] as DoubleVariable;
                 ser.XDat = xdatVariable.Data;
                 // ... cdat...
-                DoubleVariable cdatVariable = cdatFrame.Variables[i]as DoubleVariable;
+                DoubleVariable cdatVariable = cdatFrame.Variables[i] as DoubleVariable;
                 int[] cdat = new int[cdatVariable.Length];
                 for (int r = 0; r < cdat.Length; r++)
                 {
@@ -111,18 +111,18 @@ namespace StatsDirect.Charting
                 }
                 ser.CDat = cdat;
                 // ... ydat...
-                DoubleVariable ydatVariable = ydatFrame.Variables[i]as DoubleVariable;
+                DoubleVariable ydatVariable = ydatFrame.Variables[i] as DoubleVariable;
                 ser.YDat = ydatVariable.Data;
                 // ... ydatl...
                 if (null != ydatlFrame)
                 {
-                    DoubleVariable ydatlVariable = ydatlFrame.Variables[i]as DoubleVariable;
+                    DoubleVariable ydatlVariable = ydatlFrame.Variables[i] as DoubleVariable;
                     ser.YDatL = ydatlVariable.Data;
                 }
                 // ... and ydatu
                 if (null != ydatuFrame)
                 {
-                    DoubleVariable ydatuVariable = ydatuFrame.Variables[i]as DoubleVariable;
+                    DoubleVariable ydatuVariable = ydatuFrame.Variables[i] as DoubleVariable;
                     ser.YDatU = ydatuVariable.Data;
                 }
                 survivalOptions.Series.Add(ser);
@@ -170,7 +170,7 @@ namespace StatsDirect.Charting
             DataFrame frame = parameters["P"].AsDataFrame;
             for (int v = 0; v < frame.VariableCount; v++)
             {
-                DoubleVariable variable = frame.Variables[v]as DoubleVariable;
+                DoubleVariable variable = frame.Variables[v] as DoubleVariable;
                 definition.AddXSeriesAt(VariableToSeries(variable), v);
             }
             // ... then absent
@@ -179,7 +179,7 @@ namespace StatsDirect.Charting
             frame = parameters["A"].AsDataFrame;
             for (int v = 0; v < frame.VariableCount; v++)
             {
-                DoubleVariable variable = frame.Variables[v]as DoubleVariable;
+                DoubleVariable variable = frame.Variables[v] as DoubleVariable;
                 definition.AddYSeriesAt(VariableToSeries(variable), v);
             }
             string dataName = frame.Name;
@@ -195,7 +195,7 @@ namespace StatsDirect.Charting
 
             ROCOptions rocOptions = new ROCOptions(host.Preferences.ShouldUseColour, definition.XSeries)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !AbstractChartRenderer.DefaultRequestScaleLimits,
                 Title =
                     null == dataName ? "ROC plot" : "ROC plot from " + dataName,
                 ShowCutOffCalculator = true,
@@ -219,11 +219,12 @@ namespace StatsDirect.Charting
             ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour, definition.XSeries, false)
             {
                 IsAscii = step.IsAscii,
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
-                Title =
+                ShouldAutoscale = !AbstractChartRenderer.DefaultRequestScaleLimits,
+                Title = string.IsNullOrWhiteSpace(step.ChartTitle) ? (
                     null == dataName
                         ? "Scatter plot"
-                        : "Scatter plot from " + dataName,
+                        : "Scatter plot from " + dataName)
+                    : step.ChartTitle,
                 YAxisTitle = definition.YSeries[0].Title,
                 XAxisTitle = definition.XSeries[0].Title,
                 SeriesTitles = new string[definition.XSeries.Count]
@@ -449,10 +450,10 @@ namespace StatsDirect.Charting
 
             for (int sIndex = 0; sIndex < xdatFrame.VariableCount; sIndex++)
             {
-                DoubleVariable xdat = xdatFrame.Variables[sIndex]as DoubleVariable;
-                DoubleVariable ydat = ydatFrame.Variables[sIndex]as DoubleVariable;
-                DoubleVariable ydatl = ydatlFrame.Variables[sIndex]as DoubleVariable;
-                DoubleVariable ydatu = ydatuFrame.Variables[sIndex]as DoubleVariable;
+                DoubleVariable xdat = xdatFrame.Variables[sIndex] as DoubleVariable;
+                DoubleVariable ydat = ydatFrame.Variables[sIndex] as DoubleVariable;
+                DoubleVariable ydatl = ydatlFrame.Variables[sIndex] as DoubleVariable;
+                DoubleVariable ydatu = ydatuFrame.Variables[sIndex] as DoubleVariable;
                 string seriesTitle =
                     string.IsNullOrWhiteSpace(ydat.Title)
                         ? "Series " + (sIndex + 1).ToString()
@@ -603,7 +604,7 @@ namespace StatsDirect.Charting
                 barOptions.MaxBarWidth = 0.6 / definition.YSeries.Count;
             }
             DataFrame labelsFrame = parameters["labels"].AsDataFrame;
-            StringVariable labelsVariable = labelsFrame.Variables[0]as StringVariable;
+            StringVariable labelsVariable = labelsFrame.Variables[0] as StringVariable;
             barOptions.SeriesTitles = new string[labelsVariable.Length];
             for (int i = 0; i < labelsVariable.Length; i++)
                 barOptions.SeriesTitles[i] = labelsVariable.Data[i];
@@ -619,7 +620,7 @@ namespace StatsDirect.Charting
         {
             AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !AbstractChartRenderer.DefaultRequestScaleLimits,
                 Title = step.ChartTitle,
                 lla = parameters["lla"].AsDouble,
                 mean = parameters["mean"].AsDouble,

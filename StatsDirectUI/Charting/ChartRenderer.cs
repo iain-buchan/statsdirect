@@ -25,7 +25,6 @@ namespace StatsDirect.Charting
             switch (definition.ChartType)
             {
                 case ChartType.AgreementPair:
-                    return GetAgreementPairScaleParameters();
                 case ChartType.Bar:
                 case ChartType.StackedBar:
                 case ChartType.StackedBar100Percent:
@@ -48,6 +47,7 @@ namespace StatsDirect.Charting
                 case ChartType.Normal:
                     return GetNormalScaleParameters();
                 case ChartType.Pyramid:
+                    throw new NotImplementedException();
                 case ChartType.ROC:
                     return GetRocScaleParameters();
                 case ChartType.ScatterXY:
@@ -71,7 +71,6 @@ namespace StatsDirect.Charting
             switch (definition.ChartType)
             {
                 case ChartType.AgreementPair:
-                    return PlotAgreementPair();
                 case ChartType.Bar:
                 case ChartType.StackedBar:
                 case ChartType.StackedBar100Percent:
@@ -1033,167 +1032,6 @@ namespace StatsDirect.Charting
         }
 
 
-        /// <summary>
-        /// Detect and return minimum and maximum values in the array.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="scaleType">THe scale that will use the data.  For log scales, values of 0 or less are ignored.</param>
-        /// <param name="min">Filled in with the global minimum value</param>
-        /// <param name="max">Filled in with the global maximum value</param>
-        /// <remarks>STYLE: Wouldn't this be better as a function returning some kind of data structure?</remarks>
-        private void GetMinMaxArray(double[] data, ScaleType scaleType, out double min, out double max)
-        {
-            bool ignoreZeroOrLess = scaleType == ScaleType.LogNatural || scaleType == ScaleType.Log10;
-            min = double.MaxValue;
-            max = double.MinValue;
-            for (int i = data.GetLowerBound(0); i <= data.GetUpperBound(0); i++)
-            {
-                if (data[i] != Constant.MISSING && !(ignoreZeroOrLess && data[i] <= 0))
-                {
-                    if (data[i] < min)
-                        min = data[i];
-                    if (data[i] > max)
-                        max = data[i];
-                }
-            }
-        }
-
-        /// <summary>
-        /// Detect and return minimum, minimum greater than zero and maximum values in the array.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="min">Filled in with the global minimum value</param>
-        /// <param name="minGreaterThanZero">Filled in with the global minimum value that is greater than zero.</param>
-        /// <param name="max">Filled in with the global maximum value</param>
-        /// <remarks>STYLE: Wouldn't this be better as a function returning some kind of data structure?</remarks>
-        private void GetMinMaxArray(double[] data, out double min, out double max, out double minGreaterThanZero)
-        {
-            min = double.MaxValue;
-            minGreaterThanZero = double.MaxValue;
-            max = double.MinValue;
-            for (int i = data.GetLowerBound(0); i <= data.GetUpperBound(0); i++)
-            {
-                if (data[i] != Constant.MISSING)
-                {
-                    if (data[i] < min)
-                        min = data[i];
-                    if ((data[i] > 0) && (data[i] < minGreaterThanZero))
-                        minGreaterThanZero = data[i];
-                    if (data[i] > max)
-                        max = data[i];
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Plots an XY chart assuming an existing vector plot is open. This allows callers to use this then add other features to the chart before it is completed.
-        /// </summary>
-        /// <param name="x">The X co-ordinates of the points to plot.  Zero-based or 1-based.</param>
-        /// <param name="y">The Y co-ordinates of the points to plot.  Zero-based or 1-based, same length as x.</param>
-        /// <param name="xtxt">The X-axis title</param>
-        /// <param name="ytxt">The y-axis title</param>
-        /// <param name="title">The chart title</param>
-        /// <param name="zPlot">If true, draw a line at the smallest Y value</param>
-        /// <param name="minMaxY"></param>
-        /// <param name="markerSize"></param>
-        /// <param name="Shape"></param>
-        /// <param name="isFilled"></param>
-        /// <param name="p"></param>
-        /// <param name="useCalculatedScalesEvenWithDefinition"></param>
-        /// <remarks></remarks>
-        private void PlotXYInternal(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, double markerSize, MarkerShape shape, bool isFilled, Pen p, bool useCalculatedScalesEvenWithDefinition, double presetXMin = 0, double presetXMax = 0, double presetYMin = 0, double presetYMax = 0)
-        {
-            ScaleType scaleTypeX = ScaleType.Linear;
-            ScaleType scaleTypeY = ScaleType.Linear;
-            if (HasScaleParameters)
-            {
-                scaleTypeX = definition.ScaleParameters.X.ScaleType;
-                scaleTypeY = definition.ScaleParameters.Y.ScaleType;
-            }
-
-            //  If required, get the Min and Max for the data
-            //  This is safe because we're using this function to plot our data.
-            double axisXMin;
-            double axisXMinGreaterThanZero;
-            double axisXMax;
-            double axisYMin;
-            double axisYMinGreaterThanZero;
-            double axisYMax;
-            switch (minMaxY)
-            {
-                case DataMinMax.XPreset_YPreset:
-                    axisXMin = presetXMin;
-                    axisXMinGreaterThanZero = presetXMin;
-                    axisXMax = presetXMax;
-                    axisYMin = presetYMin;
-                    axisYMinGreaterThanZero = presetYMin;
-                    axisYMax = presetYMax;
-                    break;
-                case DataMinMax.XUseScaleParameters_YUseScaleParameters:
-                    //  Take data from scale parameters
-                    axisYMax = definition.ScaleParameters.Y.Max;
-                    axisYMinGreaterThanZero = definition.ScaleParameters.Y.MinGreaterThanZero;
-                    axisYMin = definition.ScaleParameters.Y.Min;
-                    axisXMax = definition.ScaleParameters.X.Max;
-                    axisXMinGreaterThanZero = definition.ScaleParameters.X.MinGreaterThanZero;
-                    axisXMin = definition.ScaleParameters.X.Min;
-                    break;
-                case DataMinMax.XY_CalcTogether:
-                    // X and Y must have the same scale
-                    GetMinMaxArray(x, out axisXMin, out axisXMax, out axisXMinGreaterThanZero);
-                    GetMinMaxArray(y, out axisYMin, out axisYMax, out axisYMinGreaterThanZero);
-                    axisYMin = axisXMin = Math.Min(axisYMin, axisXMin);
-                    axisYMinGreaterThanZero = axisXMinGreaterThanZero = Math.Min(axisYMinGreaterThanZero, axisXMinGreaterThanZero);
-                    axisYMax = axisXMax = Math.Max(axisYMax, axisXMax);
-                    break;
-                case DataMinMax.XCalc_YCalc:
-                    GetMinMaxArray(x, out axisXMin, out axisXMax, out axisXMinGreaterThanZero);
-                    GetMinMaxArray(y, out axisYMin, out axisYMax, out axisYMinGreaterThanZero);
-                    break;
-                case DataMinMax.XCalc_YPreset:
-                    GetMinMaxArray(x, out axisXMin, out axisXMax, out axisXMinGreaterThanZero);
-                    axisYMin = presetYMin;
-                    axisYMinGreaterThanZero = presetYMin;
-                    axisYMax = presetYMax;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("MinMaxY", minMaxY, "Don't know how to plot using the given minMaxY");
-            }
-
-            DataMinY = axisYMin;
-            DataMinGreaterThanZeroY = axisYMinGreaterThanZero;
-            DataMaxY = axisYMax;
-            DataMinX = axisXMin;
-            DataMinGreaterThanZeroX = axisXMinGreaterThanZero;
-            DataMaxX = axisXMax;
-
-            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, scaleTypeX), new AxisDefinition(ytxt, AxisMode.Scale, scaleTypeY), false, useCalculatedScalesEvenWithDefinition);
-
-            if (zPlot)
-                DrawQCanvas(offy);
-
-            // Plot the points
-            int rows = x.Length;
-            int xOffset = x.GetLowerBound(0);
-            int yOffset = y.GetLowerBound(0);
-            PointF[] xys = new PointF[rows];
-            for (int r = 0; r < rows; r++)
-            {
-                if (x[r + xOffset] != Constant.MISSING && y[r + yOffset] != Constant.MISSING)
-                {
-                    xys[r].X = Convert.ToSingle(ToCanvasX(x[r + xOffset]));
-                    xys[r].Y = Convert.ToSingle(ToCanvasY(y[r + yOffset]));
-                }
-                else
-                {
-                    //  Missing.  Any value less than zero is ignored by DrawMarkerSeries.
-                    xys[r].X = -1;
-                    xys[r].Y = -1;
-                }
-            }
-            DrawMarkerSeriesInCanvasCoordinates(xys, markerSize, shape, isFilled, p, p, false, true);
-        }
-
         public void PlotXY(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
         {
             StartVectorPlot();
@@ -1206,19 +1044,6 @@ namespace StatsDirect.Charting
             StartVectorPlot();
             PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition, 0, 1, 0, 1);
             EndVectorPlot();
-        }
-
-        ///  <summary>
-        ///  Draw a horizontal line at the specified offset from the Y origin.
-        ///  </summary>
-        ///  <param name="y">The offset, in device units</param>
-        ///  <remarks></remarks>
-        private void DrawQCanvas(double y)
-        {
-            using (Pen greenPen = new Pen(grGreen, 2))
-            {
-                DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y, xAxisCanvas + xExtCanvas, y);
-            }
         }
 
         private ScaleParameters GetRocScaleParameters()
@@ -2650,98 +2475,6 @@ namespace StatsDirect.Charting
             }
             EndVectorPlot();
         }
-
-        private ScaleParameters GetAgreementPairScaleParameters()
-        {
-            double avMin = 0;
-            double avMax = 0;
-            double mxdMin = 0;
-            double mxdMax = 0;
-            if (!(definition == null || definition.ChartOptions == null))
-            {
-                AgreementOptions aOptions = (AgreementOptions)definition.ChartOptions;
-                GetMinMaxArray(aOptions.mxd, ScaleType.Linear, out mxdMin, out mxdMax);
-                if (aOptions.HasLimits)
-                {
-                    if (aOptions.lla < mxdMin)
-                        mxdMin = aOptions.lla;
-                    if (aOptions.ula > mxdMax)
-                        mxdMax = aOptions.ula;
-                }
-                GetMinMaxArray(aOptions.av, ScaleType.Linear, out avMin, out avMax);
-            }
-
-            return new ScaleParameters
-            {
-                X =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Linear },
-                    Max = avMax,
-                    Min = avMin
-                },
-                Y =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Linear },
-                    Max = mxdMax,
-                    Min = mxdMin
-                }
-            };
-        }
-
-        private ParameterBag PlotAgreementPair()
-        {
-            AgreementOptions aOptions = (AgreementOptions)definition.ChartOptions;
-            StartVectorPlot();
-            double mxdMin;
-            double mxdMax;
-            GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType, out mxdMin, out mxdMax);
-            using (Pen p = GetMarkerPen(MarkerTypes[0]))
-            {
-                if (aOptions.HasLimits)
-                {
-                    if (aOptions.lla < mxdMin)
-                        mxdMin = aOptions.lla;
-                    if (aOptions.ula > mxdMax)
-                        mxdMax = aOptions.ula;
-                    string xtxt = definition.ChartOptions.XAxisTitle;
-                    if (string.IsNullOrEmpty(xtxt))
-                        xtxt = "mean";
-                    string ytxt = definition.ChartOptions.YAxisTitle;
-                    if (string.IsNullOrEmpty(ytxt))
-                        ytxt = "difference";
-                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, MarkerTypes[0].MarkerSize, MarkerTypes[0].MarkerShape, MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
-                }
-                else
-                {
-                    string xtxt = definition.ChartOptions.XAxisTitle;
-                    if (string.IsNullOrEmpty(xtxt))
-                        xtxt = "mean";
-                    string ytxt = definition.ChartOptions.YAxisTitle;
-                    if (string.IsNullOrEmpty(ytxt))
-                        ytxt = "maximum difference";
-                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, MarkerTypes[0].MarkerSize, MarkerTypes[0].MarkerShape, MarkerTypes[0].IsMarkerFilled, p, false);
-                }
-            }
-
-            // Plot mean
-            using (Pen greenPen = new Pen(grGreen, 2))
-            {
-                double y1 = ToCanvasY(aOptions.mean);
-                DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
-                if (aOptions.HasLimits)
-                {
-                    // Plot upper limit
-                    y1 = ToCanvasY(aOptions.ula);
-                    DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
-                    // Plot lower limit
-                    y1 = ToCanvasY(aOptions.lla);
-                    DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
-                }
-            }
-            EndVectorPlot();
-            return new ParameterBag();
-        }
-
 
         private void get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plot_method, Transformation xform, out bool reverse, ref bool use_ci)
         {
